@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08
+Last Updated: 2026-11-08 (PR A1a)
 
 # Spike A: tasks
 
@@ -8,10 +8,15 @@ Last Updated: 2026-11-08
 - [x] Maintainer answers the open questions (2026-11-08, recorded in the context file)
 - [x] Record the gate decisions in the ACTION-PLAN Spike A gate text
 - [x] Update handoff Current state / Next action
-- [ ] Open PR
+- [x] Open PR (#3, merged 2026-11-08)
 
 ## PR A1a: cargo-deny
-- [ ] `deny.toml` with an MIT-compatible license allow-list and bans; CI job; green run
+- [x] `deny.toml` with an MIT-compatible license allow-list, bans, and sources; passes locally with cargo-deny 0.20.2
+- [x] CI `cargo-deny` job (cargo-deny-action v2.1.1, SHA-pinned), required via `ci-ok`
+- [ ] Green CI run on the PR; maintainer confirms the MPL-2.0 exceptions for Tauri's transitive crates
+
+## Follow-up (dependency policy)
+- [ ] Non-blocking (scheduled) `cargo deny check advisories` job
 
 ## PR A1: crates and decompressor decision (step 1)
 - [ ] Survey existing permissive Rust crates for the Bundles2 index and datc64
