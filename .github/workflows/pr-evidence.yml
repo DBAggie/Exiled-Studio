@@ -1,0 +1,41 @@
+name: PR evidence
+
+# ADR-012 evidence rule: PR bodies must fill in the template's evidence sections.
+# Separate from CI so editing the description re-runs only this check. "PR evidence" is a
+# required status check on main, next to ci-ok.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+# A newer edit or push supersedes a running check for the same PR.
+concurrency:
+  group: pr-evidence-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-evidence:
+    name: PR evidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: |
+            .github/scripts
+            .github/pull_request_template.md
+          sparse-checkout-cone-mode: false
+      - name: Test the evidence check
+        run: bash .github/scripts/test-check-pr-evidence.sh
+      # Read the current body from the API, not the event payload: a manual re-run reuses the
+      # original payload, so it would check a stale description.
+      - name: Check evidence sections
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Fetch first so an API failure reports itself instead of "empty section".
+          body=$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json body --jq .body)
+          printf '%s\n' "$body" | bash .github/scripts/check-pr-evidence.sh

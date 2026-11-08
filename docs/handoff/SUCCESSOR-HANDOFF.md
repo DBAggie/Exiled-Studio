@@ -23,12 +23,13 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-08, Phase 0 handoff PR)
-- **Phase 0 (bootstrap): done.** Gate passed: CI run 42526884777 green on Linux and Windows, including the wasm32 build of the core crates (<https://github.com/DBAggie/Exiled-Studio/actions/runs/42526884777>). `main` is protected, admins included: PR required (0 approvals, since the maintainer cannot approve PRs opened under their own account), `ci-ok` required and up to date, linear history, no force pushes. Merges are squash-only and branches auto-delete. Secret scanning and push protection are on. Agents use the maintainer's `gh` account, so protection is the guard against direct pushes.
+## Current state (updated 2026-11-08, PR-evidence workflow PR)
+- **Phase 0 (bootstrap): done.** Gate passed: CI run 42526884777 green on Linux and Windows, including the wasm32 build of the core crates (<https://github.com/DBAggie/Exiled-Studio/actions/runs/42526884777>). `main` is protected, admins included: PR required (0 approvals, since the maintainer cannot approve PRs opened under their own account), required status checks `ci-ok` and `PR evidence` (strict: branch up to date), linear history, no force pushes. Merges are squash-only and branches auto-delete. Secret scanning and push protection are on. Agents use the maintainer's `gh` account, so protection is the guard against direct pushes. The maintainer changes branch-protection settings themselves; agents give the exact setting.
+- PR #1 (Phase 0 handoff docs) merged 2026-11-08.
+- PR-evidence check moved to `.github/workflows/pr-evidence.yml` (this PR). It runs on `opened, edited, synchronize, reopened`, reads the live body with `gh pr view`, so editing the description (or a manual re-run) checks the current text. Logic in `.github/scripts/check-pr-evidence.sh` with tests in `test-check-pr-evidence.sh`, run by the workflow. The same PR fixed a bug: multi-line HTML comments in the template (the Handoff hint) counted as content, so an untouched Handoff section passed. Known limit: the check runs the script from the PR's own checkout, so a PR could weaken it; the maintainer's review covers that.
 - Repository: Cargo workspace (9 `loom-*` crates in `crates/`, `tools/extractor`, `tools/parity-cli`), all empty skeletons with boundary docs only, no tests yet; `ui/` React + Vite shell; CI in `.github/workflows/ci.yml`; rules in `AGENTS.md`.
 - Pinned toolchain: Rust 1.99.1 (`rust-toolchain.toml`), Node 26 (`.node-version`), pnpm 12.18.0 (`ui/package.json`), Tauri 2.12.
 - Not done in Phase 0 (not required by the action plan): `cargo-deny` licence/advisory policy, Dependabot, fixture manifest schema, CODEOWNERS (deferred by ADR-012).
-- Known CI gap: the `PR evidence` job in `ci.yml` runs only on `opened`/`synchronize`/`reopened` and reads the body from the event payload, so editing the PR description does not re-run it (a manual re-run reuses the old body). Today the only fix is pushing a commit. Fix is the next PR (see Next action).
 - Open questions for the maintainer: none.
 
 ## Workstation (maintainer, Windows)
@@ -38,9 +39,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - Still missing: LuaJIT (needed at Spike C).
 
 ## Next action
-First, a small CI PR: move the PR-evidence check into its own workflow triggered on `pull_request` types `opened, edited, synchronize, reopened`, reading the current body with `gh pr view` (not the event payload). Make its job a required status check next to `ci-ok` (branch protection on `main`), and drop it from `ci-ok`'s `needs`. Evidence: a test PR showing that an empty section fails and editing the description re-runs the check and passes.
-
-Then Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`):
+Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`):
 1. Run `/dev-docs Spike A - Bundles2 extraction` to create `dev/active/spike-a-.../` with a plan, context, and PR breakdown.
 2. Review the plan with the `plan-reviewer` agent and get the maintainer's approval.
 3. Implement in small PRs, one per session, each updating this section.
