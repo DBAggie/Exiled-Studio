@@ -33,6 +33,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 - Parse with the community dat schema: Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills/GrantedEffects, and stat-description files.
 - Record game version, schema revision, and input hashes.
 - **Gate:** two runs produce identical output hashes; record counts match PoB's data for the same patch, with every gap explained.
+  - *Reading of the gate (maintainer decision 2026-11-08):* Steam keeps only the current patch, so "the same patch" means the newest PoB data export available (searched upstream when the cross-check runs): `PathOfBuilding` for PoE1, `PathOfBuilding-PoE2` for PoE2, read from clones in `local/`. Every gap gets a category with tool evidence; uncategorized gaps must be zero and gaps due to patch changes at most 2% of PoB keys per table. Details: `dev/active/spike-a-bundles2-extraction/`.
 - **Fallback:** RePOE as input; ADR-005 amended.
 
 ### Spike B: Text to stat-ID resolution
