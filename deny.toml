@@ -1,0 +1,58 @@
+# cargo-deny policy (Spike A, PR A1a).
+# CI runs `cargo deny --all-features --locked check licenses bans sources`.
+# Run locally: `cargo install --locked cargo-deny@0.20.2`, then the same command.
+#
+# The project is MIT. Dependencies must be permissive and MIT-compatible (Spike A plan,
+# "License policy"; maintainer decision 2026-11-08). Anything else fails CI. A dependency
+# that needs a license outside the allow-list gets a per-crate exception below with a
+# reason, never a new global allow entry, so the next such crate is flagged again.
+
+[licenses]
+# Permissive, OSI-approved, compatible with distributing an MIT project.
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "ISC",
+    "MIT",
+    "MIT-0",
+    "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
+]
+confidence-threshold = 0.93
+# Some allowed licenses are not in the tree yet; that is not a problem.
+unused-allowed-license = "allow"
+
+# MPL-2.0 is file-level copyleft. These crates are used unmodified and reach the workspace
+# only through Tauri (ADR-002 shell), via `loom-tauri`; their source stays available on
+# crates.io. Allowed by name, not globally, so any new MPL-2.0 dependency fails CI.
+# Checked with `cargo tree -i <crate>` on 2026-11-08.
+exceptions = [
+    { crate = "cssparser", allow = ["MPL-2.0"] },        # tauri-utils -> dom_query
+    { crate = "cssparser-macros", allow = ["MPL-2.0"] }, # cssparser
+    { crate = "dtoa-short", allow = ["MPL-2.0"] },       # cssparser
+    { crate = "option-ext", allow = ["MPL-2.0"] },       # tauri -> dirs -> dirs-sys
+    { crate = "selectors", allow = ["MPL-2.0"] },        # tauri-utils -> dom_query
+]
+
+[licenses.private]
+# Our crates are `publish = false` and MIT; check them like any other crate.
+ignore = false
+
+[bans]
+# Tauri brings several duplicate versions (windows-sys, toml, syn, ...). Report, don't fail.
+multiple-versions = "warn"
+# Version requirements must be explicit; workspace path dependencies are fine.
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+# Only crates.io. A git or alternative-registry dependency needs an explicit entry here.
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

@@ -42,7 +42,7 @@ This spike produces **spike-level output** (deterministic JSON per table plus a 
 - Document the Bundles2 container layout, the index layout, the path-hash algorithm, and the datc64 layout as found, with sources.
 - Identify what `_.index.high.bin`, `_.index.low.bin`, and `.index.dbg` are and whether they are needed.
 - **Testing real decompression:** no permissive Oodle encoder exists to make synthetic data, and GGG bytes cannot be committed. Use the crate's own permissively licensed test vectors if it has them, plus an `#[ignore]` integration test that reads the install path from `LOOM_POE1_INSTALL` / `LOOM_POE2_INSTALL`; the maintainer runs it and pastes the result in the PR.
-- **Accept:** decision section in the spike report: chosen crate(s), license (MIT-compatible: MIT/Apache-2.0/BSD/Zlib/Unlicense), and reasons; or a recorded "no compatible option" that triggers the fallback. `cargo deny check licenses bans` passes in CI with the dependency added.
+- **Accept:** decision section in the spike report: chosen crate(s), license (MIT-compatible: MIT/Apache-2.0/BSD/Zlib/Unlicense), and reasons; or a recorded "no compatible option" that triggers the fallback. `cargo deny check licenses bans sources` passes in CI with the dependency added.
 - **Depends on:** A1a (`cargo-deny`).
 
 ### 2. Bundle container and index reading (M)
@@ -92,7 +92,7 @@ This spike produces **spike-level output** (deterministic JSON per table plus a 
 2. **Coverage vs PoB (PoE1 and PoE2):** compare against the newest PoB data export available when A6 starts (PoE1: `PathOfBuilding`, currently 3.29.3 `1b4078dc4`; PoE2: `PathOfBuilding-PoE2`, currently 0.5.5 `49e93925d`), each cloned into `local/`. Per table family, the cross-check reports `uncategorized = 0` for PoB keys missing from our output, and `patch-delta` at most 2% of PoB keys. Extracted keys not in PoB are categorized the same way. (Maintainer decision 2026-11-08, recorded in the ACTION-PLAN.)
 3. **No silent drops:** the manifest lists every schema mismatch and unparsed stat-description construct, and each has a category.
 4. **Recorded inputs:** the manifest contains the game build ID, index hash, schema tag and hash, extractor commit, and `dirty: false`.
-5. **License:** `cargo deny check licenses bans` passes in CI, covering transitive dependencies.
+5. **License:** `cargo deny check licenses bans sources` passes in CI, covering transitive dependencies.
 
 ## Fallback
 If extraction is blocked (no compatible decompressor, unusable format, or gate 2 fails with uncategorized gaps): use RePOE as the input and amend ADR-005 (maintainer decision). Partial fallback is possible: if only stat descriptions fail, RePOE's stat-translation data can serve Spike B while extraction continues.
@@ -117,7 +117,7 @@ Each PR is one session and updates the handoff and this task folder (`/dev-docs-
 | PR | Content | Evidence |
 |---|---|---|
 | A0 | This plan, handoff update. | Tests: None (docs). Parity: None. Coverage: none. |
-| A1a | `cargo-deny` config (license allow-list, bans) and CI job. | CI run with `cargo deny` green. |
+| A1a | `cargo-deny` config (license allow-list, bans, sources) and CI job. | CI run with `cargo deny` green. |
 | A1 | Step 1: spike report started with the existing-crate survey, decompressor decision, and format notes; add the chosen dependency with its test vectors (if any) and an `#[ignore]` install-backed test. | Vector test; maintainer-run ignored test output; `cargo deny` green. |
 | A2 | Step 2: bundle and index reader, `list-files`. | Unit and property tests (synthetic bytes, hash vectors); maintainer-run counts and index hashes for PoE1/PoE2. |
 | A3 | Step 3: dat reader and vendored schema. | Unit tests per column type, mismatch detection, property tests. |

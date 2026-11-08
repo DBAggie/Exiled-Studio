@@ -67,6 +67,19 @@ jobs:
           cargo build --locked --target wasm32-unknown-unknown
           -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
 
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Policy in deny.toml. Advisories are not checked yet: the advisory DB changes
+      # without a code change, so it needs its own non-blocking job (handoff follow-up).
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1 (cargo-deny 0.20.2)
+        with:
+          arguments: --all-features --locked
+          command: check
+          command-arguments: licenses bans sources
+
   frontend:
     name: frontend (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -98,7 +111,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, wasm, frontend]
+    needs: [fmt, rust, wasm, deny, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs
