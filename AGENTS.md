@@ -69,8 +69,23 @@ cargo run -p loom-tauri
 - Every `TODO` links an issue: `// TODO(#42): ...`.
 - Tests: descriptive names (`resolve_should_quarantine_unknown_line`), deterministic, no network and no game install. Fixtures from real builds are scrubbed of account names and machine paths (ADR-007).
 
+## One PR per session: leave a handoff
+Each PR is done in its own fresh session, and nothing carries over except what is in the repository. **A PR is not finished until the next session can pick up where it left off from the documents alone.** In the same PR, update every document that the PR made stale:
+
+| Document | Update when |
+|---|---|
+| `docs/handoff/SUCCESSOR-HANDOFF.md` | Every PR: rewrite **Current state** (what is done, what is in flight, open questions, blockers) and **Next action** (the exact next PR or step). |
+| `CLAUDE.md` **Status** | The current phase/spike or its next step changes. |
+| `docs/plan/ACTION-PLAN.md` **Next action** / gate status | A gate passes or fails, or the next step changes. Changing the sequence itself needs the maintainer. |
+| `dev/active/<task>/` | Every PR in a planned task: run `/dev-docs-update`; tick tasks, record decisions and exact next steps. |
+| `AGENTS.md` | Commands, crate boundaries, layout, or rules change. |
+| `README.md` | User-visible status or build steps change. |
+| `docs/adr/README.md` | An ADR or amendment is added (with maintainer approval). |
+
+Write state as facts with dates and links (PR numbers, CI runs, file paths), not as "see conversation". Record anything learned that is hard to rediscover from the code: failed approaches, environment quirks, open decisions waiting on the maintainer.
+
 ## Pull requests (ADR-012 evidence rule)
 - Small and single-purpose; branch from `main` (GitHub Flow).
-- Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**. CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
+- Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**, and **Handoff** (which documents above were updated). CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
 - All CI checks green (the `ci-ok` check is required). The maintainer reviews and merges; `main` is protected.
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).

@@ -20,7 +20,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 
 ## Sequence
 
-### Phase 0: Bootstrap (requires explicit authorization)
+### Phase 0: Bootstrap (done 2026-11-08)
 - **Step 0, workstation toolchain** (installed by the bootstrap session via winget, with maintainer approval per install): rustup + stable Rust; Node 20 LTS or newer (replaces Node 14.15.3, so warn about other projects first); pnpm; Visual Studio 2022 Build Tools with the C++ workload and Windows 11 SDK (only VS 2017 is present). LuaJIT is deferred to Spike C. WSL is on version 1; WSL 2 is optional, since CI covers Linux.
 - `git init` in `D:\POE Dev\PathOfBuilding-V2`, keeping `docs/` and `.claude/` as the first commit; create the **public** GitHub repo `DBAggie/Exiled-Studio` and push; protect `main`. MIT license; README with the non-affiliation statement; crates prefixed `loom-`.
 - Cargo workspace (domain, calc, data, parser, serialization, app, persistence, integrations, tauri, tools/extractor, tools/parity-cli) and pnpm frontend.
@@ -67,4 +67,4 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); passiv
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
 
 ## Next action
-Wait for explicit authorization to bootstrap Phase 0. Then run Spike A.
+Phase 0 is done (gate passed 2026-11-08; evidence in `docs/handoff/SUCCESSOR-HANDOFF.md`). Next: Spike A. The live state and the exact next step are in the handoff's **Current state** and **Next action**.

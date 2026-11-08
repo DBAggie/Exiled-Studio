@@ -103,7 +103,7 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           missing=0
-          for section in "Tests" "Parity / divergence" "Coverage touched"; do
+          for section in "Tests" "Parity / divergence" "Coverage touched" "Handoff"; do
             # Text under the heading, up to the next "## ", without HTML comments or blank lines.
             content=$(printf '%s\n' "$PR_BODY" | tr -d '\r' \
               | awk -v h="## $section" '$0==h{f=1;next} /^## /{f=0} f' \

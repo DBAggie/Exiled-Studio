@@ -16,6 +16,10 @@ Also record:
 - Any decision that conflicts with or extends an ADR. Flag it for the maintainer; do not edit ADRs without approval.
 - Unfinished work: the exact file and goal being edited, uncommitted changes, and temporary workarounds.
 
+Then update the repository-level handoff (each PR is done in a fresh session; see `AGENTS.md`, "One PR per session"):
+- `docs/handoff/SUCCESSOR-HANDOFF.md`: rewrite **Current state** and **Next action**.
+- `CLAUDE.md` Status and `docs/plan/ACTION-PLAN.md` Next action, if the phase, gate status, or next step changed.
+
 Move a task folder to `dev/completed/` only when its gate has passed and the maintainer agrees.
 
 Focus on what would be hard to rediscover from the code alone. Additional context: $ARGUMENTS
