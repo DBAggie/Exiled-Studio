@@ -28,6 +28,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - Repository: Cargo workspace (9 `loom-*` crates in `crates/`, `tools/extractor`, `tools/parity-cli`), all empty skeletons with boundary docs only, no tests yet; `ui/` React + Vite shell; CI in `.github/workflows/ci.yml`; rules in `AGENTS.md`.
 - Pinned toolchain: Rust 1.99.1 (`rust-toolchain.toml`), Node 26 (`.node-version`), pnpm 12.18.0 (`ui/package.json`), Tauri 2.12.
 - Not done in Phase 0 (not required by the action plan): `cargo-deny` licence/advisory policy, Dependabot, fixture manifest schema, CODEOWNERS (deferred by ADR-012).
+- Known CI gap: the `PR evidence` job in `ci.yml` runs only on `opened`/`synchronize`/`reopened` and reads the body from the event payload, so editing the PR description does not re-run it (a manual re-run reuses the old body). Today the only fix is pushing a commit. Fix is the next PR (see Next action).
 - Open questions for the maintainer: none.
 
 ## Workstation (maintainer, Windows)
@@ -37,7 +38,9 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - Still missing: LuaJIT (needed at Spike C).
 
 ## Next action
-Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`):
+First, a small CI PR: move the PR-evidence check into its own workflow triggered on `pull_request` types `opened, edited, synchronize, reopened`, reading the current body with `gh pr view` (not the event payload). Make its job a required status check next to `ci-ok` (branch protection on `main`), and drop it from `ci-ok`'s `needs`. Evidence: a test PR showing that an empty section fails and editing the description re-runs the check and passes.
+
+Then Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`):
 1. Run `/dev-docs Spike A - Bundles2 extraction` to create `dev/active/spike-a-.../` with a plan, context, and PR breakdown.
 2. Review the plan with the `plan-reviewer` agent and get the maintainer's approval.
 3. Implement in small PRs, one per session, each updating this section.
