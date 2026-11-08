@@ -87,5 +87,5 @@ Write state as facts with dates and links (PR numbers, CI runs, file paths), not
 ## Pull requests (ADR-012 evidence rule)
 - Small and single-purpose; branch from `main` (GitHub Flow).
 - Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**, and **Handoff** (which documents above were updated). CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
-- All CI checks green (the `ci-ok` check is required). The maintainer reviews and merges; `main` is protected.
+- All CI checks green. Two checks are required: `ci-ok` (`.github/workflows/ci.yml`) and `PR evidence` (`.github/workflows/pr-evidence.yml`). `PR evidence` re-runs when the description is edited, so fix an empty section by editing the PR, not by pushing. The check logic is `.github/scripts/check-pr-evidence.sh`; test it with `bash .github/scripts/test-check-pr-evidence.sh`. The maintainer reviews and merges; `main` is protected.
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).

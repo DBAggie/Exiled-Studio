@@ -92,34 +92,13 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
 
-  # ADR-012 evidence rule: PR bodies must fill in the template's evidence sections.
-  pr-evidence:
-    name: PR evidence
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check evidence sections
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          missing=0
-          for section in "Tests" "Parity / divergence" "Coverage touched" "Handoff"; do
-            # Text under the heading, up to the next "## ", without HTML comments or blank lines.
-            content=$(printf '%s\n' "$PR_BODY" | tr -d '\r' \
-              | awk -v h="## $section" '$0==h{f=1;next} /^## /{f=0} f' \
-              | sed -e 's/<!--.*-->//g' | grep -v '^[[:space:]]*$' || true)
-            if [ -z "$content" ]; then
-              echo "::error::PR description has no content under '## $section' (see .github/pull_request_template.md)"
-              missing=1
-            fi
-          done
-          exit $missing
+  # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 
-  # Single required status check for branch protection.
+  # Required status check for branch protection (with "PR evidence" from pr-evidence.yml).
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, wasm, frontend, pr-evidence]
+    needs: [fmt, rust, wasm, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs
