@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08 (PR A1a)
+Last Updated: 2026-11-08 (after PR #4 merged)
 
 # Spike A: tasks
 
@@ -13,7 +13,7 @@ Last Updated: 2026-11-08 (PR A1a)
 ## PR A1a: cargo-deny
 - [x] `deny.toml` with an MIT-compatible license allow-list, bans, and sources; passes locally with cargo-deny 0.20.2
 - [x] CI `cargo-deny` job (cargo-deny-action v2.1.1, SHA-pinned), required via `ci-ok`
-- [ ] Green CI run on the PR; maintainer confirms the MPL-2.0 exceptions for Tauri's transitive crates
+- [x] Green CI run (42532581603); merged as PR #4 on 2026-11-08, which accepts the MPL-2.0 exceptions
 
 ## Follow-up (dependency policy)
 - [ ] Non-blocking (scheduled) `cargo deny check advisories` job
