@@ -20,12 +20,27 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 - Maintainer PoB builds (corpus seed, scrub before committing): `D:\Documents\Path of Building\Builds`.
 - PoE2 Build Planner files: `D:\Documents\My Games\Path of Exile 2\BuildPlanner`.
 
-## Workstation state (checked 2026-11-08)
-- Present: git 2.55, gh 2.102 (logged in as `DBAggie`), git identity configured, WebView2, winget, WSL 1 (Ubuntu).
-- Missing or outdated: Rust (none), Node (14.15.3; need 20+), pnpm (none), MSVC (VS 2017 only; need VS 2022 Build Tools + Windows 11 SDK), LuaJIT (needed only at Spike C).
+## How sessions work
+Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Next action: bootstrap session
-The maintainer has decided the bootstrap session starts Phase 0. Confirm authorization at the start of the session, then:
-1. Install the missing toolchain via winget, asking approval for each install (Node upgrade first warns about other projects using Node 14).
-2. Phase 0 per `docs/plan/ACTION-PLAN.md`: git init in this folder, public repo `DBAggie/Exiled-Studio`, workspace, CI, AGENTS.md/CLAUDE.md, PR template.
-3. Use `/dev-docs` to plan Spike A and review it with the `plan-reviewer` agent before implementing.
+## Current state (updated 2026-11-08, Phase 0 handoff PR)
+- **Phase 0 (bootstrap): done.** Gate passed: CI run 42526884777 green on Linux and Windows, including the wasm32 build of the core crates (<https://github.com/DBAggie/Exiled-Studio/actions/runs/42526884777>). `main` is protected, admins included: PR required (0 approvals, since the maintainer cannot approve PRs opened under their own account), `ci-ok` required and up to date, linear history, no force pushes. Merges are squash-only and branches auto-delete. Secret scanning and push protection are on. Agents use the maintainer's `gh` account, so protection is the guard against direct pushes.
+- Repository: Cargo workspace (9 `loom-*` crates in `crates/`, `tools/extractor`, `tools/parity-cli`), all empty skeletons with boundary docs only, no tests yet; `ui/` React + Vite shell; CI in `.github/workflows/ci.yml`; rules in `AGENTS.md`.
+- Pinned toolchain: Rust 1.99.1 (`rust-toolchain.toml`), Node 26 (`.node-version`), pnpm 12.18.0 (`ui/package.json`), Tauri 2.12.
+- Not done in Phase 0 (not required by the action plan): `cargo-deny` licence/advisory policy, Dependabot, fixture manifest schema, CODEOWNERS (deferred by ADR-012).
+- Known CI gap: the `PR evidence` job in `ci.yml` runs only on `opened`/`synchronize`/`reopened` and reads the body from the event payload, so editing the PR description does not re-run it (a manual re-run reuses the old body). Today the only fix is pushing a commit. Fix is the next PR (see Next action).
+- Open questions for the maintainer: none.
+
+## Workstation (maintainer, Windows)
+- Installed 2026-11-08: rustup + Rust 1.99.1 with wasm32; Node 26.13 LTS (replaced 14.15.3); pnpm 12.18 (winget); C++ workload + Windows 11 SDK in VS 2022 and VS 2026 Community. rustc links with VS 2026 (MSVC 14.51), the newest VS with a linker.
+- Present before: git 2.55, gh 2.102 (logged in as `DBAggie`), WebView2, winget, WSL 1 (Ubuntu).
+- Commits use the GitHub noreply address (repo-local `user.email`).
+- Still missing: LuaJIT (needed at Spike C).
+
+## Next action
+First, a small CI PR: move the PR-evidence check into its own workflow triggered on `pull_request` types `opened, edited, synchronize, reopened`, reading the current body with `gh pr view` (not the event payload). Make its job a required status check next to `ci-ok` (branch protection on `main`), and drop it from `ci-ok`'s `needs`. Evidence: a test PR showing that an empty section fails and editing the description re-runs the check and passes.
+
+Then Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`):
+1. Run `/dev-docs Spike A - Bundles2 extraction` to create `dev/active/spike-a-.../` with a plan, context, and PR breakdown.
+2. Review the plan with the `plan-reviewer` agent and get the maintainer's approval.
+3. Implement in small PRs, one per session, each updating this section.
