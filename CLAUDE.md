@@ -1,7 +1,9 @@
-# CLAUDE.md - Exiled Studio (codename `loom`, planning stage)
+# CLAUDE.md - Exiled Studio (codename `loom`)
+
+Read `AGENTS.md` first: crate boundaries, commands, code expectations, and the PR evidence rule. This file adds Claude Code specifics.
 
 ## Status
-Planning documents only. Do not bootstrap code, CI, or a git repository until the maintainer explicitly authorizes Phase 0. A fuller `AGENTS.md`/`CLAUDE.md` is a Phase 0 deliverable (ADR-012).
+Phase 0 (bootstrap) is done. Next: Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`). Do not start work for a later step before the earlier gate passes.
 
 ## Authoritative sources
 1. `docs/plan/ACTION-PLAN.md` - sequence, spikes, gates.
@@ -16,8 +18,13 @@ Planning documents only. Do not bootstrap code, CI, or a git repository until th
 - Core crates must stay wasm32-compatible: no fs, threads, clocks, or network (ADR-016).
 - No telemetry. Network access only in integration adapters (ADR-011).
 - PRs are small, single-purpose, and carry their own evidence: tests, parity/divergence diff, and coverage touched (ADR-012).
+- `main` is protected. Work on a branch and open a PR; commit or push only when the maintainer asks.
 
 ## Workflow
 - Persistent task docs: `/dev-docs <task>` creates `dev/active/<task>/`; `/dev-docs-update` refreshes them before a context reset.
 - Review plans with the `plan-reviewer` agent before implementing; review code with the `code-architecture-reviewer` agent before opening a PR.
 - Rust code follows the `rust-best-practices` skill. Lint: `cargo clippy --all-targets --all-features --locked -- -D warnings`. Use `#[expect(...)]` with a reason instead of `#[allow(...)]`.
+
+## Maintainer workstation
+- VS 2022 and VS 2026 Community both have the C++ workload; rustc links with the newest (VS 2026, MSVC 14.51). CI's Windows runner uses its own image's MSVC.
+- Game installs and corpus paths are in `docs/handoff/SUCCESSOR-HANDOFF.md`. Never commit anything from them unscrubbed.
