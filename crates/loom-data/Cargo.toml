@@ -1,0 +1,15 @@
+[package]
+name = "loom-data"
+description = "Canonical game-data model and bundle loading through an abstract source (core, wasm32)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-domain.workspace = true
+
+[lints]
+workspace = true

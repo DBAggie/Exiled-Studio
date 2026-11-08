@@ -1,0 +1,5 @@
+# Workspace default. Core crates (ADR-016) carry their own clippy.toml with
+# extra host-capability bans; clippy uses the nearest file, so keep these
+# settings in sync with crates/*/clippy.toml.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

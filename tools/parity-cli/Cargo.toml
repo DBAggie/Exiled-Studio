@@ -1,0 +1,16 @@
+[package]
+name = "loom-parity-cli"
+description = "Thin oracle harness driving pinned legacy PoB for regression comparison."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-domain.workspace = true
+loom-serialization.workspace = true
+
+[lints]
+workspace = true

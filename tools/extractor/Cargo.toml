@@ -1,0 +1,15 @@
+[package]
+name = "loom-extractor"
+description = "Maintainer-run game-data extractor (Bundles2 to canonical bundles)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-data.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,20 @@
+[package]
+name = "loom-tauri"
+description = "Tauri 2 desktop shell: hosts the UI and adapts the loom-app API to Tauri commands and events."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-app.workspace = true
+loom-integrations.workspace = true
+tauri = "2.12.5"
+
+[lints]
+workspace = true
+
+[build-dependencies]
+tauri-build = "2.7.4"

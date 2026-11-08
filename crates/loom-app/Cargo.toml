@@ -1,0 +1,20 @@
+[package]
+name = "loom-app"
+description = "Application command/query/event API and single-writer build task (host layer)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-domain.workspace = true
+loom-data.workspace = true
+loom-parser.workspace = true
+loom-calc.workspace = true
+loom-serialization.workspace = true
+loom-persistence.workspace = true
+
+[lints]
+workspace = true

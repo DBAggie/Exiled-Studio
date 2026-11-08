@@ -1,0 +1,16 @@
+[package]
+name = "loom-integrations"
+description = "Network integrations (trade, character import, updates) and the MCP addon transport (host layer)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-domain.workspace = true
+loom-app.workspace = true
+
+[lints]
+workspace = true
