@@ -1,35 +1,44 @@
-# Exiled Studio - planning set (codename `loom`)
+# Exiled Studio
 
-## Purpose
-This directory contains the accepted architecture decisions, new-session handoff, and action plan for an independent, modern successor to Path of Building. Working product name: **Exiled Studio** (public GitHub repo `DBAggie/Exiled-Studio`); internal crate codename `loom`. Not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project. It contains documentation only; no successor repository has been bootstrapped.
+An independent, open-source build planner for Path of Exile, written in Rust with a Tauri 2 desktop shell. Internal codename `loom`; crates are named `loom-*`.
 
-## Reading order
-1. `docs/handoff/SUCCESSOR-HANDOFF.md` - concise context for a new session.
-2. `docs/adr/000-context-and-governance.md` - independent-project relationship, naming, license.
-3. Remaining ADRs in numeric order (001–017).
-4. `docs/plan/ACTION-PLAN.md` - **authoritative** sequence and gates (agreed 2026-11-08).
-5. `docs/plan/IMPLEMENTATION-PLAN.md` - supporting work-package detail; superseded where it conflicts.
-6. `docs/spikes/spike-c-legacy-oracle.md` - detail for Spike C; reduced in scope by ADR-006.
+> **Not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.** Exiled Studio is a separate project with its own governance. Path of Building is used only as a pinned regression reference.
 
-## Directory map
+**Status: pre-release scaffold.** The repository has a workspace, CI, and contributor rules, but no build-planning features yet. Next comes a game-data extraction spike (see `docs/plan/ACTION-PLAN.md`). The name gets a final trademark check before the first release.
+
+## Principles
+- The game is the source of truth. Path of Building v2.67.2 is a pinned regression oracle; every intentional difference is recorded with evidence.
+- Modifiers are modelled on the game's stat IDs, not on English text.
+- Game data comes from the project's own extractor and ships as signed bundles of derived data only: no Grinding Gear Games art or audio.
+- Works offline. No account, no telemetry.
+- PoE1 first, with a core ready for PoE2. Windows and Linux are supported; macOS is best-effort.
+- The calculation core compiles to WebAssembly.
+
+## Building
+Requirements: Rust (version pinned in `rust-toolchain.toml`, installed via rustup), Node (`.node-version`), pnpm (`ui/package.json`), and the platform prerequisites for [Tauri 2](https://v2.tauri.app/start/prerequisites/).
+
+```sh
+cargo test --workspace
+cd ui && pnpm install && pnpm build
 ```
-README.md              entry point (this file)
-CLAUDE.md              rules for AI agents working in this repository
-.claude/               agent tooling
-  skills/              rust-best-practices
-  agents/              plan-reviewer, code-architecture-reviewer
-  commands/            /dev-docs, /dev-docs-update
-docs/
-  adr/                 Architecture Decision Records + index (README.md)
-  plan/                ACTION-PLAN.md (authoritative), IMPLEMENTATION-PLAN.md (detail)
-  handoff/             new-session context
-  spikes/              spike specifications (Spike C: legacy oracle harness)
-dev/                   created by /dev-docs: active/ and completed/ task docs
+
+`AGENTS.md` lists every command CI runs and the contributor rules.
+
+## Repository map
 ```
-Phase 0 adds the Rust workspace and frontend at the repository root alongside `docs/`.
+crates/        Rust workspace: core crates (domain, data, parser, calc, serialization) and host crates (persistence, app, integrations, tauri)
+tools/         maintainer tools: game-data extractor, parity (oracle) CLI
+ui/            React + TypeScript + Vite frontend
+docs/adr/      Architecture Decision Records (authoritative) + index
+docs/plan/     ACTION-PLAN.md (authoritative sequence), IMPLEMENTATION-PLAN.md (detail)
+docs/handoff/  context for new contributor/agent sessions
+docs/spikes/   spike specifications
+.claude/       AI agent tooling (skills, review agents, commands)
+AGENTS.md      contributor rules for humans and AI agents
+```
 
-## Current next action
-After explicit authorization to bootstrap, execute Phase 0, then Spikes A, B and C in order (see `docs/plan/ACTION-PLAN.md`). Do not edit or bootstrap the legacy repository.
+## Contributing
+Read `AGENTS.md`. Pull requests are small and single-purpose and carry their own evidence (tests, parity/divergence diff, coverage touched); the PR template and CI enforce this.
 
-## Decision summary
-Full Rust rewrite; game is truth with PoB as pinned regression oracle; stat-ID-first modifiers; own Bundles2 extractor; shipped signed data bundles; API-first sandboxed addons with a local MCP server as the Claude integration; PoE1 first with a PoE2-ready core; Windows/Linux gated, macOS best-effort; WASM-compatible core; Tauri 2 + React/TypeScript/Vite; versioned JSON with XML compatibility; maintainer + CI review until release; MIT.
+## License
+[MIT](LICENSE).
