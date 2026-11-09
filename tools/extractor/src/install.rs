@@ -132,11 +132,15 @@ fn bundle_path(install: &Path, name: &str) -> Result<PathBuf, InstallError> {
     Ok(install.join("Bundles2").join(format!("{name}.bundle.bin")))
 }
 
+/// SHA-256 of each bundle file read, by bundle name from the index.
+pub type BundleHashes = BTreeMap<String, [u8; 32]>;
+
 /// Reads the files of `records` from `<install>/Bundles2`, reading and
 /// decoding each bundle once, and calls `visit` with each record's position in
 /// `records` and its bytes. Files are visited bundle by bundle (in bundle
 /// order, not `records` order), so only one decoded bundle is in memory at a
-/// time. An error from `visit` stops the walk and is returned.
+/// time. An error from `visit` stops the walk and is returned. Returns the
+/// SHA-256 of every bundle file read, as stored on disk.
 ///
 /// # Errors
 /// `E` from `visit`, or [`InstallError`] (converted) if a bundle name is not a
@@ -148,12 +152,13 @@ pub fn read_files<D, F, E>(
     records: &[FileRecord],
     decompressor: &D,
     mut visit: F,
-) -> Result<(), E>
+) -> Result<BundleHashes, E>
 where
     D: Decompressor + ?Sized,
     F: FnMut(usize, &[u8]) -> Result<(), E>,
     E: From<InstallError>,
 {
+    let mut hashes = BundleHashes::new();
     let mut by_bundle: BTreeMap<u32, Vec<(usize, FileRecord)>> = BTreeMap::new();
     for (position, &record) in records.iter().enumerate() {
         by_bundle
@@ -172,6 +177,7 @@ where
             .ok_or(InstallError::RecordOutOfRange { record: first })?;
         let path = bundle_path(install, &entry.name)?;
         let bytes = std::fs::read(&path).map_err(|source| InstallError::Read { path, source })?;
+        hashes.insert(entry.name.clone(), Sha256::digest(&bytes).into());
         let decoded = Bundle::parse(&bytes)
             .and_then(|b| b.decode(decompressor))
             .map_err(|source| InstallError::DataBundle {
@@ -195,7 +201,48 @@ where
             visit(position, file)?;
         }
     }
-    Ok(())
+    Ok(hashes)
+}
+
+/// The Steam build ID of the install, read from the `appmanifest_*.acf` in
+/// the Steam library's `steamapps` folder (two levels above an install in
+/// `steamapps/common/<folder>`) whose `installdir` is the install's folder
+/// name. `None` if there is no such manifest, for example outside Steam.
+#[must_use]
+pub fn steam_build_id(install: &Path) -> Option<String> {
+    let folder = install.file_name()?.to_str()?;
+    let steamapps = install.parent()?.parent()?;
+    let mut found: Vec<String> = std::fs::read_dir(steamapps)
+        .ok()?
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            let name = entry.file_name();
+            let name = name.to_string_lossy();
+            name.starts_with("appmanifest_") && name.ends_with(".acf")
+        })
+        .filter_map(|entry| std::fs::read_to_string(entry.path()).ok())
+        .filter(|text| acf_value(text, "installdir") == Some(folder))
+        .filter_map(|text| acf_value(&text, "buildid").map(str::to_owned))
+        .collect();
+    // Two manifests for one folder would be ambiguous.
+    found.dedup();
+    match found.as_slice() {
+        [one] => Some(one.clone()),
+        _ => None,
+    }
+}
+
+/// The first `"key" "value"` pair named `key` in a Steam `.acf` text.
+fn acf_value<'a>(text: &'a str, key: &str) -> Option<&'a str> {
+    text.lines().find_map(|line| {
+        let mut parts = line.trim().split('"');
+        match (parts.next(), parts.next(), parts.next(), parts.next()) {
+            (Some(""), Some(k), Some(gap), Some(value)) if k == key && gap.trim().is_empty() => {
+                Some(value)
+            }
+            _ => None,
+        }
+    })
 }
 
 /// Lowercase hex of `bytes`.
@@ -274,6 +321,68 @@ mod tests {
             Ok::<_, InstallError>(())
         })?;
         Ok(seen)
+    }
+
+    #[test]
+    fn read_files_should_hash_each_bundle_read() {
+        let install = FakeInstall::new("hash", &[("a", b"0123"), ("b", b"xy"), ("c", b"z")]);
+        let index = index(&[("a", 4), ("b", 2), ("c", 1)]);
+        let records = [record(2, 0, 1), record(0, 0, 1), record(0, 1, 1)];
+        let hashes = read_files(&install.0, &index, &records, &Identity, |_, _| {
+            Ok::<_, InstallError>(())
+        })
+        .unwrap();
+        let expected: BundleHashes = ["a", "c"]
+            .into_iter()
+            .map(|name| {
+                let bytes =
+                    std::fs::read(install.0.join(format!("Bundles2/{name}.bundle.bin"))).unwrap();
+                (name.to_owned(), Sha256::digest(bytes).into())
+            })
+            .collect();
+        assert_eq!(hashes, expected);
+    }
+
+    /// A Steam `appmanifest` text with `pairs`, tab-separated as Steam writes it.
+    fn acf(pairs: &[(&str, &str)]) -> String {
+        let body: String = pairs
+            .iter()
+            .map(|(k, v)| format!("\t\"{k}\"\t\t\"{v}\"\n"))
+            .collect();
+        format!("\"AppState\"\n{{\n{body}}}\n")
+    }
+
+    #[test]
+    fn acf_value_should_read_quoted_pairs() {
+        let text = acf(&[
+            ("appid", "238960"),
+            ("installdir", "Path of Exile"),
+            ("buildid", "26474023"),
+        ]);
+        let text = text.as_str();
+        assert_eq!(acf_value(text, "buildid"), Some("26474023"));
+        assert_eq!(acf_value(text, "installdir"), Some("Path of Exile"));
+        assert_eq!(acf_value(text, "AppState"), None);
+        assert_eq!(acf_value(text, "missing"), None);
+    }
+
+    #[test]
+    fn steam_build_id_should_match_install_folder() {
+        let root = std::env::temp_dir().join(format!("loom-steam-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let install = root.join("steamapps/common/Game A");
+        std::fs::create_dir_all(&install).unwrap();
+        for (id, dir, build) in [("1", "Game A", "100"), ("2", "Game B", "200")] {
+            std::fs::write(
+                root.join(format!("steamapps/appmanifest_{id}.acf")),
+                acf(&[("installdir", dir), ("buildid", build)]),
+            )
+            .unwrap();
+        }
+        assert_eq!(steam_build_id(&install).as_deref(), Some("100"));
+        assert_eq!(steam_build_id(&root.join("steamapps/common/Other")), None);
+        assert_eq!(steam_build_id(Path::new("loom-no-such-install")), None);
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

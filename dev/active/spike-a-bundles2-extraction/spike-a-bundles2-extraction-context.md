@@ -1,9 +1,9 @@
-Last Updated: 2026-11-08 (PR A3 opened)
+Last Updated: 2026-11-09 (PR A4 opened)
 
 # Spike A: context
 
 ## Key files
-- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. `src/lib.rs` (library, `#![warn(clippy::indexing_slicing)]`), `src/decompress.rs` (`Decompressor` trait, `ExternalTool`, `Identity`; A1), `src/reader.rs` (private bounds-checked cursor, `Short` error), `src/hash.rs` (MurmurHash64A `path_hash`), `src/bundle.rs` (`Bundle::parse`/`decode`, `decode_bundle`, test helper `build_identity_bundle`), `src/index.rs` (`Index::parse`/`paths`/`list`, `Listing`), `src/install.rs` (filesystem edge: `read_index`, `read_files` (decodes each bundle once), SHA-256, `hex`), `src/schema.rs` (`Schema` loader, `VENDORED` embedded schema and its hash; A3), `src/dat.rs` (`DatFile::parse`, `read_table`, `Value`; A3), `src/main.rs` (`list-files` subcommand). Install-backed `#[ignore]` tests: `tests/install_decompress.rs` (A1), `tests/install_index.rs` (A2), `tests/install_dat.rs` (A3).
+- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. `src/lib.rs` (library, `#![warn(clippy::indexing_slicing)]`), `src/decompress.rs` (`Decompressor` trait, `ExternalTool`, `Identity`; A1), `src/reader.rs` (private bounds-checked cursor, `Short` error), `src/hash.rs` (MurmurHash64A `path_hash`), `src/bundle.rs` (`Bundle::parse`/`decode`, `decode_bundle`, test helper `build_identity_bundle`), `src/index.rs` (`Index::parse`/`paths`/`list`, `Listing`), `src/install.rs` (filesystem edge: `read_index`, `read_files` (decodes each bundle once), SHA-256, `hex`), `src/schema.rs` (`Schema` loader, `VENDORED` embedded schema and its hash; A3), `src/dat.rs` (`DatFile::parse`, `read_table`, `Value`; A3), `src/extract.rs` (`Plan`, `Extraction`, canonical table JSON, `Manifest`; A4), `src/main.rs` (`list-files` and `extract` subcommands). `scripts/check-determinism.sh` (two-run byte comparison; A4). Install-backed `#[ignore]` tests: `tests/install_decompress.rs` (A1), `tests/install_index.rs` (A2), `tests/install_dat.rs` (A3).
 - `tools/extractor/schema/`: vendored `schema.min.json` (community dat schema, MIT), its license, and `README.md` with provenance, hash, and update steps.
 - `tools/extractor/src/bin/fake-unoodle.rs` + `tests/external_tool.rs`: a test double for `unoodle` (behaviour picked by the input prefix `ok:`/`lie:`/`silent:`/`fail:`) so CI tests `ExternalTool` without a decoder. Added after the `code-architecture-reviewer` review (should-fix: the tool path was only covered by the ignored test).
 - `docs/spikes/spike-a-extraction.md`: the spike report (survey, decompressor decision, bundle and index layout, evidence). Add a section per PR.
@@ -89,7 +89,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **For A3/A4:** PoE1 tables are in `data/`, PoE2 tables in `data/balance/`. Localized PoE1 copies (`data/<language>/stats.datc64`) point at the same bundle range. Many files share `Tiny*` bundles: decode each bundle once and slice files out.
 - **Verify:** `cargo test -p loom-extractor`; with `LOOM_POE1_INSTALL`/`LOOM_POE2_INSTALL` set, `cargo test --release -p loom-extractor --test install_index -- --ignored --nocapture`; `cargo run --release -p loom-extractor -- list-files "<game folder>"`. Agent shells need the cargo PATH prefix (Git Bash: `export PATH="/c/Users/justi/.cargo/bin:$PATH"`).
 
-## PR A3: dat reader and schema loader (PR #8, opened 2026-11-08, branch `spike-a/a3-dat-reader`)
+## PR A3: dat reader and schema loader (PR #8, merged 2026-11-09 as `2c2abbe`; main CI run 42555106211)
 - **Maintainer approved vendoring** `poe-tool-dev/dat-schema` on 2026-11-08 (combined `schema.min.json`, 2.5 MB, over per-game files). Upstream has no version tags (`latest` is rebuilt on every commit), so the copy is pinned by source commit `717d788d6ec0` (verified via upstream Publish run 42056729237) and SHA-256. `.gitattributes` marks the file `binary` so the committed bytes stay exact. Embedded with `include_bytes!`; a unit test checks the hash, so a swapped file fails CI until README and `VENDORED_SHA256` are updated together.
 - **Schema loader is strict:** `deny_unknown_fields` on every level, unknown type names and `validFor` bits are errors, version must be 7. A schema update that changes the format fails loudly. `description`, `until`, `file`, `files` are parsed but unused.
 - **datc64 layout confirmed** (report section 6). Facts that are easy to get wrong: offsets count from the start of the `0xBB` boundary; strings end at two zero UTF-16 units; `foreignrow` is 16 bytes and its second word is 0 / null (now enforced); `enumrow` is 4 bytes; null keys are the full 64-bit `0xFE` pattern.
@@ -103,6 +103,31 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **`code-architecture-reviewer` (2026-11-08): no blockers.** Applied: decode output cap (`DECODE_BUDGET_PER_BYTE` = 8, `EXTRACT_DAT_TOO_LARGE`) against rows sharing one large array or string; `read_files` visitor returns `Result<(), E>` with `E: From<InstallError>` so A4 can stop on the first error; bundle names from the index are checked before they become paths (`EXTRACT_INSTALL_BAD_BUNDLE_NAME`); string offsets inside the boundary or odd are rejected (none in real data); `ValueError` has a readable `Display`; install test trimmed to outcomes and now asserts no table fails; tests for a float interval and a bad element inside an array. Its doc-staleness finding was a timing artefact (docs were updated in parallel). Deferred to A4: non-finite `f32` handling and shortest-round-trip `f32` formatting (do not widen to `f64` and print); emit `u64` keys and offsets as exact integers, not via `f64`; `localized` columns are not used, the English text comes from reading `data/` (PoE1) or `data/balance/` (PoE2), make that explicit in the manifest; one bad value fails the whole table even when it has a mismatch (consider keeping the mismatch finding); trailing bytes of wider rows are not exposed (use `DatFile::row` if needed); `Interval` boxes its pair (cosmetic).
 - **Verify:** `cargo test -p loom-extractor`; with `LOOM_POE1_INSTALL`/`LOOM_POE2_INSTALL` set, `cargo test --release -p loom-extractor --test install_dat -- --ignored --nocapture`.
 - **Agent shell quirk:** Bash heredocs passed through the tool can mangle backslashes (a `'\\0'` became a NUL byte) and some non-ASCII. Write edit scripts with the Write tool and run them with `python -I <script> <file>`. PowerShell 5.1 `Set-Content -Encoding utf8` adds a BOM; strip it.
+
+## PR A4: extract, manifest, determinism (PR #9, opened 2026-11-09, branch `spike-a/a4-extract`)
+- **Not split into A4a/A4b:** the dat reader is generic, so all six tables plus the referenced ones cost the same code as Stats alone.
+- **Which tables:** the six roots plus the transitive closure over every column that references a table (enum references skipped): PoE1 72 tables, PoE2 85. Only direct references would be 27/38; the closure was chosen so every key in the output can be range-checked. Tables come from `data/` (PoE1) and `data/balance/` (PoE2), the English text; the manifest says so (`table_dir`, `text_language`).
+- **JSON layout:** `{"columns": [...], "rows": [[...], ...], "table": ...}`, one row per line. Rows are arrays, not objects, because many schema columns have no name. Details in the report, section 10.
+- **Floats:** `serde_json::to_string(&f32)` uses `ryu` for `f32` (shortest round-trip, no widening). Non-finite floats become the strings `"NaN"`/`"Infinity"`/`"-Infinity"` and are counted per table (0 in both installs). serde_json writes exponents as `e+38`.
+- **Watch out: `serde_json/preserve_order` is enabled in the workspace** (through `schemars`), so `serde_json::Map` keeps insertion order in some builds and not in others. The manifest uses derived structs whose fields are declared alphabetically, plus `BTreeMap`. A golden test pins the exact bytes. Keep fields alphabetical when adding any.
+- **Steam build ID:** from `<library>/steamapps/appmanifest_*.acf`, matched by `installdir`. **Game version string:** not recorded (no reliable source).
+- **Provenance:** the git commit and dirty flag are read at run time from `CARGO_MANIFEST_DIR` (the reviewer's should-fix 1). Accepted and documented rather than moved to `build.rs`: a `build.rs` would not rerun when untracked files appear, and `cargo run` and the script rebuild right before running anyway. Revisit for Phase 2 signed bundles.
+- **Exit code / `problems()`:** non-zero if any table failed, a root is not `ok` (a row-size mismatch on a root counts), or any key column has dangling keys. Everything else is recorded only in the manifest.
+- **Output folder:** checked before decoding. Written to `<out>.partial`, then renamed. CLI errors have codes `EXTRACT_CLI_*`.
+- **`read_files` now returns `BundleHashes`** (SHA-256 per bundle file). Each table also records `source_sha256` (the table bytes after the bundle is decoded).
+- **`default-run = "loom-extractor"`** added: since A3's `fake-unoodle` bin, `cargo run -p loom-extractor` needed `--bin`.
+- **Results** (report section 11): clean tree `d047e4a`; both games byte-identical over two runs (PoE1 73 files, PoE2 86 files); 0 dangling keys of 905,891 (PoE1) and 388,069 (PoE2) checked; PoE2 `ItemVisualIdentity` is the only non-ok table (row-size mismatch, not a root). Manifests committed in `docs/spikes/spike-a/`.
+- **`code-architecture-reviewer` (2026-11-09): no blockers in code.**
+  - Applied: process blocker (docs); should-fix 2 (root mismatch and dangling keys fail the run, with tests); 3 (early output check, `.partial` + rename); 4 (CLI error codes); 5 (`key_target` cases, huge keys, NaN in intervals, `planned_files` test, all 6 add orders over 3 tables).
+  - Nits applied: decoder `--version` with null stdin; `source_sha256`; empty-parent guard.
+  - Not applied: build-time provenance (see above); a defensive table-name check (the schema is vendored and hashed); mismatch details on stdout (they are in the manifest).
+- **For A5/A6:**
+  - A6 reads `tables/*.json` (rows as arrays; find a column's position by `columns[].name`).
+  - Foreign keys are row indices into the target's `rows`.
+  - The manifest's per-table `status` gives the `schema-mismatch` category evidence.
+- **Verify:**
+  - `cargo test -p loom-extractor`.
+  - `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` (Git Bash with the cargo PATH prefix; output in `local/determinism/`).
 
 ## Open questions for the maintainer
 None.

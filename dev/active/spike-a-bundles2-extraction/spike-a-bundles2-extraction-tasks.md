@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08 (PR A3 opened)
+Last Updated: 2026-11-09 (PR A4 opened)
 
 # Spike A: tasks
 
@@ -44,14 +44,16 @@ Last Updated: 2026-11-08 (PR A3 opened)
 - [x] datc64 reader for every column type; row-size mismatch reporting (`src/dat.rs`)
 - [x] Unit tests per column type; exhaustive truncation and single-byte corruption tests
 - [x] `read_files` (one decode per bundle) and `#[ignore]` install test `tests/install_dat.rs`, passed on PoE1 and PoE2 (report section 9)
-- [ ] PR open (#8), CI green, maintainer merge
+- [x] PR open (#8), CI green, maintainer merge (merged 2026-11-09 as `2c2abbe`)
 
 ## PR A4 (a/b): extract and determinism (step 4)
-- [ ] `extract` for Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects (plus referenced tables)
-- [ ] `BTreeMap`-only output assembly; shuffled-input determinism unit test
-- [ ] Canonical JSON output and manifest (build ID, hashes, schema tag, extractor commit, dirty flag, decoder program and version)
-- [ ] Determinism check script; run twice on PoE1 and PoE2 from a clean tree
-- [ ] Commit scrubbed manifests
+- [x] `extract` for Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects plus the transitive closure of referenced tables (PoE1 72, PoE2 85); not split
+- [x] `BTreeMap`-only output assembly; every-order determinism unit test; golden manifest test
+- [x] Canonical JSON output and manifest (build ID, index and bundle hashes, schema commit and hash, extractor commit, dirty flag, decoder program and version, per-table status, key range checks)
+- [x] Determinism check script `tools/extractor/scripts/check-determinism.sh`; byte-identical on PoE1 and PoE2 from clean tree `d047e4a`
+- [x] Commit manifests (`docs/spikes/spike-a/`; no machine paths, so committed unchanged)
+- [x] `code-architecture-reviewer` findings applied or recorded (context file, "PR A4")
+- [ ] PR open (#9), CI green, maintainer merge
 
 ## PR A5: stat descriptions (step 5; can run in parallel with A3/A4)
 - [ ] UTF-16LE `.csd` reader, includes, description blocks, conditions, format strings, handlers
@@ -67,4 +69,5 @@ Last Updated: 2026-11-08 (PR A3 opened)
 - [ ] Update ACTION-PLAN gate status, CLAUDE.md Status, handoff
 
 ## Follow-up (outside Spike A)
+- [ ] Phase 2: record extractor provenance at build time (or in a signed build step) instead of querying git at run time
 - [ ] Fix stale `docs/plan/IMPLEMENTATION-PLAN.md` Phase 2 item 4 ("converter from legacy exporter output") to match ADR-005

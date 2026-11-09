@@ -10,6 +10,7 @@
 pub mod bundle;
 pub mod dat;
 pub mod decompress;
+pub mod extract;
 pub mod hash;
 pub mod index;
 pub mod install;

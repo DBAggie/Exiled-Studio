@@ -82,6 +82,23 @@ impl ScalarType {
         }
     }
 
+    /// The type's name in the schema file (`foreignrow`, `f32`, ...).
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Bool => "bool",
+            Self::I16 => "i16",
+            Self::U16 => "u16",
+            Self::I32 => "i32",
+            Self::U32 => "u32",
+            Self::F32 => "f32",
+            Self::String => "string",
+            Self::Row => "row",
+            Self::ForeignRow => "foreignrow",
+            Self::EnumRow => "enumrow",
+        }
+    }
+
     const fn is_number(self) -> bool {
         matches!(
             self,
@@ -660,6 +677,25 @@ mod tests {
             Schema::parse(json.as_bytes()).unwrap_err().code(),
             "EXTRACT_SCHEMA_DUPLICATE"
         );
+    }
+
+    #[test]
+    fn scalar_name_should_round_trip_through_from_schema() {
+        use ScalarType as T;
+        for ty in [
+            T::Bool,
+            T::I16,
+            T::U16,
+            T::I32,
+            T::U32,
+            T::F32,
+            T::String,
+            T::Row,
+            T::ForeignRow,
+            T::EnumRow,
+        ] {
+            assert_eq!(ScalarType::from_schema(ty.name()), Some(ty));
+        }
     }
 
     #[test]

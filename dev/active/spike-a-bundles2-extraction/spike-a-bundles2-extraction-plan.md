@@ -8,7 +8,7 @@ Spike A in `docs/plan/ACTION-PLAN.md` (Phase 1, first spike). Prove that the pro
 This spike produces **spike-level output** (deterministic JSON per table plus a manifest). The canonical game-data schema and signed bundle format are Phase 2 work (IMPLEMENTATION-PLAN Phase 2, item 3) and are not designed here.
 
 ## Current state (2026-11-08)
-- `tools/extractor` reads the Bundles2 index (A1 decompressor boundary, A2 bundle/index reader and `list-files`). It depends on `loom-data` (still empty).
+- `tools/extractor` reads the Bundles2 index (A1 decompressor boundary, A2 bundle/index reader and `list-files`), decodes dat tables with the vendored schema (A3), and extracts the Spike A tables to deterministic JSON plus a manifest (A4, `extract`, `scripts/check-determinism.sh`). It depends on `loom-data` (still empty).
 - Workspace lints: `unsafe_code = "deny"`, no `unwrap`/`expect` outside tests, `#[expect]` only.
 - Game installs present: PoE1 `D:\SteamLibrary\steamapps\common\Path of Exile` (Steam build 26474023) and PoE2 `...\Path of Exile 2` (Steam build 26476662). Both have `Bundles2/_.index.bin` (plus `_.index.high.bin`, `_.index.low.bin`, `.index.dbg`, which the spike must identify).
 - Legacy PoB v2.67.2 (oracle pin, tagged 2026-08-08) carries the "3.29.2 Export" data (commit `b383679a4`). Legacy HEAD has a "3.29.3 Export" (`1b4078dc4`). PoB uses its own `src/Export/spec.lua`, not the community schema, and filters what it exports. PoB v2.67.2 is PoE1 only.
