@@ -20,6 +20,8 @@ Then update the repository-level handoff (each PR is done in a fresh session; se
 - `docs/handoff/SUCCESSOR-HANDOFF.md`: rewrite **Current state** and **Next action**.
 - `CLAUDE.md` Status and `docs/plan/ACTION-PLAN.md` Next action, if the phase, gate status, or next step changed.
 
+Timing (see `AGENTS.md`, "When to update"): run this before opening the PR, and again right after `gh pr create`, to write the new PR number into the handoff Current state, the task file's "Open PR" item, and every other doc that names the PR. Push that as a follow-up commit to the PR branch before any other work.
+
 Move a task folder to `dev/completed/` only when its gate has passed and the maintainer agrees.
 
 Focus on what would be hard to rediscover from the code alone. Additional context: $ARGUMENTS

@@ -3,10 +3,10 @@
 Read `AGENTS.md` first: crate boundaries, commands, code expectations, and the PR evidence rule. This file adds Claude Code specifics.
 
 ## Status
-Phase 0 (bootstrap) is done. Spike A (game-data extraction, `docs/plan/ACTION-PLAN.md`) is done: gate **met**, A6b merged 2026-11-09; task docs in `dev/completed/spike-a-bundles2-extraction/`. Spike B (text to stat-ID resolution) is in progress in `dev/active/spike-b-text-stat-resolution/` (PRs B0 and B1 merged; PR B1x, extractor roots for lookup tables, in review); next is PR B2a (reverse matcher in `loom-parser`). Do not start work for a later step before the earlier gate passes.
+Phase 0 (bootstrap) is done. Spike A (game-data extraction, `docs/plan/ACTION-PLAN.md`) is done: gate **met**, A6b merged 2026-11-09; task docs in `dev/completed/spike-a-bundles2-extraction/`. Spike B (text to stat-ID resolution) is in progress in `dev/active/spike-b-text-stat-resolution/` (PRs B0, B1, and B1x merged); next is PR B2a (reverse matcher in `loom-parser`). Do not start work for a later step before the earlier gate passes.
 
 ## One PR per session
-Each PR is done in a fresh session. Before opening the PR, update every document it made stale (the handoff's Current state and Next action on every PR; the full list is in `AGENTS.md`, "One PR per session"). Run `/dev-docs-update` for planned tasks. The next session must be able to resume from the repository alone.
+Each PR is done in a fresh session. Before opening the PR, update every document it made stale (the handoff's Current state and Next action on every PR; the full list is in `AGENTS.md`, "One PR per session"). Run `/dev-docs-update` for planned tasks. **Right after `gh pr create`, before any other work, push a follow-up commit that writes the PR number into the handoff's Current state and every other doc that names the PR** (`AGENTS.md`, "When to update"). The next session must be able to resume from the repository alone.
 
 ## Authoritative sources
 1. `docs/plan/ACTION-PLAN.md` - sequence, spikes, gates.
