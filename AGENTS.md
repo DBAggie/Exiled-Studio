@@ -74,6 +74,10 @@ tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
 cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game poe1|poe2 --out local/cross-check/<game>/<build>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
 cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<build>
+# Render every stat-description variant and resolve it back; writes summary.json and report.json (<dir> must not exist):
+cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
+# Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
+cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build> local/pob/<checkout> --out <dir>
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

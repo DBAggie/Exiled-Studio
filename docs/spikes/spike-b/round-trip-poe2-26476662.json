@@ -1,0 +1,560 @@
+{
+  "inputs": {
+    "game": "poe2",
+    "steam_build_id": "26476662",
+    "manifest_sha256": "4a77f23378a3fb51535d4649eea94799f88ecabb89a0f7a95171f3af03511afb"
+  },
+  "lookup": {
+    "keys": {
+      "display_indexable_support": 0,
+      "passive_hash": 9731
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "display_indexable_non_active_support": "IndexableNonActiveSupportGems is not in the extract",
+      "display_indexable_skill": "IndexableSkillGems is not in the extract",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  },
+  "scopes": 589,
+  "item_index": {
+    "bad_template": 0,
+    "empty_text": 0,
+    "entries": 58615,
+    "gem_quality": 2,
+    "indexed": 15611,
+    "keys": 31068,
+    "lookup": 13,
+    "lookup_blank_names": 195,
+    "lookup_multi": 0,
+    "lookup_unavailable": 23,
+    "max_lines": 6,
+    "multi_line": 371,
+    "table_only": 23
+  },
+  "item_scope_shadowed_descriptions": 26,
+  "variants": {
+    "gem_quality": 203,
+    "table_only": 1621,
+    "tried": 28013
+  },
+  "samples": 104695,
+  "outcomes": {
+    "ambiguous-template": 6572,
+    "not-rendered/missing-lookup": 77,
+    "not-rendered/unknown-handler": 4,
+    "not-rendered/unsupported-format": 12,
+    "ok": 97743,
+    "rendered-double-sign": 6,
+    "shadowed-description": 281
+  },
+  "item_scope_outcomes": {
+    "ambiguous-template": 2810,
+    "not-rendered/missing-lookup": 74,
+    "not-rendered/unsupported-format": 12,
+    "ok": 57095,
+    "rendered-double-sign": 6,
+    "shadowed-description": 140
+  },
+  "samples_with_shadowed_matches": 3059,
+  "examples": {
+    "ambiguous-template": [
+      {
+        "outcome": "ambiguous-template",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 461,
+        "variant_line": 464,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "Deals 1% more Attack damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 13, hand: Main }, DescRef { depth: 0, index: 15, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 461,
+        "variant_line": 464,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            101
+          ]
+        ],
+        "lines": [
+          "Deals (1-101)% more Attack damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 13, hand: Main }, DescRef { depth: 0, index: 15, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 461,
+        "variant_line": 464,
+        "hand": "main",
+        "values": [
+          [
+            51,
+            51
+          ]
+        ],
+        "lines": [
+          "Deals 51% more Attack damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 13, hand: Main }, DescRef { depth: 0, index: 15, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 461,
+        "variant_line": 464,
+        "hand": "main",
+        "values": [
+          [
+            101,
+            101
+          ]
+        ],
+        "lines": [
+          "Deals 101% more Attack damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 13, hand: Main }, DescRef { depth: 0, index: 15, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 461,
+        "variant_line": 465,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [
+          "Deals 101% less Attack damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 13, hand: Main }, DescRef { depth: 0, index: 15, hand: Main }]"
+      }
+    ],
+    "not-rendered/missing-lookup": [
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "data/statdescriptions/map_stat_descriptions.csd",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 1 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "data/statdescriptions/map_stat_descriptions.csd",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            50,
+            50
+          ],
+          [
+            50,
+            50
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 50 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "data/statdescriptions/map_stat_descriptions.csd",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            100,
+            100
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 100 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 1232,
+        "variant_line": 1235,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"ultimatum_wager_type_hash\", value: 1 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 1232,
+        "variant_line": 1235,
+        "hand": "main",
+        "values": [
+          [
+            50,
+            50
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"ultimatum_wager_type_hash\", value: 50 }"
+      }
+    ],
+    "not-rendered/unknown-handler": [
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "data/statdescriptions/gem_stat_descriptions.csd",
+        "description_line": 55030,
+        "variant_line": 55033,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"one_hundred_divide_by_value\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "data/statdescriptions/gem_stat_descriptions.csd",
+        "description_line": 55030,
+        "variant_line": 55033,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"one_hundred_divide_by_value\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "data/statdescriptions/gem_stat_descriptions.csd",
+        "description_line": 55030,
+        "variant_line": 55033,
+        "hand": "main",
+        "values": [
+          [
+            51,
+            51
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"one_hundred_divide_by_value\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "data/statdescriptions/gem_stat_descriptions.csd",
+        "description_line": 55030,
+        "variant_line": 55033,
+        "hand": "main",
+        "values": [
+          [
+            101,
+            101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"one_hundred_divide_by_value\")"
+      }
+    ],
+    "not-rendered/unsupported-format": [
+      {
+        "outcome": "not-rendered/unsupported-format",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 164784,
+        "variant_line": 164788,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnsupportedFormat(\"-d\")"
+      },
+      {
+        "outcome": "not-rendered/unsupported-format",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 164784,
+        "variant_line": 164788,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -1
+          ]
+        ],
+        "lines": [],
+        "detail": "UnsupportedFormat(\"-d\")"
+      },
+      {
+        "outcome": "not-rendered/unsupported-format",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 164784,
+        "variant_line": 164788,
+        "hand": "main",
+        "values": [
+          [
+            -51,
+            -51
+          ]
+        ],
+        "lines": [],
+        "detail": "UnsupportedFormat(\"-d\")"
+      },
+      {
+        "outcome": "not-rendered/unsupported-format",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 164784,
+        "variant_line": 164788,
+        "hand": "main",
+        "values": [
+          [
+            -1,
+            -1
+          ]
+        ],
+        "lines": [],
+        "detail": "UnsupportedFormat(\"-d\")"
+      },
+      {
+        "outcome": "not-rendered/unsupported-format",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 164876,
+        "variant_line": 164880,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnsupportedFormat(\"-d\")"
+      }
+    ],
+    "rendered-double-sign": [
+      {
+        "outcome": "rendered-double-sign",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 281,
+        "variant_line": 285,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [
+          "--101 to Deflection Rating per 10 maximum Runic Ward"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 281,
+        "variant_line": 285,
+        "hand": "main",
+        "values": [
+          [
+            -51,
+            -51
+          ]
+        ],
+        "lines": [
+          "--51 to Deflection Rating per 10 maximum Runic Ward"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 281,
+        "variant_line": 285,
+        "hand": "main",
+        "values": [
+          [
+            -1,
+            -1
+          ]
+        ],
+        "lines": [
+          "--1 to Deflection Rating per 10 maximum Runic Ward"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 405051,
+        "variant_line": 405055,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [
+          "--101 to Stun Threshold per 10 maximum Runic Ward"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "data/statdescriptions/stat_descriptions.csd",
+        "description_line": 405051,
+        "variant_line": 405055,
+        "hand": "main",
+        "values": [
+          [
+            -51,
+            -51
+          ]
+        ],
+        "lines": [
+          "--51 to Stun Threshold per 10 maximum Runic Ward"
+        ],
+        "detail": "NoTemplate"
+      }
+    ],
+    "shadowed-description": [
+      {
+        "outcome": "shadowed-description",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 3776,
+        "variant_line": 3779,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "1% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 3776,
+        "variant_line": 3779,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            101
+          ]
+        ],
+        "lines": [
+          "(1-101)% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 3776,
+        "variant_line": 3779,
+        "hand": "main",
+        "values": [
+          [
+            51,
+            51
+          ]
+        ],
+        "lines": [
+          "51% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 3776,
+        "variant_line": 3779,
+        "hand": "main",
+        "values": [
+          [
+            101,
+            101
+          ]
+        ],
+        "lines": [
+          "101% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "data/statdescriptions/active_skill_gem_stat_descriptions.csd",
+        "description_line": 3776,
+        "variant_line": 3780,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [
+          "101% reduced Aura Area of Effect"
+        ],
+        "detail": ""
+      }
+    ]
+  }
+}
