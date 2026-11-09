@@ -125,6 +125,11 @@ pub enum Category {
     PobGenerated,
     /// Differs between PoB's export patch and the installed patch.
     PatchDelta,
+    /// Not on the game's tree that PoB's data covers, by the game's own
+    /// placement (passive skill graphs), where PoB's data is not made by a
+    /// PoB rule the cross-check could reproduce (PoE1 passives; maintainer
+    /// decision 2026-11-09, PR A6b).
+    NotOnTree,
     /// The table did not decode cleanly (manifest status not `ok`).
     SchemaMismatch,
     /// No rule explains it.
@@ -170,6 +175,13 @@ pub enum CrossCheckError {
         /// What is wrong.
         what: String,
     },
+    /// A passive skill graph is missing from the extract output or did not
+    /// parse there.
+    #[error("passive skill graphs: {0}")]
+    Graph(String),
+    /// `PassiveSkills` rows that cannot be keyed by their graph ID.
+    #[error("PassiveSkills: {0}")]
+    PassiveRows(String),
     /// No `PassiveSkillTrees` row `Default`, or it names no graph we have.
     #[error("no graph for the default passive tree: {0}")]
     NoDefaultTree(String),
@@ -197,6 +209,8 @@ impl CrossCheckError {
             Self::UnsupportedPob { .. } => "EXTRACT_XCHECK_UNSUPPORTED_POB",
             Self::NameCollision { .. } => "EXTRACT_XCHECK_NAME_COLLISION",
             Self::NoDefaultTree(_) => "EXTRACT_XCHECK_NO_DEFAULT_TREE",
+            Self::Graph(_) => "EXTRACT_XCHECK_GRAPH",
+            Self::PassiveRows(_) => "EXTRACT_XCHECK_PASSIVE_ROWS",
         }
     }
 }
@@ -578,12 +592,15 @@ impl<'a> Family<'a> {
     fn finish(mut self, compared: &'static str, status: Option<&str>) -> FamilyReport {
         if let Some(status) = status.filter(|s| *s != "ok") {
             for rules in [&mut self.pob_missing_rules, &mut self.ours_extra_rules] {
-                rules.push(Rule::new(
+                rules.insert(
+                    0,
+                    Rule::new(
                     Category::SchemaMismatch,
                     "table-not-ok",
-                    format!("the extract manifest gives the table status `{status}`; the gap may come from the decoding, so it fails the gate"),
+                    format!("the extract manifest gives the table status `{status}`; every gap may come from the decoding, so no other rule explains it and it fails the gate"),
                     |_| true,
-                ));
+                    ),
+                );
             }
         }
         let missing = self.pob_keys.difference(&self.our_keys).map(String::as_str);
@@ -1641,22 +1658,33 @@ fn stats(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
 }
 
 /// Passive skill graphs in the extract output, by index path (lowercase,
-/// `.psg`), as node-key sets.
+/// `.psg`), as node-key sets. Driven by the manifest's
+/// `passive_skill_graphs` section: every listed graph must be `ok` and have
+/// its output file, so a graph that failed in `extract` cannot hide its
+/// nodes.
 fn graphs(ctx: &Ctx<'_>) -> Result<BTreeMap<String, BTreeSet<String>>, CrossCheckError> {
-    let prefix = format!("{PASSIVE_SKILL_GRAPHS_DIR}/");
+    let section = ctx.manifest.passive_skill_graphs.as_ref().ok_or_else(|| {
+        CrossCheckError::Graph(format!(
+            "manifest format {} has no passive_skill_graphs section; rerun extract",
+            ctx.manifest.format
+        ))
+    })?;
     let mut out = BTreeMap::new();
-    for (path, bytes) in ctx.ours {
-        let Some(index_path) = path
-            .strip_prefix(&prefix)
-            .and_then(|p| p.strip_suffix(".json"))
-        else {
-            continue;
-        };
-        let graph = ours::Graph::parse(bytes).map_err(|source| CrossCheckError::Json {
-            path: path.clone(),
-            source,
-        })?;
-        out.insert(index_path.to_owned(), graph.node_keys());
+    for (index_path, entry) in &section.files {
+        if entry.status != "ok" {
+            return Err(CrossCheckError::Graph(format!(
+                "{index_path}: status `{}` in the manifest",
+                entry.status
+            )));
+        }
+        let path = entry
+            .output
+            .clone()
+            .unwrap_or_else(|| format!("{PASSIVE_SKILL_GRAPHS_DIR}/{index_path}.json"));
+        let bytes = Ctx::file(ctx.ours, &path)?;
+        let graph =
+            ours::Graph::parse(bytes).map_err(|source| CrossCheckError::Json { path, source })?;
+        out.insert(index_path.clone(), graph.node_keys());
     }
     Ok(out)
 }
@@ -1678,7 +1706,8 @@ fn default_graph(ctx: &Ctx<'_>) -> Result<String, CrossCheckError> {
 }
 
 /// Ascendancy rows PoB's PoE2 tree script skips: name starting with `[DNT`
-/// or `Disabled` set.
+/// or `Disabled` set. A foreign key is the target's row position, so the
+/// row position is the key (as everywhere in the extract output).
 fn skipped_ascendancies(ctx: &Ctx<'_>) -> Result<BTreeSet<u64>, CrossCheckError> {
     let table = ctx.table("Ascendancy")?;
     let name = column(&table, "Name")?;
@@ -1704,6 +1733,16 @@ struct PassiveRow<'a> {
     expansion: bool,
 }
 
+/// The first status of `tables` that is not `ok` (a missing entry counts as
+/// not `ok`), or `ok`.
+fn worst_status<'c>(ctx: &'c Ctx<'_>, tables: &[&str]) -> &'c str {
+    tables
+        .iter()
+        .map(|t| ctx.status(t).unwrap_or("not-in-manifest"))
+        .find(|s| *s != "ok")
+        .unwrap_or("ok")
+}
+
 fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossCheckError> {
     let table = ctx.table("PassiveSkills")?;
     let graph_id = column(&table, "PassiveSkillGraphId")?;
@@ -1718,36 +1757,44 @@ fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossChec
     let default = graphs
         .get(&default_path)
         .ok_or_else(|| CrossCheckError::NoDefaultTree(format!("{default_path} not extracted")))?;
-    let other_nodes: BTreeSet<&str> = graphs
-        .iter()
-        .filter(|(p, _)| **p != default_path)
-        .flat_map(|(_, n)| n.iter().map(String::as_str))
-        .collect();
-    let rows: BTreeMap<String, PassiveRow<'_>> = table
-        .rows
-        .iter()
-        .filter_map(|r| {
-            let key = ours::uint(r, graph_id)?.to_string();
-            let row = PassiveRow {
-                name: ours::text(r, name).unwrap_or_default(),
-                ascendancy: ascendancy.and_then(|c| ours::uint(r, c)),
-                expansion: r.get(expansion).and_then(Value::as_bool) == Some(true),
-            };
-            Some((key, row))
-        })
-        .collect();
+    let mut rows: BTreeMap<String, PassiveRow<'_>> = BTreeMap::new();
+    let (mut without_id, mut duplicate_ids) = (0, 0);
+    for r in &table.rows {
+        let Some(key) = ours::uint(r, graph_id).map(|k| k.to_string()) else {
+            without_id += 1;
+            continue;
+        };
+        let row = PassiveRow {
+            name: ours::text(r, name).unwrap_or_default(),
+            ascendancy: ascendancy.and_then(|c| ours::uint(r, c)),
+            expansion: r.get(expansion).and_then(Value::as_bool) == Some(true),
+        };
+        if rows.insert(key, row).is_some() {
+            duplicate_ids += 1;
+        }
+    }
     let skipped_asc = match ctx.game {
         Game::Poe1 => BTreeSet::new(),
         Game::Poe2 => skipped_ascendancies(ctx)?,
     };
     let on_default = |k: &str| default.contains(k);
     let row = |k: &str| rows.get(k).copied();
-    let others = |k: &str| -> Vec<&str> {
-        graphs
+    // Where an off-tree node is: the other graphs it is on, or none.
+    let placement = |k: &str| -> String {
+        let found: Vec<&str> = graphs
             .iter()
             .filter(|(path, nodes)| **path != default_path && nodes.contains(k))
             .map(|(path, _)| path.as_str())
-            .collect()
+            .collect();
+        let mut detail = if found.is_empty() {
+            "no graph".to_owned()
+        } else {
+            found.join(" + ")
+        };
+        if row(k).is_some_and(|r| r.expansion) {
+            detail.push_str(" (IsExpansion)");
+        }
+        detail
     };
     let dnt_kept: String = DNT_KEPT
         .iter()
@@ -1755,7 +1802,6 @@ fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossChec
         .collect();
     let dnt_snippet = format!("if passiveRow.Name:find(ignoreFilter) ~= nil{dnt_kept} then");
     let skipped_asc = &skipped_asc;
-    let other_nodes = &other_nodes;
 
     // Declared after everything its rules borrow.
     let mut family = Family {
@@ -1764,9 +1810,15 @@ fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossChec
     };
     let path = tree_path(tree_version);
     family.add_pob(&path, pob::tree_nodes(ctx.pob_file(&path)?));
+    let other_nodes: BTreeSet<&str> = graphs
+        .iter()
+        .filter(|(p, _)| **p != default_path)
+        .flat_map(|(_, n)| n.iter().map(String::as_str))
+        .collect();
+    let off_graph = |k: &str| !on_default(k) && !other_nodes.contains(k);
     let pob_count =
         |test: &dyn Fn(&str) -> bool| family.pob_keys.iter().filter(|k| test(k.as_str())).count();
-    let off_graph = |k: &str| !on_default(k) && !other_nodes.contains(k);
+    let pob_off_default = pob_count(&|k| !on_default(k));
     let notes = [
         ("graph files".to_owned(), graphs.len()),
         (
@@ -1776,6 +1828,14 @@ fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossChec
         (
             "default graph nodes without a PassiveSkills row".to_owned(),
             default.iter().filter(|k| !rows.contains_key(*k)).count(),
+        ),
+        (
+            "PassiveSkills rows without a graph ID".to_owned(),
+            without_id,
+        ),
+        (
+            "PassiveSkills rows with a graph ID of an earlier row".to_owned(),
+            duplicate_ids,
         ),
         (
             "PoB keys on the default graph".to_owned(),
@@ -1792,133 +1852,123 @@ fn passives(ctx: &Ctx<'_>, tree_version: &str) -> Result<FamilyReport, CrossChec
         ),
     ];
     family.notes = notes.into_iter().collect();
+    if without_id > 0 || duplicate_ids > 0 {
+        // Rows that cannot be keyed cannot be compared: stop rather than
+        // drop them (ADR-015). None occur on the installs.
+        return Err(CrossCheckError::PassiveRows(format!(
+            "{without_id} rows without a PassiveSkillGraphId, {duplicate_ids} with a repeated one"
+        )));
+    }
 
-    if ctx.game == Game::Poe2 {
-        // PoB's PoE2 tree script walks the groups of the Default tree's
-        // graph and skips three kinds of node.
-        let walk = [
-            "local idPassiveTree = 'Default'",
-            "for i, group in ipairs(psg.groups) do",
-            "local ignoreFilter = \"^%[DNT\"",
-        ];
-        let with = |last: &'static str| {
-            let mut s = walk.to_vec();
-            s.push(last);
-            s
-        };
-        family.anchored_all(
-            ctx,
-            PASSIVETREE_SCRIPT,
-            &with("if passiveRow.Name == \"\" then"),
-            true,
-            Rule::new(
-                Category::PobFiltered,
-                "empty-name",
-                "on the Default tree's graph with an empty Name; passivetree.lua skips it (`if passiveRow.Name == \"\" then goto exitNode`)",
-                move |k| on_default(k) && row(k).is_some_and(|r| r.name.is_empty()),
-            ),
-        );
-        let mut snippets = walk.to_vec();
-        snippets.push(&dnt_snippet);
-        family.anchored_all(
-            ctx,
-            PASSIVETREE_SCRIPT,
-            &snippets,
-            true,
-            Rule::new(
-                Category::PobFiltered,
-                "dnt-name",
-                format!(
-                    "on the Default tree's graph with a Name starting `[DNT` (other than {}); passivetree.lua skips it",
-                    DNT_KEPT.join(", ")
-                ),
-                move |k| {
-                    on_default(k)
-                        && row(k).is_some_and(|r| {
-                            r.name.starts_with("[DNT") && !DNT_KEPT.contains(&r.name)
-                        })
-                },
-            ),
-        );
-        family.anchored_all(
-            ctx,
-            PASSIVETREE_SCRIPT,
-            &with("if passiveRow.Ascendancy.Name:find(ignoreFilter) ~= nil or passiveRow.Ascendancy.isDisabled then"),
-            true,
-            Rule::new(
-                Category::PobFiltered,
-                "skipped-ascendancy",
-                "on the Default tree's graph in an ascendancy whose Name starts `[DNT` or that is Disabled; passivetree.lua skips it",
-                move |k| {
-                    on_default(k)
-                        && row(k)
-                            .and_then(|r| r.ascendancy)
-                            .is_some_and(|a| skipped_asc.contains(&a))
-                },
-            ),
-        );
-    }
-    let source = match ctx.game {
-        Game::Poe1 => "PoB's PoE1 tree is GGG's export of the character tree",
-        Game::Poe2 => {
-            "PoB's PoE2 tree is built by passivetree.lua from the graph of the PassiveSkillTrees row `Default`"
-        }
-    };
-    let other_rule = Rule::detailed(
-        Category::PobFiltered,
-        "on-other-graph",
-        format!(
-            "{source} ({default_path}); this node is only on other trees' graphs (breakdown: the graphs)"
-        ),
-        move |k| {
-            if on_default(k) {
-                return None;
-            }
-            let found = others(k);
-            (!found.is_empty()).then(|| found.join(" + "))
-        },
-    );
-    let none_rule = Rule::detailed(
-        Category::PobFiltered,
-        "on-no-graph",
-        format!(
-            "{source} ({default_path}); this node is on no passive skill graph of the install, so on no tree (breakdown: IsExpansion rows; PoB keys on no graph are counted in notes)"
-        ),
-        move |k| {
-            off_graph(k).then(|| {
-                if row(k).is_some_and(|r| r.expansion) {
-                    "IsExpansion".to_owned()
-                } else {
-                    String::new()
-                }
-            })
-        },
-    );
     match ctx.game {
-        Game::Poe1 => {
-            family.ours_extra_rules.push(other_rule);
-            family.ours_extra_rules.push(none_rule);
-        }
         Game::Poe2 => {
-            family.anchored(
-                ctx,
-                PASSIVETREE_SCRIPT,
+            // PoB's PoE2 tree script walks the groups of the Default tree's
+            // graph, adds each node it does not skip, and skips three kinds
+            // of node (checked in this order: empty name, `[DNT` name,
+            // skipped ascendancy).
+            let walk = [
                 "local idPassiveTree = 'Default'",
-                true,
-                other_rule,
-            );
-            family.anchored(
+                "for i, group in ipairs(psg.groups) do",
+                "tree.nodes[passive.id] = node",
+                "local ignoreFilter = \"^%[DNT\"",
+            ];
+            let with = |last: &'static str| {
+                let mut s = walk.to_vec();
+                s.push(last);
+                s
+            };
+            family.anchored_all(
                 ctx,
                 PASSIVETREE_SCRIPT,
-                "for i, group in ipairs(psg.groups) do",
+                &with("if passiveRow.Name == \"\" then"),
                 true,
-                none_rule,
+                Rule::new(
+                    Category::PobFiltered,
+                    "empty-name",
+                    "on the Default tree's graph with an empty Name; passivetree.lua skips it (`if passiveRow.Name == \"\" then goto exitNode`)",
+                    move |k| on_default(k) && row(k).is_some_and(|r| r.name.is_empty()),
+                ),
             );
+            let mut snippets = walk.to_vec();
+            snippets.push(&dnt_snippet);
+            family.anchored_all(
+                ctx,
+                PASSIVETREE_SCRIPT,
+                &snippets,
+                true,
+                Rule::new(
+                    Category::PobFiltered,
+                    "dnt-name",
+                    format!(
+                        "on the Default tree's graph with a non-empty Name starting `[DNT` (other than {}); passivetree.lua skips it",
+                        DNT_KEPT.join(", ")
+                    ),
+                    move |k| {
+                        on_default(k)
+                            && row(k).is_some_and(|r| {
+                                r.name.starts_with("[DNT") && !DNT_KEPT.contains(&r.name)
+                            })
+                    },
+                ),
+            );
+            family.anchored_all(
+                ctx,
+                PASSIVETREE_SCRIPT,
+                &with("if passiveRow.Ascendancy.Name:find(ignoreFilter) ~= nil or passiveRow.Ascendancy.isDisabled then"),
+                true,
+                Rule::new(
+                    Category::PobFiltered,
+                    "skipped-ascendancy",
+                    "on the Default tree's graph with a kept Name, in an ascendancy whose Name starts `[DNT` or that is Disabled; passivetree.lua skips it",
+                    move |k| {
+                        on_default(k)
+                            && row(k)
+                                .and_then(|r| r.ascendancy)
+                                .is_some_and(|a| skipped_asc.contains(&a))
+                    },
+                ),
+            );
+            let rule = Rule::detailed(
+                Category::PobFiltered,
+                "not-on-default-graph",
+                format!(
+                    "not a node of the Default tree's graph ({default_path}); passivetree.lua builds PoB's tree from that graph's nodes only (breakdown: the other graphs the node is on, or no graph)"
+                ),
+                move |k| (!on_default(k)).then(|| placement(k)),
+            );
+            if pob_off_default == 0 {
+                family.anchored_all(ctx, PASSIVETREE_SCRIPT, &walk, true, rule);
+            } else {
+                // PoB has nodes off that graph, so it is not built from it
+                // alone: the rule's premise is false.
+                family.disabled.push(format!(
+                    "not-on-default-graph: {pob_off_default} PoB keys are not on {default_path}"
+                ));
+            }
+        }
+        Game::Poe1 => {
+            // PoB's PoE1 tree is GGG's tree export, not a PoB script over
+            // the graph, so there is no PoB rule to reproduce. The game's own
+            // placement is the evidence: the node is not on the character
+            // tree. The export also has nodes off every graph (cluster-jewel
+            // and special ascendancy nodes, counted in `notes`).
+            family.ours_extra_rules.push(Rule::detailed(
+                Category::NotOnTree,
+                "not-on-default-graph",
+                format!(
+                    "not a node of the Default tree's graph ({default_path}), the game's character tree (breakdown: the other graphs the node is on, or no graph)"
+                ),
+                move |k| (!on_default(k)).then(|| placement(k)),
+            ));
         }
     }
+    let status = match ctx.game {
+        Game::Poe1 => worst_status(ctx, &["PassiveSkills", "PassiveSkillTrees"]),
+        Game::Poe2 => worst_status(ctx, &["PassiveSkills", "PassiveSkillTrees", "Ascendancy"]),
+    };
     Ok(family.finish(
         "PoB tree node IDs (src/TreeData/<newest>/tree.lua) vs PassiveSkills.PassiveSkillGraphId, placed with the passive skill graphs (passive_skill_graphs/)",
-        ctx.status("PassiveSkills"),
+        Some(status),
     ))
 }
 
@@ -2025,15 +2075,31 @@ mod tests {
         .unwrap()
     }
 
+    const DEFAULT_GRAPH: &str = "metadata/passiveskillgraph.psg";
+    const ATLAS_GRAPH: &str = "metadata/atlasskillgraphs/atlas.psg";
+
+    /// A format-3 manifest for `game`: every cross-check table `ok` except
+    /// those in `statuses`, and the two fixture graphs `ok`.
+    fn manifest(game: &str, statuses: &[(&str, &str)]) -> Vec<u8> {
+        let mut tables: BTreeMap<&str, Value> = TABLES
+            .iter()
+            .map(|t| (*t, json!({"status": "ok"})))
+            .collect();
+        for (t, status) in statuses {
+            tables.insert(t, json!({"status": status}));
+        }
+        let graph = |path: &str| json!({"output": format!("passive_skill_graphs/{path}.json"), "status": "ok"});
+        serde_json::to_vec(&json!({
+            "extractor": {"commit": "abc", "dirty": false, "version": "0"}, "format": 3, "game": game,
+            "passive_skill_graphs": {"files": {DEFAULT_GRAPH: graph(DEFAULT_GRAPH), ATLAS_GRAPH: graph(ATLAS_GRAPH)}},
+            "steam_build_id": "7", "tables": tables}))
+        .unwrap()
+    }
+
     fn ours() -> BTreeMap<String, Vec<u8>> {
         let any: Value = serde_json::from_str(ANY).unwrap();
         let mut files = BTreeMap::new();
-        let manifest = json!({"extractor": {"commit": "abc", "dirty": false, "version": "0"}, "format": 2, "game": "poe1", "steam_build_id": "7",
-            "tables": {"Mods": {"status": "ok"}, "Stats": {"status": "ok"}, "BaseItemTypes": {"status": "ok"}, "GrantedEffects": {"status": "ok"}, "PassiveSkills": {"status": "ok"}}});
-        files.insert(
-            "manifest.json".to_owned(),
-            serde_json::to_vec(&manifest).unwrap(),
-        );
+        files.insert("manifest.json".to_owned(), manifest("poe1", &[]));
         let stats = ["s_a", "s_b", "s_dnt", "main_x", "off_x", "unused"];
         files.insert("tables/Stats.json".to_owned(), id_table("Stats", &stats));
         files.insert(
@@ -2212,7 +2278,7 @@ mod tests {
             graph_file(&[&[1, 2], &[8]]),
         );
         files.insert(
-            "passive_skill_graphs/metadata/atlasskillgraphs/atlas.psg.json".to_owned(),
+            format!("passive_skill_graphs/{ATLAS_GRAPH}.json"),
             graph_file(&[&[3, 1]]),
         );
         files.insert(
@@ -2457,24 +2523,20 @@ mod tests {
         );
         assert!(!stats.gate.met);
 
-        // PoE1: rows off the Default graph are explained by where they are.
+        // PoE1: rows off the Default graph are not on the character tree.
         let passives = &report.families["passives"];
         assert_eq!(passives.matched, 3);
         assert_eq!(
             rules(&passives.ours_extra),
-            expect(&[
-                ("pob-filtered/on-no-graph", &["4"]),
-                ("pob-filtered/on-other-graph", &["3"]),
-            ])
-        );
-        let filtered = &passives.ours_extra.by_category[&Category::PobFiltered];
-        assert_eq!(
-            filtered["on-other-graph"].breakdown,
-            [("metadata/atlasskillgraphs/atlas.psg".to_owned(), 1)].into()
+            expect(&[("not-on-tree/not-on-default-graph", &["3", "4"])])
         );
         assert_eq!(
-            filtered["on-no-graph"].breakdown,
-            [("IsExpansion".to_owned(), 1)].into()
+            passives.ours_extra.by_category[&Category::NotOnTree]["not-on-default-graph"].breakdown,
+            [
+                (ATLAS_GRAPH.to_owned(), 1),
+                ("no graph (IsExpansion)".to_owned(), 1)
+            ]
+            .into()
         );
         let notes: Vec<(&str, usize)> = passives
             .notes
@@ -2484,6 +2546,8 @@ mod tests {
         assert_eq!(
             notes,
             [
+                ("PassiveSkills rows with a graph ID of an earlier row", 0),
+                ("PassiveSkills rows without a graph ID", 0),
                 ("PoB keys on no graph", 1),
                 ("PoB keys on no graph with IsExpansion", 1),
                 ("PoB keys on other graphs only", 0),
@@ -2511,29 +2575,38 @@ mod tests {
     }
 
     #[test]
-    fn cross_check_should_turn_unexplained_gaps_of_a_bad_table_into_schema_mismatch() {
-        let mut ours = ours();
-        let manifest = json!({"extractor": {"commit": "abc", "dirty": false, "version": "0"}, "format": 2, "game": "poe1", "steam_build_id": "7",
-            "tables": {"Stats": {"status": "row-size-mismatch"}}});
-        ours.insert(
-            "manifest.json".to_owned(),
-            serde_json::to_vec(&manifest).unwrap(),
-        );
-        let report = run(&ours, &pob()).unwrap();
-        let stats = &report.families["stats"];
-        // Gaps a rule explains keep their rule; the rest fail the family.
-        assert_eq!(
-            rules(&stats.pob_missing)["schema-mismatch/table-not-ok"],
-            ["game_only"]
-        );
-        assert_eq!(stats.gate.schema_mismatch, 1);
-        assert_eq!(stats.gate.uncategorized, 0);
-        assert!(
-            report
-                .gate
-                .not_met
-                .contains(&"stats: 1 gaps in a table that did not decode cleanly".to_owned())
-        );
+    fn cross_check_should_put_every_gap_of_a_bad_table_under_schema_mismatch() {
+        for (table, family) in [("Stats", "stats"), ("PassiveSkillTrees", "passives")] {
+            let mut ours = ours();
+            ours.insert(
+                "manifest.json".to_owned(),
+                manifest("poe1", &[(table, "row-size-mismatch")]),
+            );
+            let report = run(&ours, &pob()).unwrap();
+            let f = &report.families[family];
+            // No rule explains a gap of a table that may be misread, not
+            // even one whose rule would match.
+            for gaps in [&f.pob_missing, &f.ours_extra] {
+                assert!(
+                    rules(gaps)
+                        .keys()
+                        .all(|r| r == "schema-mismatch/table-not-ok"),
+                    "{family}: {:?}",
+                    rules(gaps)
+                );
+            }
+            assert!(f.gate.schema_mismatch > 0);
+            assert!(
+                report
+                    .gate
+                    .not_met
+                    .iter()
+                    .any(|l| l.starts_with(&format!("{family}: "))
+                        && l.ends_with("gaps in a table that did not decode cleanly")),
+                "{:?}",
+                report.gate.not_met
+            );
+        }
     }
 
     /// PoE2's tree script, reduced to the lines the passive rules anchor on.
@@ -2545,21 +2618,17 @@ mod tests {
         format!(
             "local ignoreFilter = \"^%[DNT\"\nlocal idPassiveTree = 'Default'\n\
              for i, group in ipairs(psg.groups) do\n\
+             tree.nodes[passive.id] = node\n\
              if passiveRow.Name == \"\" then\n\
              if passiveRow.Name:find(ignoreFilter) ~= nil{kept} then\n\
              if passiveRow.Ascendancy.Name:find(ignoreFilter) ~= nil or passiveRow.Ascendancy.isDisabled then\n"
         )
     }
 
-    fn poe2_passives(script: &str) -> FamilyReport {
+    fn poe2_passives(script: &str, tree: &str) -> FamilyReport {
         let schema = Schema::vendored().unwrap();
         let mut ours = ours();
-        let manifest = json!({"extractor": {"commit": "abc", "dirty": false, "version": "0"}, "format": 3, "game": "poe2", "steam_build_id": "7",
-            "tables": {"PassiveSkills": {"status": "ok"}}});
-        ours.insert(
-            "manifest.json".to_owned(),
-            serde_json::to_vec(&manifest).unwrap(),
-        );
+        ours.insert("manifest.json".to_owned(), manifest("poe2", &[]));
         // 1 and 4 in PoB's tree; 2..=6 on the Default graph but skipped or
         // not; 7 on the atlas graph; 10 on no graph.
         ours.insert(
@@ -2604,7 +2673,7 @@ mod tests {
             graph_file(&[&[7]]),
         );
         let mut pob = pob();
-        pob.insert(tree_path("0_5"), "skill=1,\nskill=4,\n".to_owned());
+        pob.insert(tree_path("0_5"), tree.to_owned());
         pob.insert(PASSIVETREE_SCRIPT.to_owned(), script.to_owned());
         let inputs = Inputs {
             game: Game::Poe2,
@@ -2616,9 +2685,11 @@ mod tests {
         passives(&Ctx::new(inputs).unwrap(), "0_5").unwrap()
     }
 
+    const POE2_TREE: &str = "skill=1,\nskill=4,\n";
+
     #[test]
     fn passives_should_reproduce_poe2_tree_script_filters() {
-        let report = poe2_passives(&passivetree_lua());
+        let report = poe2_passives(&passivetree_lua(), POE2_TREE);
         assert!(
             report.disabled_rules.is_empty(),
             "{:?}",
@@ -2629,12 +2700,16 @@ mod tests {
             expect(&[
                 ("pob-filtered/dnt-name", &["3"]),
                 ("pob-filtered/empty-name", &["2"]),
-                ("pob-filtered/on-no-graph", &["10"]),
-                ("pob-filtered/on-other-graph", &["7"]),
+                ("pob-filtered/not-on-default-graph", &["10", "7"]),
                 ("pob-filtered/skipped-ascendancy", &["5"]),
                 // A live ascendancy is not skipped: unexplained.
                 ("uncategorized/none", &["6"]),
             ])
+        );
+        let placed = &report.ours_extra.by_category[&Category::PobFiltered]["not-on-default-graph"];
+        assert_eq!(
+            placed.breakdown,
+            [(ATLAS_GRAPH.to_owned(), 1), ("no graph".to_owned(), 1)].into()
         );
         assert!(!report.gate.met);
     }
@@ -2642,25 +2717,61 @@ mod tests {
     #[test]
     fn passives_should_disable_poe2_rules_whose_script_snippet_is_gone() {
         let script = passivetree_lua().replace(" and passiveRow.Name ~= \"[DNT] Whaler\"", "");
-        let report = poe2_passives(&script);
+        let report = poe2_passives(&script, POE2_TREE);
         assert_eq!(report.disabled_rules.len(), 1);
         assert!(report.disabled_rules[0].starts_with("dnt-name: "));
         assert_eq!(rules(&report.ours_extra)["uncategorized/none"], ["3", "6"]);
 
-        // Without the Default-tree walk, no graph rule applies.
-        let report = poe2_passives("");
-        assert_eq!(report.disabled_rules.len(), 5);
+        // Without the Default-tree walk, no rule applies.
+        let report = poe2_passives("", POE2_TREE);
+        assert_eq!(report.disabled_rules.len(), 4);
         assert_eq!(report.gate.uncategorized, 6);
     }
 
     #[test]
-    fn passives_should_require_the_default_tree_graph() {
-        let mut ours = ours();
-        ours.remove("passive_skill_graphs/metadata/passiveskillgraph.psg.json");
+    fn passives_should_disable_the_graph_rule_when_pob_has_nodes_off_the_graph() {
+        // PoB's tree has the atlas node 7: it is not built from the Default
+        // graph alone, so being off that graph explains nothing.
+        let report = poe2_passives(&passivetree_lua(), "skill=1,\nskill=4,\nskill=7,\n");
         assert_eq!(
-            run(&ours, &pob()).unwrap_err().code(),
-            "EXTRACT_XCHECK_NO_DEFAULT_TREE"
+            report.disabled_rules,
+            ["not-on-default-graph: 1 PoB keys are not on metadata/passiveskillgraph.psg"]
         );
+        assert_eq!(rules(&report.ours_extra)["uncategorized/none"], ["10", "6"]);
+    }
+
+    #[test]
+    fn passives_should_require_every_graph_and_the_default_tree() {
+        let code = |ours: &BTreeMap<String, Vec<u8>>| run(ours, &pob()).unwrap_err().code();
+        // A graph listed in the manifest but missing from the output.
+        let mut ours = ours();
+        ours.remove(&format!("passive_skill_graphs/{ATLAS_GRAPH}.json"));
+        assert_eq!(code(&ours), "EXTRACT_XCHECK_MISSING_FILE");
+
+        // A graph that failed in extract: its nodes must not look off-tree.
+        let mut ours = crate::crosscheck::tests::ours();
+        let mut m: Value = serde_json::from_slice(&ours["manifest.json"]).unwrap();
+        m["passive_skill_graphs"]["files"][ATLAS_GRAPH] =
+            json!({"output": null, "status": "failed"});
+        ours.insert("manifest.json".to_owned(), serde_json::to_vec(&m).unwrap());
+        assert_eq!(code(&ours), "EXTRACT_XCHECK_GRAPH");
+
+        // An extract from before graphs were read (format 2).
+        m.as_object_mut().unwrap().remove("passive_skill_graphs");
+        ours.insert("manifest.json".to_owned(), serde_json::to_vec(&m).unwrap());
+        assert_eq!(code(&ours), "EXTRACT_XCHECK_GRAPH");
+
+        // The Default tree's graph is not among the graphs.
+        let mut ours = crate::crosscheck::tests::ours();
+        let mut m: Value = serde_json::from_slice(&ours["manifest.json"]).unwrap();
+        m["passive_skill_graphs"]["files"]
+            .as_object_mut()
+            .unwrap()
+            .remove(DEFAULT_GRAPH);
+        ours.insert("manifest.json".to_owned(), serde_json::to_vec(&m).unwrap());
+        assert_eq!(code(&ours), "EXTRACT_XCHECK_NO_DEFAULT_TREE");
+
+        // No `Default` row.
         let mut ours = crate::crosscheck::tests::ours();
         ours.insert(
             "tables/PassiveSkillTrees.json".to_owned(),
@@ -2673,10 +2784,33 @@ mod tests {
                 json!([]),
             ),
         );
-        assert_eq!(
-            run(&ours, &pob()).unwrap_err().code(),
-            "EXTRACT_XCHECK_NO_DEFAULT_TREE"
-        );
+        assert_eq!(code(&ours), "EXTRACT_XCHECK_NO_DEFAULT_TREE");
+    }
+
+    #[test]
+    fn passives_should_refuse_rows_without_a_unique_graph_id() {
+        for rows in [
+            json!([[1, "A", false], [1, "B", false]]),
+            json!([[null, "A", false]]),
+        ] {
+            let mut ours = ours();
+            ours.insert(
+                "tables/PassiveSkills.json".to_owned(),
+                table(
+                    "PassiveSkills",
+                    vec![
+                        col("PassiveSkillGraphId", "u16", None, false),
+                        col("Name", "string", None, false),
+                        col("IsExpansion", "bool", None, false),
+                    ],
+                    rows,
+                ),
+            );
+            assert_eq!(
+                run(&ours, &pob()).unwrap_err().code(),
+                "EXTRACT_XCHECK_PASSIVE_ROWS"
+            );
+        }
     }
 
     #[test]

@@ -212,6 +212,22 @@ pub struct ManifestTable {
     pub status: String,
 }
 
+/// One passive skill graph in the manifest (the fields the cross-check needs).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ManifestGraph {
+    /// Output file, if written.
+    pub output: Option<String>,
+    /// `ok` or `failed`.
+    pub status: String,
+}
+
+/// The manifest's `passive_skill_graphs` section (format 3 and later).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ManifestGraphs {
+    /// Every graph, by lowercase index path.
+    pub files: BTreeMap<String, ManifestGraph>,
+}
+
 /// The manifest fields the cross-check reads.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Manifest {
@@ -221,6 +237,8 @@ pub struct Manifest {
     pub format: u32,
     /// `poe1` or `poe2`.
     pub game: String,
+    /// Passive skill graphs (absent before format 3).
+    pub passive_skill_graphs: Option<ManifestGraphs>,
     /// Steam build ID, if found.
     pub steam_build_id: Option<String>,
     /// Every planned or referenced table.

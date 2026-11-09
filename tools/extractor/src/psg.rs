@@ -205,6 +205,13 @@ impl Graph {
             .count()
     }
 
+    /// Roots that are not nodes of this graph.
+    #[must_use]
+    pub fn dangling_roots(&self) -> usize {
+        let ids: BTreeSet<u64> = self.node_ids().map(u64::from).collect();
+        self.roots.iter().filter(|r| !ids.contains(r)).count()
+    }
+
     /// Node IDs that appear more than once.
     #[must_use]
     pub fn duplicate_nodes(&self) -> usize {
@@ -213,7 +220,11 @@ impl Graph {
     }
 }
 
-/// Reads `count` items with `read`, without trusting `count` for allocation.
+/// Reads `count` items with `read`, without trusting `count` for allocation:
+/// every item reads at least one byte, so a false count ends in
+/// [`PsgError::Truncated`] after at most one item per input byte. Memory stays
+/// proportional to the input (a node takes about 40 bytes for its 16 input
+/// bytes), which is fine for game files of a few hundred KiB.
 fn repeat<T>(
     r: &mut Reader<'_>,
     count: u32,
@@ -224,11 +235,6 @@ fn repeat<T>(
         out.push(read(r)?);
     }
     Ok(out)
-}
-
-fn u8_(r: &mut Reader<'_>, field: &'static str) -> Result<u8, PsgError> {
-    let bytes = r.take(field, 1)?;
-    Ok(bytes.first().copied().unwrap_or_default())
 }
 
 fn f32_(r: &mut Reader<'_>, field: &'static str) -> Result<f32, PsgError> {
@@ -242,12 +248,12 @@ fn f32_(r: &mut Reader<'_>, field: &'static str) -> Result<f32, PsgError> {
 /// group position, a node outside the header's orbits, or trailing bytes.
 pub fn parse(bytes: &[u8], game: Game) -> Result<Graph, PsgError> {
     let mut r = Reader::new(bytes);
-    let version = u8_(&mut r, "version")?;
+    let version = r.u8("version")?;
     if version != VERSION {
         return Err(PsgError::Version(version));
     }
-    let kind = u8_(&mut r, "kind")?;
-    let orbits = u8_(&mut r, "orbit count")?;
+    let kind = r.u8("kind")?;
+    let orbits = r.u8("orbit count")?;
     let orbit_slots = r.take("orbit slots", usize::from(orbits))?.to_vec();
     let root_count = r.u32("root count")?;
     let roots = repeat(&mut r, root_count, |r| {
@@ -266,7 +272,7 @@ pub fn parse(bytes: &[u8], game: Game) -> Result<Graph, PsgError> {
         }
         let flags = r.u32("group flags")?;
         let unknown1 = r.u32("group unknown1")?;
-        let unknown2 = u8_(&mut r, "group unknown2")?;
+        let unknown2 = r.u8("group unknown2")?;
         let node_count = r.u32("node count")?;
         let nodes = repeat(&mut r, node_count, |r| {
             let id = r.u32("node id")?;
@@ -362,8 +368,11 @@ pub enum GraphStatus {
 pub struct GraphEntry {
     /// Connections.
     pub connections: Option<usize>,
-    /// Connections to a node not in the graph.
+    /// Connections to a node not in the graph (none on the installs; a
+    /// connection is assumed to stay inside its graph, so one fails the run).
     pub dangling_connections: Option<usize>,
+    /// Roots that are not nodes of the graph (recorded only).
+    pub dangling_roots: Option<usize>,
     /// Node IDs listed more than once.
     pub duplicate_nodes: Option<usize>,
     /// Why the file did not parse.
@@ -496,6 +505,7 @@ impl Collection {
             let mut entry = GraphEntry {
                 connections: None,
                 dangling_connections: None,
+                dangling_roots: None,
                 duplicate_nodes: None,
                 error: None,
                 groups: None,
@@ -512,6 +522,7 @@ impl Collection {
                     let out = output_path(&key);
                     entry.connections = Some(graph.connections());
                     entry.dangling_connections = Some(graph.dangling_connections());
+                    entry.dangling_roots = Some(graph.dangling_roots());
                     entry.duplicate_nodes = Some(graph.duplicate_nodes());
                     entry.groups = Some(graph.groups.len());
                     entry.kind = Some(graph.kind);
@@ -635,7 +646,9 @@ mod tests {
 
     #[test]
     fn parse_should_fail_on_the_other_games_layout() {
-        // Same bytes, other widths: never a silent misread.
+        // With roots or connections, the other game's widths do not fit the
+        // bytes. A graph with neither reads the same either way (see
+        // `parse_should_read_graphs_without_roots_or_connections_in_both_layouts`).
         assert!(parse(&sample(Game::Poe2), Game::Poe1).is_err());
         assert!(parse(&sample(Game::Poe1), Game::Poe2).is_err());
     }
@@ -707,11 +720,64 @@ mod tests {
     }
 
     #[test]
-    fn graph_should_count_dangling_connections_and_duplicates() {
-        let bytes = file(Game::Poe1, &[], &[&[(1, 0, 0, &[9]), (1, 1, 0, &[])]]);
+    fn graph_should_count_dangling_connections_roots_and_duplicates() {
+        let bytes = file(Game::Poe1, &[1, 5], &[&[(1, 0, 0, &[9]), (1, 1, 0, &[])]]);
         let g = parse(&bytes, Game::Poe1).unwrap();
         assert_eq!(g.dangling_connections(), 1);
+        assert_eq!(g.dangling_roots(), 1);
         assert_eq!(g.duplicate_nodes(), 1);
+    }
+
+    #[test]
+    fn parse_should_read_graphs_without_roots_or_connections_in_both_layouts() {
+        // The widths only differ in roots and connections; without them
+        // both games read the same bytes the same way.
+        let bytes = file(Game::Poe1, &[], &[&[(1, 0, 0, &[])]]);
+        assert_eq!(bytes, file(Game::Poe2, &[], &[&[(1, 0, 0, &[])]]));
+        assert_eq!(
+            parse(&bytes, Game::Poe1).unwrap(),
+            parse(&bytes, Game::Poe2).unwrap()
+        );
+    }
+
+    #[test]
+    fn parse_should_keep_poe2_connection_orbits_as_stored() {
+        let mut bytes = sample(Game::Poe2);
+        // The first connection's orbit (-1) becomes the observed sentinel.
+        let at = bytes.windows(4).position(|w| w == [0xff; 4]).unwrap();
+        bytes[at..at + 4].copy_from_slice(&i32::MAX.to_le_bytes());
+        let g = parse(&bytes, Game::Poe2).unwrap();
+        assert_eq!(g.groups[0].nodes[0].connections[0].orbit, Some(i32::MAX));
+        assert_eq!(g.groups[1].nodes[0].connections[0].orbit, Some(-1));
+    }
+
+    #[test]
+    fn collection_should_refuse_paths_that_leave_the_output_folder() {
+        let mut c = Collection::new(Game::Poe1);
+        c.add("metadata/../x.psg", &sample(Game::Poe1)).unwrap();
+        let (files, manifest) = c.finish();
+        assert!(files.is_empty());
+        let entry = &manifest.files["metadata/../x.psg"];
+        assert_eq!(entry.status, GraphStatus::Failed);
+        assert_eq!(entry.error.as_ref().unwrap().code, "EXTRACT_PSG_BAD_PATH");
+    }
+
+    #[test]
+    fn render_should_write_header_fields_of_a_graph_without_groups() {
+        let mut c = Collection::new(Game::Poe2);
+        c.add("a.psg", &file(Game::Poe2, &[7], &[])).unwrap();
+        let (files, _) = c.finish();
+        assert_eq!(
+            String::from_utf8(files["passive_skill_graphs/a.psg.json"].clone()).unwrap(),
+            "{
+\"groups\": [],
+\"kind\": 0,
+\"orbit_slots\": [1,6],
+\"roots\": [7],
+\"version\": 3
+}
+"
+        );
     }
 
     #[test]

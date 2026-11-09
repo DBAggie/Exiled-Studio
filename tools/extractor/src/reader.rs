@@ -66,6 +66,10 @@ impl<'a> Reader<'a> {
         Ok(head)
     }
 
+    pub(crate) fn u8(&mut self, field: &'static str) -> Result<u8, Short> {
+        self.array(field).map(u8::from_le_bytes)
+    }
+
     pub(crate) fn u32(&mut self, field: &'static str) -> Result<u32, Short> {
         self.array(field).map(u32::from_le_bytes)
     }

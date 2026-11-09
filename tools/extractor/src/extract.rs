@@ -871,7 +871,8 @@ impl Manifest {
 /// One output file.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct OutputFile {
-    /// Rows in the file.
+    /// Rows in the file: table rows, stat-description descriptions, or
+    /// graph nodes.
     pub rows: usize,
     /// SHA-256 of the file.
     pub sha256: String,
@@ -1416,6 +1417,7 @@ mod tests {
       "metadata/passiveskillgraph.psg": {
         "connections": 0,
         "dangling_connections": 0,
+        "dangling_roots": 0,
         "duplicate_nodes": 0,
         "error": null,
         "groups": 0,
@@ -1615,6 +1617,22 @@ mod tests {
             ]
         );
         assert_eq!(out.manifest.problems(), ["Root: Failed"]);
+    }
+
+    #[test]
+    fn problems_should_flag_a_graph_that_did_not_parse() {
+        let schema = schema();
+        let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
+        extraction.add("data/child.datc64", &child_dat()).unwrap();
+        extraction.add(STAT_PATH, &stat_file()).unwrap();
+        extraction.add(GRAPH_PATH, &GRAPH_FILE[..10]).unwrap();
+        let out = extraction.finish(inputs());
+        assert_eq!(out.manifest.problems(), [format!("{GRAPH_PATH}: Failed")]);
+        assert!(
+            !out.files
+                .keys()
+                .any(|k| k.starts_with("passive_skill_graphs/"))
+        );
     }
 
     #[test]

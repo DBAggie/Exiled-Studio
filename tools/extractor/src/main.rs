@@ -475,11 +475,14 @@ fn print_graphs(graphs: &GraphManifest) {
     for (path, g) in &graphs.files {
         let n = |v: Option<usize>| v.map_or_else(|| "-".to_owned(), |v| v.to_string());
         println!(
-            "  {path}: {:?}, {} nodes, {} connections, {} roots",
+            "  {path}: {:?}, {} nodes, {} connections, {} roots{}",
             g.status,
             n(g.nodes),
             n(g.connections),
-            n(g.roots)
+            n(g.roots),
+            g.error
+                .as_ref()
+                .map_or_else(String::new, |e| format!(" [{}] {}", e.code, e.message))
         );
     }
 }
