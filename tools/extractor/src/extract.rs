@@ -211,6 +211,18 @@ pub enum ExtractError {
         /// Path as given.
         path: String,
     },
+    /// The path is not a stat-description file of the game.
+    #[error("{path} is not a stat-description file")]
+    UnplannedFile {
+        /// Path as given.
+        path: String,
+    },
+    /// The stat-description file was added before.
+    #[error("{path} was added twice")]
+    DuplicateFile {
+        /// Path as given.
+        path: String,
+    },
     /// Writing JSON failed.
     #[error("cannot write JSON: {0}")]
     Json(#[from] serde_json::Error),
@@ -223,12 +235,14 @@ impl ExtractError {
         match self {
             Self::Unplanned { .. } => "EXTRACT_UNPLANNED_TABLE",
             Self::Duplicate { .. } => "EXTRACT_DUPLICATE_TABLE",
+            Self::UnplannedFile { .. } => "EXTRACT_UNPLANNED_FILE",
+            Self::DuplicateFile { .. } => "EXTRACT_DUPLICATE_FILE",
             Self::Json(_) => "EXTRACT_JSON",
         }
     }
 }
 
-/// Why a table was not decoded.
+/// Why a table or stat-description file was not decoded.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct TableError {
     /// Stable error code.

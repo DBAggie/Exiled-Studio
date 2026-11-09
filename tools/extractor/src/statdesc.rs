@@ -169,6 +169,10 @@ pub enum FindingKind {
     BadInclude,
     /// An include names a file that is not in the stat-description folder.
     MissingInclude,
+    /// An include names a file that was not parsed (failed or skipped).
+    IncludeNotParsed,
+    /// An include leads back to the including file.
+    IncludeCycle,
     /// `no_description` without exactly one stat ID.
     BadNoDescription,
     /// A `description` line with more than a name after the keyword.
@@ -393,7 +397,7 @@ impl Line<'_> {
     /// The line's only token as a number.
     fn count(&self) -> Option<usize> {
         match self.tokens.as_deref()? {
-            [Token::Word(w)] => w.parse().ok(),
+            [Token::Word(w)] => unsigned(w),
             _ => None,
         }
     }
@@ -513,17 +517,21 @@ impl<'l, 'a> Parser<'l, 'a> {
         } else {
             (ids, None)
         };
-        let Some(variants) = self.variant_list(header, count, true) else {
-            return;
-        };
+        // A bad English count keeps the description, with no variants, so
+        // its stats stay visible; the finding says why.
+        let variants = self.variant_list(header, count, true);
+        let english_ok = variants.is_some();
         self.out.descriptions.push(Description {
             handed,
             line: header.number,
             name,
             off_hand_stats,
             stats,
-            variants,
+            variants: variants.unwrap_or_default(),
         });
+        if !english_ok {
+            return;
+        }
         while let Some(line) = self.peek().filter(|l| l.first_word() == Some(LANG)) {
             let Some([Token::Word(_), Token::Quoted(language)]) = line.tokens.as_deref() else {
                 self.bad_block(FindingKind::BadLanguage, line);
@@ -532,6 +540,10 @@ impl<'l, 'a> Parser<'l, 'a> {
             self.pos += 1;
             let before = self.pos;
             if self.variant_list(line, count, false).is_none() {
+                // The `lang` line was consumed; count it as skipped too.
+                if let Some(finding) = self.out.findings.last_mut() {
+                    finding.skipped += 1;
+                }
                 return;
             }
             // The count line plus the variant lines.
@@ -558,7 +570,7 @@ impl<'l, 'a> Parser<'l, 'a> {
         };
         let parsed = first.words().and_then(|words| {
             let (count, ids) = words.split_first()?;
-            let count: usize = count.parse().ok().filter(|&n| n > 0)?;
+            let count = unsigned(count).filter(|&n| n > 0)?;
             let need = if handed { count.checked_mul(2)? } else { count };
             Some((count, need, ids.to_vec()))
         });
@@ -573,7 +585,7 @@ impl<'l, 'a> Parser<'l, 'a> {
                 .peek()
                 .filter(|l| !l.ends_list())
                 .and_then(|l| l.words())
-                .filter(|w| w.first().is_some_and(|w| w.parse::<i64>().is_err()));
+                .filter(|w| w.first().is_some_and(|w| signed(w).is_none()));
             let Some(words) = more else {
                 break;
             };
@@ -622,17 +634,31 @@ impl<'l, 'a> Parser<'l, 'a> {
     }
 }
 
-/// Parses one condition token.
+/// A decimal of digits only (no sign), if it fits a `usize`.
+fn unsigned(s: &str) -> Option<usize> {
+    let digits = !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+    digits.then(|| s.parse().ok()).flatten()
+}
+
+/// A decimal with an optional `-` (no `+`), if it fits an `i64`.
+fn signed(s: &str) -> Option<i64> {
+    let magnitude = s.strip_prefix('-').unwrap_or(s);
+    let digits = !magnitude.is_empty() && magnitude.bytes().all(|b| b.is_ascii_digit());
+    digits.then(|| s.parse().ok()).flatten()
+}
+
+/// Parses one condition token. A range with `min > max` is kept as
+/// written (none in either install).
 fn condition(word: &str) -> Option<Condition> {
     let bound = |s: &str| -> Option<Option<i64>> {
         if s == "#" {
             Some(None)
         } else {
-            s.parse().ok().map(Some)
+            signed(s).map(Some)
         }
     };
     if let Some(value) = word.strip_prefix('!') {
-        return value.parse().ok().map(|value| Condition::Not { value });
+        return signed(value).map(|value| Condition::Not { value });
     }
     let (min, max) = match word.split_once('|') {
         Some((min, max)) => (bound(min)?, bound(max)?),
@@ -688,7 +714,7 @@ fn parse_variant(line: &Line<'_>, stats: usize) -> Result<Variant, FindingKind> 
             }
         } else {
             let stat: usize = match tokens.next() {
-                Some(Token::Word(v)) => v.parse().map_err(|_| FindingKind::BadHandler)?,
+                Some(Token::Word(v)) => unsigned(v).ok_or(FindingKind::BadHandler)?,
                 _ => return Err(FindingKind::BadHandler),
             };
             if stat == 0 || stat > stats {
@@ -809,16 +835,23 @@ impl Collection {
     /// [`ExtractError`] if `path` is not a stat-description file, was added
     /// before, or JSON cannot be written.
     pub fn add(&mut self, path: &str, bytes: &[u8]) -> Result<(), ExtractError> {
-        let kind = source_kind(self.game, path).ok_or_else(|| ExtractError::Unplanned {
+        let kind = source_kind(self.game, path).ok_or_else(|| ExtractError::UnplannedFile {
             path: path.to_owned(),
         })?;
         let key = path.to_ascii_lowercase();
         if self.added.contains_key(&key) {
-            return Err(ExtractError::Duplicate {
+            return Err(ExtractError::DuplicateFile {
                 path: path.to_owned(),
             });
         }
+        let below = key.strip_prefix(stat_desc_dir(self.game)).unwrap_or(&key);
         let parsed = match kind {
+            // The path becomes an output path: refuse anything but plain
+            // relative parts.
+            _ if !plain_relative(below) => Some(Err(TableError {
+                code: "EXTRACT_STATDESC_BAD_PATH",
+                message: format!("{path} is not a plain relative path"),
+            })),
             SourceKind::Filters => None,
             SourceKind::Descriptions => Some(match decode_utf16le(bytes) {
                 Ok(text) => {
@@ -846,12 +879,26 @@ impl Collection {
         Ok(())
     }
 
-    /// Resolves includes and builds the output files (by path inside the
+    /// Resolves includes (missing, not parsed, cycles) and builds the output files (by path inside the
     /// output directory) and the manifest section.
     #[must_use]
     pub fn finish(self) -> (BTreeMap<String, Vec<u8>>, StatDescManifest) {
         let dir = stat_desc_dir(self.game);
         let present: BTreeSet<&str> = self.added.keys().map(String::as_str).collect();
+        // Include edges of parsed files, by lowercase path.
+        let graph: BTreeMap<&str, Vec<String>> = self
+            .added
+            .iter()
+            .filter_map(|(key, added)| {
+                let file = &added.parsed.as_ref()?.as_ref().ok()?.file;
+                let targets = file
+                    .includes
+                    .iter()
+                    .map(|(_, p)| p.to_ascii_lowercase())
+                    .collect();
+                Some((key.as_str(), targets))
+            })
+            .collect();
         let mut files = BTreeMap::new();
         let mut manifest = StatDescManifest {
             dir,
@@ -886,14 +933,22 @@ impl Collection {
                     let file = &rendered.file;
                     let mut findings = file.findings.clone();
                     for (line, path) in &file.includes {
-                        if !present.contains(path.to_ascii_lowercase().as_str()) {
-                            findings.push(Finding {
-                                kind: FindingKind::MissingInclude,
-                                line: *line,
-                                skipped: 0,
-                                text: format!("include \"{path}\""),
-                            });
-                        }
+                        let target = path.to_ascii_lowercase();
+                        let kind = if !present.contains(target.as_str()) {
+                            FindingKind::MissingInclude
+                        } else if !graph.contains_key(target.as_str()) {
+                            FindingKind::IncludeNotParsed
+                        } else if reaches(&graph, &target, key) {
+                            FindingKind::IncludeCycle
+                        } else {
+                            continue;
+                        };
+                        findings.push(Finding {
+                            kind,
+                            line: *line,
+                            skipped: 0,
+                            text: format!("include \"{path}\""),
+                        });
                     }
                     findings.sort_by_key(|f| f.line);
                     let variants = file.descriptions.iter().flat_map(|d| &d.variants);
@@ -934,6 +989,34 @@ impl Collection {
         }
         (files, manifest)
     }
+}
+
+/// Whether `to` is `from` or reachable from it through includes.
+fn reaches(graph: &BTreeMap<&str, Vec<String>>, from: &str, to: &str) -> bool {
+    let mut seen = BTreeSet::new();
+    let mut todo = vec![from];
+    while let Some(node) = todo.pop() {
+        if node == to {
+            return true;
+        }
+        if seen.insert(node)
+            && let Some(targets) = graph.get(node)
+        {
+            todo.extend(targets.iter().map(String::as_str));
+        }
+    }
+    false
+}
+
+/// Characters that could take an output path out of its folder on Windows.
+const PATH_BREAKERS: [char; 3] = ['\\', ':', '\0'];
+
+/// Whether `path` is `/`-separated parts that are not empty, `.`, or `..`
+/// and hold none of [`PATH_BREAKERS`] (so it stays inside the output folder).
+fn plain_relative(path: &str) -> bool {
+    path.split('/').all(|part| {
+        !part.is_empty() && part != "." && part != ".." && !part.contains(PATH_BREAKERS)
+    })
 }
 
 /// Renders a parsed file as JSON: one description per line.
@@ -1165,6 +1248,10 @@ mod tests {
             ("|1", None),
             ("!", None),
             ("!#", None),
+            ("+5", None),
+            ("!+1", None),
+            ("1|+2", None),
+            ("-", None),
             ("a", None),
             ("table_only", None),
         ] {
@@ -1476,7 +1563,7 @@ mod tests {
             ),
             (
                 "description\n1 s\n1\n# \"a\"\nlang \"French\"\nx\n# \"b\"\n",
-                vec![(K::BadVariantCount, 6, 2)],
+                vec![(K::BadVariantCount, 6, 3)],
             ),
             // More English lines than counted: the extra one is unknown.
             (
@@ -1594,9 +1681,9 @@ mod tests {
         let err = c
             .add("DATA/StatDescriptions/stat_descriptions.csd", &[])
             .unwrap_err();
-        assert_eq!(err.code(), "EXTRACT_DUPLICATE_TABLE");
+        assert_eq!(err.code(), "EXTRACT_DUPLICATE_FILE");
         let err = c.add("data/balance/stats.datc64", &[]).unwrap_err();
-        assert_eq!(err.code(), "EXTRACT_UNPLANNED_TABLE");
+        assert_eq!(err.code(), "EXTRACT_UNPLANNED_FILE");
 
         let (files, m) = c.finish();
         assert_eq!(
@@ -1659,5 +1746,95 @@ mod tests {
         assert_eq!(String::from_utf8(json).unwrap(), expected);
         let empty = String::from_utf8(render("x", &parse("")).unwrap()).unwrap();
         assert!(empty.starts_with("{\n\"descriptions\": [],\n"));
+    }
+
+    #[test]
+    fn parse_should_keep_a_description_whose_english_count_is_bad() {
+        use FindingKind as K;
+        for (text, expected) in [
+            ("description x\n2 a b\n", vec![(K::BadVariantCount, 1, 0)]),
+            (
+                "description x\n2 a b\n+1\n# # \"a\"\n",
+                vec![(K::BadVariantCount, 3, 2)],
+            ),
+        ] {
+            let file = parse(text);
+            assert_eq!(findings(&file), expected, "{text}");
+            let d = &file.descriptions[0];
+            assert_eq!((d.name.as_deref(), d.line), (Some("x"), 1), "{text}");
+            assert_eq!(d.stats, ["a", "b"], "{text}");
+            assert!(d.variants.is_empty(), "{text}");
+        }
+    }
+
+    #[test]
+    fn parse_should_reject_plus_signs_in_counts_and_handler_stats() {
+        use FindingKind as K;
+        let file = parse("description\n+1 s\n1\n# \"a\"\n");
+        assert_eq!(findings(&file), [(K::BadStatList, 2, 3)]);
+        let file = parse(&one_variant("# \"a\" negate +1"));
+        assert_eq!(findings(&file), [(K::BadHandler, 4, 1)]);
+        let file = parse(&one_variant("+1 \"a\""));
+        assert_eq!(findings(&file), [(K::BadCondition, 4, 1)]);
+    }
+
+    #[test]
+    fn collection_should_fail_paths_that_leave_the_output_folder() {
+        for bad in [
+            "data/statdescriptions/../x.csd",
+            "data/statdescriptions/a//x.csd",
+            "data/statdescriptions/./x.csd",
+            "data/statdescriptions/a\\x.csd",
+            "data/statdescriptions/c:x.csd",
+        ] {
+            let mut c = Collection::new(Game::Poe2);
+            c.add(bad, &utf16le("no_description s\n")).unwrap();
+            let (files, m) = c.finish();
+            assert!(files.is_empty(), "{bad}");
+            let entry = &m.files[bad];
+            assert_eq!(entry.status, FileStatus::Failed, "{bad}");
+            assert_eq!(
+                entry.error.as_ref().map(|e| e.code),
+                Some("EXTRACT_STATDESC_BAD_PATH"),
+                "{bad}"
+            );
+            assert_eq!(m.problems(), [format!("{bad}: Failed")], "{bad}");
+        }
+    }
+
+    #[test]
+    fn collection_should_report_includes_of_unparsed_files_and_cycles() {
+        let dir = "metadata/statdescriptions/";
+        let mut c = Collection::new(Game::Poe1);
+        let include = |name: &str| format!("include \"Metadata/StatDescriptions/{name}\"\n");
+        // a -> b -> c -> a is a cycle; d -> a is not part of it;
+        // e includes a filter file and a file that is not UTF-16.
+        for (name, text) in [
+            ("a.txt", include("B.txt")),
+            ("b.txt", include("c.txt")),
+            ("c.txt", include("a.txt")),
+            ("d.txt", include("a.txt")),
+            ("e.txt", include("x_filters.txt") + &include("bad.txt")),
+        ] {
+            c.add(&format!("{dir}{name}"), &utf16le(&text)).unwrap();
+        }
+        c.add(&format!("{dir}x_filters.txt"), b"").unwrap();
+        c.add(&format!("{dir}bad.txt"), b"odd").unwrap();
+        let (_, m) = c.finish();
+        let found: Vec<(&str, FindingKind, usize)> = m
+            .findings
+            .iter()
+            .map(|f| (f.file.strip_prefix(dir).unwrap(), f.kind, f.line))
+            .collect();
+        assert_eq!(
+            found,
+            [
+                ("a.txt", FindingKind::IncludeCycle, 1),
+                ("b.txt", FindingKind::IncludeCycle, 1),
+                ("c.txt", FindingKind::IncludeCycle, 1),
+                ("e.txt", FindingKind::IncludeNotParsed, 1),
+                ("e.txt", FindingKind::IncludeNotParsed, 2),
+            ]
+        );
     }
 }
