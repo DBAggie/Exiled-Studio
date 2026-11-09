@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A6b: gate verdict, `not-on-tree` category)
+Last Updated: 2026-11-09 (closed: PR A6b merged; moved to dev/completed/ in PR B0)
 
 # Spike A: Bundles2 game-data extraction (plan)
 

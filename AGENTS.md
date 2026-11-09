@@ -96,7 +96,7 @@ Each PR is done in its own fresh session, and nothing carries over except what i
 | `docs/handoff/SUCCESSOR-HANDOFF.md` | Every PR: rewrite **Current state** (what is done, what is in flight, open questions, blockers) and **Next action** (the exact next PR or step). |
 | `CLAUDE.md` **Status** | The current phase/spike or its next step changes. |
 | `docs/plan/ACTION-PLAN.md` **Next action** / gate status | A gate passes or fails, or the next step changes. Changing the sequence itself needs the maintainer. |
-| `dev/active/<task>/` | Every PR in a planned task: run `/dev-docs-update`; tick tasks, record decisions and exact next steps. |
+| `dev/active/<task>/` | Every PR in a planned task: run `/dev-docs-update`; tick tasks, record decisions and exact next steps. When the task closes, move its folder to `dev/completed/` (maintainer decision 2026-11-09). |
 | `AGENTS.md` | Commands, crate boundaries, layout, or rules change. |
 | `README.md` | User-visible status or build steps change. |
 | `docs/adr/README.md` | An ADR or amendment is added (with maintainer approval). |

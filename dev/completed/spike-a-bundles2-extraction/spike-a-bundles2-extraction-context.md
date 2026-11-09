@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A6b)
+Last Updated: 2026-11-09 (closed: PR A6b merged; moved to dev/completed/ in PR B0)
 
 # Spike A: context
 
@@ -169,7 +169,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Verify:** `cargo test -p loom-extractor`; `cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game <game> --out local/cross-check/<game>/<build>` (the A5 extracts are in `local/determinism/<game>/run1`; reports from this PR in `local/cross-check/`). Exit 1 while passives are uncategorized.
 - **Agent shell quirk:** multi-line Python heredocs in Git Bash broke on quotes in one call; writing the script with the Write tool and running `python -I <script>` works (same as the A3 note).
 
-## PR A6b: passive skill graph and final gate (PR #12, open, branch `spike-a/a6b-passive-graph`)
+## PR A6b: passive skill graph and final gate (PR #12, merged 2026-11-09 as `6f6bf83`; main CI run 42628047083 green)
 - PR A6a (#11) merged 2026-11-09 as `be55992` (main CI run 42622872489 green).
 - **How the format was found:** a throwaway scratch binary (depends on `loom-extractor` by path, not committed) dumped every `*.psg` to `local/a6b/<game>/` with `install::read_files`; hex dumps plus a Python prototype in the session scratchpad found the layout (report section 16). PoE2's layout matched PoB's `passivetree.lua` at once; PoE1 overran by a few bytes until the connections were read as bare `u32` (PoB's old `psg.lua` already did that). All 12 graphs then parse to their last byte, every orbit and orbit index is in range, and no connection leaves its graph.
 - **Which graph is the character tree:** `PassiveSkillTrees` row `Default` (`PassiveSkillGraph` column), exactly as PoB's PoE2 script finds it. PoE1 also has `DefaultAltAscendancies` (custom-ascendancy graph), `Royale`, `Atlas`, `AtlasCurrentLeague` (points at `AtlasSkillGraph`, not `atlasskillgraphcurrentleague.psg`, which no tree row names), `AtlasEmpty`, `BrequelTree` (Chayula league graph); PoE2 `Royale`, `Atlas`, `EndgameMap`, `BrequelTree`. `PassiveSkillTrees` was added to the extract roots.
