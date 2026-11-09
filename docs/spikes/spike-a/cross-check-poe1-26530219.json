@@ -11,6 +11,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 22,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 1091,
@@ -128,6 +129,7 @@
         "patch_delta": 1,
         "patch_delta_limit": 470,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 23539,
@@ -138,7 +140,7 @@
             "aura-bonus-family": {
               "breakdown": {},
               "count": 121,
-              "evidence": "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`",
+              "evidence": "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`, and no mod PoB exports with the same domain and generation type has that family",
               "keys": []
             },
             "dnt-first-line": {
@@ -209,7 +211,7 @@
                 "WATCHSTONE(25) / UNIQUE(3)": 30
               },
               "count": 8724,
-              "evidence": "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`)",
+              "evidence": "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`). Derived from PoB's output, not from its writer conditions: a pair that a patch adds lands here, not in patch-delta",
               "keys": []
             },
             "id-pattern-excluded": {
@@ -224,7 +226,7 @@
                 "^Synthesis": 41
               },
               "count": 4440,
-              "evidence": "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script; counted per pattern in `breakdown`)",
+              "evidence": "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script), and no mod PoB exports with the same domain and generation type matches it (counted per pattern in `breakdown`)",
               "keys": []
             },
             "no-description-line": {
@@ -236,7 +238,7 @@
             "unique-generation-without-family": {
               "breakdown": {},
               "count": 5,
-              "evidence": "Export/Scripts/mods.lua's item-exclusive writer needs a mod family (`mod.Family[1] and ...`); this UNIQUE-generation mod has none",
+              "evidence": "Export/Scripts/mods.lua's item-exclusive writer needs a mod family (`mod.Family[1] and ...`); this UNIQUE-generation mod has none, and no mod PoB exports with the same domain and generation type lacks one",
               "keys": []
             },
             "zero-values": {
@@ -298,6 +300,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 67,
         "uncategorized": 2310,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 3396,
@@ -2645,6 +2648,7 @@
         "patch_delta": 1,
         "patch_delta_limit": 30,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 1508,
@@ -2660,10 +2664,10 @@
             }
           },
           "patch-delta": {
-            "listed-not-exported": {
+            "listed-not-in-output": {
               "breakdown": {},
               "count": 1,
-              "evidence": "listed by `#skill` but not in PoB's output; Export/Scripts/skills.lua leaves out a listed skill only when its GrantedEffects row is missing from the game data it read, so the row is newer than PoB's export",
+              "evidence": "listed by `#skill` in a processed spec but not in PoB's generated output; Export/Scripts/skills.lua writes the key of every listed skill before any other check, so PoB's output was generated before the spec line was added (counted as a difference between PoB's export and its spec)",
               "keys": [
                 "EDSHarvestMinerHammerSmoke"
               ]
@@ -2723,6 +2727,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 273,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 13664,
@@ -2803,7 +2808,7 @@
     "provenance": {
       "extract_manifest_sha256": "201fd82bcbbd7efd60e1006aff25309515074be5a90abd3863e6b3a49dbb453c",
       "pob_commit": "1b4078dc4dcd58f7308df7e779974737badee894",
-      "tool_commit": "e237e8538f320f41afdba07d7c82983ec52c1e8b",
+      "tool_commit": "33730ed4b787e98a47046ddb06b67e3928eb4a79",
       "tool_dirty": false,
       "tool_version": "0.0.0"
     },

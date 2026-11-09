@@ -11,6 +11,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 35,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 1764,
@@ -128,6 +129,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 181,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 9059,
@@ -138,7 +140,7 @@
             "aura-bonus-family": {
               "breakdown": {},
               "count": 14,
-              "evidence": "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`",
+              "evidence": "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`, and no mod PoB exports with the same domain and generation type has that family",
               "keys": []
             },
             "domain-generation-not-exported": {
@@ -177,21 +179,21 @@
                 "WATCHSTONE(25) / SUFFIX(2)": 51
               },
               "count": 2059,
-              "evidence": "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`)",
+              "evidence": "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`). Derived from PoB's output, not from its writer conditions: a pair that a patch adds lands here, not in patch-delta",
               "keys": []
             },
             "id-pattern-excluded": {
               "breakdown": {
                 "Cowards": 9,
-                "Immunity": 25,
+                "Immunity": 24,
                 "Map": 2377,
                 "Master": 31,
                 "Royale": 42,
                 "Ultimatum": 123,
                 "^Synthesis": 41
               },
-              "count": 2648,
-              "evidence": "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script; counted per pattern in `breakdown`)",
+              "count": 2647,
+              "evidence": "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script), and no mod PoB exports with the same domain and generation type matches it (counted per pattern in `breakdown`)",
               "keys": []
             },
             "no-description-line": {
@@ -202,7 +204,7 @@
             },
             "zero-values": {
               "breakdown": {},
-              "count": 190,
+              "count": 191,
               "evidence": "every stat describeMod reads (slots 1 to 6, without buff-template stats) is 0 to 0; Export/statdesc.lua's describeStats skips such stats (`v.min ~= 0 or v.max ~= 0`), so describeMod gives no line and Export/Scripts/mods.lua does not write the mod (`#orders > 0`)",
               "keys": []
             }
@@ -237,6 +239,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 98,
         "uncategorized": 4817,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 4914,
@@ -5091,6 +5094,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 28,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 1429,
@@ -5136,6 +5140,7 @@
         "patch_delta": 0,
         "patch_delta_limit": 290,
         "uncategorized": 0,
+        "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 14526,
@@ -5960,7 +5965,7 @@
     "provenance": {
       "extract_manifest_sha256": "776d9acb09815a88082c3cb2815a99ec58c6dc8700606329c436bc0ed9e40b92",
       "pob_commit": "49e93925dcb79024175c58d25befadab67b4dd44",
-      "tool_commit": "e237e8538f320f41afdba07d7c82983ec52c1e8b",
+      "tool_commit": "33730ed4b787e98a47046ddb06b67e3928eb4a79",
       "tool_dirty": false,
       "tool_version": "0.0.0"
     },
