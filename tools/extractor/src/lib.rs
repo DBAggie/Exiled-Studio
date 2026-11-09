@@ -16,5 +16,6 @@ pub mod index;
 pub mod install;
 mod reader;
 pub mod schema;
+pub mod statdesc;
 
 pub use reader::Short;

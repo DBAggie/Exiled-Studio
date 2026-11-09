@@ -1,7 +1,8 @@
 //! Table extraction (Spike A, PR A4): picks the tables to extract, decodes
 //! them, writes each as canonical JSON, and builds the manifest that ties the
-//! output to its inputs (ADR-005). Pure: the filesystem stays in `main.rs` and
-//! [`crate::install`].
+//! output to its inputs (ADR-005). Stat-description files (PR A5) go through
+//! the same [`Extraction`] and are parsed by [`crate::statdesc`]. Pure: the
+//! filesystem stays in `main.rs` and [`crate::install`].
 //!
 //! Output is deterministic by construction: tables and findings are kept in
 //! `BTreeMap`s, rows keep file order, numbers are formatted without locale,
@@ -39,6 +40,7 @@ use crate::install::{BundleHashes, INDEX_PATH, hex};
 use crate::schema::{
     Column, ColumnKind, Game, ScalarType, Schema, TableSchema, VENDORED_COMMIT, VENDORED_SHA256,
 };
+use crate::statdesc::{self, StatDescManifest};
 
 /// Tables Spike A extracts; the tables they reference are added by [`Plan::new`].
 pub const SPIKE_TABLES: [&str; 6] = [
@@ -51,7 +53,8 @@ pub const SPIKE_TABLES: [&str; 6] = [
 ];
 
 /// Version of the manifest layout. Bump it when a field changes meaning.
-pub const MANIFEST_FORMAT: u32 = 1;
+/// 2: `stat_descriptions` added (PR A5).
+pub const MANIFEST_FORMAT: u32 = 2;
 
 /// Manifest file name inside the output directory.
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -263,31 +266,40 @@ struct Added {
     result: Result<Rendered, TableError>,
 }
 
-/// Collects the planned tables in any order and builds the output.
+/// Collects the planned tables and the stat-description files in any order
+/// and builds the output.
 #[derive(Debug, Clone)]
 pub struct Extraction<'s> {
     plan: Plan<'s>,
     added: BTreeMap<String, Added>,
+    stat_descriptions: statdesc::Collection,
 }
 
 impl<'s> Extraction<'s> {
-    /// Starts an extraction of `plan`.
+    /// Starts an extraction of `plan` and of the game's stat-description
+    /// files ([`statdesc::source_kind`]).
     #[must_use]
     pub const fn new(plan: Plan<'s>) -> Self {
+        let game = plan.game;
         Self {
             plan,
             added: BTreeMap::new(),
+            stat_descriptions: statdesc::Collection::new(game),
         }
     }
 
-    /// Decodes and renders the table file at `path` (as listed in the index).
-    /// A table that does not decode is recorded for the manifest, not
-    /// returned as an error.
+    /// Decodes and renders the table or stat-description file at `path` (as
+    /// listed in the index). A file that does not decode is recorded for the
+    /// manifest, not returned as an error.
     ///
     /// # Errors
-    /// [`ExtractError`] if `path` is not a planned table with a schema, was
-    /// added before, or JSON cannot be written.
+    /// [`ExtractError`] if `path` is neither a planned table with a schema
+    /// nor a stat-description file, was added before, or JSON cannot be
+    /// written.
     pub fn add(&mut self, path: &str, bytes: &[u8]) -> Result<(), ExtractError> {
+        if self.stat_descriptions.wants(path) {
+            return self.stat_descriptions.add(path, bytes);
+        }
         let unplanned = || ExtractError::Unplanned {
             path: path.to_owned(),
         };
@@ -334,7 +346,11 @@ impl<'s> Extraction<'s> {
     /// Checks key ranges and builds the table files and the manifest.
     #[must_use]
     pub fn finish(self, inputs: Inputs) -> Output {
-        let Self { plan, mut added } = self;
+        let Self {
+            plan,
+            mut added,
+            stat_descriptions,
+        } = self;
         let rows_of: BTreeMap<String, usize> = added
             .iter()
             .filter_map(|(key, a)| Some((key.clone(), a.result.as_ref().ok()?.rows)))
@@ -430,6 +446,23 @@ impl<'s> Extraction<'s> {
             tables.insert(planned.name.clone(), entry);
         }
 
+        let (statdesc_files, stat_descriptions) = stat_descriptions.finish();
+        for entry in stat_descriptions.files.values() {
+            if let Some(path) = &entry.output
+                && let Some(bytes) = statdesc_files.get(path)
+            {
+                // A stat-description file's "rows" are its descriptions.
+                file_entries.insert(
+                    path.clone(),
+                    OutputFile {
+                        rows: entry.descriptions,
+                        sha256: hex(&Sha256::digest(bytes)),
+                    },
+                );
+            }
+        }
+        files.extend(statdesc_files);
+
         let manifest = Manifest {
             bundles: inputs
                 .bundles
@@ -450,6 +483,7 @@ impl<'s> Extraction<'s> {
                 sha256: VENDORED_SHA256,
                 source: SCHEMA_SOURCE,
             },
+            stat_descriptions,
             steam_build_id: inputs.steam_build_id,
             table_dir: table_dir(plan.game),
             tables,
@@ -689,10 +723,11 @@ pub struct Extractor {
     pub version: String,
 }
 
-/// What came out: table files by output path, and the manifest.
+/// What came out: output files by path, and the manifest.
 #[derive(Debug, Clone)]
 pub struct Output {
-    /// Table files, by path inside the output directory.
+    /// Table and stat-description files, by path inside the output
+    /// directory.
     pub files: BTreeMap<String, Vec<u8>>,
     /// The manifest.
     pub manifest: Manifest,
@@ -737,6 +772,8 @@ pub struct Manifest {
     pub index: IndexInput,
     /// The vendored schema.
     pub schema: SchemaInput,
+    /// Stat-description files, their counts, and every line not parsed.
+    pub stat_descriptions: StatDescManifest,
     /// Steam build ID of the install, if found.
     pub steam_build_id: Option<String>,
     /// Folder of the tables in the index.
@@ -760,11 +797,13 @@ impl Manifest {
 
     /// Problems that make the run fail: a root table that is not `ok` (not
     /// decoded, or decoded with a row-size mismatch), any table that failed
-    /// to decode, and any key column with keys past the end of its target.
-    /// Everything else is recorded in the manifest only.
+    /// to decode, any key column with keys past the end of its target, and
+    /// the stat-description problems ([`StatDescManifest::problems`]).
+    /// Everything else, stat-description findings included, is recorded in
+    /// the manifest only.
     #[must_use]
     pub fn problems(&self) -> Vec<String> {
-        let mut problems = Vec::new();
+        let mut problems = self.stat_descriptions.problems();
         for (name, table) in &self.tables {
             if table.status == Status::Failed || (table.root && table.status != Status::Ok) {
                 problems.push(format!("{name}: {:?}", table.status));
@@ -979,11 +1018,27 @@ mod tests {
         }
     }
 
+    const STAT_PATH: &str = "metadata/statdescriptions/stat_descriptions.txt";
+
+    /// A stat-description file (UTF-16LE with BOM): one description with two
+    /// English variants and a French list, then a line that is not parsed.
+    fn stat_file() -> Vec<u8> {
+        let text = "\u{feff}description\r\n\t1 level\r\n\t2\r\n\
+                    \t\t1|# \"Level {0}\" reminderstring ReminderTextLevel\r\n\
+                    \t\t#|-1 \"Minus {0}\" negate 1\r\n\
+                    \tlang \"French\"\r\n\t1\r\n\t\t# \"Niveau {0}\"\r\n\
+                    \r\nbogus line\r\n";
+        text.encode_utf16().flat_map(u16::to_le_bytes).collect()
+    }
+
+    /// Extracts `tables` plus [`stat_file`], so the run has the stat
+    /// descriptions it needs.
     fn extract(schema: &Schema, tables: &[(&str, &[u8])]) -> Output {
         let mut extraction = Extraction::new(Plan::new(schema, Game::Poe1, &["root"]));
         for (path, bytes) in tables {
             extraction.add(path, bytes).unwrap();
         }
+        extraction.add(STAT_PATH, &stat_file()).unwrap();
         extraction.finish(inputs())
     }
 
@@ -1087,27 +1142,36 @@ mod tests {
     fn extract_should_not_depend_on_add_order() {
         let schema = schema();
         let (root, child, absent) = (root_dat(), child_dat(), dat(&[], &[]));
-        let tables: [(&str, &[u8]); 3] = [
+        // A second stat-description file, which includes the first.
+        let other: Vec<u8> = "include \"Metadata/StatDescriptions/stat_descriptions.txt\"\n"
+            .encode_utf16()
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        let files: [(&str, &[u8]); 4] = [
             ("data/root.datc64", &root),
             ("data/child.datc64", &child),
             ("data/absent.datc64", &absent),
+            ("metadata/statdescriptions/b/other.txt", &other),
         ];
-        let orders = [
-            [0, 1, 2],
-            [0, 2, 1],
-            [1, 0, 2],
-            [1, 2, 0],
-            [2, 0, 1],
-            [2, 1, 0],
-        ];
+        // Every rotation, forwards and backwards.
+        let mut orders = Vec::new();
+        for start in 0..4 {
+            let forward: [usize; 4] = std::array::from_fn(|i| (start + i) % 4);
+            let mut backward = forward;
+            backward.reverse();
+            orders.extend([forward, backward]);
+        }
         let outputs: Vec<_> = orders
             .iter()
             .map(|order| {
-                let out = extract(&schema, &order.map(|i| tables[i]));
+                let out = extract(&schema, &order.map(|i| files[i]));
                 (out.files, out.manifest.to_json().unwrap())
             })
             .collect();
-        assert_eq!(outputs[0].0.len(), 3);
+        assert_eq!(outputs[0].0.len(), 5);
+        let manifest = String::from_utf8(outputs[0].1.clone()).unwrap();
+        assert!(manifest.contains("\"stat_descriptions/b/other.txt.json\""));
+        assert!(!manifest.contains("missing-include"));
         for other in &outputs[1..] {
             assert_eq!(other, &outputs[0]);
         }
@@ -1222,9 +1286,14 @@ mod tests {
         let json = String::from_utf8(out.manifest.to_json().unwrap()).unwrap();
         let root_sha = hex(&Sha256::digest(&out.files["tables/Root.json"]));
         let child_sha = hex(&Sha256::digest(&out.files["tables/Child.json"]));
+        let sd_sha = hex(&Sha256::digest(
+            &out.files["stat_descriptions/stat_descriptions.txt.json"],
+        ));
         let expected = GOLDEN
             .replace("{root_sha}", &root_sha)
             .replace("{child_sha}", &child_sha)
+            .replace("{sd_sha}", &sd_sha)
+            .replace("{sd_src}", &hex(&Sha256::digest(stat_file())))
             .replace("{root_src}", &hex(&Sha256::digest(root_dat())))
             .replace("{child_src}", &hex(&Sha256::digest(child_dat())))
             .replace("{schema_commit}", VENDORED_COMMIT)
@@ -1250,6 +1319,10 @@ mod tests {
     "version": "0.0.0"
   },
   "files": {
+    "stat_descriptions/stat_descriptions.txt.json": {
+      "rows": 1,
+      "sha256": "{sd_sha}"
+    },
     "tables/Child.json": {
       "rows": 2,
       "sha256": "{child_sha}"
@@ -1259,7 +1332,7 @@ mod tests {
       "sha256": "{root_sha}"
     }
   },
-  "format": 1,
+  "format": 2,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -1269,6 +1342,47 @@ mod tests {
     "commit": "{schema_commit}",
     "sha256": "{schema_sha}",
     "source": "poe-tool-dev/dat-schema"
+  },
+  "stat_descriptions": {
+    "dir": "metadata/statdescriptions/",
+    "files": {
+      "metadata/statdescriptions/stat_descriptions.txt": {
+        "descriptions": 1,
+        "english_variants": 2,
+        "error": null,
+        "findings": 1,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 1,
+            "variants": 1
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/stat_descriptions.txt",
+        "source_sha256": "{sd_src}",
+        "status": "ok"
+      }
+    },
+    "findings": [
+      {
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "kind": "unknown-line",
+        "line": 10,
+        "skipped": 1,
+        "text": "bogus line"
+      }
+    ],
+    "findings_by_kind": {
+      "unknown-line": 1
+    },
+    "handlers": {
+      "negate": 1,
+      "reminderstring": 1
+    },
+    "variant_flags": {}
   },
   "steam_build_id": "123",
   "table_dir": "data/",
@@ -1401,7 +1515,13 @@ mod tests {
             })
         );
         assert_eq!(child.columns_read, Some(1));
-        assert_eq!(out.files.keys().collect::<Vec<_>>(), ["tables/Child.json"]);
+        assert_eq!(
+            out.files.keys().collect::<Vec<_>>(),
+            [
+                "stat_descriptions/stat_descriptions.txt.json",
+                "tables/Child.json"
+            ]
+        );
         assert_eq!(out.manifest.problems(), ["Root: Failed"]);
     }
 
@@ -1430,10 +1550,47 @@ mod tests {
         ] {
             let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
             extraction.add("data/child.datc64", &bytes).unwrap();
+            extraction.add(STAT_PATH, &stat_file()).unwrap();
             let problems = extraction.finish(inputs()).manifest.problems();
             // Child's keys point into Missing, which has no schema: unchecked.
             assert_eq!(problems, expected);
         }
+    }
+
+    #[test]
+    fn problems_should_flag_missing_and_undecodable_stat_descriptions() {
+        let schema = schema();
+        let run = |files: &[(&str, &[u8])]| {
+            let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
+            extraction.add("data/child.datc64", &child_dat()).unwrap();
+            for (path, bytes) in files {
+                extraction.add(path, bytes).unwrap();
+            }
+            extraction.finish(inputs())
+        };
+        // A filter file alone is not enough; findings are not problems.
+        let filters = "metadata/statdescriptions/skillpopup_stat_filters.txt";
+        assert_eq!(
+            run(&[(filters, b"")]).manifest.problems(),
+            ["no stat-description files in metadata/statdescriptions/"]
+        );
+        let out = run(&[(STAT_PATH, &stat_file()), (filters, b"")]);
+        assert_eq!(out.manifest.problems(), Vec::<String>::new());
+        assert_eq!(out.manifest.stat_descriptions.findings.len(), 1);
+        // An odd byte count is not UTF-16.
+        let out = run(&[(STAT_PATH, b"abc")]);
+        assert_eq!(out.manifest.problems(), [format!("{STAT_PATH}: Failed")]);
+        let entry = &out.manifest.stat_descriptions.files[STAT_PATH];
+        assert_eq!(
+            entry.error.as_ref().map(|e| e.code),
+            Some("EXTRACT_STATDESC_ODD_LENGTH")
+        );
+        assert_eq!(entry.output, None);
+        assert!(
+            !out.files
+                .keys()
+                .any(|k| k.starts_with("stat_descriptions/"))
+        );
     }
 
     #[test]
