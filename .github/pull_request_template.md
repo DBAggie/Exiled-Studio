@@ -17,7 +17,8 @@ Write "None: <reason>" when a section does not apply, e.g. "None: docs only".
 
 ## Handoff
 <!-- Each PR is done in a fresh session. List the docs updated so the next session can resume
-     (handoff Current state + Next action on every PR; see AGENTS.md "One PR per session"). -->
+     (handoff Current state + Next action on every PR; see AGENTS.md "One PR per session").
+     Right after opening, push a follow-up commit that records this PR's number in the handoff. -->
 
 ## Checklist
 - [ ] Single purpose and small
