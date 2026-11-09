@@ -40,7 +40,7 @@ Last Updated: 2026-11-09 (PR B2a)
 - [x] `parity-cli render-check` against PoB's exported mod text; 0 uncategorized
 - [x] Count stat sets that depend on include precedence (item scope: 10 PoE1 / 26 PoE2 shadowed descriptions, all within the file)
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#18)
 
 ## PR B3: PoB item reader and `resolve-corpus`
 - [ ] Record the Steam build; re-extract if changed
