@@ -11,3 +11,6 @@
 *.ico binary
 *.icns binary
 *.woff2 binary
+
+# Vendored third-party data: keep the committed bytes exact (the hash is checked in tests).
+tools/extractor/schema/schema.min.json binary
