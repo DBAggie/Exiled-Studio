@@ -73,7 +73,7 @@ Last Updated: 2026-11-09 (PR A6a)
 - [x] Note that gap entries become divergence-register entries once Spike C defines the format (report section 14)
 - [x] Update ACTION-PLAN gate status, CLAUDE.md Status, handoff
 - [x] `code-architecture-reviewer` review: blocker and should-fix items applied (context file, "PR A6a"); tool rerun at `33730ed`
-- [ ] PR open, CI green, maintainer merge
+- [ ] PR open (#11), CI green, maintainer merge
 
 ## PR A6b: passive skill graph and final gate (step 6, part 2)
 - [ ] Find the passive skill graph files in both installs (PoE1 `metadata/passiveskillgraph.psg`?, PoE2 equivalent) and document the format (PoB `src/Export/psg.lua` reads an old PoE1 layout; PoE2 `src/Export/Scripts/passivetree.lua`)

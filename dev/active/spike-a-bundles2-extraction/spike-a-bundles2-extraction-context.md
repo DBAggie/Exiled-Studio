@@ -150,7 +150,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **For Spike B:** read `stat_descriptions/**/*.json`. A description is matched by its stat IDs; a variant applies when every condition holds for its stat's value; `handlers` transform values before formatting (`stat` is 1-based); `placeholders[].index` is 0-based (`null` means 0). `includes` chain files (a skill file includes `skill_stat_descriptions`, which includes `stat_descriptions`); which file wins for a stat is not decided yet. `no_description` lists stats that are deliberately not shown. Findings do not fail the run: read `findings_by_kind` in the manifest.
 - **Verify:** `cargo test -p loom-extractor`; `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` and read `local/determinism/<game>/run1.log`.
 
-## PR A6a: cross-check (branch `spike-a/a6a-cross-check`, opened 2026-11-09)
+## PR A6a: cross-check (PR #11, opened 2026-11-09, branch `spike-a/a6a-cross-check`)
 - PR A5 (#10) merged 2026-11-09 as `ce5221b`.
 - **Maintainer decision 2026-11-09: split A6.** The gate needs every gap categorized in both directions; our PassiveSkills rows missing from PoB's tree (PoE1 2,310, PoE2 4,817) have no honest evidence in the extracted tables. A6a = the tool and four families; A6b = read the passive skill graph and close the gate.
 - **Upstream search 2026-11-09:** no export newer than PoE1 `1b4078dc4` / PoE2 `49e93925d` (dev, beta, master branches; open PRs with "export" in the title). Clones: `local/pob/PathOfBuilding-1b4078dc4`, `local/pob/PathOfBuilding-PoE2-49e93925d` (`git init`, `git fetch --depth 1 <url> <full sha>`, checkout `FETCH_HEAD`).
