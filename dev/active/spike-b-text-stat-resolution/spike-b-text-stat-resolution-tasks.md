@@ -17,7 +17,7 @@ Last Updated: 2026-11-09 (PR B1)
 - [x] Confirm each lookup handler's table in the schema (input for B1x; table in the plan)
 - [x] `parity-cli load-statdesc`; unit tests per construct; load counts on PoE1/PoE2; wasm32 build
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR; record PR number in handoff
+- [x] Open PR (#14)
 
 ## PR B1x: extractor roots for lookup tables
 - [ ] Add missing roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems`

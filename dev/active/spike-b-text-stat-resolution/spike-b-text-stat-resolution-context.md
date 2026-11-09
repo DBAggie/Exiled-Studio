@@ -39,7 +39,7 @@ Verdict: proceed with changes. All applied in this plan:
 - Should-fix: scope by `ModDomain` (not item class); independent `render-check`; normalization details (markup, literal digits, `gem_quality`, dedupe by description, two-line variants); Mods filter without spawn-tag rejection, same definition for `mod-backed`; exclusion bounds and distinct rate; B2 and B4 split.
 - Nits: `pob_item` placement reason, alt variants, second-level category for unique lines, item-set mention removed, `parity-cli` deps and description, handoff wording, Steam build check before B3.
 
-## PR B1: model, renderer, `load-statdesc` (branch `spike-b/b1-statdesc-model`)
+## PR B1: model, renderer, `load-statdesc` (PR #14, branch `spike-b/b1-statdesc-model`)
 - PR B0 (#13) merged 2026-11-09 as `c71fa9c`.
 - **Survey of the real text (2026-11-09, throwaway script in the session scratchpad):** escapes are only `
 ` (backslash, `n`; PoE1 1,185, PoE2 1,257); no `%%`. Markup: `<tag>{{text}}` (305 `<enchanted>`, `<crafting*>`, `<nemesismod>`, `<necropolisdownside>`, `<normal>`); the `{{ }}` belong to the markup, no literal braces occur elsewhere. `[Ref|Text]` and `[Text]` (PoE2 about 24,000; PoE1 253, `[DNT]` among them); `[ArmourBreak|Break {0}% of Armour]` holds a placeholder; `<<Icon>>` only in PoE2 (33). Placeholder formats: `""`, `d`, `+d`, `+` (PoE1 2, `{0:+}`), `-d` (PoE2 5, Abyssal Wasting). Handed descriptions: PoE1 5 (`weapon_*_damage_range`), PoE2 0. Every file has at most one include.
