@@ -2,7 +2,7 @@
 
 Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
 
-Status (2026-11-08, PR A2): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2). No gate result yet.
+Status (2026-11-08, PR A3): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3). No gate result yet.
 
 ## 1. Existing crates (survey, 2026-11-08)
 Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
@@ -90,8 +90,28 @@ Install files and SHA-256 (2026-11-08):
 - `_.index.high.bin`, `_.index.low.bin`: identical 74-byte bundles, byte-identical in PoE1 and PoE2, that decode to 8 zero bytes (an index with zero bundles). Their timestamps are older than `_.index.bin`, so the game does not rewrite them on patch. **Not needed**; not read by the extractor.
 - `.index.dbg`: not a bundle (starts `u32 1`, `u32 count`; PoE1 count 1,166,053), followed by records that look like 64-bit hashes. Older than `_.index.bin` in both installs, so not updated per patch. **Not needed**; not read.
 
-## 6. datc64 (to confirm in A3)
-Community-documented layout, from `poe-tool-dev/dat-schema` (MIT, the schema we will vendor) and `poe-dat-viewer`: `u32` row count, fixed-width rows, an 8-byte `0xBB` boundary marker, then a variable data section that strings (UTF-16LE, null-terminated) and arrays (count + offset) point into, with offsets counted from the marker. A3 checks this against real tables and records the results here.
+## 6. datc64 (confirmed on PoE1 and PoE2 in A3)
+Layout as documented by the community (`poe-tool-dev/dat-schema`, MIT, vendored; `poe-dat-viewer`'s reader, which has no license, consulted for layout facts only, no code taken). Read by `tools/extractor/src/dat.rs`; checked on every table of both installs (section 9).
+
+- `u32` row count, then `rows x width` bytes of fixed-width rows, then the variable section. The variable section starts with the 8-byte boundary `BB BB BB BB BB BB BB BB`; string and array offsets count from the first boundary byte (so real offsets are at least 8).
+- The file does not store the row width. The reader takes the schema's width when the boundary sits exactly at `4 + rows x width`; otherwise it takes the first boundary at a whole, non-zero number of bytes per row and reports a row-size mismatch. Boundary bytes can occur inside rows, so the schema width is tried first. A table with no rows starts with the boundary.
+- Column widths (the schema's `type`, `array`, `interval`):
+
+| Schema type | Bytes | Value |
+|---|---|---|
+| `bool` | 1 | 0 or 1 (anything else is an error; none seen) |
+| `i16`, `u16` | 2 | little-endian |
+| `i32`, `u32`, `f32`, `enumrow` | 4 | little-endian; `enumrow` is the enumerator value, offset by the enumeration's `indexing` |
+| `string` | 8 | `u64` offset of UTF-16LE text, ended by two zero units (a zero `u32`); every real offset is even and past the boundary, and the reader rejects others |
+| `row` | 8 | `u64` row index in the same table; null is `0xFEFEFEFEFEFEFEFE` |
+| `foreignrow` | 16 | `u64` row index in another table, then a `u64` that is **0 when the key is set and `0xFEFE...FE` when it is null** (counted on the 1,453,408 PoE1 and 1,036,443 PoE2 scalar `foreignrow` values of the tables whose width matches; the reader rejects anything else, since it signals misaligned columns, and no decoded table, array elements included, tripped it) |
+| `interval: true` | 2 x type | two values (only `i32` intervals in the schema) |
+| `array: true` | 16 | `u64` count, `u64` offset of `count x width` element bytes in the variable section; the offset of an empty array is not meaningful |
+| `array` (element type unknown) | 16 | count and offset only; elements are not read |
+
+- No key had only its low half equal to the null pattern, so the reader compares all 64 bits.
+- Output cap: `read_table` stops with `EXTRACT_DAT_TOO_LARGE` beyond 8 decoded values plus string units per input byte (`DECODE_BUDGET_PER_BYTE`), so a corrupt table whose rows all point at one large array cannot multiply its output. No real table comes near it.
+- Schema: version 7, 1,550 table entries (264 PoE1-only, 580 PoE2-only, 706 both; a name appears once per game it differs in), 149 enumerations. `validFor` is a bitmask (1 = PoE1, 2 = PoE2). File stems are lowercase; the reader matches table names ignoring ASCII case.
 
 ## 7. Evidence (PR A1)
 - CI tests: `cargo test -p loom-extractor`. Unit tests cover identity, length checks, tool-output parsing, and spawn errors. `tests/external_tool.rs` runs `ExternalTool` against `fake-unoodle` (`src/bin/fake-unoodle.rs`, a test double, not a decoder) and covers success, reported and actual length mismatches, a missing length line, tool failure with stderr, a missing work dir, scratch cleanup, and 8 concurrent calls.
@@ -101,3 +121,23 @@ Community-documented layout, from `poe-tool-dev/dat-schema` (MIT, the schema we 
 - CI tests: `cargo test -p loom-extractor`. Synthetic bundles (stored uncompressed, read with `Identity`) and synthetic indexes cover parsing, path rebuilding with shared prefixes, listing with a path that has no record, a record that has no path, a directory record that matches no directory, and a path that matches two records; and each error: inconsistent header fields, trailing bytes, undefined prefix (also after re-entering the prefix phase, which clears prefixes), a path over 4096 bytes, a block ending inside a fragment, non-UTF-8 names and paths, a file record naming a missing bundle or running past its bundle (including `offset + size` above `u32::MAX`), and a path block outside the path data. Corrupt-input tests are exhaustive rather than random: every truncation of a synthetic bundle and index is an error, and every single-byte change (6 values per byte) parses and lists without a panic. Huge counts are rejected before allocating. Path-hash vectors are 12 path/hash pairs read from the PoE1 index (directory records and file records), covering tail lengths 0 to 7 and multi-block input.
 - Maintainer-run `#[ignore]` test `tools/extractor/tests/install_index.rs` (2026-11-08, `unoodle` 0.5.7, release build): passed on both installs; it checks that every path and every record is accounted for exactly once, that no directory record is unmatched, and that the stats table resolves. `tests/install_decompress.rs` now reads headers through `Bundle::parse` and still passes on both.
 - `loom-extractor list-files <install>` (release build, maintainer workstation): PoE1 in about 1.5 s, PoE2 in about 5.8 s, index hashes as in the table above (unchanged since A1). Counts as in section 4.
+
+## 9. Evidence (PR A3)
+- Schema vendored at `tools/extractor/schema/schema.min.json` from `poe-tool-dev/dat-schema` release `latest`, built by upstream run 42056729237 on commit `717d788d6ec081821c33473b2a0ec35629144826` (2026-11-05); SHA-256 `e8e7e4c858924655bcfd56c23b275101f0321f435f90b19f8267bf43344ea16a`, checked by a unit test. Provenance and update steps in `tools/extractor/schema/README.md`. Upstream has no version tags, so the commit and hash pin it.
+- CI tests: `cargo test -p loom-extractor`. Schema: a minimal two-game fixture (lookup by game and case, intervals, references, unknown arrays, enumerations), and each rejection (invalid JSON, unknown field, unsupported version, unknown or empty `validFor`, unknown type, `array` type that is not an array, interval on a string, array plus interval, duplicate table or enumeration per game, also by case); the vendored file loads for both games. Dat: a synthetic two-row table with every column kind (values row, and a row of nulls, empty arrays, and an empty string); wider rows (mismatch, all columns read); narrower rows (mismatch, only the columns that fit read); a schema with no columns; an empty table under any schema; boundary bytes inside a row (schema width wins); fallback to the first aligned boundary; each value error (bad bool, string offset out of range, inside the boundary, or odd, unterminated, unpaired surrogate, array out of range including overflowing counts, bad `foreignrow` second word, including inside an array with its row and column in the message) and each framing error; a float interval; 100 rows sharing one 1,000-element array stop at the output cap. Every truncation of the synthetic table is an error, and every single-byte change (7 values per byte) returns without a panic. `read_files`: files sliced from two bundles (one in a subdirectory) in bundle order, and each error (record past the bundle, unknown bundle, decoded size differs from the index, missing bundle file, corrupt bundle, and bundle names that are absolute, contain `..`, `.`, empty parts, a backslash, or a colon, since index names become paths).
+- Maintainer-workstation run of the `#[ignore]` test `tests/install_dat.rs` (2026-11-08, `unoodle` 0.5.7, release build, about 19 s for both games). Index hashes unchanged since A1. Every table directly in the game's table directory was read with the vendored schema; the test fails if any table fails to decode. Re-run after the review fixes (output cap, stricter string offsets, bundle-name check) with identical results:
+
+| | PoE1 (`data/`) | PoE2 (`data/balance/`) |
+|---|---|---|
+| Tables in the directory | 957 | 1,025 |
+| Decoded, width matches the schema | 942 (2 with no rows; 564,393 rows) | 1,008 (91 with no rows; 429,900 rows) |
+| Row-size mismatch (all decoded, rows wider than the schema) | 2 | 6 |
+| Failed to decode | 0 | 0 |
+| No schema entry | 13 | 11 |
+| Schema entries with no file | 26 | 272 |
+
+  Mismatches (schema bytes -> file bytes): PoE1 `hideoutdoodads` 156 -> 157, `mapdevices` 110 -> 126. PoE2 `coreleagues` 238 -> 254, `endgamemapcontentvisualidentity` 40 -> 43, `hideoutdoodads` 172 -> 173, `hideoutsalvagebenchinterfacevisuals` 48 -> 50, `itemvisualidentity` 968 -> 992, `mapdevices` 110 -> 126. In every case the rows are wider, so all schema columns were read and the extra trailing bytes are unknown columns.
+
+  Tables with no schema entry: PoE1 `abyssmonstermodreplacement`, `additionallifescalingperlevel`, `breachstashtablayout`, `dynamiccraftingbenchinventorytype`, `eventcoins`, `goldmodprices`, `graphicalitemreceptacleadditionalbutton`, `graphicalitemreceptacleslot`, `leaderboardmapdevice`, `leaderboardmapdevicelabel`, `mercenarydisableduniques`, `missiontilemap`, `statistictrackingmicrotransactionsonkill`. PoE2 `additionallifescalingperlevel`, `atlaspoem`, `endgameplayerhideoutapplymods`, `endgameplayerhideoutrewards`, `eventcoins`, `missiontilemap`, `mobileatlaseldermemories`, `mobileatlasinventorylayout`, `mobilequestaudio`, `specialareabonusmapstats`, `tencentcharacterpanelstatslistener`.
+
+  All six Spike A tables (Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects) decode with no mismatch on both games; the test asserts this. None of the mismatched or schema-less tables is one A4 extracts.

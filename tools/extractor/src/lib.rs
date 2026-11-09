@@ -8,10 +8,12 @@
 #![warn(clippy::indexing_slicing)]
 
 pub mod bundle;
+pub mod dat;
 pub mod decompress;
 pub mod hash;
 pub mod index;
 pub mod install;
 mod reader;
+pub mod schema;
 
 pub use reader::Short;

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08 (PR A1 opened)
+Last Updated: 2026-11-08 (PR A3 opened)
 
 # Spike A: tasks
 
@@ -36,13 +36,15 @@ Last Updated: 2026-11-08 (PR A1 opened)
 - [x] Corrupt-input tests (exhaustive truncation and single-byte corruption instead of random property tests)
 - [x] `list-files` subcommand; maintainer run on PoE1 and PoE2 (counts and hashes in report sections 4 and 8)
 - [x] `#[ignore]` install test `tests/install_index.rs` passed on both installs
-- [ ] PR open (#7), CI green, maintainer merge
+- [x] PR open (#7), CI green, maintainer merge (merged 2026-11-09 as `89ed48c`; main CI run 42552158054 green)
 
 ## PR A3: dat reader (step 3)
-- [ ] Vendor the schema file with tag, hash, and third-party license notice (after maintainer OK)
-- [ ] Schema loader filtered by game
-- [ ] datc64 reader for every column type; row-size mismatch reporting
-- [ ] Unit tests per column type; property tests on corrupt and truncated input
+- [x] Vendor the schema file with source commit (upstream has no tags), hash, and third-party license notice (maintainer OK 2026-11-08)
+- [x] Schema loader filtered by game (`src/schema.rs`)
+- [x] datc64 reader for every column type; row-size mismatch reporting (`src/dat.rs`)
+- [x] Unit tests per column type; exhaustive truncation and single-byte corruption tests
+- [x] `read_files` (one decode per bundle) and `#[ignore]` install test `tests/install_dat.rs`, passed on PoE1 and PoE2 (report section 9)
+- [ ] PR open (#8), CI green, maintainer merge
 
 ## PR A4 (a/b): extract and determinism (step 4)
 - [ ] `extract` for Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects (plus referenced tables)
