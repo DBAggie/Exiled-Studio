@@ -129,7 +129,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
   - `cargo test -p loom-extractor`.
   - `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` (Git Bash with the cargo PATH prefix; output in `local/determinism/`).
 
-## PR A5: stat-description parser (branch `spike-a/a5-stat-descriptions`, opened 2026-11-09)
+## PR A5: stat-description parser (PR #10, opened 2026-11-09, branch `spike-a/a5-stat-descriptions`)
 - PR A4 (#9) merged 2026-11-09 as `d480d1f`.
 - **The plan's `.csd` assumption held only for PoE2.** PoE1 uses `metadata/statdescriptions/*.txt` (45 files), PoE2 `data/statdescriptions/**/*.csd` (589, most per skill). Same UTF-16LE grammar; full description in the report, section 12.
 - **How the grammar was found:** a throwaway example binary (not committed) dumped every file to `local/a5/`, converted to UTF-8 with `iconv`, then surveyed with `grep`/`awk` (line kinds, condition shapes, handler argument shapes, placeholders, markup). PoB's `src/Export/statdesc.lua` (legacy repo, read only) agrees on the grammar. The dumps are still in `local/a5/` on the maintainer workstation (git-ignored); recreate them the same way if needed.
@@ -145,7 +145,8 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Results** (report section 13): zero unparsed English lines on both games; counts match independent `grep` counts; determinism holds (PoE1 117 files, PoE2 675) from clean tree `9394d75` (after the review fixes).
 - **`code-architecture-reviewer` (2026-11-09): no blockers.** (The first attempt stopped on an account usage limit; it was resumed after the reset.)
   - Applied: should-fix 1 (stat-description paths with `..`, empty parts, `\`, `:`, NUL fail the file with `EXTRACT_STATDESC_BAD_PATH`, since the path becomes an output path); 2 (a bad English count keeps the description without variants; a consumed `lang` line counts as skipped); 3 (`EXTRACT_UNPLANNED_FILE`/`EXTRACT_DUPLICATE_FILE` instead of the table codes; `TableError` documented as covering files too, not renamed); 4 (new findings `include-not-parsed` and `include-cycle`); nit: counts, conditions, handler stats reject a leading `+`.
-  - Not applied (nits): `min > max` ranges kept as written (documented; none occur); bare-`` line endings (none occur); line numbers for `includes`/`no_description` in the JSON; renaming `Handler.stat` (1-based) vs `Placeholder.index` (0-based), documented instead; a warning for a non-empty file with no constructs (an even-length non-text file would decode and give `unknown-line` findings, so it is not silent).
+  - Not applied (nits): `min > max` ranges kept as written (documented; none occur); bare-`
+` line endings (none occur); line numbers for `includes`/`no_description` in the JSON; renaming `Handler.stat` (1-based) vs `Placeholder.index` (0-based), documented instead; a warning for a non-empty file with no constructs (an even-length non-text file would decode and give `unknown-line` findings, so it is not silent).
 - **For Spike B:** read `stat_descriptions/**/*.json`. A description is matched by its stat IDs; a variant applies when every condition holds for its stat's value; `handlers` transform values before formatting (`stat` is 1-based); `placeholders[].index` is 0-based (`null` means 0). `includes` chain files (a skill file includes `skill_stat_descriptions`, which includes `stat_descriptions`); which file wins for a stat is not decided yet. `no_description` lists stats that are deliberately not shown. Findings do not fail the run: read `findings_by_kind` in the manifest.
 - **Verify:** `cargo test -p loom-extractor`; `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` and read `local/determinism/<game>/run1.log`.
 

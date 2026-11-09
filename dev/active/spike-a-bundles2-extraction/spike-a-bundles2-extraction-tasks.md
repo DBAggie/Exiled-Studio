@@ -62,7 +62,7 @@ Last Updated: 2026-11-09 (PR A5 opened)
 - [x] Unit tests per construct and per finding kind; no-panic tests on truncated and corrupt input
 - [x] Maintainer run from clean tree `9394d75`: zero unparsed English lines on both games; determinism holds (117 / 675 files); manifests committed
 - [x] `code-architecture-reviewer` review: no blockers; should-fix 1-4 and one nit applied, other nits recorded (context file, "PR A5")
-- [ ] PR open, CI green, maintainer merge
+- [ ] PR open (#10), CI green, maintainer merge
 
 ## PR A6: cross-check and gate (step 6)
 - [ ] Search upstream for data exports newer than 3.29.3 / 0.5.5; use the newest and record the commits
