@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08 (PR A1a)
+Last Updated: 2026-11-08 (after PR #4 merged)
 
 # Spike A: context
 
@@ -52,17 +52,17 @@ Last Updated: 2026-11-08 (PR A1a)
 
 These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 
-## PR A1a: cargo-deny (2026-11-08, branch `ci/cargo-deny`)
+## PR A1a: cargo-deny (PR #4, merged 2026-11-08 as `be077e9`)
 - Files: `deny.toml` (new), `.github/workflows/ci.yml` (new `cargo-deny` job, id `deny`, added to `ci-ok` needs), `AGENTS.md` (command + "Dependencies" section).
 - CI uses `EmbarkStudios/cargo-deny-action` v2.1.1 pinned to `3c6349835b2b7b196a839186cb8b78e02f7b5f25`, which bundles cargo-deny 0.20.2; the maintainer workstation has the same version (`cargo install --locked cargo-deny@0.20.2`). Command: `cargo deny --all-features --locked check licenses bans sources`.
 - Allow-list: 0BSD, Apache-2.0, Apache-2.0 WITH LLVM-exception, BSD-2-Clause, BSD-3-Clause, CC0-1.0, ISC, MIT, MIT-0, Unicode-3.0, Unlicense, Zlib. This extends decision 3's list (MIT/Apache/BSD/Zlib/Unlicense) with other permissive licenses already in the tree (0BSD, CC0, MIT-0, Unicode-3.0, LLVM-exception) plus ISC.
-- **MPL-2.0 exceptions (needs maintainer confirmation):** the tree had 5 MPL-2.0-only crates, all reached only through Tauri via `loom-tauri` (checked with `cargo tree -i`): `cssparser`, `cssparser-macros`, `dtoa-short`, `selectors` (tauri-utils -> dom_query) and `option-ext` (tauri -> dirs -> dirs-sys). They are allowed by crate name, not globally, so a new MPL dependency still fails. Removing them would mean dropping Tauri (ADR-002). Without the exceptions the check fails with exactly these 5 crates; that run is the evidence the policy rejects non-allowed licenses.
+- **MPL-2.0 exceptions (accepted by the maintainer by merging PR #4, 2026-11-08):** the tree had 5 MPL-2.0-only crates, all reached only through Tauri via `loom-tauri` (checked with `cargo tree -i`): `cssparser`, `cssparser-macros`, `dtoa-short`, `selectors` (tauri-utils -> dom_query) and `option-ext` (tauri -> dirs -> dirs-sys). They are allowed by crate name, not globally, so a new MPL dependency still fails. Removing them would mean dropping Tauri (ADR-002). Without the exceptions the check fails with exactly these 5 crates; that run is the evidence the policy rejects non-allowed licenses.
 - `multiple-versions = "warn"`: Tauri brings ~20 duplicate crates (windows-sys, toml, syn, ...); denying would block on upstream.
 - Advisories (`cargo deny check advisories`) are deliberately not in the required job: the RustSec DB changes without a code change and would turn unrelated PRs red. Follow-up task: a scheduled or non-blocking advisories job.
 - Quirk: in the agent's PowerShell, cargo is not on PATH; prefix commands with `$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`. Git Bash has no cargo either.
 
 ## Open questions for the maintainer
-- Confirm the 5 MPL-2.0 exceptions for Tauri's transitive crates (PR A1a). If rejected, the alternative is replacing Tauri, which needs an ADR-002 amendment.
+None.
 
 ## Plan review (2026-11-08)
 `plan-reviewer` verdict: proceed with changes. No ADR conflicts. Applied:
