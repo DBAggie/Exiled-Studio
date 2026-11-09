@@ -1,9 +1,9 @@
-Last Updated: 2026-11-09 (PR A4 opened)
+Last Updated: 2026-11-09 (PR A5 opened)
 
 # Spike A: context
 
 ## Key files
-- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. `src/lib.rs` (library, `#![warn(clippy::indexing_slicing)]`), `src/decompress.rs` (`Decompressor` trait, `ExternalTool`, `Identity`; A1), `src/reader.rs` (private bounds-checked cursor, `Short` error), `src/hash.rs` (MurmurHash64A `path_hash`), `src/bundle.rs` (`Bundle::parse`/`decode`, `decode_bundle`, test helper `build_identity_bundle`), `src/index.rs` (`Index::parse`/`paths`/`list`, `Listing`), `src/install.rs` (filesystem edge: `read_index`, `read_files` (decodes each bundle once), SHA-256, `hex`), `src/schema.rs` (`Schema` loader, `VENDORED` embedded schema and its hash; A3), `src/dat.rs` (`DatFile::parse`, `read_table`, `Value`; A3), `src/extract.rs` (`Plan`, `Extraction`, canonical table JSON, `Manifest`; A4), `src/main.rs` (`list-files` and `extract` subcommands). `scripts/check-determinism.sh` (two-run byte comparison; A4). Install-backed `#[ignore]` tests: `tests/install_decompress.rs` (A1), `tests/install_index.rs` (A2), `tests/install_dat.rs` (A3).
+- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. `src/lib.rs` (library, `#![warn(clippy::indexing_slicing)]`), `src/decompress.rs` (`Decompressor` trait, `ExternalTool`, `Identity`; A1), `src/reader.rs` (private bounds-checked cursor, `Short` error), `src/hash.rs` (MurmurHash64A `path_hash`), `src/bundle.rs` (`Bundle::parse`/`decode`, `decode_bundle`, test helper `build_identity_bundle`), `src/index.rs` (`Index::parse`/`paths`/`list`, `Listing`), `src/install.rs` (filesystem edge: `read_index`, `read_files` (decodes each bundle once), SHA-256, `hex`), `src/schema.rs` (`Schema` loader, `VENDORED` embedded schema and its hash; A3), `src/dat.rs` (`DatFile::parse`, `read_table`, `Value`; A3), `src/extract.rs` (`Plan`, `Extraction`, canonical table JSON, `Manifest`; A4), `src/statdesc.rs` (stat-description decoder, parser, findings, `Collection`; A5), `src/main.rs` (`list-files` and `extract` subcommands). `scripts/check-determinism.sh` (two-run byte comparison; A4). Install-backed `#[ignore]` tests: `tests/install_decompress.rs` (A1), `tests/install_index.rs` (A2), `tests/install_dat.rs` (A3).
 - `tools/extractor/schema/`: vendored `schema.min.json` (community dat schema, MIT), its license, and `README.md` with provenance, hash, and update steps.
 - `tools/extractor/src/bin/fake-unoodle.rs` + `tests/external_tool.rs`: a test double for `unoodle` (behaviour picked by the input prefix `ok:`/`lie:`/`silent:`/`fail:`) so CI tests `ExternalTool` without a decoder. Added after the `code-architecture-reviewer` review (should-fix: the tool path was only covered by the ignored test).
 - `docs/spikes/spike-a-extraction.md`: the spike report (survey, decompressor decision, bundle and index layout, evidence). Add a section per PR.
@@ -104,7 +104,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Verify:** `cargo test -p loom-extractor`; with `LOOM_POE1_INSTALL`/`LOOM_POE2_INSTALL` set, `cargo test --release -p loom-extractor --test install_dat -- --ignored --nocapture`.
 - **Agent shell quirk:** Bash heredocs passed through the tool can mangle backslashes (a `'\\0'` became a NUL byte) and some non-ASCII. Write edit scripts with the Write tool and run them with `python -I <script> <file>`. PowerShell 5.1 `Set-Content -Encoding utf8` adds a BOM; strip it.
 
-## PR A4: extract, manifest, determinism (PR #9, opened 2026-11-09, branch `spike-a/a4-extract`)
+## PR A4: extract, manifest, determinism (PR #9, merged 2026-11-09 as `d480d1f`)
 - **Not split into A4a/A4b:** the dat reader is generic, so all six tables plus the referenced ones cost the same code as Stats alone.
 - **Which tables:** the six roots plus the transitive closure over every column that references a table (enum references skipped): PoE1 72 tables, PoE2 85. Only direct references would be 27/38; the closure was chosen so every key in the output can be range-checked. Tables come from `data/` (PoE1) and `data/balance/` (PoE2), the English text; the manifest says so (`table_dir`, `text_language`).
 - **JSON layout:** `{"columns": [...], "rows": [[...], ...], "table": ...}`, one row per line. Rows are arrays, not objects, because many schema columns have no name. Details in the report, section 10.
@@ -128,6 +128,27 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Verify:**
   - `cargo test -p loom-extractor`.
   - `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` (Git Bash with the cargo PATH prefix; output in `local/determinism/`).
+
+## PR A5: stat-description parser (PR #10, opened 2026-11-09, branch `spike-a/a5-stat-descriptions`)
+- PR A4 (#9) merged 2026-11-09 as `d480d1f`.
+- **The plan's `.csd` assumption held only for PoE2.** PoE1 uses `metadata/statdescriptions/*.txt` (45 files), PoE2 `data/statdescriptions/**/*.csd` (589, most per skill). Same UTF-16LE grammar; full description in the report, section 12.
+- **How the grammar was found:** a throwaway example binary (not committed) dumped every file to `local/a5/`, converted to UTF-8 with `iconv`, then surveyed with `grep`/`awk` (line kinds, condition shapes, handler argument shapes, placeholders, markup). PoB's `src/Export/statdesc.lua` (legacy repo, read only) agrees on the grammar. The dumps are still in `local/a5/` on the maintainer workstation (git-ignored); recreate them the same way if needed.
+- **Decisions:**
+  - Parsing is token based per non-blank line, not indentation based: many files put block lines at column 0.
+  - English only is parsed; other languages are counted per file (`languages`). Non-English lines contain constructs the English never uses (`1|1|#`, `{0%}`, `{0 }`); parsing them would add findings that do not matter for Spike B.
+  - A grammar problem is a finding (fixed `FindingKind` list, line, text, skipped count), never an error. Only an odd byte count or a bad surrogate fails a file (`EXTRACT_STATDESC_ODD_LENGTH`, `EXTRACT_STATDESC_BAD_UTF16`), and that, or finding no stat-description file at all, fails the run.
+  - Handler names are an open set: any `<name> <stat>` parses, and the manifest counts each name. Their meaning (PoB implements about 50 of them in `describeStats`) is Spike B work. Only `reminderstring <id>` and the bare `canonical_line`/`markup` are special. Variant flags are a closed list (`gem_quality`, `table_only`); an unknown one is a finding.
+  - `{{`/`}}` are literal braces; markup (`<tag>{...}`, `[Ref|Text]`, `<<Icon>>`) is kept as written in `text`. Spike B must strip it before matching.
+  - `*_filters` files (PoE1 `skillpopup_stat_filters.txt`, a `group {}` format) are hashed and listed as `skipped`.
+  - Stat-description output goes through the same `Extraction` as tables (`Extraction::add` routes by path), so it shares the determinism and the `.partial` output folder. Manifest format bumped to 2.
+- **Steam updated PoE1 overnight** (build 26474023 to 26530219). Every bundle and table A4 reads has the same hash; the A4 table results stand. The A4 PoE1 manifest was replaced by the new one; the old one is in git history.
+- **Results** (report section 13): zero unparsed English lines on both games; counts match independent `grep` counts; determinism holds (PoE1 117 files, PoE2 675) from clean tree `9394d75` (after the review fixes).
+- **`code-architecture-reviewer` (2026-11-09): no blockers.** (The first attempt stopped on an account usage limit; it was resumed after the reset.)
+  - Applied: should-fix 1 (stat-description paths with `..`, empty parts, `\`, `:`, NUL fail the file with `EXTRACT_STATDESC_BAD_PATH`, since the path becomes an output path); 2 (a bad English count keeps the description without variants; a consumed `lang` line counts as skipped); 3 (`EXTRACT_UNPLANNED_FILE`/`EXTRACT_DUPLICATE_FILE` instead of the table codes; `TableError` documented as covering files too, not renamed); 4 (new findings `include-not-parsed` and `include-cycle`); nit: counts, conditions, handler stats reject a leading `+`.
+  - Not applied (nits): `min > max` ranges kept as written (documented; none occur); bare-`
+` line endings (none occur); line numbers for `includes`/`no_description` in the JSON; renaming `Handler.stat` (1-based) vs `Placeholder.index` (0-based), documented instead; a warning for a non-empty file with no constructs (an even-length non-text file would decode and give `unknown-line` findings, so it is not silent).
+- **For Spike B:** read `stat_descriptions/**/*.json`. A description is matched by its stat IDs; a variant applies when every condition holds for its stat's value; `handlers` transform values before formatting (`stat` is 1-based); `placeholders[].index` is 0-based (`null` means 0). `includes` chain files (a skill file includes `skill_stat_descriptions`, which includes `stat_descriptions`); which file wins for a stat is not decided yet. `no_description` lists stats that are deliberately not shown. Findings do not fail the run: read `findings_by_kind` in the manifest.
+- **Verify:** `cargo test -p loom-extractor`; `tools/extractor/scripts/check-determinism.sh "<install>" poe1|poe2` and read `local/determinism/<game>/run1.log`.
 
 ## Open questions for the maintainer
 None.

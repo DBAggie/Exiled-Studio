@@ -19,7 +19,12 @@
     "Folders/E/data.datc64": "cd7f8a338213f162005b6b9f5ee0df35f19843bc16f3d3f49a477903fcbc4213",
     "Folders/F/data.datc64": "56afb500385641fe4adced26b410a3afb49d0b5718dcc30ee1c835cebc7e4352",
     "Folders/metadata": "4b2c0af7b807d42dcbae554bc6e8989b4ae27ef2d9aa41a414a659c3aca9f08b",
+    "Folders/metadata/chests": "feb89ec05398689ec6848122d8b75fcb06c7c5eb5cd71edd84aa7aead0edfbfc",
     "Folders/metadata/items_1": "84a4b4db751ac8e395b7e4bfc585f283c9a4db595422820b88465ec4c6702ef1",
+    "Folders/metadata/statdescriptions": "64f95ab18507261b630b7f20faa03bcc35f97b517416038770d0c596f84f89b9",
+    "Folders/metadata/statdescriptions_1": "3b16498999033bcb78a5eb03a92ccda7e63f6e3e3f61e31402b27450861249bd",
+    "Folders/metadata/statdescriptions_2": "3ddb84d93c0e5953627038545696023d661ebde128c71756791110da49efc0ce",
+    "Tiny_02": "ed2c825a31ef0e6d14530eb8a6f534b8a49c6dc97de083d9aa26f5402d2eb4d6",
     "Tiny_9": "633bc1d83890e2bf898db2035d3bc1a0d803025c9d62a07c3571a6e940ce284b"
   },
   "decoder": {
@@ -27,11 +32,187 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "d047e4a1043655a68629f7781d7100a236b8795e",
+    "commit": "9394d75a34b05bc4a0cd36d4aa7e7089d58ddffb",
     "dirty": false,
     "version": "0.0.0"
   },
   "files": {
+    "stat_descriptions/active_skill_gem_stat_descriptions.txt.json": {
+      "rows": 361,
+      "sha256": "d69049eb4fc13b334ab6b5598cf9d3518ae1c7980d2e4b7a9d1124f397b89509"
+    },
+    "stat_descriptions/advanced_mod_stat_descriptions.txt.json": {
+      "rows": 21,
+      "sha256": "fc696d02be8965447af7092dda0d41307b7b637b92db4d97d82cb35e1eef5858"
+    },
+    "stat_descriptions/atlas_relic_stat_descriptions.txt.json": {
+      "rows": 3,
+      "sha256": "cffce0d97f705b002c0a649817656d8685e3c987e38a155226daaa86604ac670"
+    },
+    "stat_descriptions/atlas_stat_descriptions.txt.json": {
+      "rows": 976,
+      "sha256": "094b9466380cbc9027005335f8638d1bc27bf946601a265b1ef48322ca270adc"
+    },
+    "stat_descriptions/aura_skill_stat_descriptions.txt.json": {
+      "rows": 92,
+      "sha256": "263ad39ed8cd202fc422f0876bf0f81248eb09845ac6c8315ffbf9106979ba26"
+    },
+    "stat_descriptions/banner_aura_skill_stat_descriptions.txt.json": {
+      "rows": 17,
+      "sha256": "6986150cf19102be52c2d03601c66235cb4fe1a256a3b4ad799fbd7b8f8b1ff5"
+    },
+    "stat_descriptions/beam_skill_stat_descriptions.txt.json": {
+      "rows": 3,
+      "sha256": "31b57f57adbd2c8900bc1d84b0a329024868597ffb51bb77fc407d4e2bcd6969"
+    },
+    "stat_descriptions/brand_skill_stat_descriptions.txt.json": {
+      "rows": 12,
+      "sha256": "ab63c9a2dbf0f9bcece7c12db4b7e16ecec431292ced7e8004dce4229352eb88"
+    },
+    "stat_descriptions/buff_skill_stat_descriptions.txt.json": {
+      "rows": 61,
+      "sha256": "5e730396140db62d71cd441d29f968f7aa022335c20ea719339648f5fc65107b"
+    },
+    "stat_descriptions/chest_stat_descriptions.txt.json": {
+      "rows": 102,
+      "sha256": "64e85833222723f24c5f27b2cf3a26ef23f9919f80346daa404ad69cb240351e"
+    },
+    "stat_descriptions/curse_skill_stat_descriptions.txt.json": {
+      "rows": 78,
+      "sha256": "e513f61aaff5b0ef767905e331c225c0e5bc9489e70ba5f19b98c1ae2977f9de"
+    },
+    "stat_descriptions/debuff_skill_stat_descriptions.txt.json": {
+      "rows": 27,
+      "sha256": "4c9cac0b4984373c08f247c006c8cbb4662215ddc48098d1baaaf467de4706db"
+    },
+    "stat_descriptions/deepwater_applied_adjacent_stat_descriptions.txt.json": {
+      "rows": 3,
+      "sha256": "a52a85142393b2493e84ee2a1f69d91bd3805df38f6a05f1d379cc46addd57c8"
+    },
+    "stat_descriptions/deepwater_explicit_stat_descriptions.txt.json": {
+      "rows": 27,
+      "sha256": "fcab9fd7656586ed65b0dab4f35fa03ada60d887fbca5f9b4f8b45a258c793f9"
+    },
+    "stat_descriptions/deepwater_implicit_stat_descriptions.txt.json": {
+      "rows": 70,
+      "sha256": "2bf84bddb8ad70f30e75f57b644d2771981885d60def7d5800134f5e322e3f09"
+    },
+    "stat_descriptions/deepwater_stat_descriptions.txt.json": {
+      "rows": 0,
+      "sha256": "d7768d6154050b826e4ed89d4f067623e8def51cf6b9467452fa2a883f361caf"
+    },
+    "stat_descriptions/expedition_relic_stat_descriptions.txt.json": {
+      "rows": 140,
+      "sha256": "3e7705a8602bfa539b9e46fdd2567b5216b0daeb2655e4413a94db9a61dafe43"
+    },
+    "stat_descriptions/gem_stat_descriptions.txt.json": {
+      "rows": 787,
+      "sha256": "54942da54bee92453d04b7fbb9f8a7e6068ebe12175575863155290ad21a913c"
+    },
+    "stat_descriptions/graft_stat_descriptions.txt.json": {
+      "rows": 97,
+      "sha256": "f6dfe4c62336b921b90b3b6875b001fb03314243c93a3977a694073057c4accb"
+    },
+    "stat_descriptions/heist_equipment_stat_descriptions.txt.json": {
+      "rows": 123,
+      "sha256": "f4adc9c92d43979d88d27a444124b3f7603505533391a9e58502da9143ac5da7"
+    },
+    "stat_descriptions/leaguestone_stat_descriptions.txt.json": {
+      "rows": 174,
+      "sha256": "bb53f954b878727b299fcd7e0cca605b0e4595276178a6533616d006859a4052"
+    },
+    "stat_descriptions/map_stat_descriptions.txt.json": {
+      "rows": 207,
+      "sha256": "87ad8587e0de521da3aa98bfb31adcaff357504e7095200a0e86202b805263e0"
+    },
+    "stat_descriptions/mercenary_support_stat_descriptions.txt.json": {
+      "rows": 50,
+      "sha256": "8d1a5ba88bf2f2bb60af48ec782448aa7ea034d497939517b07ec829b31f0a58"
+    },
+    "stat_descriptions/minion_attack_skill_stat_descriptions.txt.json": {
+      "rows": 161,
+      "sha256": "03b67839f8714455df75852d11d44ec4a80080c0f1936e64971592a66ca7ed0b"
+    },
+    "stat_descriptions/minion_skill_stat_descriptions.txt.json": {
+      "rows": 346,
+      "sha256": "7ad35c1ff9e7a073f6861431963d7d47e3b96f4f2f264d3a5415a77bf2532ad5"
+    },
+    "stat_descriptions/minion_spell_damage_skill_stat_descriptions.txt.json": {
+      "rows": 92,
+      "sha256": "58677f0eb91c018c56fd1313d8ca6817cbfac56222497a8a024a172dbf264d77"
+    },
+    "stat_descriptions/minion_spell_skill_stat_descriptions.txt.json": {
+      "rows": 8,
+      "sha256": "47ca9f241f43edfeea8cbecd7b1c8773fc1be6409d89e600669248009c1954e4"
+    },
+    "stat_descriptions/mirage_stat_descriptions.txt.json": {
+      "rows": 65,
+      "sha256": "d573bde48be9ea662285dee1ae54a2f30422413998735936dbd6d1e4e41f3c63"
+    },
+    "stat_descriptions/monster_stat_descriptions.txt.json": {
+      "rows": 33,
+      "sha256": "d83bb1aeb68154dce2f39f310a072eaace0d8fc63baeb20bb29adf7a134fd8fb"
+    },
+    "stat_descriptions/necropolis_stat_descriptions.txt.json": {
+      "rows": 138,
+      "sha256": "f6c3f633be01a915f0a9e338641da7167708af31c7e25b7dd9c701e248652873"
+    },
+    "stat_descriptions/offering_skill_stat_descriptions.txt.json": {
+      "rows": 16,
+      "sha256": "e17b7bd62d7ca864b55acb50d828ea6c68a3f0284226cda8ad50fbd0b47475bc"
+    },
+    "stat_descriptions/passive_skill_aura_stat_descriptions.txt.json": {
+      "rows": 25,
+      "sha256": "2898392d5eba075e971e098fcb6e30932ff7a7468afefac3fe34dfa500363cdd"
+    },
+    "stat_descriptions/passive_skill_stat_descriptions.txt.json": {
+      "rows": 135,
+      "sha256": "524e8a1da2cba39c82759fb4549da765dacc96011b97b1d17daf0f34942dab07"
+    },
+    "stat_descriptions/primordial_altar_stat_descriptions.txt.json": {
+      "rows": 137,
+      "sha256": "2db0d97a23cfb7a66b6633d3343d74ec81133fa65766fe6b5619e76b10488b9d"
+    },
+    "stat_descriptions/sanctum_relic_stat_descriptions.txt.json": {
+      "rows": 57,
+      "sha256": "f5706803909b97338d96bdfd64cb43ad0486989edac43225ab1238cd9834f649"
+    },
+    "stat_descriptions/secondary_debuff_skill_stat_descriptions.txt.json": {
+      "rows": 2,
+      "sha256": "e585fa58fe781a7b9897dbb0c6ff96876d0466388e5634e5adea709356eabc17"
+    },
+    "stat_descriptions/sentinel_stat_descriptions.txt.json": {
+      "rows": 136,
+      "sha256": "5dd49b455c9a94b6b76ce2039f5bfae4673bc4bbc5256713b3cc092b1f23b2d0"
+    },
+    "stat_descriptions/single_minion_spell_skill_stat_descriptions.txt.json": {
+      "rows": 46,
+      "sha256": "e979829386f2fcb7284b5c3aea8aa4a04c94ccd32a0d874e3394bbd97cf42c93"
+    },
+    "stat_descriptions/skill_stat_descriptions.txt.json": {
+      "rows": 1736,
+      "sha256": "0b05064ba94b1a70a094ffca06450e85e0fb84c70bd1236e6f9d3aaabc306264"
+    },
+    "stat_descriptions/stat_descriptions.txt.json": {
+      "rows": 11040,
+      "sha256": "134c60358323b4227caa1524fdd2fe656ed4eabad0e4ba680c992f86062a2a4d"
+    },
+    "stat_descriptions/tincture_stat_descriptions.txt.json": {
+      "rows": 85,
+      "sha256": "e5a1f9f7506829ced73e4ef39a4c1d11d54462d535c8eaecac07bf8f55cb1c20"
+    },
+    "stat_descriptions/vaal_side_area_stat_descriptions.txt.json": {
+      "rows": 0,
+      "sha256": "071db75e28041715313a84b2caa203ceece867055e23cb446245ed899be6177e"
+    },
+    "stat_descriptions/variable_duration_skill_stat_descriptions.txt.json": {
+      "rows": 5,
+      "sha256": "266b31728a22557207d8f73e44a69627f9daff14e40352cf1c4e9a8f8acc3563"
+    },
+    "stat_descriptions/village_stat_descriptions.txt.json": {
+      "rows": 45,
+      "sha256": "11d5e743e9585afdc8d23288421e9e94097ebdfc66797a47487c0e284d0ebdbc"
+    },
     "tables/AchievementItems.json": {
       "rows": 11776,
       "sha256": "493f965355d35eed90931adaa38c3e897e1007358dc5f8bae3f71bb869aa74aa"
@@ -321,18 +502,2521 @@
       "sha256": "eac1dda8f5e1bd05e2e751f741a10885a15e9228f541e899d44e5cc8c051e02a"
     }
   },
-  "format": 1,
+  "format": 2,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
-    "sha256": "60264b4fc9182a442d95c29d49c0bb5097586b5081ac8f8b3032b74cdcbf19ac"
+    "sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
   },
   "schema": {
     "commit": "717d788d6ec081821c33473b2a0ec35629144826",
     "sha256": "e8e7e4c858924655bcfd56c23b275101f0321f435f90b19f8267bf43344ea16a",
     "source": "poe-tool-dev/dat-schema"
   },
-  "steam_build_id": "26474023",
+  "stat_descriptions": {
+    "dir": "metadata/statdescriptions/",
+    "files": {
+      "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt": {
+        "descriptions": 361,
+        "english_variants": 604,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/gem_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "German": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Japanese": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Korean": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Portuguese": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Russian": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Simplified Chinese": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Spanish": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Thai": {
+            "descriptions": 359,
+            "variants": 601
+          },
+          "Traditional Chinese": {
+            "descriptions": 359,
+            "variants": 601
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/active_skill_gem_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "source_sha256": "92bd41f9c68829663ab98615a91b61dd8e05f22d837b021f4f65b44e44ee983c",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/advanced_mod_stat_descriptions.txt": {
+        "descriptions": 21,
+        "english_variants": 77,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "German": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Japanese": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Korean": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Portuguese": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Russian": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Simplified Chinese": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Spanish": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Thai": {
+            "descriptions": 21,
+            "variants": 77
+          },
+          "Traditional Chinese": {
+            "descriptions": 21,
+            "variants": 77
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/advanced_mod_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/advanced_mod_stat_descriptions.txt",
+        "source_sha256": "5df83b3fbe253f141d2250b7631045ee19bc49aea94cee2429d8127e3c8878f8",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/atlas_relic_stat_descriptions.txt": {
+        "descriptions": 3,
+        "english_variants": 3,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/atlas_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "German": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Japanese": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Korean": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Portuguese": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Russian": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Simplified Chinese": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Spanish": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Thai": {
+            "descriptions": 3,
+            "variants": 3
+          },
+          "Traditional Chinese": {
+            "descriptions": 3,
+            "variants": 3
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/atlas_relic_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/atlas_relic_stat_descriptions.txt",
+        "source_sha256": "a32b7f9ac05df6d8ea55f4f4ddc8b323934db66c6a6e084adc48c054ba582437",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/atlas_stat_descriptions.txt": {
+        "descriptions": 976,
+        "english_variants": 1407,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "German": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Japanese": {
+            "descriptions": 976,
+            "variants": 1407
+          },
+          "Korean": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Portuguese": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Russian": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Simplified Chinese": {
+            "descriptions": 975,
+            "variants": 1405
+          },
+          "Spanish": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Thai": {
+            "descriptions": 968,
+            "variants": 1395
+          },
+          "Traditional Chinese": {
+            "descriptions": 968,
+            "variants": 1395
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/atlas_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/atlas_stat_descriptions.txt",
+        "source_sha256": "df56cbf102e3028650caa1a136efb0e14e4d0f13dc7b7a8a610b344294645150",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/aura_skill_stat_descriptions.txt": {
+        "descriptions": 92,
+        "english_variants": 124,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "German": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Japanese": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Korean": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Portuguese": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Russian": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Simplified Chinese": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Spanish": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Thai": {
+            "descriptions": 92,
+            "variants": 124
+          },
+          "Traditional Chinese": {
+            "descriptions": 92,
+            "variants": 124
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/aura_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/aura_skill_stat_descriptions.txt",
+        "source_sha256": "d947821f596b03b48ec5e887a42ee16208538500a9ef88b85cd890c892731f71",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/banner_aura_skill_stat_descriptions.txt": {
+        "descriptions": 17,
+        "english_variants": 28,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/aura_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "German": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Japanese": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Korean": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Portuguese": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Russian": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Simplified Chinese": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Spanish": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Thai": {
+            "descriptions": 17,
+            "variants": 28
+          },
+          "Traditional Chinese": {
+            "descriptions": 17,
+            "variants": 28
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/banner_aura_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/banner_aura_skill_stat_descriptions.txt",
+        "source_sha256": "be15e8ff367787c55a1b8caccc7549a0e73ab5f69542b14e964461c664fef6f0",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/beam_skill_stat_descriptions.txt": {
+        "descriptions": 3,
+        "english_variants": 7,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "German": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Japanese": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Korean": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Portuguese": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Russian": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Simplified Chinese": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Spanish": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Thai": {
+            "descriptions": 3,
+            "variants": 7
+          },
+          "Traditional Chinese": {
+            "descriptions": 3,
+            "variants": 7
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/beam_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/beam_skill_stat_descriptions.txt",
+        "source_sha256": "2a8c27e70311bc5d474a60e618931ffbe32b253853ade0e3b4b36b8382948e3b",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/brand_skill_stat_descriptions.txt": {
+        "descriptions": 12,
+        "english_variants": 19,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "German": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Japanese": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Korean": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Portuguese": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Russian": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Simplified Chinese": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Spanish": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Thai": {
+            "descriptions": 12,
+            "variants": 19
+          },
+          "Traditional Chinese": {
+            "descriptions": 12,
+            "variants": 19
+          }
+        },
+        "no_description": 1,
+        "output": "stat_descriptions/brand_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/brand_skill_stat_descriptions.txt",
+        "source_sha256": "d94fe540f6b74dc120387ad2cecee6616900a77f43ee08402758f8510056ea76",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/buff_skill_stat_descriptions.txt": {
+        "descriptions": 61,
+        "english_variants": 86,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "German": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Japanese": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Korean": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Portuguese": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Russian": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Simplified Chinese": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Spanish": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Thai": {
+            "descriptions": 61,
+            "variants": 86
+          },
+          "Traditional Chinese": {
+            "descriptions": 61,
+            "variants": 86
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/buff_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/buff_skill_stat_descriptions.txt",
+        "source_sha256": "bd0038ed2b15ca47fca5787600b3c5fec7d31b826a9911196adac6612610c595",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/chest_stat_descriptions.txt": {
+        "descriptions": 102,
+        "english_variants": 170,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 98,
+            "variants": 161
+          },
+          "German": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Japanese": {
+            "descriptions": 102,
+            "variants": 170
+          },
+          "Korean": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Portuguese": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Russian": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Simplified Chinese": {
+            "descriptions": 100,
+            "variants": 167
+          },
+          "Spanish": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Thai": {
+            "descriptions": 98,
+            "variants": 162
+          },
+          "Traditional Chinese": {
+            "descriptions": 98,
+            "variants": 161
+          }
+        },
+        "no_description": 2,
+        "output": "stat_descriptions/chest_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/chest_stat_descriptions.txt",
+        "source_sha256": "9e43fdc286e09984ba65206400f4604faa2d25e9750b86abb7e0728a7e3b0c38",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/curse_skill_stat_descriptions.txt": {
+        "descriptions": 78,
+        "english_variants": 109,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "German": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Japanese": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Korean": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Portuguese": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Russian": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Simplified Chinese": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Spanish": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Thai": {
+            "descriptions": 78,
+            "variants": 109
+          },
+          "Traditional Chinese": {
+            "descriptions": 78,
+            "variants": 109
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/curse_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/curse_skill_stat_descriptions.txt",
+        "source_sha256": "fa292274bc0ad1513bc03466e51eee982843e4a7eed3cdb9a38d19b0a89aa4d9",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/debuff_skill_stat_descriptions.txt": {
+        "descriptions": 27,
+        "english_variants": 35,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "German": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Japanese": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Korean": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Portuguese": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Russian": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Simplified Chinese": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Spanish": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Thai": {
+            "descriptions": 27,
+            "variants": 35
+          },
+          "Traditional Chinese": {
+            "descriptions": 27,
+            "variants": 35
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/debuff_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/debuff_skill_stat_descriptions.txt",
+        "source_sha256": "bfb3afeae70aa0138e6b6f2a070e07bfab6656be2bb78813adbf032cd76d3524",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/deepwater_applied_adjacent_stat_descriptions.txt": {
+        "descriptions": 3,
+        "english_variants": 5,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/deepwater_explicit_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "German": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Japanese": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Korean": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Portuguese": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Russian": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Simplified Chinese": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Spanish": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Thai": {
+            "descriptions": 3,
+            "variants": 5
+          },
+          "Traditional Chinese": {
+            "descriptions": 3,
+            "variants": 5
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/deepwater_applied_adjacent_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/deepwater_applied_adjacent_stat_descriptions.txt",
+        "source_sha256": "8ec99182e431903e55ceeff1a728f91b53d8fbfeca48dde4731d7342bce878af",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/deepwater_explicit_stat_descriptions.txt": {
+        "descriptions": 27,
+        "english_variants": 46,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "German": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Japanese": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Korean": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Portuguese": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Russian": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Simplified Chinese": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Spanish": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Thai": {
+            "descriptions": 27,
+            "variants": 46
+          },
+          "Traditional Chinese": {
+            "descriptions": 27,
+            "variants": 46
+          }
+        },
+        "no_description": 4,
+        "output": "stat_descriptions/deepwater_explicit_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/deepwater_explicit_stat_descriptions.txt",
+        "source_sha256": "e640de5e802ad69ddc0ea02dffb86de8af8e8559aff2df7938075ccfb4e9f580",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/deepwater_implicit_stat_descriptions.txt": {
+        "descriptions": 70,
+        "english_variants": 122,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "German": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Japanese": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Korean": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Portuguese": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Russian": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Simplified Chinese": {
+            "descriptions": 68,
+            "variants": 120
+          },
+          "Spanish": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Thai": {
+            "descriptions": 69,
+            "variants": 121
+          },
+          "Traditional Chinese": {
+            "descriptions": 69,
+            "variants": 121
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/deepwater_implicit_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/deepwater_implicit_stat_descriptions.txt",
+        "source_sha256": "10dd9b5d8d095ea210439bd712e916881e71df290467282616057377a8744bff",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/deepwater_stat_descriptions.txt": {
+        "descriptions": 0,
+        "english_variants": 0,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {},
+        "no_description": 4,
+        "output": "stat_descriptions/deepwater_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/deepwater_stat_descriptions.txt",
+        "source_sha256": "ef66743fad336c2dfdd0a9481aa94e4200fb2363f64d3a7800c047b8a3c76d60",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/expedition_relic_stat_descriptions.txt": {
+        "descriptions": 140,
+        "english_variants": 238,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "German": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Japanese": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Korean": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Portuguese": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Russian": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Simplified Chinese": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Spanish": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Thai": {
+            "descriptions": 140,
+            "variants": 238
+          },
+          "Traditional Chinese": {
+            "descriptions": 140,
+            "variants": 238
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/expedition_relic_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/expedition_relic_stat_descriptions.txt",
+        "source_sha256": "0abed886e0c9d396926d04bdd080128efda55a1ba1993be8d3a50b34ab742cf5",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/gem_stat_descriptions.txt": {
+        "descriptions": 787,
+        "english_variants": 1329,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "German": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Japanese": {
+            "descriptions": 787,
+            "variants": 1329
+          },
+          "Korean": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Portuguese": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Russian": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Simplified Chinese": {
+            "descriptions": 785,
+            "variants": 1327
+          },
+          "Spanish": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Thai": {
+            "descriptions": 784,
+            "variants": 1324
+          },
+          "Traditional Chinese": {
+            "descriptions": 784,
+            "variants": 1324
+          }
+        },
+        "no_description": 1,
+        "output": "stat_descriptions/gem_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/gem_stat_descriptions.txt",
+        "source_sha256": "fc7166d551487788a9dc20620c47a984a0404c3c5dafd9d4e9df6242853136b1",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/graft_stat_descriptions.txt": {
+        "descriptions": 97,
+        "english_variants": 167,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "German": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Japanese": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Korean": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Portuguese": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Russian": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Simplified Chinese": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Spanish": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Thai": {
+            "descriptions": 97,
+            "variants": 167
+          },
+          "Traditional Chinese": {
+            "descriptions": 97,
+            "variants": 167
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/graft_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/graft_stat_descriptions.txt",
+        "source_sha256": "a8b8f18ec0fa194de777a4f266fdf4e2da0b2f2a30b6c5aa8a05ef44db6f0908",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/heist_equipment_stat_descriptions.txt": {
+        "descriptions": 123,
+        "english_variants": 194,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "German": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Japanese": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Korean": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Portuguese": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Russian": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Simplified Chinese": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Spanish": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Thai": {
+            "descriptions": 123,
+            "variants": 194
+          },
+          "Traditional Chinese": {
+            "descriptions": 123,
+            "variants": 194
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/heist_equipment_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/heist_equipment_stat_descriptions.txt",
+        "source_sha256": "c46dcd38ff02a2e698f33260d4931fef47ba963fa453865d7b0bacf11c2a7bab",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/leaguestone_stat_descriptions.txt": {
+        "descriptions": 174,
+        "english_variants": 275,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "German": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Japanese": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Korean": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Portuguese": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Russian": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Simplified Chinese": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Spanish": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Thai": {
+            "descriptions": 174,
+            "variants": 275
+          },
+          "Traditional Chinese": {
+            "descriptions": 174,
+            "variants": 275
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/leaguestone_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/leaguestone_stat_descriptions.txt",
+        "source_sha256": "1923ccfa886a5f2078ef9cc48853e3cef435a08d5db89273e42bc0c5c051af6e",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/map_stat_descriptions.txt": {
+        "descriptions": 207,
+        "english_variants": 320,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "German": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Japanese": {
+            "descriptions": 194,
+            "variants": 299
+          },
+          "Korean": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Portuguese": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Russian": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Simplified Chinese": {
+            "descriptions": 193,
+            "variants": 298
+          },
+          "Spanish": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Thai": {
+            "descriptions": 192,
+            "variants": 296
+          },
+          "Traditional Chinese": {
+            "descriptions": 192,
+            "variants": 296
+          }
+        },
+        "no_description": 55,
+        "output": "stat_descriptions/map_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/map_stat_descriptions.txt",
+        "source_sha256": "447cfea51eceea68bd7185f236859011a1039c6d153161811f96f5249a5756a4",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/mercenary_support_stat_descriptions.txt": {
+        "descriptions": 50,
+        "english_variants": 79,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/gem_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "German": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Japanese": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Korean": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Portuguese": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Russian": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Simplified Chinese": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Spanish": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Thai": {
+            "descriptions": 50,
+            "variants": 79
+          },
+          "Traditional Chinese": {
+            "descriptions": 50,
+            "variants": 79
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/mercenary_support_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/mercenary_support_stat_descriptions.txt",
+        "source_sha256": "ecabb4a28c34b6b1ac35e650fc1417adaf22156a3d0a08dc6a5676ca85eb2757",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/minion_attack_skill_stat_descriptions.txt": {
+        "descriptions": 161,
+        "english_variants": 272,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/minion_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "German": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Japanese": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Korean": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Portuguese": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Russian": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Simplified Chinese": {
+            "descriptions": 159,
+            "variants": 270
+          },
+          "Spanish": {
+            "descriptions": 161,
+            "variants": 272
+          },
+          "Thai": {
+            "descriptions": 159,
+            "variants": 270
+          },
+          "Traditional Chinese": {
+            "descriptions": 161,
+            "variants": 272
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/minion_attack_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/minion_attack_skill_stat_descriptions.txt",
+        "source_sha256": "328a7fa497c298bedc9baed49ce3f438ac7e4d0886a8b42ccd0e0f38a38058ac",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/minion_skill_stat_descriptions.txt": {
+        "descriptions": 346,
+        "english_variants": 599,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "German": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Japanese": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Korean": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Portuguese": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Russian": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Simplified Chinese": {
+            "descriptions": 344,
+            "variants": 597
+          },
+          "Spanish": {
+            "descriptions": 346,
+            "variants": 599
+          },
+          "Thai": {
+            "descriptions": 344,
+            "variants": 597
+          },
+          "Traditional Chinese": {
+            "descriptions": 346,
+            "variants": 599
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/minion_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/minion_skill_stat_descriptions.txt",
+        "source_sha256": "42a94aa540d15475a5f6f3c3e91156edbd26ac3626bd57576bdb6e4baeb235cf",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/minion_spell_damage_skill_stat_descriptions.txt": {
+        "descriptions": 92,
+        "english_variants": 151,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/minion_spell_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "German": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Japanese": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Korean": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Portuguese": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Russian": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Simplified Chinese": {
+            "descriptions": 90,
+            "variants": 149
+          },
+          "Spanish": {
+            "descriptions": 92,
+            "variants": 151
+          },
+          "Thai": {
+            "descriptions": 90,
+            "variants": 149
+          },
+          "Traditional Chinese": {
+            "descriptions": 92,
+            "variants": 151
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/minion_spell_damage_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/minion_spell_damage_skill_stat_descriptions.txt",
+        "source_sha256": "3ebc0594f81483f31686ac2521c0ed39a830835485d301dc5ded61cf8118320a",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/minion_spell_skill_stat_descriptions.txt": {
+        "descriptions": 8,
+        "english_variants": 12,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/minion_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "German": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Japanese": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Korean": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Portuguese": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Russian": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Simplified Chinese": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Spanish": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Thai": {
+            "descriptions": 8,
+            "variants": 12
+          },
+          "Traditional Chinese": {
+            "descriptions": 8,
+            "variants": 12
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/minion_spell_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/minion_spell_skill_stat_descriptions.txt",
+        "source_sha256": "864e4ebe4d80decb265889b7051918a446caf40461681b80cca562e8338a2178",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/mirage_stat_descriptions.txt": {
+        "descriptions": 65,
+        "english_variants": 91,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "German": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Japanese": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Korean": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Portuguese": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Russian": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Simplified Chinese": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Spanish": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Thai": {
+            "descriptions": 65,
+            "variants": 91
+          },
+          "Traditional Chinese": {
+            "descriptions": 65,
+            "variants": 91
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/mirage_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/mirage_stat_descriptions.txt",
+        "source_sha256": "5218d38d0a218519b11ea6db8deace84390cf73d879be446a972ec623433872d",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/monster_stat_descriptions.txt": {
+        "descriptions": 33,
+        "english_variants": 39,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "German": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Japanese": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Korean": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Portuguese": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Russian": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Simplified Chinese": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Spanish": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Thai": {
+            "descriptions": 33,
+            "variants": 39
+          },
+          "Traditional Chinese": {
+            "descriptions": 33,
+            "variants": 39
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/monster_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/monster_stat_descriptions.txt",
+        "source_sha256": "24f660a1ba1182b685fe49daae591219d2918f1e8ce1da4be005ecaaac268069",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/necropolis_stat_descriptions.txt": {
+        "descriptions": 138,
+        "english_variants": 243,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "German": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Japanese": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Korean": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Portuguese": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Russian": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Simplified Chinese": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Spanish": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Thai": {
+            "descriptions": 138,
+            "variants": 243
+          },
+          "Traditional Chinese": {
+            "descriptions": 138,
+            "variants": 243
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/necropolis_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/necropolis_stat_descriptions.txt",
+        "source_sha256": "b226421b9a449022266a8a23aca1e429106008f050ba7d7dc7ac8f8b5777993f",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/offering_skill_stat_descriptions.txt": {
+        "descriptions": 16,
+        "english_variants": 22,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "German": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Japanese": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Korean": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Portuguese": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Russian": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Simplified Chinese": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Spanish": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Thai": {
+            "descriptions": 16,
+            "variants": 22
+          },
+          "Traditional Chinese": {
+            "descriptions": 16,
+            "variants": 22
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/offering_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/offering_skill_stat_descriptions.txt",
+        "source_sha256": "2bb023d47b5bccb5f1706ea47bc58de2600fbd4b2e60e8e2fbd42314092bc9df",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/passive_skill_aura_stat_descriptions.txt": {
+        "descriptions": 25,
+        "english_variants": 38,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/passive_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "German": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Japanese": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Korean": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Portuguese": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Russian": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Simplified Chinese": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Spanish": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Thai": {
+            "descriptions": 25,
+            "variants": 38
+          },
+          "Traditional Chinese": {
+            "descriptions": 25,
+            "variants": 38
+          }
+        },
+        "no_description": 4,
+        "output": "stat_descriptions/passive_skill_aura_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/passive_skill_aura_stat_descriptions.txt",
+        "source_sha256": "c32568f8dddfa66c7eff9c7ca59c8fbaf619cefef85e20848d9c6a32519e64b1",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/passive_skill_stat_descriptions.txt": {
+        "descriptions": 135,
+        "english_variants": 161,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "German": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Japanese": {
+            "descriptions": 135,
+            "variants": 161
+          },
+          "Korean": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Portuguese": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Russian": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Simplified Chinese": {
+            "descriptions": 135,
+            "variants": 161
+          },
+          "Spanish": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Thai": {
+            "descriptions": 134,
+            "variants": 160
+          },
+          "Traditional Chinese": {
+            "descriptions": 135,
+            "variants": 161
+          }
+        },
+        "no_description": 2,
+        "output": "stat_descriptions/passive_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/passive_skill_stat_descriptions.txt",
+        "source_sha256": "98dcc8c9bba348b2b123a9db6391212d691fe1621fd870cb07259dcf9a7e886b",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/primordial_altar_stat_descriptions.txt": {
+        "descriptions": 137,
+        "english_variants": 268,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "German": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Japanese": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Korean": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Portuguese": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Russian": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Simplified Chinese": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Spanish": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Thai": {
+            "descriptions": 137,
+            "variants": 268
+          },
+          "Traditional Chinese": {
+            "descriptions": 137,
+            "variants": 268
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/primordial_altar_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/primordial_altar_stat_descriptions.txt",
+        "source_sha256": "d6ae9952258d23b51531d5c436e7598800ece53637392949d2c129a4e35beb45",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/sanctum_relic_stat_descriptions.txt": {
+        "descriptions": 57,
+        "english_variants": 80,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "German": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Japanese": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Korean": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Portuguese": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Russian": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Simplified Chinese": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Spanish": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Thai": {
+            "descriptions": 57,
+            "variants": 80
+          },
+          "Traditional Chinese": {
+            "descriptions": 57,
+            "variants": 80
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/sanctum_relic_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/sanctum_relic_stat_descriptions.txt",
+        "source_sha256": "e391fa33a09f68cb3e12ebabac5b9a71f54b9d952ce437524fa6c08837080d5d",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/secondary_debuff_skill_stat_descriptions.txt": {
+        "descriptions": 2,
+        "english_variants": 2,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/buff_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "German": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Japanese": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Korean": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Portuguese": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Russian": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Simplified Chinese": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Spanish": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Thai": {
+            "descriptions": 2,
+            "variants": 2
+          },
+          "Traditional Chinese": {
+            "descriptions": 2,
+            "variants": 2
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/secondary_debuff_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/secondary_debuff_skill_stat_descriptions.txt",
+        "source_sha256": "ad9942018c50d4263a6dcd6562b074cd3f90483bba36374da9db461f3360f2a6",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/sentinel_stat_descriptions.txt": {
+        "descriptions": 136,
+        "english_variants": 204,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "German": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Japanese": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Korean": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Portuguese": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Russian": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Simplified Chinese": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Spanish": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Thai": {
+            "descriptions": 136,
+            "variants": 204
+          },
+          "Traditional Chinese": {
+            "descriptions": 136,
+            "variants": 204
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/sentinel_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/sentinel_stat_descriptions.txt",
+        "source_sha256": "f15dfbb7b737693e216c950fd448bc1c6ac331b54299571bd296f45d5b6a59b9",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/single_minion_spell_skill_stat_descriptions.txt": {
+        "descriptions": 46,
+        "english_variants": 75,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/minion_spell_skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "German": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Japanese": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Korean": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Portuguese": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Russian": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Simplified Chinese": {
+            "descriptions": 44,
+            "variants": 73
+          },
+          "Spanish": {
+            "descriptions": 46,
+            "variants": 75
+          },
+          "Thai": {
+            "descriptions": 44,
+            "variants": 73
+          },
+          "Traditional Chinese": {
+            "descriptions": 46,
+            "variants": 75
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/single_minion_spell_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/single_minion_spell_skill_stat_descriptions.txt",
+        "source_sha256": "708744f86f6a1a958b7a977b4cc645fac06f7a8e4e4620861e8035858078088f",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/skill_stat_descriptions.txt": {
+        "descriptions": 1736,
+        "english_variants": 3076,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/active_skill_gem_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "German": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Japanese": {
+            "descriptions": 1733,
+            "variants": 3071
+          },
+          "Korean": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Portuguese": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Russian": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Simplified Chinese": {
+            "descriptions": 1731,
+            "variants": 3069
+          },
+          "Spanish": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Thai": {
+            "descriptions": 1730,
+            "variants": 3066
+          },
+          "Traditional Chinese": {
+            "descriptions": 1730,
+            "variants": 3066
+          }
+        },
+        "no_description": 1,
+        "output": "stat_descriptions/skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "source_sha256": "0686943db84c87093456f1299622d85c824959ef1289022bc8a24b952eb557ba",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/skillpopup_stat_filters.txt": {
+        "descriptions": 0,
+        "english_variants": 0,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "filters",
+        "languages": {},
+        "no_description": 0,
+        "output": null,
+        "source": "metadata/statdescriptions/skillpopup_stat_filters.txt",
+        "source_sha256": "0016997cb410f4a863aa3a2ceee4d348a662886def02dfe83010855dfa351ff2",
+        "status": "skipped"
+      },
+      "metadata/statdescriptions/stat_descriptions.txt": {
+        "descriptions": 11040,
+        "english_variants": 15773,
+        "error": null,
+        "findings": 0,
+        "includes": [],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "German": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "Japanese": {
+            "descriptions": 11002,
+            "variants": 15720
+          },
+          "Korean": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "Portuguese": {
+            "descriptions": 10986,
+            "variants": 15700
+          },
+          "Russian": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "Simplified Chinese": {
+            "descriptions": 10985,
+            "variants": 15699
+          },
+          "Spanish": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "Thai": {
+            "descriptions": 10986,
+            "variants": 15705
+          },
+          "Traditional Chinese": {
+            "descriptions": 10986,
+            "variants": 15702
+          }
+        },
+        "no_description": 24,
+        "output": "stat_descriptions/stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/stat_descriptions.txt",
+        "source_sha256": "93a81fb098854781d41e682fff67dae573ee43612c99ad5b22208d49270368f0",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/tincture_stat_descriptions.txt": {
+        "descriptions": 85,
+        "english_variants": 128,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "German": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Japanese": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Korean": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Portuguese": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Russian": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Simplified Chinese": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Spanish": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Thai": {
+            "descriptions": 85,
+            "variants": 128
+          },
+          "Traditional Chinese": {
+            "descriptions": 85,
+            "variants": 128
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/tincture_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/tincture_stat_descriptions.txt",
+        "source_sha256": "4278067d21953b859eb158799dd44bf4c0b7f701da66fac98129aaa09f1be88d",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/vaal_side_area_stat_descriptions.txt": {
+        "descriptions": 0,
+        "english_variants": 0,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/map_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {},
+        "no_description": 2,
+        "output": "stat_descriptions/vaal_side_area_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/vaal_side_area_stat_descriptions.txt",
+        "source_sha256": "4be8fcc9910004d12e6c0ded777237acd3650020f2518b0654981e43fd3bc0c5",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/variable_duration_skill_stat_descriptions.txt": {
+        "descriptions": 5,
+        "english_variants": 10,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/skill_stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "German": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Japanese": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Korean": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Portuguese": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Russian": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Simplified Chinese": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Spanish": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Thai": {
+            "descriptions": 5,
+            "variants": 10
+          },
+          "Traditional Chinese": {
+            "descriptions": 5,
+            "variants": 10
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/variable_duration_skill_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/variable_duration_skill_stat_descriptions.txt",
+        "source_sha256": "57ace2b3698265f24f9543bcbe793e59ec782545c77d90bb2096b64e378078ee",
+        "status": "ok"
+      },
+      "metadata/statdescriptions/village_stat_descriptions.txt": {
+        "descriptions": 45,
+        "english_variants": 106,
+        "error": null,
+        "findings": 0,
+        "includes": [
+          "Metadata/StatDescriptions/stat_descriptions.txt"
+        ],
+        "kind": "descriptions",
+        "languages": {
+          "French": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "German": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Japanese": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Korean": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Portuguese": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Russian": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Simplified Chinese": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Spanish": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Thai": {
+            "descriptions": 45,
+            "variants": 106
+          },
+          "Traditional Chinese": {
+            "descriptions": 45,
+            "variants": 106
+          }
+        },
+        "no_description": 0,
+        "output": "stat_descriptions/village_stat_descriptions.txt.json",
+        "source": "metadata/statdescriptions/village_stat_descriptions.txt",
+        "source_sha256": "15edc3ed46a214ddf59ce80c2aa2dee23bcd3f685b763ab0d96874e60508425d",
+        "status": "ok"
+      }
+    },
+    "findings": [],
+    "findings_by_kind": {},
+    "handlers": {
+      "30%_of_value": 2,
+      "60%_of_value": 2,
+      "affliction_reward_type": 9,
+      "canonical_line": 251,
+      "canonical_stat": 9,
+      "deciseconds_to_seconds": 3,
+      "display_indexable_non_active_support": 8,
+      "display_indexable_skill": 2,
+      "display_indexable_support": 2,
+      "divide_by_fifteen_0dp": 1,
+      "divide_by_five": 4,
+      "divide_by_four": 1,
+      "divide_by_one_hundred": 277,
+      "divide_by_one_hundred_0dp": 3,
+      "divide_by_one_hundred_1dp": 1,
+      "divide_by_one_hundred_2dp": 5,
+      "divide_by_one_hundred_2dp_if_required": 34,
+      "divide_by_one_hundred_and_negate": 8,
+      "divide_by_one_thousand": 7,
+      "divide_by_six": 1,
+      "divide_by_ten_0dp": 4,
+      "divide_by_ten_1dp": 64,
+      "divide_by_ten_1dp_if_required": 147,
+      "divide_by_three": 1,
+      "divide_by_twelve": 2,
+      "divide_by_twenty": 1,
+      "divide_by_twenty_then_double_0dp": 1,
+      "divide_by_two_0dp": 10,
+      "double": 35,
+      "invert_chance": 1,
+      "locations_to_metres": 309,
+      "markup": 74,
+      "milliseconds_to_seconds": 268,
+      "milliseconds_to_seconds_0dp": 9,
+      "milliseconds_to_seconds_1dp": 25,
+      "milliseconds_to_seconds_2dp": 108,
+      "milliseconds_to_seconds_2dp_if_required": 159,
+      "milliseconds_to_seconds_halved": 1,
+      "mod_value_to_item_class": 1,
+      "multiplicative_damage_modifier": 8,
+      "multiply_by_four": 1,
+      "multiply_by_one_hundred": 1,
+      "multiply_by_ten": 1,
+      "negate": 5328,
+      "negate_and_double": 35,
+      "old_leech_percent": 14,
+      "old_leech_permyriad": 11,
+      "passive_hash": 9,
+      "per_minute_to_per_second": 229,
+      "per_minute_to_per_second_0dp": 4,
+      "per_minute_to_per_second_1dp": 4,
+      "per_minute_to_per_second_2dp": 8,
+      "per_minute_to_per_second_2dp_if_required": 19,
+      "permyriad_per_minute_to_%_per_second": 2,
+      "plus_two_hundred": 1,
+      "reminderstring": 4541,
+      "tempest_mod_text": 2,
+      "times_one_point_five": 1,
+      "times_twenty": 10,
+      "tree_expansion_jewel_passive": 1,
+      "weapon_tree_unique_base_type_name": 1
+    },
+    "variant_flags": {
+      "gem_quality": 34
+    }
+  },
+  "steam_build_id": "26530219",
   "table_dir": "data/",
   "tables": {
     "AchievementItems": {

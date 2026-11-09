@@ -2,7 +2,7 @@
 
 Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
 
-Status (2026-11-09, PR A4): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11). Gate items 1 and 4 met; 2 and 3 pending (A5, A6).
+Status (2026-11-09, PR A5): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11); stat-description files of both games parsed with zero unparsed English lines, every finding categorized in the manifest (A5, sections 12 and 13). Gate items 1, 3, and 4 met; 2 pending (A6).
 
 ## 1. Existing crates (survey, 2026-11-08)
 Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
@@ -167,7 +167,7 @@ Layout as documented by the community (`poe-tool-dev/dat-schema`, MIT, vendored;
   - Steam `.acf` parsing and build-ID lookup.
   - `planned_files`: match ignoring case, missing file, a path listed twice.
   - `write_output`: written through `.partial` and renamed; an existing output or partial folder is refused.
-- Maintainer workstation run, 2026-11-09. Tree clean at extractor commit `d047e4a` (manifest `dirty: false`), `unoodle` 0.5.7, release build. `tools/extractor/scripts/check-determinism.sh` ran `extract` twice per game and compared every file byte for byte. The manifests are committed unchanged (they hold no machine paths) as `docs/spikes/spike-a/manifest-poe1-26474023.json` and `manifest-poe2-26476662.json`.
+- Maintainer workstation run, 2026-11-09. Tree clean at extractor commit `d047e4a` (manifest `dirty: false`), `unoodle` 0.5.7, release build. `tools/extractor/scripts/check-determinism.sh` ran `extract` twice per game and compared every file byte for byte. The manifests are committed unchanged (they hold no machine paths) as `docs/spikes/spike-a/manifest-poe1-26474023.json` and `manifest-poe2-26476662.json`. A5 replaced both with format-2 manifests (section 13); the A4 versions are in git history at `d480d1f`.
 
 | | PoE1 | PoE2 |
 |---|---|---|
@@ -185,3 +185,47 @@ Layout as documented by the community (`poe-tool-dev/dat-schema`, MIT, vendored;
 
   Gate items this covers: 1 (determinism, both games) and 4 (recorded inputs: build ID, index hash, schema commit and hash, extractor commit, `dirty: false`). Gate 3 is partial: every row-size mismatch of an extracted table is in the manifest with a status; stat-description constructs are A5. Gate 2 (coverage against PoB) is A6.
 - Not exposed: trailing bytes of rows wider than the schema (`ItemVisualIdentity` in PoE2). Their width is in the manifest; reading them needs a schema update, not extractor work.
+
+## 12. Stat-description files (observed on PoE1 and PoE2 in A5)
+Parser: `tools/extractor/src/statdesc.rs`, run by `extract`. Format knowledge comes from the files themselves (surveyed line by line on both installs) and was compared with PoB's exporter `src/Export/statdesc.lua` (read only, no code taken).
+
+- **Where:** PoE1 `metadata/statdescriptions/*.txt` (45 files; the plan's `.csd` guess was wrong for PoE1). PoE2 `data/statdescriptions/**/*.csd` (589 files: 27 at the top, the rest per skill in `specific_skill_stat_descriptions/`, some as `<skill>/statset_<n>.csd`). Both are UTF-16LE with a byte-order mark and CRLF lines, and share one grammar.
+- **Not stat descriptions:** PoE1 `skillpopup_stat_filters.txt` holds `group <name> { ... }` lists for the skill pop-up. Any `*_filters` file is hashed, listed as `skipped`, and not parsed.
+- **Indentation is not reliable** (many blocks start at column 0), so the parser works on tokens per non-blank line: bare words, and `"..."` strings. No string holds an escaped quote or spans lines (checked on both installs).
+- **Top level:** `include "<path>"` (path as in the index, mixed case: `Metadata/StatDescriptions/x.txt`, `Data/StatDescriptions/x.csd`); `has_identifiers` / `no_identifiers` (file flags, meaning unknown, recorded as written); `no_description <stat_id>`; `description [<name>]`; `handed_description [<name>]`.
+- **Description block:** `<n> <stat_id> x n`, then the English variant list `<m>` followed by `m` variant lines, then any number of `lang "<Language>"` lists of the same shape. `handed_description` lists `n` main-hand IDs and then `n` off-hand IDs, which may span lines (PoE1 `skill_stat_descriptions.txt`, 5 blocks; none in PoE2). Its variants have `n` conditions.
+- **Variant line:** `n` conditions, optional flags (`gem_quality`, PoE2 also `table_only`), the format string, then handlers. Conditions: `#` (any), `<v>`, `<a>|<b>` (either side `#`), `!<v>` (not `v`). Handlers: `<name> <stat>` with a 1-based stat number (61 names on PoE1, 54 on PoE2, counted in the manifest), `reminderstring <ReminderText id>`, and the bare `canonical_line` and `markup`.
+- **Format string:** placeholders `{<index>[:<format>]}` with a 0-based index (`{}` and `{:+d}` mean stat 0) and formats `d`, `+d`, `-d`, `+`, or none. `{{` and `}}` are literal braces: `<enchanted>{{{0}% ...}}` is a markup span around a placeholder. `\n` is a line break. Markup is display text and is kept as written: `<tag>{...}`, `[Ref|Text]` / `[Text]` links, `<<Icon>>`. Spike B has to strip it before matching item text.
+- **Languages:** English is the list before the first `lang` and is the only one parsed. Others are counted per file (PoE1 10 languages, PoE2 11, Turkish only in PoE2). They contain constructs that the English text never uses (for example `1|1|#` in Portuguese, `{0%}`, `{0 }`); not parsing them is deliberate.
+- **Findings:** a line that does not fit the grammar is not an error. It becomes a finding with one kind from a fixed list (`FindingKind`: `unknown-line`, `unterminated-string`, `bad-include`, `missing-include`, `include-not-parsed`, `include-cycle`, `bad-no-description`, `bad-description-header`, `bad-stat-list`, `bad-variant-count`, `bad-language`, `bad-condition`, `condition-count`, `unknown-variant-flag`, `missing-string`, `bad-handler`, `handler-stat-out-of-range`, `bad-placeholder`, `placeholder-out-of-range`), its line number, the line text, and how many lines were left out because of it. A bad variant line drops only that line; a bad block header, stat list, or other-language count drops the block up to the next top-level construct, and the count is recorded. A bad English count keeps the description (stats and name) with no variants. Includes are checked across files: one that names no file in the folder, names a file that was not parsed (failed or skipped), or leads back to the including file is a finding. Counts, conditions, and handler stats accept digits with an optional `-` only. Range conditions with `min > max` are kept as written (none occur).
+- **Output:** `stat_descriptions/<path below the folder>.json`, one description per line (`handed`, `line`, `name`, `off_hand_stats`, `stats`, `variants` with `conditions`, `flags`, `handlers`, `line`, `placeholders`, `text`), then the file's `file_flags`, `includes`, `languages`, `no_description`, and `source`. The manifest (format 2) adds `stat_descriptions`: the folder, every file with its kind, status, hash, counts, includes, and languages, every finding, finding counts by kind, handler counts, and flag counts. The run fails if no stat-description file is found, one is not UTF-16, or its path is not a plain relative path (`EXTRACT_STATDESC_BAD_PATH`; the path becomes an output path). Findings alone do not fail it: Spike B and A6 must read `findings_by_kind`.
+
+## 13. Evidence (PR A5)
+- CI tests (`cargo test -p loom-extractor`, 112 tests):
+  - Decoding: BOM dropped, surrogate pairs kept, odd length and unpaired surrogate rejected with their codes.
+  - Tokens and every condition form, including rejected ones (`1|1|#`, `1|`, `!#`).
+  - Every construct on synthetic snippets: includes, file flags, `no_description`, named and unnamed descriptions, multi-stat variants with flags and every handler shape, other languages counted, a handed description spanning lines, placeholders (every format, literal braces, markup).
+  - Every finding kind, with its line and skipped count, and recovery at the next description.
+  - Every prefix of a file parses without a panic; every truncation and seven byte values at every offset of a UTF-16 file decode or fail without a panic.
+  - Collection: filter file skipped, missing include, include of a failed or skipped file, include cycles, paths with `..`, empty parts, `\`, or `:` failed, duplicate and unplanned paths (`EXTRACT_DUPLICATE_FILE`, `EXTRACT_UNPLANNED_FILE`), nested PoE2 output paths, handler and flag counts.
+  - A description with a bad English count is kept without variants; a leading `+` in counts, conditions, and handler stats is a finding.
+  - Exact per-file JSON; golden manifest (format 2) with a finding; same bytes for every rotation of adding three tables and a stat-description file; `problems()` for no stat-description file and an undecodable one; `planned_files` picks the game's stat-description files only.
+- Maintainer workstation run, 2026-11-09. Tree clean at extractor commit `9394d75` (`dirty: false`; after the review fixes), `unoodle` 0.5.7, release build. `check-determinism.sh` ran `extract` twice per game. Manifests committed as `docs/spikes/spike-a/manifest-poe1-26530219.json` and `manifest-poe2-26476662.json`.
+- **Steam updated PoE1 between A4 and A5** (build 26474023 to 26530219, index SHA-256 `60264b4f…` to `d23c7899…`). Every bundle and table file that A4 reads has the same SHA-256 as before, and the row counts are identical, so the A4 table results stand.
+
+| | PoE1 | PoE2 |
+|---|---|---|
+| Steam build / index SHA-256 | 26530219 / `d23c7899…0eb516f1488df4a1ccf39b0d51be54d0` | 26476662 / `9342956e…c9cdad7ed9` |
+| Stat-description files | 45 (44 `ok`, 1 `skipped`: `skillpopup_stat_filters.txt`) | 589 (589 `ok`) |
+| Descriptions / English variants | 17,739 / 26,794 | 19,657 / 29,837 |
+| `no_description` / includes | 100 / 39 | 412 / 583 |
+| Other-language lists (languages) | 176,483 (10) | 195,682 (11) |
+| Handler names / flags | 61 / `gem_quality` 34 | 54 / `gem_quality` 203, `table_only` 1,621 |
+| Findings (unparsed lines) | 0 | 0 |
+| Tables | 72 `ok` (unchanged from A4) | 84 `ok`, 1 `row-size-mismatch` (unchanged) |
+| Two runs identical | 117 files | 675 files |
+| Manifest SHA-256 | `201fd82bcbbd7efd60e1006aff25309515074be5a90abd3863e6b3a49dbb453c` | `776d9acb09815a88082c3cb2815a99ec58c6dc8700606329c436bc0ed9e40b92` |
+
+  Counts were checked independently of the parser with `grep`/`awk` over the decoded files: description keywords, `no_description` lines, `lang` lines, and English variant lines (56,631 for both games together) all match.
+- Gate 3 (no silent drops) is met: every row-size mismatch and every unparsed stat-description line is in the manifest with a category; on these installs there are no unparsed English lines. Gates 1 and 4 hold again for the new output. Gate 2 is A6.
+- PoE2's manifest is 1.2 MB (A4: 106 KB): it lists 589 files, each with an 11-language count map.

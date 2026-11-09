@@ -10,12 +10,15 @@
 //!   the first `n` files (default 10) or all of them.
 //! - `extract <install> --game poe1|poe2 --out <dir> [--decoder <program>]`:
 //!   extracts the Spike A tables and every table they reference into
-//!   `<dir>/tables/*.json`, plus `<dir>/manifest.json` (see
-//!   [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
+//!   `<dir>/tables/*.json`, the game's stat-description files into
+//!   `<dir>/stat_descriptions/**/*.json` (see [`loom_extractor::statdesc`]),
+//!   plus `<dir>/manifest.json` (see [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
 //!   checked before anything is decoded. Exits with an error if a root table
-//!   is not `ok`, any table failed, or any key is past the end of its target
-//!   (`Manifest::problems`); the output is written either way.
+//!   is not `ok`, any table failed, any key is past the end of its target,
+//!   no stat-description file was found, or one did not decode
+//!   (`Manifest::problems`); the output is written either way. Stat-description
+//!   lines that were not parsed are listed in the manifest, not errors.
 //!
 //!   Provenance: the extractor's git commit and dirty flag are read when the
 //!   command runs, from the source tree the binary was built from. They are
@@ -32,13 +35,14 @@ use std::process::ExitCode;
 use loom_extractor::decompress::ExternalTool;
 use loom_extractor::extract::{
     Decoder, ExtractError, Extraction, Extractor, Inputs, MANIFEST_PATH, Manifest, Plan,
-    SPIKE_TABLES, Status, TABLES_DIR,
+    SPIKE_TABLES, Status,
 };
 use loom_extractor::index::{FileRecord, Index, Listing};
 use loom_extractor::install::{
     INDEX_PATH, InstallError, InstallIndex, hex, read_files, read_index, steam_build_id,
 };
 use loom_extractor::schema::{Game, Schema};
+use loom_extractor::statdesc::{FileStatus, StatDescManifest, source_kind};
 use sha2::{Digest, Sha256};
 
 const USAGE: &str = "usage:
@@ -294,7 +298,8 @@ fn decoder_info(program: &Path) -> Decoder {
     }
 }
 
-/// Index paths and records of the planned tables that have a file.
+/// Index paths and records of the planned tables that have a file, and of
+/// every file in the game's stat-description folder.
 fn planned_files(
     plan: &Plan<'_>,
     listing: &Listing,
@@ -303,7 +308,11 @@ fn planned_files(
     let mut by_path: BTreeMap<String, Vec<FileRecord>> =
         plan.sources().map(|path| (path, Vec::new())).collect();
     for file in &listing.files {
-        if let Some(records) = by_path.get_mut(&file.path.to_ascii_lowercase()) {
+        let path = file.path.to_ascii_lowercase();
+        if source_kind(plan.game(), &path).is_some() {
+            by_path.entry(path.clone()).or_default();
+        }
+        if let Some(records) = by_path.get_mut(&path) {
             records.push(file.record);
         }
     }
@@ -368,15 +377,38 @@ fn write_output(
     let partial = partial_dir(out);
     // `create_dir` fails if the folder exists, so no stale file survives.
     std::fs::create_dir(&partial).map_err(|e| fail(&partial, e))?;
-    let tables = partial.join(TABLES_DIR);
-    std::fs::create_dir(&tables).map_err(|e| fail(&tables, e))?;
     for (path, bytes) in files {
         let path = partial.join(path);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| fail(parent, e))?;
+        }
         std::fs::write(&path, bytes).map_err(|e| fail(&path, e))?;
     }
     let path = partial.join(MANIFEST_PATH);
     std::fs::write(&path, manifest).map_err(|e| fail(&path, e))?;
     std::fs::rename(&partial, out).map_err(|e| fail(out, e))
+}
+
+/// Prints the stat-description part of the run summary.
+fn print_stat_descriptions(sd: &StatDescManifest) {
+    let mut by_status: BTreeMap<FileStatus, usize> = BTreeMap::new();
+    for file in sd.files.values() {
+        *by_status.entry(file.status).or_default() += 1;
+    }
+    let descriptions: usize = sd.files.values().map(|f| f.descriptions).sum();
+    let variants: usize = sd.files.values().map(|f| f.english_variants).sum();
+    let no_description: usize = sd.files.values().map(|f| f.no_description).sum();
+    println!("stat desc files      {} in {}", sd.files.len(), sd.dir);
+    for (status, count) in &by_status {
+        println!("  {:<18} {count}", format!("{status:?}"));
+    }
+    println!("descriptions         {descriptions} ({variants} English variants)");
+    println!("no_description       {no_description}");
+    println!("handlers             {} distinct", sd.handlers.len());
+    println!("unparsed lines       {}", sd.findings.len());
+    for (kind, count) in &sd.findings_by_kind {
+        println!("  {:<18} {count}", format!("{kind:?}"));
+    }
 }
 
 /// Prints the run summary.
@@ -419,9 +451,10 @@ fn print_summary(m: &Manifest, manifest: &[u8]) {
             println!("  {name}: {:?}", table.status);
         }
     }
-    println!("files written        {} ({rows} rows)", m.files.len());
     println!("dangling keys        {dangling} ({unchecked} key columns unchecked)");
     println!("non-finite floats    {non_finite}");
+    print_stat_descriptions(&m.stat_descriptions);
+    println!("files written        {} ({rows} rows)", m.files.len());
     println!("manifest sha256      {}", hex(&Sha256::digest(manifest)));
 }
 
@@ -556,11 +589,23 @@ mod tests {
                 ("data/Stats.datc64", 1),
                 ("data/french/stats.datc64", 2),
                 ("data/mods.datc64", 3),
+                // Stat descriptions: every file in the game's folder.
+                ("metadata/statdescriptions/a.txt", 4),
+                ("Metadata/StatDescriptions/B_filters.txt", 5),
+                ("metadata/statdescriptions/c.dat", 6),
+                ("data/statdescriptions/d.csd", 7),
             ]),
         )
         .unwrap();
-        assert_eq!(paths, ["data/stats.datc64"]);
-        assert_eq!(records, [record(1)]);
+        assert_eq!(
+            paths,
+            [
+                "data/stats.datc64",
+                "metadata/statdescriptions/a.txt",
+                "metadata/statdescriptions/b_filters.txt",
+            ]
+        );
+        assert_eq!(records, [record(1), record(4), record(5)]);
 
         let (paths, _) = planned_files(&plan, &listing(&[])).unwrap();
         assert!(paths.is_empty());
