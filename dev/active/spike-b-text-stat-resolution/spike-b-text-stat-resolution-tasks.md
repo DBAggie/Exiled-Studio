@@ -22,7 +22,7 @@ Last Updated: 2026-11-09 (PR B1x)
 ## PR B1x: extractor roots for lookup tables
 - [x] Add missing roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems` (the last two PoE1 only: no PoE2 file)
 - [x] Determinism on both games; manifests replaced; cross-check summaries replaced (same families); `load-statdesc` unchanged
-- [ ] Open PR
+- [x] Open PR (#15)
 
 ## PR B2a: single-line matcher (`loom-parser`)
 - [ ] Template index, normalization, value tokens, numeric handler inversion, conditions, hidden stats
