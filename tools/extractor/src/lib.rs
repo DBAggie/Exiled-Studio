@@ -8,6 +8,7 @@
 #![warn(clippy::indexing_slicing)]
 
 pub mod bundle;
+pub mod crosscheck;
 pub mod dat;
 pub mod decompress;
 pub mod extract;

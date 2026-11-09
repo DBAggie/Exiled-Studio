@@ -69,6 +69,9 @@ cargo run --release -p loom-extractor -- list-files "<game folder>" [--decoder <
 cargo run --release -p loom-extractor -- extract "<game folder>" --game poe1|poe2 --out local/extract/<game>/<steam build id>
 # Determinism check: two extract runs, byte comparison (Git Bash; output in local/determinism/<game>/):
 tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
+# Cross-check an extract output against a PoB checkout cloned into local/ (never the legacy repo);
+# writes report.json and summary.json, exits 1 while the gate is not met:
+cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game poe1|poe2 --out local/cross-check/<game>/<build>
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

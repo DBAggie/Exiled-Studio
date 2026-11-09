@@ -20,6 +20,13 @@
 //!   (`Manifest::problems`); the output is written either way. Stat-description
 //!   lines that were not parsed are listed in the manifest, not errors.
 //!
+//! - `cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out <dir>`:
+//!   compares an `extract` output with a Path of Building checkout and writes
+//!   `<dir>/report.json` (every gap with its category and rule) and
+//!   `<dir>/summary.json` (the same without the `pob-filtered` key lists);
+//!   see [`loom_extractor::crosscheck`]. Exits with an error if the Spike A
+//!   gate is not met; the report is written either way.
+//!
 //!   Provenance: the extractor's git commit and dirty flag are read when the
 //!   command runs, from the source tree the binary was built from. They are
 //!   right when the binary is built from the current tree just before the
@@ -32,10 +39,11 @@ use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use loom_extractor::crosscheck::{self, Gaps, Report};
 use loom_extractor::decompress::ExternalTool;
 use loom_extractor::extract::{
     Decoder, ExtractError, Extraction, Extractor, Inputs, MANIFEST_PATH, Manifest, Plan,
-    SPIKE_TABLES, Status,
+    SPIKE_TABLES, Status, TABLES_DIR,
 };
 use loom_extractor::index::{FileRecord, Index, Listing};
 use loom_extractor::install::{
@@ -48,21 +56,46 @@ use sha2::{Digest, Sha256};
 const USAGE: &str = "usage:
   loom-extractor list-files <install> [--decoder <program>] [--sample <n> | --all]
   loom-extractor extract <install> --game poe1|poe2 --out <dir> [--decoder <program>]
+  loom-extractor cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out <dir>
 
   <install>            game folder that contains Bundles2/
+  <extract-dir>        an extract output folder
+  <pob-dir>            a Path of Building checkout (a clone in local/,
+                       never the legacy repository)
   --decoder <program>  Oodle decoder to run (default: unoodle on PATH;
                        see docs/spikes/spike-a-extraction.md, section 2)
   --sample <n>         print the first n files by path (default 10)
   --all                print every file
   --game <game>        which game the install is: poe1 or poe2
   --out <dir>          output folder, must not exist (convention:
-                       local/extract/<game>/<steam build id>)";
+                       local/extract/<game>/<steam build id>, or
+                       local/cross-check/<game>/<steam build id>)";
 
 /// A parsed command line.
 #[derive(Debug, PartialEq, Eq)]
 enum Command {
     ListFiles(ListFiles),
     Extract(Extract),
+    CrossCheck(CrossCheck),
+}
+
+/// Parsed `cross-check` arguments.
+#[derive(Debug, PartialEq, Eq)]
+struct CrossCheck {
+    /// An `extract` output folder.
+    extract: PathBuf,
+    /// A Path of Building checkout.
+    pob: PathBuf,
+    game: Game,
+    out: PathBuf,
+}
+
+/// Which subcommand is being parsed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    ListFiles,
+    Extract,
+    CrossCheck,
 }
 
 /// Parsed `list-files` arguments.
@@ -85,54 +118,64 @@ struct Extract {
 
 fn parse_args(args: &[String]) -> Result<Command, String> {
     let mut args = args.iter();
-    let extract = match args.next().map(String::as_str) {
-        Some("list-files") => false,
-        Some("extract") => true,
+    let kind = match args.next().map(String::as_str) {
+        Some("list-files") => Kind::ListFiles,
+        Some("extract") => Kind::Extract,
+        Some("cross-check") => Kind::CrossCheck,
         Some(other) => return Err(format!("unknown subcommand `{other}`")),
         None => return Err("missing subcommand".to_owned()),
     };
-    let mut install = None;
+    let wanted = if kind == Kind::CrossCheck { 2 } else { 1 };
+    let mut positional: Vec<PathBuf> = Vec::new();
     let mut decoder = PathBuf::from("unoodle");
     let mut sample = Some(10);
     let mut game = None;
     let mut out = None;
     while let Some(arg) = args.next() {
         match arg.as_str() {
-            "--decoder" => {
+            "--decoder" if kind != Kind::CrossCheck => {
                 decoder = args.next().ok_or("--decoder needs a program")?.into();
             }
-            "--sample" if !extract => {
+            "--sample" if kind == Kind::ListFiles => {
                 let n = args.next().ok_or("--sample needs a number")?;
                 sample = Some(n.parse().map_err(|_| format!("bad --sample `{n}`"))?);
             }
-            "--all" if !extract => sample = None,
-            "--game" if extract => {
+            "--all" if kind == Kind::ListFiles => sample = None,
+            "--game" if kind != Kind::ListFiles => {
                 game = Some(match args.next().map(String::as_str) {
                     Some("poe1") => Game::Poe1,
                     Some("poe2") => Game::Poe2,
                     _ => return Err("--game needs poe1 or poe2".to_owned()),
                 });
             }
-            "--out" if extract => out = Some(args.next().ok_or("--out needs a folder")?.into()),
+            "--out" if kind != Kind::ListFiles => {
+                out = Some(args.next().ok_or("--out needs a folder")?.into());
+            }
             flag if flag.starts_with("--") => return Err(format!("unknown option `{flag}`")),
-            path if install.is_none() => install = Some(PathBuf::from(path)),
+            path if positional.len() < wanted => positional.push(PathBuf::from(path)),
             extra => return Err(format!("unexpected argument `{extra}`")),
         }
     }
-    let install = install.ok_or("missing <install>")?;
-    Ok(if extract {
-        Command::Extract(Extract {
-            install,
+    let mut positional = positional.into_iter();
+    let mut path = |what: &str| positional.next().ok_or(format!("missing {what}"));
+    Ok(match kind {
+        Kind::ListFiles => Command::ListFiles(ListFiles {
+            install: path("<install>")?,
+            decoder,
+            sample,
+        }),
+        Kind::Extract => Command::Extract(Extract {
+            install: path("<install>")?,
             decoder,
             game: game.ok_or("missing --game")?,
             out: out.ok_or("missing --out")?,
-        })
-    } else {
-        Command::ListFiles(ListFiles {
-            install,
-            decoder,
-            sample,
-        })
+        }),
+        Kind::CrossCheck => Command::CrossCheck(CrossCheck {
+            extract: path("<extract-dir>")?,
+            pob: path("<pob-dir>")?,
+            game: game.ok_or("missing --game")?,
+            out: out.ok_or("missing --out")?,
+        }),
     })
 }
 
@@ -364,6 +407,19 @@ fn write_output(
     files: &BTreeMap<String, Vec<u8>>,
     manifest: &[u8],
 ) -> Result<(), Failure> {
+    let files = files
+        .iter()
+        .map(|(path, bytes)| (path.as_str(), bytes.as_slice()))
+        .chain(std::iter::once((MANIFEST_PATH, manifest)));
+    write_files(out, files)
+}
+
+/// Writes `files` (relative path, bytes) into `<out>.partial`, then renames
+/// it to `out`. Neither may exist.
+fn write_files<'f>(
+    out: &Path,
+    files: impl IntoIterator<Item = (&'f str, &'f [u8])>,
+) -> Result<(), Failure> {
     let fail = |path: &Path, e: std::io::Error| {
         Failure::new(
             "EXTRACT_CLI_OUTPUT_WRITE",
@@ -384,8 +440,6 @@ fn write_output(
         }
         std::fs::write(&path, bytes).map_err(|e| fail(&path, e))?;
     }
-    let path = partial.join(MANIFEST_PATH);
-    std::fs::write(&path, manifest).map_err(|e| fail(&path, e))?;
     std::fs::rename(&partial, out).map_err(|e| fail(out, e))
 }
 
@@ -502,6 +556,218 @@ fn run_extract(cmd: &Extract) -> Result<bool, Failure> {
     Ok(problems.is_empty())
 }
 
+/// Path of `path` inside `root`, with `/` separators.
+fn relative(root: &Path, path: &Path) -> Option<String> {
+    let rel = path.strip_prefix(root).ok()?;
+    let parts: Option<Vec<&str>> = rel.components().map(|c| c.as_os_str().to_str()).collect();
+    Some(parts?.join("/"))
+}
+
+/// Files in `dir` (and below, if `deep`) whose name ends in `ext`, sorted.
+fn files_in(dir: &Path, ext: &str, deep: bool) -> Result<Vec<PathBuf>, Failure> {
+    let fail = |e: std::io::Error| {
+        Failure::new(
+            "EXTRACT_CLI_READ",
+            format!("cannot read {}: {e}", dir.display()),
+        )
+    };
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir).map_err(fail)? {
+        let path = entry.map_err(fail)?.path();
+        if path.is_dir() {
+            if deep {
+                out.extend(files_in(&path, ext, deep)?);
+            }
+        } else if path.to_str().is_some_and(|p| p.ends_with(ext)) {
+            out.push(path);
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
+fn read_bytes(path: &Path) -> Result<Vec<u8>, Failure> {
+    std::fs::read(path).map_err(|e| {
+        Failure::new(
+            "EXTRACT_CLI_READ",
+            format!("cannot read {}: {e}", path.display()),
+        )
+    })
+}
+
+fn read_text(path: &Path) -> Result<String, Failure> {
+    String::from_utf8(read_bytes(path)?).map_err(|e| {
+        Failure::new(
+            "EXTRACT_CLI_READ",
+            format!("{} is not UTF-8: {e}", path.display()),
+        )
+    })
+}
+
+/// The commit a checkout's `.git/HEAD` points at (detached, or through one ref).
+fn checkout_commit(repo: &Path) -> Option<String> {
+    let git = repo.join(".git");
+    let head = std::fs::read_to_string(git.join("HEAD")).ok()?;
+    let head = head.trim();
+    let commit = match head.strip_prefix("ref: ") {
+        Some(reference) => std::fs::read_to_string(git.join(reference)).ok()?,
+        None => head.to_owned(),
+    };
+    let commit = commit.trim();
+    (commit.len() == 40 && commit.bytes().all(|b| b.is_ascii_hexdigit())).then(|| commit.to_owned())
+}
+
+/// Prints one direction's gaps by category and rule.
+fn print_gaps(direction: &str, gaps: &Gaps) {
+    println!("    {direction:<12} {}", gaps.total);
+    for (category, rules) in &gaps.by_category {
+        for (rule, result) in rules {
+            let category = format!("{category:?}");
+            println!("      {category:<15} {rule:<34} {}", result.count);
+        }
+    }
+}
+
+/// Prints the cross-check summary.
+fn print_report(report: &Report) {
+    let unknown = "unknown";
+    let inputs = &report.inputs;
+    println!("game                 {}", report.game);
+    println!(
+        "steam build id       {}",
+        inputs.steam_build_id.as_deref().unwrap_or(unknown)
+    );
+    println!(
+        "pob commit           {} (tree {})",
+        inputs.provenance.pob_commit.as_deref().unwrap_or(unknown),
+        inputs.pob_tree_version
+    );
+    for (name, family) in &report.families {
+        let g = &family.gate;
+        println!(
+            "{name:<10} pob {}  ours {}  matched {}  gate {}",
+            family.pob_keys,
+            family.our_keys,
+            family.matched,
+            if g.met { "met" } else { "NOT met" }
+        );
+        print_gaps("pob-missing", &family.pob_missing);
+        print_gaps("ours-extra", &family.ours_extra);
+        println!(
+            "    patch-delta {} (limit {}), uncategorized {}, unparsed {}",
+            g.patch_delta, g.patch_delta_limit, g.uncategorized, g.unparsed
+        );
+        for (path, excluded) in &family.excluded_pob_files {
+            println!(
+                "    excluded {path}: {} keys, {} equal ours ({})",
+                excluded.keys, excluded.keys_matching_ours, excluded.reason
+            );
+        }
+        for rule in &family.disabled_rules {
+            println!("    disabled rule {rule}");
+        }
+    }
+    println!(
+        "gate                 {}",
+        if report.gate.met { "met" } else { "NOT met" }
+    );
+    for reason in &report.gate.not_met {
+        println!("  {reason}");
+    }
+}
+
+/// Runs `cross-check`; `Ok(false)` if the report was written but the gate is not met.
+fn run_cross_check(cmd: &CrossCheck) -> Result<bool, Failure> {
+    check_output_free(&cmd.out)?;
+    let schema = Schema::vendored().map_err(|e| Failure::new(e.code(), e))?;
+
+    let mut ours: BTreeMap<String, Vec<u8>> = BTreeMap::new();
+    let mut wanted = vec![MANIFEST_PATH.to_owned()];
+    wanted.extend(
+        crosscheck::TABLES
+            .iter()
+            .map(|t| format!("{TABLES_DIR}/{t}.json")),
+    );
+    for rel in wanted {
+        let bytes = read_bytes(&cmd.extract.join(&rel))?;
+        ours.insert(rel, bytes);
+    }
+    for path in files_in(
+        &cmd.extract.join(crosscheck::STAT_DESCRIPTIONS_DIR),
+        ".json",
+        true,
+    )? {
+        if let Some(rel) = relative(&cmd.extract, &path) {
+            ours.insert(rel, read_bytes(&path)?);
+        }
+    }
+
+    let mut pob: BTreeMap<String, String> = BTreeMap::new();
+    for (dir, ext, deep) in crosscheck::POB_DIRS {
+        for path in files_in(&cmd.pob.join(dir), ext, deep)? {
+            if let Some(rel) = relative(&cmd.pob, &path) {
+                pob.insert(rel, read_text(&path)?);
+            }
+        }
+    }
+    let tree_dir = cmd.pob.join("src/TreeData");
+    let mut versions = Vec::new();
+    for entry in std::fs::read_dir(&tree_dir).map_err(|e| {
+        Failure::new(
+            "EXTRACT_CLI_READ",
+            format!("cannot read {}: {e}", tree_dir.display()),
+        )
+    })? {
+        let entry = entry.map_err(|e| Failure::new("EXTRACT_CLI_READ", e))?;
+        if entry.path().is_dir() {
+            versions.push(entry.file_name().to_string_lossy().into_owned());
+        }
+    }
+    let tree_version = crosscheck::newest_tree_version(versions.iter().map(String::as_str))
+        .ok_or_else(|| {
+            Failure::new(
+                "EXTRACT_CLI_NO_TREE",
+                format!("no <major>_<minor> folder in {}", tree_dir.display()),
+            )
+        })?
+        .to_owned();
+    let tree = crosscheck::tree_path(&tree_version);
+    pob.insert(tree.clone(), read_text(&cmd.pob.join(&tree))?);
+
+    let manifest_sha256 = ours
+        .get(MANIFEST_PATH)
+        .map(|m| hex(&Sha256::digest(m)))
+        .unwrap_or_default();
+    let report = crosscheck::cross_check(
+        crosscheck::Inputs {
+            game: cmd.game,
+            schema: &schema,
+            ours: &ours,
+            pob: &pob,
+            tree_version: &tree_version,
+        },
+        crosscheck::Provenance {
+            extract_manifest_sha256: manifest_sha256,
+            pob_commit: checkout_commit(&cmd.pob),
+            tool_commit: git(&["rev-parse", "HEAD"]),
+            tool_dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+            tool_version: env!("CARGO_PKG_VERSION").to_owned(),
+        },
+    )
+    .map_err(|e| Failure::new(e.code(), e))?;
+    let json = |r: &Report| r.to_json().map_err(|e| Failure::new("EXTRACT_CLI_JSON", e));
+    let (full, summary) = (json(&report)?, json(&report.summary())?);
+    write_files(
+        &cmd.out,
+        [
+            ("report.json", full.as_slice()),
+            ("summary.json", summary.as_slice()),
+        ],
+    )?;
+    print_report(&report);
+    Ok(report.gate.met)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let cmd = match parse_args(&args) {
@@ -514,6 +780,7 @@ fn main() -> ExitCode {
     let result = match &cmd {
         Command::ListFiles(cmd) => run_list_files(cmd).map(|()| true),
         Command::Extract(cmd) => run_extract(cmd).map_err(|Failure(message)| message),
+        Command::CrossCheck(cmd) => run_cross_check(cmd).map_err(|Failure(message)| message),
     };
     match result {
         Ok(true) => ExitCode::SUCCESS,
@@ -656,7 +923,7 @@ mod tests {
     fn parse_args_should_read_options() {
         let list = |list: &[&str]| match parse_args(&args(list)).unwrap() {
             Command::ListFiles(cmd) => cmd,
-            Command::Extract(_) => panic!("not list-files"),
+            Command::Extract(_) | Command::CrossCheck(_) => panic!("not list-files"),
         };
         let cmd = list(&["list-files", "--decoder", "x/unoodle", "D:/game", "--all"]);
         assert_eq!(cmd.decoder, PathBuf::from("x/unoodle"));
@@ -690,6 +957,62 @@ mod tests {
     }
 
     #[test]
+    fn parse_args_should_read_cross_check() {
+        let cmd = parse_args(&args(&[
+            "cross-check",
+            "local/extract/poe1/1",
+            "local/pob/PathOfBuilding",
+            "--game",
+            "poe1",
+            "--out",
+            "local/cross-check/poe1/1",
+        ]))
+        .unwrap();
+        assert_eq!(
+            cmd,
+            Command::CrossCheck(CrossCheck {
+                extract: PathBuf::from("local/extract/poe1/1"),
+                pob: PathBuf::from("local/pob/PathOfBuilding"),
+                game: Game::Poe1,
+                out: PathBuf::from("local/cross-check/poe1/1"),
+            })
+        );
+    }
+
+    #[test]
+    fn checkout_commit_should_read_detached_and_ref_heads() {
+        let dir = TestDir::new("commit");
+        let git = dir.0.join(".git");
+        std::fs::create_dir_all(git.join("refs/heads")).unwrap();
+        let sha = "1b4078dc4dcd58f7308df7e779974737badee894";
+        std::fs::write(git.join("HEAD"), format!("{sha}\n")).unwrap();
+        assert_eq!(checkout_commit(&dir.0).as_deref(), Some(sha));
+        std::fs::write(git.join("HEAD"), "ref: refs/heads/dev\n").unwrap();
+        std::fs::write(git.join("refs/heads/dev"), format!("{sha}\n")).unwrap();
+        assert_eq!(checkout_commit(&dir.0).as_deref(), Some(sha));
+        std::fs::write(git.join("refs/heads/dev"), "not a commit\n").unwrap();
+        assert_eq!(checkout_commit(&dir.0), None);
+    }
+
+    #[test]
+    fn files_in_should_list_sorted_and_recurse_only_when_asked() {
+        let dir = TestDir::new("files");
+        std::fs::create_dir_all(dir.0.join("sub")).unwrap();
+        for name in ["b.lua", "a.lua", "c.txt", "sub/d.lua"] {
+            std::fs::write(dir.0.join(name), "").unwrap();
+        }
+        let rel = |deep| -> Vec<String> {
+            files_in(&dir.0, ".lua", deep)
+                .unwrap()
+                .iter()
+                .map(|p| relative(&dir.0, p).unwrap())
+                .collect()
+        };
+        assert_eq!(rel(false), ["a.lua", "b.lua"]);
+        assert_eq!(rel(true), ["a.lua", "b.lua", "sub/d.lua"]);
+    }
+
+    #[test]
     fn parse_args_should_reject_bad_input() {
         for bad in [
             &[][..],
@@ -705,6 +1028,21 @@ mod tests {
             &["extract", "a", "--game", "poe3", "--out", "o"][..],
             &["extract", "--game", "poe1", "--out", "o"][..],
             &["extract", "a", "--game", "poe1", "--out", "o", "--all"][..],
+            &["cross-check", "a", "--game", "poe1", "--out", "o"][..],
+            &["cross-check", "a", "b", "c", "--game", "poe1", "--out", "o"][..],
+            &["cross-check", "a", "b", "--out", "o"][..],
+            &[
+                "cross-check",
+                "a",
+                "b",
+                "--game",
+                "poe1",
+                "--decoder",
+                "u",
+                "--out",
+                "o",
+            ][..],
+            &["bogus"][..],
         ] {
             assert!(parse_args(&args(bad)).is_err(), "{bad:?}");
         }
