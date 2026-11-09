@@ -53,7 +53,7 @@ Last Updated: 2026-11-09 (PR A4 opened)
 - [x] Determinism check script `tools/extractor/scripts/check-determinism.sh`; byte-identical on PoE1 and PoE2 from clean tree `d047e4a`
 - [x] Commit manifests (`docs/spikes/spike-a/`; no machine paths, so committed unchanged)
 - [x] `code-architecture-reviewer` findings applied or recorded (context file, "PR A4")
-- [ ] PR open, CI green, maintainer merge
+- [ ] PR open (#9), CI green, maintainer merge
 
 ## PR A5: stat descriptions (step 5; can run in parallel with A3/A4)
 - [ ] UTF-16LE `.csd` reader, includes, description blocks, conditions, format strings, handlers

@@ -104,7 +104,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Verify:** `cargo test -p loom-extractor`; with `LOOM_POE1_INSTALL`/`LOOM_POE2_INSTALL` set, `cargo test --release -p loom-extractor --test install_dat -- --ignored --nocapture`.
 - **Agent shell quirk:** Bash heredocs passed through the tool can mangle backslashes (a `'\\0'` became a NUL byte) and some non-ASCII. Write edit scripts with the Write tool and run them with `python -I <script> <file>`. PowerShell 5.1 `Set-Content -Encoding utf8` adds a BOM; strip it.
 
-## PR A4: extract, manifest, determinism (opened 2026-11-09, branch `spike-a/a4-extract`)
+## PR A4: extract, manifest, determinism (PR #9, opened 2026-11-09, branch `spike-a/a4-extract`)
 - **Not split into A4a/A4b:** the dat reader is generic, so all six tables plus the referenced ones cost the same code as Stats alone.
 - **Which tables:** the six roots plus the transitive closure over every column that references a table (enum references skipped): PoE1 72 tables, PoE2 85. Only direct references would be 27/38; the closure was chosen so every key in the output can be range-checked. Tables come from `data/` (PoE1) and `data/balance/` (PoE2), the English text; the manifest says so (`table_dir`, `text_language`).
 - **JSON layout:** `{"columns": [...], "rows": [[...], ...], "table": ...}`, one row per line. Rows are arrays, not objects, because many schema columns have no name. Details in the report, section 10.
