@@ -3,6 +3,8 @@
 //! recording game version, schema revision, and input hashes (ADR-005).
 //! Never ships GGG art or audio (ADR-000).
 
+#![warn(clippy::indexing_slicing)]
+
 use std::process::ExitCode;
 
 fn main() -> ExitCode {

@@ -1722,6 +1722,7 @@ name = "loom-extractor"
 version = "0.0.0"
 dependencies = [
  "loom-data",
+ "thiserror 2.0.21",
 ]
 
 [[package]]

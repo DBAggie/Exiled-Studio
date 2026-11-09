@@ -1,0 +1,83 @@
+# Spike A: Bundles2 game-data extraction (report)
+
+Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
+
+Status (2026-11-08, PR A1): decompressor decided; format notes for the bundle container and index recorded from observation. No gate result yet.
+
+## 1. Existing crates (survey, 2026-11-08)
+Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
+
+| Crate / project | What it does | License | Verdict |
+|---|---|---|---|
+| `oozextract` 0.5.7 (lvlvllvlvllvlvl/oozextract) | Pure-Rust Kraken/Mermaid/Selkie/Leviathan/LZNA/Bitknit decoder; `unoodle` CLI behind feature `cli` | crates.io says MIT; the repo has **no LICENSE file** and describes itself as a "rust port of ooz" | Probably a derivative of GPL code; **not linked**. Used only as a separately installed tool (section 2). |
+| powzix/ooz (C++) | Original open-source Oodle decoder | GPL-3.0-or-later (header in `kraken.cpp`) | Not usable as a dependency. |
+| zao/ooz (C++) | ooz fork with Bundles2 tools (`bun_extract_file`, used by PoB's exporter) | No license file; GPL headers from ooz | Not usable. |
+| `oozle` 0.1.5 | C++ ooz via `cxx` | GPL-3.0-or-later | Not usable. |
+| `ooz-sys` 0.2.0 | ooz bindings | GPL-3.0-or-later, yanked | Not usable. |
+| `poe_bundle` 0.2.1 | Bundles2 reader over C++ ooz | LGPL-3.0-only | Not usable. |
+| `poe_data_tools` 4.0.1 | Bundles, dat, stat descriptions, CLI | MIT OR Apache-2.0 | Depends on `oozextract` (same provenance problem) and brings `reqwest`, `tokio`, `rayon`, `arrow`. Not adopted; a possible reference for format behaviour (permissive, so reading it is fine). |
+| `primase-oozextract` 0.0.0 | Pure-Rust decoder | MIT | Repo not found (404); a fork of `oozextract` by its description. Not usable. |
+| `oodle`, `oodle-safe`, `oodle-sys` | Wrappers around the proprietary Oodle SDK | n/a | Need RAD/Epic's binary; neither PoE install ships an Oodle DLL (Oodle is linked into the game executable). Not usable. |
+| `ggpk` 1.2.2 | Legacy single-file GGPK (pre-Bundles2) | MIT | Wrong format. |
+
+Finding: **every open Oodle decoder found derives from powzix/ooz (GPL-3.0-or-later).** No clean-room permissive implementation exists. A web search for one (2026-11-08) found only ooz derivatives. No existing crate collapses A1 to A3 without bringing in ooz-derived code, so the container, index, and dat readers are written here (plan step 1, "collapse" case does not apply).
+
+## 2. Decompressor decision (maintainer, 2026-11-08)
+Options put to the maintainer: (a) run a separately installed decoder across a process boundary, (b) accept `oozextract` as MIT at face value, (c) take the RePOE fallback and amend ADR-005. **Chosen: (a), external tool boundary.**
+
+- No ooz-derived code is linked into or vendored in this repository, and none is in `Cargo.lock`. `cargo deny` sees nothing new except `thiserror`.
+- `tools/extractor/src/decompress.rs` defines the `Decompressor` trait. `ExternalTool` runs the maintainer-installed `unoodle` (from `cargo install --locked oozextract@0.5.7 --features cli`) once per call, through two scratch files, and checks the decoded length the tool reports. `Identity` serves framing tests on synthetic bytes.
+- The decoder is a maintainer workstation tool, like a compiler. It is not distributed by this project and never reaches end users (ADR-005: users get signed bundles only).
+- The manifest (A4) must record the decoder program and version, because outputs depend on it.
+- Why not (c): RePOE itself decodes with PyPoE, which uses ooz, so it does not remove GPL code from the pipeline; it only hides it. Its data files are GGG-owned (RePOE `LICENSE.md`), the same as ours.
+- Recorded as ADR-005 Amendment 1 (`docs/adr/005-build-and-data-compatibility.md`), approved by merging PR #6. The extractor is still the project's own Rust code; only Oodle decoding is delegated.
+
+Performance (PoE1 `_.index.bin`, maintainer workstation): one call per 256 KiB chunk takes about 27 ms per spawn; one call on all chunks concatenated decodes 33.4 MB in about 0.1 s and matches the per-chunk output. A2 uses one call per bundle.
+
+## 3. Bundle container (observed, PoE1 and PoE2)
+All integers little-endian. Verified on `_.index.bin` (both games), `_.index.high.bin`, `_.index.low.bin`, and PoE1 `Tiny.bundle.bin`: `file size = 12 + head_size + payload_size`, chunk sizes sum to `payload_size`, and `chunk_count = ceil(decompressed_size / granularity)`.
+
+| Offset | Type | Field |
+|---|---|---|
+| 0 | u32 | decompressed size |
+| 4 | u32 | payload size (all chunks) |
+| 8 | u32 | head size (bytes from offset 12 to the first chunk; `48 + 4 * chunk_count`) |
+| 12 | u32 | encoder id (observed 8, 12, 13; matches the community-documented Oodle compressor enum, Kraken = 8, Leviathan = 13; not needed for decoding) |
+| 16 | u32 | unknown (observed 1) |
+| 20 | u64 | decompressed size (repeat) |
+| 28 | u64 | payload size (repeat) |
+| 36 | u32 | chunk count |
+| 40 | u32 | granularity (observed 262144 = 256 KiB) |
+| 44 | u32 x 4 | unknown (observed 0) |
+| 60 | u32 x chunk count | compressed size of each chunk |
+| 12 + head size | bytes | chunks, back to back |
+
+Each chunk decodes to `granularity` bytes (the last to the remainder). Chunks start with an Oodle block header (`0x8C`; observed `8C 0C` in large bundles, `CC 06` in the 8-byte high/low bundles).
+
+## 4. Index (`_.index.bin`; sizes and bundle counts observed on PoE1 and PoE2, record layout walked on PoE1)
+`_.index.bin` is a bundle. Its decoded bytes (PoE1: 33,449,776; PoE2: 151,240,657) are laid out as:
+
+1. `u32` bundle count (PoE1 46,884; PoE2 64,994), then per bundle: `u32` name length, name bytes (e.g. `Metadata/Shrines`, no extension), `u32` decompressed size.
+2. `u32` file count (PoE1 1,245,702), then per file 20 bytes: `u64` path hash, `u32` bundle index, `u32` offset in the decoded bundle, `u32` size.
+3. `u32` path-rep count (PoE1 86,209), then per rep 20 bytes: `u64` directory hash, `u32` offset, `u32` size, `u32` recursive size.
+4. The rest is an embedded bundle (same container) holding the path data; its decoded size equals the first rep's recursive size (PoE1: 26,706,151), and it ends exactly at the end of the index.
+
+To confirm in A2 (community-documented, not yet checked here): the path-data encoding (a phase-switched list of path fragments) and the path hash (MurmurHash64A over the lowercased path with seed `0x1337b33f`; older patches used FNV-1a). A2 checks the hash by rebuilding every path and matching all 1,245,702 file records.
+
+Install files and SHA-256 (2026-11-08):
+
+| Game | Steam build | `_.index.bin` SHA-256 |
+|---|---|---|
+| PoE1 | 26474023 | `60264b4fc9182a442d95c29d49c0bb5097586b5081ac8f8b3032b74cdcbf19ac` |
+| PoE2 | 26476662 | `9342956efd2ac4cb7864b46c3f7cb889fa3e1b49b3ca05cca7efddc9cdad7ed9` |
+
+## 5. Other files in `Bundles2/`
+- `_.index.high.bin`, `_.index.low.bin`: identical 74-byte bundles, byte-identical in PoE1 and PoE2, that decode to 8 zero bytes (an index with zero bundles). Their timestamps are older than `_.index.bin`, so the game does not rewrite them on patch. **Not needed**; not read by the extractor.
+- `.index.dbg`: not a bundle (starts `u32 1`, `u32 count`; PoE1 count 1,166,053), followed by records that look like 64-bit hashes. Older than `_.index.bin` in both installs, so not updated per patch. **Not needed**; not read.
+
+## 6. datc64 (to confirm in A3)
+Community-documented layout, from `poe-tool-dev/dat-schema` (MIT, the schema we will vendor) and `poe-dat-viewer`: `u32` row count, fixed-width rows, an 8-byte `0xBB` boundary marker, then a variable data section that strings (UTF-16LE, null-terminated) and arrays (count + offset) point into, with offsets counted from the marker. A3 checks this against real tables and records the results here.
+
+## 7. Evidence (PR A1)
+- CI tests: `cargo test -p loom-extractor`. Unit tests cover identity, length checks, tool-output parsing, and spawn errors. `tests/external_tool.rs` runs `ExternalTool` against `fake-unoodle` (`src/bin/fake-unoodle.rs`, a test double, not a decoder) and covers success, reported and actual length mismatches, a missing length line, tool failure with stderr, a missing work dir, scratch cleanup, and 8 concurrent calls.
+- Maintainer-run `#[ignore]` test `tools/extractor/tests/install_decompress.rs` (2026-11-08, `unoodle` 0.5.7): passed on both installs. PoE1 index 20,826,488 -> 33,449,776 bytes (128 chunks); PoE2 index 116,427,003 -> 151,240,657 bytes (577 chunks); the first and last chunks decoded on their own match the whole-payload decode; high/low bundles decode to 8 zero bytes in both.

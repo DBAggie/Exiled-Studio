@@ -9,7 +9,7 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [002](002-application-shell-and-core.md) | Application shell and domain core (Tauri 2, React, Rust) | Accepted |
 | [003](003-domain-and-calculation-architecture.md) | Domain and calculation architecture | Accepted |
 | [004](004-api-state-and-concurrency.md) | Application API, state, and concurrency | Accepted |
-| [005](005-build-and-data-compatibility.md) | Build formats and game-data source | Revised |
+| [005](005-build-and-data-compatibility.md) | Build formats and game-data source | Revised; Amendment 1 (Oodle via external tool) |
 | [006](006-parity-and-oracle.md) | Parity verification, oracle, divergence register | Revised |
 | [007](007-corpus-and-coverage.md) | Parity corpus and coverage | Revised |
 | [008](008-ui-and-accessibility.md) | UI, UX, and accessibility | Accepted |
@@ -24,3 +24,5 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [017](017-mcp-reference-addon.md) | Local MCP server as reference addon | Accepted (new) |
 
 New ADRs take the next number and use the same header format (Status, Date, Decision, Consequences).
+
+Amendments are appended to the ADR as `## Amendment N (date): title` sections with Context, Decision, and Consequences. The original text stays unchanged, the Status line names the amendment, and the table above lists it. The maintainer approves an amendment by merging the PR that adds it.

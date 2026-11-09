@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08 (after PR #4 merged)
+Last Updated: 2026-11-08 (PR A1 opened)
 
 # Spike A: tasks
 
@@ -19,18 +19,20 @@ Last Updated: 2026-11-08 (after PR #4 merged)
 - [ ] Non-blocking (scheduled) `cargo deny check advisories` job
 
 ## PR A1: crates and decompressor decision (step 1)
-- [ ] Survey existing permissive Rust crates for the Bundles2 index and datc64
-- [ ] Survey decompressors; record license, codecs, maintenance, `unsafe` needs
-- [ ] Identify `_.index.high.bin`, `_.index.low.bin`, `.index.dbg`
-- [ ] Write format notes (bundle, index, path hash, datc64) with sources
-- [ ] Start `docs/spikes/spike-a-extraction.md` with the decision
-- [ ] Add the dependency with its test vectors (if any) and an `#[ignore]` test using `LOOM_POE1_INSTALL`/`LOOM_POE2_INSTALL` (or record the fallback trigger)
-- [ ] Enable `clippy::indexing_slicing` for `tools/extractor`
+- [x] Survey existing permissive Rust crates for the Bundles2 index and datc64 (none usable without ooz-derived code; report section 1)
+- [x] Survey decompressors; record license, codecs, maintenance, `unsafe` needs (all derive from GPL ooz)
+- [x] Maintainer decision: external tool boundary (`unoodle` from `oozextract` 0.5.7, installed separately, not linked)
+- [x] Identify `_.index.high.bin`, `_.index.low.bin`, `.index.dbg` (not needed; report section 5)
+- [x] Write format notes (bundle container and index observed; path hash and datc64 marked "to confirm" in A2/A3)
+- [x] Start `docs/spikes/spike-a-extraction.md` with the decision
+- [x] `Decompressor` trait, `ExternalTool`, `Identity` in `tools/extractor/src/decompress.rs`; `#[ignore]` test `tests/install_decompress.rs` passed on PoE1 and PoE2 (maintainer workstation)
+- [x] Enable `clippy::indexing_slicing` for `tools/extractor` (crate attribute in `lib.rs` and `main.rs`)
+- [ ] PR open, CI green, maintainer merge
 
 ## PR A2: bundle and index (step 2)
-- [ ] `Decompressor` trait and the chosen implementation
-- [ ] Bundle header/chunk parser with synthetic-byte tests
-- [ ] Index parser and path reconstruction; path-hash test vectors
+- [x] `Decompressor` trait and the chosen implementation (done in A1)
+- [ ] Bundle header/chunk parser (layout in the spike report, section 3; one decoder call per bundle) with synthetic-byte tests
+- [ ] Index parser and path reconstruction (layout in report section 4); confirm the path hash by matching all file records; path-hash test vectors
 - [ ] Corrupt-input property tests
 - [ ] `list-files` subcommand; maintainer run on PoE1 and PoE2, counts and hashes in the PR
 
@@ -43,7 +45,7 @@ Last Updated: 2026-11-08 (after PR #4 merged)
 ## PR A4 (a/b): extract and determinism (step 4)
 - [ ] `extract` for Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects (plus referenced tables)
 - [ ] `BTreeMap`-only output assembly; shuffled-input determinism unit test
-- [ ] Canonical JSON output and manifest (build ID, hashes, schema tag, extractor commit, dirty flag)
+- [ ] Canonical JSON output and manifest (build ID, hashes, schema tag, extractor commit, dirty flag, decoder program and version)
 - [ ] Determinism check script; run twice on PoE1 and PoE2 from a clean tree
 - [ ] Commit scrubbed manifests
 

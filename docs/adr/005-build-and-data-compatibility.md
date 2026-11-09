@@ -1,6 +1,6 @@
 # ADR-005: Build, Schema, and Game-Data Compatibility
 
-- Status: Accepted (revised 2026-11-08)
+- Status: Accepted (revised 2026-11-08; Amendment 1, 2026-11-08)
 - Date: 2026-02-01
 
 ## Decision
@@ -22,3 +22,23 @@ The PoE2 in-game Build Planner `.build` JSON is a backlog import target.
 - Patch-day data turnaround depends on maintainer availability.
 - The extractor must record game version, schema revision, and input hashes for reproducibility.
 - Data schema and application schema version independently.
+
+## Amendment 1 (2026-11-08): Oodle decompression through an external tool
+Approved by the maintainer by merging the PR that adds it (Spike A, PR A1, #6). Evidence: `docs/spikes/spike-a-extraction.md`, sections 1 and 2.
+
+### Context
+Bundles2 bundles are Oodle-compressed (Kraken/Leviathan). The Spike A survey found that every open-source Oodle decoder derives from powzix/ooz, which is GPL-3.0-or-later. The only one labeled permissive, the `oozextract` crate (MIT on crates.io), is a self-described Rust port of ooz with no license file in its repository. The official Oodle SDK is proprietary, and neither game install ships it as a separate library. The project is MIT and accepts only permissive dependencies (`deny.toml`), so no decoder can be a dependency. The RePOE fallback does not avoid the problem: RePOE decodes with PyPoE, which also uses ooz.
+
+### Decision
+- The extractor does not link, vendor, or depend on any Oodle decoder. Decoding is delegated to a **separately installed command-line tool** that the maintainer runs as a child process, behind the extractor's `Decompressor` trait. Everything else stays the project's own Rust code: bundle container, index, path hashing, `.dat` tables, stat descriptions, manifest.
+- The tool is a maintainer workstation tool, like a compiler. The project does not distribute it, and it never reaches end users, who still receive only signed bundles.
+- The tool and its exact version are pinned in the extractor documentation (currently `unoodle` from `oozextract` 0.5.7: `cargo install --locked oozextract@0.5.7 --features cli`). The extraction manifest records the decoder program and version with the other inputs.
+- The extractor checks each decode against the decompressed length recorded in the bundle, so a wrong or truncated decode fails instead of producing data.
+- CI does not run the decoder. Code around it is tested on synthetic bytes and with a test-double tool; real decoding is checked by maintainer-run install-backed tests.
+- Replacing the tool (another ooz build, or a permissive clean-room decoder if one appears) requires only a change to the `Decompressor` implementation and the pinned version, not a further amendment. Linking any decoder into the project, or distributing one, does require a new amendment.
+
+### Consequences
+- The maintainer needs one more local install, and the extractor depends on that tool's command-line interface.
+- CI can re-check outputs from decompressed or extracted inputs, but cannot reproduce decompression itself; reproducibility rests on the recorded index hash, decoder version, and output hashes.
+- The repository and its dependency tree stay free of GPL-derived code, so the project license and the `cargo-deny` policy are unaffected.
+- The RePOE fallback stays in place for the case where extraction is blocked for other reasons.

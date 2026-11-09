@@ -56,6 +56,12 @@ cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
 
+# Maintainer only: extractor tests against a local game install (not in CI).
+# Needs the Oodle decoder installed separately (never a dependency; docs/spikes/spike-a-extraction.md):
+#   cargo install --locked oozextract@0.5.7 --features cli
+# Set LOOM_POE1_INSTALL and/or LOOM_POE2_INSTALL to the game folders, then:
+cargo test -p loom-extractor --test install_decompress -- --ignored --nocapture
+
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
 pnpm format:check && pnpm lint && pnpm build

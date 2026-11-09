@@ -1,9 +1,11 @@
-Last Updated: 2026-11-08 (after PR #4 merged)
+Last Updated: 2026-11-08 (PR A1 opened)
 
 # Spike A: context
 
 ## Key files
-- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. Currently `src/main.rs` only.
+- `tools/extractor/` (`loom-extractor`): where all Spike A code goes. `src/lib.rs` (library, `#![warn(clippy::indexing_slicing)]`), `src/decompress.rs` (`Decompressor` trait, `ExternalTool`, `Identity`), `tests/install_decompress.rs` (`#[ignore]` install-backed test), `src/main.rs` (still a stub).
+- `tools/extractor/src/bin/fake-unoodle.rs` + `tests/external_tool.rs`: a test double for `unoodle` (behaviour picked by the input prefix `ok:`/`lie:`/`silent:`/`fail:`) so CI tests `ExternalTool` without a decoder. Added after the `code-architecture-reviewer` review (should-fix: the tool path was only covered by the ignored test).
+- `docs/spikes/spike-a-extraction.md`: the spike report (survey, decompressor decision, bundle and index layout, evidence). Add a section per PR.
 - `crates/loom-data/`: core crate, empty. Not changed by Spike A (the canonical data schema is Phase 2).
 - `Cargo.toml`: workspace lints (`unsafe_code = "deny"`, `unwrap_used`/`expect_used` warn, errors in CI).
 - `.gitignore`: `/local/` and `/out/` are ignored; extractor output and PoB clones go in `local/`.
@@ -60,6 +62,17 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - `multiple-versions = "warn"`: Tauri brings ~20 duplicate crates (windows-sys, toml, syn, ...); denying would block on upstream.
 - Advisories (`cargo deny check advisories`) are deliberately not in the required job: the RustSec DB changes without a code change and would turn unrelated PRs red. Follow-up task: a scheduled or non-blocking advisories job.
 - Quirk: in the agent's PowerShell, cargo is not on PATH; prefix commands with `$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`. Git Bash has no cargo either.
+
+## PR A1: decompressor decision (2026-11-08)
+- **Survey result:** every open Oodle decoder derives from powzix/ooz (GPL-3.0-or-later). `oozextract` 0.5.7 says MIT on crates.io, but its repo has no LICENSE file and calls itself a "rust port of ooz". `poe_data_tools` (MIT/Apache) depends on it. Neither PoE install ships an Oodle DLL. Full table in the report, section 1.
+- **Maintainer decision (2026-11-08): external tool boundary.** No ooz-derived code is linked, vendored, or in `Cargo.lock`. `ExternalTool` runs a separately installed `unoodle` (`cargo install --locked oozextract@0.5.7 --features cli`) as `unoodle <in> --length <n> --header 0 --verbose --output <out>`, through scratch files, and checks its `Extracted <n> bytes` line. The tool always writes a buffer of the requested size, so that line is the only real length check. RePOE was rejected as a fallback here because it also decodes with ooz (via PyPoE).
+- **ADR-005 Amendment 1** records this decision (added to PR #6 at the maintainer's request; approved by merging PR #6). It allows swapping the external tool without another amendment, but linking or distributing a decoder needs a new one.
+- **Performance:** one spawn per 256 KiB chunk takes about 27 ms. Decoding all chunks concatenated in one call works (33.4 MB in about 0.1 s, matching the per-chunk output). A2 should call the decoder once per bundle.
+- **Index files:** `_.index.high.bin` and `_.index.low.bin` are identical bundles that decode to 8 zero bytes; `.index.dbg` is a stale non-bundle hash table. None are needed.
+- **Error codes:** the extractor starts a convention: each `thiserror` enum has `code() -> &'static str` returning `EXTRACT_<AREA>_<WHAT>` (ADR-014). No repo-wide convention exists yet.
+- **Clippy quirk:** `allow-expect-in-tests` does not cover helper functions in integration-test files, so `tests/install_decompress.rs` uses a file-level `#![expect(clippy::expect_used, reason = ...)]`.
+- **Install test** (PowerShell; agent shells need the cargo PATH prefix): set `LOOM_POE1_INSTALL` and `LOOM_POE2_INSTALL` to the install folders, then `cargo test -p loom-extractor --test install_decompress -- --ignored --nocapture`. `LOOM_OODLE_TOOL` overrides the decoder path. Passed 2026-11-08 on both installs.
+- `unoodle` 0.5.7 is installed on the maintainer workstation in `%USERPROFILE%/.cargo/bin`.
 
 ## Open questions for the maintainer
 None.
