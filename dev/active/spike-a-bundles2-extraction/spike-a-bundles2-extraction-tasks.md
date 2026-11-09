@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A4 opened)
+Last Updated: 2026-11-09 (PR A5 opened)
 
 # Spike A: tasks
 
@@ -53,12 +53,16 @@ Last Updated: 2026-11-09 (PR A4 opened)
 - [x] Determinism check script `tools/extractor/scripts/check-determinism.sh`; byte-identical on PoE1 and PoE2 from clean tree `d047e4a`
 - [x] Commit manifests (`docs/spikes/spike-a/`; no machine paths, so committed unchanged)
 - [x] `code-architecture-reviewer` findings applied or recorded (context file, "PR A4")
-- [ ] PR open (#9), CI green, maintainer merge
+- [x] PR open (#9), CI green, maintainer merge (merged 2026-11-09 as `d480d1f`)
 
 ## PR A5: stat descriptions (step 5; can run in parallel with A3/A4)
-- [ ] UTF-16LE `.csd` reader, includes, description blocks, conditions, format strings, handlers
-- [ ] Unparsed-construct counting in the manifest
-- [ ] Unit tests per construct; maintainer-run counts
+- [x] Survey the real files on both installs (PoE1 `.txt`, PoE2 `.csd`; same grammar; report section 12)
+- [x] UTF-16LE reader, includes, description and handed blocks, conditions, flags, format-string placeholders, handlers; other languages counted (`src/statdesc.rs`)
+- [x] Findings with a fixed kind list, line text and skipped counts in the manifest (format 2, `stat_descriptions`)
+- [x] Unit tests per construct and per finding kind; no-panic tests on truncated and corrupt input
+- [x] Maintainer run from clean tree `8e777b9`: zero unparsed English lines on both games; determinism holds (117 / 675 files); manifests committed
+- [ ] `code-architecture-reviewer` review (first attempt stopped on a usage limit; rerun before the PR is opened) and findings applied or recorded
+- [ ] PR open, CI green, maintainer merge
 
 ## PR A6: cross-check and gate (step 6)
 - [ ] Search upstream for data exports newer than 3.29.3 / 0.5.5; use the newest and record the commits
