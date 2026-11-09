@@ -1047,26 +1047,47 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         .flat_map(|(_, keys)| &keys.keys)
         .filter_map(|k| rows.get(k.as_str()).copied())
         .collect();
-    let broken_by = |test: &dyn Fn(&[Value]) -> bool| -> BTreeSet<String> {
-        exported_rows
-            .iter()
-            .filter(|r| test(r))
-            .map(|r| combo(r))
-            .collect()
-    };
+    let combos_where =
+        |rows: &[&Vec<Value>], test: &dyn Fn(&[Value]) -> bool| -> BTreeSet<String> {
+            rows.iter().filter(|r| test(r)).map(|r| combo(r)).collect()
+        };
     let pattern_broken: Vec<BTreeSet<String>> = id_patterns
         .iter()
-        .map(|(_, p)| broken_by(&|r| ours::text(r, id).is_some_and(|i| p.find(i))))
+        .map(|(_, p)| {
+            combos_where(&exported_rows, &|r| {
+                ours::text(r, id).is_some_and(|i| p.find(i))
+            })
+        })
+        .collect();
+    let (id_patterns, pattern_broken) = (&id_patterns, &pattern_broken);
+    // A mod whose Id matches an exclusion pattern that PoB nevertheless
+    // exports for its pair belongs to a specialised writer (for example
+    // `ModSynthesis.lua` for `^Synthesis`); the generic writer conditions
+    // below say nothing about it.
+    let special = |r: &[Value]| {
+        let c = combo(r);
+        ours::text(r, id).is_some_and(|i| {
+            id_patterns
+                .iter()
+                .zip(pattern_broken.iter())
+                .any(|((_, p), broken)| p.find(i) && broken.contains(&c))
+        })
+    };
+    let generic_rows: Vec<&Vec<Value>> = exported_rows
+        .iter()
+        .copied()
+        .filter(|r| !special(r))
         .collect();
     let aura_bonus = |r: &[Value]| first_family(r) == Some("AuraBonus");
     let without_family = |r: &[Value]| unique_generation(r) && !non_empty(r, family_col);
     let flagged = |r: &[Value]| non_empty(r, aura_flags);
-    let aura_bonus_broken = broken_by(&aura_bonus);
-    let without_family_broken = broken_by(&without_family);
-    let flagged_broken = broken_by(&flagged);
-    // `test` holds for the row and no exported mod of its pair breaks it.
+    let aura_bonus_broken = combos_where(&generic_rows, &aura_bonus);
+    let without_family_broken = combos_where(&generic_rows, &without_family);
+    let flagged_broken = combos_where(&generic_rows, &flagged);
+    // `test` holds for the row, the row is not a specialised writer's, and
+    // no generically exported mod of its pair breaks `test`.
     let scoped = move |k: &str, test: &dyn Fn(&[Value]) -> bool, broken: &BTreeSet<String>| {
-        row(k).is_some_and(|r| test(r) && !broken.contains(&combo(r)))
+        row(k).is_some_and(|r| test(r) && !special(r) && !broken.contains(&combo(r)))
     };
 
     // Declared after everything its rules borrow.
@@ -1086,7 +1107,7 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
             let c = combo(row(k)?);
             id_patterns
                 .iter()
-                .zip(&pattern_broken)
+                .zip(pattern_broken.iter())
                 .find(|((_, p), broken)| p.find(k) && !broken.contains(&c))
                 .map(|((raw, _), _)| raw.clone())
         },
@@ -1750,7 +1771,7 @@ mod tests {
             i64,
             i64,
         );
-        let mods: [ModRow; 12] = [
+        let mods: [ModRow; 13] = [
             ("Kept", 1, 1, &[0], &[], None, 0, 5, 10),
             ("RoyaleX", 1, 1, &[0], &[], None, 0, 5, 10),
             ("ZeroMod", 1, 1, &[0], &[], None, 0, 0, 0),
@@ -1763,7 +1784,10 @@ mod tests {
             ("NewMod", 1, 1, &[0], &[], None, 0, 1, 1),
             // PoB exports a `Royale` mod of AREA / PREFIX, so the pattern
             // does not explain a missing one of that pair.
-            ("RoyaleKept", 5, 1, &[0], &[], None, 0, 1, 1),
+            ("RoyaleKept", 5, 1, &[1], &[], None, 0, 1, 1),
+            // A specialised writer's mod (matches an exported pattern) does
+            // not break the generic AuraBonus condition for its pair.
+            ("AreaAura", 5, 1, &[1], &[], None, 0, 1, 1),
             ("RoyaleArea", 5, 1, &[0], &[], None, 0, 1, 1),
         ];
         let rows: Vec<Value> = mods
@@ -1993,7 +2017,10 @@ mod tests {
                 ("pob-filtered/zero-values", &["ZeroMod"]),
                 ("pob-filtered/no-description-line", &["BuffOnly", "NoLine"]),
                 ("pob-filtered/dnt-first-line", &["DntMod"]),
-                ("pob-filtered/aura-bonus-family", &["AuraBonusMod"]),
+                (
+                    "pob-filtered/aura-bonus-family",
+                    &["AreaAura", "AuraBonusMod"]
+                ),
                 ("pob-filtered/aura-flags", &["FlaggedMod"]),
                 (
                     "pob-filtered/domain-generation-not-exported",
