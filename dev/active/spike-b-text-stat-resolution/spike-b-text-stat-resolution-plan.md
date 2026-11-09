@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B1x: lookup tables extracted)
+Last Updated: 2026-11-09 (PR B2a: reverse matcher)
 
 # Spike B: text to stat-ID resolution (plan)
 
@@ -6,9 +6,9 @@ Last Updated: 2026-11-09 (PR B1x: lookup tables extracted)
 Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item modifier text can be resolved to `(stat_id, values)` by reverse-matching the game's stat-description tables that Spike A extracts (ADR-015), without PoB's text patterns (`ModParser.lua`). The corpus is the maintainer's PoE1 builds. Spike C (oracle harness) and Phase 2 (PoB XML import through stat resolution) build on this.
 
 ## Current state (2026-11-09)
-- **PR B0 merged** (PR #13, `c71fa9c`). **PR B1 merged** (PR #14, `cb9b24d`): `loom-data::stat_desc` (model, loader, `Scope`, markup stripping, renderer) and `loom-parity-cli load-statdesc`; both extracts load with 0 problems (context file, "PR B1"). **PR B1x merged** (PR #15, `186b72f`): the six lookup tables are `extract` roots (PoE1 all six, PoE2 four; context file, "PR B1x"). Next: PR B2a.
+- **PR B0 merged** (PR #13, `c71fa9c`). **PR B1 merged** (PR #14, `cb9b24d`): `loom-data::stat_desc` (model, loader, `Scope`, markup stripping, renderer) and `loom-parity-cli load-statdesc`; both extracts load with 0 problems (context file, "PR B1"). **PR B1x merged** (PR #15, `186b72f`): the six lookup tables are `extract` roots (PoE1 all six, PoE2 four; context file, "PR B1x"). **PR B2a open, in review**: `loom-parser::resolve` (index, tokenizer, verification) and `loom-data::stat_desc::invert` (context file, "PR B2a"). Next: PR B2b.
 - Spike A is done (gate met, PR #12 merged as `6f6bf83`). `loom-extractor extract` writes the stat-description files as JSON: `stat_descriptions/<file>.json` with `descriptions[]` (`stats`, `variants[]` with `conditions`, `flags`, `handlers`, `placeholders`, `text`), `includes`, `no_description`. PoE1 build 26530219: 44 files, 17,739 descriptions, 26,794 English variants, 0 unparsed lines. Reading notes: Spike A context file (`dev/completed/spike-a-bundles2-extraction/`), "For Spike B".
-- `loom-parser` and `loom-data` are empty core crates (wasm32; their `clippy.toml` bans fs and env, **also in tests**, since clippy runs with `--all-targets`). `tools/parity-cli` is an empty skeleton (depends on `loom-domain`, `loom-serialization`).
+- Before B1/B2a, `loom-parser` and `loom-data` were empty core crates (wasm32; their `clippy.toml` bans fs and env, **also in tests**, since clippy runs with `--all-targets`). `tools/parity-cli` is an empty skeleton (depends on `loom-domain`, `loom-serialization`).
 - Corpus: `D:\Documents\Path of Building\Builds` holds **21** PoB XML files (maintainer, 2026-11-09: 21 is correct; ADR-007 and the ACTION-PLAN say 22, corrected in B4b). All are `targetVersion="3_0"`. Survey on 2026-11-09 (throwaway scripts, not committed):
   - 1,055 items: 561 rare, 257 magic, 8 normal, 222 unique, 7 relic. About 3,740 non-unique implicit and explicit lines, so the 2% budget is about 75 lines.
   - Line prefixes: `{variant}` 1,611, `{range}` 1,511, `{tags}` 831, `{crafted}` 746, `{custom}` 54, `{eater}` 42, `{exarch}` 38, `{fractured}` 31, `{mutated}` 11. Legacy `<ModRange id range>` child elements: 5,431 (plan review count). `Catalyst` lines: 123. `Has Alt Variant`: 20.
