@@ -20,6 +20,9 @@ loom-persistence = { path = "crates/loom-persistence" }
 loom-app = { path = "crates/loom-app" }
 loom-integrations = { path = "crates/loom-integrations" }
 
+# Third-party crates shared across the workspace.
+thiserror = "2.0"
+
 [workspace.lints.rust]
 unsafe_code = "deny"
 missing_docs = "warn"

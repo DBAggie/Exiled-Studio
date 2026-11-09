@@ -24,7 +24,7 @@ This spike produces **spike-level output** (deterministic JSON per table plus a 
 
 ## Design constraints and decisions
 - **Location:** all format code (bundle, index, dat, stat descriptions) lives in `tools/extractor` as a library (`src/lib.rs`) plus a thin binary. It is not a core crate: ADR-005 makes extraction maintainer-only, so the app never needs it, and keeping it out of `loom-data` keeps core small. Parsers take `&[u8]`/`&str`; filesystem access stays in the binary and an `InstallReader` at the edge, so parsers are unit-testable without a game install.
-- **Decompression** sits behind a `Decompressor` trait so container/framing tests can use an identity decompressor and synthetic bytes.
+- **Decompression** sits behind a `Decompressor` trait so container/framing tests can use an identity decompressor and synthetic bytes. **Decided in A1 (maintainer, 2026-11-08):** every open Oodle decoder derives from GPL ooz, so none is linked; `ExternalTool` runs a separately installed `unoodle` (`oozextract` 0.5.7) as a child process. Details in `docs/spikes/spike-a-extraction.md`, section 2.
 - **Schema:** vendor the pinned community dat-schema file (`poe-tool-dev/dat-schema` release `schema.min.json`, if its license permits) into `tools/extractor/schema/` with its release tag, a third-party license notice, and a hash over the exact committed bytes. No network at extraction time (ADR-011 spirit; reproducibility per ADR-005).
 - **Unknown content is never silently dropped (ADR-015):** columns the schema does not describe, tables whose row size disagrees with the schema, and stat-description constructs the parser does not understand are reported in the manifest with counts.
 - **No GGG assets (ADR-000):** only tables and text data are read. No art, audio, or raw game files are committed; tests use synthetic bytes.
@@ -100,7 +100,7 @@ If extraction is blocked (no compatible decompressor, unusable format, or gate 2
 ## Risks and mitigations
 | Risk | Mitigation |
 |---|---|
-| Only GPL or unlicensed decompressors exist | Check licenses first (step 1); `cargo-deny` enforces; fallback to RePOE; never vendor code without a clear license. |
+| Only GPL or unlicensed decompressors exist | Happened (A1). Resolved by the external tool boundary: no ooz-derived code in the tree or `Cargo.lock`; `cargo-deny` enforces the rest. |
 | Installed game patch differs from any PoB export, so counts cannot match "for the same patch" | Newest available export, re-searched at A6; `patch-delta` category with tool evidence and a 2% ceiling. |
 | `patch-delta` used to explain away real gaps | Fixed category list, tool evidence per category, 2% ceiling, `uncategorized = 0`. |
 | Community schema lags the installed patch (row-size mismatch) | Detect and report mismatches; pin the newest schema release; record the schema tag. |
