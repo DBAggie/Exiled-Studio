@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B0: plan)
+Last Updated: 2026-11-09 (PR B1)
 
 # Spike B: tasks
 
@@ -12,13 +12,15 @@ Last Updated: 2026-11-09 (PR B0: plan)
 - [x] Open PR (#13)
 
 ## PR B1: stat-description model and renderer (`loom-data`)
-- [ ] Model types, serde loader from bytes, include-chain `Scope`, markup stripping
-- [ ] Forward renderer (numeric handlers, lookup trait, placeholder formats, multi-line)
-- [ ] Confirm each lookup handler's table in the schema (input for B1x)
-- [ ] `parity-cli load-statdesc`; unit tests per construct; load counts on PoE1/PoE2; wasm32 build
+- [x] Model types, serde loader from bytes, include-chain `Scope`, markup stripping
+- [x] Forward renderer (numeric handlers, lookup trait, placeholder formats, multi-line)
+- [x] Confirm each lookup handler's table in the schema (input for B1x; table in the plan)
+- [x] `parity-cli load-statdesc`; unit tests per construct; load counts on PoE1/PoE2; wasm32 build
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#14)
 
 ## PR B1x: extractor roots for lookup tables
-- [ ] Add missing roots (at least `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`)
+- [ ] Add missing roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems`
 - [ ] Determinism on both games; manifests replaced
 
 ## PR B2a: single-line matcher (`loom-parser`)
@@ -27,6 +29,7 @@ Last Updated: 2026-11-09 (PR B0: plan)
 
 ## PR B2b: multi-line, lookup handlers, checks
 - [ ] Two-line variants; lookup-handler inversion
+- [ ] Confirm lookup key forms (row index vs `Index` column vs hash) against real values; `mod_value_to_item_class` key form
 - [ ] `parity-cli round-trip` (PoE1, PoE2); failures categorized
 - [ ] `parity-cli render-check` against PoB v2.67.2 mod text; differences categorized
 - [ ] Count stat sets that depend on include precedence

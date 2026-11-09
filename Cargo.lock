@@ -1711,6 +1711,9 @@ name = "loom-data"
 version = "0.0.0"
 dependencies = [
  "loom-domain",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1740,8 +1743,11 @@ dependencies = [
 name = "loom-parity-cli"
 version = "0.0.0"
 dependencies = [
+ "loom-data",
  "loom-domain",
  "loom-serialization",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,6 +1,6 @@
 [package]
 name = "loom-parity-cli"
-description = "Thin oracle harness driving pinned legacy PoB for regression comparison."
+description = "Maintainer-run oracle and corpus harnesses (stat-description checks; PoB oracle from Spike C)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,7 +10,10 @@ publish.workspace = true
 
 [dependencies]
 loom-domain.workspace = true
+loom-data.workspace = true
 loom-serialization.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [lints]
 workspace = true
