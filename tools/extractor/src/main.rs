@@ -3,7 +3,7 @@
 //! recording game version, schema revision, and input hashes (ADR-005).
 //! Never ships GGG art or audio (ADR-000).
 //!
-//! Subcommands so far (Spike A, `dev/active/spike-a-bundles2-extraction/`):
+//! Subcommands so far (Spike A, `dev/completed/spike-a-bundles2-extraction/`):
 //! - `list-files <install> [--decoder <program>] [--sample <n> | --all]`:
 //!   reads `Bundles2/_.index.bin`, rebuilds every path, matches paths to file
 //!   records, and prints counts, the index hash, every unmatched entry, and

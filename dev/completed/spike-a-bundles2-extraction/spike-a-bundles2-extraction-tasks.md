@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A6b)
+Last Updated: 2026-11-09 (closed: PR A6b merged; moved to dev/completed/ in PR B0)
 
 # Spike A: tasks
 
@@ -81,7 +81,7 @@ Last Updated: 2026-11-09 (PR A6b)
 - [x] Cross-check passive rules from the graphs: PoE2 `passivetree.lua` filters (empty name, `[DNT` name, skipped ascendancy) and `not-on-default-graph` (`pob-filtered`); PoE1 `not-on-default-graph` under the new category `not-on-tree` (maintainer decision 2026-11-09; plan step 6 amended)
 - [x] `code-architecture-reviewer` review: 3 blockers and should-fix items applied (context file, "PR A6b"); tool rerun at `b4eebe0`
 - [x] Final gate verdict (met); ACTION-PLAN gate status, CLAUDE.md Status, handoff
-- [ ] PR open (#12), CI green, maintainer merge
+- [x] PR open (#12), CI green, maintainer merge (merged 2026-11-09 as `6f6bf83`; main CI run 42628047083 green)
 
 ## Follow-up (cross-check)
 - [ ] Reproduce `mods.lua`'s writer list (`writeMods(file, condFunc)` domains and generation types, DelveFossil spawn-tag skips) so `domain-generation-not-exported` and `passes-reproduced-filters` stop being output-derived heuristics (report section 14)

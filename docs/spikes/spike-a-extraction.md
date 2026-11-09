@@ -1,6 +1,6 @@
 # Spike A: Bundles2 game-data extraction (report)
 
-Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6b); the gate verdict is written at A6b.
+Plan: `dev/completed/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6b); the gate verdict is written at A6b.
 
 Status (2026-11-09, PR A6a): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11); stat-description files of both games parsed with zero unparsed English lines, every finding categorized in the manifest (A5, sections 12 and 13); `cross-check` compares the output with PoB's newest data exports in both directions and categorizes every gap of mods, bases, skills, and stats on both games (A6a, sections 14 and 15). Gate items 1, 3, 4, and 5 met; item 2 met for mods, bases, skills, and stats, not yet for passives (our PassiveSkills rows that PoB's tree lacks are uncategorized until A6b reads the passive skill graph).
 
