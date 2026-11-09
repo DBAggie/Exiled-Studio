@@ -65,9 +65,9 @@ pub struct Summary {
     /// - `not-rendered/<reason>`: the renderer wrote no line;
     /// - `shadowed-description`: the description is shadowed in its own
     ///   file's scope, so the scope never renders it (not resolved);
-    /// - `rendered-double-sign`: a line has `--` or `+-` before a digit (a
-    ///   literal sign in the template before a negative value; not
-    ///   resolved);
+    /// - `rendered-double-sign`: `no-template`, and a line has `--` or `+-`
+    ///   before a digit (a literal sign in the template before a negative
+    ///   value);
     /// - `split`: the lines resolved as more than one resolution;
     /// - `no-template`, `only-shadowed`, `no-variant-fits/<first reason>`:
     ///   unresolved;
@@ -105,6 +105,10 @@ pub struct Failure {
     /// What came back, briefly.
     pub detail: String,
 }
+
+/// Outcomes that mean the resolver read a rendered line wrongly; the
+/// subcommand fails if any occurs.
+pub const WRONG_READINGS: [&str; 3] = ["value-mismatch", "wrong-description", "split"];
 
 /// Every failure.
 #[derive(Debug, Default, Serialize)]
@@ -200,6 +204,7 @@ fn index_fields(i: IndexStats) -> BTreeMap<&'static str, usize> {
         ("empty_text", i.empty_text),
         ("lookup_unavailable", i.lookup_unavailable),
         ("lookup_multi", i.lookup_multi),
+        ("lookup_blank_names", i.lookup_blank_names),
     ])
 }
 
@@ -307,19 +312,16 @@ impl Ctx<'_, '_> {
                 out.push((outcome, Some(f), false));
                 continue;
             }
-            if lines.iter().any(|l| double_sign(l)) {
-                let outcome = "rendered-double-sign".to_owned();
-                let f = fail(outcome.clone(), lines, String::new());
-                out.push((outcome, Some(f), false));
-                continue;
-            }
             let refs: Vec<&str> = lines.iter().map(String::as_str).collect();
             let resolutions = self.index.resolve_lines(&refs);
             let has_shadowed = resolutions.iter().any(|r| !r.shadowed.is_empty());
-            let (outcome, detail) = match resolutions.as_slice() {
+            let (mut outcome, detail) = match resolutions.as_slice() {
                 [one] => classify(&one.outcome, at, &values),
                 more => ("split".to_owned(), format!("{} resolutions", more.len())),
             };
+            if outcome == "no-template" && lines.iter().any(|l| double_sign(l)) {
+                "rendered-double-sign".clone_into(&mut outcome);
+            }
             let failure = (outcome != "ok").then(|| fail(outcome.clone(), lines, detail));
             out.push((outcome, failure, has_shadowed));
         }
@@ -327,9 +329,11 @@ impl Ctx<'_, '_> {
     }
 }
 
-/// Whether a line has two signs before a digit (`--5`, `+-5`): a template
-/// with a literal sign before a plain placeholder, rendered with a negative
-/// value. No game text is known to show it; the line has no template key.
+/// Whether a line has two signs before a digit (`--5`, `+-5`). On a line
+/// without a template key it marks a template with a literal sign before a
+/// plain placeholder, rendered with a negative value; no game text is
+/// known to show it. (A negative range, `(-10--5)`, has it too, and
+/// resolves.)
 fn double_sign(line: &str) -> bool {
     let bytes = line.as_bytes();
     bytes

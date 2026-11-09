@@ -617,8 +617,12 @@ mod tests {
                 (handler == LookupHandler::PassiveHash && value == 7).then(|| "Whispers".to_owned())
             }
 
-            fn entries(&self, _: LookupHandler) -> Vec<(i64, String)> {
-                Vec::new()
+            fn entries(&self, handler: LookupHandler) -> Vec<(i64, String)> {
+                if handler == LookupHandler::PassiveHash {
+                    vec![(7, "Whispers".to_owned())]
+                } else {
+                    Vec::new()
+                }
             }
         }
         let d = handled(&["s"], "Allocates {0}", &[("passive_hash", Some(1))]);

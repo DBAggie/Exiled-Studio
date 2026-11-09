@@ -24,7 +24,8 @@ const USAGE: &str = "usage:
   loom-parity-cli round-trip <extract-dir> --out <dir>
       Render every variant with values inside its conditions and resolve
       the lines back; write summary.json and report.json (every sample
-      that did not read back) to <dir>, which must not exist.
+      that did not read back) to <dir>, which must not exist. Exit 1 if a
+      line is read wrongly (value-mismatch, wrong-description, split).
   loom-parity-cli render-check <extract-dir> <pob-dir> --out <dir>
       Render every PoE1 Mods row and compare with PoB's exported mod text
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
@@ -75,7 +76,9 @@ fn round_trip(extract: &Path, out: &Path) -> Result<bool, String> {
     write_out(out, &summary, &report)?;
     let json = serde_json::to_string_pretty(&summary.outcomes).map_err(|e| e.to_string())?;
     println!("{json}");
-    Ok(true)
+    Ok(!round_trip::WRONG_READINGS
+        .iter()
+        .any(|o| summary.outcomes.contains_key(*o)))
 }
 
 /// `*.lua` files directly in `dir`, sorted by name.

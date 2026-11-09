@@ -139,18 +139,40 @@ impl Table {
         row.get(col)?.as_str()
     }
 
-    /// `key column -> text column` for every row with both.
+    /// `key column -> text column`. The first row with a key wins; later
+    /// rows with the same key and rows without an integer key or a text
+    /// are counted, not dropped silently.
     ///
     /// # Errors
     /// A message when a column is missing.
-    pub fn map(&self, key: &str, text: &str) -> Result<BTreeMap<i64, String>, String> {
+    pub fn map(&self, key: &str, text: &str) -> Result<KeyedTexts, String> {
         let (k, t) = (self.column(key)?, self.column(text)?);
-        Ok(self
-            .rows
-            .iter()
-            .filter_map(|r| Some((Self::int(r, k)?, Self::text(r, t)?.to_owned())))
-            .collect())
+        let mut out = KeyedTexts::default();
+        for row in &self.rows {
+            let (Some(key), Some(text)) = (Self::int(row, k), Self::text(row, t)) else {
+                out.skipped_rows += 1;
+                continue;
+            };
+            match out.texts.entry(key) {
+                std::collections::btree_map::Entry::Occupied(_) => out.duplicate_keys += 1,
+                std::collections::btree_map::Entry::Vacant(slot) => {
+                    slot.insert(text.to_owned());
+                }
+            }
+        }
+        Ok(out)
     }
+}
+
+/// Output of [`Table::map`].
+#[derive(Debug, Default)]
+pub struct KeyedTexts {
+    /// Key to text.
+    pub texts: BTreeMap<i64, String>,
+    /// Rows whose key was already taken (the first row's text is kept).
+    pub duplicate_keys: usize,
+    /// Rows without an integer key or a text.
+    pub skipped_rows: usize,
 }
 
 #[cfg(test)]
@@ -170,6 +192,20 @@ pub mod tests {
     }
 
     #[test]
+    fn table_map_should_count_duplicate_keys_and_rows_it_cannot_read() {
+        let json = r#"{"table": "T", "columns": [{"name": "Index", "references": null},
+            {"name": "Name", "references": null}],
+            "rows": [[1, "A"], [1, "B"], [null, "C"], [2, null], [3, "D"]]}"#;
+        let t: Table = serde_json::from_str(json).unwrap();
+        let m = t.map("Index", "Name").unwrap();
+        assert_eq!(
+            m.texts,
+            BTreeMap::from([(1, "A".to_owned()), (3, "D".to_owned())])
+        );
+        assert_eq!((m.duplicate_keys, m.skipped_rows), (1, 2));
+    }
+
+    #[test]
     fn table_should_map_a_key_column_to_a_text_column() {
         let json = table_json("T", &[(1, "A"), (2, "B")]);
         let read = |p: &str| {
@@ -179,7 +215,7 @@ pub mod tests {
         };
         let t = Table::require(&read, "T").unwrap();
         assert_eq!(
-            t.map("Index", "Name").unwrap(),
+            t.map("Index", "Name").unwrap().texts,
             BTreeMap::from([(1, "A".to_owned()), (2, "B".to_owned())])
         );
         assert!(t.column("Nope").is_err());

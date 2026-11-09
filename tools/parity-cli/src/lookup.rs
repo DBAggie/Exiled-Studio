@@ -42,6 +42,12 @@ pub struct LookupReport {
     /// Handler name to the number of keys with a name (0 for an extracted
     /// table without rows).
     pub keys: BTreeMap<&'static str, usize>,
+    /// Handler name to rows whose key an earlier row already has (the
+    /// first row's name is kept), when non-zero.
+    pub duplicate_keys: BTreeMap<&'static str, usize>,
+    /// Handler name to rows without an integer key or a name, when
+    /// non-zero.
+    pub skipped_rows: BTreeMap<&'static str, usize>,
     /// Handler name to why it has no names (table not in the extract, or
     /// not supported, with the reason).
     pub unavailable: BTreeMap<&'static str, String>,
@@ -86,9 +92,19 @@ impl TableLookup {
         for (handler, table, key, name) in SOURCES {
             match Table::read(read, table)? {
                 Some(t) => {
-                    let names = t.map(key, name)?;
-                    report.keys.insert(handler.name(), names.len());
-                    lookup.names.insert(handler, names);
+                    let mapped = t.map(key, name)?;
+                    report.keys.insert(handler.name(), mapped.texts.len());
+                    if mapped.duplicate_keys > 0 {
+                        report
+                            .duplicate_keys
+                            .insert(handler.name(), mapped.duplicate_keys);
+                    }
+                    if mapped.skipped_rows > 0 {
+                        report
+                            .skipped_rows
+                            .insert(handler.name(), mapped.skipped_rows);
+                    }
+                    lookup.names.insert(handler, mapped.texts);
                 }
                 None => {
                     report

@@ -22,9 +22,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_data::stat_desc::template::strip_markup;
 use loom_data::stat_desc::{
-    Condition, DescRef, Description, Handler, Lookup, LookupHandler, NotRenderedReason, Scope,
-    StatValue, VariantFilter, render_description,
+    Condition, DescRef, Description, Hand, Handler, Lookup, LookupHandler, NotRenderedReason,
+    Scope, StatValue, Template, VariantFilter, render_description,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -61,6 +62,11 @@ pub struct Summary {
     pub pob_stat_description_files: BTreeMap<String, usize>,
     /// `Mods` rows.
     pub mods_rows: usize,
+    /// Rows without a text `Id` (not compared).
+    pub rows_without_id: usize,
+    /// Stat slots with a key whose stat or values could not be read (left
+    /// out of the row).
+    pub slots_unresolved: usize,
     /// Rows not compared: PoB exports no entry for the `Id` (A6a's
     /// cross-check categorizes them).
     pub not_in_pob: usize,
@@ -231,14 +237,18 @@ pub enum Category {
     /// PoB keeps a line's surrounding spaces (it splits on `\n` without
     /// trimming); our renderer trims. Trimmed, PoB's lines equal ours.
     PobUntrimmed,
-    /// A lookup stat with a range: PoB writes the range of raw keys, our
-    /// renderer names no single row (`lookup-range`); every line we write
-    /// is one of PoB's.
+    /// A lookup stat with a range: our renderer names no single row
+    /// (`lookup-range`); `describeStats` names no lookup and writes the
+    /// range of keys. The variant `matchLimit` picks, rendered without its
+    /// lookup handlers, gives PoB's lines.
     PobLookupRange,
-    /// The game text changed since PoB's export: for a description we
-    /// render, PoB's exported stat descriptions
-    /// (`src/Data/StatDescriptions/*.lua`, same stat list) hold a variant
-    /// text the extract's description does not have.
+    /// The game text changed since PoB's export: PoB's exported stat
+    /// descriptions (`src/Data/StatDescriptions/*.lua`, same stat list)
+    /// hold a text that no variant of the extract's description has
+    /// (markup removed on both sides), and our rendering with that text in
+    /// place of the chosen variant's gives PoB's lines (with the presence
+    /// prefix where `mods.lua` adds one). Divergence-register material once
+    /// Spike C defines the register: the game, not PoB, is the truth.
     PatchDelta,
     /// Anything else.
     Uncategorized,
@@ -278,10 +288,22 @@ struct Rendered<'a> {
     lines: Vec<String>,
     /// Stats not rendered (value 0 left out), with the reason.
     not_rendered: Vec<(String, NotRenderedReason)>,
-    /// Descriptions that wrote lines.
-    described: Vec<&'a Description>,
+    /// Descriptions that wrote lines, in line order.
+    written: Vec<Written<'a>>,
     /// Numeric handlers of the variants that wrote lines.
     numeric: BTreeSet<&'static str>,
+}
+
+/// One description that wrote lines.
+struct Written<'a> {
+    description: &'a Description,
+    hand: Hand,
+    /// The row's values in the hand's stat order (0 if not given).
+    values: Vec<StatValue>,
+    /// The variant chosen.
+    variant: usize,
+    /// Its lines.
+    lines: Vec<String>,
 }
 
 /// The two scopes `mods.lua` loads.
@@ -317,7 +339,7 @@ impl<'a> Scopes<'a> {
         let mut out = Rendered {
             lines: Vec::new(),
             not_rendered: Vec::new(),
-            described: Vec::new(),
+            written: Vec::new(),
             numeric: BTreeSet::new(),
         };
         for (scope, values) in [(&self.tincture, tincture), (&self.graft, graft)] {
@@ -325,6 +347,7 @@ impl<'a> Scopes<'a> {
                 continue;
             }
             let r = scope.render(&values, &RawNumbers, VariantFilter::default());
+            let mut last: Option<DescRef> = None;
             for line in r.lines {
                 if let Some((_, d)) = scope.description(line.at) {
                     if let Some(v) = d.variants.get(line.variant) {
@@ -334,9 +357,22 @@ impl<'a> Scopes<'a> {
                                 _ => None,
                             }));
                     }
-                    if !out.described.iter().any(|x| std::ptr::eq(*x, d)) {
-                        out.described.push(d);
+                    match out.written.last_mut() {
+                        Some(w) if last == Some(line.at) => w.lines.push(line.text.clone()),
+                        _ => out.written.push(Written {
+                            description: d,
+                            hand: line.at.hand,
+                            values: d
+                                .stats_of(line.at.hand)
+                                .unwrap_or_default()
+                                .iter()
+                                .map(|id| values.get(id).copied().unwrap_or(StatValue::exact(0)))
+                                .collect(),
+                            variant: line.variant,
+                            lines: vec![line.text.clone()],
+                        }),
                     }
+                    last = Some(line.at);
                 }
                 out.lines.push(line.text);
             }
@@ -451,6 +487,7 @@ pub fn run(extract: &Extract, read: Read<'_>, pob: &Pob) -> Result<(Summary, Rep
     for row in &mods.table.rows {
         s.mods_rows += 1;
         let Some(id) = Table::text(row, mods.id) else {
+            s.rows_without_id += 1;
             continue;
         };
         ours_ids.insert(id.to_owned());
@@ -467,24 +504,36 @@ pub fn run(extract: &Extract, read: Read<'_>, pob: &Pob) -> Result<(Summary, Rep
             .filter_map(|b| b.get(buff_stats))
             .flat_map(keys)
             .collect();
-        let stats: Vec<(String, i64, i64)> = mods
-            .slots
-            .iter()
-            .filter_map(|&(key, min, max)| {
-                let k = Table::int(row, key)?;
-                if skip.contains(&k) {
-                    return None;
-                }
-                Some((stat_name(k)?, Table::int(row, min)?, Table::int(row, max)?))
-            })
-            .collect();
+        // (slot number, stat, min, max) of every used slot.
+        let mut slotted: Vec<(usize, String, i64, i64)> = Vec::new();
+        for (n, &(key, min, max)) in mods.slots.iter().enumerate() {
+            let Some(k) = Table::int(row, key) else {
+                continue;
+            };
+            if skip.contains(&k) {
+                continue;
+            }
+            match (stat_name(k), Table::int(row, min), Table::int(row, max)) {
+                (Some(stat), Some(min), Some(max)) => slotted.push((n + 1, stat, min, max)),
+                _ => s.slots_unresolved += 1,
+            }
+        }
+        let slot2 = slotted.iter().find(|x| x.0 == 2).map(|x| x.1.clone());
+        let stats: Vec<(String, i64, i64)> =
+            slotted.into_iter().map(|(_, s, a, b)| (s, a, b)).collect();
         let rendered = scopes.render(&stats);
         let (outcome, evidence) = if texts.contains(&rendered.lines) {
             ("match".to_owned(), String::new())
         } else if texts.iter().any(|t| same_lines(t, &rendered.lines)) {
             ("order-only".to_owned(), String::new())
         } else {
-            let (category, evidence) = categorize(id, &stats, &rendered, texts, &scopes, pob);
+            let row = Row {
+                id,
+                stats: &stats,
+                slot2: slot2.as_deref(),
+                texts,
+            };
+            let (category, evidence) = categorize(&row, &rendered, &scopes, pob);
             (format!("differs/{}", category.name()), evidence)
         };
         *s.outcomes.entry(outcome.clone()).or_default() += 1;
@@ -563,20 +612,35 @@ fn same_lines(a: &[String], b: &[String]) -> bool {
     a == b
 }
 
-/// A copy of `d` with only variant `index`, its conditions open, and its
-/// unknown handlers removed when `drop_unknown`.
-fn forced(d: &Description, index: usize, drop_unknown: bool) -> Option<Description> {
+/// A copy of `d` with only variant `index`, its conditions open, and the
+/// handlers `drop` selects removed.
+fn forced(d: &Description, index: usize, drop: impl Fn(&Handler) -> bool) -> Option<Description> {
     let mut v = d.variants.get(index)?.clone();
     v.conditions.fill(Condition::Range {
         min: None,
         max: None,
     });
-    if drop_unknown {
-        v.handlers.retain(|h| !matches!(h, Handler::Unknown { .. }));
-    }
+    v.handlers.retain(|h| !drop(h));
     let mut copy = d.clone();
     copy.variants = vec![v];
     Some(copy)
+}
+
+/// Renders the only variant of a [`forced`] copy, as PoB's export would
+/// choose it (`gem_quality` allowed).
+fn render_forced(copy: &Description, hand: Hand, values: &[StatValue]) -> Option<Vec<String>> {
+    render_description(
+        copy,
+        hand,
+        values,
+        &RawNumbers,
+        VariantFilter {
+            gem_quality: true,
+            table_only: false,
+        },
+    )
+    .ok()
+    .map(|(_, lines)| lines)
 }
 
 /// The variant PoB's `matchLimit` picks for `values` (minimum tested),
@@ -593,6 +657,13 @@ fn match_limit(d: &Description, values: &[StatValue]) -> Option<usize> {
 
 /// Our lines with the descriptions that failed for `reason` written the
 /// way PoB's export writes them; `None` if one cannot be.
+/// - `unknown-handler`: the variant `matchLimit` picks, without its
+///   unknown handlers (`describeStats` logs them and goes on);
+/// - `no-matching-variant`: the variant picked after moving a `0` end to
+///   1 / -1, written with the original values;
+/// - `lookup-range`: the variant picked, without its lookup handlers, so
+///   the range of keys is written as numbers (`describeStats` names no
+///   lookup).
 fn with_pob_fallback(
     scopes: &Scopes<'_>,
     stats: &[(String, i64, i64)],
@@ -605,86 +676,133 @@ fn with_pob_fallback(
     }
     let mut lines = rendered.lines.clone();
     for (d, at, values) in failed {
-        let index = match reason {
-            "no-matching-variant" => {
-                let raised: Vec<StatValue> = values
-                    .iter()
-                    .map(|v| match (v.min, v.max) {
-                        (0, max) if max > 0 => StatValue { min: 1, max },
-                        (min, 0) if min < 0 => StatValue { min, max: -1 },
-                        _ => *v,
-                    })
-                    .collect();
-                match_limit(d, &raised)?
-            }
-            _ => match_limit(d, &values)?,
+        let index = if reason == "no-matching-variant" {
+            let raised: Vec<StatValue> = values
+                .iter()
+                .map(|v| match (v.min, v.max) {
+                    (0, max) if max > 0 => StatValue { min: 1, max },
+                    (min, 0) if min < 0 => StatValue { min, max: -1 },
+                    _ => *v,
+                })
+                .collect();
+            match_limit(d, &raised)?
+        } else {
+            match_limit(d, &values)?
         };
-        let copy = forced(d, index, reason == "unknown-handler")?;
-        let (_, more) = render_description(
-            &copy,
-            at.hand,
-            &values,
-            &RawNumbers,
-            VariantFilter {
-                gem_quality: true,
-                table_only: false,
-            },
-        )
-        .ok()?;
-        lines.extend(more);
+        let copy = forced(d, index, |h| match reason {
+            "unknown-handler" => matches!(h, Handler::Unknown { .. }),
+            "lookup-range" => matches!(h, Handler::Lookup { .. }),
+            _ => false,
+        })?;
+        lines.extend(render_forced(&copy, at.hand, &values)?);
     }
     Some(lines)
 }
 
+/// Our lines with one description's lines rewritten from PoB's exported
+/// text `text` (in place of the variant we chose), if that text differs
+/// from every variant text of the extract's description (markup removed
+/// on both sides, as PoB's `escapeGGGString` removes it).
+fn with_pob_text(
+    rendered: &Rendered<'_>,
+    written: &Written<'_>,
+    text: &str,
+) -> Option<Vec<String>> {
+    let d = written.description;
+    let count = d.stats_of(written.hand)?.len();
+    let mut copy = forced(d, written.variant, |_| false)?;
+    let v = copy.variants.first_mut()?;
+    v.template = Template::parse(text, count);
+    v.text = text.to_owned();
+    let new = render_forced(&copy, written.hand, &written.values)?;
+    let mut lines = rendered.lines.clone();
+    for old in &written.lines {
+        let at = lines.iter().position(|l| l == old)?;
+        lines.remove(at);
+    }
+    lines.extend(new);
+    Some(lines)
+}
+
+/// `v2.67.2:src/Export/Scripts/mods.lua`: ids containing the marker get
+/// the prefix on every line.
+const PRESENCE_PREFIXES: [(&str, &str); 2] = [
+    (
+        "EldritchImplicitUniquePresence",
+        "While a Unique Enemy is in your Presence, ",
+    ),
+    (
+        "EldritchImplicitPinnaclePresence",
+        "While a Pinnacle Atlas Boss is in your Presence, ",
+    ),
+];
+
+/// One differing row.
+struct Row<'r> {
+    id: &'r str,
+    stats: &'r [(String, i64, i64)],
+    /// The stat in slot 2, which `mods.lua` overrides for one mod.
+    slot2: Option<&'r str>,
+    /// PoB's texts for the `Id`.
+    texts: &'r [Vec<String>],
+}
+
 /// The first category whose rule holds for the row, with the evidence.
 fn categorize(
-    id: &str,
-    stats: &[(String, i64, i64)],
+    row: &Row<'_>,
     rendered: &Rendered<'_>,
-    texts: &[Vec<String>],
     scopes: &Scopes<'_>,
     pob: &Pob,
 ) -> (Category, String) {
+    let Row {
+        id,
+        stats,
+        slot2,
+        texts,
+    } = *row;
     let equals = |lines: &[String]| texts.iter().any(|t| same_lines(t, lines));
-    for (marker, prefix) in [
-        (
-            "EldritchImplicitUniquePresence",
-            "While a Unique Enemy is in your Presence, ",
-        ),
-        (
-            "EldritchImplicitPinnaclePresence",
-            "While a Pinnacle Atlas Boss is in your Presence, ",
-        ),
-    ] {
-        if id.contains(marker) {
-            let rewritten: Vec<String> = rendered
-                .lines
-                .iter()
-                .map(|l| format!("{prefix}{l}"))
-                .collect();
-            if equals(&rewritten) {
-                return (
-                    Category::PobRewritten,
-                    format!("mods.lua prefixes `{prefix}` for ids containing {marker}"),
-                );
-            }
+    // mods.lua prefixes every line of two id families.
+    let prefix = PRESENCE_PREFIXES
+        .iter()
+        .find(|(marker, _)| id.contains(marker));
+    let with_prefix = |lines: &[String]| -> Vec<String> {
+        match prefix {
+            Some((_, p)) => lines.iter().map(|l| format!("{p}{l}")).collect(),
+            None => lines.to_vec(),
         }
+    };
+    if let Some((marker, p)) = prefix
+        && equals(&with_prefix(&rendered.lines))
+    {
+        return (
+            Category::PobRewritten,
+            format!("mods.lua prefixes `{p}` for ids containing {marker}"),
+        );
     }
-    if id == "JewelExpansionPassiveNodes" {
-        let mut changed = stats.to_vec();
-        if let Some(second) = changed.get_mut(1) {
-            (second.1, second.2) = (2, 12);
-        }
+    if id == "JewelExpansionPassiveNodes"
+        && let Some(slot2) = slot2
+    {
+        let changed: Vec<(String, i64, i64)> = stats
+            .iter()
+            .map(|(s, min, max)| {
+                if s == slot2 {
+                    (s.clone(), 2, 12)
+                } else {
+                    (s.clone(), *min, *max)
+                }
+            })
+            .collect();
         if equals(&scopes.render(&changed).lines) {
             return (
                 Category::PobRewritten,
-                "mods.lua sets this mod's second stat to 2-12".to_owned(),
+                "mods.lua sets this mod's Stat2Value to 2-12".to_owned(),
             );
         }
     }
     for (reason, category) in [
         ("unknown-handler", Category::PobIgnoresUnknownHandler),
         ("no-matching-variant", Category::PobZeroRangeRetry),
+        ("lookup-range", Category::PobLookupRange),
     ] {
         if with_pob_fallback(scopes, stats, rendered, reason).is_some_and(|l| equals(&l)) {
             let failed: Vec<&str> = rendered
@@ -712,40 +830,30 @@ fn categorize(
             "PoB's lines, trimmed, equal ours".to_owned(),
         );
     }
-    let lookup_ranges: Vec<&str> = rendered
-        .not_rendered
-        .iter()
-        .filter(|(_, r)| matches!(r, NotRenderedReason::LookupRange(_)))
-        .map(|(s, _)| s.as_str())
-        .collect();
-    if !lookup_ranges.is_empty()
-        && texts
-            .iter()
-            .any(|t| t.len() > rendered.lines.len() && rendered.lines.iter().all(|l| t.contains(l)))
-    {
-        return (
-            Category::PobLookupRange,
-            format!("lookup stats with a range: {}", lookup_ranges.join(", ")),
-        );
-    }
-    for d in &rendered.described {
+    for written in &rendered.written {
+        let d = written.description;
         let Some(theirs) = pob.stat_texts.get(&d.stats.join(" ")) else {
             continue;
         };
-        let ours: BTreeSet<&str> = d.variants.iter().map(|v| v.text.as_str()).collect();
-        let changed: Vec<&String> = theirs
+        let ours: BTreeSet<String> = d
+            .variants
             .iter()
-            .filter(|t| !ours.contains(t.as_str()))
+            .filter_map(|v| strip_markup(&v.text).ok())
             .collect();
-        if !changed.is_empty() {
-            return (
-                Category::PatchDelta,
-                format!(
-                    "PoB's exported description of {} has {:?}, not in the extract",
-                    d.stats.join(" "),
-                    changed
-                ),
-            );
+        for text in theirs.iter().filter(|t| !ours.contains(*t)) {
+            if with_pob_text(rendered, written, text).is_some_and(|l| equals(&with_prefix(&l))) {
+                let variant = d
+                    .variants
+                    .get(written.variant)
+                    .map_or("", |v| v.text.as_str());
+                return (
+                    Category::PatchDelta,
+                    format!(
+                        "PoB's exported description of {} has {text:?}, the extract {variant:?}; with PoB's text our lines equal PoB's",
+                        d.stats.join(" ")
+                    ),
+                );
+            }
         }
     }
     (Category::Uncategorized, String::new())
@@ -796,6 +904,250 @@ mod tests {
             pob.stat_texts.get("c"),
             Some(&BTreeSet::from(["Other".to_owned()]))
         );
+    }
+
+    mod categories {
+        use loom_data::stat_desc::{StatDescFile, StatDescriptions, Variant};
+
+        use super::super::*;
+
+        const POSITIVE: Condition = Condition::Range {
+            min: Some(1),
+            max: None,
+        };
+        const ANY: Condition = Condition::Range {
+            min: None,
+            max: None,
+        };
+
+        fn desc(
+            stats: &[&str],
+            conditions: &[Condition],
+            text: &str,
+            handlers: &[(&str, usize)],
+        ) -> Description {
+            let n = stats.len();
+            Description {
+                name: None,
+                line: 1,
+                stats: stats.iter().map(|s| (*s).to_owned()).collect(),
+                off_hand_stats: None,
+                variants: vec![Variant {
+                    conditions: conditions.to_vec(),
+                    gem_quality: false,
+                    table_only: false,
+                    unknown_flags: Vec::new(),
+                    handlers: handlers
+                        .iter()
+                        .map(|(h, s)| Handler::classify(h, Some(*s), None, n).unwrap())
+                        .collect(),
+                    line: 1,
+                    text: text.to_owned(),
+                    template: Template::parse(text, n),
+                }],
+            }
+        }
+
+        fn file(name: &str, includes: &[&str], descriptions: Vec<Description>) -> StatDescFile {
+            StatDescFile {
+                source: format!("metadata/statdescriptions/{name}.txt"),
+                includes: includes
+                    .iter()
+                    .map(|i| format!("Metadata/StatDescriptions/{i}.txt"))
+                    .collect(),
+                descriptions,
+                no_description: Vec::new(),
+            }
+        }
+
+        fn set() -> StatDescriptions {
+            let mut set = StatDescriptions::new();
+            set.insert(file(
+                "stat_descriptions",
+                &[],
+                vec![
+                    desc(&["s"], &[POSITIVE], "{0}% increased X", &[]),
+                    desc(&["u"], &[ANY], "{0}% leech", &[("old_leech_percent", 1)]),
+                    desc(
+                        &["lvl", "gem"],
+                        &[ANY, ANY],
+                        "Supported by Level {0} {1}",
+                        &[("display_indexable_support", 2)],
+                    ),
+                    desc(&["o"], &[ANY], "<tag>{{Your}} {0}% more Z", &[]),
+                ],
+            ));
+            set.insert(file(
+                "tincture_stat_descriptions",
+                &["stat_descriptions"],
+                Vec::new(),
+            ));
+            set.insert(file(
+                "graft_stat_descriptions",
+                &["stat_descriptions"],
+                Vec::new(),
+            ));
+            set
+        }
+
+        fn category(
+            set: &StatDescriptions,
+            id: &str,
+            stats: &[(&str, i64, i64)],
+            pob_lines: &[&str],
+            stat_texts: &[(&str, &str)],
+        ) -> &'static str {
+            let scopes = Scopes {
+                tincture: set
+                    .scope("metadata/statdescriptions/tincture_stat_descriptions.txt")
+                    .unwrap(),
+                graft: set
+                    .scope("metadata/statdescriptions/graft_stat_descriptions.txt")
+                    .unwrap(),
+            };
+            let stats: Vec<(String, i64, i64)> = stats
+                .iter()
+                .map(|(s, a, b)| ((*s).to_owned(), *a, *b))
+                .collect();
+            let mut pob = Pob::default();
+            for (key, text) in stat_texts {
+                pob.stat_texts
+                    .entry((*key).to_owned())
+                    .or_default()
+                    .insert((*text).to_owned());
+            }
+            let texts = vec![pob_lines.iter().map(|l| (*l).to_owned()).collect()];
+            let rendered = scopes.render(&stats);
+            let row = Row {
+                id,
+                stats: &stats,
+                slot2: stats.get(1).map(|s| s.0.as_str()),
+                texts: &texts,
+            };
+            categorize(&row, &rendered, &scopes, &pob).0.name()
+        }
+
+        #[test]
+        fn rewritten_should_need_the_prefixed_lines() {
+            let set = set();
+            let id = "XEldritchImplicitUniquePresence1";
+            let ok = ["While a Unique Enemy is in your Presence, 5% increased X"];
+            assert_eq!(
+                category(&set, id, &[("s", 5, 5)], &ok, &[]),
+                "pob-rewritten"
+            );
+            let other = ["While a Unique Enemy is in your Presence, 6% increased X"];
+            assert_eq!(
+                category(&set, id, &[("s", 5, 5)], &other, &[]),
+                "uncategorized"
+            );
+            assert_eq!(
+                category(&set, "Plain", &[("s", 5, 5)], &ok, &[]),
+                "uncategorized"
+            );
+        }
+
+        #[test]
+        fn unknown_handler_should_need_the_value_written_unchanged() {
+            let set = set();
+            let stats = [("u", 3, 3)];
+            assert_eq!(
+                category(&set, "A", &stats, &["3% leech"], &[]),
+                "pob-ignores-unknown-handler"
+            );
+            assert_eq!(
+                category(&set, "A", &stats, &["4% leech"], &[]),
+                "uncategorized"
+            );
+        }
+
+        #[test]
+        fn zero_range_retry_should_keep_the_original_zero() {
+            let set = set();
+            let stats = [("s", 0, 10)];
+            assert_eq!(
+                category(&set, "A", &stats, &["(0-10)% increased X"], &[]),
+                "pob-zero-range-retry"
+            );
+            assert_eq!(
+                category(&set, "A", &stats, &["(1-10)% increased X"], &[]),
+                "uncategorized"
+            );
+        }
+
+        #[test]
+        fn untrimmed_should_need_equal_lines_after_trimming() {
+            let set = set();
+            let stats = [("s", 5, 5)];
+            assert_eq!(
+                category(&set, "A", &stats, &["5% increased X "], &[]),
+                "pob-untrimmed"
+            );
+            assert_eq!(
+                category(&set, "A", &stats, &["5% increased Y "], &[]),
+                "uncategorized"
+            );
+        }
+
+        #[test]
+        fn lookup_range_should_need_the_range_of_keys_written_as_numbers() {
+            let set = set();
+            let stats = [("lvl", 1, 10), ("gem", 1, 172)];
+            assert_eq!(
+                category(
+                    &set,
+                    "A",
+                    &stats,
+                    &["Supported by Level (1-10) (1-172)"],
+                    &[]
+                ),
+                "pob-lookup-range"
+            );
+            // Our renderer writes nothing for the row; any other PoB line is
+            // not explained.
+            assert_eq!(
+                category(&set, "A", &stats, &["Something else"], &[]),
+                "uncategorized"
+            );
+        }
+
+        #[test]
+        fn patch_delta_should_need_pob_text_that_explains_the_line() {
+            let set = set();
+            let stats = [("o", 5, 5)];
+            // Markup is stripped before comparing: the extract's own text is
+            // not a change.
+            assert_eq!(
+                category(
+                    &set,
+                    "A",
+                    &stats,
+                    &["Our 5% more Z"],
+                    &[("o", "Your {0}% more Z")]
+                ),
+                "uncategorized"
+            );
+            assert_eq!(
+                category(&set, "A", &stats, &["5% more Z"], &[("o", "{0}% more Z")]),
+                "patch-delta"
+            );
+            // A changed text that does not give PoB's line explains nothing.
+            assert_eq!(
+                category(&set, "A", &stats, &["5% more Z"], &[("o", "{0}% less Z")]),
+                "uncategorized"
+            );
+            let presence = "XEldritchImplicitPinnaclePresence2";
+            assert_eq!(
+                category(
+                    &set,
+                    presence,
+                    &stats,
+                    &["While a Pinnacle Atlas Boss is in your Presence, 5% more Z"],
+                    &[("o", "{0}% more Z")]
+                ),
+                "patch-delta"
+            );
+        }
     }
 
     #[test]

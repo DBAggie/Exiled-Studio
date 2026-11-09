@@ -563,6 +563,7 @@ fn build_should_count_every_variant_it_leaves_out() {
             empty_text: 1,
             lookup_unavailable: 1,
             lookup_multi: 0,
+            lookup_blank_names: 0,
         }
     );
     // Every variant is indexed or counted as left out.
@@ -857,8 +858,51 @@ fn resolve_should_read_a_looked_up_name_as_every_key_with_that_name() {
     );
     let scope = set.scope("a.txt").unwrap();
     let stats = Index::build_with(&scope, &Names).stats();
-    // Two distinct non-blank names.
-    assert_eq!((stats.indexed, stats.lookup, stats.entries), (1, 1, 2));
+    // Two distinct non-blank names; the blank one is counted.
+    assert_eq!(
+        (
+            stats.indexed,
+            stats.lookup,
+            stats.entries,
+            stats.lookup_blank_names
+        ),
+        (1, 1, 2, 1)
+    );
+}
+
+#[test]
+fn build_should_count_two_lookup_handlers_on_one_stat_as_multi() {
+    let set = one_file(vec![desc(
+        &["p"],
+        vec![variant(
+            &[ANY],
+            "Allocates {0}",
+            &[("passive_hash", 0), ("display_indexable_support", 0)],
+        )],
+    )]);
+    let scope = set.scope("a.txt").unwrap();
+    let stats = Index::build_with(&scope, &Names).stats();
+    assert_eq!((stats.indexed, stats.lookup_multi), (0, 1));
+}
+
+#[test]
+fn resolve_lines_should_keep_single_line_readings_when_a_multi_line_match_fails() {
+    // The two-line key fits, its condition does not; both lines resolve
+    // alone, so their single-line readings are kept.
+    let set = one_file(vec![
+        desc(
+            &["a"],
+            vec![variant(&[POSITIVE], "{0} first\\nsecond", &[])],
+        ),
+        simple("one", "{0} first"),
+        simple("two", "second"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let rs = index.resolve_lines(&["-3 first", "second"]);
+    let shapes: Vec<(usize, &str)> = rs.iter().map(|r| (r.lines, outcome_name(r))).collect();
+    assert_eq!(shapes, vec![(1, "resolved"), (1, "resolved")]);
+    assert_eq!(values(&rs[0]), vec![("one".to_owned(), exact(-3))]);
 }
 
 #[test]

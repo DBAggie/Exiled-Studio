@@ -11,7 +11,9 @@
 //!    [`Lookup`] gives for the handler, with the name as literal text, and
 //!    the keys that carry the name are kept for the stat. Left out, and
 //!    counted in [`IndexStats`]: `gem_quality` and `table_only` variants
-//!    (PoB `matchLimit` skips them for items), templates that did not
+//!    (`v2.67.2:src/Modules/StatDescriber.lua` `matchLimit` skips
+//!    `gem_quality` for regular mods; `table_only`, a PoE2 flag, is skipped
+//!    as the renderer does since PR B1), templates that did not
 //!    parse, templates with no text, lookup variants whose handler has no
 //!    names in the [`Lookup`], and variants with more than one lookup
 //!    placeholder.
@@ -67,7 +69,10 @@ use token::{Atom, SLOT, Sign, Token, collapse, normalize, tokenize};
 /// Counts of the variants an [`Index`] holds and leaves out. Each variant
 /// is counted once per hand, under exactly one of `indexed`,
 /// `gem_quality`, `table_only`, `bad_template`, `empty_text`,
-/// `lookup_unavailable`, `lookup_multi`.
+/// `lookup_unavailable`, `lookup_multi`. (PoB's runtime describer,
+/// `v2.67.2:src/Modules/StatDescriber.lua` `matchLimit`, skips only
+/// `gem_quality`; its export describer, `Export/statdesc.lua`, only
+/// `table_only`.)
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct IndexStats {
     /// Variants indexed (one per hand of a handed description).
@@ -86,15 +91,21 @@ pub struct IndexStats {
     pub gem_quality: usize,
     /// Left out: flagged `table_only`.
     pub table_only: usize,
-    /// Left out: the template did not parse.
+    /// Left out: the template did not parse, or its slots do not fit its
+    /// placeholders (for a lookup variant: under any one name; the whole
+    /// variant is left out and counted once).
     pub bad_template: usize,
     /// Left out: the template has no text (a deliberately hidden line).
     pub empty_text: usize,
-    /// Left out: a lookup placeholder whose handler has no names in the
-    /// [`Lookup`] (its table is not available).
+    /// Left out: a lookup placeholder whose handler has no non-blank names
+    /// in the [`Lookup`] (its table is not available, or empty).
     pub lookup_unavailable: usize,
-    /// Left out: more than one stat with a lookup placeholder.
+    /// Left out: more than one lookup placeholder stat, or more than one
+    /// lookup handler on one stat.
     pub lookup_multi: usize,
+    /// Not a variant count: lookup keys with a blank name (they write no
+    /// text and cannot be matched), over the handlers this index read.
+    pub lookup_blank_names: usize,
 }
 
 /// What a value token of a template stands for.
@@ -376,10 +387,13 @@ impl<'a> Index<'a> {
 
     /// Resolves consecutive item lines. At each line, the longest run of
     /// lines (up to the longest indexed template) whose joined key is
-    /// indexed is taken as one multi-line template, whatever its outcome:
-    /// a key that spans lines is strong evidence that they belong together.
-    /// Otherwise the line is resolved alone. Every input line is covered by
-    /// exactly one [`Resolution`] (see [`Resolution::lines`]).
+    /// indexed is taken as one multi-line template: a key that spans lines
+    /// is strong evidence that they belong together, so it is kept even
+    /// when it does not verify, unless every line of the run resolves
+    /// alone (resolved or ambiguous), in which case the single-line
+    /// readings are kept. Otherwise the line is resolved alone. Every input
+    /// line is covered by exactly one [`Resolution`] (see
+    /// [`Resolution::lines`]).
     #[must_use]
     pub fn resolve_lines(&self, lines: &[&str]) -> Vec<Resolution> {
         let normalized: Vec<String> = lines.iter().map(|l| normalize(l)).collect();
@@ -388,14 +402,37 @@ impl<'a> Index<'a> {
         while let Some(first) = normalized.get(at) {
             let longest = self.stats.max_lines.min(normalized.len() - at);
             let multi = (2..=longest).rev().find_map(|n| {
-                let joined = normalized.get(at..at + n)?.join("\n");
+                let run = normalized.get(at..at + n)?;
+                let joined = run.join("\n");
                 self.entries
                     .contains_key(&tokenize(&joined).key)
-                    .then(|| self.resolve_normalized(joined, n))
+                    .then(|| (run, self.resolve_normalized(joined, n)))
             });
-            let resolution = multi.unwrap_or_else(|| self.resolve_normalized(first.clone(), 1));
-            at += resolution.lines;
-            out.push(resolution);
+            match multi {
+                Some((run, multi)) if matches!(multi.outcome, Outcome::Unresolved(_)) => {
+                    let singles: Vec<Resolution> = run
+                        .iter()
+                        .map(|l| self.resolve_normalized(l.clone(), 1))
+                        .collect();
+                    let all_read = singles
+                        .iter()
+                        .all(|r| !matches!(r.outcome, Outcome::Unresolved(_)));
+                    at += multi.lines;
+                    if all_read {
+                        out.extend(singles);
+                    } else {
+                        out.push(multi);
+                    }
+                }
+                Some((_, multi)) => {
+                    at += multi.lines;
+                    out.push(multi);
+                }
+                None => {
+                    out.push(self.resolve_normalized(first.clone(), 1));
+                    at += 1;
+                }
+            }
         }
         out
     }
@@ -473,14 +510,21 @@ impl<'a> Index<'a> {
 struct NameCache(BTreeMap<LookupHandler, BTreeMap<String, Vec<i64>>>);
 
 impl NameCache {
-    fn get(&mut self, handler: LookupHandler, lookup: &dyn Lookup) -> &BTreeMap<String, Vec<i64>> {
+    fn get(
+        &mut self,
+        handler: LookupHandler,
+        lookup: &dyn Lookup,
+        stats: &mut IndexStats,
+    ) -> &BTreeMap<String, Vec<i64>> {
         self.0.entry(handler).or_insert_with(|| {
             let mut names: BTreeMap<String, Vec<i64>> = BTreeMap::new();
             for (key, name) in lookup.entries(handler) {
-                // Shown text is trimmed by the renderer; an empty name
-                // writes no text and cannot be matched.
+                // Shown text is trimmed by the renderer; a blank name
+                // writes no text and cannot be matched (counted).
                 let shown = collapse(&name);
-                if !shown.is_empty() {
+                if shown.is_empty() {
+                    stats.lookup_blank_names += 1;
+                } else {
                     names.entry(shown).or_default().push(key);
                 }
             }
@@ -539,7 +583,7 @@ fn index_variant(
         })
         .collect();
     looked_up.sort_unstable();
-    looked_up.dedup_by_key(|(stat, _)| *stat);
+    looked_up.dedup();
     let mut out = Vec::new();
     match looked_up.as_slice() {
         [] => match index_skeleton(template, None, stat_count, stats) {
@@ -547,7 +591,7 @@ fn index_variant(
             None => return Vec::new(),
         },
         [(stat, handler)] => {
-            let named = names.get(*handler, lookup);
+            let named = names.get(*handler, lookup, stats);
             if named.is_empty() {
                 stats.lookup_unavailable += 1;
                 return Vec::new();
