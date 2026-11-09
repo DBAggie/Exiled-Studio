@@ -9,7 +9,7 @@ Last Updated: 2026-11-09 (PR B0: plan)
 - [x] Measure lookup-handler lines in the corpus (117 non-unique)
 - [x] Move Spike A task docs to `dev/completed/`; record the A6b merge
 - [x] Update handoff Current state / Next action, CLAUDE.md Status
-- [ ] Open PR
+- [x] Open PR (#13)
 
 ## PR B1: stat-description model and renderer (`loom-data`)
 - [ ] Model types, serde loader from bytes, include-chain `Scope`, markup stripping
