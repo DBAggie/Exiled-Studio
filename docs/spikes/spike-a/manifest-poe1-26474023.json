@@ -1,0 +1,3064 @@
+{
+  "bundles": {
+    "Folders/0/data.datc64": "d018d2dd69892b5eaf9ef6d4d05c2ccd141ce66244a78c15ab12b014f0718fc4",
+    "Folders/0/data.datcl64": "c5e660e36e98b6013ec1b6182c2fb478c572a17590e7e419bbcbe0399da8b832",
+    "Folders/1/data.datc64": "75f82441db7f49d3a44e6743dded31e096781f10562d245068b144d9cc0e78ac",
+    "Folders/2/data.datc64": "12b161bec0501120fe7c90ba8d79adaf7af3f8bf0f446bde2707a065dbd5bc97",
+    "Folders/3/data.datc64": "c316c75365d538a0663d345d4d31bdf35b3839db20960f2e1689b9f01e4e594a",
+    "Folders/4/data.datc64": "07a9a242ac8f467799dcc7ac26f2f768f76f7ced27e6641f85fa382466c4369f",
+    "Folders/5/data.datc64": "b9244d5a21d56b4eb73a048ad50c83a03be8abeb1aaa82952f563c50c5967ac8",
+    "Folders/6/data.datc64": "a5b58cb962a60a9dc3ab9194732151e2e7ebd44011999d048aa5b84f25af7dec",
+    "Folders/7/data.datc64": "eaab2b4da0178bebcedcbec6873cd03c7b2fe6f58477ced64948579346c2c53a",
+    "Folders/7/data.datc64_1": "e20d81861c35b2d3b5e5db3dbd0ffe295864c33f6db8282d5e28c9129e63b1b0",
+    "Folders/8/data.datc64": "1e271e72cae0c90d2f9f750e790c4da4d83ea7f36daac6f7e6c31340c0be4a11",
+    "Folders/9/data.datc64": "64dd4975f273eb649a62270996c3e75856ae90b877e5492416d93dbce69b1b0d",
+    "Folders/A/data.datc64": "8e867f94bf5af709add0c841dd3a039cfb1eb218e09f4c002f0111ac41f8f939",
+    "Folders/B/data.datc64": "d5a252ac542997d6579f7c1267a04e5f9be69b4b83249233f5bf62b4c117f33e",
+    "Folders/C/data.datc64": "8f757ff24dc714913f823966512dc700d1c0e8632441f1bba7191fefd0804068",
+    "Folders/D/data.datc64": "39e9eeef8372d864b1b72de81e818994e53cc98dd5c896095696a1cc0098d6a2",
+    "Folders/E/data.datc64": "cd7f8a338213f162005b6b9f5ee0df35f19843bc16f3d3f49a477903fcbc4213",
+    "Folders/F/data.datc64": "56afb500385641fe4adced26b410a3afb49d0b5718dcc30ee1c835cebc7e4352",
+    "Folders/metadata": "4b2c0af7b807d42dcbae554bc6e8989b4ae27ef2d9aa41a414a659c3aca9f08b",
+    "Folders/metadata/items_1": "84a4b4db751ac8e395b7e4bfc585f283c9a4db595422820b88465ec4c6702ef1",
+    "Tiny_9": "633bc1d83890e2bf898db2035d3bc1a0d803025c9d62a07c3571a6e940ce284b"
+  },
+  "decoder": {
+    "program": "unoodle",
+    "version": "oozextract 0.5.7"
+  },
+  "extractor": {
+    "commit": "d047e4a1043655a68629f7781d7100a236b8795e",
+    "dirty": false,
+    "version": "0.0.0"
+  },
+  "files": {
+    "tables/AchievementItems.json": {
+      "rows": 11776,
+      "sha256": "493f965355d35eed90931adaa38c3e897e1007358dc5f8bae3f71bb869aa74aa"
+    },
+    "tables/AchievementSetsDisplay.json": {
+      "rows": 73,
+      "sha256": "50286a1f60f25c2f9dc9b455d21d122d623a1b62526b74da13ef558f1e5117d8"
+    },
+    "tables/Achievements.json": {
+      "rows": 1749,
+      "sha256": "dd6ee2c03ee6c38784c57022e9636899b23c2246f9a5bf62f55bb6ddcb475487"
+    },
+    "tables/ActionTypes.json": {
+      "rows": 1351,
+      "sha256": "702a7d47f953d53fb3124bb3f2a302a26732e1d34af71d93311b04e486f1f43f"
+    },
+    "tables/ActiveSkillType.json": {
+      "rows": 135,
+      "sha256": "0326270e1e697d91c923509984d4e8f41c428fd852b4cbd3b7e3696e57889651"
+    },
+    "tables/ActiveSkills.json": {
+      "rows": 1941,
+      "sha256": "3febbb0770073b14f6ba06d24cebbca0ea168ea9445a579535bce7aa2bbf26b2"
+    },
+    "tables/AlternateSkillTargetingBehaviours.json": {
+      "rows": 8,
+      "sha256": "d1eb2ce3da69f8b136daabdcd448f8f06c1991014176b14005742d31f5689ed4"
+    },
+    "tables/Animation.json": {
+      "rows": 179,
+      "sha256": "f74a7e0eb3e3148a8250166648e684f041533c016584fcbd0cb434a05e952ba9"
+    },
+    "tables/Ascendancy.json": {
+      "rows": 21,
+      "sha256": "dc14c6c21171c106c9f387e7be1c01ac7884e99ab91588304729fb7fb0f5bc39"
+    },
+    "tables/AtlasPassiveSkillTreeGroupType.json": {
+      "rows": 42,
+      "sha256": "697ccdb78845f201dc37d78e7923547b096c7a8e7f511f6010158b1c92c48b4d"
+    },
+    "tables/BaseItemTypes.json": {
+      "rows": 5461,
+      "sha256": "fd72842829d3df73448548f7c6df6cf9f7d77b9ebdbbdc860bf37cf2673dbe58"
+    },
+    "tables/BloodTypes.json": {
+      "rows": 18,
+      "sha256": "ed79eb5879550e5409c8ec3a500fcecdf66a277f101943981d9ceba23d6cd056"
+    },
+    "tables/BrequelPassiveSubTrees.json": {
+      "rows": 4,
+      "sha256": "f8c05b944880beab65e195b56da3f6d81fcb303a634e095b30507f847043b3a7"
+    },
+    "tables/BuffDefinitions.json": {
+      "rows": 2814,
+      "sha256": "ad13b24df9e80f46aeb719587751316033e4470de2ab4db3ae5e9487c93480f2"
+    },
+    "tables/BuffTemplates.json": {
+      "rows": 811,
+      "sha256": "ca9e089c118ad86e1ae7559e5e8276dce91e2bf79685c21ebfb11ae41abc63a3"
+    },
+    "tables/BuffVisualOrbArt.json": {
+      "rows": 256,
+      "sha256": "4c523d78171b0e4d4ad4dc707040a4bbc79d6ad91dd2d750394a394e3048223e"
+    },
+    "tables/BuffVisualOrbTypes.json": {
+      "rows": 22,
+      "sha256": "f179c6839021953dc6a3f95fb937b421cb71f78b7a2c43c7991e3f9256f584b4"
+    },
+    "tables/BuffVisualOrbs.json": {
+      "rows": 242,
+      "sha256": "6ce0f2666c39638a9a87d5fe97653d500729f3bbc3bcc82b5bc4d4c03184e53c"
+    },
+    "tables/BuffVisuals.json": {
+      "rows": 2476,
+      "sha256": "92b483a9b3ac49d17ac9b35fddeae884cdc7df19e8901206d679329e913afdf6"
+    },
+    "tables/Characters.json": {
+      "rows": 7,
+      "sha256": "5fb934f11c1b0be40f73f8193649c161463521628b58142fc5f37e8980fe20da"
+    },
+    "tables/ClientStrings.json": {
+      "rows": 8497,
+      "sha256": "e2d8e4ca173f38892339b7dce120492a9e005d047398466c100b763bbe1a8a11"
+    },
+    "tables/CostTypes.json": {
+      "rows": 13,
+      "sha256": "e27590e1a8322e4dd1f065908c23130e8028140455c0dca7adfa709ffda02d96"
+    },
+    "tables/DamageEffectVariations.json": {
+      "rows": 162,
+      "sha256": "3316a65b6610b2927e4b8ccd75e2fd6f88673bfcbab6c88061c346404efa89e1"
+    },
+    "tables/Descendancy.json": {
+      "rows": 17,
+      "sha256": "c5d69e79d066b9edb1fc6a3818e6962e3e2ad5e9e420bba2e6d63b3ec2079783"
+    },
+    "tables/FlavourText.json": {
+      "rows": 2962,
+      "sha256": "e922afcdbfa6afe0227d126e4cab649de4c2ee36f24044d41f8b2e76a6ac4b46"
+    },
+    "tables/GemEffects.json": {
+      "rows": 1292,
+      "sha256": "55c8347ad76a4ca6b025608d09ff9cb14b2d9a592b2724f8ef50641685877f89"
+    },
+    "tables/GemTags.json": {
+      "rows": 54,
+      "sha256": "092c3fddb438be2c79f4d7bca689f74cc48ab7018fc6630c85828d7e4ba1380c"
+    },
+    "tables/GrantedEffectStatSets.json": {
+      "rows": 12763,
+      "sha256": "18f80c5a6286560dae8e03fad16c0a22d9489bfc82a030107930ca0fa75f662a"
+    },
+    "tables/GrantedEffects.json": {
+      "rows": 12829,
+      "sha256": "eab95b930e41eaab0b88080be8e05e322d154a39da4697ff598d5caafa8f2599"
+    },
+    "tables/GrantedEffectsPerLevel.json": {
+      "rows": 80600,
+      "sha256": "bceba6e4163f73be8de159537b3b138c77c558a00c10f74044f82c2125897c75"
+    },
+    "tables/ImpactSoundData.json": {
+      "rows": 23,
+      "sha256": "473c9b9f5d4af1cf70966a91fedcc0179a13dcd1e53f1b489bad9795e86fb6d0"
+    },
+    "tables/ItemClassCategories.json": {
+      "rows": 67,
+      "sha256": "fa129dd182f08b35cdc757cee079588c673e29d60b58380eb2a586c36319396a"
+    },
+    "tables/ItemClasses.json": {
+      "rows": 103,
+      "sha256": "2ada80d8767691162f333b1cf4c966fe08f895005c043135007270bb772cc27f"
+    },
+    "tables/ItemExperienceTypes.json": {
+      "rows": 28,
+      "sha256": "abb19d54e7377b273f6d2ba093ca6c1a0f27f330525b770744541fe2df5bf897"
+    },
+    "tables/ItemStances.json": {
+      "rows": 11,
+      "sha256": "f59b486f7a51de0fbbc25657a6cc0b926a67d0b1d3febc4e6f9adf2b5cfbcaf2"
+    },
+    "tables/ItemVisualEffect.json": {
+      "rows": 336,
+      "sha256": "a1f4e10253fc405173de9b355b9b0462368e25a6b9d7d2bd0d10bab9e0ab06b0"
+    },
+    "tables/ItemVisualIdentity.json": {
+      "rows": 15516,
+      "sha256": "81d331558b8d8d36de3d251b377c893e7183de18e4d33a30f2bf2f97bcee48fe"
+    },
+    "tables/MicrotransactionPortalVariations.json": {
+      "rows": 300,
+      "sha256": "8acf3387265eb6d9e8b5b539fb7207859b766673559ba10607729bd6e8b94f96"
+    },
+    "tables/MicrotransactionSkillGemEffectSlotTypes.json": {
+      "rows": 2,
+      "sha256": "2fd7ff70e1bec16dbb75262a9a11b342ee172006fca439f851c0195d33a881d4"
+    },
+    "tables/MiscAnimated.json": {
+      "rows": 8273,
+      "sha256": "bbbb8e60748d4a39f269b8a223bf0dd3c18bad4eebc2194cec3570bf4b4a6de8"
+    },
+    "tables/MiscEffectPacks.json": {
+      "rows": 862,
+      "sha256": "e59f12371531640c59b1160beb60adcd02a531e1b513f4ab6cd00c8ecf9b1e34"
+    },
+    "tables/MiscObjects.json": {
+      "rows": 1836,
+      "sha256": "6dff3c9b5c02c28ddba237a8efb8b80ee30cf7155a90d0d63a16ffb4721158c0"
+    },
+    "tables/ModFamily.json": {
+      "rows": 7844,
+      "sha256": "30c965f0218e8c4225f8dbb9b093c01e6506fe1bfcc93f52207c92d876844f4d"
+    },
+    "tables/ModSellPriceTypes.json": {
+      "rows": 67,
+      "sha256": "3d9abad8cb1a7323e6b3749beed6f5ace79b9fcafa039446498a299d8f063a9d"
+    },
+    "tables/ModType.json": {
+      "rows": 14554,
+      "sha256": "cc6a9f324efcec6d7dd64befc01ac0eb9379c947a53273949676f9838733bbbb"
+    },
+    "tables/Mods.json": {
+      "rows": 40355,
+      "sha256": "e79beca9aca9c76bffb17f8dfe0ede425eb3f7d5e9136136649ef33047678f78"
+    },
+    "tables/MonsterArmours.json": {
+      "rows": 217,
+      "sha256": "7c0df60443135af2dc5994c71a156040f13df83f3b684f85bf568df06edebcf1"
+    },
+    "tables/MonsterCategories.json": {
+      "rows": 6,
+      "sha256": "c89a126e5f7f75c21b744929ebcd83603feba4a3501a74304370848cb5fbf130"
+    },
+    "tables/MonsterConditionalEffectPacks.json": {
+      "rows": 9,
+      "sha256": "2d292567f26bf63e01ea0ea3c74d853e31fc71cc06302a49d6a926ab7a95ea00"
+    },
+    "tables/MonsterResistances.json": {
+      "rows": 50,
+      "sha256": "8c7a891a05c65f1836328c79b56962f181f4552199361b64c3f240c740c3ba0b"
+    },
+    "tables/MonsterSegments.json": {
+      "rows": 61,
+      "sha256": "b6c2d6ac0bce738aeb670b51ea6e6958016f13ca469fa584d97356b6bd9c4b77"
+    },
+    "tables/MonsterTypes.json": {
+      "rows": 3600,
+      "sha256": "d3f8783242f955867b318def48d5697dc2055fa772363293d0733ec3da753553"
+    },
+    "tables/MonsterVarieties.json": {
+      "rows": 10691,
+      "sha256": "5c0857badc7eafd91f83eb1f2acca19286bd8c3b8b4c958499130d58f84888e0"
+    },
+    "tables/MtxTypeGameSpecific.json": {
+      "rows": 7849,
+      "sha256": "04b356c520ead49bb3f808ad5b829e6662b2b3cb421986c19cac94fa5977fffd"
+    },
+    "tables/MtxTypes.json": {
+      "rows": 8557,
+      "sha256": "3e0ff82439a2b3e60489e62a7862d725d47f008cd4d01539f47390de9afeca75"
+    },
+    "tables/MultiPartAchievements.json": {
+      "rows": 246,
+      "sha256": "33bc226866a20b3a47db7d25389cf7c75c985fe4634e1cf9154da453b5da4eae"
+    },
+    "tables/PassiveSkillMasteryEffects.json": {
+      "rows": 354,
+      "sha256": "eda72bc596f1dc42114abd50c00bcc5176d5be49cd60c0134b037f2b38090718"
+    },
+    "tables/PassiveSkillMasteryGroups.json": {
+      "rows": 61,
+      "sha256": "0322ced7d3aad146b0f5ff0ba88b25eb7bb619fcd054c72e5451c432f0bcca03"
+    },
+    "tables/PassiveSkillStatCategories.json": {
+      "rows": 20,
+      "sha256": "db21ef3e68faae426ffbb2bcdff6672ba20cae0b9cb674c8dac3f98cb8e7ee02"
+    },
+    "tables/PassiveSkillTreeUIArtAscendancy.json": {
+      "rows": 15,
+      "sha256": "601c0adb493533d85ef66e3d8143af9e2a21937d99cf978a49192fe64c88bf52"
+    },
+    "tables/PassiveSkills.json": {
+      "rows": 5706,
+      "sha256": "73fe236986e10dc1b18505c69de24d18b359884f31db9fb4036d52561aa25e48"
+    },
+    "tables/PreloadGroups.json": {
+      "rows": 79,
+      "sha256": "9ca117a79725d1fe085e6058e1582935af47ea686837a4fb0c627249a99407b1"
+    },
+    "tables/QuestFlags.json": {
+      "rows": 3999,
+      "sha256": "9a1932a4508cfd0bd9359ea24e4830ec68ba857169872cee7d2475d534bf56f1"
+    },
+    "tables/ReminderText.json": {
+      "rows": 468,
+      "sha256": "212eec15a1a5fc25fcd431f0490d9da584d657ff128633d90d2b5ed5c46a673a"
+    },
+    "tables/ShopTag.json": {
+      "rows": 953,
+      "sha256": "03ea02658b735a052b75410c68c422916c73e093a4b471e75277becb5566f0f2"
+    },
+    "tables/SkillGems.json": {
+      "rows": 847,
+      "sha256": "6df0dd3485a9c3873eb575d682816d861dd49af48e2332982bfbff6056f76e17"
+    },
+    "tables/SkillWeaponEffects.json": {
+      "rows": 4,
+      "sha256": "28a13b9d75ad0a4dce91502eb3ec7251fa4009ae4080adc0f3cce0aae0dd4e29"
+    },
+    "tables/SoundEffects.json": {
+      "rows": 864,
+      "sha256": "8c35d23451c8b539d089109cb9cb51823208d3eb8bbccab963f8c415eeaeae3d"
+    },
+    "tables/Stats.json": {
+      "rows": 23362,
+      "sha256": "cbb801554b8621f2d393f8829e70a6a6fb457d4579f2a240ebe6440231f5b6bc"
+    },
+    "tables/Tags.json": {
+      "rows": 1389,
+      "sha256": "92b53c2512f8ccefd8dd93b66cbedc43b25fbef9a3c5a05acf2336caaf52dcbc"
+    },
+    "tables/UIArtAscendancy.json": {
+      "rows": 15,
+      "sha256": "638421d6e36b1d1df86c7a775ab04df9db654b5dae07ab38d2739ab466dda650"
+    },
+    "tables/VirtualStatContextFlags.json": {
+      "rows": 40,
+      "sha256": "eac1dda8f5e1bd05e2e751f741a10885a15e9228f541e899d44e5cc8c051e02a"
+    }
+  },
+  "format": 1,
+  "game": "poe1",
+  "index": {
+    "path": "Bundles2/_.index.bin",
+    "sha256": "60264b4fc9182a442d95c29d49c0bb5097586b5081ac8f8b3032b74cdcbf19ac"
+  },
+  "schema": {
+    "commit": "717d788d6ec081821c33473b2a0ec35629144826",
+    "sha256": "e8e7e4c858924655bcfd56c23b275101f0321f435f90b19f8267bf43344ea16a",
+    "source": "poe-tool-dev/dat-schema"
+  },
+  "steam_build_id": "26474023",
+  "table_dir": "data/",
+  "tables": {
+    "AchievementItems": {
+      "columns": 10,
+      "columns_read": 10,
+      "error": null,
+      "key_columns": {
+        "AchievementsKey": {
+          "dangling": 0,
+          "target": "Achievements",
+          "values": 11776
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/AchievementItems.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "ItemClasses",
+        "ItemVisualIdentity",
+        "Mods",
+        "MonsterVarieties",
+        "MultiPartAchievements",
+        "PassiveSkillMasteryEffects",
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 48,
+      "row_size_mismatch": null,
+      "rows": 11776,
+      "source": "data/achievementitems.datc64",
+      "source_sha256": "4415242a390176f090b13100daa966fb6299086eeaa4f463df312741681c976d",
+      "status": "ok"
+    },
+    "AchievementSetsDisplay": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/AchievementSetsDisplay.json",
+      "referenced_by": [
+        "Achievements"
+      ],
+      "root": false,
+      "row_len": 20,
+      "row_size_mismatch": null,
+      "rows": 73,
+      "source": "data/achievementsetsdisplay.datc64",
+      "source_sha256": "035835825b194226728901a2d8798e70e21edb046b692048c7fe5d541dd0adfe",
+      "status": "ok"
+    },
+    "Achievements": {
+      "columns": 18,
+      "columns_read": 18,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/Achievements.json",
+      "referenced_by": [
+        "AchievementItems"
+      ],
+      "root": false,
+      "row_len": 74,
+      "row_size_mismatch": null,
+      "rows": 1749,
+      "source": "data/achievements.datc64",
+      "source_sha256": "6b2594920ff86b6191411661eb20a5c3d34ac20778f956d4b9771e8f886da145",
+      "status": "ok"
+    },
+    "ActionTypes": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ActionTypes.json",
+      "referenced_by": [
+        "ActiveSkills"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 1351,
+      "source": "data/actiontypes.datc64",
+      "source_sha256": "9791f34737e247db584e229dde589f3428d3e312d10e5abb8da3be70d1cce7a4",
+      "status": "ok"
+    },
+    "ActiveSkillType": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {
+        "FlagStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 44
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ActiveSkillType.json",
+      "referenced_by": [
+        "ActiveSkills",
+        "GrantedEffects"
+      ],
+      "root": false,
+      "row_len": 24,
+      "row_size_mismatch": null,
+      "rows": 135,
+      "source": "data/activeskilltype.datc64",
+      "source_sha256": "e44db407f9dff6f4c6f2510f4f3cd72e1baf69309bea118c716c48f2cf77410e",
+      "status": "ok"
+    },
+    "ActiveSkills": {
+      "columns": 31,
+      "columns_read": 31,
+      "error": null,
+      "key_columns": {
+        "ActionType": {
+          "dangling": 0,
+          "target": "ActionTypes",
+          "values": 1941
+        },
+        "ActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 13175
+        },
+        "AlternateSkillTargetingBehavioursKey": {
+          "dangling": 0,
+          "target": "AlternateSkillTargetingBehaviours",
+          "values": 333
+        },
+        "Input_StatKeys": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 3149
+        },
+        "MinionActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 718
+        },
+        "Output_StatKeys": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 3149
+        },
+        "SecondarySkillSpecificStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 212
+        },
+        "StatContextFlags": {
+          "dangling": 0,
+          "target": "VirtualStatContextFlags",
+          "values": 15838
+        },
+        "TransfigureBase": {
+          "dangling": 0,
+          "target": "ActiveSkills",
+          "values": 363
+        },
+        "WeaponRestriction_ItemClassesKeys": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 2443
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ActiveSkills.json",
+      "referenced_by": [
+        "ActiveSkills",
+        "GrantedEffects",
+        "Stats"
+      ],
+      "root": true,
+      "row_len": 257,
+      "row_size_mismatch": null,
+      "rows": 1941,
+      "source": "data/activeskills.datc64",
+      "source_sha256": "0d547eae10bfd63b2a64b3e2a4f6560f5a8f086a0c0095b9c510be9244429f7d",
+      "status": "ok"
+    },
+    "AlternateSkillTargetingBehaviours": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "ClientStrings": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 8
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/AlternateSkillTargetingBehaviours.json",
+      "referenced_by": [
+        "ActiveSkills"
+      ],
+      "root": false,
+      "row_len": 56,
+      "row_size_mismatch": null,
+      "rows": 8,
+      "source": "data/alternateskilltargetingbehaviours.datc64",
+      "source_sha256": "8886ad5a8f14d96ece7eacf911e0df514a936692508b081f7de3523322a0b4ab",
+      "status": "ok"
+    },
+    "Animation": {
+      "columns": 12,
+      "columns_read": 12,
+      "error": null,
+      "key_columns": {
+        "#10": {
+          "dangling": 0,
+          "target": "Animation",
+          "values": 1
+        },
+        "#8": {
+          "dangling": 0,
+          "target": "Animation",
+          "values": 1
+        },
+        "Mainhand_AnimationKey": {
+          "dangling": 0,
+          "target": "Animation",
+          "values": 55
+        },
+        "Offhand_AnimationKey": {
+          "dangling": 0,
+          "target": "Animation",
+          "values": 18
+        },
+        "Stat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 2
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Animation.json",
+      "referenced_by": [
+        "Animation",
+        "GrantedEffects"
+      ],
+      "root": false,
+      "row_len": 77,
+      "row_size_mismatch": null,
+      "rows": 179,
+      "source": "data/animation.datc64",
+      "source_sha256": "d262703103aea222045d0fe2c9b536668dc8c90f476d64a313fe682f73495b65",
+      "status": "ok"
+    },
+    "Ascendancy": {
+      "columns": 20,
+      "columns_read": 20,
+      "error": null,
+      "key_columns": {
+        "Character": {
+          "dangling": 0,
+          "target": "Characters",
+          "values": 21
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Ascendancy.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 141,
+      "row_size_mismatch": null,
+      "rows": 21,
+      "source": "data/ascendancy.datc64",
+      "source_sha256": "97e7a834a76063900052c14ea0da04a49c9404efdd23ad96cd1aca60ab4ee253",
+      "status": "ok"
+    },
+    "AtlasPassiveSkillTreeGroupType": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/AtlasPassiveSkillTreeGroupType.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 42,
+      "source": "data/atlaspassiveskilltreegrouptype.datc64",
+      "source_sha256": "500eb58119335c180c1ae472558b83f731b406516ed57b1830964be2b99b58cf",
+      "status": "ok"
+    },
+    "BaseItemTypes": {
+      "columns": 36,
+      "columns_read": 36,
+      "error": null,
+      "key_columns": {
+        "Achievement1": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 228
+        },
+        "Achievement2": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 116
+        },
+        "Equip_AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 176
+        },
+        "FlavourTextKey": {
+          "dangling": 0,
+          "target": "FlavourText",
+          "values": 1306
+        },
+        "FragmentBaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 165
+        },
+        "IdentifyMagic_AchievementItems": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 0
+        },
+        "Identify_AchievementItems": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 0
+        },
+        "Implicit_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 791
+        },
+        "ItemClassesKey": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 5461
+        },
+        "ItemStance": {
+          "dangling": 0,
+          "target": "ItemStances",
+          "values": 0
+        },
+        "ItemVisualIdentity": {
+          "dangling": 0,
+          "target": "ItemVisualIdentity",
+          "values": 5461
+        },
+        "ShopTag": {
+          "dangling": 0,
+          "target": "ShopTag",
+          "values": 288
+        },
+        "SoundEffect": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 728
+        },
+        "SoundEffect2": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 1
+        },
+        "TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 6502
+        },
+        "TalismanEnchants": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 43
+        },
+        "VendorRecipe_AchievementItems": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 696
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BaseItemTypes.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "BrequelPassiveSubTrees",
+        "Characters",
+        "SkillGems"
+      ],
+      "root": true,
+      "row_len": 374,
+      "row_size_mismatch": null,
+      "rows": 5461,
+      "source": "data/baseitemtypes.datc64",
+      "source_sha256": "e12c385b43f4a2d9c7d4464b15e7aea8309c2a3aa5fec5657a26a2b30d0465d7",
+      "status": "ok"
+    },
+    "BloodTypes": {
+      "columns": 16,
+      "columns_read": 16,
+      "error": null,
+      "key_columns": {
+        "Animation": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 30
+        },
+        "EffectCrit": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 17
+        },
+        "EffectFirstBloodCrit": {
+          "dangling": 0,
+          "target": "MicrotransactionPortalVariations",
+          "values": 5
+        },
+        "EffectFirstBloodLarge": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 5
+        },
+        "EffectFirstBloodSmall": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 5
+        },
+        "EffectGoreCrit": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 13
+        },
+        "EffectGoreLarge": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 13
+        },
+        "EffectGoreSmall": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 13
+        },
+        "EffectLarge": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 17
+        },
+        "EffectSmall": {
+          "dangling": 0,
+          "target": "DamageEffectVariations",
+          "values": 17
+        },
+        "ImpactSoundCrit": {
+          "dangling": 0,
+          "target": "ImpactSoundData",
+          "values": 13
+        },
+        "ImpactSoundGoreCrit": {
+          "dangling": 0,
+          "target": "ImpactSoundData",
+          "values": 13
+        },
+        "ImpactSoundGoreHit": {
+          "dangling": 0,
+          "target": "ImpactSoundData",
+          "values": 6
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BloodTypes.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 248,
+      "row_size_mismatch": null,
+      "rows": 18,
+      "source": "data/bloodtypes.datc64",
+      "source_sha256": "e961b4c8e3af02d8a65afd403545420e651b6cd8bc1f4b721e7acd5272f74929",
+      "status": "ok"
+    },
+    "BrequelPassiveSubTrees": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {
+        "RewardStringMultiple": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 4
+        },
+        "RewardStringSingle": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 4
+        },
+        "Wombgift": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 4
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BrequelPassiveSubTrees.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 56,
+      "row_size_mismatch": null,
+      "rows": 4,
+      "source": "data/brequelpassivesubtrees.datc64",
+      "source_sha256": "2bd5815c843ab9b9be17c6e76211d9709acdf880a04c41017facfa5cf7f8345f",
+      "status": "ok"
+    },
+    "BuffDefinitions": {
+      "columns": 51,
+      "columns_read": 51,
+      "error": null,
+      "key_columns": {
+        "#46": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 2
+        },
+        "#49": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 18
+        },
+        "BuffVisualsKey": {
+          "dangling": 0,
+          "target": "BuffVisuals",
+          "values": 2814
+        },
+        "ConditionStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 121
+        },
+        "Current_StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 85
+        },
+        "GrantedFlags": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 349
+        },
+        "GrantedStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 4231
+        },
+        "Maximum_StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 39
+        },
+        "MinStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 6
+        },
+        "MultiPartAchievement": {
+          "dangling": 0,
+          "target": "MultiPartAchievements",
+          "values": 55
+        },
+        "Stats2": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 92
+        },
+        "StatsKeys": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 4139
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffDefinitions.json",
+      "referenced_by": [
+        "BuffTemplates"
+      ],
+      "root": false,
+      "row_len": 314,
+      "row_size_mismatch": null,
+      "rows": 2814,
+      "source": "data/buffdefinitions.datc64",
+      "source_sha256": "dde890cbaf71a7f9f836c1d24c06aec13aee827c98c3b38bd8c03d01a8b5bad0",
+      "status": "ok"
+    },
+    "BuffTemplates": {
+      "columns": 14,
+      "columns_read": 14,
+      "error": null,
+      "key_columns": {
+        "#13": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 23
+        },
+        "BuffDefinitionsKey": {
+          "dangling": 0,
+          "target": "BuffDefinitions",
+          "values": 811
+        },
+        "BuffVisualsKey": {
+          "dangling": 0,
+          "target": "BuffVisuals",
+          "values": 90
+        },
+        "StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 405
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffTemplates.json",
+      "referenced_by": [
+        "Mods",
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 138,
+      "row_size_mismatch": null,
+      "rows": 811,
+      "source": "data/bufftemplates.datc64",
+      "source_sha256": "9fba5541b4b06a9a441ced685405e4dedd8e2a7c041c3908b2efe2d953ef37ba",
+      "status": "ok"
+    },
+    "BuffVisualOrbArt": {
+      "columns": 15,
+      "columns_read": 15,
+      "error": null,
+      "key_columns": {
+        "MiscAnimated": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 256
+        },
+        "MonsterExpiredSound": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 18
+        },
+        "PlayerAcquiredSound": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 7
+        },
+        "PlayerExpiredSound": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 17
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffVisualOrbArt.json",
+      "referenced_by": [
+        "BuffVisualOrbs"
+      ],
+      "root": false,
+      "row_len": 161,
+      "row_size_mismatch": null,
+      "rows": 256,
+      "source": "data/buffvisualorbart.datc64",
+      "source_sha256": "20e7007b0aeac6d1c587aa67ce8be6eeddc90949ed3651aa203e22aa552ed574",
+      "status": "ok"
+    },
+    "BuffVisualOrbTypes": {
+      "columns": 16,
+      "columns_read": 16,
+      "error": null,
+      "key_columns": {
+        "HeightStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 6
+        },
+        "RadiusStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 6
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffVisualOrbTypes.json",
+      "referenced_by": [
+        "BuffVisualOrbs"
+      ],
+      "root": false,
+      "row_len": 86,
+      "row_size_mismatch": null,
+      "rows": 22,
+      "source": "data/buffvisualorbtypes.datc64",
+      "source_sha256": "6291fcb48268b1dd3b1c7a22892e2bb59f62f50855dfffdec6655098d4633f96",
+      "status": "ok"
+    },
+    "BuffVisualOrbs": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {
+        "BuffVisualOrbArtKeys": {
+          "dangling": 0,
+          "target": "BuffVisualOrbArt",
+          "values": 260
+        },
+        "BuffVisualOrbArtKeys2": {
+          "dangling": 0,
+          "target": "BuffVisualOrbArt",
+          "values": 1
+        },
+        "BuffVisualOrbTypesKey": {
+          "dangling": 0,
+          "target": "BuffVisualOrbTypes",
+          "values": 242
+        },
+        "Player_BuffVisualOrbArtKeys": {
+          "dangling": 0,
+          "target": "BuffVisualOrbArt",
+          "values": 2
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffVisualOrbs.json",
+      "referenced_by": [
+        "BuffVisuals"
+      ],
+      "root": false,
+      "row_len": 72,
+      "row_size_mismatch": null,
+      "rows": 242,
+      "source": "data/buffvisualorbs.datc64",
+      "source_sha256": "20df6b2a3a473e62e6a532325e6bacb1f18b499a4113813cd47d3fdc5b15ddea",
+      "status": "ok"
+    },
+    "BuffVisuals": {
+      "columns": 24,
+      "columns_read": 24,
+      "error": null,
+      "key_columns": {
+        "BuffVisualOrbs": {
+          "dangling": 0,
+          "target": "BuffVisualOrbs",
+          "values": 260
+        },
+        "MiscAnimated1": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 2
+        },
+        "MiscAnimated2": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 1
+        },
+        "MiscAnimated3": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 6
+        },
+        "PreloadGroups": {
+          "dangling": 0,
+          "target": "PreloadGroups",
+          "values": 323
+        },
+        "WeaponEffect": {
+          "dangling": 0,
+          "target": "SkillWeaponEffects",
+          "values": 1
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BuffVisuals.json",
+      "referenced_by": [
+        "BuffDefinitions",
+        "BuffTemplates"
+      ],
+      "root": false,
+      "row_len": 244,
+      "row_size_mismatch": null,
+      "rows": 2476,
+      "source": "data/buffvisuals.datc64",
+      "source_sha256": "5d75bcfa7f0ecb171a5d7d9ba597630ba8b44daf8c8c1c25060d88825f361f36",
+      "status": "ok"
+    },
+    "Characters": {
+      "columns": 64,
+      "columns_read": 64,
+      "error": null,
+      "key_columns": {
+        "#27": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 6
+        },
+        "#28": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 6
+        },
+        "#58": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "#59": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "#63": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "Clone": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "CloneImmobile": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "DarkExile": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "Double": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "DoubleTwo": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "GhostArmMtx": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 7
+        },
+        "LightningClone": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "LightningCloneBreach": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "Mirage": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "MirageWarrior": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "Mods": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 7
+        },
+        "ReplicateClone": {
+          "dangling": 0,
+          "target": "MonsterVarieties",
+          "values": 7
+        },
+        "StartSkillGem": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 7
+        },
+        "StartSupportGem": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 7
+        },
+        "StartWeapons": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 7
+        },
+        "StartingMeleeSkill": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 7
+        },
+        "StartingWeaponBase": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 6
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Characters.json",
+      "referenced_by": [
+        "Ascendancy",
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 612,
+      "row_size_mismatch": null,
+      "rows": 7,
+      "source": "data/characters.datc64",
+      "source_sha256": "b1d85b45eb8d8c3ff1b77da6d399e7fc0a951865b230224fcb59d438420c0e01",
+      "status": "ok"
+    },
+    "ClientStrings": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ClientStrings.json",
+      "referenced_by": [
+        "AlternateSkillTargetingBehaviours",
+        "BrequelPassiveSubTrees",
+        "UIArtAscendancy"
+      ],
+      "root": false,
+      "row_len": 52,
+      "row_size_mismatch": null,
+      "rows": 8497,
+      "source": "data/clientstrings.datc64",
+      "source_sha256": "84ebcc48797ecd089ff08934bb50b0d237af41879fb9b5f77790bad53a38ff7c",
+      "status": "ok"
+    },
+    "CostTypes": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {
+        "StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 13
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/CostTypes.json",
+      "referenced_by": [
+        "GrantedEffectsPerLevel"
+      ],
+      "root": false,
+      "row_len": 36,
+      "row_size_mismatch": null,
+      "rows": 13,
+      "source": "data/costtypes.datc64",
+      "source_sha256": "8d55504ec29b983acbacb6a4b28b2c546fbb4d6f3607edc4ead9b20fa9d71add",
+      "status": "ok"
+    },
+    "DamageEffectVariations": {
+      "columns": 8,
+      "columns_read": 8,
+      "error": null,
+      "key_columns": {
+        "EffectPack": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 3
+        },
+        "MiscAnimated": {
+          "dangling": 0,
+          "target": "MiscAnimated",
+          "values": 93
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/DamageEffectVariations.json",
+      "referenced_by": [
+        "BloodTypes"
+      ],
+      "root": false,
+      "row_len": 96,
+      "row_size_mismatch": null,
+      "rows": 162,
+      "source": "data/damageeffectvariations.datc64",
+      "source_sha256": "1ad5067f9d93d8d02f29cd0eb713c483ca9f396e2451ed261511f30c027f1b9c",
+      "status": "ok"
+    },
+    "Descendancy": {
+      "columns": 12,
+      "columns_read": 12,
+      "error": null,
+      "key_columns": {
+        "PassiveTreeUIArt": {
+          "dangling": 0,
+          "target": "PassiveSkillTreeUIArtAscendancy",
+          "values": 16
+        },
+        "SoundEffectAccept": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 16
+        },
+        "SoundEffectOpen": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 16
+        },
+        "UIArt": {
+          "dangling": 0,
+          "target": "UIArtAscendancy",
+          "values": 16
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Descendancy.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 124,
+      "row_size_mismatch": null,
+      "rows": 17,
+      "source": "data/descendancy.datc64",
+      "source_sha256": "d6c8326737a0fabe5f574205ba8f430923d482d3c6070eea82f2f309f47d5eb2",
+      "status": "ok"
+    },
+    "FlavourText": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/FlavourText.json",
+      "referenced_by": [
+        "BaseItemTypes"
+      ],
+      "root": false,
+      "row_len": 20,
+      "row_size_mismatch": null,
+      "rows": 2962,
+      "source": "data/flavourtext.datc64",
+      "source_sha256": "5c8c1e24928e95a7c2a26d096048ec975e521be99ce394a81720b1b0cc7b65c5",
+      "status": "ok"
+    },
+    "GemEffects": {
+      "columns": 11,
+      "columns_read": 11,
+      "error": null,
+      "key_columns": {
+        "Consumed_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 267
+        },
+        "GemTags": {
+          "dangling": 0,
+          "target": "GemTags",
+          "values": 7781
+        },
+        "GrantedEffect": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 1292
+        },
+        "GrantedEffect2": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 193
+        },
+        "GrantedEffect2Hardmode": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 1
+        },
+        "GrantedEffectHardmode": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 19
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GemEffects.json",
+      "referenced_by": [
+        "SkillGems"
+      ],
+      "root": false,
+      "row_len": 132,
+      "row_size_mismatch": null,
+      "rows": 1292,
+      "source": "data/gemeffects.datc64",
+      "source_sha256": "914bcdc53b9e8b06f271b17a185c25a5715c56a70b25ccc566ff2216360a7a0e",
+      "status": "ok"
+    },
+    "GemTags": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {
+        "Stat1": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 25
+        },
+        "Stat2": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 14
+        },
+        "Stat3": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 5
+        },
+        "Stat4": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 15
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GemTags.json",
+      "referenced_by": [
+        "GemEffects"
+      ],
+      "root": false,
+      "row_len": 80,
+      "row_size_mismatch": null,
+      "rows": 54,
+      "source": "data/gemtags.datc64",
+      "source_sha256": "fe67a51f409fca3e53daf3f4f7a50a93b2c876f0d90a138c3020a7be4854e08f",
+      "status": "ok"
+    },
+    "GrantedEffectStatSets": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "ConstantStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 27205
+        },
+        "ImplicitStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 21646
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectStatSets.json",
+      "referenced_by": [
+        "GrantedEffects"
+      ],
+      "root": false,
+      "row_len": 68,
+      "row_size_mismatch": null,
+      "rows": 12763,
+      "source": "data/grantedeffectstatsets.datc64",
+      "source_sha256": "4b337e9f36a390c96dda0d1f72f1ba9d93337b033440a308d38eeb34bc4d8d24",
+      "status": "ok"
+    },
+    "GrantedEffects": {
+      "columns": 28,
+      "columns_read": 28,
+      "error": null,
+      "key_columns": {
+        "ActiveSkill": {
+          "dangling": 0,
+          "target": "ActiveSkills",
+          "values": 12372
+        },
+        "AddedActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 220
+        },
+        "AddedMinionActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 8
+        },
+        "AllowedActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 898
+        },
+        "Animation": {
+          "dangling": 0,
+          "target": "Animation",
+          "values": 2870
+        },
+        "ExcludedActiveSkillTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 865
+        },
+        "MultiPartAchievement": {
+          "dangling": 0,
+          "target": "MultiPartAchievements",
+          "values": 203
+        },
+        "RegularVariant": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 60
+        },
+        "StatSet1": {
+          "dangling": 0,
+          "target": "GrantedEffectStatSets",
+          "values": 12829
+        },
+        "StatSet2": {
+          "dangling": 0,
+          "target": "GrantedEffectStatSets",
+          "values": 50
+        },
+        "SupportWeaponRestrictions": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 58
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffects.json",
+      "referenced_by": [
+        "GemEffects",
+        "GrantedEffects",
+        "GrantedEffectsPerLevel",
+        "MonsterVarieties"
+      ],
+      "root": true,
+      "row_len": 235,
+      "row_size_mismatch": null,
+      "rows": 12829,
+      "source": "data/grantedeffects.datc64",
+      "source_sha256": "cf08ec4cd2d8973a0343a21b2779c5b16459221c04db716deaa847d86e1d3c78",
+      "status": "ok"
+    },
+    "GrantedEffectsPerLevel": {
+      "columns": 21,
+      "columns_read": 21,
+      "error": null,
+      "key_columns": {
+        "CostTypes": {
+          "dangling": 0,
+          "target": "CostTypes",
+          "values": 30211
+        },
+        "GrantedEffect": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 80600
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectsPerLevel.json",
+      "referenced_by": [
+        "Characters",
+        "Mods",
+        "PassiveSkillMasteryEffects",
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 120,
+      "row_size_mismatch": null,
+      "rows": 80600,
+      "source": "data/grantedeffectsperlevel.datc64",
+      "source_sha256": "7b59ca85058a65543021db06417d432ada4c434fc887220319f5f9d72da77e53",
+      "status": "ok"
+    },
+    "ImpactSoundData": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ImpactSoundData.json",
+      "referenced_by": [
+        "BloodTypes"
+      ],
+      "root": false,
+      "row_len": 32,
+      "row_size_mismatch": null,
+      "rows": 23,
+      "source": "data/impactsounddata.datc64",
+      "source_sha256": "6f25ea317ec81c42aaa3bfd6c0b9e0d1077b7d669afe0e4d96458f943f6e6cd4",
+      "status": "ok"
+    },
+    "ItemClassCategories": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ItemClassCategories.json",
+      "referenced_by": [
+        "ItemClasses"
+      ],
+      "root": false,
+      "row_len": 32,
+      "row_size_mismatch": null,
+      "rows": 67,
+      "source": "data/itemclasscategories.datc64",
+      "source_sha256": "b62fbdae973b77a6e93d182c9964a5af33bc6dc2f8e64e86cf029451ae56ed9f",
+      "status": "ok"
+    },
+    "ItemClasses": {
+      "columns": 31,
+      "columns_read": 31,
+      "error": null,
+      "key_columns": {
+        "EquipAchievements": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 2
+        },
+        "IdentifyAchievements": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 35
+        },
+        "ItemClassCategory": {
+          "dangling": 0,
+          "target": "ItemClassCategories",
+          "values": 82
+        },
+        "ItemStance": {
+          "dangling": 0,
+          "target": "ItemStances",
+          "values": 18
+        },
+        "PickedUpQuest": {
+          "dangling": 0,
+          "target": "QuestFlags",
+          "values": 5
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ItemClasses.json",
+      "referenced_by": [
+        "ActiveSkills",
+        "BaseItemTypes",
+        "GrantedEffects",
+        "Mods",
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 153,
+      "row_size_mismatch": null,
+      "rows": 103,
+      "source": "data/itemclasses.datc64",
+      "source_sha256": "b4cc75e5747229a8dc692475b5e01e887409d1a749b0b345ec8c9ad6df85cf6d",
+      "status": "ok"
+    },
+    "ItemExperienceTypes": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ItemExperienceTypes.json",
+      "referenced_by": [
+        "SkillGems"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 28,
+      "source": "data/itemexperiencetypes.datc64",
+      "source_sha256": "953e67a516531d42da7b269126eecb837ab7e168b1160c03544408882451e260",
+      "status": "ok"
+    },
+    "ItemStances": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ItemStances.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "ItemClasses"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 11,
+      "source": "data/itemstances.datc64",
+      "source_sha256": "65928323bbf6d69d80848241b08b3a9e204c099146977bbb183f0f2c56b6c85e",
+      "status": "ok"
+    },
+    "ItemVisualEffect": {
+      "columns": 17,
+      "columns_read": 17,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ItemVisualEffect.json",
+      "referenced_by": [
+        "SkillWeaponEffects"
+      ],
+      "root": false,
+      "row_len": 131,
+      "row_size_mismatch": null,
+      "rows": 336,
+      "source": "data/itemvisualeffect.datc64",
+      "source_sha256": "cc6517234e5b3d19e3ce03ce17df1126c64a9bb0c3474d4b36fe1bf22585d5b5",
+      "status": "ok"
+    },
+    "ItemVisualIdentity": {
+      "columns": 61,
+      "columns_read": 61,
+      "error": null,
+      "key_columns": {
+        "Corrupt_AchievementItemsKeys": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 44
+        },
+        "CreateCorruptedJewelAchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 18
+        },
+        "HeistAchievement": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 80
+        },
+        "Identify_AchievementItemsKeys": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 686
+        },
+        "InventorySoundEffect": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 14037
+        },
+        "KalandraAchievement": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 862
+        },
+        "Pickup_AchievementItemsKeys": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 438
+        },
+        "UniqueStat1": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 93
+        },
+        "UniqueStat2": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 33
+        },
+        "UniqueStat3": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 1
+        },
+        "UniqueStat4": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 0
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ItemVisualIdentity.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 604,
+      "row_size_mismatch": null,
+      "rows": 15516,
+      "source": "data/itemvisualidentity.datc64",
+      "source_sha256": "86e4fe3ad6c066964ebeb69937023b8f8a04b11608fefab6398db5d7e38e17f9",
+      "status": "ok"
+    },
+    "MicrotransactionPortalVariations": {
+      "columns": 13,
+      "columns_read": 13,
+      "error": null,
+      "key_columns": {
+        "MiscObject": {
+          "dangling": 0,
+          "target": "MiscObjects",
+          "values": 111
+        },
+        "MtxTypeGameSpecific": {
+          "dangling": 0,
+          "target": "MtxTypeGameSpecific",
+          "values": 300
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MicrotransactionPortalVariations.json",
+      "referenced_by": [
+        "BloodTypes"
+      ],
+      "root": false,
+      "row_len": 98,
+      "row_size_mismatch": null,
+      "rows": 300,
+      "source": "data/microtransactionportalvariations.datc64",
+      "source_sha256": "6b9a02fefaaebc1121636eb7607d92e6e4573e73d4b13f5dc2d02c6f89ba821c",
+      "status": "ok"
+    },
+    "MicrotransactionSkillGemEffectSlotTypes": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/MicrotransactionSkillGemEffectSlotTypes.json",
+      "referenced_by": [
+        "SkillGems"
+      ],
+      "root": false,
+      "row_len": 20,
+      "row_size_mismatch": null,
+      "rows": 2,
+      "source": "data/microtransactionskillgemeffectslottypes.datc64",
+      "source_sha256": "37c751046d493f47aa3c3c0598c3d8319a0d2f8b2fbe4c27ff73b0bdaf9dbf86",
+      "status": "ok"
+    },
+    "MiscAnimated": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {
+        "PreloadGroupsKeys": {
+          "dangling": 0,
+          "target": "PreloadGroups",
+          "values": 552
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MiscAnimated.json",
+      "referenced_by": [
+        "BloodTypes",
+        "BuffVisualOrbArt",
+        "BuffVisuals",
+        "DamageEffectVariations"
+      ],
+      "root": false,
+      "row_len": 44,
+      "row_size_mismatch": null,
+      "rows": 8273,
+      "source": "data/miscanimated.datc64",
+      "source_sha256": "9e46506c92845a2b2e71dd17568325780ba1b9be48e54c95522740e1cde58f38",
+      "status": "ok"
+    },
+    "MiscEffectPacks": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "PreloadGroups": {
+          "dangling": 0,
+          "target": "PreloadGroups",
+          "values": 56
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MiscEffectPacks.json",
+      "referenced_by": [
+        "Characters",
+        "DamageEffectVariations",
+        "MonsterConditionalEffectPacks"
+      ],
+      "root": false,
+      "row_len": 54,
+      "row_size_mismatch": null,
+      "rows": 862,
+      "source": "data/misceffectpacks.datc64",
+      "source_sha256": "64065878c2a625e6825025bc84e9f1d2da0e8930d76cf92747662a3a0691227f",
+      "status": "ok"
+    },
+    "MiscObjects": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {
+        "PreloadGroupsKeys": {
+          "dangling": 0,
+          "target": "PreloadGroups",
+          "values": 280
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MiscObjects.json",
+      "referenced_by": [
+        "MicrotransactionPortalVariations"
+      ],
+      "root": false,
+      "row_len": 44,
+      "row_size_mismatch": null,
+      "rows": 1836,
+      "source": "data/miscobjects.datc64",
+      "source_sha256": "422712f8acb9b7deec89f23b4c7093047c20f67374d52ca8a5551d41abeeb6b6",
+      "status": "ok"
+    },
+    "ModFamily": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ModFamily.json",
+      "referenced_by": [
+        "Mods"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 7844,
+      "source": "data/modfamily.datc64",
+      "source_sha256": "acbdef3596d199dd1492b05a805f8c9bdcf5062d572d625db12eeb5072fe492b",
+      "status": "ok"
+    },
+    "ModSellPriceTypes": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ModSellPriceTypes.json",
+      "referenced_by": [
+        "ModType"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 67,
+      "source": "data/modsellpricetypes.datc64",
+      "source_sha256": "ed002d1c590fa3b6b812e0bb3a67b462f974243957fe694ee7680afbc5635592",
+      "status": "ok"
+    },
+    "ModType": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {
+        "ModSellPriceTypesKeys": {
+          "dangling": 0,
+          "target": "ModSellPriceTypes",
+          "values": 7801
+        },
+        "Stats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 21945
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ModType.json",
+      "referenced_by": [
+        "Mods"
+      ],
+      "root": false,
+      "row_len": 41,
+      "row_size_mismatch": null,
+      "rows": 14554,
+      "source": "data/modtype.datc64",
+      "source_sha256": "6d7e52def860a693f36f1f34f2075b844cfba7fc7fec0ba67ca22bdf93be32b0",
+      "status": "ok"
+    },
+    "Mods": {
+      "columns": 78,
+      "columns_read": 78,
+      "error": null,
+      "key_columns": {
+        "AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 0
+        },
+        "ArchnemesisMinionMod": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 28
+        },
+        "ArchnemesisType": {
+          "dangling": 0,
+          "target": "ModType",
+          "values": 15
+        },
+        "BuffTemplate1": {
+          "dangling": 0,
+          "target": "BuffTemplates",
+          "values": 3145
+        },
+        "BuffTemplate2": {
+          "dangling": 0,
+          "target": "BuffTemplates",
+          "values": 19
+        },
+        "CraftingItemClassRestrictions": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 4278
+        },
+        "Families": {
+          "dangling": 0,
+          "target": "ModFamily",
+          "values": 40583
+        },
+        "FullAreaClear_AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 0
+        },
+        "GenerationWeight_TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 4074
+        },
+        "GrantedEffectRuthless": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 18
+        },
+        "GrantedEffectsPerLevelKeys": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 1719
+        },
+        "HeistAchievements": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 333
+        },
+        "ImplicitTagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 70327
+        },
+        "ModTypeKey": {
+          "dangling": 0,
+          "target": "ModType",
+          "values": 40355
+        },
+        "ModifyMapsAchievements": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 91
+        },
+        "MonsterKillAchievements": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 70
+        },
+        "SpawnWeight_TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 70968
+        },
+        "StatsKey1": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 39863
+        },
+        "StatsKey2": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 13209
+        },
+        "StatsKey3": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 4093
+        },
+        "StatsKey4": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 1940
+        },
+        "StatsKey5": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 891
+        },
+        "StatsKey6": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 541
+        },
+        "StatsKey7": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 114
+        },
+        "StatsKey8": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 44
+        },
+        "TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 5075
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Mods.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "Characters",
+        "GemEffects",
+        "Mods",
+        "MonsterVarieties"
+      ],
+      "root": true,
+      "row_len": 654,
+      "row_size_mismatch": null,
+      "rows": 40355,
+      "source": "data/mods.datc64",
+      "source_sha256": "163f2d3d9b8b3d5fc1045cf78b23d2ffe4d0ae303cc201b89e2bd4bc158400de",
+      "status": "ok"
+    },
+    "MonsterArmours": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/MonsterArmours.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 16,
+      "row_size_mismatch": null,
+      "rows": 217,
+      "source": "data/monsterarmours.datc64",
+      "source_sha256": "7eb7a8ffe03859ad1bd7aa1f2517ae50c26cf7bd8f62d955fc512c58a60834a1",
+      "status": "ok"
+    },
+    "MonsterCategories": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {
+        "Tag": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 6
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MonsterCategories.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 28,
+      "row_size_mismatch": null,
+      "rows": 6,
+      "source": "data/monstercategories.datc64",
+      "source_sha256": "e99252a3dbbf326b5d2380d7d7d1442d18e60275b884f93f5efd1a6ac4c2665b",
+      "status": "ok"
+    },
+    "MonsterConditionalEffectPacks": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {
+        "MiscEffectPack1": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 7
+        },
+        "MiscEffectPack2": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 7
+        },
+        "MiscEffectPack3": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 5
+        },
+        "MiscEffectPack4": {
+          "dangling": 0,
+          "target": "MiscEffectPacks",
+          "values": 0
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MonsterConditionalEffectPacks.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 76,
+      "row_size_mismatch": null,
+      "rows": 9,
+      "source": "data/monsterconditionaleffectpacks.datc64",
+      "source_sha256": "e178b6622709ecb0ce8f24ade8d6f1b289ad70a4cc3759d7efa5b55b4f260698",
+      "status": "ok"
+    },
+    "MonsterResistances": {
+      "columns": 13,
+      "columns_read": 13,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/MonsterResistances.json",
+      "referenced_by": [
+        "MonsterTypes"
+      ],
+      "root": false,
+      "row_len": 56,
+      "row_size_mismatch": null,
+      "rows": 50,
+      "source": "data/monsterresistances.datc64",
+      "source_sha256": "b689a62047872c4b5def671f80f560452165a7060545b34604404d5e914c464e",
+      "status": "ok"
+    },
+    "MonsterSegments": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/MonsterSegments.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 16,
+      "row_size_mismatch": null,
+      "rows": 61,
+      "source": "data/monstersegments.datc64",
+      "source_sha256": "4f70ebf878d27904a68269a04cac9f0f2ef41d45fdc148afc8ffa71ee5257efe",
+      "status": "ok"
+    },
+    "MonsterTypes": {
+      "columns": 11,
+      "columns_read": 11,
+      "error": null,
+      "key_columns": {
+        "Resistances": {
+          "dangling": 0,
+          "target": "MonsterResistances",
+          "values": 3592
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MonsterTypes.json",
+      "referenced_by": [
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 48,
+      "row_size_mismatch": null,
+      "rows": 3600,
+      "source": "data/monstertypes.datc64",
+      "source_sha256": "42cae44fa4d140e6e26bb373737f9a375ef62f3c1c167e26790bb90de792f25e",
+      "status": "ok"
+    },
+    "MonsterVarieties": {
+      "columns": 102,
+      "columns_read": 102,
+      "error": null,
+      "key_columns": {
+        "#63": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 267
+        },
+        "#71": {
+          "dangling": 0,
+          "target": "MultiPartAchievements",
+          "values": 3
+        },
+        "Achievement": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 139
+        },
+        "Back_ItemVisualIdentityKey": {
+          "dangling": 0,
+          "target": "ItemVisualIdentity",
+          "values": 395
+        },
+        "BloodType": {
+          "dangling": 0,
+          "target": "BloodTypes",
+          "values": 10691
+        },
+        "Endgame_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 184
+        },
+        "GrantedEffectsKeys": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 34028
+        },
+        "Helmet_ItemVisualIdentityKey": {
+          "dangling": 0,
+          "target": "ItemVisualIdentity",
+          "values": 140
+        },
+        "KillRare_AchievementItemsKeys": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 1103
+        },
+        "KillSpecificMonsterCount_AchievementItemsKeys": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 543
+        },
+        "KillWhileOnslaughtIsActive_AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 51
+        },
+        "KillWhileTalismanIsActive_AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 37
+        },
+        "MainHand_ItemClassesKey": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 3724
+        },
+        "ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 13914
+        },
+        "ModsKeys2": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 2145
+        },
+        "MonsterArmoursKey": {
+          "dangling": 0,
+          "target": "MonsterArmours",
+          "values": 987
+        },
+        "MonsterCategory": {
+          "dangling": 0,
+          "target": "MonsterCategories",
+          "values": 9607
+        },
+        "MonsterConditionalEffectPacksKey": {
+          "dangling": 0,
+          "target": "MonsterConditionalEffectPacks",
+          "values": 229
+        },
+        "MonsterSegmentsKey": {
+          "dangling": 0,
+          "target": "MonsterSegments",
+          "values": 761
+        },
+        "MonsterTypesKey": {
+          "dangling": 0,
+          "target": "MonsterTypes",
+          "values": 10691
+        },
+        "MultiPartAchievement": {
+          "dangling": 0,
+          "target": "MultiPartAchievements",
+          "values": 48
+        },
+        "OffHand_ItemClassesKey": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 1017
+        },
+        "Part1_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 127
+        },
+        "Part2_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 99
+        },
+        "Special_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 2708
+        },
+        "TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 125725
+        },
+        "Weapon1_ItemVisualIdentityKeys": {
+          "dangling": 0,
+          "target": "ItemVisualIdentity",
+          "values": 4019
+        },
+        "Weapon2_ItemVisualIdentityKeys": {
+          "dangling": 0,
+          "target": "ItemVisualIdentity",
+          "values": 1753
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MonsterVarieties.json",
+      "referenced_by": [
+        "Characters"
+      ],
+      "root": false,
+      "row_len": 794,
+      "row_size_mismatch": null,
+      "rows": 10691,
+      "source": "data/monstervarieties.datc64",
+      "source_sha256": "e94c32cf0cc283e9ec491281faf4e6afd5ba967372a14abea9fd2b3f497e68b4",
+      "status": "ok"
+    },
+    "MtxTypeGameSpecific": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "Type": {
+          "dangling": 0,
+          "target": "MtxTypes",
+          "values": 7849
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MtxTypeGameSpecific.json",
+      "referenced_by": [
+        "MicrotransactionPortalVariations"
+      ],
+      "root": false,
+      "row_len": 68,
+      "row_size_mismatch": null,
+      "rows": 7849,
+      "source": "data/mtxtypegamespecific.datc64",
+      "source_sha256": "2838ee4941a4f2d9859f754fdb898d25c3f082b39c780383d9f1e05d3f5b6e6d",
+      "status": "ok"
+    },
+    "MtxTypes": {
+      "columns": 26,
+      "columns_read": 26,
+      "error": null,
+      "key_columns": {
+        "ShopTag": {
+          "dangling": 0,
+          "target": "ShopTag",
+          "values": 7468
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MtxTypes.json",
+      "referenced_by": [
+        "MtxTypeGameSpecific"
+      ],
+      "root": false,
+      "row_len": 180,
+      "row_size_mismatch": null,
+      "rows": 8557,
+      "source": "data/mtxtypes.datc64",
+      "source_sha256": "b7d1d9be3b13653892a076ffa277822b42054c53b2fe22637a3a509c98a32fd8",
+      "status": "ok"
+    },
+    "MultiPartAchievements": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "AchievementItemsKey": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 168
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/MultiPartAchievements.json",
+      "referenced_by": [
+        "BuffDefinitions",
+        "GrantedEffects",
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 38,
+      "row_size_mismatch": null,
+      "rows": 246,
+      "source": "data/multipartachievements.datc64",
+      "source_sha256": "da0dff305e304c6fddc2383f5571bd44efbd9b2a8a746dbb6c477daab4c282b8",
+      "status": "ok"
+    },
+    "PassiveSkillMasteryEffects": {
+      "columns": 8,
+      "columns_read": 8,
+      "error": null,
+      "key_columns": {
+        "AchievementItem": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 352
+        },
+        "GrantedEffect": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 1
+        },
+        "Stats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 393
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkillMasteryEffects.json",
+      "referenced_by": [
+        "PassiveSkillMasteryGroups"
+      ],
+      "root": false,
+      "row_len": 70,
+      "row_size_mismatch": null,
+      "rows": 354,
+      "source": "data/passiveskillmasteryeffects.datc64",
+      "source_sha256": "790dfce143ca1a77ef6d31f168c9eed49b16d12590c0bfbe8c9a97f68398d467",
+      "status": "ok"
+    },
+    "PassiveSkillMasteryGroups": {
+      "columns": 8,
+      "columns_read": 8,
+      "error": null,
+      "key_columns": {
+        "MasteryCountStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 61
+        },
+        "MasteryEffects": {
+          "dangling": 0,
+          "target": "PassiveSkillMasteryEffects",
+          "values": 353
+        },
+        "SoundEffect": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 61
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkillMasteryGroups.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 81,
+      "row_size_mismatch": null,
+      "rows": 61,
+      "source": "data/passiveskillmasterygroups.datc64",
+      "source_sha256": "bc2839744427a062b8b3b91ac5948b197ae37983d58790db0004e3ec65d0d229",
+      "status": "ok"
+    },
+    "PassiveSkillStatCategories": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkillStatCategories.json",
+      "referenced_by": [
+        "Stats"
+      ],
+      "root": false,
+      "row_len": 16,
+      "row_size_mismatch": null,
+      "rows": 20,
+      "source": "data/passiveskillstatcategories.datc64",
+      "source_sha256": "09f3753ba0838b77c5d3d9274fd07a0b6a4499b19f0112f8618792672aac33d1",
+      "status": "ok"
+    },
+    "PassiveSkillTreeUIArtAscendancy": {
+      "columns": 14,
+      "columns_read": 14,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkillTreeUIArtAscendancy.json",
+      "referenced_by": [
+        "Descendancy"
+      ],
+      "root": false,
+      "row_len": 112,
+      "row_size_mismatch": null,
+      "rows": 15,
+      "source": "data/passiveskilltreeuiartascendancy.datc64",
+      "source_sha256": "a21b6288afd350cbdbc78033969b3dcdd7bdb122a8754f71ad1fc681e3cfc7c0",
+      "status": "ok"
+    },
+    "PassiveSkills": {
+      "columns": 51,
+      "columns_read": 51,
+      "error": null,
+      "key_columns": {
+        "AchievementItem": {
+          "dangling": 0,
+          "target": "AchievementItems",
+          "values": 1198
+        },
+        "AscendancyKey": {
+          "dangling": 0,
+          "target": "Ascendancy",
+          "values": 828
+        },
+        "AtlasGroup": {
+          "dangling": 0,
+          "target": "AtlasPassiveSkillTreeGroupType",
+          "values": 161
+        },
+        "BrequelSubTree": {
+          "dangling": 0,
+          "target": "BrequelPassiveSubTrees",
+          "values": 144
+        },
+        "BuffsHardmode": {
+          "dangling": 0,
+          "target": "BuffTemplates",
+          "values": 37
+        },
+        "Characters": {
+          "dangling": 0,
+          "target": "Characters",
+          "values": 7
+        },
+        "DescendancyKey": {
+          "dangling": 0,
+          "target": "Descendancy",
+          "values": 149
+        },
+        "GrantedEffectsPerLevel": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 50
+        },
+        "GrantedEffectsPerLevelHardmode": {
+          "dangling": 0,
+          "target": "GrantedEffectsPerLevel",
+          "values": 50
+        },
+        "MasteryGroup": {
+          "dangling": 0,
+          "target": "PassiveSkillMasteryGroups",
+          "values": 316
+        },
+        "PassiveSkillBuffs": {
+          "dangling": 0,
+          "target": "BuffTemplates",
+          "values": 48
+        },
+        "ReminderStrings": {
+          "dangling": 0,
+          "target": "ReminderText",
+          "values": 106
+        },
+        "SoundEffect": {
+          "dangling": 0,
+          "target": "SoundEffects",
+          "values": 51
+        },
+        "Stats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 8018
+        },
+        "StatsHardmode": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 1029
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkills.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 354,
+      "row_size_mismatch": null,
+      "rows": 5706,
+      "source": "data/passiveskills.datc64",
+      "source_sha256": "83763d4491f00d85500b6b998dd086472550650738d7a3f16353b5e3d4474020",
+      "status": "ok"
+    },
+    "PreloadGroups": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/PreloadGroups.json",
+      "referenced_by": [
+        "BuffVisuals",
+        "MiscAnimated",
+        "MiscEffectPacks",
+        "MiscObjects"
+      ],
+      "root": false,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 79,
+      "source": "data/preloadgroups.datc64",
+      "source_sha256": "941ec7d16dc2402671a7883f3a370f38bf2ab43e00435b6c21af75beca4cb01a",
+      "status": "ok"
+    },
+    "QuestFlags": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/QuestFlags.json",
+      "referenced_by": [
+        "ItemClasses"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 3999,
+      "source": "data/questflags.datc64",
+      "source_sha256": "0f8b2f2722f769330ae25bf1e0ff538c8bb6e1baf6595bae7372a94995edc339",
+      "status": "ok"
+    },
+    "ReminderText": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/ReminderText.json",
+      "referenced_by": [
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 24,
+      "row_size_mismatch": null,
+      "rows": 468,
+      "source": "data/remindertext.datc64",
+      "source_sha256": "09667a176d63f0772644ee224fc524151ecf8e9c07924d2834e2a49d2aec290b",
+      "status": "ok"
+    },
+    "ShopTag": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "#7": {
+          "dangling": 0,
+          "target": "ShopTag",
+          "values": 47
+        },
+        "Category": {
+          "dangling": 0,
+          "target": "ShopTag",
+          "values": 686
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ShopTag.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "MtxTypes",
+        "ShopTag"
+      ],
+      "root": false,
+      "row_len": 51,
+      "row_size_mismatch": null,
+      "rows": 953,
+      "source": "data/shoptag.datc64",
+      "source_sha256": "8206f9ceb0b96ab3e4d68693550c2343c076c50ed5bb128919883b20e1cea05a",
+      "status": "ok"
+    },
+    "SkillGems": {
+      "columns": 19,
+      "columns_read": 19,
+      "error": null,
+      "key_columns": {
+        "AwakenedVariant": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 47
+        },
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 847
+        },
+        "GemVariants": {
+          "dangling": 0,
+          "target": "GemEffects",
+          "values": 1292
+        },
+        "ItemExperienceType": {
+          "dangling": 0,
+          "target": "ItemExperienceTypes",
+          "values": 847
+        },
+        "MinionGlobalSkillLevelStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 6
+        },
+        "MtxSlotTypes": {
+          "dangling": 0,
+          "target": "MicrotransactionSkillGemEffectSlotTypes",
+          "values": 850
+        },
+        "RegularVariant": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 55
+        },
+        "VaalVariant_BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 51
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/SkillGems.json",
+      "referenced_by": [
+        "Characters",
+        "SkillGems"
+      ],
+      "root": false,
+      "row_len": 135,
+      "row_size_mismatch": null,
+      "rows": 847,
+      "source": "data/skillgems.datc64",
+      "source_sha256": "fa6fd79e7ff09220cd240f1beb100b3b320de422393a30d5e6605c5d9a63a8b1",
+      "status": "ok"
+    },
+    "SkillWeaponEffects": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {
+        "VisualEffect": {
+          "dangling": 0,
+          "target": "ItemVisualEffect",
+          "values": 4
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/SkillWeaponEffects.json",
+      "referenced_by": [
+        "BuffVisuals"
+      ],
+      "root": false,
+      "row_len": 33,
+      "row_size_mismatch": null,
+      "rows": 4,
+      "source": "data/skillweaponeffects.datc64",
+      "source_sha256": "d52b14487f878ff3faf834bdc20d07a56f69d0a9270447653b6fe13f02353fee",
+      "status": "ok"
+    },
+    "SoundEffects": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/SoundEffects.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "BuffVisualOrbArt",
+        "Descendancy",
+        "ItemVisualIdentity",
+        "PassiveSkillMasteryGroups",
+        "PassiveSkills"
+      ],
+      "root": false,
+      "row_len": 33,
+      "row_size_mismatch": null,
+      "rows": 864,
+      "source": "data/soundeffects.datc64",
+      "source_sha256": "24662e64e90792eac5fb6e183a6b604ccb3d91272e594e65597420886999b16e",
+      "status": "ok"
+    },
+    "Stats": {
+      "columns": 18,
+      "columns_read": 18,
+      "error": null,
+      "key_columns": {
+        "Category": {
+          "dangling": 0,
+          "target": "PassiveSkillStatCategories",
+          "values": 1666
+        },
+        "ContextFlags": {
+          "dangling": 0,
+          "target": "VirtualStatContextFlags",
+          "values": 2092
+        },
+        "DotFlag": {
+          "dangling": 0,
+          "target": "VirtualStatContextFlags",
+          "values": 15
+        },
+        "MainHandAlias_StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 169
+        },
+        "OffHandAlias_StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 173
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Stats.json",
+      "referenced_by": [
+        "ActiveSkillType",
+        "ActiveSkills",
+        "Animation",
+        "BuffDefinitions",
+        "BuffTemplates",
+        "BuffVisualOrbTypes",
+        "CostTypes",
+        "GemTags",
+        "GrantedEffectStatSets",
+        "ItemVisualIdentity",
+        "ModType",
+        "Mods",
+        "PassiveSkillMasteryEffects",
+        "PassiveSkillMasteryGroups",
+        "PassiveSkills",
+        "SkillGems",
+        "Stats"
+      ],
+      "root": true,
+      "row_len": 105,
+      "row_size_mismatch": null,
+      "rows": 23362,
+      "source": "data/stats.datc64",
+      "source_sha256": "619fced1bbbb7c32a898721ed36c948f852b5728c8e7bf1fbcca518e3abe4256",
+      "status": "ok"
+    },
+    "Tags": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/Tags.json",
+      "referenced_by": [
+        "BaseItemTypes",
+        "Mods",
+        "MonsterCategories",
+        "MonsterVarieties"
+      ],
+      "root": false,
+      "row_len": 28,
+      "row_size_mismatch": null,
+      "rows": 1389,
+      "source": "data/tags.datc64",
+      "source_sha256": "b83f729f254f030e8a1e6674257092c629dbe55a057c79707d1cfbe4712cc8af",
+      "status": "ok"
+    },
+    "UIArtAscendancy": {
+      "columns": 14,
+      "columns_read": 14,
+      "error": null,
+      "key_columns": {
+        "ClientStrings": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 15
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/UIArtAscendancy.json",
+      "referenced_by": [
+        "Descendancy"
+      ],
+      "root": false,
+      "row_len": 116,
+      "row_size_mismatch": null,
+      "rows": 15,
+      "source": "data/uiartascendancy.datc64",
+      "source_sha256": "3ce9d11ab80270d6ce2a4efc5b8caee35f5ff6a98837fed9ba1da9b299b5362c",
+      "status": "ok"
+    },
+    "VirtualStatContextFlags": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/VirtualStatContextFlags.json",
+      "referenced_by": [
+        "ActiveSkills",
+        "Stats"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 40,
+      "source": "data/virtualstatcontextflags.datc64",
+      "source_sha256": "17079242b5cfc3a284b2cc2ebe79b4d19a04228ac1a72ae6db53d3edd03f9107",
+      "status": "ok"
+    }
+  },
+  "text_language": "English"
+}

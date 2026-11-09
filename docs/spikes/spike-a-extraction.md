@@ -2,7 +2,7 @@
 
 Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
 
-Status (2026-11-08, PR A3): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3). No gate result yet.
+Status (2026-11-09, PR A4): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11). Gate items 1 and 4 met; 2 and 3 pending (A5, A6).
 
 ## 1. Existing crates (survey, 2026-11-08)
 Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
@@ -153,3 +153,35 @@ Layout as documented by the community (`poe-tool-dev/dat-schema`, MIT, vendored;
 - **Determinism:** by construction (`BTreeMap` everywhere output is assembled, file row order, no parallel assembly), checked by the unit test `extract_should_not_depend_on_add_order` (same bytes whichever order tables arrive in, which `read_files` sets by bundle) and a golden manifest test. Two-run check: `tools/extractor/scripts/check-determinism.sh <install> <game>` (output in `local/determinism/<game>/`).
 
 ## 11. Evidence (PR A4)
+- CI tests (`cargo test -p loom-extractor`):
+  - Plan: transitive closure, enum references not followed, a table with no schema still planned, per-game differences.
+  - Exact table JSON for a synthetic two-row table: escaped and non-ASCII strings, null keys, arrays, `0.1_f32` written as `0.1`, NaN as a string.
+  - Number formatting: shortest `f32` round-trip (`0.1`, `-0.0`, `1e-7`, `3.4028235e+38`), `u64` keys above 2^53 kept exact, non-finite floats counted inside intervals and arrays.
+  - Every order of adding three tables gives byte-identical files and manifest.
+  - Golden manifest with sorted keys.
+  - Key range checks: `foreignrow`, `row` self keys, keys above `usize`, keys into an undecoded target left unchecked; `key_target` for every column shape.
+  - `problems()`: failed table, root not decoded, root with a row-size mismatch, dangling keys.
+  - A failed table and a mismatched table in one run.
+  - Rejected `add` paths: unplanned, schema-less, a language copy, wrong extension, duplicate.
+  - `read_files` returns bundle hashes.
+  - Steam `.acf` parsing and build-ID lookup.
+  - `planned_files`: match ignoring case, missing file, a path listed twice.
+  - `write_output`: written through `.partial` and renamed; an existing output or partial folder is refused.
+- Maintainer workstation run, 2026-11-09. Tree clean at extractor commit `d047e4a` (manifest `dirty: false`), `unoodle` 0.5.7, release build. `tools/extractor/scripts/check-determinism.sh` ran `extract` twice per game and compared every file byte for byte. The manifests are committed unchanged (they hold no machine paths) as `docs/spikes/spike-a/manifest-poe1-26474023.json` and `manifest-poe2-26476662.json`.
+
+| | PoE1 | PoE2 |
+|---|---|---|
+| Steam build / index SHA-256 | 26474023 / `60264b4f…cdcbf19ac` | 26476662 / `9342956e…c9cdad7ed9` |
+| Tables planned (roots + referenced) | 72 | 85 |
+| Status | 72 `ok` | 84 `ok`, 1 `row-size-mismatch` (`ItemVisualIdentity` 968 -> 992 bytes, all 90 schema columns read; section 9) |
+| Rows written | 308,214 | 224,218 |
+| Bundles read | 21 | 61 |
+| Key columns / key values checked / dangling | 262 / 905,891 / 0 | 322 / 388,069 / 0 |
+| Non-finite floats | 0 | 0 |
+| Root rows (Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects) | 23,362, 40,355, 5,461, 5,706, 1,941, 12,829 | 27,299, 16,911, 5,496, 9,731, 1,148, 8,350 |
+| Two runs identical | 73 files | 86 files |
+| Manifest SHA-256 | `64a9e8eb627b9269a50b0d4002dca6de9dea908dacf7426da04787b669189471` | `952e63fdc5d206e519409e39dc665516fcb728ecb6fe7e7c047bcbac2a658ff6` |
+| Time per run | about 4 s | about 12 s |
+
+  Gate items this covers: 1 (determinism, both games) and 4 (recorded inputs: build ID, index hash, schema commit and hash, extractor commit, `dirty: false`). Gate 3 is partial: every row-size mismatch of an extracted table is in the manifest with a status; stat-description constructs are A5. Gate 2 (coverage against PoB) is A6.
+- Not exposed: trailing bytes of rows wider than the schema (`ItemVisualIdentity` in PoE2). Their width is in the manifest; reading them needs a schema update, not extractor work.
