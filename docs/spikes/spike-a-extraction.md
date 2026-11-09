@@ -30,7 +30,7 @@ Options put to the maintainer: (a) run a separately installed decoder across a p
 - The decoder is a maintainer workstation tool, like a compiler. It is not distributed by this project and never reaches end users (ADR-005: users get signed bundles only).
 - The manifest (A4) must record the decoder program and version, because outputs depend on it.
 - Why not (c): RePOE itself decodes with PyPoE, which uses ooz, so it does not remove GPL code from the pipeline; it only hides it. Its data files are GGG-owned (RePOE `LICENSE.md`), the same as ours.
-- ADR-005 is unchanged: the extractor is still the project's own Rust code; only Oodle decoding is delegated.
+- Recorded as ADR-005 Amendment 1 (`docs/adr/005-build-and-data-compatibility.md`), approved by merging PR #6. The extractor is still the project's own Rust code; only Oodle decoding is delegated.
 
 Performance (PoE1 `_.index.bin`, maintainer workstation): one call per 256 KiB chunk takes about 27 ms per spawn; one call on all chunks concatenated decodes 33.4 MB in about 0.1 s and matches the per-chunk output. A2 uses one call per bundle.
 
