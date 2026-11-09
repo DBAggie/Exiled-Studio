@@ -3,7 +3,7 @@
 Read `AGENTS.md` first: crate boundaries, commands, code expectations, and the PR evidence rule. This file adds Claude Code specifics.
 
 ## Status
-Phase 0 (bootstrap) is done. Spike A (game-data extraction, `docs/plan/ACTION-PLAN.md`) is done: gate **met**, A6b merged 2026-11-09; task docs in `dev/completed/spike-a-bundles2-extraction/`. Spike B (text to stat-ID resolution) is planned in `dev/active/spike-b-text-stat-resolution/` (PR B0, reviewed by `plan-reviewer`); next is PR B1. Do not start work for a later step before the earlier gate passes.
+Phase 0 (bootstrap) is done. Spike A (game-data extraction, `docs/plan/ACTION-PLAN.md`) is done: gate **met**, A6b merged 2026-11-09; task docs in `dev/completed/spike-a-bundles2-extraction/`. Spike B (text to stat-ID resolution) is in progress in `dev/active/spike-b-text-stat-resolution/` (PR B0 merged; PR B1, stat-description model and renderer in `loom-data`, in review); next is PR B1x (extractor roots for lookup tables). Do not start work for a later step before the earlier gate passes.
 
 ## One PR per session
 Each PR is done in a fresh session. Before opening the PR, update every document it made stale (the handoff's Current state and Next action on every PR; the full list is in `AGENTS.md`, "One PR per session"). Run `/dev-docs-update` for planned tasks. The next session must be able to resume from the repository alone.

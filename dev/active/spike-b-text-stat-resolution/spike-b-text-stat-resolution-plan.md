@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B0: plan, plan-reviewer findings applied)
+Last Updated: 2026-11-09 (PR B1: model and renderer; lookup tables confirmed in the schema)
 
 # Spike B: text to stat-ID resolution (plan)
 
@@ -6,6 +6,7 @@ Last Updated: 2026-11-09 (PR B0: plan, plan-reviewer findings applied)
 Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item modifier text can be resolved to `(stat_id, values)` by reverse-matching the game's stat-description tables that Spike A extracts (ADR-015), without PoB's text patterns (`ModParser.lua`). The corpus is the maintainer's PoE1 builds. Spike C (oracle harness) and Phase 2 (PoB XML import through stat resolution) build on this.
 
 ## Current state (2026-11-09)
+- **PR B0 merged** (PR #13, `c71fa9c`). **PR B1 in review**: `loom-data::stat_desc` (model, loader, `Scope`, markup stripping, renderer) and `loom-parity-cli load-statdesc`; both extracts load with 0 problems (context file, "PR B1"). Next: PR B1x.
 - Spike A is done (gate met, PR #12 merged as `6f6bf83`). `loom-extractor extract` writes the stat-description files as JSON: `stat_descriptions/<file>.json` with `descriptions[]` (`stats`, `variants[]` with `conditions`, `flags`, `handlers`, `placeholders`, `text`), `includes`, `no_description`. PoE1 build 26530219: 44 files, 17,739 descriptions, 26,794 English variants, 0 unparsed lines. Reading notes: Spike A context file (`dev/completed/spike-a-bundles2-extraction/`), "For Spike B".
 - `loom-parser` and `loom-data` are empty core crates (wasm32; their `clippy.toml` bans fs and env, **also in tests**, since clippy runs with `--all-targets`). `tools/parity-cli` is an empty skeleton (depends on `loom-domain`, `loom-serialization`).
 - Corpus: `D:\Documents\Path of Building\Builds` holds **21** PoB XML files (maintainer, 2026-11-09: 21 is correct; ADR-007 and the ACTION-PLAN say 22, corrected in B4b). All are `targetVersion="3_0"`. Survey on 2026-11-09 (throwaway scripts, not committed):
@@ -33,12 +34,21 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 - **Numeric handlers:** inverted before the condition check (conditions apply to raw stat values). Lossy handlers give an interval; rounding follows the handler's own semantics, with PoB's `applySpecial` (`v2.67.2:src/Modules/StatDescriber.lua`) as cited reference for non-obvious cases (`divide_by_ten_1dp`, `per_minute_to_per_second`, `divide_by_one_hundred_and_negate` round to 1 dp). The handler list comes from the extract manifest (`stat_descriptions.handlers`); an unknown handler is `parser-gap/unsupported-handler`, never ignored.
 - **Lookup handlers** render a key into another table's name. Inverse = name to key, which needs the table.
 
-  | Handler | Corpus use | Needs |
-  |---|---|---|
-  | `tree_expansion_jewel_passive` | cluster `Added Small Passive Skills grant: ...` (56) | `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels` (+ the passive's stats, rendered through `passive_skill_stat_descriptions`) |
-  | `passive_hash` | anoint `Allocates <notable>` (35) | `PassiveSkills` (in the extract) |
-  | `display_indexable_support`, `display_indexable_non_active_support`, `display_indexable_skill` | `Socketed Gems are Supported by ...` (26) and `Grants Level ...` lines | gem and skill tables (to confirm; `GrantedEffects`, `ActiveSkills` are extracted, indexable-support tables may not be) |
-  | `mod_value_to_item_class`, `affliction_reward_type`, `weapon_tree_unique_base_type_name`, `tempest_mod_text` | none found yet | named table per handler (to confirm) |
+  | Handler | Corpus use | Needs (vendored schema, checked in B1) | Extracted? |
+  |---|---|---|---|
+  | `tree_expansion_jewel_passive` | cluster `Added Small Passive Skills grant: ...` (56) | `PassiveTreeExpansionSkills` (`PassiveSkillsKey`, `PassiveTreeExpansionJewelSizesKey`), `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes` (+ the passive's stats, rendered through `passive_skill_stat_descriptions`) | no (B1x) |
+  | `passive_hash` | anoint `Allocates <notable>` (35) | `PassiveSkills.PassiveSkillGraphId` -> `Name` | yes |
+  | `display_indexable_support` | `Socketed Gems are Supported by ...` (26, with the next row) | `IndexableSupportGems` (`Index`, `Name`) | no (B1x) |
+  | `display_indexable_non_active_support` (PoE1) | same | `IndexableNonActiveSupportGems` (`Index`, `Name`) | no (B1x) |
+  | `display_indexable_skill` (PoE1) | `+n to Level of all <skill> Gems` | `IndexableSkillGems` (`Index`, `Name1`, `Name2`) | no (B1x) |
+  | `mod_value_to_item_class` | none found | `ItemClasses` (key form to confirm in B2b) | yes |
+  | `affliction_reward_type` | none found | `AfflictionRewardTypeVisuals` (`AfflictionRewardTypes` enum, `Name`) | no |
+  | `weapon_tree_unique_base_type_name` (PoE1) | none found | `WeaponPassiveTreeUniqueBaseTypes` -> `BaseItemTypes.Name` (hypothesis) | no |
+  | `tempest_mod_text` | none found | no table found in the schema | - |
+  | `mages_legacy_index` (PoE2) | n/a (PoE1 gate) | `UniqueMagesLegacy` (`DisplayText`) | no |
+  | `passive_keystone_index` (PoE2) | n/a | `PassiveKeystoneList` (`DisplayText`) | no |
+  | `specific_skill` (PoE2) | n/a | `SkillGemsForUniqueStat` (`Index`, `SkillGems`) (hypothesis) | no |
+  | `ultimatum_wager_type_hash` (PoE2) | n/a | `UltimatumWagerTypes` (`HASH16`, `DisplayText`) | no |
 
   Tables not yet extracted are added by an extractor PR (B1x) before the resolver needs them. A lookup handler whose table is missing gives `parser-gap/unsupported-handler`, not a data gap.
 - **Values:** a ranged line (`{range:r}` or `<ModRange>`, text `(a-b)`) resolves to the interval `[a, b]`, with `r` and any catalyst quality recorded as data. Spike B does **not** compute the rolled value: `v2.67.2:src/Modules/ItemTools.lua` `itemLib.applyRange` adds per-range ranges, the antonym rewrite of negative increased to reduced, `data.modScalability` precision, and catalyst scaling (`Item.lua` `getCatalystScalar`). Reproducing it is Phase 2 import work. The gate counts stat IDs; `mod-backed` compares intervals.
@@ -59,7 +69,7 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 - **Depends on:** Spike A output.
 
 ### 1x. Extractor roots for lookup tables (S-M)
-- In B1 (or B0's measurement), confirm each lookup handler's table in the schema; add the missing ones as `extract` roots (at least `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`); determinism re-run on both games; manifests replaced in `docs/spikes/spike-a/`.
+- Tables confirmed in B1 (table above). Add the corpus-relevant ones as `extract` roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems` (others optional, recorded if left out); determinism re-run on both games; manifests replaced in `docs/spikes/spike-a/`.
 - **Accept:** extractor unit tests unchanged or extended; determinism holds; the tables are `ok` in the manifest.
 - **Depends on:** nothing in Spike B; must merge before B2b.
 

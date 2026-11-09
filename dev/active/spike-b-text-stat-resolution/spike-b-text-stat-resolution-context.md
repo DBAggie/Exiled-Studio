@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B0: plan, plan-reviewer findings applied)
+Last Updated: 2026-11-09 (PR B1: model, renderer, load-statdesc)
 
 # Spike B: context
 
@@ -12,7 +12,9 @@ Last Updated: 2026-11-09 (PR B0: plan, plan-reviewer findings applied)
 - `dev/completed/spike-a-bundles2-extraction/spike-a-bundles2-extraction-context.md`, "For Spike B": how to read `stat_descriptions/**/*.json`.
 - `docs/spikes/spike-a-extraction.md`, sections 12 (stat-description grammar; markup left to Spike B) and 13 (A5 results).
 - `tools/extractor/src/statdesc.rs`: writer of the JSON the `loom-data` loader reads.
-- `crates/loom-data`, `crates/loom-parser`, `tools/parity-cli`: empty skeletons today.
+- `crates/loom-data/src/stat_desc/` (PR B1): model (`mod.rs`), loader (`load.rs`), markup and placeholders (`template.rs`), handler semantics table (`handler.rs`), include chain (`scope.rs`), renderer (`render.rs`).
+- `tools/parity-cli/src/load_statdesc.rs` (PR B1): `load-statdesc` checks and counts.
+- `crates/loom-parser`: still empty (B2a).
 
 ## Inputs on the maintainer workstation
 - Corpus: `D:\Documents\Path of Building\Builds` (21 XML files). Never commit anything from it unscrubbed.
@@ -36,6 +38,27 @@ Verdict: proceed with changes. All applied in this plan:
 - ADR items: cite `v2.67.2:` only; precedence marked PoB-observed; PoB used as cross-check only, stated.
 - Should-fix: scope by `ModDomain` (not item class); independent `render-check`; normalization details (markup, literal digits, `gem_quality`, dedupe by description, two-line variants); Mods filter without spawn-tag rejection, same definition for `mod-backed`; exclusion bounds and distinct rate; B2 and B4 split.
 - Nits: `pob_item` placement reason, alt variants, second-level category for unique lines, item-set mention removed, `parity-cli` deps and description, handoff wording, Steam build check before B3.
+
+## PR B1: model, renderer, `load-statdesc` (branch `spike-b/b1-statdesc-model`)
+- PR B0 (#13) merged 2026-11-09 as `c71fa9c`.
+- **Survey of the real text (2026-11-09, throwaway script in the session scratchpad):** escapes are only `
+` (backslash, `n`; PoE1 1,185, PoE2 1,257); no `%%`. Markup: `<tag>{{text}}` (305 `<enchanted>`, `<crafting*>`, `<nemesismod>`, `<necropolisdownside>`, `<normal>`); the `{{ }}` belong to the markup, no literal braces occur elsewhere. `[Ref|Text]` and `[Text]` (PoE2 about 24,000; PoE1 253, `[DNT]` among them); `[ArmourBreak|Break {0}% of Armour]` holds a placeholder; `<<Icon>>` only in PoE2 (33). Placeholder formats: `""`, `d`, `+d`, `+` (PoE1 2, `{0:+}`), `-d` (PoE2 5, Abyssal Wasting). Handed descriptions: PoE1 5 (`weapon_*_damage_range`), PoE2 0. Every file has at most one include.
+- **Decisions:**
+  - Markup is stripped before placeholders are parsed: `<tag>{{x}}` -> `x`, `[A|B]` -> `B`, `[A]` -> `A`, `<<I>>` removed; rendered lines are trimmed and empty lines dropped. The extractor's `placeholders` list is checked against our parse (`PlaceholderMismatch` per variant, not a load error).
+  - Handler semantics are a table (`NUMERIC_HANDLERS`) with a `Basis`: `PobCited` reproduces `applySpecial` exactly (rounding with PoB `round` = `floor(x*10^d+0.5)`, `%d` truncation where PoB sets no `fmt`, `%g` where it sets `"g"`, `%.2f` for `deciseconds_to_seconds`); `NameDerived` (9 names: `add_one`, `subtract_one`, `divide_by_three`, `divide_by_fifty`, `divide_by_ten_thousand_1dp`, `divide_by_one_hundred_0dp`, `milliseconds_to_seconds_halved`, `multiply_by_one_hundred`, `multiply_by_ten`) follow the same conventions. Neither is game evidence; B2b's `render-check` tests them. `old_leech_percent`, `old_leech_permyriad`, `one_hundred_divide_by_value` stay `Unknown` (no reference, ambiguous name) and the renderer reports them. Placeholder format `-d` is kept as `Other` and reported (`unsupported-format`), not guessed.
+  - Known difference from PoB in the renderer: a signed range with fractional values is written with the value format, where PoB writes `%d` (`+(%d-%d)`). Not a divergence-register item yet (Spike C defines the register; B2b's `render-check` will show whether it matters).
+  - Variant choice tests conditions on the raw range minimum (PoB `matchLimit`); `gem_quality` and `table_only` variants are skipped unless the caller asks (`VariantFilter`).
+  - Include precedence: own file, then includes depth-first in written order (PoB has one parent per file; with at most one include in both installs the order question does not arise yet).
+  - Lookup handlers render through a host `Lookup` trait; a missing name, a range, an unknown or malformed handler, an unknown flag, an unknown format, or a variant that renders no text (`empty-line`) is a `NotRenderedReason`, and every input stat that is not rendered (also value 0, no description, declared `no_description`) is returned with its reason.
+  - Problems confined to one variant never fail the file load: an unknown variant flag is kept (`unknown_flags`), a handler with a bad argument becomes `Handler::Malformed`, a bad format text keeps its `TemplateError`. File-level shape errors (unknown JSON fields, condition count, hands) still fail the load.
+  - Duplicate stats within one file: the first description in file order wins (hypothesis, test `scope_should_use_the_first_description_of_a_stat_within_one_file`); B2b counts affected lines.
+  - A range is written as one value only when the numbers are equal (PoB compares `v.min == v.max`), so `%d` can write `(10-10)` like PoB.
+  - Lookup tables read from the vendored schema (plan table): six corpus-relevant tables are missing from the extract and go to B1x; key forms (row index, `Index` column, hash) are confirmed in B2b.
+- **Results** (`loom-parity-cli load-statdesc local/determinism/<game>/run1`, extracts from tool commit `b4eebe0`; output in `local/load-statdesc/`, two runs byte-identical): **0 problems on both games.**
+  - PoE1 26530219: 44 files, 17,739 descriptions, 26,794 variants (equal to the manifest), 5 handed, 34 `gem_quality`. Handlers: 7,139 numeric PoB-cited, 7 name-derived, 35 lookup, 4,875 display, 25 unknown (`old_leech_percent` 14, `old_leech_permyriad` 11). 0 template errors. Longest chain 7 files. Render smoke: 26,055 rendered, 689 rendered by an earlier variant (the chosen test value also fits it), 34 `missing-lookup`, 25 `unknown-handler`, 1 `empty-line` (`map_additional_red_beasts` with `map_bestiary_league` 0: the game file's text is `""`, a deliberately hidden line). No unknown flags, no malformed handlers.
+  - PoE2 26476662: 589 files, 19,657 descriptions, 29,837 variants, 203 `gem_quality`, 1,621 `table_only`. Handlers: 9,468 PoB-cited, 25 name-derived, 38 lookup, 256 display, 2 unknown (`one_hundred_divide_by_value`). 0 template errors. Longest chain 6. Smoke: 29,099 rendered, 694 earlier variant, 37 `missing-lookup`, 2 `unknown-handler`, 5 `unsupported-format`.
+- **`code-architecture-reviewer` (2026-11-09):** no blockers. Should-fix applied: unknown flags and bad handler arguments no longer fail the file (above); `EmptyLine` reason (it found the PoE1 case above); numeric `min == max` like PoB with a test; duplicate-stat rule documented and tested; table test of every PoB-cited handler against hand-computed `applySpecial` output (42 handlers). Reviewer's stack-overflow finding on nested `<tag>{{` was checked and does not hold: a block ends at the first `}}`, so recursion stops at the second level; a 100,000-deep input fails as `UnclosedMarkup` (regression test kept, no depth guard). Nits applied: duplicate `insert` is a `load-statdesc` problem, `StatValue` `min <= max` documented, `Scope::descriptions()` added for B2a. Left for B2a: `NumericHandler::invert` (rounded handlers map a shown value to a raw interval), a name-to-handler map instead of the linear search, a note that `Template` drops the `[Ref|...]` reference (fine for matching shown text).
+- **Verify:** `cargo test -p loom-data -p loom-parity-cli`; `cargo run --release -p loom-parity-cli -- load-statdesc local/determinism/poe1/run1` (exit 0, `problems: []`); wasm32 build of the core crates.
 
 ## Open questions for the maintainer
 - None now. Exclusion rules beyond the three named ones, if B4b finds a need, come to the maintainer in that PR.

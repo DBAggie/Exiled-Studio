@@ -24,7 +24,7 @@ crates/
   loom-tauri          shell  Tauri 2 desktop app
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
-  parity-cli          loom-parity-cli: thin oracle harness
+  parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes
 ```
@@ -72,6 +72,8 @@ tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
 # Cross-check an extract output against a PoB checkout cloned into local/ (never the legacy repo);
 # writes report.json and summary.json, exits 1 while the gate is not met:
 cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game poe1|poe2 --out local/cross-check/<game>/<build>
+# Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
+cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<build>
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
