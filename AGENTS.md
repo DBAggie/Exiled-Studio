@@ -61,6 +61,9 @@ cargo deny --all-features --locked check licenses bans sources
 #   cargo install --locked oozextract@0.5.7 --features cli
 # Set LOOM_POE1_INSTALL and/or LOOM_POE2_INSTALL to the game folders, then:
 cargo test -p loom-extractor --test install_decompress -- --ignored --nocapture
+cargo test --release -p loom-extractor --test install_index -- --ignored --nocapture
+# List an install's files (counts, index SHA-256, unmatched entries; --all prints every file):
+cargo run --release -p loom-extractor -- list-files "<game folder>" [--decoder <program>] [--sample <n> | --all]
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

@@ -2,7 +2,7 @@
 
 Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
 
-Status (2026-11-08, PR A1): decompressor decided; format notes for the bundle container and index recorded from observation. No gate result yet.
+Status (2026-11-08, PR A2): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2). No gate result yet.
 
 ## 1. Existing crates (survey, 2026-11-08)
 Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
@@ -54,7 +54,9 @@ All integers little-endian. Verified on `_.index.bin` (both games), `_.index.hig
 
 Each chunk decodes to `granularity` bytes (the last to the remainder). Chunks start with an Oodle block header (`0x8C`; observed `8C 0C` in large bundles, `CC 06` in the 8-byte high/low bundles).
 
-## 4. Index (`_.index.bin`; sizes and bundle counts observed on PoE1 and PoE2, record layout walked on PoE1)
+`Bundle::parse` (`tools/extractor/src/bundle.rs`, A2) rejects a file unless every redundant field agrees: the `u64` copies equal the `u32` fields, `head size = 48 + 4 * chunk count`, `chunk count = ceil(decompressed size / granularity)` with a non-zero granularity, the chunk sizes sum to the payload size, and the payload ends exactly at the end of the file. The fields at 16 and 44 are not checked.
+
+## 4. Index (`_.index.bin`; layout walked on PoE1 in A1, read in full on PoE1 and PoE2 in A2)
 `_.index.bin` is a bundle. Its decoded bytes (PoE1: 33,449,776; PoE2: 151,240,657) are laid out as:
 
 1. `u32` bundle count (PoE1 46,884; PoE2 64,994), then per bundle: `u32` name length, name bytes (e.g. `Metadata/Shrines`, no extension), `u32` decompressed size.
@@ -62,7 +64,20 @@ Each chunk decodes to `granularity` bytes (the last to the remainder). Chunks st
 3. `u32` path-rep count (PoE1 86,209), then per rep 20 bytes: `u64` directory hash, `u32` offset, `u32` size, `u32` recursive size.
 4. The rest is an embedded bundle (same container) holding the path data; its decoded size equals the first rep's recursive size (PoE1: 26,706,151), and it ends exactly at the end of the index.
 
-To confirm in A2 (community-documented, not yet checked here): the path-data encoding (a phase-switched list of path fragments) and the path hash (MurmurHash64A over the lowercased path with seed `0x1337b33f`; older patches used FNV-1a). A2 checks the hash by rebuilding every path and matching all 1,245,702 file records.
+PoE2 (A2): 4,324,296 file records, 97,028 path reps, path data 127,635,349 bytes.
+
+**Path data (confirmed in A2 on both installs).** Each path rep's `(offset, size)` is a block of the decoded path data; the blocks tile the data exactly, and the first rep (the root directory) is 8 bytes. A block is a sequence of `u32 n`: `n = 0` toggles between a prefix phase and a path phase (a block starts in the path phase; entering the prefix phase clears the prefixes). Otherwise a NUL-terminated fragment follows; if `n - 1` names an existing prefix, the fragment is appended to it, and `n - 1` equal to the number of prefixes starts a new string. In the prefix phase the result becomes the next prefix; in the path phase it is a file path. Observed on PoE1: every block toggles exactly twice and ends exactly at a fragment boundary, and `n - 1` is never greater than the prefix count, so `Index::paths` treats all three as errors. All paths are lowercase ASCII with `/` separators.
+
+**Path hash (confirmed in A2).** MurmurHash64A, seed `0x1337b33f`, over the lowercase path (`tools/extractor/src/hash.rs`, written from the published public-domain algorithm). Directory records use the same hash over the directory path without a trailing slash; the root is the empty string. FNV-1a (older patches) matches nothing. Results:
+
+| Game | Paths rebuilt | Records matched | Paths without record | Records without path | Path reps matched |
+|---|---|---|---|---|---|
+| PoE1 | 1,245,702 | 1,245,702 of 1,245,702 | 0 | 0 | 86,209 of 86,209 |
+| PoE2 | 4,324,296 | 4,324,291 of 4,324,296 | 5 | 5 | 97,028 of 97,028 |
+
+The 10 unmatched PoE2 entries are a real inconsistency in the installed index, not a parser gap: 5 paths (`art/uiart/scrolling_hotmetal.{dds,dds.header,mat}`, `art/uiart/scrolling_blue_hotmetal.{dds,dds.header}`) have no record, and 5 records (in bundles `Tiny.V4`, `Tiny.V5`, `Tiny.V9`, and two `Streaming/Content/metadata/...*.ao` bundles) have no path. All are art or effect files that Spike A does not read. `list-files` prints them all (ADR-015).
+
+**Other observations for A3.** Every file record lies inside its bundle's decoded size. PoE1 keeps tables in `data/` (`data/stats.datc64`, with the 8 language copies `data/<language>/stats.datc64` pointing at the same bundle range); PoE2 keeps them in `data/balance/` (`data/balance/stats.datc64`). Many small files share the `Tiny*` bundles, so A3/A4 should decode each bundle once and slice files out of it.
 
 Install files and SHA-256 (2026-11-08):
 
@@ -81,3 +96,8 @@ Community-documented layout, from `poe-tool-dev/dat-schema` (MIT, the schema we 
 ## 7. Evidence (PR A1)
 - CI tests: `cargo test -p loom-extractor`. Unit tests cover identity, length checks, tool-output parsing, and spawn errors. `tests/external_tool.rs` runs `ExternalTool` against `fake-unoodle` (`src/bin/fake-unoodle.rs`, a test double, not a decoder) and covers success, reported and actual length mismatches, a missing length line, tool failure with stderr, a missing work dir, scratch cleanup, and 8 concurrent calls.
 - Maintainer-run `#[ignore]` test `tools/extractor/tests/install_decompress.rs` (2026-11-08, `unoodle` 0.5.7): passed on both installs. PoE1 index 20,826,488 -> 33,449,776 bytes (128 chunks); PoE2 index 116,427,003 -> 151,240,657 bytes (577 chunks); the first and last chunks decoded on their own match the whole-payload decode; high/low bundles decode to 8 zero bytes in both.
+
+## 8. Evidence (PR A2)
+- CI tests: `cargo test -p loom-extractor`. Synthetic bundles (stored uncompressed, read with `Identity`) and synthetic indexes cover parsing, path rebuilding with shared prefixes, listing with a path that has no record, a record that has no path, a directory record that matches no directory, and a path that matches two records; and each error: inconsistent header fields, trailing bytes, undefined prefix (also after re-entering the prefix phase, which clears prefixes), a path over 4096 bytes, a block ending inside a fragment, non-UTF-8 names and paths, a file record naming a missing bundle or running past its bundle (including `offset + size` above `u32::MAX`), and a path block outside the path data. Corrupt-input tests are exhaustive rather than random: every truncation of a synthetic bundle and index is an error, and every single-byte change (6 values per byte) parses and lists without a panic. Huge counts are rejected before allocating. Path-hash vectors are 12 path/hash pairs read from the PoE1 index (directory records and file records), covering tail lengths 0 to 7 and multi-block input.
+- Maintainer-run `#[ignore]` test `tools/extractor/tests/install_index.rs` (2026-11-08, `unoodle` 0.5.7, release build): passed on both installs; it checks that every path and every record is accounted for exactly once, that no directory record is unmatched, and that the stats table resolves. `tests/install_decompress.rs` now reads headers through `Bundle::parse` and still passes on both.
+- `loom-extractor list-files <install>` (release build, maintainer workstation): PoE1 in about 1.5 s, PoE2 in about 5.8 s, index hashes as in the table above (unchanged since A1). Counts as in section 4.

@@ -27,14 +27,16 @@ Last Updated: 2026-11-08 (PR A1 opened)
 - [x] Start `docs/spikes/spike-a-extraction.md` with the decision
 - [x] `Decompressor` trait, `ExternalTool`, `Identity` in `tools/extractor/src/decompress.rs`; `#[ignore]` test `tests/install_decompress.rs` passed on PoE1 and PoE2 (maintainer workstation)
 - [x] Enable `clippy::indexing_slicing` for `tools/extractor` (crate attribute in `lib.rs` and `main.rs`)
-- [ ] PR open, CI green, maintainer merge
+- [x] PR open, CI green, maintainer merge (PR #6, merged 2026-11-08 as `e4b8402`; main CI run 42550157380 green)
 
 ## PR A2: bundle and index (step 2)
 - [x] `Decompressor` trait and the chosen implementation (done in A1)
-- [ ] Bundle header/chunk parser (layout in the spike report, section 3; one decoder call per bundle) with synthetic-byte tests
-- [ ] Index parser and path reconstruction (layout in report section 4); confirm the path hash by matching all file records; path-hash test vectors
-- [ ] Corrupt-input property tests
-- [ ] `list-files` subcommand; maintainer run on PoE1 and PoE2, counts and hashes in the PR
+- [x] Bundle header/chunk parser (`src/bundle.rs`; one decoder call per bundle) with synthetic-byte tests
+- [x] Index parser and path reconstruction (`src/index.rs`); path hash confirmed: PoE1 all 1,245,702 records match, PoE2 4,324,291 of 4,324,296 (5 + 5 unmatched listed, report section 4); 12 path-hash vectors from the PoE1 index
+- [x] Corrupt-input tests (exhaustive truncation and single-byte corruption instead of random property tests)
+- [x] `list-files` subcommand; maintainer run on PoE1 and PoE2 (counts and hashes in report sections 4 and 8)
+- [x] `#[ignore]` install test `tests/install_index.rs` passed on both installs
+- [ ] PR open (#7), CI green, maintainer merge
 
 ## PR A3: dat reader (step 3)
 - [ ] Vendor the schema file with tag, hash, and third-party license notice (after maintainer OK)
