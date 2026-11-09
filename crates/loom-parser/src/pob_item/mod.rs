@@ -442,8 +442,10 @@ impl Item {
     }
 }
 
-/// `^([%a %(%)]+:?): (.+)$` or `^(Requires %a+) (.+)$`: the key.
-fn spec_key(line: &str) -> Option<&str> {
+/// The key of a spec-shaped line: `^([%a %(%)]+:?): (.+)$` or
+/// `^(Requires %a+) (.+)$`.
+#[must_use]
+pub fn spec_key(line: &str) -> Option<&str> {
     if let Some((key, value)) = line.split_once(": ") {
         let body = key.strip_suffix(':').unwrap_or(key);
         if !body.is_empty()

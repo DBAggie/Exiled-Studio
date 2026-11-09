@@ -157,6 +157,17 @@ fn run_should_put_every_item_line_under_one_outcome() {
 fn run_should_never_write_item_names_or_custom_text() {
     let (s, r) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
     let json = serde_json::to_string(&s).unwrap() + &serde_json::to_string(&r).unwrap();
+    // A line no template matches may be the author's words: hashed in the
+    // summary (the local report keeps it for B4b).
+    let summary = serde_json::to_string(&s).unwrap();
+    assert!(!summary.contains("No such text here"));
+    assert!(
+        r.builds
+            .values()
+            .flatten()
+            .flat_map(|i| &i.lines)
+            .any(|l| l.text == "No such text here")
+    );
     for secret in [
         "Secret Name",
         "My private note",
@@ -201,16 +212,42 @@ fn bases_scope_should_follow_the_mod_domain() {
         b.scope(&item(
             "Rarity: RARE\nN\nSuperior Fleshgraft\nImplicits: 0\n"
         )),
-        Ok("graft_stat_descriptions")
+        Ok(("graft_stat_descriptions", false))
     );
     assert_eq!(
         b.scope(&item("Rarity: NORMAL\nIronwood Tincture\nImplicits: 0\n")),
-        Ok("tincture_stat_descriptions")
+        Ok(("tincture_stat_descriptions", false))
     );
     assert_eq!(
         b.scope(&item("Rarity: RARE\nN\nNope\nImplicits: 0\n")),
         Err("not-in-base-item-types".to_owned())
     );
+    assert_eq!(
+        b.scope(&item(
+            "Rarity: RARE\nN\nCoral Ring (PoB Name)\nImplicits: 0\n"
+        )),
+        Ok(("stat_descriptions", true))
+    );
+    assert_eq!(
+        b.scope(&item("Rarity: RARE\nN\nNope (X)\nImplicits: 0\n")),
+        Err("not-in-base-item-types".to_owned())
+    );
+}
+
+#[test]
+fn marks_should_name_shapes_without_judging_them() {
+    assert_eq!(marks("^1Note to self"), ["color-code"]);
+    assert_eq!(
+        marks("Quality (Attribute Modifiers): +20%"),
+        ["spec-shaped"]
+    );
+    assert_eq!(marks("Memory Strands: 63"), ["spec-shaped"]);
+    assert_eq!(
+        marks("Added Small Passive Skills grant: 12% increased Fire Damage"),
+        ["small-passive-grant"]
+    );
+    assert!(marks("+10 to maximum Life").is_empty());
+    assert!(marks("^Z").is_empty());
 }
 
 impl Build {

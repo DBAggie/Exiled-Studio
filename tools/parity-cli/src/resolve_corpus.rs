@@ -106,8 +106,12 @@ impl Bases {
         bases
     }
 
-    /// The item's scope, or why there is none.
-    fn scope(&self, item: &Item) -> Result<&'static str, String> {
+    /// The item's scope, or why there is none; `true` when the base was
+    /// found only after removing a PoB-only ` (...)` suffix (PoB names the
+    /// three `Two-Toned Boots` rows `Two-Toned Boots (Armour/Energy
+    /// Shield)` and so on; `v2.67.2:src/Classes/Item.lua` `ParseRaw` has a
+    /// "Hack for Two-Toned Boots", and removes ` %(.+%)` from magic names).
+    fn scope(&self, item: &Item) -> Result<(&'static str, bool), String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
             (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
@@ -120,12 +124,22 @@ impl Bases {
             }
             _ => return Err("no-name".to_owned()),
         };
-        let scopes = self
-            .scopes
-            .get(&name)
-            .ok_or_else(|| "not-in-base-item-types".to_owned())?;
+        let stripped = name
+            .strip_suffix(')')
+            .and_then(|n| n.rsplit_once(" ("))
+            .map(|(n, _)| n);
+        let (scopes, suffix) = match (self.scopes.get(&name), stripped) {
+            (Some(s), _) => (s, false),
+            (None, Some(n)) => (
+                self.scopes
+                    .get(n)
+                    .ok_or_else(|| "not-in-base-item-types".to_owned())?,
+                true,
+            ),
+            (None, None) => return Err("not-in-base-item-types".to_owned()),
+        };
         match scopes.iter().collect::<Vec<_>>().as_slice() {
-            [one] => Ok(one),
+            [one] => Ok((one, suffix)),
             _ => Err("scope-conflict".to_owned()),
         }
     }
@@ -292,8 +306,47 @@ pub struct Summary {
     pub rate: Rate,
     /// Ambiguous texts: candidates as `stat,stat` lists.
     pub ambiguous: BTreeMap<String, Distinct>,
-    /// Unresolved non-excluded texts (scrubbed where needed), by outcome.
+    /// Unresolved texts by outcome. Text is written only for outcomes where
+    /// a template matched (`no-variant-fits`, `only-shadowed`), so it is
+    /// game text; other text is a hash (it may be the author's own words).
     pub unresolved: BTreeMap<String, BTreeMap<String, Distinct>>,
+    /// Items whose base was found only after removing a PoB-only
+    /// ` (...)` suffix.
+    pub pob_base_suffix_removed: usize,
+    /// Measurements for B4b's categories, not categories: mark to
+    /// `<group>/<outcome>` to lines not resolved (see [`marks`]).
+    pub marks: BTreeMap<&'static str, BTreeMap<String, usize>>,
+}
+
+/// Outcomes whose text a template matched.
+const TEMPLATE_MATCHED: [&str; 2] = ["unresolved/no-variant-fits", "unresolved/only-shadowed"];
+
+/// Shapes of a line's text that B4b's categories will need evidence for:
+/// - `color-code`: starts with a PoB colour escape (`^1`..`^9`, `^x`),
+///   text the build's author wrote;
+/// - `spec-shaped`: a spec line `ParseRaw` knows (`Quality (... Modifiers):
+///   +20%`, `Memory Strands: 63`) in the modifier section, pasted from the
+///   game's item text (`ParseRaw` also reads it as a modifier there);
+/// - `small-passive-grant`: `Added Small Passive Skills grant: ...`, a
+///   cluster jewel's `local_jewel_expansion_passive_node_index` line, whose
+///   only variant is `{0}` through `tree_expansion_jewel_passive` (not
+///   supported, see `lookup.rs`).
+fn marks(text: &str) -> Vec<&'static str> {
+    let mut out = Vec::new();
+    let mut chars = text.chars();
+    if chars.next() == Some('^') && chars.next().is_some_and(|c| c.is_ascii_digit() || c == 'x') {
+        out.push("color-code");
+    }
+    if pob_item::spec_key(text).is_some_and(|k| {
+        pob_item::KNOWN_SPECS.contains(&k)
+            || (k.starts_with("Quality (") && k.ends_with(" Modifiers)"))
+    }) {
+        out.push("spec-shaped");
+    }
+    if text.starts_with("Added Small Passive Skills grant: ") {
+        out.push("small-passive-grant");
+    }
+    out
 }
 
 /// [`IndexStats`] as JSON.
@@ -711,11 +764,16 @@ fn count_item(
     }
     let scope = bases.scope(item);
     let scope_name = match &scope {
-        Ok(name) => (*name).to_owned(),
+        Ok((name, suffix)) => {
+            if *suffix {
+                s.pob_base_suffix_removed += 1;
+            }
+            (*name).to_owned()
+        }
         Err(reason) => format!("unknown-base/{reason}"),
     };
     *s.items_by_scope.entry(scope_name.clone()).or_default() += 1;
-    let index = scope.as_ref().ok().and_then(|name| indexes.get(name));
+    let index = scope.as_ref().ok().and_then(|(name, _)| indexes.get(name));
     let records = item_lines(item, index, scope.as_ref().err().map(String::as_str));
     let unique = item.rarity.is_none_or(Rarity::is_unique);
     for (record, shadowed) in &records {
@@ -732,17 +790,36 @@ fn count_item(
                 .or_default()
                 .insert(record.outcome.clone());
         }
+        if !excluded && record.outcome != "resolved" {
+            for mark in marks(&record.text) {
+                let group = if unique { "unique" } else { "non_unique" };
+                *s.marks
+                    .entry(mark)
+                    .or_default()
+                    .entry(format!("{group}/{}", record.outcome))
+                    .or_default() += 1;
+            }
+        }
         let entry = match record.outcome.as_str() {
             "resolved" => None,
             "ambiguous" => Some(s.ambiguous.entry(record.text.clone()).or_default()),
             o if o.starts_with("excluded/") => None,
-            o => Some(
-                s.unresolved
-                    .entry(o.to_owned())
-                    .or_default()
-                    .entry(record.text.clone())
-                    .or_default(),
-            ),
+            o => {
+                // Only text a template matched is known to be game text;
+                // other text may be written by the build's author.
+                let text = if TEMPLATE_MATCHED.contains(&o) {
+                    record.text.clone()
+                } else {
+                    scrub(&record.text)
+                };
+                Some(
+                    s.unresolved
+                        .entry(o.to_owned())
+                        .or_default()
+                        .entry(text)
+                        .or_default(),
+                )
+            }
         };
         if let Some(entry) = entry {
             if unique {
