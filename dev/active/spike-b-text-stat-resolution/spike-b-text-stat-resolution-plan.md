@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B2a: reverse matcher)
+Last Updated: 2026-11-09 (PR B2b: multi-line, lookups, round-trip, render-check)
 
 # Spike B: text to stat-ID resolution (plan)
 
@@ -6,13 +6,13 @@ Last Updated: 2026-11-09 (PR B2a: reverse matcher)
 Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item modifier text can be resolved to `(stat_id, values)` by reverse-matching the game's stat-description tables that Spike A extracts (ADR-015), without PoB's text patterns (`ModParser.lua`). The corpus is the maintainer's PoE1 builds. Spike C (oracle harness) and Phase 2 (PoB XML import through stat resolution) build on this.
 
 ## Current state (2026-11-09)
-- **PR B0 merged** (PR #13, `c71fa9c`). **PR B1 merged** (PR #14, `cb9b24d`): `loom-data::stat_desc` (model, loader, `Scope`, markup stripping, renderer) and `loom-parity-cli load-statdesc`; both extracts load with 0 problems (context file, "PR B1"). **PR B1x merged** (PR #15, `186b72f`): the six lookup tables are `extract` roots (PoE1 all six, PoE2 four; context file, "PR B1x"). **PR B2a open, in review (PR #17)**: `loom-parser::resolve` (index, tokenizer, verification) and `loom-data::stat_desc::invert` (context file, "PR B2a"). Next: PR B2b.
+- **PR B0 merged** (PR #13, `c71fa9c`). **PR B1 merged** (PR #14, `cb9b24d`): `loom-data::stat_desc` (model, loader, `Scope`, markup stripping, renderer) and `loom-parity-cli load-statdesc`; both extracts load with 0 problems (context file, "PR B1"). **PR B1x merged** (PR #15, `186b72f`): the six lookup tables are `extract` roots (PoE1 all six, PoE2 four; context file, "PR B1x"). **PR B2a merged** (PR #17, `7fa4c65`): `loom-parser::resolve` (index, tokenizer, verification) and `loom-data::stat_desc::invert` (context file, "PR B2a"). **PR B2b open, in review (PR #18)**: multi-line and lookup matching, `parity-cli round-trip` and `render-check` (context file, "PR B2b"). Next: PR B3.
 - Spike A is done (gate met, PR #12 merged as `6f6bf83`). `loom-extractor extract` writes the stat-description files as JSON: `stat_descriptions/<file>.json` with `descriptions[]` (`stats`, `variants[]` with `conditions`, `flags`, `handlers`, `placeholders`, `text`), `includes`, `no_description`. PoE1 build 26530219: 44 files, 17,739 descriptions, 26,794 English variants, 0 unparsed lines. Reading notes: Spike A context file (`dev/completed/spike-a-bundles2-extraction/`), "For Spike B".
 - Before B1/B2a, `loom-parser` and `loom-data` were empty core crates (wasm32; their `clippy.toml` bans fs and env, **also in tests**, since clippy runs with `--all-targets`). `tools/parity-cli` is an empty skeleton (depends on `loom-domain`, `loom-serialization`).
 - Corpus: `D:\Documents\Path of Building\Builds` holds **21** PoB XML files (maintainer, 2026-11-09: 21 is correct; ADR-007 and the ACTION-PLAN say 22, corrected in B4b). All are `targetVersion="3_0"`. Survey on 2026-11-09 (throwaway scripts, not committed):
   - 1,055 items: 561 rare, 257 magic, 8 normal, 222 unique, 7 relic. About 3,740 non-unique implicit and explicit lines, so the 2% budget is about 75 lines.
   - Line prefixes: `{variant}` 1,611, `{range}` 1,511, `{tags}` 831, `{crafted}` 746, `{custom}` 54, `{eater}` 42, `{exarch}` 38, `{fractured}` 31, `{mutated}` 11. Legacy `<ModRange id range>` child elements: 5,431 (plan review count). `Catalyst` lines: 123. `Has Alt Variant`: 20.
-  - **Lookup-handler lines in non-unique items: 117** (cluster `Added Small Passive Skills grant` 56, anoint `Allocates ...` 35, `Socketed Gems are Supported by` 26). Without lookup handlers the gate cannot be met.
+  - **Lookup-handler lines in non-unique items: 117** (cluster `Added Small Passive Skills grant` 56, anoint `Allocates ...` 35, `Socketed Gems are Supported by` 26). Without lookup handlers the gate cannot be met. (B2b correction: the 56 cluster lines are ordinary descriptions, no lookup; 61 corpus lines need one.)
   - All 257 magic items have only one name line (affixes plus base), no separate base line.
 
 ## Target state
@@ -36,12 +36,12 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 
   | Handler | Corpus use | Needs (vendored schema, checked in B1) | Extracted? |
   |---|---|---|---|
-  | `tree_expansion_jewel_passive` | cluster `Added Small Passive Skills grant: ...` (56) | `PassiveTreeExpansionSkills` (`PassiveSkillsKey`, `PassiveTreeExpansionJewelSizesKey`), `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes` (+ the passive's stats, rendered through `passive_skill_stat_descriptions`) | yes (B1x) |
-  | `passive_hash` | anoint `Allocates <notable>` (35) | `PassiveSkills.PassiveSkillGraphId` -> `Name` | yes |
-  | `display_indexable_support` | `Socketed Gems are Supported by ...` (26, with the next row) | `IndexableSupportGems` (`Index`, `Name`) | yes (B1x) |
-  | `display_indexable_non_active_support` (PoE1) | same | `IndexableNonActiveSupportGems` (`Index`, `Name`) | yes (B1x) |
-  | `display_indexable_skill` (PoE1) | `+n to Level of all <skill> Gems` | `IndexableSkillGems` (`Index`, `Name1`, `Name2`) | yes (B1x) |
-  | `mod_value_to_item_class` | none found | `ItemClasses` (key form to confirm in B2b) | yes |
+  | `tree_expansion_jewel_passive` | none (B2b: the cluster `Added Small Passive Skills grant: ...` lines B0 counted here, 56, are ordinary descriptions of `local_affliction_jewel_small_nodes_grant_*` stats without a lookup) | `PassiveTreeExpansionSkills` (`PassiveSkillsKey`, `PassiveTreeExpansionJewelSizesKey`), `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes` | yes (B1x); not supported (B2b: no key form known) |
+  | `passive_hash` | anoint `Allocates <notable>` (35) | `PassiveSkills.PassiveSkillGraphId` -> `Name` (B2b: hypothesis; PoB's export prints the value as an unsigned 16-bit number) | yes |
+  | `display_indexable_support` | `Socketed Gems are Supported by ...` (26, with the next row) | `IndexableSupportGems` (`Index`, `Name`) (B2b: key = `Index`; Mods range `1-172` = row count refutes a 0-based row index) | yes (B1x) |
+  | `display_indexable_non_active_support` (PoE1) | same | `IndexableNonActiveSupportGems` (`Index`, `Name`) (B2b: `1-164`, same evidence) | yes (B1x) |
+  | `display_indexable_skill` (PoE1) | `+n to Level of all <skill> Gems` | `IndexableSkillGems` (`Index`, `Name1`, `Name2`) (B2b: key = `Index`, `1-287`; writes `Name1`, a hypothesis) | yes (B1x) |
+  | `mod_value_to_item_class` | none found | `ItemClasses`? (B2b: refuted for row order: Mods values amulets 0, belts 15 are rows 4 and 21; not supported) | yes |
   | `affliction_reward_type` | none found | `AfflictionRewardTypeVisuals` (`AfflictionRewardTypes` enum, `Name`) | no |
   | `weapon_tree_unique_base_type_name` (PoE1) | none found | `WeaponPassiveTreeUniqueBaseTypes` -> `BaseItemTypes.Name` (hypothesis) | no |
   | `tempest_mod_text` | none found | no table found in the schema | - |
@@ -79,6 +79,7 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 - **Depends on:** 1.
 
 ### 2b. Multi-line, lookup handlers, round-trip and render checks (M-L)
+- **Done in B2b** (context file, "PR B2b"; maintainer kept it one PR, 2026-11-09). Multi-line variants have up to 8 lines (PoE1), so matching takes any number of lines, not two.
 - Two-line variants; lookup-handler inversion through the lookup trait.
 - `parity-cli round-trip <extract>`: for every non-`gem_quality` variant, render with values inside its conditions (both ends and a middle value of each range, deterministic), resolve, and require the same description and values (or an interval containing them). Failures listed by category (`ambiguous-template`, `lossy-handler`, `unsupported-handler`, other with a reason).
 - `parity-cli render-check <extract> <pob-clone>`: an **independent** check, because the round trip tests the renderer against itself. Render each `Mods` row's min and max with the B1 renderer and compare with PoB's exported mod text for the same `Id` (`Data/ModItem.lua` and siblings in a `local/pob/` clone; cross-check only). Differences categorized like A6a (`patch-delta`, `pob-rounding`, `pob-filtered`, `uncategorized`).

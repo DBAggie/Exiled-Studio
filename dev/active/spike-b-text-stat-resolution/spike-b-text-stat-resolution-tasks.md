@@ -32,13 +32,15 @@ Last Updated: 2026-11-09 (PR B2a)
 - [x] Open PR (#17)
 
 ## PR B2b: multi-line, lookup handlers, checks
-- [ ] Two-line variants; lookup-handler inversion (B2a leaves both out of the index and counts them: `IndexStats::deferred_multi_line`, `deferred_lookup`)
-- [ ] Count lines that depend on include precedence from `Resolution::shadowed` / `Unresolved::OnlyShadowed`
-- [ ] Report `IndexStats` for `stat_descriptions` on PoE1 and PoE2 (B2a has only synthetic tests)
-- [ ] Confirm lookup key forms (row index vs `Index` column vs hash) against real values; `mod_value_to_item_class` key form
-- [ ] `parity-cli round-trip` (PoE1, PoE2); failures categorized
-- [ ] `parity-cli render-check` against PoB v2.67.2 mod text; differences categorized
-- [ ] Count stat sets that depend on include precedence
+- [x] Multi-line variants (up to 8 lines); lookup-handler inversion by name expansion
+- [x] Count samples with shadowed matches (`samples_with_shadowed_matches`); corpus lines in B3
+- [x] Report `IndexStats` for `stat_descriptions` on PoE1 and PoE2
+- [x] Lookup key forms: indexable gems `Index` (0-based row refuted); `passive_hash` graph id (hypothesis); `mod_value_to_item_class` row order refuted, unsupported
+- [x] `parity-cli round-trip` (PoE1, PoE2); every sample under one outcome; 0 wrong readings
+- [x] `parity-cli render-check` against PoB's exported mod text; 0 uncategorized
+- [x] Count stat sets that depend on include precedence (item scope: 10 PoE1 / 26 PoE2 shadowed descriptions, all within the file)
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#18)
 
 ## PR B3: PoB item reader and `resolve-corpus`
 - [ ] Record the Steam build; re-extract if changed

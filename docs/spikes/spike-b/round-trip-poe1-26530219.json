@@ -1,0 +1,690 @@
+{
+  "inputs": {
+    "game": "poe1",
+    "steam_build_id": "26530219",
+    "manifest_sha256": "c23d4c0ffbbfd59e2a04703130dac84e1010164f0026efe734e33a00753aac0f"
+  },
+  "lookup": {
+    "keys": {
+      "display_indexable_non_active_support": 164,
+      "display_indexable_skill": 287,
+      "display_indexable_support": 172,
+      "passive_hash": 5706
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  },
+  "scopes": 44,
+  "item_index": {
+    "bad_template": 0,
+    "empty_text": 1,
+    "entries": 45022,
+    "gem_quality": 0,
+    "indexed": 15760,
+    "keys": 28090,
+    "lookup": 21,
+    "lookup_blank_names": 6,
+    "lookup_multi": 0,
+    "lookup_unavailable": 12,
+    "max_lines": 8,
+    "multi_line": 463,
+    "table_only": 0
+  },
+  "item_scope_shadowed_descriptions": 10,
+  "variants": {
+    "gem_quality": 34,
+    "tried": 26770
+  },
+  "samples": 101207,
+  "outcomes": {
+    "ambiguous-handed": 8,
+    "ambiguous-template": 7298,
+    "not-rendered/empty-line": 4,
+    "not-rendered/missing-lookup": 40,
+    "not-rendered/unknown-handler": 100,
+    "ok": 93645,
+    "rendered-double-sign": 3,
+    "shadowed-description": 109
+  },
+  "item_scope_outcomes": {
+    "ambiguous-template": 3269,
+    "not-rendered/empty-line": 4,
+    "not-rendered/missing-lookup": 37,
+    "not-rendered/unknown-handler": 100,
+    "ok": 57122,
+    "rendered-double-sign": 3,
+    "shadowed-description": 52
+  },
+  "samples_with_shadowed_matches": 3150,
+  "examples": {
+    "ambiguous-handed": [
+      {
+        "outcome": "ambiguous-handed",
+        "file": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "description_line": 479,
+        "variant_line": 484,
+        "hand": "main",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [
+          "No Fire Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 0, index: 9, hand: Off }]"
+      },
+      {
+        "outcome": "ambiguous-handed",
+        "file": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "description_line": 479,
+        "variant_line": 484,
+        "hand": "off",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [
+          "No Fire Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 0, index: 9, hand: Off }]"
+      },
+      {
+        "outcome": "ambiguous-handed",
+        "file": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "description_line": 527,
+        "variant_line": 532,
+        "hand": "main",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [
+          "No Cold Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 10, hand: Main }, DescRef { depth: 0, index: 10, hand: Off }]"
+      },
+      {
+        "outcome": "ambiguous-handed",
+        "file": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "description_line": 527,
+        "variant_line": 532,
+        "hand": "off",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [
+          "No Cold Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 10, hand: Main }, DescRef { depth: 0, index: 10, hand: Off }]"
+      },
+      {
+        "outcome": "ambiguous-handed",
+        "file": "metadata/statdescriptions/skill_stat_descriptions.txt",
+        "description_line": 575,
+        "variant_line": 580,
+        "hand": "main",
+        "values": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [
+          "No Lightning Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 11, hand: Main }, DescRef { depth: 0, index: 11, hand: Off }]"
+      }
+    ],
+    "ambiguous-template": [
+      {
+        "outcome": "ambiguous-template",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 332,
+        "variant_line": 335,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "Deals 1 to 1 Physical Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 2, index: 1420, hand: Main }, DescRef { depth: 2, index: 1425, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 332,
+        "variant_line": 335,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            100
+          ],
+          [
+            1,
+            100
+          ]
+        ],
+        "lines": [
+          "Deals (1-100) to (1-100) Physical Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 2, index: 1420, hand: Main }, DescRef { depth: 2, index: 1425, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 332,
+        "variant_line": 335,
+        "hand": "main",
+        "values": [
+          [
+            50,
+            50
+          ],
+          [
+            50,
+            50
+          ]
+        ],
+        "lines": [
+          "Deals 50 to 50 Physical Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 2, index: 1420, hand: Main }, DescRef { depth: 2, index: 1425, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 332,
+        "variant_line": 335,
+        "hand": "main",
+        "values": [
+          [
+            100,
+            100
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "lines": [
+          "Deals 100 to 100 Physical Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 9, hand: Main }, DescRef { depth: 2, index: 1420, hand: Main }, DescRef { depth: 2, index: 1425, hand: Main }]"
+      },
+      {
+        "outcome": "ambiguous-template",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 367,
+        "variant_line": 370,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "Deals 1 to 1 Fire Damage"
+        ],
+        "detail": "[DescRef { depth: 0, index: 10, hand: Main }, DescRef { depth: 0, index: 53, hand: Main }, DescRef { depth: 2, index: 1426, hand: Main }]"
+      }
+    ],
+    "not-rendered/empty-line": [
+      {
+        "outcome": "not-rendered/empty-line",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 330752,
+        "variant_line": 330755,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [],
+        "detail": "EmptyLine"
+      },
+      {
+        "outcome": "not-rendered/empty-line",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 330752,
+        "variant_line": 330755,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            100
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [],
+        "detail": "EmptyLine"
+      },
+      {
+        "outcome": "not-rendered/empty-line",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 330752,
+        "variant_line": 330755,
+        "hand": "main",
+        "values": [
+          [
+            50,
+            50
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [],
+        "detail": "EmptyLine"
+      },
+      {
+        "outcome": "not-rendered/empty-line",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 330752,
+        "variant_line": 330755,
+        "hand": "main",
+        "values": [
+          [
+            100,
+            100
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "lines": [],
+        "detail": "EmptyLine"
+      }
+    ],
+    "not-rendered/missing-lookup": [
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "metadata/statdescriptions/map_stat_descriptions.txt",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 1 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "metadata/statdescriptions/map_stat_descriptions.txt",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            50,
+            50
+          ],
+          [
+            50,
+            50
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 50 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "metadata/statdescriptions/map_stat_descriptions.txt",
+        "description_line": 1,
+        "variant_line": 4,
+        "hand": "main",
+        "values": [
+          [
+            100,
+            100
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"tempest_mod_text\", value: 100 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 106698,
+        "variant_line": 106701,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"mod_value_to_item_class\", value: 1 }"
+      },
+      {
+        "outcome": "not-rendered/missing-lookup",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 106698,
+        "variant_line": 106701,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            100
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "MissingLookup { handler: \"mod_value_to_item_class\", value: 1 }"
+      }
+    ],
+    "not-rendered/unknown-handler": [
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 36645,
+        "variant_line": 36648,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"old_leech_percent\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 36645,
+        "variant_line": 36648,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"old_leech_percent\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 36645,
+        "variant_line": 36648,
+        "hand": "main",
+        "values": [
+          [
+            51,
+            51
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"old_leech_percent\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 36645,
+        "variant_line": 36648,
+        "hand": "main",
+        "values": [
+          [
+            101,
+            101
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"old_leech_percent\")"
+      },
+      {
+        "outcome": "not-rendered/unknown-handler",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 36785,
+        "variant_line": 36788,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [],
+        "detail": "UnknownHandler(\"old_leech_percent\")"
+      }
+    ],
+    "rendered-double-sign": [
+      {
+        "outcome": "rendered-double-sign",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 63963,
+        "variant_line": 63967,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "--101 to Level of all Fireball Gems"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 63963,
+        "variant_line": 63967,
+        "hand": "main",
+        "values": [
+          [
+            -51,
+            -51
+          ],
+          [
+            144,
+            144
+          ]
+        ],
+        "lines": [
+          "--51 to Level of all Frost Bomb Gems"
+        ],
+        "detail": "NoTemplate"
+      },
+      {
+        "outcome": "rendered-double-sign",
+        "file": "metadata/statdescriptions/stat_descriptions.txt",
+        "description_line": 63963,
+        "variant_line": 63967,
+        "hand": "main",
+        "values": [
+          [
+            -1,
+            -1
+          ],
+          [
+            287,
+            287
+          ]
+        ],
+        "lines": [
+          "--1 to Level of all Mana-Infused Staff Gems"
+        ],
+        "detail": "NoTemplate"
+      }
+    ],
+    "shadowed-description": [
+      {
+        "outcome": "shadowed-description",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 3993,
+        "variant_line": 3996,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            1
+          ]
+        ],
+        "lines": [
+          "1% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 3993,
+        "variant_line": 3996,
+        "hand": "main",
+        "values": [
+          [
+            1,
+            101
+          ]
+        ],
+        "lines": [
+          "(1-101)% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 3993,
+        "variant_line": 3996,
+        "hand": "main",
+        "values": [
+          [
+            51,
+            51
+          ]
+        ],
+        "lines": [
+          "51% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 3993,
+        "variant_line": 3996,
+        "hand": "main",
+        "values": [
+          [
+            101,
+            101
+          ]
+        ],
+        "lines": [
+          "101% increased Aura Area of Effect"
+        ],
+        "detail": ""
+      },
+      {
+        "outcome": "shadowed-description",
+        "file": "metadata/statdescriptions/active_skill_gem_stat_descriptions.txt",
+        "description_line": 3993,
+        "variant_line": 3997,
+        "hand": "main",
+        "values": [
+          [
+            -101,
+            -101
+          ]
+        ],
+        "lines": [
+          "101% reduced Aura Area of Effect"
+        ],
+        "detail": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,760 @@
+{
+  "inputs": {
+    "game": "poe1",
+    "steam_build_id": "26530219",
+    "manifest_sha256": "c23d4c0ffbbfd59e2a04703130dac84e1010164f0026efe734e33a00753aac0f"
+  },
+  "pob_files": {
+    "ModCorrupted.lua": 371,
+    "ModDelve.lua": 186,
+    "ModEldritch.lua": 4086,
+    "ModExplicit.lua": 4310,
+    "ModFlask.lua": 246,
+    "ModFoulborn.lua": 365,
+    "ModGraft.lua": 485,
+    "ModItemExclusive.lua": 8963,
+    "ModJewel.lua": 425,
+    "ModJewelAbyss.lua": 721,
+    "ModJewelCharm.lua": 242,
+    "ModJewelCluster.lua": 557,
+    "ModMap.lua": 0,
+    "ModMaster.lua": 0,
+    "ModNecropolis.lua": 51,
+    "ModScourge.lua": 1251,
+    "ModSynthesis.lua": 1344,
+    "ModTincture.lua": 66,
+    "ModVeiled.lua": 258
+  },
+  "pob_unparsed": 0,
+  "pob_ids": 23539,
+  "pob_ids_with_several_texts": 0,
+  "pob_stat_description_files": {
+    "active_skill_gem_stat_descriptions.lua": 361,
+    "aura_skill_stat_descriptions.lua": 92,
+    "banner_aura_skill_stat_descriptions.lua": 17,
+    "beam_skill_stat_descriptions.lua": 3,
+    "brand_skill_stat_descriptions.lua": 13,
+    "buff_skill_stat_descriptions.lua": 61,
+    "curse_skill_stat_descriptions.lua": 78,
+    "debuff_skill_stat_descriptions.lua": 27,
+    "gem_stat_descriptions.lua": 788,
+    "graft_stat_descriptions.lua": 97,
+    "minion_attack_skill_stat_descriptions.lua": 161,
+    "minion_skill_stat_descriptions.lua": 346,
+    "minion_spell_damage_skill_stat_descriptions.lua": 92,
+    "minion_spell_skill_stat_descriptions.lua": 8,
+    "monster_stat_descriptions.lua": 33,
+    "offering_skill_stat_descriptions.lua": 16,
+    "secondary_debuff_skill_stat_descriptions.lua": 2,
+    "single_minion_spell_skill_stat_descriptions.lua": 46,
+    "skill_stat_descriptions.lua": 1737,
+    "stat_descriptions.lua": 11064,
+    "tincture_stat_descriptions.lua": 85,
+    "variable_duration_skill_stat_descriptions.lua": 5
+  },
+  "mods_rows": 40355,
+  "rows_without_id": 0,
+  "slots_unresolved": 0,
+  "not_in_pob": 16816,
+  "pob_only": 0,
+  "outcomes": {
+    "differs/patch-delta": 33,
+    "differs/pob-ignores-unknown-handler": 62,
+    "differs/pob-lookup-range": 7,
+    "differs/pob-rewritten": 2701,
+    "differs/pob-untrimmed": 1,
+    "differs/pob-zero-range-retry": 7,
+    "match": 20728
+  },
+  "numeric_handlers_confirmed": {
+    "30%_of_value": 16,
+    "60%_of_value": 2,
+    "deciseconds_to_seconds": 1,
+    "divide_by_five": 13,
+    "divide_by_four": 2,
+    "divide_by_one_hundred": 364,
+    "divide_by_one_thousand": 30,
+    "divide_by_ten_0dp": 2,
+    "divide_by_ten_1dp": 1,
+    "divide_by_twelve": 1,
+    "divide_by_two_0dp": 3,
+    "double": 2,
+    "locations_to_metres": 73,
+    "milliseconds_to_seconds": 107,
+    "milliseconds_to_seconds_0dp": 1,
+    "milliseconds_to_seconds_2dp": 10,
+    "milliseconds_to_seconds_2dp_if_required": 13,
+    "multiplicative_damage_modifier": 2,
+    "negate": 842,
+    "negate_and_double": 53,
+    "per_minute_to_per_second": 255,
+    "per_minute_to_per_second_0dp": 4,
+    "per_minute_to_per_second_1dp": 2,
+    "per_minute_to_per_second_2dp": 3,
+    "per_minute_to_per_second_2dp_if_required": 54,
+    "permyriad_per_minute_to_%_per_second": 1,
+    "plus_two_hundred": 1,
+    "times_one_point_five": 46,
+    "times_twenty": 4
+  },
+  "numeric_handlers_in_differing_rows": {
+    "divide_by_one_thousand": 60,
+    "locations_to_metres": 36,
+    "milliseconds_to_seconds": 72,
+    "negate": 84,
+    "per_minute_to_per_second": 12
+  },
+  "examples": {
+    "differs/patch-delta": [
+      {
+        "outcome": "differs/patch-delta",
+        "id": "V2CannotGainBleedingCorrupted_",
+        "stats": [
+          [
+            "base_cannot_gain_bleeding",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "Bleeding Cannot be inflicted on you"
+        ],
+        "pob": [
+          "Bleeding cannot be inflicted on you"
+        ],
+        "not_rendered": [],
+        "evidence": "PoB's exported description of base_cannot_gain_bleeding has \"Bleeding cannot be inflicted on you\", the extract \"Bleeding Cannot be inflicted on you\"; with PoB's text our lines equal PoB's"
+      },
+      {
+        "outcome": "differs/patch-delta",
+        "id": "BleedingImmunityUnique__1",
+        "stats": [
+          [
+            "base_cannot_gain_bleeding",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "Bleeding Cannot be inflicted on you"
+        ],
+        "pob": [
+          "Bleeding cannot be inflicted on you"
+        ],
+        "not_rendered": [],
+        "evidence": "PoB's exported description of base_cannot_gain_bleeding has \"Bleeding cannot be inflicted on you\", the extract \"Bleeding Cannot be inflicted on you\"; with PoB's text our lines equal PoB's"
+      },
+      {
+        "outcome": "differs/patch-delta",
+        "id": "BleedingImmunityUnique__2",
+        "stats": [
+          [
+            "base_cannot_gain_bleeding",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "Bleeding Cannot be inflicted on you"
+        ],
+        "pob": [
+          "Bleeding cannot be inflicted on you"
+        ],
+        "not_rendered": [],
+        "evidence": "PoB's exported description of base_cannot_gain_bleeding has \"Bleeding cannot be inflicted on you\", the extract \"Bleeding Cannot be inflicted on you\"; with PoB's text our lines equal PoB's"
+      },
+      {
+        "outcome": "differs/patch-delta",
+        "id": "SynthesisImplicitImmuneToBleed1____",
+        "stats": [
+          [
+            "base_cannot_gain_bleeding",
+            100,
+            100
+          ]
+        ],
+        "ours": [
+          "Bleeding Cannot be inflicted on you"
+        ],
+        "pob": [
+          "Bleeding cannot be inflicted on you"
+        ],
+        "not_rendered": [],
+        "evidence": "PoB's exported description of base_cannot_gain_bleeding has \"Bleeding cannot be inflicted on you\", the extract \"Bleeding Cannot be inflicted on you\"; with PoB's text our lines equal PoB's"
+      },
+      {
+        "outcome": "differs/patch-delta",
+        "id": "OfferingEffectInfluence1_",
+        "stats": [
+          [
+            "offering_spells_effect_+%",
+            16,
+            20
+          ]
+        ],
+        "ours": [
+          "Your Offerings have (16-20)% increased Effect"
+        ],
+        "pob": [
+          "(16-20)% increased effect of Offerings"
+        ],
+        "not_rendered": [],
+        "evidence": "PoB's exported description of offering_spells_effect_+% has \"{0}% increased effect of Offerings\", the extract \"Your Offerings have {0}% increased Effect\"; with PoB's text our lines equal PoB's"
+      }
+    ],
+    "differs/pob-ignores-unknown-handler": [
+      {
+        "outcome": "differs/pob-ignores-unknown-handler",
+        "id": "LifeLeech1",
+        "stats": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            1,
+            2
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(1-2)% of Physical Attack Damage Leeched as Life"
+        ],
+        "not_rendered": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            "unknown-handler"
+          ]
+        ],
+        "evidence": "unknown-handler for old_do_not_use_life_leech_from_physical_damage_%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-ignores-unknown-handler",
+        "id": "LifeLeech2",
+        "stats": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            3,
+            4
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(3-4)% of Physical Attack Damage Leeched as Life"
+        ],
+        "not_rendered": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            "unknown-handler"
+          ]
+        ],
+        "evidence": "unknown-handler for old_do_not_use_life_leech_from_physical_damage_%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-ignores-unknown-handler",
+        "id": "LifeLeech3",
+        "stats": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            5,
+            6
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(5-6)% of Physical Attack Damage Leeched as Life"
+        ],
+        "not_rendered": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            "unknown-handler"
+          ]
+        ],
+        "evidence": "unknown-handler for old_do_not_use_life_leech_from_physical_damage_%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-ignores-unknown-handler",
+        "id": "LifeLeechUniqueRing2",
+        "stats": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            2,
+            2
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "2% of Physical Attack Damage Leeched as Life"
+        ],
+        "not_rendered": [
+          [
+            "old_do_not_use_life_leech_from_physical_damage_%",
+            "unknown-handler"
+          ]
+        ],
+        "evidence": "unknown-handler for old_do_not_use_life_leech_from_physical_damage_%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-ignores-unknown-handler",
+        "id": "LifeLeechImplicitClaw1",
+        "stats": [
+          [
+            "old_do_not_use_local_life_leech_from_physical_damage_%",
+            8,
+            8
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "8% of Physical Attack Damage Leeched as Life"
+        ],
+        "not_rendered": [
+          [
+            "old_do_not_use_local_life_leech_from_physical_damage_%",
+            "unknown-handler"
+          ]
+        ],
+        "evidence": "unknown-handler for old_do_not_use_local_life_leech_from_physical_damage_%; PoB's fallback gives its lines"
+      }
+    ],
+    "differs/pob-lookup-range": [
+      {
+        "outcome": "differs/pob-lookup-range",
+        "id": "RandomSupportUnique__1",
+        "stats": [
+          [
+            "local_random_support_gem_index",
+            1,
+            172
+          ],
+          [
+            "local_random_support_gem_level",
+            1,
+            10
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "Socketed Gems are Supported by Level (1-10) (1-172)"
+        ],
+        "not_rendered": [
+          [
+            "local_random_support_gem_index",
+            "lookup-range"
+          ],
+          [
+            "local_random_support_gem_level",
+            "lookup-range"
+          ]
+        ],
+        "evidence": "lookup-range for local_random_support_gem_index, local_random_support_gem_level; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-lookup-range",
+        "id": "RandomSupportUnique__2",
+        "stats": [
+          [
+            "local_random_support_gem_index_1",
+            1,
+            172
+          ],
+          [
+            "local_random_support_gem_level_1",
+            25,
+            35
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "Socketed Gems are Supported by Level (25-35) (1-172)"
+        ],
+        "not_rendered": [
+          [
+            "local_random_support_gem_index_1",
+            "lookup-range"
+          ],
+          [
+            "local_random_support_gem_level_1",
+            "lookup-range"
+          ]
+        ],
+        "evidence": "lookup-range for local_random_support_gem_index_1, local_random_support_gem_level_1; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-lookup-range",
+        "id": "RandomSupportUnique__3",
+        "stats": [
+          [
+            "local_random_support_gem_index",
+            1,
+            172
+          ],
+          [
+            "local_random_support_gem_level",
+            1,
+            10
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "Socketed Gems are Supported by Level (1-10) (1-172)"
+        ],
+        "not_rendered": [
+          [
+            "local_random_support_gem_index",
+            "lookup-range"
+          ],
+          [
+            "local_random_support_gem_level",
+            "lookup-range"
+          ]
+        ],
+        "evidence": "lookup-range for local_random_support_gem_index, local_random_support_gem_level; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-lookup-range",
+        "id": "RandomSupportUnique__4_",
+        "stats": [
+          [
+            "local_random_support_gem_index_1",
+            1,
+            172
+          ],
+          [
+            "local_random_support_gem_level_1",
+            25,
+            35
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "Socketed Gems are Supported by Level (25-35) (1-172)"
+        ],
+        "not_rendered": [
+          [
+            "local_random_support_gem_index_1",
+            "lookup-range"
+          ],
+          [
+            "local_random_support_gem_level_1",
+            "lookup-range"
+          ]
+        ],
+        "evidence": "lookup-range for local_random_support_gem_index_1, local_random_support_gem_level_1; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-lookup-range",
+        "id": "RandomSkillUnique__1",
+        "stats": [
+          [
+            "random_skill_gem_level_+_level",
+            3,
+            3
+          ],
+          [
+            "random_skill_gem_level_+_index",
+            1,
+            287
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "+3 to Level of all (1-287) Gems"
+        ],
+        "not_rendered": [
+          [
+            "random_skill_gem_level_+_index",
+            "lookup-range"
+          ],
+          [
+            "random_skill_gem_level_+_level",
+            "lookup-range"
+          ]
+        ],
+        "evidence": "lookup-range for random_skill_gem_level_+_index, random_skill_gem_level_+_level; PoB's fallback gives its lines"
+      }
+    ],
+    "differs/pob-rewritten": [
+      {
+        "outcome": "differs/pob-rewritten",
+        "id": "JewelExpansionPassiveNodes",
+        "stats": [
+          [
+            "local_jewel_expansion_passive_node_index",
+            0,
+            0
+          ],
+          [
+            "local_jewel_expansion_passive_node_count",
+            0,
+            0
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "Adds (2-12) Passive Skills"
+        ],
+        "not_rendered": [],
+        "evidence": "mods.lua sets this mod's Stat2Value to 2-12"
+      },
+      {
+        "outcome": "differs/pob-rewritten",
+        "id": "IncreasedAttackSpeedEldritchImplicitUniquePresence1",
+        "stats": [
+          [
+            "attack_speed_+%",
+            12,
+            12
+          ],
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "12% increased Attack Speed"
+        ],
+        "pob": [
+          "While a Unique Enemy is in your Presence, 12% increased Attack Speed"
+        ],
+        "not_rendered": [
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            "no-description"
+          ]
+        ],
+        "evidence": "mods.lua prefixes `While a Unique Enemy is in your Presence, ` for ids containing EldritchImplicitUniquePresence"
+      },
+      {
+        "outcome": "differs/pob-rewritten",
+        "id": "IncreasedAttackSpeedEldritchImplicitUniquePresence2",
+        "stats": [
+          [
+            "attack_speed_+%",
+            13,
+            13
+          ],
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "13% increased Attack Speed"
+        ],
+        "pob": [
+          "While a Unique Enemy is in your Presence, 13% increased Attack Speed"
+        ],
+        "not_rendered": [
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            "no-description"
+          ]
+        ],
+        "evidence": "mods.lua prefixes `While a Unique Enemy is in your Presence, ` for ids containing EldritchImplicitUniquePresence"
+      },
+      {
+        "outcome": "differs/pob-rewritten",
+        "id": "IncreasedAttackSpeedEldritchImplicitUniquePresence3",
+        "stats": [
+          [
+            "attack_speed_+%",
+            14,
+            14
+          ],
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "14% increased Attack Speed"
+        ],
+        "pob": [
+          "While a Unique Enemy is in your Presence, 14% increased Attack Speed"
+        ],
+        "not_rendered": [
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            "no-description"
+          ]
+        ],
+        "evidence": "mods.lua prefixes `While a Unique Enemy is in your Presence, ` for ids containing EldritchImplicitUniquePresence"
+      },
+      {
+        "outcome": "differs/pob-rewritten",
+        "id": "IncreasedAttackSpeedEldritchImplicitUniquePresence4",
+        "stats": [
+          [
+            "attack_speed_+%",
+            15,
+            15
+          ],
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            1,
+            1
+          ]
+        ],
+        "ours": [
+          "15% increased Attack Speed"
+        ],
+        "pob": [
+          "While a Unique Enemy is in your Presence, 15% increased Attack Speed"
+        ],
+        "not_rendered": [
+          [
+            "local_influence_mod_requires_unique_monster_presence",
+            "no-description"
+          ]
+        ],
+        "evidence": "mods.lua prefixes `While a Unique Enemy is in your Presence, ` for ids containing EldritchImplicitUniquePresence"
+      }
+    ],
+    "differs/pob-untrimmed": [
+      {
+        "outcome": "differs/pob-untrimmed",
+        "id": "HeavyStrikeThresholdJewel___1",
+        "stats": [
+          [
+            "local_unique_jewel_heavy_strike_chance_to_deal_double_damage_%_with_50_strength_in_radius",
+            20,
+            20
+          ],
+          [
+            "local_jewel_effect_base_radius",
+            1200,
+            1200
+          ]
+        ],
+        "ours": [
+          "With at least 40 Strength in Radius, Heavy Strike has a",
+          "20% chance to deal Double Damage"
+        ],
+        "pob": [
+          "With at least 40 Strength in Radius, Heavy Strike has a ",
+          "20% chance to deal Double Damage"
+        ],
+        "not_rendered": [
+          [
+            "local_jewel_effect_base_radius",
+            "no-description"
+          ]
+        ],
+        "evidence": "PoB's lines, trimmed, equal ours"
+      }
+    ],
+    "differs/pob-zero-range-retry": [
+      {
+        "outcome": "differs/pob-zero-range-retry",
+        "id": "LocalIncreasedEnergyShieldPercentUnique__13",
+        "stats": [
+          [
+            "local_energy_shield_+%",
+            0,
+            200
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(0-200)% increased Energy Shield"
+        ],
+        "not_rendered": [
+          [
+            "local_energy_shield_+%",
+            "no-matching-variant"
+          ]
+        ],
+        "evidence": "no-matching-variant for local_energy_shield_+%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-zero-range-retry",
+        "id": "LocalIncreasedPhysicalDamageReductionRatingPercentUnique__13",
+        "stats": [
+          [
+            "local_physical_damage_reduction_rating_+%",
+            0,
+            200
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(0-200)% increased Armour"
+        ],
+        "not_rendered": [
+          [
+            "local_physical_damage_reduction_rating_+%",
+            "no-matching-variant"
+          ]
+        ],
+        "evidence": "no-matching-variant for local_physical_damage_reduction_rating_+%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-zero-range-retry",
+        "id": "LocalIncreasedEvasionRatingPercentUnique__10",
+        "stats": [
+          [
+            "local_evasion_rating_+%",
+            0,
+            200
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(0-200)% increased Evasion Rating"
+        ],
+        "not_rendered": [
+          [
+            "local_evasion_rating_+%",
+            "no-matching-variant"
+          ]
+        ],
+        "evidence": "no-matching-variant for local_evasion_rating_+%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-zero-range-retry",
+        "id": "MovementVelocityUnique__22",
+        "stats": [
+          [
+            "base_movement_velocity_+%",
+            0,
+            40
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(0-40)% increased Movement Speed"
+        ],
+        "not_rendered": [
+          [
+            "base_movement_velocity_+%",
+            "no-matching-variant"
+          ]
+        ],
+        "evidence": "no-matching-variant for base_movement_velocity_+%; PoB's fallback gives its lines"
+      },
+      {
+        "outcome": "differs/pob-zero-range-retry",
+        "id": "AttackAndCastSpeedUnique__9",
+        "stats": [
+          [
+            "attack_and_cast_speed_+%",
+            0,
+            40
+          ]
+        ],
+        "ours": [],
+        "pob": [
+          "(0-40)% increased Attack and Cast Speed"
+        ],
+        "not_rendered": [
+          [
+            "attack_and_cast_speed_+%",
+            "no-matching-variant"
+          ]
+        ],
+        "evidence": "no-matching-variant for attack_and_cast_speed_+%; PoB's fallback gives its lines"
+      }
+    ]
+  }
+}

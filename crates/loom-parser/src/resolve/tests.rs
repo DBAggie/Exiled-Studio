@@ -9,8 +9,8 @@
 use std::collections::BTreeMap;
 
 use loom_data::stat_desc::{
-    Condition, Description, Hand, Handler, NoLookup, StatDescFile, StatDescriptions, StatValue,
-    Template, Variant, VariantFilter, render_description,
+    Condition, Description, Hand, Handler, Lookup, LookupHandler, NoLookup, StatDescFile,
+    StatDescriptions, StatValue, Template, Variant, VariantFilter, render_description,
 };
 
 use super::*;
@@ -114,7 +114,7 @@ fn values(r: &Resolution) -> Vec<(String, RawValue)> {
     resolved(r)
         .stats
         .iter()
-        .map(|s| (s.stat.clone(), s.value))
+        .map(|s| (s.stat.clone(), s.value.clone()))
         .collect()
 }
 
@@ -551,14 +551,19 @@ fn build_should_count_every_variant_it_leaves_out() {
     assert_eq!(
         stats,
         IndexStats {
-            indexed: 2,
-            keys: 1,
+            indexed: 3,
+            multi_line: 1,
+            lookup: 0,
+            entries: 3,
+            keys: 2,
+            max_lines: 2,
             gem_quality: 1,
             table_only: 1,
             bad_template: 2,
             empty_text: 1,
-            deferred_multi_line: 1,
-            deferred_lookup: 1,
+            lookup_unavailable: 1,
+            lookup_multi: 0,
+            lookup_blank_names: 0,
         }
     );
     // Every variant is indexed or counted as left out.
@@ -567,8 +572,8 @@ fn build_should_count_every_variant_it_leaves_out() {
         + stats.table_only
         + stats.bad_template
         + stats.empty_text
-        + stats.deferred_multi_line
-        + stats.deferred_lookup;
+        + stats.lookup_unavailable
+        + stats.lookup_multi;
     assert_eq!(accounted, 9);
 }
 
@@ -586,7 +591,7 @@ fn resolve_should_keep_a_later_variant_that_reads_the_line_differently() {
     )]);
     let r = resolve(&set, "5% chance");
     let c = resolved(&r);
-    assert_eq!((c.variant, c.stats[0].value), (0, exact(5)));
+    assert_eq!((c.variant, c.stats[0].value.clone()), (0, exact(5)));
     assert_eq!(
         c.alternatives,
         vec![Alternative {
@@ -790,4 +795,346 @@ fn resolve_should_not_panic_on_arbitrary_text() {
     }
     // The generator reaches more than the no-template path.
     assert!(outcomes.len() >= 3, "{outcomes:?}");
+}
+
+/// Names for `passive_hash` (keys 7 and 9 share a name, 10 is blank) and
+/// `display_indexable_support` (a name with a number).
+struct Names;
+
+impl Lookup for Names {
+    fn name(&self, handler: LookupHandler, value: i64) -> Option<String> {
+        self.entries(handler)
+            .into_iter()
+            .find(|(k, _)| *k == value)
+            .map(|(_, n)| n)
+    }
+
+    fn entries(&self, handler: LookupHandler) -> Vec<(i64, String)> {
+        match handler {
+            LookupHandler::PassiveHash => vec![
+                (7, "Whispers of Doom".to_owned()),
+                (8, "Heart of Ice".to_owned()),
+                (9, "Whispers of Doom".to_owned()),
+                (10, "  ".to_owned()),
+            ],
+            LookupHandler::DisplayIndexableSupport => vec![(1, "Level 2 Thing".to_owned())],
+            _ => Vec::new(),
+        }
+    }
+}
+
+fn resolve_named(set: &StatDescriptions, line: &str) -> Resolution {
+    let scope = set.scope("a.txt").unwrap();
+    Index::build_with(&scope, &Names).resolve(line)
+}
+
+fn outcome_name(r: &Resolution) -> &'static str {
+    match &r.outcome {
+        Outcome::Resolved(_) => "resolved",
+        Outcome::Ambiguous(_) => "ambiguous",
+        Outcome::Unresolved(u) => u.name(),
+    }
+}
+
+#[test]
+fn resolve_should_read_a_looked_up_name_as_every_key_with_that_name() {
+    let set = one_file(vec![desc(
+        &["p"],
+        vec![variant(&[ANY], "Allocates {0}", &[("passive_hash", 0)])],
+    )]);
+    let r = resolve_named(&set, "Allocates Whispers of Doom");
+    assert_eq!(
+        values(&r),
+        vec![("p".to_owned(), RawValue::Lookup(vec![7, 9]))]
+    );
+    let r = resolve_named(&set, "Allocates  Heart of Ice ");
+    assert_eq!(
+        values(&r),
+        vec![("p".to_owned(), RawValue::Lookup(vec![8]))]
+    );
+    assert_eq!(
+        resolve_named(&set, "Allocates Nothing").outcome,
+        Outcome::Unresolved(Unresolved::NoTemplate)
+    );
+    let scope = set.scope("a.txt").unwrap();
+    let stats = Index::build_with(&scope, &Names).stats();
+    // Two distinct non-blank names; the blank one is counted.
+    assert_eq!(
+        (
+            stats.indexed,
+            stats.lookup,
+            stats.entries,
+            stats.lookup_blank_names
+        ),
+        (1, 1, 2, 1)
+    );
+}
+
+#[test]
+fn build_should_count_two_lookup_handlers_on_one_stat_as_multi() {
+    let set = one_file(vec![desc(
+        &["p"],
+        vec![variant(
+            &[ANY],
+            "Allocates {0}",
+            &[("passive_hash", 0), ("display_indexable_support", 0)],
+        )],
+    )]);
+    let scope = set.scope("a.txt").unwrap();
+    let stats = Index::build_with(&scope, &Names).stats();
+    assert_eq!((stats.indexed, stats.lookup_multi), (0, 1));
+}
+
+#[test]
+fn resolve_lines_should_keep_single_line_readings_when_a_multi_line_match_fails() {
+    // The two-line key fits, its condition does not; both lines resolve
+    // alone, so their single-line readings are kept.
+    let set = one_file(vec![
+        desc(
+            &["a"],
+            vec![variant(&[POSITIVE], "{0} first\\nsecond", &[])],
+        ),
+        simple("one", "{0} first"),
+        simple("two", "second"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let rs = index.resolve_lines(&["-3 first", "second"]);
+    let shapes: Vec<(usize, &str)> = rs.iter().map(|r| (r.lines, outcome_name(r))).collect();
+    assert_eq!(shapes, vec![(1, "resolved"), (1, "resolved")]);
+    assert_eq!(values(&rs[0]), vec![("one".to_owned(), exact(-3))]);
+}
+
+#[test]
+fn resolve_should_keep_only_looked_up_keys_that_meet_the_condition() {
+    let at_most_eight = Condition::Range {
+        min: None,
+        max: Some(8),
+    };
+    let set = one_file(vec![desc(
+        &["p"],
+        vec![variant(
+            &[at_most_eight],
+            "Allocates {0}",
+            &[("passive_hash", 0)],
+        )],
+    )]);
+    let r = resolve_named(&set, "Allocates Whispers of Doom");
+    assert_eq!(
+        values(&r),
+        vec![("p".to_owned(), RawValue::Lookup(vec![7]))]
+    );
+    let above = Condition::Range {
+        min: Some(10),
+        max: None,
+    };
+    let set = one_file(vec![desc(
+        &["p"],
+        vec![variant(&[above], "Allocates {0}", &[("passive_hash", 0)])],
+    )]);
+    assert_eq!(
+        rejections(&resolve_named(&set, "Allocates Heart of Ice")),
+        vec!["condition-fails"]
+    );
+}
+
+#[test]
+fn resolve_should_read_numbers_next_to_and_inside_a_looked_up_name() {
+    let set = one_file(vec![desc(
+        &["level", "gem"],
+        vec![variant(
+            &[ANY, ANY],
+            "Supported by Level {0} {1}",
+            &[("display_indexable_support", 1)],
+        )],
+    )]);
+    let r = resolve_named(&set, "Supported by Level 20 Level 2 Thing");
+    assert_eq!(
+        values(&r),
+        vec![
+            ("level".to_owned(), exact(20)),
+            ("gem".to_owned(), RawValue::Lookup(vec![1]))
+        ]
+    );
+    // The name's own number is a literal.
+    assert_eq!(
+        rejections(&resolve_named(&set, "Supported by Level 20 Level 3 Thing")),
+        vec!["literal-mismatch"]
+    );
+}
+
+#[test]
+fn build_should_count_lookup_variants_it_cannot_expand() {
+    let two = desc(
+        &["a", "b"],
+        vec![variant(
+            &[ANY, ANY],
+            "{0} and {1}",
+            &[("passive_hash", 0), ("passive_hash", 1)],
+        )],
+    );
+    let missing = desc(
+        &["c"],
+        vec![variant(
+            &[ANY],
+            "Uses {0}",
+            &[("affliction_reward_type", 0)],
+        )],
+    );
+    // A lookup stat without a placeholder is an ordinary hidden stat.
+    let hidden = desc(
+        &["d", "e"],
+        vec![variant(&[ANY, ANY], "{0} hidden", &[("passive_hash", 1)])],
+    );
+    let set = one_file(vec![two, missing, hidden]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build_with(&scope, &Names);
+    let stats = index.stats();
+    assert_eq!(
+        (
+            stats.indexed,
+            stats.lookup,
+            stats.lookup_multi,
+            stats.lookup_unavailable
+        ),
+        (1, 0, 1, 1)
+    );
+    assert_eq!(outcome_name(&index.resolve("5 hidden")), "resolved");
+}
+
+#[test]
+fn resolve_lines_should_match_a_multi_line_template_across_lines() {
+    let set = one_file(vec![
+        desc(
+            &["a", "b"],
+            vec![variant(&[ANY, ANY], "{0} first\\n<tag>{{Second}} {1}", &[])],
+        ),
+        simple("one", "{0} first"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    assert_eq!(index.stats().max_lines, 2);
+    let rs = index.resolve_lines(&["3 first", " Second  4", "5 first"]);
+    assert_eq!(rs.len(), 2);
+    assert_eq!((rs[0].lines, rs[0].line.as_str()), (2, "3 first\nSecond 4"));
+    assert_eq!(
+        values(&rs[0]),
+        vec![("a".to_owned(), exact(3)), ("b".to_owned(), exact(4))]
+    );
+    assert_eq!(rs[1].lines, 1);
+    assert_eq!(values(&rs[1]), vec![("one".to_owned(), exact(5))]);
+    // Alone, the first line is the single-line description.
+    assert_eq!(
+        values(&index.resolve("3 first")),
+        vec![("one".to_owned(), exact(3))]
+    );
+}
+
+#[test]
+fn resolve_lines_should_keep_a_multi_line_key_match_that_does_not_verify() {
+    let set = one_file(vec![
+        desc(
+            &["a"],
+            vec![variant(&[POSITIVE], "{0} first\\nsecond", &[])],
+        ),
+        simple("one", "{0} first"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let rs = index.resolve_lines(&["-3 first", "second"]);
+    assert_eq!(rs.len(), 1);
+    assert_eq!(rejections(&rs[0]), vec!["condition-fails"]);
+}
+
+#[test]
+fn resolve_lines_should_cover_every_line_once() {
+    let set = one_file(vec![
+        desc(&["a"], vec![variant(&[ANY], "A {0}\\nB\\nC", &[])]),
+        simple("b", "B"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let lines = ["A 1", "B", "x", "", "A 2", "B", "C", "B"];
+    let rs = index.resolve_lines(&lines);
+    let covered: usize = rs.iter().map(|r| r.lines).sum();
+    assert_eq!(covered, lines.len());
+    let shapes: Vec<(usize, &str)> = rs.iter().map(|r| (r.lines, outcome_name(r))).collect();
+    assert_eq!(
+        shapes,
+        vec![
+            (1, "no-template"),
+            (1, "resolved"),
+            (1, "no-template"),
+            (1, "no-template"),
+            (3, "resolved"),
+            (1, "resolved"),
+        ]
+    );
+    assert!(index.resolve_lines(&[]).is_empty());
+}
+
+#[test]
+fn resolve_lines_should_read_back_multi_line_and_lookup_renders() {
+    let set = one_file(vec![
+        desc(
+            &["lvl", "gem"],
+            vec![variant(
+                &[ANY, ANY],
+                "Level {0}\\nSupported by {1}",
+                &[("display_indexable_support", 1)],
+            )],
+        ),
+        desc(
+            &["p", "q"],
+            vec![variant(
+                &[ANY, POSITIVE],
+                "Allocates {0}\\n{1}% increased X\\nThird line",
+                &[("passive_hash", 0)],
+            )],
+        ),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build_with(&scope, &Names);
+    let (_, one) = scope.description(scope.find("lvl").unwrap()).unwrap();
+    let (_, two) = scope.description(scope.find("p").unwrap()).unwrap();
+    let mut rng = Rng(0x1234_5678_9ABC_DEF0);
+    for _ in 0..500 {
+        let level = i64::try_from(rng.below(40)).unwrap() - 5;
+        let key = [7, 8, 9][rng.below(3)];
+        let pct = i64::try_from(rng.below(100)).unwrap() + 1;
+        let (_, a) = render_description(
+            one,
+            Hand::Main,
+            &[StatValue::exact(level), StatValue::exact(1)],
+            &Names,
+            VariantFilter::default(),
+        )
+        .unwrap();
+        let (_, b) = render_description(
+            two,
+            Hand::Main,
+            &[StatValue::exact(key), StatValue::exact(pct)],
+            &Names,
+            VariantFilter::default(),
+        )
+        .unwrap();
+        let lines: Vec<&str> = a.iter().chain(&b).map(String::as_str).collect();
+        let rs = index.resolve_lines(&lines);
+        assert_eq!(rs.len(), 2, "{lines:?}");
+        assert_eq!(
+            values(&rs[0]),
+            vec![
+                ("lvl".to_owned(), exact(level)),
+                ("gem".to_owned(), RawValue::Lookup(vec![1]))
+            ]
+        );
+        let keys = if key == 8 { vec![8] } else { vec![7, 9] };
+        assert_eq!(
+            values(&rs[1]),
+            vec![
+                ("p".to_owned(), RawValue::Lookup(keys)),
+                ("q".to_owned(), exact(pct))
+            ]
+        );
+    }
 }
