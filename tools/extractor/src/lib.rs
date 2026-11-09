@@ -7,4 +7,11 @@
 
 #![warn(clippy::indexing_slicing)]
 
+pub mod bundle;
 pub mod decompress;
+pub mod hash;
+pub mod index;
+pub mod install;
+mod reader;
+
+pub use reader::Short;

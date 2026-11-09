@@ -10,8 +10,8 @@
 //! ```
 //! `LOOM_OODLE_TOOL` overrides the decoder path (default: `unoodle` on PATH).
 //!
-//! The bundle header is parsed here with test-only code; the real container
-//! parser is PR A2.
+//! The bundle header comes from `Bundle::parse` (PR A2), which checks the
+//! header arithmetic; this test checks that chunks decode on their own too.
 
 #![expect(
     clippy::expect_used,
@@ -20,67 +20,28 @@
 
 use std::path::{Path, PathBuf};
 
+use loom_extractor::bundle::Bundle;
 use loom_extractor::decompress::{Decompressor, ExternalTool};
-
-/// Bundle header fields used by this check (layout in `docs/spikes/spike-a-extraction.md`).
-struct Header {
-    decompressed_len: usize,
-    payload_len: usize,
-    head_len: usize,
-    granularity: usize,
-    chunk_sizes: Vec<usize>,
-}
 
 fn u32_at(bytes: &[u8], offset: usize) -> usize {
     let raw: [u8; 4] = bytes
         .get(offset..offset + 4)
         .and_then(|s| s.try_into().ok())
-        .expect("header field within file");
+        .expect("field within buffer");
     usize::try_from(u32::from_le_bytes(raw)).expect("u32 fits usize")
 }
 
-fn parse_header(bytes: &[u8]) -> Header {
-    let chunk_count = u32_at(bytes, 36);
-    Header {
-        decompressed_len: u32_at(bytes, 0),
-        payload_len: u32_at(bytes, 4),
-        head_len: u32_at(bytes, 8),
-        granularity: u32_at(bytes, 40),
-        chunk_sizes: (0..chunk_count)
-            .map(|i| u32_at(bytes, 60 + 4 * i))
-            .collect(),
-    }
-}
-
-/// Checks header arithmetic, then decodes the payload in one call and the
-/// first and last chunks on their own, and compares them.
+/// Decodes the payload in one call and the first and last chunks on their
+/// own, and compares them.
 fn decode_bundle(tool: &ExternalTool, path: &Path) -> Vec<u8> {
     let bytes = std::fs::read(path).expect("read bundle");
-    let h = parse_header(&bytes);
-    let data_start = 12 + h.head_len;
-    assert_eq!(
-        data_start + h.payload_len,
-        bytes.len(),
-        "header sizes add up to file size"
-    );
-    assert_eq!(
-        h.chunk_sizes.iter().sum::<usize>(),
-        h.payload_len,
-        "chunk sizes add up to payload"
-    );
-    assert_eq!(
-        h.chunk_sizes.len(),
-        h.decompressed_len.div_ceil(h.granularity),
-        "chunk count"
-    );
-
-    let payload = bytes.get(data_start..).expect("payload");
-    let whole = tool
-        .decompress(payload, h.decompressed_len)
-        .expect("decode whole payload");
+    let bundle = Bundle::parse(&bytes).expect("valid bundle header");
+    let h = &bundle.header;
+    let payload = bundle.payload;
+    let whole = bundle.decode(tool).expect("decode whole payload");
 
     let first_len = h.decompressed_len.min(h.granularity);
-    let first_size = h.chunk_sizes[0];
+    let first_size = usize::try_from(h.chunk_sizes[0]).expect("fits usize");
     let first = tool
         .decompress(&payload[..first_size], first_len)
         .expect("decode first chunk");
@@ -90,7 +51,8 @@ fn decode_bundle(tool: &ExternalTool, path: &Path) -> Vec<u8> {
         "first chunk matches whole-payload decode"
     );
 
-    let last_size = *h.chunk_sizes.last().expect("at least one chunk");
+    let last_size =
+        usize::try_from(*h.chunk_sizes.last().expect("at least one chunk")).expect("fits usize");
     let last_start_out = (h.chunk_sizes.len() - 1) * h.granularity;
     let last = tool
         .decompress(
