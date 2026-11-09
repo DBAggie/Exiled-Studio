@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A6a)
+Last Updated: 2026-11-09 (PR A6b)
 
 # Spike A: tasks
 
@@ -73,13 +73,15 @@ Last Updated: 2026-11-09 (PR A6a)
 - [x] Note that gap entries become divergence-register entries once Spike C defines the format (report section 14)
 - [x] Update ACTION-PLAN gate status, CLAUDE.md Status, handoff
 - [x] `code-architecture-reviewer` review: blocker and should-fix items applied (context file, "PR A6a"); tool rerun at `33730ed`
-- [ ] PR open (#11), CI green, maintainer merge
+- [x] PR open (#11), CI green, maintainer merge (merged 2026-11-09 as `be55992`)
 
 ## PR A6b: passive skill graph and final gate (step 6, part 2)
-- [ ] Find the passive skill graph files in both installs (PoE1 `metadata/passiveskillgraph.psg`?, PoE2 equivalent) and document the format (PoB `src/Export/psg.lua` reads an old PoE1 layout; PoE2 `src/Export/Scripts/passivetree.lua`)
-- [ ] Parser in `tools/extractor` (bytes in, typed errors, corrupt-input tests); `extract` writes the graph's node IDs
-- [ ] Cross-check passive rules: rows not in the graph (`pob-filtered`/`not-in-index` as fits), rows in the graph but not in PoB's tree (atlas and other sub-trees, by `SkillType`/`AtlasSubTree`/`BrequelTree`/ascendancy columns), with tool evidence
-- [ ] Final gate verdict; ACTION-PLAN gate status, CLAUDE.md Status, handoff
+- [x] Find the passive skill graph files in both installs (7 PoE1, 5 PoE2 `*.psg`) and document the format (report section 16)
+- [x] Parser in `tools/extractor` (`src/psg.rs`: bytes in, typed errors, corrupt-input tests); `extract` writes every graph (`passive_skill_graphs/`, manifest format 3) and extracts `PassiveSkillTrees`
+- [x] Cross-check passive rules from the graphs: PoE2 `passivetree.lua` filters (empty name, `[DNT` name, skipped ascendancy) and `not-on-default-graph` (`pob-filtered`); PoE1 `not-on-default-graph` under the new category `not-on-tree` (maintainer decision 2026-11-09; plan step 6 amended)
+- [x] `code-architecture-reviewer` review: 3 blockers and should-fix items applied (context file, "PR A6b"); tool rerun at `b4eebe0`
+- [x] Final gate verdict (met); ACTION-PLAN gate status, CLAUDE.md Status, handoff
+- [ ] PR open, CI green, maintainer merge
 
 ## Follow-up (cross-check)
 - [ ] Reproduce `mods.lua`'s writer list (`writeMods(file, condFunc)` domains and generation types, DelveFossil spawn-tag skips) so `domain-generation-not-exported` and `passes-reproduced-filters` stop being output-derived heuristics (report section 14)

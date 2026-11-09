@@ -54,6 +54,8 @@
     "Folders/data/statdescriptions.1": "a8ab3a99addd59b2300a44375955880eeccb7f16e8c1e4d713ca86f8449b714e",
     "Folders/data/statdescriptions.2": "a07ad51ffaae73318e2c9d1fdc8d950224e996405235a7d0568152dc468e7924",
     "Folders/metadata": "64c5370fbe3b837fbdc8f23a333562fc8fea5212554358dd85180ce57831cf14",
+    "Folders/metadata/leagueskillgraphs": "bb265023cbc69e570f3817ba9596e8e338fa863c2d4e7d4598c3695457d3c514",
+    "Folders/metadata/ui": "d8fe9ea0257d83ac1cb63085dcbff8c1812d53333b356bfba63061afa6d61491",
     "Tiny.V0.1": "f363052dce76f49e5927bdd8238ce798bae65af3cb08c201f46f0c0a95cc36e4",
     "Tiny.V1.1": "27ade06468f1ea9b05b51783562601d77259d79486a0f4d55ae89b0911eb7557",
     "Tiny.V2.1": "1219e0563dbcda7e71f41d0af9ef2c5899165530b49a7d0ae3212244bb297f5c",
@@ -76,11 +78,31 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "9394d75a34b05bc4a0cd36d4aa7e7089d58ddffb",
+    "commit": "b4eebe08104772f808cad58868888edfbcfe4f99",
     "dirty": false,
     "version": "0.0.0"
   },
   "files": {
+    "passive_skill_graphs/metadata/alternateskillgraphs/royalepassiveskillgraph.psg.json": {
+      "rows": 6,
+      "sha256": "af7fb28da424e0fd2c5da45403ea5fde0b2fd0f984b62a237b320b88bdeecc39"
+    },
+    "passive_skill_graphs/metadata/atlasskillgraphs/atlasskillgraph.psg.json": {
+      "rows": 576,
+      "sha256": "3b311cef140111d7ae786ad5b35d9adfedad08f88bddc68eb691c9d38afaf416"
+    },
+    "passive_skill_graphs/metadata/atlasskillgraphs/endgamemaplayoutgraph.psg.json": {
+      "rows": 611,
+      "sha256": "a058a115848cccf7d70db6c244daa68221bbbaa7877a6ceaaec2c2b9b3982e8d"
+    },
+    "passive_skill_graphs/metadata/leagueskillgraphs/chayulatreepassiveskillgraph.psg.json": {
+      "rows": 248,
+      "sha256": "59d1e9fc83eae908257aa72163fa60d92677d972d9a25873c8477deb01c19843"
+    },
+    "passive_skill_graphs/metadata/passiveskillgraph.psg.json": {
+      "rows": 5152,
+      "sha256": "e18cb3d782b7b911b0ab6a16ff92573a4d938c500d7901a5e73c1383541dc031"
+    },
     "stat_descriptions/active_skill_gem_stat_descriptions.csd.json": {
       "rows": 326,
       "sha256": "fe7204b05ea89f22dfad718305b6757f04a94f5f86b0908947e00ab7590b6b33"
@@ -2705,6 +2727,10 @@
       "rows": 9,
       "sha256": "8997deeccd6cdbcc9d728dfb595ac7462d9ed7daae97940d14ac58d274c7711f"
     },
+    "tables/PassiveSkillTrees.json": {
+      "rows": 5,
+      "sha256": "9422c309ac2b22250321f752e63b1cc6c0847288c23d811663a7468255547aeb"
+    },
     "tables/PassiveSkillVariantTypes.json": {
       "rows": 85,
       "sha256": "f0839b1366181489c5d3ed04ec502858bd1eabe879392f4d438630e20ec5feac"
@@ -2778,11 +2804,91 @@
       "sha256": "36071ad34e857e80e07ddc3d94feb470509837f6962dec9d1cd88d1eb4254bc0"
     }
   },
-  "format": 2,
+  "format": 3,
   "game": "poe2",
   "index": {
     "path": "Bundles2/_.index.bin",
     "sha256": "9342956efd2ac4cb7864b46c3f7cb889fa3e1b49b3ca05cca7efddc9cdad7ed9"
+  },
+  "passive_skill_graphs": {
+    "dir": "passive_skill_graphs",
+    "files": {
+      "metadata/alternateskillgraphs/royalepassiveskillgraph.psg": {
+        "connections": 0,
+        "dangling_connections": 0,
+        "dangling_roots": 0,
+        "duplicate_nodes": 0,
+        "error": null,
+        "groups": 6,
+        "kind": 0,
+        "nodes": 6,
+        "output": "passive_skill_graphs/metadata/alternateskillgraphs/royalepassiveskillgraph.psg.json",
+        "roots": 6,
+        "source": "metadata/alternateskillgraphs/royalepassiveskillgraph.psg",
+        "source_sha256": "c3c0e67460bda08e4c4d53ab28b9e59c989e623621b5029c8827fc7397153bfa",
+        "status": "ok"
+      },
+      "metadata/atlasskillgraphs/atlasskillgraph.psg": {
+        "connections": 586,
+        "dangling_connections": 0,
+        "dangling_roots": 0,
+        "duplicate_nodes": 1,
+        "error": null,
+        "groups": 255,
+        "kind": 1,
+        "nodes": 576,
+        "output": "passive_skill_graphs/metadata/atlasskillgraphs/atlasskillgraph.psg.json",
+        "roots": 7,
+        "source": "metadata/atlasskillgraphs/atlasskillgraph.psg",
+        "source_sha256": "c705685dfd3028cddbd535ca718931a8ece1eed369d16b79f867c37e9986e9d4",
+        "status": "ok"
+      },
+      "metadata/atlasskillgraphs/endgamemaplayoutgraph.psg": {
+        "connections": 800,
+        "dangling_connections": 0,
+        "dangling_roots": 0,
+        "duplicate_nodes": 0,
+        "error": null,
+        "groups": 611,
+        "kind": 1,
+        "nodes": 611,
+        "output": "passive_skill_graphs/metadata/atlasskillgraphs/endgamemaplayoutgraph.psg.json",
+        "roots": 0,
+        "source": "metadata/atlasskillgraphs/endgamemaplayoutgraph.psg",
+        "source_sha256": "f511ae9708d8278e1886c8af86e22020241449394ff82f8c53e5ac46989f4c7f",
+        "status": "ok"
+      },
+      "metadata/leagueskillgraphs/chayulatreepassiveskillgraph.psg": {
+        "connections": 245,
+        "dangling_connections": 0,
+        "dangling_roots": 0,
+        "duplicate_nodes": 0,
+        "error": null,
+        "groups": 228,
+        "kind": 2,
+        "nodes": 248,
+        "output": "passive_skill_graphs/metadata/leagueskillgraphs/chayulatreepassiveskillgraph.psg.json",
+        "roots": 5,
+        "source": "metadata/leagueskillgraphs/chayulatreepassiveskillgraph.psg",
+        "source_sha256": "f25e8cc4a3da0a6077244ea2cda423a7873bcd0c93547b28b5754fa1268d4923",
+        "status": "ok"
+      },
+      "metadata/passiveskillgraph.psg": {
+        "connections": 6070,
+        "dangling_connections": 0,
+        "dangling_roots": 0,
+        "duplicate_nodes": 0,
+        "error": null,
+        "groups": 1623,
+        "kind": 0,
+        "nodes": 5152,
+        "output": "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
+        "roots": 6,
+        "source": "metadata/passiveskillgraph.psg",
+        "source_sha256": "071cba806a621a0bdae09828cc5ad8e34259159659e950a1898770790730c344",
+        "status": "ok"
+      }
+    }
   },
   "schema": {
     "commit": "717d788d6ec081821c33473b2a0ec35629144826",
@@ -36322,6 +36428,7 @@
         "ActiveSkillWeaponRequirement",
         "AlternateSkillTargetingBehaviours",
         "AtlasPassiveSkillSubTrees",
+        "PassiveSkillTrees",
         "PassiveSkills",
         "Tags"
       ],
@@ -37746,7 +37853,8 @@
       "non_finite_floats": 0,
       "output": "tables/PassiveSkillTreeUIArt.json",
       "referenced_by": [
-        "Ascendancy"
+        "Ascendancy",
+        "PassiveSkillTrees"
       ],
       "root": false,
       "row_len": 177,
@@ -37754,6 +37862,33 @@
       "rows": 9,
       "source": "data/balance/passiveskilltreeuiart.datc64",
       "source_sha256": "0325bd827dbeae13674b131d223a4a4e357efee74d0b25c0a25d3b62cd00a3cb",
+      "status": "ok"
+    },
+    "PassiveSkillTrees": {
+      "columns": 25,
+      "columns_read": 25,
+      "error": null,
+      "key_columns": {
+        "Name": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 5
+        },
+        "UIArt": {
+          "dangling": 0,
+          "target": "PassiveSkillTreeUIArt",
+          "values": 5
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveSkillTrees.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 120,
+      "row_size_mismatch": null,
+      "rows": 5,
+      "source": "data/balance/passiveskilltrees.datc64",
+      "source_sha256": "e9be3ec7c8d65e347613b44b309e7ddb04b687bf708da19eb5b0c663cc6f4e95",
       "status": "ok"
     },
     "PassiveSkillVariantTypes": {
