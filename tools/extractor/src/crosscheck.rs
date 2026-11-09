@@ -294,6 +294,9 @@ pub struct FamilyGate {
     pub patch_delta_limit: usize,
     /// Uncategorized gaps in both directions.
     pub uncategorized: usize,
+    /// `schema-mismatch` gaps in both directions: the table did not decode
+    /// cleanly, so these gaps are not explained and the family fails.
+    pub schema_mismatch: usize,
     /// PoB lines that did not parse.
     pub unparsed: usize,
 }
@@ -536,7 +539,7 @@ impl<'a> Family<'a> {
                 rules.push(Rule::new(
                     Category::SchemaMismatch,
                     "table-not-ok",
-                    format!("the extract manifest gives the table status `{status}`"),
+                    format!("the extract manifest gives the table status `{status}`; the gap may come from the decoding, so it fails the gate"),
                     |_| true,
                 ));
             }
@@ -550,14 +553,17 @@ impl<'a> Family<'a> {
         let both = |c| pob_missing.count(c) + ours_extra.count(c);
         let patch_delta = both(Category::PatchDelta);
         let uncategorized = both(Category::Uncategorized);
+        let schema_mismatch = both(Category::SchemaMismatch);
         self.unparsed.sort();
         let gate = FamilyGate {
             met: pob_keys > 0
                 && uncategorized == 0
+                && schema_mismatch == 0
                 && self.unparsed.is_empty()
                 && patch_delta * 100 <= pob_keys * PATCH_DELTA_PERCENT,
             patch_delta,
             patch_delta_limit: pob_keys * PATCH_DELTA_PERCENT / 100,
+            schema_mismatch,
             uncategorized,
             unparsed: self.unparsed.len(),
         };
@@ -767,6 +773,12 @@ fn pob_name_of(file: &str) -> String {
 /// Our output keeps `no_description` apart from the descriptions, so a
 /// file's `no_description` entries are applied before its descriptions; PoB
 /// applies them in line order. Stat-description files put them first.
+///
+/// Description order is one running count over all files. PoB renumbers the
+/// descriptions of a file loaded in append mode (`loadStatFile(a, b)`: `b`)
+/// from 1, so two descriptions can share an order there. This does not
+/// change whether a mod gets a line, only, in rare cases, which line comes
+/// first (the `dnt-first-line` rule reads the first line).
 struct Describer<'c> {
     by_stat: BTreeMap<&'c str, Option<(usize, &'c Description)>>,
     next_order: usize,
@@ -1026,6 +1038,36 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         id_patterns.push((raw, pattern));
     }
     let row = |k: &str| rows.get(k).copied();
+    // Rows PoB exports. A writer filter only explains a gap for a (domain,
+    // generation) pair where no exported mod breaks it: PoB has several
+    // writers, and a pattern one writer excludes another may write (for
+    // example `^Synthesis` and `Necropolis`).
+    let exported_rows: Vec<&Vec<Value>> = read
+        .iter()
+        .flat_map(|(_, keys)| &keys.keys)
+        .filter_map(|k| rows.get(k.as_str()).copied())
+        .collect();
+    let broken_by = |test: &dyn Fn(&[Value]) -> bool| -> BTreeSet<String> {
+        exported_rows
+            .iter()
+            .filter(|r| test(r))
+            .map(|r| combo(r))
+            .collect()
+    };
+    let pattern_broken: Vec<BTreeSet<String>> = id_patterns
+        .iter()
+        .map(|(_, p)| broken_by(&|r| ours::text(r, id).is_some_and(|i| p.find(i))))
+        .collect();
+    let aura_bonus = |r: &[Value]| first_family(r) == Some("AuraBonus");
+    let without_family = |r: &[Value]| unique_generation(r) && !non_empty(r, family_col);
+    let flagged = |r: &[Value]| non_empty(r, aura_flags);
+    let aura_bonus_broken = broken_by(&aura_bonus);
+    let without_family_broken = broken_by(&without_family);
+    let flagged_broken = broken_by(&flagged);
+    // `test` holds for the row and no exported mod of its pair breaks it.
+    let scoped = move |k: &str, test: &dyn Fn(&[Value]) -> bool, broken: &BTreeSet<String>| {
+        row(k).is_some_and(|r| test(r) && !broken.contains(&combo(r)))
+    };
 
     // Declared after everything its rules borrow.
     let mut family = Family {
@@ -1039,12 +1081,14 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
     family.ours_extra_rules.push(Rule::detailed(
         Category::PobFiltered,
         "id-pattern-excluded",
-        "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script; counted per pattern in `breakdown`)",
+        "the Id matches a pattern that a writer in Export/Scripts/mods.lua excludes (`not mod.Id:match(\"<pattern>\")`, read from the script), and no mod PoB exports with the same domain and generation type matches it (counted per pattern in `breakdown`)",
         move |k| {
+            let c = combo(row(k)?);
             id_patterns
                 .iter()
-                .find(|(_, p)| p.find(k))
-                .map(|(raw, _)| raw.clone())
+                .zip(&pattern_broken)
+                .find(|((_, p), broken)| p.find(k) && !broken.contains(&c))
+                .map(|((raw, _), _)| raw.clone())
         },
     ));
     family.anchored(
@@ -1103,8 +1147,8 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         Rule::new(
             Category::PobFiltered,
             "aura-bonus-family",
-            "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`",
-            move |k| row(k).and_then(|r| first_family(r)) == Some("AuraBonus"),
+            "Export/Scripts/mods.lua's item and item-exclusive writers skip mods whose first family is `AuraBonus`, and no mod PoB exports with the same domain and generation type has that family",
+            move |k| scoped(k, &aura_bonus, &aura_bonus_broken),
         ),
     );
     family.anchored(
@@ -1115,8 +1159,8 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         Rule::new(
             Category::PobFiltered,
             "unique-generation-without-family",
-            "Export/Scripts/mods.lua's item-exclusive writer needs a mod family (`mod.Family[1] and ...`); this UNIQUE-generation mod has none",
-            move |k| row(k).is_some_and(|r| unique_generation(r) && !non_empty(r, family_col)),
+            "Export/Scripts/mods.lua's item-exclusive writer needs a mod family (`mod.Family[1] and ...`); this UNIQUE-generation mod has none, and no mod PoB exports with the same domain and generation type lacks one",
+            move |k| scoped(k, &without_family, &without_family_broken),
         ),
     );
     family.anchored(
@@ -1127,14 +1171,14 @@ fn mods(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         Rule::new(
             Category::PobFiltered,
             "aura-flags",
-            "Export/Scripts/mods.lua's explicit-mod writer skips mods with aura flags (`#mod.AuraFlags == 0`)",
-            move |k| row(k).is_some_and(|r| non_empty(r, aura_flags)),
+            "Export/Scripts/mods.lua's explicit-mod writer skips mods with aura flags (`#mod.AuraFlags == 0`), and no mod PoB exports with the same domain and generation type has any",
+            move |k| scoped(k, &flagged, &flagged_broken),
         ),
     );
     family.ours_extra_rules.push(Rule::detailed(
         Category::PobFiltered,
         "domain-generation-not-exported",
-        "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`)",
+        "PoB's mod files hold no mod of this domain and generation type (counted per pair in `breakdown`). Derived from PoB's output, not from its writer conditions: a pair that a patch adds lands here, not in patch-delta",
         move |k| {
             let c = combo(row(k)?);
             (!exported.contains(&c)).then_some(c)
@@ -1411,12 +1455,12 @@ fn skills(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
     family.anchored(
         ctx,
         SKILLS_SCRIPT,
-        "if not granted then",
+        "out:write('skills[\"', grantedId, '\"] = {\\n')",
         true,
         Rule::new(
             Category::PatchDelta,
-            "listed-not-exported",
-            "listed by `#skill` but not in PoB's output; Export/Scripts/skills.lua leaves out a listed skill only when its GrantedEffects row is missing from the game data it read, so the row is newer than PoB's export",
+            "listed-not-in-output",
+            "listed by `#skill` in a processed spec but not in PoB's generated output; Export/Scripts/skills.lua writes the key of every listed skill before any other check, so PoB's output was generated before the spec line was added (counted as a difference between PoB's export and its spec)",
             move |k| listed.contains(k),
         ),
     );
@@ -1463,12 +1507,6 @@ fn stats(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         .filter(|d| d.handed)
         .flat_map(Description::all_stats)
         .collect();
-    let in_game: BTreeSet<&str> = ctx
-        .stat_descs
-        .values()
-        .flat_map(|f| &f.descriptions)
-        .flat_map(Description::all_stats)
-        .collect();
     // For each PoB stat: the PoB files naming it, split by whether the game
     // still has that file.
     let files_of = |stat: &str| -> Vec<&String> {
@@ -1513,12 +1551,6 @@ fn stats(ctx: &Ctx<'_>) -> Result<FamilyReport, CrossCheckError> {
         "handed-placeholder",
         "PoB writes `0` as the stat list of handed (main hand / off hand) descriptions; every PoB file with it converts a game file that has a handed description",
         placeholder,
-    ));
-    family.pob_missing_rules.push(Rule::new(
-        Category::NotInIndex,
-        "stat-only-in-game-descriptions",
-        "the installed stat-description files name this stat too, but the installed Stats table has no row for it",
-        move |k| in_game.contains(k),
     ));
     family.pob_missing_rules.push(Rule::new(
         Category::NotInIndex,
@@ -1590,6 +1622,12 @@ pub fn cross_check(inputs: Inputs<'_>, provenance: Provenance) -> Result<Report,
         }
         if g.unparsed > 0 {
             not_met.push(format!("{name}: {} PoB lines not parsed", g.unparsed));
+        }
+        if g.schema_mismatch > 0 {
+            not_met.push(format!(
+                "{name}: {} gaps in a table that did not decode cleanly",
+                g.schema_mismatch
+            ));
         }
         if g.patch_delta * 100 > family.pob_keys * PATCH_DELTA_PERCENT {
             not_met.push(format!(
@@ -1712,7 +1750,7 @@ mod tests {
             i64,
             i64,
         );
-        let mods: [ModRow; 10] = [
+        let mods: [ModRow; 12] = [
             ("Kept", 1, 1, &[0], &[], None, 0, 5, 10),
             ("RoyaleX", 1, 1, &[0], &[], None, 0, 5, 10),
             ("ZeroMod", 1, 1, &[0], &[], None, 0, 0, 0),
@@ -1723,6 +1761,10 @@ mod tests {
             ("FlaggedMod", 1, 1, &[0], &[1], None, 0, 1, 1),
             ("MonsterMod", 3, 1, &[0], &[], None, 0, 1, 1),
             ("NewMod", 1, 1, &[0], &[], None, 0, 1, 1),
+            // PoB exports a `Royale` mod of AREA / PREFIX, so the pattern
+            // does not explain a missing one of that pair.
+            ("RoyaleKept", 5, 1, &[0], &[], None, 0, 1, 1),
+            ("RoyaleArea", 5, 1, &[0], &[], None, 0, 1, 1),
         ];
         let rows: Vec<Value> = mods
             .iter()
@@ -1824,7 +1866,7 @@ mod tests {
         let files: [(&str, &str); 12] = [
             (
                 "src/Data/ModItem.lua",
-                "return {\n\t[\"Kept\"] = { },\n\t[\"PobOnly\"] = { },\n}",
+                "return {\n\t[\"Kept\"] = { },\n\t[\"PobOnly\"] = { },\n\t[\"RoyaleKept\"] = { },\n}",
             ),
             (
                 "src/Data/ModScalability.lua",
@@ -1857,7 +1899,7 @@ mod tests {
             ),
             (
                 "src/Export/Scripts/skills.lua",
-                "for _, name in pairs({\"act_int\"}) do\n\tif not granted then\n",
+                "for _, name in pairs({\"act_int\"}) do\n\tout:write('skills[\"', grantedId, '\"] = {\\n')\n",
             ),
             (
                 "src/Data/StatDescriptions/stat_descriptions.lua",
@@ -1957,7 +1999,10 @@ mod tests {
                     "pob-filtered/domain-generation-not-exported",
                     &["MonsterMod"]
                 ),
-                ("patch-delta/passes-reproduced-filters", &["NewMod"]),
+                (
+                    "patch-delta/passes-reproduced-filters",
+                    &["NewMod", "RoyaleArea"]
+                ),
             ])
         );
         let breakdown =
@@ -2004,7 +2049,7 @@ mod tests {
             rules(&skills.ours_extra),
             expect(&[
                 ("pob-filtered/not-in-skill-spec", &["Unlisted"]),
-                ("patch-delta/listed-not-exported", &["NewSkill"])
+                ("patch-delta/listed-not-in-output", &["NewSkill"])
             ])
         );
         assert!(skills.unparsed.is_empty(), "#skillEnd is not a #skill line");
@@ -2016,11 +2061,10 @@ mod tests {
             rules(&stats.pob_missing),
             expect(&[
                 ("not-in-index/stale-pob-description-file", &["gone_stat"]),
-                (
-                    "not-in-index/stat-only-in-game-descriptions",
-                    &["game_only"]
-                ),
                 ("pob-generated/handed-placeholder", &["0"]),
+                // Named by an installed description but no Stats row: not
+                // explained until the cause is known.
+                ("uncategorized/none", &["game_only"]),
             ])
         );
         assert_eq!(
@@ -2033,23 +2077,27 @@ mod tests {
                 ),
             ])
         );
-        assert!(stats.gate.met);
+        assert!(!stats.gate.met);
 
-        // PassiveSkills is not `ok` in the manifest: its gaps fall to schema-mismatch.
+        // PassiveSkills is not `ok` in the manifest: its gaps fall to
+        // schema-mismatch, which fails the family.
         let passives = &report.families["passives"];
         assert_eq!(
             rules(&passives.ours_extra),
             expect(&[("schema-mismatch/table-not-ok", &["3"])])
         );
-        assert!(passives.gate.met);
+        assert!(!passives.gate.met);
+        assert_eq!(passives.gate.schema_mismatch, 1);
 
         assert!(!report.gate.met);
         assert_eq!(
             report.gate.not_met,
             [
                 "mods: 1 uncategorized gaps",
-                "mods: 1 patch-delta gaps, more than 2% of 2 PoB keys",
+                "mods: 2 patch-delta gaps, more than 2% of 3 PoB keys",
+                "passives: 1 gaps in a table that did not decode cleanly",
                 "skills: 1 patch-delta gaps, more than 2% of 2 PoB keys",
+                "stats: 1 uncategorized gaps",
             ]
         );
         assert_eq!(report.inputs.steam_build_id.as_deref(), Some("7"));
