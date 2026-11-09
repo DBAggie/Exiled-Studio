@@ -235,7 +235,7 @@ Tool: `loom-extractor cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out
 
 - **PoB baseline (searched upstream 2026-11-09):** no data export newer than PoE1 "3.29.3 Export" `1b4078dc4` (2026-08-23) or PoE2 "Export 0.5.5 data" `49e93925d` (2026-09-10). Checked: the default `dev` branches (newest commits to `src/Data/Mod*.lua` and `src/Data/Skills` are those exports or code fixes), `beta` and `master`, and open pull requests with "export" in the title. Both repositories are shallow-cloned at those commits into `local/pob/` (`git init` + `git fetch --depth 1 <url> <sha>`); the legacy repository is not touched.
 - **Families, like for like:** mods (PoB `src/Data/Mod*.lua` entry keys vs `Mods.Id`), bases (`src/Data/Bases/*.lua` names vs `BaseItemTypes.Name`, cleaned as PoB does: trimmed, `ö` written as `o`), skills (`src/Data/Skills/*.lua` keys vs `GrantedEffects.Id`), stats (stat IDs in `src/Data/StatDescriptions/**/*.lua` vs `Stats.Id`), passives (node IDs in the newest `src/TreeData/<major>_<minor>/tree.lua` vs `PassiveSkills.PassiveSkillGraphId`). Four mod files are keyed by something other than a mod Id (`ModCache` by text, `ModScalability` by stat text, `ModFoulbornMap` by unique name, PoE2 `ModRunes` by rune and soul-core base name); they are listed under `excluded_pob_files` with how many of their keys equal a `Mods.Id` (0 or 2 of about 15,000, so a different key space).
-- **Both directions:** PoB keys missing from our output (`pob_missing`) and our keys PoB does not have (`ours_extra`). Each gap gets the first rule that matches, from the fixed category list (plan step 6). A gap no rule explains is `uncategorized`.
+- **Both directions:** PoB keys missing from our output (`pob_missing`) and our keys PoB does not have (`ours_extra`). Each gap gets the first rule that matches, from the fixed category list (plan step 6; A6b added `not-on-tree`, see section 17). A gap no rule explains is `uncategorized`.
 - **Readers are narrow line patterns, not a Lua parser.** A line that starts like a key and does not complete the pattern is reported as `unparsed`, and an unparsed line fails the family. `#baseMatch` values are Lua patterns (`Wand[MEK]?%d+`); the tool has a small Lua pattern matcher (classes, sets, `? * + -`, anchors) that rejects captures, `%b`, `%f`, and back-references instead of guessing.
 - **Rules reproduce PoB's export from its own files.** Spec lists are read from the scripts (`skills.lua`'s `for _, name in pairs({...})`, `bases.lua`'s `itemTypes`), mod Id exclusions from every `not mod.Id:match("<pattern>")` in `mods.lua`, and the stat files `describeMod` uses from `mods.lua`'s `loadStatFile(...)`. Rules taken from script logic are tied to a snippet of the script; if the snippet is missing (PoB changed the script, or the other game's script never had it), the rule is disabled and listed in `disabled_rules`, so it cannot explain a gap.
 
@@ -256,7 +256,8 @@ Rules (category, rule: what it checks):
 | | ours extra | `pob-filtered` not-in-skill-spec; `patch-delta` listed-not-in-output (a `#skill` line whose key is not in PoB's output; `skills.lua` writes the key of every listed skill before any check, so PoB's output predates the spec line) |
 | stats | PoB missing | `pob-generated` handed-placeholder (PoB writes `0` as the stat list of handed descriptions); `not-in-index` stale-pob-description-file (only PoB files with no installed counterpart name it; PoB keeps converted files of removed game files). A PoB stat that an installed description names but the Stats table lacks is left `uncategorized` (none occur): it could be an extraction gap |
 | | ours extra | `pob-filtered` handed-description; not-in-converted-descriptions (no installed counterpart of a file PoB converts names it) |
-| all | both | `schema-mismatch` table-not-ok: the table's manifest status is not `ok`. These gaps fail the family's gate, because the decoding could be their cause (no family table is affected on these installs) |
+| passives (A6b) | ours extra | PoE2 `pob-filtered` empty-name, dnt-name, skipped-ascendancy (the three node filters of `passivetree.lua`, on the Default tree's graph only), not-on-default-graph (PoB's PoE2 tree is built from that graph only); PoE1 `not-on-tree` not-on-default-graph (section 17) |
+| all | both | `schema-mismatch` table-not-ok: the table's manifest status is not `ok`. Since A6b this rule comes first, so every gap of the family falls under it and fails the gate, because the decoding could be their cause (no family table is affected on these installs) |
 
 - **Writer scoping of the mod rules** (after the review): PoB has several mod writers, and a pattern one excludes another may write (`^Synthesis` is left out of `ModExplicit` but is `ModSynthesis`'s whole content). So an `Id`-pattern rule only explains a gap whose (domain, generation type) pair has no exported mod matching that pattern. The generic writer conditions (AuraBonus family, no family, aura flags) only explain a gap whose pair has no exported mod breaking them; mods of a specialised writer (their Id matches a pattern that PoB still exports for their pair) neither break those conditions nor fall under them. A new Synthesis or Necropolis mod therefore lands in `patch-delta`, counted against the ceiling.
 - **Heuristics and their blind spot:** `domain-generation-not-exported` and `passes-reproduced-filters` come from PoB's output (which pairs it exports), not from its writer conditions (`writeMods(file, condFunc)` in `mods.lua` is not parsed). A (domain, generation type) pair that a game patch adds is called `pob-filtered`, not `patch-delta`; a writer filter that is not reproduced (the DelveFossil spawn-tag skips, `ModJewelCluster`'s conditions) would show up as `patch-delta`. Reproducing the writer list is a follow-up task.
@@ -292,7 +293,7 @@ Rules (category, rule: what it checks):
 | PoB missing: `not-in-index` stale-pob-description-file | 0 | 9 (192 of PoB's 764 PoE2 files have no installed counterpart; checked against the installed index with `list-files --all`: 589 `.csd` files, the same 192 absent, and spot checks such as `arc` and `advancing_strike` find no file under any name) |
 | ours extra: `pob-filtered` handed-description / not-in-converted-descriptions | 20 / 9,678 | 0 / 12,773 |
 | **passives** keys PoB / ours / matched | 3,396 / 5,706 / 3,396 | 4,914 / 9,731 / 4,914 |
-| ours extra: `uncategorized` | 2,310 | 4,817 |
+| ours extra: `uncategorized` (categorized in A6b, section 17) | 2,310 | 4,817 |
 | Uncategorized / unparsed PoB lines (mods, bases, skills, stats) | 0 / 0 | 0 / 0 |
 | patch-delta (limit = 2% of PoB keys) | mods 1 (470), skills 1 (30) | 0 |
 | Gate 2 verdict | met for mods, bases, skills, stats; not met for passives | same |
@@ -300,3 +301,85 @@ Rules (category, rule: what it checks):
 - Every PoB key of every family is in our output except the ones categorized above: no PoB mod, passive node, or (PoE2) skill is missing, and the missing bases, skills, and stats are all PoB-made names or keys of removed game files.
 - **Review:** `code-architecture-reviewer` (2026-11-09). Applied: blocker (`schema-mismatch` gaps fail the gate); writer scoping of the `Id`-pattern and writer-condition rules; the skill rule's evidence and anchor (`listed-not-in-output`); the installed-only stat rule removed; the index check of the stale files; documentation of the heuristic rules, the append order, and the expected disabled rules. Not applied: parsing `writeMods` condFuncs (follow-up task); renumbering appended descriptions; null `Id`/`Name` rows (none occur) becoming an empty key.
 - **Passives (A6b):** PoB's PoE1 tree comes from GGG's published tree file, not from a filter over PassiveSkills, and PoE2's from PoB's own tree export. The extra rows (PoE1: atlas, alternate-ascendancy, royale, and legacy nodes; PoE2: atlas, Brequel, and others) need the game's own placement evidence, the passive skill graph file, which the extractor does not read yet. Maintainer decision 2026-11-09: split A6 into A6a (this PR) and A6b (read the passive skill graph, categorize the passive gaps, final gate verdict).
+
+## 16. Passive skill graphs (observed on PoE1 and PoE2 in A6b)
+A passive tree's layout is a `.psg` file; `PassiveSkillTrees.PassiveSkillGraph` names the graph of each tree (the row `Default` is the character tree, `Metadata/PassiveSkillGraph` in both games). A `PassiveSkills` row is on a tree only if its `PassiveSkillGraphId` is a node of that tree's graph. The installs have 7 (PoE1) and 5 (PoE2) graphs:
+
+| Graph (`metadata/...`) | Kind byte | PoE1 nodes / connections / roots | PoE2 nodes / connections / roots |
+|---|---|---|---|
+| `passiveskillgraph.psg` (character tree) | 0 | 2,987 / 3,359 / 23 | 5,152 / 6,070 / 6 |
+| `alternateskillgraphs/customascendancypassiveskillgraph.psg` | 0 | 2,928 / 3,284 / 21 | - |
+| `alternateskillgraphs/royalepassiveskillgraph.psg` | 0 | 212 / 185 / 6 | 6 / 0 / 6 |
+| `atlasskillgraphs/atlasskillgraph.psg` | 1 | 1,029 / 1,004 / 1 | 576 / 586 / 7 |
+| `atlasskillgraphs/atlasskillgraphcurrentleague.psg` | 1 | 959 / 932 / 1 | - |
+| `atlasskillgraphs/atlasskillgraphblank.psg` | 1 | 1 / 0 / 1 | - |
+| `atlasskillgraphs/endgamemaplayoutgraph.psg` | 1 | - | 611 / 800 / 0 |
+| `leagueskillgraphs/chayulatreepassiveskillgraph.psg` | 2 | 134 / 132 / 4 | 248 / 245 / 5 |
+
+Layout (little-endian), found by hex inspection and confirmed by parsing all 12 files to their last byte:
+
+```text
+u8   version                 3 (every file)
+u8   kind                    0 passive tree, 1 atlas, 2 league (observed meaning)
+u8   orbit count n           PoE1 7, PoE2 10
+u8   slots[n]                nodes per orbit ring: PoE1 1,6,16,16,40,72,72; PoE2 1,12,24,24,72,72,72,24,72,144
+u32  root count, roots       u32 node IDs (PoE1) or u64 (PoE2)
+u32  group count, then per group:
+  f32 x, f32 y               group centre
+  u32 flags, u32, u8         flags 0-2 observed; the u32 0-5, the u8 0-1 (meaning unknown, kept as stored)
+  u32 node count, then per node:
+    u32 id                   PassiveSkills.PassiveSkillGraphId
+    u32 orbit, u32 index     always orbit < n and index < slots[orbit]
+    u32 connection count, then per connection:
+      u32 id                 always a node of the same graph
+      i32 orbit              PoE2 only: signed arc, -9..9 and 2147483647 observed
+```
+
+- **The two games differ in two widths**, not in the version byte: PoE1 roots are `u32` and PoE1 connections are bare node IDs; PoE2 roots are `u64` and each connection carries an `i32`. The parser takes the game as input; parsing a file with the other game's widths fails (unit test), so a misread is never silent.
+- **PoB's readers:** PoE1 `src/Export/psg.lua` reads an older layout (7-byte header, nodes without orbit checks) and is not used for PoB's PoE1 tree anymore: PoB's PoE1 `tree.lua` comes from GGG's published tree export. PoE2 `src/Export/Scripts/passivetree.lua` reads this layout (`u16` version 3, skips 11 bytes, `u64` roots, `(id, radius)` connections) for the `Default` tree only.
+- **Duplicates and dangling references:** one PoE2 atlas node ID is listed twice in `atlasskillgraph.psg` (counted in the manifest as `duplicate_nodes`); no other graph has duplicates. No connection points outside its graph; that is treated as an invariant, so a dangling connection fails the run. Roots outside their graph are counted (`dangling_roots`), not fatal.
+- **Which tree uses which graph** (`PassiveSkillTrees`): PoE1 `Default`, `DefaultAltAscendancies` (custom-ascendancy graph), `Royale`, `Atlas` and `AtlasCurrentLeague` (both `AtlasSkillGraph`; `atlasskillgraphcurrentleague.psg` is named by no tree), `AtlasEmpty`, `BrequelTree` (Chayula graph); PoE2 `Default`, `Royale`, `Atlas`, `EndgameMap`, `BrequelTree`.
+- **Output:** `extract` writes each graph as `passive_skill_graphs/<lowercase index path>.json` (header fields, one group per line) and lists every `.psg` in the manifest (format 3, `passive_skill_graphs`) with status, counts, and source hash. Errors: `EXTRACT_PSG_TRUNCATED`, `_VERSION`, `_NON_FINITE`, `_ORBIT`, `_TRAILING`, `_BAD_PATH`. `PassiveSkillTrees` is now a root table of `extract` (it and its references add 4 tables in PoE1, 1 in PoE2).
+
+## 17. Evidence (PR A6b) and gate verdict
+- **Passive rules.** PoE2's tree is made by PoB's `src/Export/Scripts/passivetree.lua`, which walks the groups of the graph of `PassiveSkillTrees` row `Default` and skips three kinds of node. The cross-check reproduces all of it, anchored to the script's lines: `empty-name`, `dnt-name` (except the 5 `[DNT]` names PoB keeps), `skipped-ascendancy` (ascendancy name `[DNT` or `Disabled`), and `not-on-default-graph` for rows off that graph (breakdown: the other graphs they are on, or none). The last rule is disabled if any PoB key is off the Default graph, which would falsify it; none is. PoE1's tree is GGG's own tree export, and no PoB script can be reproduced. It has 409 nodes on no graph (361 flagged `IsExpansion`; the others are cluster-jewel notables and masteries and special ascendancy nodes), so being off the graph does not predict PoB's choice. Our PoE1 rows off the character tree's graph therefore get a new category, **`not-on-tree`**: "not on the game tree PoB's data covers, by the game's own placement". The maintainer decided this on 2026-11-09 after the review, as an amendment to the plan's category list.
+- **Review** (`code-architecture-reviewer`, 2026-11-09, on `1bb261b`). Three blockers, all applied:
+  - The category split above.
+  - `table-not-ok` now comes before every other rule, so a misread table cannot be explained by a filter. Passives also check `PassiveSkillTrees` and (PoE2) `Ascendancy`.
+  - `cross-check` reads the graph statuses from the manifest and stops on a failed or missing graph (`EXTRACT_XCHECK_GRAPH`), so a broken graph cannot make its nodes look off-tree.
+  - Should-fix items were applied too: rows without a unique graph ID stop the cross-check (`EXTRACT_XCHECK_PASSIVE_ROWS`; none occur), the falsification check, a `dangling_roots` count, and more tests. Details are in the context file.
+- **CI tests** (`cargo test -p loom-extractor`: 147 library tests, plus 9 CLI tests). The graph parser is tested on:
+  - both layouts, and the other game's widths failing;
+  - truncation at every length, trailing bytes, the version, non-finite positions, orbits out of range, and huge counts;
+  - counts of dangling connections and roots and of duplicates, kept connection orbits, the rendered JSON, a bad path, and a failed graph failing the run.
+
+  The passive cross-check is tested on:
+  - the PoE1 category with its breakdown and notes;
+  - every PoE2 rule, rules disabled by a missing snippet, and the falsified graph rule;
+  - `schema-mismatch` taking every gap of a bad table (stats and passives);
+  - every error path: a missing graph file, a failed graph, a format-2 manifest, no Default graph or row, and unkeyable rows.
+- **Maintainer workstation run, 2026-11-09, from clean tool commit `b4eebe0`.** The Steam builds are unchanged: PoE1 26530219, PoE2 26476662.
+  - `check-determinism.sh` gave byte-identical output on both games: 128 files for PoE1 (76 tables, 45 stat-description files, 7 graphs), 681 for PoE2 (86 tables, 589, 5).
+  - Two cross-check runs per game gave byte-identical reports.
+  - Manifests and summaries were replaced in `docs/spikes/spike-a/`.
+  - Mods, bases, skills, and stats gave the same results as in A6a (section 15).
+
+| Passives | PoE1 (tree 3_29) | PoE2 (tree 0_5) |
+|---|---|---|
+| keys PoB / ours / matched | 3,396 / 5,706 / 3,396 | 4,914 / 9,731 / 4,914 |
+| Default graph nodes / PoB keys on it | 2,987 / 2,987 | 5,152 / 4,914 |
+| PoB keys off every graph | 409 (361 `IsExpansion`) | 0 |
+| ours extra: `pob-filtered` empty-name / dnt-name / skipped-ascendancy | - | 120 / 105 / 13 |
+| ours extra: off the Default graph (`not-on-tree` PoE1, `pob-filtered` PoE2) | 2,310 | 4,579 |
+| of which: atlas graphs | 1,076 | 1,185 (atlas 574, endgame map 610, both 1) |
+| of which: other graphs (custom ascendancy, royale, Chayula league) | 362 / 141 / 134 | - / 0 / 248 |
+| of which: no graph | 597 (1 `IsExpansion`) | 3,146 (1 `IsExpansion`) |
+| uncategorized / patch-delta | 0 / 0 | 0 / 0 |
+
+- **Spike A gate verdict (2026-11-09): met.**
+  1. **Determinism** holds on both games (above).
+  2. **Coverage vs PoB:** uncategorized is 0 in both directions for every family on both games. Patch-delta is 2 PoE1 keys (mods 1, skills 1; limits 470 and 30) and 0 on PoE2.
+  3. **No silent drops:** the manifest lists every schema mismatch (only PoE2 `ItemVisualIdentity`, not a root table), every stat-description finding (0 unparsed), and every graph with its status. The cross-check stops on anything it cannot place.
+  4. **Recorded inputs:** the manifests carry the Steam build, the index and bundle hashes, the schema commit and hash, the extractor commit `b4eebe0`, and `dirty: false`.
+  5. **Licenses:** `cargo deny` passes in CI.
+- **For later spikes:** Spike B reads `stat_descriptions/**`. Phase 2 and the passive-tree work can read `passive_skill_graphs/**` (layout, orbits, connections) together with `PassiveSkillTrees`. Every categorized gap becomes a divergence-register entry once Spike C defines the register format.

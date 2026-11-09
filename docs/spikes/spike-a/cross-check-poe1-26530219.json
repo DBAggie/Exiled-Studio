@@ -15,6 +15,7 @@
         "unparsed": 0
       },
       "matched": 1091,
+      "notes": {},
       "our_keys": 4310,
       "ours_extra": {
         "by_category": {
@@ -133,6 +134,7 @@
         "unparsed": 0
       },
       "matched": 23539,
+      "notes": {},
       "our_keys": 40355,
       "ours_extra": {
         "by_category": {
@@ -292,26 +294,47 @@
       "unparsed": []
     },
     "passives": {
-      "compared": "PoB tree node IDs (src/TreeData/<newest>/tree.lua) vs PassiveSkills.PassiveSkillGraphId",
+      "compared": "PoB tree node IDs (src/TreeData/<newest>/tree.lua) vs PassiveSkills.PassiveSkillGraphId, placed with the passive skill graphs (passive_skill_graphs/)",
       "disabled_rules": [],
       "excluded_pob_files": {},
       "gate": {
-        "met": false,
+        "met": true,
         "patch_delta": 0,
         "patch_delta_limit": 67,
-        "uncategorized": 2310,
+        "uncategorized": 0,
         "schema_mismatch": 0,
         "unparsed": 0
       },
       "matched": 3396,
+      "notes": {
+        "PassiveSkills rows with a graph ID of an earlier row": 0,
+        "PassiveSkills rows without a graph ID": 0,
+        "PoB keys on no graph": 409,
+        "PoB keys on no graph with IsExpansion": 361,
+        "PoB keys on other graphs only": 0,
+        "PoB keys on the default graph": 2987,
+        "default graph metadata/passiveskillgraph.psg: nodes": 2987,
+        "default graph nodes without a PassiveSkills row": 0,
+        "graph files": 7
+      },
       "our_keys": 5706,
       "ours_extra": {
         "by_category": {
-          "uncategorized": {
-            "none": {
-              "breakdown": {},
+          "not-on-tree": {
+            "not-on-default-graph": {
+              "breakdown": {
+                "metadata/alternateskillgraphs/customascendancypassiveskillgraph.psg": 362,
+                "metadata/alternateskillgraphs/royalepassiveskillgraph.psg": 141,
+                "metadata/atlasskillgraphs/atlasskillgraph.psg": 117,
+                "metadata/atlasskillgraphs/atlasskillgraph.psg + metadata/atlasskillgraphs/atlasskillgraphblank.psg + metadata/atlasskillgraphs/atlasskillgraphcurrentleague.psg": 1,
+                "metadata/atlasskillgraphs/atlasskillgraph.psg + metadata/atlasskillgraphs/atlasskillgraphcurrentleague.psg": 911,
+                "metadata/atlasskillgraphs/atlasskillgraphcurrentleague.psg": 47,
+                "metadata/leagueskillgraphs/chayulatreepassiveskillgraph.psg": 134,
+                "no graph": 596,
+                "no graph (IsExpansion)": 1
+              },
               "count": 2310,
-              "evidence": "no rule matched",
+              "evidence": "not a node of the Default tree's graph (metadata/passiveskillgraph.psg), the game's character tree (breakdown: the other graphs the node is on, or no graph)",
               "keys": [
                 "10074",
                 "10094",
@@ -2652,6 +2675,7 @@
         "unparsed": 0
       },
       "matched": 1508,
+      "notes": {},
       "our_keys": 12829,
       "ours_extra": {
         "by_category": {
@@ -2731,6 +2755,7 @@
         "unparsed": 0
       },
       "matched": 13664,
+      "notes": {},
       "our_keys": 23362,
       "ours_extra": {
         "by_category": {
@@ -2794,21 +2819,19 @@
       "unparsed": []
     }
   },
-  "format": 1,
+  "format": 2,
   "game": "poe1",
   "gate": {
-    "met": false,
-    "not_met": [
-      "passives: 2310 uncategorized gaps"
-    ]
+    "met": true,
+    "not_met": []
   },
   "inputs": {
-    "extract_commit": "9394d75a34b05bc4a0cd36d4aa7e7089d58ddffb",
+    "extract_commit": "b4eebe08104772f808cad58868888edfbcfe4f99",
     "extract_dirty": false,
     "provenance": {
-      "extract_manifest_sha256": "201fd82bcbbd7efd60e1006aff25309515074be5a90abd3863e6b3a49dbb453c",
+      "extract_manifest_sha256": "9efb36572f13cb4d69055709c23883fb9a6e260cd35b8798b03a451a0cfc7102",
       "pob_commit": "1b4078dc4dcd58f7308df7e779974737badee894",
-      "tool_commit": "33730ed4b787e98a47046ddb06b67e3928eb4a79",
+      "tool_commit": "b4eebe08104772f808cad58868888edfbcfe4f99",
       "tool_dirty": false,
       "tool_version": "0.0.0"
     },

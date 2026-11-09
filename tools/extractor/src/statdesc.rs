@@ -1013,7 +1013,7 @@ const PATH_BREAKERS: [char; 3] = ['\\', ':', '\0'];
 
 /// Whether `path` is `/`-separated parts that are not empty, `.`, or `..`
 /// and hold none of [`PATH_BREAKERS`] (so it stays inside the output folder).
-fn plain_relative(path: &str) -> bool {
+pub(crate) fn plain_relative(path: &str) -> bool {
     path.split('/').all(|part| {
         !part.is_empty() && part != "." && part != ".." && !part.contains(PATH_BREAKERS)
     })

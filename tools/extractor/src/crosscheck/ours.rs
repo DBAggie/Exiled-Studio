@@ -1,9 +1,10 @@
 //! Readers for the extractor's own output (`extract`): `manifest.json`,
-//! `tables/<Name>.json`, and `stat_descriptions/**/*.json`. Table and
+//! `tables/<Name>.json`, `stat_descriptions/**/*.json`, and
+//! `passive_skill_graphs/**/*.json`. Table and
 //! manifest fields are read strictly, so a change to the output format fails
 //! here instead of being misread.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -52,6 +53,47 @@ impl Table {
         self.columns
             .iter()
             .position(|c| c.name.as_deref() == Some(name))
+    }
+}
+
+/// Node IDs of a passive skill graph file (the fields the cross-check needs).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct Graph {
+    /// Groups in file order.
+    pub groups: Vec<GraphGroup>,
+}
+
+/// One group of a graph file.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct GraphGroup {
+    /// Nodes in file order.
+    pub nodes: Vec<GraphNode>,
+}
+
+/// One node of a graph file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+pub struct GraphNode {
+    /// `PassiveSkills.PassiveSkillGraphId`.
+    pub id: u32,
+}
+
+impl Graph {
+    /// Parses a graph file.
+    ///
+    /// # Errors
+    /// If the bytes are not a graph file.
+    pub fn parse(bytes: &[u8]) -> Result<Self, serde_json::Error> {
+        serde_json::from_slice(bytes)
+    }
+
+    /// Node IDs as decimal strings (the passive family's key form).
+    #[must_use]
+    pub fn node_keys(&self) -> BTreeSet<String> {
+        self.groups
+            .iter()
+            .flat_map(|g| &g.nodes)
+            .map(|n| n.id.to_string())
+            .collect()
     }
 }
 
@@ -170,6 +212,22 @@ pub struct ManifestTable {
     pub status: String,
 }
 
+/// One passive skill graph in the manifest (the fields the cross-check needs).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ManifestGraph {
+    /// Output file, if written.
+    pub output: Option<String>,
+    /// `ok` or `failed`.
+    pub status: String,
+}
+
+/// The manifest's `passive_skill_graphs` section (format 3 and later).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct ManifestGraphs {
+    /// Every graph, by lowercase index path.
+    pub files: BTreeMap<String, ManifestGraph>,
+}
+
 /// The manifest fields the cross-check reads.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Manifest {
@@ -179,6 +237,8 @@ pub struct Manifest {
     pub format: u32,
     /// `poe1` or `poe2`.
     pub game: String,
+    /// Passive skill graphs (absent before format 3).
+    pub passive_skill_graphs: Option<ManifestGraphs>,
     /// Steam build ID, if found.
     pub steam_build_id: Option<String>,
     /// Every planned or referenced table.

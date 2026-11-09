@@ -34,7 +34,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 - Record game version, schema revision, and input hashes.
 - **Gate:** two runs produce identical output hashes; record counts match PoB's data for the same patch, with every gap explained.
   - *Reading of the gate (maintainer decision 2026-11-08):* Steam keeps only the current patch, so "the same patch" means the newest PoB data export available (searched upstream when the cross-check runs): `PathOfBuilding` for PoE1, `PathOfBuilding-PoE2` for PoE2, read from clones in `local/`. Every gap gets a category with tool evidence; uncategorized gaps must be zero and gaps due to patch changes at most 2% of PoB keys per table. Details: `dev/active/spike-a-bundles2-extraction/`.
-  - *Gate status (2026-11-09, PR A6a):* items 1 (determinism), 3 (no silent drops), 4 (recorded inputs), and 5 (licenses) met. Item 2 (coverage) met for mods, bases, skills, and stats on PoE1 and PoE2 (0 uncategorized, patch-delta 2 PoE1 keys, 0 PoE2); passives pending A6b, which reads the passive skill graph (maintainer decision 2026-11-09 to split A6). Evidence: `docs/spikes/spike-a-extraction.md`, sections 14 and 15.
+  - *Gate status (2026-11-09, PR A6b): **met.*** Items 1 (determinism), 3 (no silent drops), 4 (recorded inputs), and 5 (licenses) met; item 2 (coverage) met for mods, bases, skills, stats, and passives on PoE1 and PoE2 (0 uncategorized in both directions; patch-delta 2 PoE1 keys, 0 PoE2). Passive rows are placed with the game's passive skill graphs; PoE1 rows off the character tree get the category `not-on-tree` (maintainer decision 2026-11-09, PoB's PoE1 tree being GGG's export, not a reproducible PoB rule). Evidence: `docs/spikes/spike-a-extraction.md`, sections 14 to 17.
 - **Fallback:** RePOE as input; ADR-005 amended.
 
 ### Spike B: Text to stat-ID resolution
@@ -69,4 +69,4 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); passiv
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
 
 ## Next action
-Phase 0 is done (gate passed 2026-11-08; evidence in `docs/handoff/SUCCESSOR-HANDOFF.md`). Next: Spike A. The live state and the exact next step are in the handoff's **Current state** and **Next action**.
+Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Next: Spike B. The live state and the exact next step are in the handoff's **Current state** and **Next action**.

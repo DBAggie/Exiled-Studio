@@ -65,7 +65,7 @@ cargo test --release -p loom-extractor --test install_index -- --ignored --nocap
 cargo test --release -p loom-extractor --test install_dat -- --ignored --nocapture
 # List an install's files (counts, index SHA-256, unmatched entries; --all prints every file):
 cargo run --release -p loom-extractor -- list-files "<game folder>" [--decoder <program>] [--sample <n> | --all]
-# Extract the Spike A tables (and every table they reference) and the stat-description files to JSON plus manifest.json; <dir> must not exist:
+# Extract the Spike A tables (and every table they reference), the stat-description files, and the passive skill graphs (*.psg) to JSON plus manifest.json; <dir> must not exist:
 cargo run --release -p loom-extractor -- extract "<game folder>" --game poe1|poe2 --out local/extract/<game>/<steam build id>
 # Determinism check: two extract runs, byte comparison (Git Bash; output in local/determinism/<game>/):
 tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
