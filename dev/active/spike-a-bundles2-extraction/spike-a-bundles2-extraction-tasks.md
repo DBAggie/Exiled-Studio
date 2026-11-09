@@ -36,7 +36,7 @@ Last Updated: 2026-11-08 (PR A1 opened)
 - [x] Corrupt-input tests (exhaustive truncation and single-byte corruption instead of random property tests)
 - [x] `list-files` subcommand; maintainer run on PoE1 and PoE2 (counts and hashes in report sections 4 and 8)
 - [x] `#[ignore]` install test `tests/install_index.rs` passed on both installs
-- [ ] PR open, CI green, maintainer merge
+- [ ] PR open (#7), CI green, maintainer merge
 
 ## PR A3: dat reader (step 3)
 - [ ] Vendor the schema file with tag, hash, and third-party license notice (after maintainer OK)

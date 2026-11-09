@@ -74,7 +74,7 @@ These decisions are written into the ACTION-PLAN Spike A gate (2026-11-08).
 - **Install test** (PowerShell; agent shells need the cargo PATH prefix): set `LOOM_POE1_INSTALL` and `LOOM_POE2_INSTALL` to the install folders, then `cargo test -p loom-extractor --test install_decompress -- --ignored --nocapture`. `LOOM_OODLE_TOOL` overrides the decoder path. Passed 2026-11-08 on both installs.
 - `unoodle` 0.5.7 is installed on the maintainer workstation in `%USERPROFILE%/.cargo/bin`.
 
-## PR A2: bundle and index reader (2026-11-08, branch `spike-a/a2-index-reader`)
+## PR A2: bundle and index reader (PR #7, opened 2026-11-08, branch `spike-a/a2-index-reader`)
 - PR A1 (#6) merged 2026-11-08 as `e4b8402`; main CI run 42550157380 green. That merge approved ADR-005 Amendment 1.
 - **Confirmed on both installs:** path encoding (phase-switched fragments) and path hash (MurmurHash64A, seed `0x1337b33f`, lowercase path; directory records hash the directory without trailing slash, root = `""`). Full description and counts in the report, section 4. First explored with a throwaway Python script in the session scratchpad (not committed), then reproduced by the Rust code.
 - **PoE2 index inconsistency:** 5 paths without a record and 5 records without a path (art/effects only, listed in the report). So `Index::list` returns `Listing` with `files`, `paths_without_record`, `records_without_path`, `path_reps_without_directory`; nothing is dropped (ADR-015). A path matching several records is listed once per record.
