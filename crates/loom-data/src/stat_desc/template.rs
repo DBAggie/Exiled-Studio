@@ -5,7 +5,9 @@
 //! - `<tag>{{text}}` (tag letters and `_`): shown as `text`
 //!   (`<enchanted>{{Blessed by Kaom}}`, `<craftingfire>{{Fire}}`);
 //! - `[Ref|Text]`: shown as `Text`, which may hold placeholders
-//!   (`[ArmourBreak|Break {0}% of Armour]`);
+//!   (`[ArmourBreak|Break {0}% of Armour]`); the `Ref` part is dropped,
+//!   which is enough for matching and writing shown text (a tooltip
+//!   reference would need it back);
 //! - `[Text]`: shown as `Text` (`[DNT]`, `[Attack]`);
 //! - `<<Icon>>`: an inline icon, not text; removed.
 //!

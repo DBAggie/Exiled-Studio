@@ -260,6 +260,16 @@ pub const NUMERIC_HANDLERS: &[NumericHandler] = &[
     n("times_twenty", 20, 1, None, None, PobCited),
 ];
 
+/// The numeric handler with this name ([`NUMERIC_HANDLERS`] is sorted by
+/// name, checked by a test).
+#[must_use]
+pub fn numeric_handler(name: &str) -> Option<&'static NumericHandler> {
+    NUMERIC_HANDLERS
+        .binary_search_by(|h| h.name.cmp(name))
+        .ok()
+        .and_then(|i| NUMERIC_HANDLERS.get(i))
+}
+
 /// A handler that names a row of another table. The table each needs was
 /// read from the vendored schema (`tools/extractor/schema/schema.min.json`)
 /// in PR B1; see the Spike B context file. Confirmation against real
@@ -436,7 +446,7 @@ impl Handler {
             "markup" => Self::Markup,
             "canonical_stat" => Self::CanonicalStat { stat: index? },
             _ => {
-                if let Some(handler) = NUMERIC_HANDLERS.iter().find(|h| h.name == name) {
+                if let Some(handler) = numeric_handler(name) {
                     Self::Numeric {
                         handler,
                         stat: index?,
@@ -504,6 +514,14 @@ mod tests {
         sorted.dedup();
         assert_eq!(names, sorted);
         assert!(NUMERIC_HANDLERS.iter().all(|h| h.den != 0));
+    }
+
+    #[test]
+    fn numeric_handler_should_find_every_entry_by_name() {
+        for h in NUMERIC_HANDLERS {
+            assert_eq!(numeric_handler(h.name), Some(h));
+        }
+        assert_eq!(numeric_handler("no_such_handler"), None);
     }
 
     #[test]

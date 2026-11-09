@@ -11,6 +11,8 @@
 //! - [`load`]: manifest and file loaders from bytes (no filesystem).
 //! - [`template`]: markup stripping and placeholder parsing of format text.
 //! - [`handler`]: handler kinds; numeric semantics with their basis.
+//! - [`invert`]: the raw values a numeric handler chain shows as a number
+//!   (used by the resolver in `loom-parser`).
 //! - [`scope`]: a set of files and the include chain of one file.
 //! - [`render`]: the forward renderer and the [`render::Lookup`] trait for
 //!   handlers that name rows of other tables.
@@ -21,12 +23,16 @@
 //! it did not render with a reason.
 
 pub mod handler;
+pub mod invert;
 pub mod load;
 pub mod render;
 pub mod scope;
 pub mod template;
 
-pub use handler::{Basis, Handler, HandlerKind, LookupHandler, NumericHandler, ValueFormat};
+pub use handler::{
+    Basis, Handler, HandlerKind, LookupHandler, NumericHandler, ValueFormat, numeric_handler,
+};
+pub use invert::{RAW_MAX, RAW_MIN, invert_shown, shown_text};
 pub use load::{LoadError, ManifestFile, SUPPORTED_MANIFEST_FORMATS, StatDescManifest};
 pub use render::{
     Lookup, NoLookup, NotRendered, NotRenderedReason, Rendered, RenderedLine, StatValue,

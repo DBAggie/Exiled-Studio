@@ -69,4 +69,4 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); passiv
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
 
 ## Next action
-Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B is in progress (`dev/active/spike-b-text-stat-resolution/`; PRs B0, B1, and B1x merged); next: PR B2a. The live state and the exact next step are in the handoff's **Current state** and **Next action**.
+Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B is in progress (`dev/active/spike-b-text-stat-resolution/`; PRs B0, B1, and B1x merged; PR B2a open, in review as PR #17); next: PR B2b. The live state and the exact next step are in the handoff's **Current state** and **Next action**.

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B1x)
+Last Updated: 2026-11-09 (PR B2a)
 
 # Spike B: tasks
 
@@ -25,11 +25,16 @@ Last Updated: 2026-11-09 (PR B1x)
 - [x] Open PR (#15)
 
 ## PR B2a: single-line matcher (`loom-parser`)
-- [ ] Template index, normalization, value tokens, numeric handler inversion, conditions, hidden stats
-- [ ] Unit and property tests
+- [x] Template index, normalization, value tokens, numeric handler inversion, conditions, hidden stats
+- [x] Unit and property tests (hand-rolled xorshift generators; no new dependency)
+- [x] B1 leftovers: `invert_shown` (raw interval), `numeric_handler` binary search, `[Ref|...]` doc note
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#17)
 
 ## PR B2b: multi-line, lookup handlers, checks
-- [ ] Two-line variants; lookup-handler inversion
+- [ ] Two-line variants; lookup-handler inversion (B2a leaves both out of the index and counts them: `IndexStats::deferred_multi_line`, `deferred_lookup`)
+- [ ] Count lines that depend on include precedence from `Resolution::shadowed` / `Unresolved::OnlyShadowed`
+- [ ] Report `IndexStats` for `stat_descriptions` on PoE1 and PoE2 (B2a has only synthetic tests)
 - [ ] Confirm lookup key forms (row index vs `Index` column vs hash) against real values; `mod_value_to_item_class` key form
 - [ ] `parity-cli round-trip` (PoE1, PoE2); failures categorized
 - [ ] `parity-cli render-check` against PoB v2.67.2 mod text; differences categorized
