@@ -29,7 +29,7 @@ Last Updated: 2026-11-09 (PR B2a)
 - [x] Unit and property tests (hand-rolled xorshift generators; no new dependency)
 - [x] B1 leftovers: `invert_shown` (raw interval), `numeric_handler` binary search, `[Ref|...]` doc note
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#17)
 
 ## PR B2b: multi-line, lookup handlers, checks
 - [ ] Two-line variants; lookup-handler inversion (B2a leaves both out of the index and counts them: `IndexStats::deferred_multi_line`, `deferred_lookup`)
