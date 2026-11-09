@@ -45,6 +45,7 @@ use crate::schema::{
 use crate::statdesc::{self, StatDescManifest};
 
 /// Tables Spike A extracts; the tables they reference are added by [`Plan::new`].
+/// `extract` plans with [`roots`], which adds the lookup tables.
 /// `PassiveSkillTrees` (PR A6b) names the graph file of each passive tree.
 pub const SPIKE_TABLES: [&str; 7] = [
     "Stats",
@@ -1670,6 +1671,8 @@ mod tests {
         let schema = Schema::vendored().unwrap();
         for game in [Game::Poe1, Game::Poe2] {
             let roots = roots(game);
+            let unique: BTreeSet<_> = roots.iter().map(|r| r.to_ascii_lowercase()).collect();
+            assert_eq!(unique.len(), roots.len(), "{game:?}: duplicate root");
             for root in &roots {
                 assert!(schema.table(game, root).is_some(), "{game:?} {root}");
             }
