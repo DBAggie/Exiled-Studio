@@ -44,7 +44,7 @@ Last Updated: 2026-11-08 (PR A3 opened)
 - [x] datc64 reader for every column type; row-size mismatch reporting (`src/dat.rs`)
 - [x] Unit tests per column type; exhaustive truncation and single-byte corruption tests
 - [x] `read_files` (one decode per bundle) and `#[ignore]` install test `tests/install_dat.rs`, passed on PoE1 and PoE2 (report section 9)
-- [ ] PR open, CI green, maintainer merge
+- [ ] PR open (#8), CI green, maintainer merge
 
 ## PR A4 (a/b): extract and determinism (step 4)
 - [ ] `extract` for Stats, Mods, BaseItemTypes, PassiveSkills, ActiveSkills, GrantedEffects (plus referenced tables)
