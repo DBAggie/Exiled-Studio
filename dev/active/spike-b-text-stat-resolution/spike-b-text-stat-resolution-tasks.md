@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B1)
+Last Updated: 2026-11-09 (PR B1x)
 
 # Spike B: tasks
 
@@ -20,8 +20,9 @@ Last Updated: 2026-11-09 (PR B1)
 - [x] Open PR (#14)
 
 ## PR B1x: extractor roots for lookup tables
-- [ ] Add missing roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems`
-- [ ] Determinism on both games; manifests replaced
+- [x] Add missing roots: `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`, `IndexableNonActiveSupportGems`, `IndexableSkillGems` (the last two PoE1 only: no PoE2 file)
+- [x] Determinism on both games; manifests replaced; cross-check summaries replaced (same families); `load-statdesc` unchanged
+- [ ] Open PR
 
 ## PR B2a: single-line matcher (`loom-parser`)
 - [ ] Template index, normalization, value tokens, numeric handler inversion, conditions, hidden stats

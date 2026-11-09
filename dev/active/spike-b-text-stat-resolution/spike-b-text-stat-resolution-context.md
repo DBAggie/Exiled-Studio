@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B1: model, renderer, load-statdesc)
+Last Updated: 2026-11-09 (PR B1x: lookup tables extracted)
 
 # Spike B: context
 
@@ -18,7 +18,7 @@ Last Updated: 2026-11-09 (PR B1: model, renderer, load-statdesc)
 
 ## Inputs on the maintainer workstation
 - Corpus: `D:\Documents\Path of Building\Builds` (21 XML files). Never commit anything from it unscrubbed.
-- Extract: `local/determinism/poe1/run1` (PoE1 build 26530219, A6b tool commit) and `local/determinism/poe2/run1` (PoE2 26476662). Handler counts are in each `manifest.json`, `stat_descriptions.handlers`. The extract has no `PassiveTreeExpansion*`, `CraftingBenchOptions`, or `Essences` tables.
+- Extract: `local/determinism/poe1/run1` (PoE1 build 26530219) and `local/determinism/poe2/run1` (PoE2 26476662), both from B1x tool commit `4c70f6a`; manifests committed in `docs/spikes/spike-a/`. Handler counts are in each `manifest.json`, `stat_descriptions.handlers`. The lookup tables of B1x are in `tables/`; `CraftingBenchOptions` and `Essences` are not extracted (B4a decides).
 - PoB references, cited at the pinned tag only (`git show v2.67.2:<path>` in `D:\POE Dev\PathOfBuilding`, read only; its working tree is at `v2.67.2-122-g3dbca4463` and must not be cited):
   - `src/Modules/StatDescriber.lua`: `getScope` (precedence), `matchLimit` (conditions; skips `gem_quality`), `applySpecial` (handler rounding).
   - `src/Modules/ItemTools.lua`: `itemLib.applyRange` (ranges, antonyms, `modScalability`, catalyst scalar). Not reproduced in Spike B.
@@ -59,6 +59,14 @@ Verdict: proceed with changes. All applied in this plan:
   - PoE2 26476662: 589 files, 19,657 descriptions, 29,837 variants, 203 `gem_quality`, 1,621 `table_only`. Handlers: 9,468 PoB-cited, 25 name-derived, 38 lookup, 256 display, 2 unknown (`one_hundred_divide_by_value`). 0 template errors. Longest chain 6. Smoke: 29,099 rendered, 694 earlier variant, 37 `missing-lookup`, 2 `unknown-handler`, 5 `unsupported-format`.
 - **`code-architecture-reviewer` (2026-11-09):** no blockers. Should-fix applied: unknown flags and bad handler arguments no longer fail the file (above); `EmptyLine` reason (it found the PoE1 case above); numeric `min == max` like PoB with a test; duplicate-stat rule documented and tested; table test of every PoB-cited handler against hand-computed `applySpecial` output (42 handlers). Reviewer's stack-overflow finding on nested `<tag>{{` was checked and does not hold: a block ends at the first `}}`, so recursion stops at the second level; a 100,000-deep input fails as `UnclosedMarkup` (regression test kept, no depth guard). Nits applied: duplicate `insert` is a `load-statdesc` problem, `StatValue` `min <= max` documented, `Scope::descriptions()` added for B2a. Left for B2a: `NumericHandler::invert` (rounded handlers map a shown value to a raw interval), a name-to-handler map instead of the linear search, a note that `Template` drops the `[Ref|...]` reference (fine for matching shown text).
 - **Verify:** `cargo test -p loom-data -p loom-parity-cli`; `cargo run --release -p loom-parity-cli -- load-statdesc local/determinism/poe1/run1` (exit 0, `problems: []`); wasm32 build of the core crates.
+
+## PR B1x: extractor roots for lookup tables (branch `spike-b/b1x-lookup-roots`)
+- PR B1 (#14) merged 2026-11-09 as `cb9b24d`; main CI run 42666533075 green.
+- **Change:** `tools/extractor/src/extract.rs` has `roots(game)` = `SPIKE_TABLES` + `LOOKUP_TABLES` (`PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`) + for PoE1 `LOOKUP_TABLES_POE1` (`IndexableNonActiveSupportGems`, `IndexableSkillGems`); `main.rs` plans with it. Test `roots_should_have_a_vendored_schema_for_their_game`.
+- **Why per game:** the schema lists all six for both games, but `list-files` on the PoE2 install shows no file for the two PoE1-only tables, and a root that is not `ok` fails `extract` (`Manifest::problems`). The four shared tables exist in PoE2 as 12-byte files (0 rows) except `PassiveTreeExpansionJewelSizes` (3 rows); empty tables are `ok` but their row width is unchecked.
+- **Left out** (no corpus use): `AfflictionRewardTypeVisuals`, `WeaponPassiveTreeUniqueBaseTypes`, PoE2 `UniqueMagesLegacy`, `PassiveKeystoneList`, `SkillGemsForUniqueStat`, `UltimatumWagerTypes`. B2b's PoE2 round trip reports their handlers as `unsupported-handler` (missing table).
+- **Results** (clean commit `4c70f6a`, Steam builds unchanged): determinism byte-identical, PoE1 134 files / 82 tables, PoE2 685 / 90. Every A6b output file unchanged; manifest changes are only the new tables and new `referenced_by` links. Rows (PoE1 / PoE2): `PassiveTreeExpansionSkills` 55 / 0, `PassiveTreeExpansionJewels` 3 / 0, `PassiveTreeExpansionJewelSizes` 3 / 3 (`Small`, `Medium`, `Large`), `IndexableSupportGems` 172 / 0, `IndexableNonActiveSupportGems` 164 / -, `IndexableSkillGems` 287 / -; all `ok`, 0 dangling keys. Cross-check re-run (two runs identical per game): `families` equal to A6b, gate met; summaries replaced because they record the manifest hash. `load-statdesc` output byte-identical to B1. Spike A report section 18.
+- **For B2b:** `IndexableSkillGems.SkillGem1`/`SkillGem2` are arrays in the extract; `IndexRuthless` is a self-reference. Key forms (row index vs `Index` column) are still to confirm against real stat values.
 
 ## Open questions for the maintainer
 - None now. Exclusion rules beyond the three named ones, if B4b finds a need, come to the maintainer in that PR.

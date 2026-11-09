@@ -383,3 +383,29 @@ u32  group count, then per group:
   4. **Recorded inputs:** the manifests carry the Steam build, the index and bundle hashes, the schema commit and hash, the extractor commit `b4eebe0`, and `dirty: false`.
   5. **Licenses:** `cargo deny` passes in CI.
 - **For later spikes:** Spike B reads `stat_descriptions/**`. Phase 2 and the passive-tree work can read `passive_skill_graphs/**` (layout, orbits, connections) together with `PassiveSkillTrees`. Every categorized gap becomes a divergence-register entry once Spike C defines the register format.
+
+## 18. Lookup tables added for Spike B (PR B1x)
+Spike B's lookup handlers name a value through other tables (Spike B plan, "Lookup handlers"). PR B1x adds the corpus-relevant ones as `extract` roots (`tools/extractor/src/extract.rs`, `roots(game)`). The roots now differ by game:
+- Both games (`LOOKUP_TABLES`): `PassiveTreeExpansionSkills`, `PassiveTreeExpansionJewels`, `PassiveTreeExpansionJewelSizes`, `IndexableSupportGems`.
+- PoE1 only (`LOOKUP_TABLES_POE1`): `IndexableNonActiveSupportGems`, `IndexableSkillGems`. The vendored schema lists them for both games (`validFor` 3), but the PoE2 install (build 26476662) has no file for them (`list-files`), and a root without a file fails the run.
+- Left out (no corpus line uses them; recorded in the Spike B plan): `AfflictionRewardTypeVisuals`, `WeaponPassiveTreeUniqueBaseTypes`, and the PoE2-only `UniqueMagesLegacy`, `PassiveKeystoneList`, `SkillGemsForUniqueStat`, `UltimatumWagerTypes`.
+
+No new table is reached transitively (the targets `PassiveSkills`, `Tags`, `BaseItemTypes`, `SkillGems` were already extracted).
+
+**Evidence, maintainer workstation, 2026-11-09, from clean tool commit `4c70f6a`.** The Steam builds are unchanged (PoE1 26530219, PoE2 26476662).
+- `check-determinism.sh`: byte-identical on both games, 134 files for PoE1 (82 tables), 685 for PoE2 (90 tables). Manifest SHA-256: PoE1 `c23d4c0f…`, PoE2 `4a77f233…`.
+- Compared with the A6b manifests, every earlier output file is byte-identical; the only manifest changes are the new tables and the new `referenced_by` links on `BaseItemTypes`, `PassiveSkills`, `SkillGems`, and `Tags`.
+- New tables, all `ok`, 0 dangling keys:
+
+| Table | PoE1 rows | PoE2 rows |
+|---|---|---|
+| `PassiveTreeExpansionSkills` | 55 | 0 |
+| `PassiveTreeExpansionJewels` | 3 | 0 |
+| `PassiveTreeExpansionJewelSizes` | 3 | 3 |
+| `IndexableSupportGems` | 172 | 0 |
+| `IndexableNonActiveSupportGems` | 164 | - |
+| `IndexableSkillGems` | 287 | - |
+
+  The three empty PoE2 tables have files of 12 bytes (a row count of 0 and the data boundary), so their row width (`row_len` 0) is not checked against the schema; `ok` there means only "decoded".
+- `cross-check` re-run on the new extracts, two runs per game byte-identical: `families` equal to the A6b summaries on both games, gate met; only `inputs` changed (tool commit, manifest hash). Manifests and cross-check summaries were replaced in `docs/spikes/spike-a/`.
+- `loom-parity-cli load-statdesc` on the new extracts: output byte-identical to the B1 run on both games.
