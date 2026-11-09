@@ -60,8 +60,8 @@ Last Updated: 2026-11-09 (PR A5 opened)
 - [x] UTF-16LE reader, includes, description and handed blocks, conditions, flags, format-string placeholders, handlers; other languages counted (`src/statdesc.rs`)
 - [x] Findings with a fixed kind list, line text and skipped counts in the manifest (format 2, `stat_descriptions`)
 - [x] Unit tests per construct and per finding kind; no-panic tests on truncated and corrupt input
-- [x] Maintainer run from clean tree `8e777b9`: zero unparsed English lines on both games; determinism holds (117 / 675 files); manifests committed
-- [ ] `code-architecture-reviewer` review (first attempt stopped on a usage limit; rerun before the PR is opened) and findings applied or recorded
+- [x] Maintainer run from clean tree `9394d75`: zero unparsed English lines on both games; determinism holds (117 / 675 files); manifests committed
+- [x] `code-architecture-reviewer` review: no blockers; should-fix 1-4 and one nit applied, other nits recorded (context file, "PR A5")
 - [ ] PR open, CI green, maintainer merge
 
 ## PR A6: cross-check and gate (step 6)
