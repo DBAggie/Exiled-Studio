@@ -1745,9 +1745,11 @@ version = "0.0.0"
 dependencies = [
  "loom-data",
  "loom-domain",
+ "loom-parser",
  "loom-serialization",
  "serde",
  "serde_json",
+ "sha2",
 ]
 
 [[package]]

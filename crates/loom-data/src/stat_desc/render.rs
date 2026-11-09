@@ -52,6 +52,11 @@ impl StatValue {
 pub trait Lookup {
     /// The display name for `value` under `handler`.
     fn name(&self, handler: LookupHandler, value: i64) -> Option<String>;
+
+    /// Every key and its name under `handler`, sorted by key; empty when
+    /// the handler's table is not available. Must agree with
+    /// [`Lookup::name`]. The resolver inverts lookups with it.
+    fn entries(&self, handler: LookupHandler) -> Vec<(i64, String)>;
 }
 
 /// A [`Lookup`] that knows nothing.
@@ -61,6 +66,10 @@ pub struct NoLookup;
 impl Lookup for NoLookup {
     fn name(&self, _: LookupHandler, _: i64) -> Option<String> {
         None
+    }
+
+    fn entries(&self, _: LookupHandler) -> Vec<(i64, String)> {
+        Vec::new()
     }
 }
 
@@ -606,6 +615,10 @@ mod tests {
         impl Lookup for Names {
             fn name(&self, handler: LookupHandler, value: i64) -> Option<String> {
                 (handler == LookupHandler::PassiveHash && value == 7).then(|| "Whispers".to_owned())
+            }
+
+            fn entries(&self, _: LookupHandler) -> Vec<(i64, String)> {
+                Vec::new()
             }
         }
         let d = handled(&["s"], "Allocates {0}", &[("passive_hash", Some(1))]);
