@@ -12,11 +12,14 @@
 //!   extracts the Spike A tables and every table they reference into
 //!   `<dir>/tables/*.json`, the game's stat-description files into
 //!   `<dir>/stat_descriptions/**/*.json` (see [`loom_extractor::statdesc`]),
+//!   every passive skill graph (`*.psg`) into
+//!   `<dir>/passive_skill_graphs/**/*.json` (see [`loom_extractor::psg`]),
 //!   plus `<dir>/manifest.json` (see [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
 //!   checked before anything is decoded. Exits with an error if a root table
 //!   is not `ok`, any table failed, any key is past the end of its target,
-//!   no stat-description file was found, or one did not decode
+//!   no stat-description file was found, or one did not decode, or no graph
+//!   was found, one did not parse, or one has a dangling connection
 //!   (`Manifest::problems`); the output is written either way. Stat-description
 //!   lines that were not parsed are listed in the manifest, not errors.
 //!
@@ -49,6 +52,7 @@ use loom_extractor::index::{FileRecord, Index, Listing};
 use loom_extractor::install::{
     INDEX_PATH, InstallError, InstallIndex, hex, read_files, read_index, steam_build_id,
 };
+use loom_extractor::psg::{self, GraphManifest};
 use loom_extractor::schema::{Game, Schema};
 use loom_extractor::statdesc::{FileStatus, StatDescManifest, source_kind};
 use sha2::{Digest, Sha256};
@@ -352,7 +356,7 @@ fn planned_files(
         plan.sources().map(|path| (path, Vec::new())).collect();
     for file in &listing.files {
         let path = file.path.to_ascii_lowercase();
-        if source_kind(plan.game(), &path).is_some() {
+        if source_kind(plan.game(), &path).is_some() || psg::is_graph(&path) {
             by_path.entry(path.clone()).or_default();
         }
         if let Some(records) = by_path.get_mut(&path) {
@@ -465,6 +469,21 @@ fn print_stat_descriptions(sd: &StatDescManifest) {
     }
 }
 
+/// Prints the graph part of the run summary.
+fn print_graphs(graphs: &GraphManifest) {
+    println!("passive skill graphs {}", graphs.files.len());
+    for (path, g) in &graphs.files {
+        let n = |v: Option<usize>| v.map_or_else(|| "-".to_owned(), |v| v.to_string());
+        println!(
+            "  {path}: {:?}, {} nodes, {} connections, {} roots",
+            g.status,
+            n(g.nodes),
+            n(g.connections),
+            n(g.roots)
+        );
+    }
+}
+
 /// Prints the run summary.
 fn print_summary(m: &Manifest, manifest: &[u8]) {
     let mut by_status: BTreeMap<Status, usize> = BTreeMap::new();
@@ -508,6 +527,7 @@ fn print_summary(m: &Manifest, manifest: &[u8]) {
     println!("dangling keys        {dangling} ({unchecked} key columns unchecked)");
     println!("non-finite floats    {non_finite}");
     print_stat_descriptions(&m.stat_descriptions);
+    print_graphs(&m.passive_skill_graphs);
     println!("files written        {} ({rows} rows)", m.files.len());
     println!("manifest sha256      {}", hex(&Sha256::digest(manifest)));
 }
@@ -692,13 +712,14 @@ fn run_cross_check(cmd: &CrossCheck) -> Result<bool, Failure> {
         let bytes = read_bytes(&cmd.extract.join(&rel))?;
         ours.insert(rel, bytes);
     }
-    for path in files_in(
-        &cmd.extract.join(crosscheck::STAT_DESCRIPTIONS_DIR),
-        ".json",
-        true,
-    )? {
-        if let Some(rel) = relative(&cmd.extract, &path) {
-            ours.insert(rel, read_bytes(&path)?);
+    for dir in [
+        crosscheck::STAT_DESCRIPTIONS_DIR,
+        crosscheck::PASSIVE_SKILL_GRAPHS_DIR,
+    ] {
+        for path in files_in(&cmd.extract.join(dir), ".json", true)? {
+            if let Some(rel) = relative(&cmd.extract, &path) {
+                ours.insert(rel, read_bytes(&path)?);
+            }
         }
     }
 
@@ -861,6 +882,8 @@ mod tests {
                 ("Metadata/StatDescriptions/B_filters.txt", 5),
                 ("metadata/statdescriptions/c.dat", 6),
                 ("data/statdescriptions/d.csd", 7),
+                // Passive skill graphs: every .psg file.
+                ("Metadata/PassiveSkillGraph.psg", 8),
             ]),
         )
         .unwrap();
@@ -868,11 +891,12 @@ mod tests {
             paths,
             [
                 "data/stats.datc64",
+                "metadata/passiveskillgraph.psg",
                 "metadata/statdescriptions/a.txt",
                 "metadata/statdescriptions/b_filters.txt",
             ]
         );
-        assert_eq!(records, [record(1), record(4), record(5)]);
+        assert_eq!(records, [record(1), record(8), record(4), record(5)]);
 
         let (paths, _) = planned_files(&plan, &listing(&[])).unwrap();
         assert!(paths.is_empty());

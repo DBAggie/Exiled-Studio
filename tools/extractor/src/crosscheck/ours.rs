@@ -1,9 +1,10 @@
 //! Readers for the extractor's own output (`extract`): `manifest.json`,
-//! `tables/<Name>.json`, and `stat_descriptions/**/*.json`. Table and
+//! `tables/<Name>.json`, `stat_descriptions/**/*.json`, and
+//! `passive_skill_graphs/**/*.json`. Table and
 //! manifest fields are read strictly, so a change to the output format fails
 //! here instead of being misread.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Deserialize;
 use serde_json::Value;
@@ -52,6 +53,47 @@ impl Table {
         self.columns
             .iter()
             .position(|c| c.name.as_deref() == Some(name))
+    }
+}
+
+/// Node IDs of a passive skill graph file (the fields the cross-check needs).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct Graph {
+    /// Groups in file order.
+    pub groups: Vec<GraphGroup>,
+}
+
+/// One group of a graph file.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+pub struct GraphGroup {
+    /// Nodes in file order.
+    pub nodes: Vec<GraphNode>,
+}
+
+/// One node of a graph file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+pub struct GraphNode {
+    /// `PassiveSkills.PassiveSkillGraphId`.
+    pub id: u32,
+}
+
+impl Graph {
+    /// Parses a graph file.
+    ///
+    /// # Errors
+    /// If the bytes are not a graph file.
+    pub fn parse(bytes: &[u8]) -> Result<Self, serde_json::Error> {
+        serde_json::from_slice(bytes)
+    }
+
+    /// Node IDs as decimal strings (the passive family's key form).
+    #[must_use]
+    pub fn node_keys(&self) -> BTreeSet<String> {
+        self.groups
+            .iter()
+            .flat_map(|g| &g.nodes)
+            .map(|n| n.id.to_string())
+            .collect()
     }
 }
 

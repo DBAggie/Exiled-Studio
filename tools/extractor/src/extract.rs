@@ -1,7 +1,8 @@
 //! Table extraction (Spike A, PR A4): picks the tables to extract, decodes
 //! them, writes each as canonical JSON, and builds the manifest that ties the
 //! output to its inputs (ADR-005). Stat-description files (PR A5) go through
-//! the same [`Extraction`] and are parsed by [`crate::statdesc`]. Pure: the
+//! the same [`Extraction`] and are parsed by [`crate::statdesc`], and so do
+//! passive skill graphs (PR A6b, [`crate::psg`]). Pure: the
 //! filesystem stays in `main.rs` and [`crate::install`].
 //!
 //! Output is deterministic by construction: tables and findings are kept in
@@ -37,24 +38,28 @@ use sha2::{Digest, Sha256};
 
 use crate::dat::{RowSizeMismatch, Value, read_table};
 use crate::install::{BundleHashes, INDEX_PATH, hex};
+use crate::psg::{self, GraphManifest};
 use crate::schema::{
     Column, ColumnKind, Game, ScalarType, Schema, TableSchema, VENDORED_COMMIT, VENDORED_SHA256,
 };
 use crate::statdesc::{self, StatDescManifest};
 
 /// Tables Spike A extracts; the tables they reference are added by [`Plan::new`].
-pub const SPIKE_TABLES: [&str; 6] = [
+/// `PassiveSkillTrees` (PR A6b) names the graph file of each passive tree.
+pub const SPIKE_TABLES: [&str; 7] = [
     "Stats",
     "Mods",
     "BaseItemTypes",
     "PassiveSkills",
     "ActiveSkills",
     "GrantedEffects",
+    "PassiveSkillTrees",
 ];
 
 /// Version of the manifest layout. Bump it when a field changes meaning.
 /// 2: `stat_descriptions` added (PR A5).
-pub const MANIFEST_FORMAT: u32 = 2;
+/// 3: `passive_skill_graphs` added (PR A6b).
+pub const MANIFEST_FORMAT: u32 = 3;
 
 /// Manifest file name inside the output directory.
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -287,6 +292,7 @@ pub struct Extraction<'s> {
     plan: Plan<'s>,
     added: BTreeMap<String, Added>,
     stat_descriptions: statdesc::Collection,
+    graphs: psg::Collection,
 }
 
 impl<'s> Extraction<'s> {
@@ -299,6 +305,7 @@ impl<'s> Extraction<'s> {
             plan,
             added: BTreeMap::new(),
             stat_descriptions: statdesc::Collection::new(game),
+            graphs: psg::Collection::new(game),
         }
     }
 
@@ -313,6 +320,9 @@ impl<'s> Extraction<'s> {
     pub fn add(&mut self, path: &str, bytes: &[u8]) -> Result<(), ExtractError> {
         if self.stat_descriptions.wants(path) {
             return self.stat_descriptions.add(path, bytes);
+        }
+        if psg::is_graph(path) {
+            return self.graphs.add(path, bytes);
         }
         let unplanned = || ExtractError::Unplanned {
             path: path.to_owned(),
@@ -364,6 +374,7 @@ impl<'s> Extraction<'s> {
             plan,
             mut added,
             stat_descriptions,
+            graphs,
         } = self;
         let rows_of: BTreeMap<String, usize> = added
             .iter()
@@ -477,6 +488,23 @@ impl<'s> Extraction<'s> {
         }
         files.extend(statdesc_files);
 
+        let (graph_files, passive_skill_graphs) = graphs.finish();
+        for entry in passive_skill_graphs.files.values() {
+            if let Some(path) = &entry.output
+                && let Some(bytes) = graph_files.get(path)
+            {
+                // A graph's "rows" are its nodes.
+                file_entries.insert(
+                    path.clone(),
+                    OutputFile {
+                        rows: entry.nodes.unwrap_or_default(),
+                        sha256: hex(&Sha256::digest(bytes)),
+                    },
+                );
+            }
+        }
+        files.extend(graph_files);
+
         let manifest = Manifest {
             bundles: inputs
                 .bundles
@@ -492,6 +520,7 @@ impl<'s> Extraction<'s> {
                 path: INDEX_PATH,
                 sha256: hex(&inputs.index_sha256),
             },
+            passive_skill_graphs,
             schema: SchemaInput {
                 commit: VENDORED_COMMIT,
                 sha256: VENDORED_SHA256,
@@ -740,7 +769,7 @@ pub struct Extractor {
 /// What came out: output files by path, and the manifest.
 #[derive(Debug, Clone)]
 pub struct Output {
-    /// Table and stat-description files, by path inside the output
+    /// Table, stat-description, and graph files, by path inside the output
     /// directory.
     pub files: BTreeMap<String, Vec<u8>>,
     /// The manifest.
@@ -784,6 +813,8 @@ pub struct Manifest {
     pub game: &'static str,
     /// The index read.
     pub index: IndexInput,
+    /// Passive skill graph files and their counts.
+    pub passive_skill_graphs: GraphManifest,
     /// The vendored schema.
     pub schema: SchemaInput,
     /// Stat-description files, their counts, and every line not parsed.
@@ -812,12 +843,14 @@ impl Manifest {
     /// Problems that make the run fail: a root table that is not `ok` (not
     /// decoded, or decoded with a row-size mismatch), any table that failed
     /// to decode, any key column with keys past the end of its target, and
-    /// the stat-description problems ([`StatDescManifest::problems`]).
+    /// the stat-description and graph problems ([`StatDescManifest::problems`],
+    /// [`GraphManifest::problems`]).
     /// Everything else, stat-description findings included, is recorded in
     /// the manifest only.
     #[must_use]
     pub fn problems(&self) -> Vec<String> {
         let mut problems = self.stat_descriptions.problems();
+        problems.extend(self.passive_skill_graphs.problems());
         for (name, table) in &self.tables {
             if table.status == Status::Failed || (table.root && table.status != Status::Ok) {
                 problems.push(format!("{name}: {:?}", table.status));
@@ -1045,14 +1078,21 @@ mod tests {
         text.encode_utf16().flat_map(u16::to_le_bytes).collect()
     }
 
-    /// Extracts `tables` plus [`stat_file`], so the run has the stat
-    /// descriptions it needs.
+    const GRAPH_PATH: &str = "metadata/passiveskillgraph.psg";
+
+    /// An empty PoE1 passive skill graph: version, kind, no orbits, no
+    /// roots, no groups.
+    const GRAPH_FILE: [u8; 11] = [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    /// Extracts `tables` plus [`stat_file`] and [`GRAPH_FILE`], so the run
+    /// has the stat descriptions and the graph it needs.
     fn extract(schema: &Schema, tables: &[(&str, &[u8])]) -> Output {
         let mut extraction = Extraction::new(Plan::new(schema, Game::Poe1, &["root"]));
         for (path, bytes) in tables {
             extraction.add(path, bytes).unwrap();
         }
         extraction.add(STAT_PATH, &stat_file()).unwrap();
+        extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
         extraction.finish(inputs())
     }
 
@@ -1182,7 +1222,7 @@ mod tests {
                 (out.files, out.manifest.to_json().unwrap())
             })
             .collect();
-        assert_eq!(outputs[0].0.len(), 5);
+        assert_eq!(outputs[0].0.len(), 6);
         let manifest = String::from_utf8(outputs[0].1.clone()).unwrap();
         assert!(manifest.contains("\"stat_descriptions/b/other.txt.json\""));
         assert!(!manifest.contains("missing-include"));
@@ -1303,7 +1343,21 @@ mod tests {
         let sd_sha = hex(&Sha256::digest(
             &out.files["stat_descriptions/stat_descriptions.txt.json"],
         ));
+        let graph_json = &out.files["passive_skill_graphs/metadata/passiveskillgraph.psg.json"];
+        assert_eq!(
+            graph_json.as_slice(),
+            b"{
+\"groups\": [],
+\"kind\": 0,
+\"orbit_slots\": [],
+\"roots\": [],
+\"version\": 3
+}
+"
+        );
         let expected = GOLDEN
+            .replace("{graph_sha}", &hex(&Sha256::digest(graph_json)))
+            .replace("{graph_src}", &hex(&Sha256::digest(GRAPH_FILE)))
             .replace("{root_sha}", &root_sha)
             .replace("{child_sha}", &child_sha)
             .replace("{sd_sha}", &sd_sha)
@@ -1333,6 +1387,10 @@ mod tests {
     "version": "0.0.0"
   },
   "files": {
+    "passive_skill_graphs/metadata/passiveskillgraph.psg.json": {
+      "rows": 0,
+      "sha256": "{graph_sha}"
+    },
     "stat_descriptions/stat_descriptions.txt.json": {
       "rows": 1,
       "sha256": "{sd_sha}"
@@ -1346,11 +1404,30 @@ mod tests {
       "sha256": "{root_sha}"
     }
   },
-  "format": 2,
+  "format": 3,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
     "sha256": "abababababababababababababababababababababababababababababababab"
+  },
+  "passive_skill_graphs": {
+    "dir": "passive_skill_graphs",
+    "files": {
+      "metadata/passiveskillgraph.psg": {
+        "connections": 0,
+        "dangling_connections": 0,
+        "duplicate_nodes": 0,
+        "error": null,
+        "groups": 0,
+        "kind": 0,
+        "nodes": 0,
+        "output": "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
+        "roots": 0,
+        "source": "metadata/passiveskillgraph.psg",
+        "source_sha256": "{graph_src}",
+        "status": "ok"
+      }
+    }
   },
   "schema": {
     "commit": "{schema_commit}",
@@ -1532,6 +1609,7 @@ mod tests {
         assert_eq!(
             out.files.keys().collect::<Vec<_>>(),
             [
+                "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
                 "stat_descriptions/stat_descriptions.txt.json",
                 "tables/Child.json"
             ]
@@ -1565,6 +1643,7 @@ mod tests {
             let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
             extraction.add("data/child.datc64", &bytes).unwrap();
             extraction.add(STAT_PATH, &stat_file()).unwrap();
+            extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             let problems = extraction.finish(inputs()).manifest.problems();
             // Child's keys point into Missing, which has no schema: unchecked.
             assert_eq!(problems, expected);
@@ -1577,6 +1656,7 @@ mod tests {
         let run = |files: &[(&str, &[u8])]| {
             let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
             extraction.add("data/child.datc64", &child_dat()).unwrap();
+            extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             for (path, bytes) in files {
                 extraction.add(path, bytes).unwrap();
             }
