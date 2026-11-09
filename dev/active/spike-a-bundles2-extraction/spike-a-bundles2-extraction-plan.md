@@ -1,4 +1,4 @@
-Last Updated: 2026-11-08
+Last Updated: 2026-11-09 (A6 split into A6a/A6b)
 
 # Spike A: Bundles2 game-data extraction (plan)
 
@@ -8,7 +8,7 @@ Spike A in `docs/plan/ACTION-PLAN.md` (Phase 1, first spike). Prove that the pro
 This spike produces **spike-level output** (deterministic JSON per table plus a manifest). The canonical game-data schema and signed bundle format are Phase 2 work (IMPLEMENTATION-PLAN Phase 2, item 3) and are not designed here.
 
 ## Current state (2026-11-09)
-- `tools/extractor` reads the Bundles2 index (A1 decompressor boundary, A2 bundle/index reader and `list-files`), decodes dat tables with the vendored schema (A3), and extracts the Spike A tables to deterministic JSON plus a manifest (A4, `extract`, `scripts/check-determinism.sh`). `extract` also parses the stat-description files (A5, `src/statdesc.rs`). It depends on `loom-data` (still empty).
+- `tools/extractor` reads the Bundles2 index (A1 decompressor boundary, A2 bundle/index reader and `list-files`), decodes dat tables with the vendored schema (A3), and extracts the Spike A tables and every table they reference as deterministic JSON with a manifest (A4, `extract`, `scripts/check-determinism.sh`). `extract` also parses the stat-description files (A5, `src/statdesc.rs`). `cross-check` compares the output with PoB's data exports (A6a, `src/crosscheck.rs`). It depends on `loom-data` (still empty).
 - Workspace lints: `unsafe_code = "deny"`, no `unwrap`/`expect` outside tests, `#[expect]` only.
 - Game installs present: PoE1 `D:\SteamLibrary\steamapps\common\Path of Exile` (Steam build 26474023 until A4, 26530219 since 2026-11-09; the update changed no file the extractor reads) and PoE2 `...\Path of Exile 2` (Steam build 26476662). Both have `Bundles2/_.index.bin` (plus `_.index.high.bin`, `_.index.low.bin`, `.index.dbg`, which the spike must identify).
 - Legacy PoB v2.67.2 (oracle pin, tagged 2026-08-08) carries the "3.29.2 Export" data (commit `b383679a4`). Legacy HEAD has a "3.29.3 Export" (`1b4078dc4`). PoB uses its own `src/Export/spec.lua`, not the community schema, and filters what it exports. PoB v2.67.2 is PoE1 only.
@@ -86,6 +86,9 @@ This spike produces **spike-level output** (deterministic JSON per table plus a 
   - `uncategorized`: anything else.
 - **Accept:** cross-check tool output with counts and categorized gaps; spike report with the gate verdict.
 - **Depends on:** 4, 5.
+- **Split (maintainer decision 2026-11-09):** our PassiveSkills rows that PoB's tree lacks cannot be categorized from the extracted tables; the game's evidence is the passive skill graph file.
+  - **A6a:** `cross-check`, all rules for mods, bases, skills, stats (both directions), report and summaries, gate verdict for those four families. Done (report sections 14 and 15).
+  - **A6b:** read the passive skill graph (`.psg`) in the extractor (PoE1 and PoE2), use it as evidence for the passive gaps, final gate verdict.
 
 ## Gate (objective)
 1. **Determinism:** two runs of `extract` on the same install produce identical SHA-256 for every output file and the manifest, checked by script, for PoE1 and PoE2.
@@ -123,7 +126,8 @@ Each PR is one session and updates the handoff and this task folder (`/dev-docs-
 | A3 | Step 3: dat reader and vendored schema. | Unit tests per column type, mismatch detection, property tests. |
 | A4 (a/b) | Step 4: `extract`, manifest, determinism script (split if large). | Unit tests including the shuffled-input test; determinism results for PoE1/PoE2 on a clean tree; scrubbed manifest committed. |
 | A5 | Step 5: stat-description parser. | Unit tests per construct; maintainer-run counts and unparsed-construct list. |
-| A6 | Step 6: `cross-check`, gate verdict, ACTION-PLAN gate status and handoff update. | Cross-check tool output (counts, categorized gaps); gate pass/fail. |
+| A6a | Step 6, part 1: `cross-check` for mods, bases, skills, stats, passives (passive extras left uncategorized); gate verdict for four families. | Cross-check summaries (counts, categorized gaps); unit tests per rule. |
+| A6b | Step 6, part 2: read the passive skill graph; categorize the passive gaps; final gate verdict, ACTION-PLAN gate status. | Cross-check with passives categorized; gate pass/fail. |
 
 A1 may merge into A2 if the decision is quick and the dependency is small. A5 may run in parallel with A3/A4.
 

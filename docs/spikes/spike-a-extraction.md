@@ -1,8 +1,8 @@
 # Spike A: Bundles2 game-data extraction (report)
 
-Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6); the gate verdict is written at A6.
+Plan: `dev/active/spike-a-bundles2-extraction/`. Gate: `docs/plan/ACTION-PLAN.md`, Spike A. This report grows one section per PR (A1 to A6b); the gate verdict is written at A6b.
 
-Status (2026-11-09, PR A5): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11); stat-description files of both games parsed with zero unparsed English lines, every finding categorized in the manifest (A5, sections 12 and 13). Gate items 1, 3, and 4 met; 2 pending (A6).
+Status (2026-11-09, PR A6a): decompressor decided (A1); bundle container and index read by `loom-extractor` on both installs, path encoding and path hash confirmed (A2); datc64 layout confirmed and every table with a schema entry decoded on both installs with the vendored community schema (A3); `extract` writes the Spike A tables and every table they reference as deterministic JSON with a manifest, checked byte-identical over two runs on both installs (A4, sections 10 and 11); stat-description files of both games parsed with zero unparsed English lines, every finding categorized in the manifest (A5, sections 12 and 13); `cross-check` compares the output with PoB's newest data exports in both directions and categorizes every gap of mods, bases, skills, and stats on both games (A6a, sections 14 and 15). Gate items 1, 3, 4, and 5 met; item 2 met for mods, bases, skills, and stats, not yet for passives (our PassiveSkills rows that PoB's tree lacks are uncategorized until A6b reads the passive skill graph).
 
 ## 1. Existing crates (survey, 2026-11-08)
 Searched crates.io (`oodle`, `kraken`, `ooz`, `ggpk`, `datc64`, `poe bundle`, `path of exile`) and the GitHub repos behind each hit. Licenses are from crates.io metadata and the source files.
@@ -229,3 +229,70 @@ Parser: `tools/extractor/src/statdesc.rs`, run by `extract`. Format knowledge co
   Counts were checked independently of the parser with `grep`/`awk` over the decoded files: description keywords, `no_description` lines, `lang` lines, and English variant lines (56,631 for both games together) all match.
 - Gate 3 (no silent drops) is met: every row-size mismatch and every unparsed stat-description line is in the manifest with a category; on these installs there are no unparsed English lines. Gates 1 and 4 hold again for the new output. Gate 2 is A6.
 - PoE2's manifest is 1.2 MB (A4: 106 KB): it lists 589 files, each with an 11-language count map.
+
+## 14. Cross-check against PoB (A6a)
+Tool: `loom-extractor cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out <dir>` (`tools/extractor/src/crosscheck.rs`, PoB readers in `crosscheck/pob.rs`, our-output readers in `crosscheck/ours.rs`). It writes `report.json` (every gap with its category and rule) and `summary.json` (the same without the key lists of `pob-filtered` rules) and exits non-zero when the gate is not met.
+
+- **PoB baseline (searched upstream 2026-11-09):** no data export newer than PoE1 "3.29.3 Export" `1b4078dc4` (2026-08-23) or PoE2 "Export 0.5.5 data" `49e93925d` (2026-09-10). Checked: the default `dev` branches (newest commits to `src/Data/Mod*.lua` and `src/Data/Skills` are those exports or code fixes), `beta` and `master`, and open pull requests with "export" in the title. Both repositories are shallow-cloned at those commits into `local/pob/` (`git init` + `git fetch --depth 1 <url> <sha>`); the legacy repository is not touched.
+- **Families, like for like:** mods (PoB `src/Data/Mod*.lua` entry keys vs `Mods.Id`), bases (`src/Data/Bases/*.lua` names vs `BaseItemTypes.Name`, cleaned as PoB does: trimmed, `ö` written as `o`), skills (`src/Data/Skills/*.lua` keys vs `GrantedEffects.Id`), stats (stat IDs in `src/Data/StatDescriptions/**/*.lua` vs `Stats.Id`), passives (node IDs in the newest `src/TreeData/<major>_<minor>/tree.lua` vs `PassiveSkills.PassiveSkillGraphId`). Four mod files are keyed by something other than a mod Id (`ModCache` by text, `ModScalability` by stat text, `ModFoulbornMap` by unique name, PoE2 `ModRunes` by rune and soul-core base name); they are listed under `excluded_pob_files` with how many of their keys equal a `Mods.Id` (0 or 2 of about 15,000, so a different key space).
+- **Both directions:** PoB keys missing from our output (`pob_missing`) and our keys PoB does not have (`ours_extra`). Each gap gets the first rule that matches, from the fixed category list (plan step 6). A gap no rule explains is `uncategorized`.
+- **Readers are narrow line patterns, not a Lua parser.** A line that starts like a key and does not complete the pattern is reported as `unparsed`, and an unparsed line fails the family. `#baseMatch` values are Lua patterns (`Wand[MEK]?%d+`); the tool has a small Lua pattern matcher (classes, sets, `? * + -`, anchors) that rejects captures, `%b`, `%f`, and back-references instead of guessing.
+- **Rules reproduce PoB's export from its own files.** Spec lists are read from the scripts (`skills.lua`'s `for _, name in pairs({...})`, `bases.lua`'s `itemTypes`), mod Id exclusions from every `not mod.Id:match("<pattern>")` in `mods.lua`, and the stat files `describeMod` uses from `mods.lua`'s `loadStatFile(...)`. Rules taken from script logic are tied to a snippet of the script; if the snippet is missing (PoB changed the script, or the other game's script never had it), the rule is disabled and listed in `disabled_rules`, so it cannot explain a gap.
+
+Rules (category, rule: what it checks):
+
+| Family | Direction | Rule |
+|---|---|---|
+| mods | ours extra | `pob-filtered` id-pattern-excluded: the Id matches a `not mod.Id:match(...)` pattern of `mods.lua` (per-pattern counts in `breakdown`) |
+| | | `pob-filtered` zero-values: every stat `describeMod` reads (slots 1 to 6, without buff-template stats) is 0 to 0; `describeStats` skips such stats (`v.min ~= 0 or v.max ~= 0`, `Export/statdesc.lua`) |
+| | | `pob-filtered` no-description-line: reproducing `describeStats` over the files `mods.lua` loads gives no line (`#orders > 0`) |
+| | | `pob-filtered` dnt-first-line: the first line, after `escapeGGGString`, starts with `DNT` (PoE1 only) |
+| | | `pob-filtered` aura-bonus-family, unique-generation-without-family (PoE1), aura-flags (PoE1): the writer conditions in `mods.lua` |
+| | | `pob-filtered` domain-generation-not-exported: PoB has no mod of this (domain, generation type) pair (per-pair counts in `breakdown`, with schema enum names) |
+| | | `patch-delta` passes-reproduced-filters: PoB exports mods of this pair and no rule above leaves it out, so PoB's writers would have written it |
+| bases | PoB missing | `pob-generated` display-name-in-spec (`#base <Id> <display name>`), energy-blade-rename |
+| | ours extra | `pob-filtered` not-in-base-spec, royale (PoE1), dnt-name (PoE2), renamed-by-spec, energy-blade-rename |
+| skills | PoB missing | `pob-generated` hand-written-in-spec (`skills["Id"] = {` in a processed spec, not a `#skill`) |
+| | ours extra | `pob-filtered` not-in-skill-spec; `patch-delta` listed-not-exported (a `#skill` PoB did not write; `skills.lua` drops a listed skill only when its row is missing from the data it read) |
+| stats | PoB missing | `pob-generated` handed-placeholder (PoB writes `0` as the stat list of handed descriptions); `not-in-index` stat-only-in-game-descriptions (installed descriptions name it, the Stats table has no row); `not-in-index` stale-pob-description-file (only PoB files with no installed counterpart name it; PoB keeps converted files of removed game files) |
+| | ours extra | `pob-filtered` handed-description; not-in-converted-descriptions (no installed counterpart of a file PoB converts names it) |
+| all | both | `schema-mismatch` table-not-ok: the table's manifest status is not `ok` (no family table is affected on these installs) |
+
+- **`describeMod` reproduction** (the largest rule, from PoB's `Export/statdesc.lua`): the files are loaded in order with includes read in place, and the last description naming a stat wins (`no_description` maps a stat to nothing); the stats are the mod's slots 1 to 6 without the stats of its buff templates (`BuffTemplates` key array, picked by reference because the column names differ between the games' schemas); a stat that is 0 to 0 is skipped; each description takes its first English variant (`table_only` skipped) whose conditions hold for the minimum values, retrying once with a minimum of 0 raised to 1 for ranges above 0. Our output stores a file's `no_description` list apart from its descriptions, so they are applied first; PoB applies them in line order, and the files list them before the descriptions.
+- **`patch-delta` without a newer PoB export:** the plan asked for a diff against the next PoB export; none exists. The two `patch-delta` rules instead rest on reproduced PoB behaviour: the gap would have been written by PoB's own export code, so the row was not in the data PoB read. Both keep their keys in the summary, and the 2% ceiling bounds them. The PoE1 mod case was checked by hand: PoB has `V2MinPowerChargesCorrupted` with the text "+1 to Minimum Frenzy Charges"; the install adds `V2MinPowerChargesCorruptedNew` with power charges, and PoB `dev` (2026-11-06) does not have it yet.
+- **Divergence register:** these gaps are differences from PoB (ADR-006). They become register entries once Spike C defines the register format; `summary.json` lists the keys of every category except `pob-filtered` (counts only).
+
+## 15. Evidence (PR A6a)
+- CI tests (`cargo test -p loom-extractor`, 124 library tests, 25 of them for the cross-check, plus 3 CLI tests in `main.rs`): every PoB reader on snippets, including malformed lines and `#skillEnd`; the Lua pattern matcher against `string.find` behaviour and its rejected features; `escapeGGGString` (one case checked against Lua's greedy match); a synthetic PoB checkout and extract output that puts one key under every rule of every family, `schema-mismatch` for a table that is not `ok`, the patch-delta ceiling, and the gate's `not_met` lines; disabled rules when script snippets are missing; unparsed lines failing a family; wrong game, missing file, unknown `#baseMatch` column, unsupported pattern, and missing spec list as errors; the `describeMod` reproduction (load order, includes, `no_description`, `table_only`, the zero retry, `!` conditions, zero stats); the summary keeping all but `pob-filtered` keys; identical report bytes for two runs; CLI parsing, checkout commit reading, and file listing.
+- Maintainer workstation run, 2026-11-09, tool commit `e237e85` (`tool_dirty: false`), on the A5 extract output (extractor `9394d75`, clean; the Steam builds have not changed since). Two runs per game gave byte-identical `report.json` and `summary.json`. Summaries committed as `docs/spikes/spike-a/cross-check-poe1-26530219.json` and `cross-check-poe2-26476662.json`.
+
+| | PoE1 (3.29.3 `1b4078dc4`, tree 3_29) | PoE2 (0.5.5 `49e93925d`, tree 0_5) |
+|---|---|---|
+| **mods** keys PoB / ours / matched | 23,539 / 40,355 / 23,539 | 9,059 / 16,911 / 9,059 |
+| ours extra: `pob-filtered` id-pattern-excluded | 4,440 | 2,648 |
+| ours extra: `pob-filtered` zero-values | 179 | 190 |
+| ours extra: `pob-filtered` no-description-line | 3,319 | 2,941 |
+| ours extra: `pob-filtered` dnt-first-line | 27 | 0 (rule not in the PoE2 script) |
+| ours extra: `pob-filtered` aura-bonus-family | 121 | 14 |
+| ours extra: `pob-filtered` unique-generation-without-family | 5 | 0 (rule not in the PoE2 script) |
+| ours extra: `pob-filtered` domain-generation-not-exported | 8,724 | 2,059 |
+| ours extra: `patch-delta` passes-reproduced-filters | 1 (`V2MinPowerChargesCorruptedNew`) | 0 |
+| **bases** keys PoB / ours / matched | 1,106 / 4,310 / 1,091 | 1,769 / 4,638 / 1,764 |
+| PoB missing: `pob-generated` display-name-in-spec / energy-blade-rename | 13 / 2 | 3 / 2 |
+| ours extra: `pob-filtered` not-in-base-spec / dnt-name / renamed-by-spec / energy-blade-rename | 3,217 / 0 / 1 / 1 | 2,822 / 51 / 0 / 1 |
+| **skills** keys PoB / ours / matched | 1,521 / 12,829 / 1,508 | 1,429 / 8,350 / 1,429 |
+| PoB missing: `pob-generated` hand-written-in-spec | 13 | 0 |
+| ours extra: `pob-filtered` not-in-skill-spec | 11,320 | 6,921 |
+| ours extra: `patch-delta` listed-not-exported | 1 (`EDSHarvestMinerHammerSmoke`) | 0 |
+| **stats** keys PoB / ours / matched | 13,665 / 23,362 / 13,664 | 14,535 / 27,299 / 14,526 |
+| PoB missing: `pob-generated` handed-placeholder | 1 (`0`) | 0 |
+| PoB missing: `not-in-index` stale-pob-description-file | 0 | 9 (192 of PoB's 764 PoE2 files have no installed counterpart) |
+| ours extra: `pob-filtered` handed-description / not-in-converted-descriptions | 20 / 9,678 | 0 / 12,773 |
+| **passives** keys PoB / ours / matched | 3,396 / 5,706 / 3,396 | 4,914 / 9,731 / 4,914 |
+| ours extra: `uncategorized` | 2,310 | 4,817 |
+| Uncategorized / unparsed PoB lines (mods, bases, skills, stats) | 0 / 0 | 0 / 0 |
+| patch-delta (limit = 2% of PoB keys) | mods 1 (470), skills 1 (30) | 0 |
+| Gate 2 verdict | met for mods, bases, skills, stats; not met for passives | same |
+
+- Every PoB key of every family is in our output except the ones categorized above: no PoB mod, passive node, or (PoE2) skill is missing, and the missing bases, skills, and stats are all PoB-made names or keys of removed game files.
+- **Passives (A6b):** PoB's PoE1 tree comes from GGG's published tree file, not from a filter over PassiveSkills, and PoE2's from PoB's own tree export. The extra rows (PoE1: atlas, alternate-ascendancy, royale, and legacy nodes; PoE2: atlas, Brequel, and others) need the game's own placement evidence, the passive skill graph file, which the extractor does not read yet. Maintainer decision 2026-11-09: split A6 into A6a (this PR) and A6b (read the passive skill graph, categorize the passive gaps, final gate verdict).

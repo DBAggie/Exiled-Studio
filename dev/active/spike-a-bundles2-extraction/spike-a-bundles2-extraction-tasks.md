@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR A5 opened)
+Last Updated: 2026-11-09 (PR A6a)
 
 # Spike A: tasks
 
@@ -62,15 +62,23 @@ Last Updated: 2026-11-09 (PR A5 opened)
 - [x] Unit tests per construct and per finding kind; no-panic tests on truncated and corrupt input
 - [x] Maintainer run from clean tree `9394d75`: zero unparsed English lines on both games; determinism holds (117 / 675 files); manifests committed
 - [x] `code-architecture-reviewer` review: no blockers; should-fix 1-4 and one nit applied, other nits recorded (context file, "PR A5")
-- [ ] PR open (#10), CI green, maintainer merge
+- [x] PR open (#10), CI green, maintainer merge (merged 2026-11-09 as `ce5221b`)
 
-## PR A6: cross-check and gate (step 6)
-- [ ] Search upstream for data exports newer than 3.29.3 / 0.5.5; use the newest and record the commits
-- [ ] Clone `PathOfBuilding` and `PathOfBuilding-PoE2` at those commits into `local/`
-- [ ] `cross-check` with like-for-like keys (bases by English name; PoB-generated mods as their own category)
-- [ ] Categorized gap report from the tool; spike report with the gate verdict
-- [ ] Note that gap entries become divergence-register entries once Spike C defines the format
-- [ ] Update ACTION-PLAN gate status, CLAUDE.md Status, handoff
+## PR A6a: cross-check (step 6, part 1; split by maintainer 2026-11-09)
+- [x] Search upstream for data exports newer than 3.29.3 / 0.5.5 (none; dev, beta, master, open PRs checked 2026-11-09)
+- [x] Shallow-clone `PathOfBuilding` `1b4078dc4` and `PathOfBuilding-PoE2` `49e93925d` into `local/pob/`
+- [x] `cross-check` with like-for-like keys in both directions, rules reproducing PoB's export (`src/crosscheck.rs`, `crosscheck/pob.rs`, `crosscheck/ours.rs`)
+- [x] Unit tests per reader and per rule; two runs byte-identical; summaries committed (`docs/spikes/spike-a/cross-check-*.json`)
+- [x] Spike report sections 14 and 15; gate 2 met for mods, bases, skills, stats on both games
+- [x] Note that gap entries become divergence-register entries once Spike C defines the format (report section 14)
+- [x] Update ACTION-PLAN gate status, CLAUDE.md Status, handoff
+- [ ] `code-architecture-reviewer` review, PR open, CI green, maintainer merge
+
+## PR A6b: passive skill graph and final gate (step 6, part 2)
+- [ ] Find the passive skill graph files in both installs (PoE1 `metadata/passiveskillgraph.psg`?, PoE2 equivalent) and document the format (PoB `src/Export/psg.lua` reads an old PoE1 layout; PoE2 `src/Export/Scripts/passivetree.lua`)
+- [ ] Parser in `tools/extractor` (bytes in, typed errors, corrupt-input tests); `extract` writes the graph's node IDs
+- [ ] Cross-check passive rules: rows not in the graph (`pob-filtered`/`not-in-index` as fits), rows in the graph but not in PoB's tree (atlas and other sub-trees, by `SkillType`/`AtlasSubTree`/`BrequelTree`/ascendancy columns), with tool evidence
+- [ ] Final gate verdict; ACTION-PLAN gate status, CLAUDE.md Status, handoff
 
 ## Follow-up (outside Spike A)
 - [ ] Phase 2: record extractor provenance at build time (or in a signed build step) instead of querying git at run time

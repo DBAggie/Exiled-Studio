@@ -3,7 +3,7 @@
 Read `AGENTS.md` first: crate boundaries, commands, code expectations, and the PR evidence rule. This file adds Claude Code specifics.
 
 ## Status
-Phase 0 (bootstrap) is done. Next: Spike A, game-data extraction (`docs/plan/ACTION-PLAN.md`). Do not start work for a later step before the earlier gate passes. The live state is in **Current state** in `docs/handoff/SUCCESSOR-HANDOFF.md`; read it at the start of every session.
+Phase 0 (bootstrap) is done. Spike A (game-data extraction, `docs/plan/ACTION-PLAN.md`) is in progress: A1-A5 merged, A6a (`cross-check`) in review; next is A6b (passive skill graph, final gate verdict). Do not start work for a later step before the earlier gate passes. The live state is in **Current state** in `docs/handoff/SUCCESSOR-HANDOFF.md`; read it at the start of every session.
 
 ## One PR per session
 Each PR is done in a fresh session. Before opening the PR, update every document it made stale (the handoff's Current state and Next action on every PR; the full list is in `AGENTS.md`, "One PR per session"). Run `/dev-docs-update` for planned tasks. The next session must be able to resume from the repository alone.
