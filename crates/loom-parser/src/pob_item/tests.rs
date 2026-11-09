@@ -160,6 +160,17 @@ fn read_should_mark_variant_base_lines_and_their_selection() {
 }
 
 #[test]
+fn read_should_read_a_repeated_base_line_as_a_base() {
+    let item = read(
+        "Rarity: UNIQUE\nN\nTimeless Jewel\nVariant: A\nSelected Variant: 1\nTimeless Jewel\nImplicits: 0\n",
+    );
+    assert_eq!(
+        kinds(&item),
+        ["rarity", "name", "base", "spec", "spec", "base", "spec"]
+    );
+}
+
+#[test]
 fn read_should_take_the_base_from_the_name_line_for_magic_items() {
     let item = read(
         "Rarity: MAGIC\nHeated Thicket Bow of Skill\nImplicits: 0\n10% increased Attack Speed\n",

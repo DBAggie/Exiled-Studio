@@ -691,6 +691,11 @@ pub fn read(text: &str) -> Item {
             set(&mut kinds, i, spec_kind(key));
         } else if is_influence(line) {
             set(&mut kinds, i, LineKind::Influence);
+        } else if item.base.as_deref() == Some(line) {
+            // The base line repeated (`BuildRaw` writes `self.baseLines`
+            // after the variants; `ParseRaw` reads any line naming a base
+            // as a base line: `if base then ... goto continue`).
+            set(&mut kinds, i, LineKind::Base);
         } else if is_flag(line) {
             set(&mut kinds, i, LineKind::Flag);
         } else {
