@@ -45,6 +45,7 @@ use crate::schema::{
 use crate::statdesc::{self, StatDescManifest};
 
 /// Tables Spike A extracts; the tables they reference are added by [`Plan::new`].
+/// `extract` plans with [`roots`], which adds the lookup tables.
 /// `PassiveSkillTrees` (PR A6b) names the graph file of each passive tree.
 pub const SPIKE_TABLES: [&str; 7] = [
     "Stats",
@@ -55,6 +56,36 @@ pub const SPIKE_TABLES: [&str; 7] = [
     "GrantedEffects",
     "PassiveSkillTrees",
 ];
+
+/// Tables that stat-description lookup handlers name a value through (PR B1x,
+/// Spike B plan "Lookup handlers"), in both games: cluster-jewel small
+/// passives (`tree_expansion_jewel_passive`) and indexed support gems
+/// (`display_indexable_support`). In PoE2 build 26476662 their files exist
+/// but hold no rows; they are roots so the manifest records that.
+pub const LOOKUP_TABLES: [&str; 4] = [
+    "PassiveTreeExpansionSkills",
+    "PassiveTreeExpansionJewels",
+    "PassiveTreeExpansionJewelSizes",
+    "IndexableSupportGems",
+];
+
+/// Lookup tables of PoE1 only (`display_indexable_non_active_support`,
+/// `display_indexable_skill`). The schema lists them for both games, but the
+/// PoE2 install (build 26476662) has no file for them, and a root without a
+/// file fails the run.
+pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "IndexableSkillGems"];
+
+/// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
+/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`].
+#[must_use]
+pub fn roots(game: Game) -> Vec<&'static str> {
+    let mut roots = Vec::from(SPIKE_TABLES);
+    roots.extend(LOOKUP_TABLES);
+    if game == Game::Poe1 {
+        roots.extend(LOOKUP_TABLES_POE1);
+    }
+    roots
+}
 
 /// Version of the manifest layout. Bump it when a field changes meaning.
 /// 2: `stat_descriptions` added (PR A5).
@@ -1632,6 +1663,31 @@ mod tests {
             !out.files
                 .keys()
                 .any(|k| k.starts_with("passive_skill_graphs/"))
+        );
+    }
+
+    #[test]
+    fn roots_should_have_a_vendored_schema_for_their_game() {
+        let schema = Schema::vendored().unwrap();
+        for game in [Game::Poe1, Game::Poe2] {
+            let roots = roots(game);
+            let unique: BTreeSet<_> = roots.iter().map(|r| r.to_ascii_lowercase()).collect();
+            assert_eq!(unique.len(), roots.len(), "{game:?}: duplicate root");
+            for root in &roots {
+                assert!(schema.table(game, root).is_some(), "{game:?} {root}");
+            }
+            let planned = Plan::new(&schema, game, &roots);
+            for root in &roots {
+                assert!(planned.tables[&root.to_ascii_lowercase()].root, "{root}");
+            }
+        }
+        let poe2 = roots(Game::Poe2);
+        assert!(LOOKUP_TABLES.iter().all(|t| poe2.contains(t)));
+        assert!(LOOKUP_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
+        assert!(
+            LOOKUP_TABLES_POE1
+                .iter()
+                .all(|t| roots(Game::Poe1).contains(t))
         );
     }
 

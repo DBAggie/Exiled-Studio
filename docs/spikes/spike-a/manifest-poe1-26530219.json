@@ -36,7 +36,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "b4eebe08104772f808cad58868888edfbcfe4f99",
+    "commit": "4c70f6a9a5ad2a649cdcd85b86846d5cec8ca7c5",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -369,6 +369,18 @@
       "rows": 23,
       "sha256": "473c9b9f5d4af1cf70966a91fedcc0179a13dcd1e53f1b489bad9795e86fb6d0"
     },
+    "tables/IndexableNonActiveSupportGems.json": {
+      "rows": 164,
+      "sha256": "0f3d51a8089bdac5643f03a649600acb4641badbbc216905db86a84ba6cc7503"
+    },
+    "tables/IndexableSkillGems.json": {
+      "rows": 287,
+      "sha256": "3280ae6dd2c4e2c1d0694aa237700648e47ed39e52df91936c90821f2513d4d0"
+    },
+    "tables/IndexableSupportGems.json": {
+      "rows": 172,
+      "sha256": "b02d1b3322682a83997f06ee8ca0a0a797397ff8788152e0c9203537cf0eab27"
+    },
     "tables/ItemClassCategories.json": {
       "rows": 67,
       "sha256": "fa129dd182f08b35cdc757cee079588c673e29d60b58380eb2a586c36319396a"
@@ -504,6 +516,18 @@
     "tables/PassiveSkills.json": {
       "rows": 5706,
       "sha256": "73fe236986e10dc1b18505c69de24d18b359884f31db9fb4036d52561aa25e48"
+    },
+    "tables/PassiveTreeExpansionJewelSizes.json": {
+      "rows": 3,
+      "sha256": "1274067b8078e7ad9b8f2d4cf22f6a438b8aa06f5ba6c927c613d6ccb2b96b79"
+    },
+    "tables/PassiveTreeExpansionJewels.json": {
+      "rows": 3,
+      "sha256": "c4bb31229dcf326440799ade69a6883153bec2b7ac12e6bb402d7410ae8b2e1b"
+    },
+    "tables/PassiveTreeExpansionSkills.json": {
+      "rows": 55,
+      "sha256": "831cf5a4c23d9700bccf615b7e1976c416dbafb443d1ddf6b1ee62747151757c"
     },
     "tables/PreloadGroups.json": {
       "rows": 79,
@@ -3566,6 +3590,7 @@
         "BaseItemTypes",
         "BrequelPassiveSubTrees",
         "Characters",
+        "PassiveTreeExpansionJewels",
         "SkillGems"
       ],
       "root": true,
@@ -4473,6 +4498,84 @@
       "rows": 23,
       "source": "data/impactsounddata.datc64",
       "source_sha256": "6f25ea317ec81c42aaa3bfd6c0b9e0d1077b7d669afe0e4d96458f943f6e6cd4",
+      "status": "ok"
+    },
+    "IndexableNonActiveSupportGems": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {
+        "SupportGem": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 164
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/IndexableNonActiveSupportGems.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 28,
+      "row_size_mismatch": null,
+      "rows": 164,
+      "source": "data/indexablenonactivesupportgems.datc64",
+      "source_sha256": "499061e3a0695ef9767b917fe918c1b51646c4378341a9484df6f26bd432c8fc",
+      "status": "ok"
+    },
+    "IndexableSkillGems": {
+      "columns": 6,
+      "columns_read": 6,
+      "error": null,
+      "key_columns": {
+        "IndexRuthless": {
+          "dangling": 0,
+          "target": "IndexableSkillGems",
+          "values": 272
+        },
+        "SkillGem1": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 335
+        },
+        "SkillGem2": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 334
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/IndexableSkillGems.json",
+      "referenced_by": [
+        "IndexableSkillGems"
+      ],
+      "root": true,
+      "row_len": 60,
+      "row_size_mismatch": null,
+      "rows": 287,
+      "source": "data/indexableskillgems.datc64",
+      "source_sha256": "264dc27847b5c8ccc10088e510b38b1c3265bbc9deebd6f17c27e529e043b3f8",
+      "status": "ok"
+    },
+    "IndexableSupportGems": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {
+        "SupportGem": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 172
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/IndexableSupportGems.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 28,
+      "row_size_mismatch": null,
+      "rows": 172,
+      "source": "data/indexablesupportgems.datc64",
+      "source_sha256": "810c6feb995764d460e3a80288ecad630a6010082c0ed1d80d8288d565f7edc4",
       "status": "ok"
     },
     "ItemClassCategories": {
@@ -5676,13 +5779,98 @@
       },
       "non_finite_floats": 0,
       "output": "tables/PassiveSkills.json",
-      "referenced_by": [],
+      "referenced_by": [
+        "PassiveTreeExpansionSkills"
+      ],
       "root": true,
       "row_len": 354,
       "row_size_mismatch": null,
       "rows": 5706,
       "source": "data/passiveskills.datc64",
       "source_sha256": "83763d4491f00d85500b6b998dd086472550650738d7a3f16353b5e3d4474020",
+      "status": "ok"
+    },
+    "PassiveTreeExpansionJewelSizes": {
+      "columns": 1,
+      "columns_read": 1,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/PassiveTreeExpansionJewelSizes.json",
+      "referenced_by": [
+        "PassiveTreeExpansionJewels",
+        "PassiveTreeExpansionSkills"
+      ],
+      "root": true,
+      "row_len": 8,
+      "row_size_mismatch": null,
+      "rows": 3,
+      "source": "data/passivetreeexpansionjewelsizes.datc64",
+      "source_sha256": "d3798a5ce2546d76f299fc0b5a627c327189d166163aec7375837ffafe7b57b5",
+      "status": "ok"
+    },
+    "PassiveTreeExpansionJewels": {
+      "columns": 8,
+      "columns_read": 8,
+      "error": null,
+      "key_columns": {
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 3
+        },
+        "PassiveTreeExpansionJewelSizesKey": {
+          "dangling": 0,
+          "target": "PassiveTreeExpansionJewelSizes",
+          "values": 3
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveTreeExpansionJewels.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 92,
+      "row_size_mismatch": null,
+      "rows": 3,
+      "source": "data/passivetreeexpansionjewels.datc64",
+      "source_sha256": "0115ac9f8f59adc24c50d700923527ffc24465d2dd5983dc2f6d36996fafb174",
+      "status": "ok"
+    },
+    "PassiveTreeExpansionSkills": {
+      "columns": 4,
+      "columns_read": 4,
+      "error": null,
+      "key_columns": {
+        "Mastery_PassiveSkillsKey": {
+          "dangling": 0,
+          "target": "PassiveSkills",
+          "values": 38
+        },
+        "PassiveSkillsKey": {
+          "dangling": 0,
+          "target": "PassiveSkills",
+          "values": 55
+        },
+        "PassiveTreeExpansionJewelSizesKey": {
+          "dangling": 0,
+          "target": "PassiveTreeExpansionJewelSizes",
+          "values": 55
+        },
+        "TagsKey": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 55
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/PassiveTreeExpansionSkills.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 64,
+      "row_size_mismatch": null,
+      "rows": 55,
+      "source": "data/passivetreeexpansionskills.datc64",
+      "source_sha256": "0cdb5ead83e30a0959cb2914ad049a341f7c3e6c6237858f1c2e4a49b01e247e",
       "status": "ok"
     },
     "PreloadGroups": {
@@ -5823,6 +6011,9 @@
       "output": "tables/SkillGems.json",
       "referenced_by": [
         "Characters",
+        "IndexableNonActiveSupportGems",
+        "IndexableSkillGems",
+        "IndexableSupportGems",
         "SkillGems"
       ],
       "root": false,
@@ -5951,7 +6142,8 @@
         "BaseItemTypes",
         "Mods",
         "MonsterCategories",
-        "MonsterVarieties"
+        "MonsterVarieties",
+        "PassiveTreeExpansionSkills"
       ],
       "root": false,
       "row_len": 28,

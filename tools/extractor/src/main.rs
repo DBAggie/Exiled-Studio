@@ -45,8 +45,8 @@ use std::process::ExitCode;
 use loom_extractor::crosscheck::{self, Gaps, Report};
 use loom_extractor::decompress::ExternalTool;
 use loom_extractor::extract::{
-    Decoder, ExtractError, Extraction, Extractor, Inputs, MANIFEST_PATH, Manifest, Plan,
-    SPIKE_TABLES, Status, TABLES_DIR,
+    Decoder, ExtractError, Extraction, Extractor, Inputs, MANIFEST_PATH, Manifest, Plan, Status,
+    TABLES_DIR, roots,
 };
 use loom_extractor::index::{FileRecord, Index, Listing};
 use loom_extractor::install::{
@@ -543,7 +543,7 @@ fn run_extract(cmd: &Extract) -> Result<bool, Failure> {
     let install = read_index(&cmd.install, &decoder)?;
     let listing = install.index.list().map_err(InstallError::from)?;
     let schema = Schema::vendored().map_err(|e| Failure::new(e.code(), e))?;
-    let plan = Plan::new(&schema, cmd.game, &SPIKE_TABLES);
+    let plan = Plan::new(&schema, cmd.game, &roots(cmd.game));
     let (paths, records) = planned_files(&plan, &listing)?;
 
     let mut extraction = Extraction::new(plan);
