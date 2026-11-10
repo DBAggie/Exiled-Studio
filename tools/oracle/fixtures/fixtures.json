@@ -197,6 +197,100 @@
       "expect": "ok",
       "tags": ["timeless-jewel"],
       "description": "shayd (Maxroll), Arakaali's Raise Spider Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Minions granted by a unique (Raise Spiders), poison."
+    },
+    {
+      "id": "lightning-trap-of-sparking-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/lightning-trap-of-sparking-elementalist.xml",
+      "sha256": "144ad7a1a2cbbc2639c4789c0fba39110de91d55c67606b5fdd50f24a034b069",
+      "expect": "ok",
+      "description": "velyna (Maxroll), Lightning Trap of Sparking Elementalist; credit, retrieval and terms in community/SOURCES.md. Covers: Traps (Lightning Trap of Sparking), crit, energy shield."
+    },
+    {
+      "id": "holy-flame-totem-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/holy-flame-totem-hierophant.xml",
+      "sha256": "2a5b188f47069653b3cac0f9cfbb22894231fcc46497fbf9cdc9c01415c44f2e",
+      "expect": "ok",
+      "description": "aer0 (Maxroll), Holy Flame Totem Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Spell totems (Holy Flame Totem), crit."
+    },
+    {
+      "id": "kinetic-fusillade-ballista-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/kinetic-fusillade-ballista-hierophant.xml",
+      "sha256": "4e0d521fbf773bc184a4ae2cc5b4285541f6abf9d9f5a7011a9107d98c34fe74",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "Palsteron (video guide, pobb.in), Kinetic Fusillade Ballista Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Ballista totems firing Kinetic Fusillade."
+    },
+    {
+      "id": "ethereal-knives-mines-assassin.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ethereal-knives-mines-assassin.xml",
+      "sha256": "bbd0fff4de858ba4fe273e6763346770e6f859216f35b59c50ee2e214516ed66",
+      "expect": "ok",
+      "description": "Kankar (video guide, pobb.in), Ethereal Knives Mines Assassin; credit, retrieval and terms in community/SOURCES.md. Covers: Mines (Ethereal Knives with Minefield, High-Impact and Charged Mines)."
+    },
+    {
+      "id": "lacerate-bleed-gladiator.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/lacerate-bleed-gladiator.xml",
+      "sha256": "0000d4e84a3a16e16dec132b3e12af5ed5f226ba71e86c80458ca9e37153d009",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "kosx-01 (video guide, pobb.in), Lacerate Bleed Gladiator; credit, retrieval and terms in community/SOURCES.md. Covers: Bleed (Lacerate of Haemorrhage, a transfigured gem), Gladiator block."
+    },
+    {
+      "id": "forged-frostbearer-spectre-necromancer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/forged-frostbearer-spectre-necromancer.xml",
+      "sha256": "e6a6685e6b620d1425f28ebaefd73246858e9c008b522ba6ba1551db458b02a2",
+      "expect": "ok",
+      "description": "helmbreaker (Maxroll), Forged Frostbearer Spectre Necromancer; credit, retrieval and terms in community/SOURCES.md. Covers: Spectres, skeletons, zombies."
+    },
+    {
+      "id": "animate-guardian-guardian.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/animate-guardian-guardian.xml",
+      "sha256": "94dc1f47297d53a3bbac68af18c56f6af349f0f7471cef3d2208027f58dd4e61",
+      "expect": "ok",
+      "description": "Thyworm (video guide, pobb.in), Animate Guardian Guardian; credit, retrieval and terms in community/SOURCES.md. Covers: Animate Guardian, Summon Raging Spirit, Sentinel of Radiance (Guardian minions)."
+    },
+    {
+      "id": "flicker-strike-berserker.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/flicker-strike-berserker.xml",
+      "sha256": "3f0b4085e2f50447b02702282e65ef8ad47c1493af4f3e22968260ddf92b7a04",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "cptngarbage (Maxroll), Flicker Strike Berserker; credit, retrieval and terms in community/SOURCES.md. Covers: Vaal Flicker Strike (saved with variantId), Greater Multistrike, Berserker rage."
+    },
+    {
+      "id": "shock-nova-archmage-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/shock-nova-archmage-hierophant.xml",
+      "sha256": "66a71b3aa4570ce686b13bb18603f61c26f7225847bc50b2a6fa921236d6bce2",
+      "expect": "ok",
+      "description": "goratha (Maxroll), Shock Nova of Procession Archmage Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Archmage mana stacking, Shock Nova of Procession, Spell Echo."
+    },
+    {
+      "id": "essence-drain-contagion-occultist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/essence-drain-contagion-occultist.xml",
+      "sha256": "0044adb6b97377900d22cee9d83f273937f1976e0a59a4595aa09c86f7e29799",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "goratha (Maxroll), Essence Drain Contagion Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Chaos damage over time (Essence Drain, Blight of Contagion), Chaos Inoculation."
     }
   ]
 }
