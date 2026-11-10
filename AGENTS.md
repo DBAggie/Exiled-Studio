@@ -78,7 +78,8 @@ cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<bu
 cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
 # Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
 cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build> local/pob/<checkout> --out <dir>
-# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract); summary.json is scrubbed
+# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract with item_types/, manifest format 4);
+# ambiguous lines go through the Mods filter, resolved lines get mod-backed; summary.json is scrubbed
 # (builds by content hash, no item names or author text); exits 1 while the non-unique rate is below 98%:
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/extract/poe1/<build> --out <dir>
 
