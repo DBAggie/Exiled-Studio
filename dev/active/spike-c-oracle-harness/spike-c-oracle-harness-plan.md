@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C2b: step 2b done; adapter protocol 2)
+Last Updated: 2026-11-10 (PR C3: step 3 done; corpus nondeterminism found)
 
 # Spike C: thin oracle harness (plan)
 
@@ -72,6 +72,7 @@ The FFI `Inflate` with pinned zlib, the `io.open` write guard, the jewel probe, 
 Fixture manifest (tiers 1-3), `oracle-compare`, register schema, `divergence-check`, `docs/parity/README.md`. The 21 corpus builds run twice locally.
 - Accept: the intentional discrepancy is reported as unexpected, then expected with a test register; `divergence-check` accepts the empty register and rejects malformed entries (tests); corpus summary committed with no build names or item text (scrub test as in Spike B).
 - Depends on: 2b.
+- Done in C3 (context file, "Decisions in C3"). Changes from this plan: PoB's fixtures are pinned by git blob (CRLF on Windows) and ours by SHA-256; fixtures carry an expected outcome and `oracle-run` exits 4 when one is not met; `oracle-compare` exits 19 when every difference is registered; tolerance entries also pin their values. The corpus ran 3 times twice: **3 of 21 builds are nondeterministic** (transfigured-gem lead), so gate item 1 is not met for the corpus; C3b investigates before C4.
 
 ### 4. CI on Windows and Linux (M)
 `oracle` job in `ci.yml` (matrix `ubuntu-latest`, `windows-latest`), runtime cached by commit hashes, Linux run without network, Windows vs Linux outputs compared and reported.
@@ -123,6 +124,7 @@ Each PR is one session and updates the handoff and this task folder (`/dev-docs-
 | C2a | Step 2a: adapter, schema, `oracle-run`, no shims. | Unit tests (fake adapter scripts); 3-run outcomes for the public fixtures on Windows. |
 | C2b | Step 2b: `Inflate` shim, write guard, jewel probe. | Tests; probe on the synthetic and corpus timeless-jewel builds; tree check. |
 | C3 | Step 3: fixtures, `oracle-compare`, divergence register, corpus run. | Tests; intentional discrepancy report; corpus summary (scrubbed); `cargo deny`. |
+| C3b | Corpus nondeterminism (found in C3): root cause, adapter fix or fallback per "Fallback". | Repeated corpus runs; affected fields. |
 | C4 | Step 4: CI `oracle` job. | CI runs on both runners; injected-failure run; cross-platform comparison. |
 | C5 | Step 5: report, gate verdict, ACTION-PLAN status. | Committed summaries; gate pass/fail. |
 

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
+Last Updated: 2026-11-10 (PR C3: fixtures, compare, register, corpus run)
 
 # Spike C: tasks
 
@@ -40,17 +40,23 @@ Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
 - [x] Corpus timeless-jewel builds show jewel data loaded; non-jewel computed data unchanged (6 C2a fixtures byte-identical)
 - [x] Linux (WSL 2 Ubuntu 24.04): unit and real-runtime tests, fixtures 3/3 under `unshare -rn`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; context file)
-- [x] Open PR (#36)
+- [x] Open PR (#36; merged 2026-11-10 as `91b1438`; main CI run 42860826266 failed only on a cancelled macOS job, rerun)
 
 ## PR C3: fixtures, compare, divergence register
-- [ ] Fixture manifest (PoB test builds by blob hash, synthetic fixtures, discrepancy pair)
-- [ ] `parity-cli oracle-compare`; register schema, empty register, `divergence-check`, `docs/parity/README.md`
-- [ ] Corpus run 3 times on Windows; scrubbed summary in `docs/spikes/spike-c/`
-- [ ] Review with `code-architecture-reviewer`; apply findings
+- [x] Fixture manifest (PoB test builds by blob hash, synthetic fixtures, discrepancy pair); expectations in `oracle-run` (exit 4 unmet); `--anonymous`
+- [x] `parity-cli oracle-compare`; register schema, empty register, `divergence-check`, `docs/parity/README.md`
+- [x] Intentional discrepancy: unexpected (exit 20), then expected with the test register (exit 19); real-runtime ignored test
+- [x] Corpus run 3 times on Windows (twice); scrubbed summary in `docs/spikes/spike-c/` with a scrub test. Result: 3 of 21 builds nondeterministic (context file)
+- [x] Review with `code-architecture-reviewer`; apply findings (1 blocker fixed; should-fix applied)
 - [ ] Open PR
 
+## PR C3b: corpus nondeterminism
+- [ ] Reproduce on the 3 builds with `--runs 20`; find where PoB picks a transfigured gem variant
+- [ ] Adapter-side fix (named, recorded shim) or fallback (`BLOCKED` for the affected fields); corpus rerun 3 times
+- [ ] Review; open PR
+
 ## PR C4: CI
-- [ ] `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`
+- [ ] `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`; `divergence-check` step
 - [ ] Injected wrong-hash run; cross-platform comparison
 - [ ] Review with `code-architecture-reviewer`; apply findings
 - [ ] Open PR

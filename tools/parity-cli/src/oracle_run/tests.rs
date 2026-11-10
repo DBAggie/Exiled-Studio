@@ -1054,3 +1054,54 @@ fn discrepancy_pair_should_differ_in_exactly_the_registered_fields() {
     assert_eq!(registered.class, Some(FailureClass::ExpectedDifference));
     assert!(registered.unused_entries.is_empty());
 }
+
+/// The committed corpus summary (`docs/spikes/spike-c/`) holds no build
+/// names, paths, or PoB messages: fixtures are named by their SHA-256
+/// (`--anonymous`), no run kept a stream tail, and the tool was clean.
+#[test]
+fn committed_corpus_summary_should_be_scrubbed() {
+    const REPORT: &str = include_str!("../../../../docs/spikes/spike-c/corpus-windows-report.json");
+    const SUMMARY: &str = include_str!("../../../../docs/spikes/spike-c/corpus-windows-summary.md");
+    let report: Value = serde_json::from_str(REPORT).unwrap();
+    assert_eq!(report["tool"]["dirty"], json!(false));
+    let fixtures = report["fixtures"].as_array().unwrap();
+    assert_eq!(fixtures.len(), 21);
+    for fixture in fixtures {
+        let id = fixture["id"].as_str().unwrap();
+        assert_eq!(fixture["sha256"].as_str(), Some(id));
+        assert!(
+            id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit()),
+            "{id}"
+        );
+        assert!(fixture["outcome"]["message"].is_null(), "{id}");
+        for run in fixture["runs"].as_array().unwrap() {
+            assert!(
+                run.get("stdout_tail").is_none() && run.get("stderr_tail").is_none(),
+                "{id}"
+            );
+            if let Some(outcome) = run.get("outcome") {
+                assert!(outcome["message"].is_null(), "{id}");
+            }
+        }
+    }
+    for text in [REPORT, SUMMARY] {
+        for needle in ["Users", "Documents", "Path of Building", ":\\", ":/"] {
+            let hits: Vec<&str> = text
+                .lines()
+                .filter(|l| l.contains(needle) && !l.contains("https://"))
+                .collect();
+            assert!(hits.is_empty(), "{needle}: {hits:?}");
+        }
+    }
+    // Every fixture row of the summary names a hash.
+    for line in SUMMARY
+        .lines()
+        .filter(|l| l.starts_with("| ") && !l.starts_with("| Fixture"))
+    {
+        let id = line.split(" | ").next().unwrap().trim_start_matches("| ");
+        assert!(
+            id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit()),
+            "{line}"
+        );
+    }
+}
