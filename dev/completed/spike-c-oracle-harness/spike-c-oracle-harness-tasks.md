@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C3b+C4: determinism shim, community builds, CI job)
+Last Updated: 2026-11-10 (PR C5: report and gate; task closed)
 
 # Spike C: tasks
 
@@ -48,7 +48,7 @@ Last Updated: 2026-11-10 (PR C3b+C4: determinism shim, community builds, CI job)
 - [x] Intentional discrepancy: unexpected (exit 20), then expected with the test register (exit 19); real-runtime ignored test
 - [x] Corpus run 3 times on Windows (twice); scrubbed summary in `docs/spikes/spike-c/` with a scrub test. Result: 3 of 21 builds nondeterministic (context file)
 - [x] Review with `code-architecture-reviewer`; apply findings (1 blocker fixed; should-fix applied)
-- [x] Open PR (#37)
+- [x] Open PR (#37; merged 2026-11-10 as `aa940fd` after #38 was squashed into its branch; main CI run 42898641516 green)
 
 ## PR C3b+C4: corpus nondeterminism and CI (one PR, maintainer decision 2026-11-10)
 - [x] C3b: reproduce on the 3 builds with `--runs 20`; find where PoB picks a transfigured gem variant (`SkillsTab:Load` old-format lookup; string-ID `pairs` order)
@@ -57,10 +57,13 @@ Last Updated: 2026-11-10 (PR C3b+C4: determinism shim, community builds, CI job)
 - [x] C4: `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`; `divergence-check` step
 - [x] C4: injected wrong-hash run; cross-platform comparison (run 42889081685: exit 11 on both runners)
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [x] Open PR (#38, stacked on #37)
+- [x] Open PR (#38, stacked on #37; squash-merged into #37's branch 2026-11-10 as `17edb76`, then landed on `main` with #37)
 
 ## PR C5: report and gate
-- [ ] `docs/spikes/spike-c-oracle.md` (completion report, gate verdict, feasibility decision)
-- [ ] Promote the `oracle` job into `ci-ok` after 10 consecutive green runs on both runners; then `oracle-compare` exit 20 fails the job
-- [ ] ACTION-PLAN status, handoff, CLAUDE.md
+- [x] Record the merges of #37 and #38
+- [x] Corpus 3 runs from `main` on Windows and Linux (no network), cross-platform `oracle-compare` (identical); committed summaries, scrub test extended
+- [x] `docs/spikes/spike-c-oracle.md` (completion report, gate verdict: met, decision `FEASIBLE_WITH_ADAPTATION`)
+- [x] Promote the `oracle` job into `ci-ok` after 10 consecutive green runs on both runners; `oracle-compare` exit 20 fails the job
+- [x] ACTION-PLAN status, handoff, CLAUDE.md, README, AGENTS.md; task folder to `dev/completed/`
+- [x] Review with `code-architecture-reviewer`; apply findings
 - [ ] Open PR

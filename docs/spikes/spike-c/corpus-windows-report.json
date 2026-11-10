@@ -204,8 +204,8 @@
     "file": "oracle.lua",
     "files": {
       "json.lua": "7f16a79a15b0d9517b8969ec441f4b6a4b206593e7434c2316fb01b7941ed7b6",
-      "oracle.lua": "de4031a18b0594c86639668e778fee7a95f043751736a2a8461806135697b755",
-      "shims.lua": "70c6e8d63d657ca84492d13c79dd8d58987ba534bf955b2bfc2bae885c2543a8"
+      "oracle.lua": "691f9fa1ecc2ed3c14f597b36592cb44212077fc02713fbd85013e5a5af57db7",
+      "shims.lua": "b71d71a633110672c8fe12a0d239d21549acce99335aad46eb9bc28fe7e46955"
     },
     "protocol": 3,
     "arguments": [
@@ -240,7 +240,7 @@
   "runs": 3,
   "timeout_s": 120,
   "tool": {
-    "commit": "2535abeb4d4bb87d3a697fd779b91b21af39d497",
+    "commit": "aa940fda8c171d3d3947f8df5222a932419f01a6",
     "dirty": false
   },
   "fixtures": [
@@ -271,11 +271,11 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3253,
+          "elapsed_ms": 3088,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
-            "sha256": "d029e2526ba187ac39c72d7d92dc26dbbde4fd48e8da8c92b6e74dfed1c5b0c1"
+            "sha256": "1ac0f28e3994171a0bccc51c1fcdd4f2441ccecb2af6e098dac1c53a525c5514"
           },
           "stderr": {
             "bytes": 0,
@@ -284,11 +284,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3303,
+          "elapsed_ms": 3058,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
-            "sha256": "d029e2526ba187ac39c72d7d92dc26dbbde4fd48e8da8c92b6e74dfed1c5b0c1"
+            "sha256": "1ac0f28e3994171a0bccc51c1fcdd4f2441ccecb2af6e098dac1c53a525c5514"
           },
           "stderr": {
             "bytes": 0,
@@ -297,7 +297,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3038,
+          "elapsed_ms": 3142,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
@@ -337,11 +337,11 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2214,
+          "elapsed_ms": 2113,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
-            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
           },
           "stderr": {
             "bytes": 0,
@@ -350,11 +350,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2124,
+          "elapsed_ms": 2172,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
-            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
           },
           "stderr": {
             "bytes": 0,
@@ -363,7 +363,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2140,
+          "elapsed_ms": 2117,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
@@ -403,7 +403,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 1874,
+          "elapsed_ms": 1911,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -416,7 +416,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1893,
+          "elapsed_ms": 1878,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -429,7 +429,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1895,
+          "elapsed_ms": 1878,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -469,7 +469,20 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 1927,
+          "elapsed_ms": 1888,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1858,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -482,24 +495,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1901,
+          "elapsed_ms": 1880,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 1883,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
           },
           "stderr": {
             "bytes": 0,
@@ -537,7 +537,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3992,
+          "elapsed_ms": 4032,
           "same_as_first": true,
           "stdout": {
             "bytes": 1029,
@@ -550,7 +550,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3961,
+          "elapsed_ms": 3847,
           "same_as_first": true,
           "stdout": {
             "bytes": 1029,
@@ -563,7 +563,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3842,
+          "elapsed_ms": 3876,
           "same_as_first": true,
           "stdout": {
             "bytes": 1029,
@@ -605,20 +605,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3059,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 561,
-            "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2775,
+          "elapsed_ms": 2799,
           "same_as_first": true,
           "stdout": {
             "bytes": 561,
@@ -631,11 +618,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2843,
+          "elapsed_ms": 2819,
           "same_as_first": true,
           "stdout": {
             "bytes": 561,
             "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2927,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 561,
+            "sha256": "59f233558e5408e1a777a0d22f3743a41a38d445ab9f1748bb644535db0034b5"
           },
           "stderr": {
             "bytes": 0,
@@ -671,20 +671,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2169,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 436,
-            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2155,
+          "elapsed_ms": 2148,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -697,7 +684,20 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2279,
+          "elapsed_ms": 2177,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2181,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -737,7 +737,20 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2500,
+          "elapsed_ms": 2447,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2503,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -750,20 +763,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2387,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2627,
+          "elapsed_ms": 2504,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -803,7 +803,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2371,
+          "elapsed_ms": 2287,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
@@ -816,7 +816,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2267,
+          "elapsed_ms": 2245,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
@@ -829,11 +829,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2333,
+          "elapsed_ms": 2326,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
-            "sha256": "8e434ffa6209e29825ca094f42770edfbb8be9b8b1cb463a1ad40775b6b3c6fb"
+            "sha256": "5cb171e144921936b40e68988a0edc09d7448ce81743cb5ca2606b77a3357cb9"
           },
           "stderr": {
             "bytes": 0,
@@ -869,37 +869,37 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3058,
+          "elapsed_ms": 2958,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3060,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3010,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
             "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2854,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 514,
-            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2861,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 514,
-            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
           },
           "stderr": {
             "bytes": 0,
@@ -938,7 +938,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3117,
+          "elapsed_ms": 2863,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -951,7 +951,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3065,
+          "elapsed_ms": 2818,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -964,7 +964,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3801,
+          "elapsed_ms": 2921,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -1004,7 +1004,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3112,
+          "elapsed_ms": 2313,
           "same_as_first": true,
           "stdout": {
             "bytes": 695,
@@ -1017,24 +1017,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2330,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 695,
-            "sha256": "9535361b65077934de9e9032ed227153348cccb863d557416afec303ebc57080"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2402,
+          "elapsed_ms": 2277,
           "same_as_first": true,
           "stdout": {
             "bytes": 695,
             "sha256": "209f3120ef167af15cff8655eb0f13c85a0ae469ded99459ea8726ffd4b3d91c"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2251,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 695,
+            "sha256": "9535361b65077934de9e9032ed227153348cccb863d557416afec303ebc57080"
           },
           "stderr": {
             "bytes": 0,
@@ -1070,37 +1070,37 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3040,
+          "elapsed_ms": 3004,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3071,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3017,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
             "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 3122,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 3051,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -1136,7 +1136,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2400,
+          "elapsed_ms": 2267,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
@@ -1149,7 +1149,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2363,
+          "elapsed_ms": 2279,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
@@ -1162,11 +1162,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2283,
+          "elapsed_ms": 2223,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
-            "sha256": "5621c4f469ad05bcccba69f55cdae0e658313153e689b50a5a3efdc103a7601f"
+            "sha256": "9751ba341e54df8648077d9883a8c1476a020c4c8b8336891bb4b68896a1334a"
           },
           "stderr": {
             "bytes": 0,
@@ -1202,7 +1202,20 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3374,
+          "elapsed_ms": 3222,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3196,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
@@ -1215,20 +1228,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3383,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 805,
-            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 3353,
+          "elapsed_ms": 3046,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
@@ -1268,20 +1268,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2568,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 1085,
-            "sha256": "c7f61496a664b4f0c6649cece1ebf65ec8e70c65ac1bb02d15520161845b3b5e"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2501,
+          "elapsed_ms": 2422,
           "same_as_first": true,
           "stdout": {
             "bytes": 1085,
@@ -1294,11 +1281,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2491,
+          "elapsed_ms": 2445,
           "same_as_first": true,
           "stdout": {
             "bytes": 1085,
             "sha256": "c7f61496a664b4f0c6649cece1ebf65ec8e70c65ac1bb02d15520161845b3b5e"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2421,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1085,
+            "sha256": "34b6b33a3c58ef8e13d366d18ad03e813e1a036360cca12ca3fccb31958d4a51"
           },
           "stderr": {
             "bytes": 0,
@@ -1334,20 +1334,7 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2083,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 693,
-            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2052,
+          "elapsed_ms": 1939,
           "same_as_first": true,
           "stdout": {
             "bytes": 693,
@@ -1360,11 +1347,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2139,
+          "elapsed_ms": 1945,
           "same_as_first": true,
           "stdout": {
             "bytes": 693,
-            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
+            "sha256": "02f9abd070ed85f6a3f4186e51d3aaabdf9464d70ceb3122b3ab8d714f96b505"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1948,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 693,
+            "sha256": "02f9abd070ed85f6a3f4186e51d3aaabdf9464d70ceb3122b3ab8d714f96b505"
           },
           "stderr": {
             "bytes": 0,
@@ -1400,11 +1400,11 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3155,
+          "elapsed_ms": 2932,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
           },
           "stderr": {
             "bytes": 0,
@@ -1413,11 +1413,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3050,
+          "elapsed_ms": 2919,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
           },
           "stderr": {
             "bytes": 0,
@@ -1426,11 +1426,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3022,
+          "elapsed_ms": 2942,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
           },
           "stderr": {
             "bytes": 0,
@@ -1466,11 +1466,11 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3590,
+          "elapsed_ms": 3297,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
           },
           "stderr": {
             "bytes": 0,
@@ -1479,11 +1479,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3517,
+          "elapsed_ms": 3370,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
           },
           "stderr": {
             "bytes": 0,
@@ -1492,7 +1492,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3399,
+          "elapsed_ms": 3362,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -1532,7 +1532,20 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2773,
+          "elapsed_ms": 2820,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2746,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
@@ -1545,24 +1558,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2802,
+          "elapsed_ms": 2639,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
-            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2732,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 514,
-            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
           },
           "stderr": {
             "bytes": 0,
@@ -1598,7 +1598,20 @@
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 4006,
+          "elapsed_ms": 3722,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "9cd1430974fb9400bfa78e556b0bce3dd416ffa33b79e1b4749f96f2f2c7ac31"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3815,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -1611,24 +1624,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 4038,
+          "elapsed_ms": 3768,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 3804,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
+            "sha256": "9cd1430974fb9400bfa78e556b0bce3dd416ffa33b79e1b4749f96f2f2c7ac31"
           },
           "stderr": {
             "bytes": 0,

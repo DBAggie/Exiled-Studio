@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C3b+C4: `variant_order` shim, community builds, CI `oracle` job; code commits `f510b08`, `2535abe`)
+Last Updated: 2026-11-10 (PR C5: report, gate met, `FEASIBLE_WITH_ADAPTATION`; `oracle` jobs required; task closed)
 
 # Spike C: context
 
@@ -193,7 +193,18 @@ Found while researching (2026-11-10): the current PoE1 league is **3.29 Curse of
 ## code-architecture-reviewer on C3b+C4 (2026-11-10)
 Blockers: (1) handoff and task docs not updated yet (done in the same PR); (2) the `variant_order` choice was recorded only in code comments: now in the plan (amendment under "Design constraints"), this file ("Decisions in C3b+C4"), and `docs/parity/README.md` ("Where the oracle chooses for PoB"; a successor that loads such a gem differently needs a register entry). Should-fix applied: a registered table that cannot be sorted (a non-string key) now makes the result `partial` (`variant_order: unordered table <gameId>`; Lua test); the shim's scope (only the `SkillsTab:Load` lookup) is stated in `shims.lua`; the `oracle-compare` job carries a comment that C5 makes exit 20 a failure when it promotes the job; `timeout-minutes: 45` on the `oracle` job. Nits applied: `download-artifact` with `pattern: oracle-*`; a plain `if` for the namespace network check; the Windows acquire step runs from `cmd` (no PowerShell inside PowerShell); comment wrap in `oracle.lua`. Not changed: `community/../x` is already refused by the path check (no `.` or `..` parts); the compare job rebuilds the CLI (a few minutes; acceptable while informational). The adapter changes after the evidence runs touch only the unreachable fallback path; CI ran the final adapter.
 
-## Next steps (C5)
-1. Session start: `gh pr view 38` (this PR) and `gh pr view 37`; record the merges (squash commits, main CI runs). #37 merges first; this PR is stacked on it.
-2. **C5 (plan step 5):** `docs/spikes/spike-c-oracle.md` with the completion report, gate verdict (item 1 now met for the corpus and the CI fixtures; items 2 to 4 per the plan), feasibility decision, known limitations (packaged mode, Windows network isolation, PoB's old-format Vaal gem ambiguity handled by `variant_order`), ACTION-PLAN status, handoff, CLAUDE.md. Make the `oracle` job required in `ci-ok` only after 10 consecutive green runs on both runners (count from this PR's runs on). When promoting it, make `oracle-compare` exit 20 (an unregistered cross-platform difference) fail the job (ADR-006).
-3. Still open: a real startup error through PoB (spec case 7); the maintainer posts the upstream PoB issue (draft above); community builds: no outreach for now (maintainer decision), removal on request.
+## Decisions in C5 (2026-11-10)
+- **Gate met, decision `FEASIBLE_WITH_ADAPTATION`** (report `docs/spikes/spike-c-oracle.md`). `FEASIBLE_NATIVE` was not chosen because the oracle is reproducible only with the build define `PRNG=0` and the three shims, and the spec defines `FEASIBLE_WITH_ADAPTATION` as "a documented runtime/adapter change is required"; all of them are made, so nothing is left before Phase 2 or 3. The maintainer confirms by merging.
+- **Corpus evidence refreshed from `main`** (`aa940fd`, clean) on Windows and, new, on Linux (WSL 2 Ubuntu 24.04 under `unshare -rn`), with a cross-platform `oracle-compare` of the two; all six files committed in `docs/spikes/spike-c/` (`corpus-{windows,linux,compare}-{report.json,summary.md}`). The scrub test covers all of them and also refuses `/home/`.
+- **Counting the 10 green runs:** from PR #38's first run on, completed runs only; runs cancelled by the `pull_request` concurrency group (a newer push superseded them) are not results. The `main` push run of #37 was a cache miss on both runners (full `acquire` in CI, green). The remaining runs were `workflow_dispatch` runs on `main`, one at a time (the concurrency group cancels a queued run when another is queued): they mostly hit the runtime cache, so they test the run, not the acquisition. The list is in the report, section 7.
+- **Promotion:** `oracle` and `oracle-compare` in `ci-ok`'s `needs`; `oracle-compare` exit 20 fails (19 passes); the compare job runs with `!cancelled()` instead of `always()` (a superseded run showed a red compare job, runs 42890599670 and 42894633985).
+- The task folder moved to `dev/completed/` (AGENTS.md rule); references in code comments and docs updated (the comment line in `oracle.lua` changes its file hash; outputs do not depend on it).
+
+## Facts measured in C5 (2026-11-10)
+- Session start: PR #38 was squash-merged **into #37's branch** (`17edb76`, 2026-11-10 20:34), not into `main`; #37 then merged into `main` as `aa940fd` (20:46). Main CI run 42898641516 green, a cache miss for the runtime on both runners.
+- Corpus, Windows, `aa940fd`: 21 `ok`, 3/3 each, report `ok`, exit 0, about 2 min 50 s; every output SHA-256 equal to the committed C3b run (`2535abe`), although `oracle.lua` and `shims.lua` changed since (fallback path only).
+- Corpus, Linux, same commit: 21 `ok`, 3/3 each; whole-document hashes all differ from Windows (zlib version, module paths); `oracle-compare` Windows vs Linux: **identical**, 21 identical, 0 differences, exit 0.
+- CI cross-platform comparison: identical in every completed run (runs 42888981382 and 42890650849: 20 fixtures; 42894655422 and later: 30).
+
+## Closed
+Spike C is closed with PR C5. Still open, outside this task: a real startup error through PoB (spec case 7; limitation 5 in the report); the packaged-artifact check (follow-up, not scheduled); the maintainer posts the upstream PoB issue (draft above); community builds: no outreach for now, removal on request.

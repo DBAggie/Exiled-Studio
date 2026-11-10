@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C3b+C4: corpus nondeterminism fixed by the `variant_order` shim; step 4 CI job)
+Last Updated: 2026-11-10 (PR C5: report, gate met, `FEASIBLE_WITH_ADAPTATION`; task closed and moved to `dev/completed/`)
 
 # Spike C: thin oracle harness (plan)
 
@@ -84,6 +84,7 @@ Fixture manifest (tiers 1-3), `oracle-compare`, register schema, `divergence-che
 ### 5. Report and gate verdict (S-M)
 `docs/spikes/spike-c-oracle.md` with the completion report template from the spec, the gate verdict, the feasibility decision, known limitations (packaged mode, Windows network isolation), and the next unblocked phase. ACTION-PLAN status, handoff.
 - Depends on: 1-4.
+- Done in C5 (context file, "Decisions in C5"): gate items 1-4 met; decision `FEASIBLE_WITH_ADAPTATION` (the adaptations are made); corpus rerun from `main` on Windows and Linux with a cross-platform comparison (identical); the `oracle` and `oracle cross-platform` jobs joined `ci-ok` after 10 consecutive green runs, and an unregistered cross-platform difference (exit 20) now fails.
 
 ## Gate (objective, from the ACTION-PLAN)
 Each item is checkable from committed reports or CI:

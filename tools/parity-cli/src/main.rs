@@ -5,7 +5,7 @@
 //!
 //! The PoB oracle harness (drives legacy `HeadlessWrapper.lua` on pinned
 //! LuaJIT at a pinned public PoB tag, ADR-006) is Spike C's
-//! (`dev/active/spike-c-oracle-harness/`): `oracle-verify`, `oracle-run`,
+//! (`dev/completed/spike-c-oracle-harness/`): `oracle-verify`, `oracle-run`,
 //! `oracle-compare`, and `divergence-check` (the divergence register,
 //! `docs/parity/`).
 

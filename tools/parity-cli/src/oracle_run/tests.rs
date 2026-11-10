@@ -1057,14 +1057,56 @@ fn discrepancy_pair_should_differ_in_exactly_the_registered_fields() {
     assert!(registered.unused_entries.is_empty());
 }
 
-/// The committed corpus summary (`docs/spikes/spike-c/`) holds no build
-/// names, paths, or PoB messages: fixtures are named by their SHA-256
-/// (`--anonymous`), no run kept a stream tail, and the tool was clean.
+/// The committed corpus summaries (`docs/spikes/spike-c/`, Windows and
+/// Linux) hold no build names, paths, or PoB messages: fixtures are named by
+/// their SHA-256 (`--anonymous`), no run kept a stream tail, and the tool was
+/// clean. The cross-platform comparison of the two names fixtures the same way.
 #[test]
 fn committed_corpus_summary_should_be_scrubbed() {
-    const REPORT: &str = include_str!("../../../../docs/spikes/spike-c/corpus-windows-report.json");
-    const SUMMARY: &str = include_str!("../../../../docs/spikes/spike-c/corpus-windows-summary.md");
-    let report: Value = serde_json::from_str(REPORT).unwrap();
+    assert_corpus_run_scrubbed(
+        include_str!("../../../../docs/spikes/spike-c/corpus-windows-report.json"),
+        include_str!("../../../../docs/spikes/spike-c/corpus-windows-summary.md"),
+    );
+    assert_corpus_run_scrubbed(
+        include_str!("../../../../docs/spikes/spike-c/corpus-linux-report.json"),
+        include_str!("../../../../docs/spikes/spike-c/corpus-linux-summary.md"),
+    );
+    let compare = include_str!("../../../../docs/spikes/spike-c/corpus-compare-report.json");
+    let summary = include_str!("../../../../docs/spikes/spike-c/corpus-compare-summary.md");
+    assert_no_private_paths(&[compare, summary]);
+    let report: Value = serde_json::from_str(compare).unwrap();
+    let fixtures = report["fixtures"].as_array().unwrap();
+    assert_eq!(fixtures.len(), 21);
+    for fixture in fixtures {
+        let id = fixture["id"].as_str().unwrap();
+        assert!(
+            id.len() == 64 && id.bytes().all(|b| b.is_ascii_hexdigit()),
+            "{id}"
+        );
+    }
+}
+
+fn assert_no_private_paths(texts: &[&str]) {
+    for text in texts {
+        for needle in [
+            "Users",
+            "Documents",
+            "Path of Building",
+            "/home/",
+            ":\\",
+            ":/",
+        ] {
+            let hits: Vec<&str> = text
+                .lines()
+                .filter(|l| l.contains(needle) && !l.contains("https://"))
+                .collect();
+            assert!(hits.is_empty(), "{needle}: {hits:?}");
+        }
+    }
+}
+
+fn assert_corpus_run_scrubbed(report_text: &str, summary_text: &str) {
+    let report: Value = serde_json::from_str(report_text).unwrap();
     assert_eq!(report["tool"]["dirty"], json!(false));
     let fixtures = report["fixtures"].as_array().unwrap();
     assert_eq!(fixtures.len(), 21);
@@ -1086,17 +1128,9 @@ fn committed_corpus_summary_should_be_scrubbed() {
             }
         }
     }
-    for text in [REPORT, SUMMARY] {
-        for needle in ["Users", "Documents", "Path of Building", ":\\", ":/"] {
-            let hits: Vec<&str> = text
-                .lines()
-                .filter(|l| l.contains(needle) && !l.contains("https://"))
-                .collect();
-            assert!(hits.is_empty(), "{needle}: {hits:?}");
-        }
-    }
+    assert_no_private_paths(&[report_text, summary_text]);
     // Every fixture row of the summary names a hash.
-    for line in SUMMARY
+    for line in summary_text
         .lines()
         .filter(|l| l.starts_with("| ") && !l.starts_with("| Fixture"))
     {

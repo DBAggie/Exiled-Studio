@@ -1,5 +1,5 @@
 //! Shared pieces of the PoB oracle harness (Spike C,
-//! `dev/active/spike-c-oracle-harness/`): the pinned manifest
+//! `dev/completed/spike-c-oracle-harness/`): the pinned manifest
 //! (`tools/oracle/manifest.json`), the build record the acquire scripts
 //! write (`<oracle-dir>/build.json`), and the failure classes.
 //!
