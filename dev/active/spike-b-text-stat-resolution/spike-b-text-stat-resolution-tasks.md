@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B2a)
+Last Updated: 2026-11-09 (PR B3)
 
 # Spike B: tasks
 
@@ -43,11 +43,13 @@ Last Updated: 2026-11-09 (PR B2a)
 - [x] Open PR (#18)
 
 ## PR B3: PoB item reader and `resolve-corpus`
-- [ ] Record the Steam build; re-extract if changed
-- [ ] `loom-parser::pob_item` (prefixes, variants, alt variants, `ModRange`, magic base, flag lines, catalyst)
-- [ ] `parity-cli resolve-corpus` with `report.json` / `summary.json`; scrubbing
-- [ ] XML dependency through `cargo deny`
-- [ ] Corpus run, two runs byte-identical, first rate, ambiguous set measured
+- [x] Record the Steam build; re-extract if changed (26530219, unchanged; no re-extract)
+- [x] `loom-parser::pob_item` (prefixes, variants, alt variants, `ModRange`, magic base, flag lines, catalyst)
+- [x] `parity-cli resolve-corpus` with `report.json` / `summary.json`; scrubbing
+- [x] XML dependency through `cargo deny` (`roxmltree` 0.21.2, MIT OR Apache-2.0)
+- [x] Corpus run, two runs byte-identical, first rate (79.1%), ambiguous set measured (380 lines, 289 texts)
+- [ ] Review with `code-architecture-reviewer`; apply findings
+- [ ] Open PR
 
 ## PR B4a: disambiguation and `mod-backed`
 - [ ] Mods filter (domain, generation type, stat set; spawn tags tie-break only)
