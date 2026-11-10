@@ -19,7 +19,7 @@ Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 - [x] `parity-cli oracle-verify`; unit tests per failure class (26 `oracle_verify` tests with temporary git checkouts, 8 manifest tests)
 - [x] Repeat the build, compare binary hashes; record (identical in the same folder; path-dependent, so recorded per machine in `build.json`)
 - [x] Injected-failure runs with the real runtime (wrong runtime -> 11, ignored file in checkout -> 10)
-- [ ] `acquire.sh` full run on Linux: deferred to C4 (no compiler in the workstation's WSL)
+- [x] `acquire.sh` full run on Linux (WSL 2, Ubuntu 18.04, gcc 7.5; 2026-11-10): `oracle-verify` ok, rebuild identical, wrapper smoke ok also under `unshare -rn`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; 4 should-fix and most nits applied, context file)
 - [x] Open PR (#34)
 
