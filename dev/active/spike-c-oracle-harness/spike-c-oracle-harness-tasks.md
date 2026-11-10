@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C2a: adapter protocol 1, `oracle-run`)
+Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
 
 # Spike C: tasks
 
@@ -31,14 +31,15 @@ Last Updated: 2026-11-10 (PR C2a: adapter protocol 1, `oracle-run`)
 - [x] Breakdown selection measured (182 names over 6 fixtures) and recorded in the manifest (10 names)
 - [x] Tests: scripted classification per class, fake Lua adapters and the real adapter on the real runtime (ignored test), writer Lua tests; real runs of the public fixtures on Windows (3/3, stable over 5 invocations)
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; S1-S6 applied, nits recorded in the context file)
-- [x] Open PR (#35)
+- [x] Open PR (#35; merged 2026-11-10 as `e50848c`, main CI run 42854543956 green)
 
 ## PR C2b: shims
-- [ ] `Inflate` through LuaJIT FFI, pinned zlib recorded; `io.open` write guard; jewel probe; `partial` reasons (spec case 8 on the real runtime)
-- [ ] A real PoB startup error through the adapter (spec case 7; only a fake adapter so far), if a broken checkout copy is cheap
-- [ ] Ignored-files tree check after runs; synthetic timeless-jewel fixture
-- [ ] Corpus timeless-jewel builds show jewel data loaded; non-jewel outcomes unchanged
-- [ ] Review with `code-architecture-reviewer`; apply findings
+- [x] `adapter/shims.lua`: `Inflate` through LuaJIT FFI (zlib recorded and hashed per platform); `io.open` write guard; probe in the document (protocol 2); `partial` reasons (spec case 8 on the real runtime: zlib not loadable -> `partial`, exit 3)
+- [ ] A real PoB startup error through the adapter (spec case 7; only a fake adapter so far): not done; needs a broken checkout copy, left for C3 or C5 with a reason
+- [x] Ignored-files clean check after each fixture (a dirty checkout stops the run); synthetic `timeless-militant-faith.xml`
+- [x] Corpus timeless-jewel builds show jewel data loaded; non-jewel computed data unchanged (6 C2a fixtures byte-identical)
+- [x] Linux (WSL 2 Ubuntu 24.04): unit and real-runtime tests, fixtures 3/3 under `unshare -rn`
+- [x] Review with `code-architecture-reviewer`; apply findings (no blockers; context file)
 - [ ] Open PR
 
 ## PR C3: fixtures, compare, divergence register
