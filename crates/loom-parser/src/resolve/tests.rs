@@ -1292,3 +1292,31 @@ fn resolve_lines_composed_should_not_take_a_line_out_of_a_multi_line_template() 
     assert_eq!(out[0].composition, None);
     assert_eq!(resolved(&out[0].resolution).stats[0].stat, "two");
 }
+
+#[test]
+fn resolve_case_folded_should_read_a_line_that_differs_only_in_case() {
+    let set = one_file(vec![simple("life", "+{0} to maximum Life")]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    assert!(matches!(
+        index.resolve("+132 to Maximum Life").outcome,
+        Outcome::Unresolved(Unresolved::NoTemplate)
+    ));
+    let r = index.resolve_case_folded("+132 to Maximum Life").unwrap();
+    assert_eq!(resolved(&r).stats[0].stat, "life");
+    assert_eq!(r.line, "+132 to Maximum Life");
+    // An exact key is not a case-folded read.
+    assert_eq!(index.resolve_case_folded("+132 to maximum Life"), None);
+    assert_eq!(index.resolve_case_folded("+132 to maximum Mana"), None);
+}
+
+#[test]
+fn resolve_case_folded_should_refuse_keys_that_fold_together() {
+    let set = one_file(vec![
+        simple("a", "+{0} to Maximum Life"),
+        simple("b", "+{0} to maximum life"),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    assert_eq!(index.resolve_case_folded("+1 TO MAXIMUM LIFE"), None);
+}

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5d: item property lines)
+Last Updated: 2026-11-10 (PR B5e: letter case and split sections)
 
 # Spike B: context
 
@@ -240,6 +240,13 @@ Verdict: proceed with changes. All applied in this plan:
 - **Decisions (assumptions for review):** properties are typed results (`item-property`, `catalyst-quality`) counted as resolved and shown apart, like B5g's granted skills (stat-only rate unchanged at 98.8%); catalyst quality carries the catalyst type's stat ID plus `quality=N`; values are not checked against the base (flask base tables not extracted); `Has {0}` (a text value) is not resolved.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: every quality line carries `quality_type=<Id>` (a type without a catalyst stat is an `item-property`, never a bare `quality=`); `property_missing` records named ids not read and conflicting quality descriptions (dropped); tests for singular and `CurrentOfMax` templates, number edge cases, duplicates, `item_property` leaving other outcomes alone, and a corpus-level property line (the test `bases()` now loads the fixture's properties, so one older test's expectation moved from `item-property` to resolved).
 - **Evidence** (run from clean `8bce4ee`, `local/b5d-rc3|rc4`, byte-identical): 3,343 / 3,366 = 99.3%, 23 unresolved; only property lines changed against B5g.
+
+## PR B5e: letter case and split sections (PR #32, open, branch `spike-b/b5e-case-split`, stacked on PR #31)
+- Maintainer, 2026-11-10, area 5: "Resolve as you see fit. I agree to recommendations."
+- **Decisions (assumptions for review):** case folding as a separate, flagged API (`resolve_case_folded`; exact resolution unchanged; refused when several keys fold together); split-section pairs take the pair's reading (the B4b categorizer already proved the pair); left unresolved: the two-line `Trigger a Socketed Spell` text with one line (resolving a partial multi-line text would guess), the only-shadowed line (kept as include-precedence evidence), the graft placeholders, and the 5 real ambiguities.
+- Two older corpus tests changed expectations: the categorizer fixture's `+5 to Maximum Life` now case-folds (a `Line one 5` near-miss replaces it), and the split-section test now expects resolution.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers; the tolerance judged acceptable if flagged and named in the ADR-015 clarification (report section 7 now does). Applied: split-section lines carry evidence (`resolves with item line N`) and a comment on the `mod-backed` exclusion; the categorizer's split-section rule marked a safety net; tie-break comment; doc says lowercase, not full case folding; tests that composed lines and exact or unknown lines are not folded; dangling handoff sentence and stale ACTION-PLAN line fixed. A fold to an ambiguous reading is allowed on purpose (the `Mods` filter then runs).
+- **Evidence** (run from clean `d6db8dd`, `local/b5e-rc3|rc4`, byte-identical): 3,356 / 3,366 = 99.7%, 10 unresolved; only the 13 non-unique and 12 unique adapted lines changed against B5d.
 
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).

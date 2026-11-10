@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5d)
+Last Updated: 2026-11-10 (PR B5e)
 
 # Spike B: tasks
 
@@ -97,7 +97,7 @@ Last Updated: 2026-11-10 (PR B5d)
 - [x] Category rules with positive evidence and tests (`categorize.rs`); `uncategorized = 0`
 - [x] Author notes excluded (maintainer approval 2026-11-10); every note line reviewed by hand (report section 5)
 - [x] Class-requirement lines under `special-case/not-a-modifier`, class kept on the item record (0 in the corpus)
-- [x] The 4 cluster lines split across sections: `parser-gap/split-section` (each half alone matches no template; the pair resolves)
+- [x] The 4 cluster lines split across sections (resolved since B5e): `parser-gap/split-section` (each half alone matches no template; the pair resolves)
 - [x] PoB legacy-text sources: six tags, `--pob <tag>=<dir>`
 - [x] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict (not met)
 - [x] ACTION-PLAN status and corpus count 21; ADR-007's "22" left for the maintainer (ADR text)
@@ -147,5 +147,13 @@ Last Updated: 2026-11-10 (PR B5d)
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `8bce4ee`)
 - [x] Open PR
 
-## PR B5e: the rest (near-miss, split-section, only-shadowed)
-- [ ] As recommended
+## PR B5e: the rest (near-miss, split-section, only-shadowed) (PR #32)
+- [x] `Index::resolve_case_folded`; split-section pairs resolve; `adapted` on lines and in the summary; tests
+- [x] Corpus run from clean `d6db8dd`, two runs byte-identical: 99.7%, 10 unresolved
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `d6db8dd`)
+- [x] Open PR
+
+## After the area PRs (maintainer)
+- [ ] Merge #26 .. #32 in order (retarget each to `main`)
+- [ ] Accept the ADR-015 clarification on typed resolutions, or decide otherwise
+- [ ] Move this folder to `dev/completed/`; Spike C
