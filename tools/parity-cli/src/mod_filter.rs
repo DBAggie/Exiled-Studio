@@ -11,7 +11,8 @@
 //! - explicit on a unique: the base's domain, `UNIQUE`;
 //! - explicit otherwise: prefix or suffix in the base's domain, or `DELVE`
 //!   (base domain `ITEM`, `BASE_JEWEL`, `ABYSS_JEWEL`), or `UNVEILED`
-//!   (base domain `ITEM`);
+//!   (base domain `ITEM`); an essence-only row also needs the base's class
+//!   among the classes `Essences` gives it, when known (PR B4y);
 //! - implicit `{exarch}` / `{eater}`: `EXARCH_IMPLICIT` / `EATER_IMPLICIT`
 //!   in the base's domain; other implicits: `UNIQUE` (base implicits and
 //!   unique mods), `CORRUPTED`, `EXARCH_IMPLICIT`, or `EATER_IMPLICIT` in
@@ -47,9 +48,12 @@
 //!    when the item has an influence and a candidate that does not spawn is
 //!    backed by an influence row of that influence (the item's influence
 //!    tags need `InfluenceTags`, not extracted), and when a candidate that
-//!    does not spawn is backed by an essence-only row (essences spawn by
-//!    `Essences`, not extracted). Eldritch rows do not count on implicit
-//!    lines without an eldritch flag.
+//!    does not spawn is backed by an essence-only row whose classes are
+//!    unknown. A row an essence with known classes puts on the base's class
+//!    counts as spawning, essence-only or not (`Essences` also names
+//!    ordinary affixes, such as `ColdResist7` on armour): an essence can put
+//!    it on the item, so the base can carry it whatever its tag weight. Eldritch rows do not count on implicit lines
+//!    without an eldritch flag.
 //! 4. `values` (tie-breaker, reported): candidates backed at the values
 //!    level.
 //!
@@ -158,6 +162,9 @@ pub struct ModRow {
     pub craft_classes: Vec<i64>,
     /// `IsEssenceOnlyModifier`.
     pub essence_only: bool,
+    /// `ItemClasses` rows an essence puts this mod on (`Essences`), `None`
+    /// when no `Essences` column names the row or the table is absent.
+    pub essence_classes: Option<Vec<i64>>,
 }
 
 impl ModRow {
@@ -167,6 +174,23 @@ impl ModRow {
             .iter()
             .find(|(t, _)| tags.contains(t))
             .map_or(0, |(_, w)| *w)
+    }
+
+    /// Whether an essence can put this row on `base`: `true` when the
+    /// essence classes are unknown (the guard in [`filter`] handles that) or
+    /// the base's class is unknown (no named `BaseItemTypes` row has a null
+    /// `ItemClassesKey` in PoE1 26530219; a row is not excluded on a guess).
+    fn essence_on(&self, base: &BaseRow) -> bool {
+        self.essence_classes
+            .as_ref()
+            .is_none_or(|c| base.class.is_none_or(|k| c.contains(&k)))
+    }
+
+    /// Whether an essence with known classes puts this row on `base`.
+    fn essence_known_on(&self, base: &BaseRow) -> bool {
+        self.essence_classes
+            .as_ref()
+            .is_some_and(|c| base.class.is_some_and(|k| c.contains(&k)))
     }
 
     fn range(&self, stat: &str) -> Option<(i64, i64)> {
@@ -278,8 +302,80 @@ fn spawn_pairs(
     })
 }
 
+/// `Essences` columns (PoE1 schema) to the `ItemClasses.Id`s they cover.
+/// Following PoB, the `Staff` column covers warstaves and the `Dagger`
+/// column rune daggers (`v2.67.2:src/Data/Bases/staff.lua` and `dagger.lua`
+/// type them `Staff` and `Dagger` with a `subType`). The `Display_*` columns
+/// are summaries and are not read, except `Display_Quiver_ModsKey`: the
+/// schema names no other quiver column, and it is the only column that
+/// names the 25 quiver essence rows (`QuiverAddedChaosEssence1_`, ...;
+/// PoE1 26530219). The 125 essence-only rows no column names are legacy
+/// essence mods (`ChanceToDodgeEssence4`, ...): their classes stay unknown.
+const ESSENCE_COLUMNS: [(&str, &[&str]); 22] = [
+    ("Display_Quiver_ModsKey", &["Quiver"]),
+    ("Helmet_ModsKey", &["Helmet"]),
+    ("BodyArmour_ModsKey", &["Body Armour"]),
+    ("Boots_ModsKey", &["Boots"]),
+    ("Gloves_ModsKey", &["Gloves"]),
+    ("Shield_ModsKey", &["Shield"]),
+    ("Belt_ModsKey", &["Belt"]),
+    ("Amulet_ModsKey", &["Amulet"]),
+    ("Ring_ModsKey", &["Ring"]),
+    ("Bow_ModsKey", &["Bow"]),
+    ("Wand_ModsKey", &["Wand"]),
+    ("Staff_ModsKey", &["Staff", "Warstaff"]),
+    ("TwoHandSword_ModsKey", &["Two Hand Sword"]),
+    ("TwoHandAxe_ModsKey", &["Two Hand Axe"]),
+    ("TwoHandMace_ModsKey", &["Two Hand Mace"]),
+    ("Claw_ModsKey", &["Claw"]),
+    ("Dagger_ModsKey", &["Dagger", "Rune Dagger"]),
+    ("OneHandSword_ModsKey", &["One Hand Sword"]),
+    (
+        "OneHandThrustingSword_ModsKey",
+        &["Thrusting One Hand Sword"],
+    ),
+    ("OneHandAxe_ModsKey", &["One Hand Axe"]),
+    ("OneHandMace_ModsKey", &["One Hand Mace"]),
+    ("Sceptre_ModsKey", &["Sceptre"]),
+];
+
+/// `Mods` row to the `ItemClasses` rows essences put it on; `None` when the
+/// extract has no `Essences` table (extracts before PR B4y).
+///
+/// # Errors
+/// A message when `Essences` exists but `ItemClasses`, a column, or a class
+/// of [`ESSENCE_COLUMNS`] is missing.
+fn essence_classes(read: Read<'_>) -> Result<Option<BTreeMap<usize, BTreeSet<i64>>>, String> {
+    let Some(essences) = Table::read(read, "Essences")? else {
+        return Ok(None);
+    };
+    let classes = ids(read, "ItemClasses")?;
+    let class_row = |id: &str| -> Result<i64, String> {
+        classes
+            .iter()
+            .position(|c| c == id)
+            .and_then(|n| i64::try_from(n).ok())
+            .ok_or_else(|| format!("ItemClasses: no row {id}"))
+    };
+    let mut out: BTreeMap<usize, BTreeSet<i64>> = BTreeMap::new();
+    for (column, class_ids) in ESSENCE_COLUMNS {
+        let col = essences.column(column)?;
+        let rows: Vec<i64> = class_ids
+            .iter()
+            .map(|id| class_row(id))
+            .collect::<Result<_, _>>()?;
+        for r in &essences.rows {
+            if let Some(n) = Table::int(r, col).and_then(|n| usize::try_from(n).ok()) {
+                out.entry(n).or_default().extend(&rows);
+            }
+        }
+    }
+    Ok(Some(out))
+}
+
 impl Mods {
-    /// Reads `Mods`, `Stats`, and `Tags`. Row `n` of the result is row `n`
+    /// Reads `Mods`, `Stats`, and `Tags`, and `Essences` with `ItemClasses`
+    /// when the extract has them. Row `n` of the result is row `n`
     /// of `Mods` (`Implicit_ModsKeys` index it).
     ///
     /// # Errors
@@ -335,14 +431,32 @@ impl Mods {
                 influence: Table::int(r, influence).filter(|v| *v != NO_INFLUENCE),
                 craft_classes: ints(r, craft),
                 essence_only: r.get(essence).and_then(Value::as_bool).unwrap_or(false),
+                essence_classes: None,
             });
+        }
+        if let Some(classes) = essence_classes(read)? {
+            for (n, list) in classes {
+                let row = rows
+                    .get_mut(n)
+                    .ok_or_else(|| format!("Essences: Mods row {n} is not in Mods"))?;
+                row.essence_classes = Some(list.into_iter().collect());
+            }
         }
         let mut mods = Self::from_rows(rows);
         mods.bad_spawn_rows = bad_spawn_rows;
         Ok(mods)
     }
 
-    /// Indexes rows (row `n` keeps index `n`).
+    /// Essence-only rows whose item classes `Essences` gives, and the rest.
+    #[must_use]
+    pub fn essence_rows(&self) -> (usize, usize) {
+        let only = self.rows.iter().filter(|r| r.essence_only);
+        let known = only.clone().filter(|r| r.essence_classes.is_some()).count();
+        (known, only.count() - known)
+    }
+
+    /// Indexes rows (row `n` keeps index `n`). Rows keep their
+    /// `essence_classes`.
     #[must_use]
     pub fn from_rows(rows: Vec<ModRow>) -> Self {
         fn add(index: &mut BTreeMap<String, Vec<usize>>, stat: &str, n: usize) {
@@ -470,7 +584,11 @@ fn fits(row: &ModRow, base: &BaseRow, unique: bool, line: LineContext) -> bool {
                     || base.class.is_some_and(|c| row.craft_classes.contains(&c)))
         }
         Section::Explicit if unique => own && gen_ == g::UNIQUE,
-        Section::Explicit => affix && explicit_domain(row.domain, base.domain),
+        Section::Explicit => {
+            affix
+                && explicit_domain(row.domain, base.domain)
+                && !(row.essence_only && !row.essence_on(base))
+        }
         Section::Implicit if line.exarch => own && gen_ == g::EXARCH,
         Section::Implicit if line.eater => own && gen_ == g::EATER,
         Section::Implicit => {
@@ -515,7 +633,9 @@ impl Context<'_> {
         self.mods.row(fit.row)
     }
 
-    /// Whether some fitting row spawns on one of the base rows' tags. On an
+    /// Whether some fitting row spawns on one of the base rows: a positive
+    /// weight on its tags, or an essence with known classes puts the row on
+    /// the base's class. On an
     /// implicit line without an eldritch flag, eldritch rows do not count:
     /// they have spawn weights and `UNIQUE` / `CORRUPTED` rows do not, so
     /// counting them would favour an eldritch reading by construction.
@@ -527,18 +647,22 @@ impl Context<'_> {
                 !(unflagged_implicit && eldritch)
                     && self.bases.iter().any(|b| {
                         fits(row, b, self.unique, line)
-                            && b.tags.as_ref().is_some_and(|t| row.weight(t) > 0)
+                            && (b.tags.as_ref().is_some_and(|t| row.weight(t) > 0)
+                                || row.essence_known_on(b))
                     })
             })
         })
     }
 
-    /// Whether some fitting row is essence-only (essence mods spawn by the
-    /// `Essences` table, not extracted, not by the base's tags).
+    /// Whether some fitting row is essence-only with unknown classes
+    /// (essence mods spawn through `Essences`, not the base's tags; the
+    /// legacy essence mods that no read `Essences` column names have no
+    /// known classes).
     fn essence_backed(&self, fits_: &[Fit]) -> bool {
-        fits_
-            .iter()
-            .any(|f| self.row(*f).is_some_and(|row| row.essence_only))
+        fits_.iter().any(|f| {
+            self.row(*f)
+                .is_some_and(|row| row.essence_only && row.essence_classes.is_none())
+        })
     }
 
     /// Whether some fitting row is an influence row of one of the item's

@@ -426,3 +426,17 @@ Spike B's Mods filter (PR B4a) breaks local-vs-global ties with spawn tags, so i
 - `check-determinism.sh`: byte-identical on both games, PoE1 547 files (134 + 413 item types), PoE2 962 (685 + 277). Manifest SHA-256: PoE1 `f77368bb…`, PoE2 `c23684c3…`. All item type files `ok`, 0 dangling, 0 cycles.
 - Compared with the B1x output (tool `4c70f6a`), every earlier output file is byte-identical; the manifest gains `item_types`, `format` 4, the new output files, and one more bundle read per game (PoE1 31, PoE2 73; no earlier bundle hash changed).
 - `cross-check` re-run, two runs per game byte-identical: only `inputs` differs from the B1x summaries. `loom-parity-cli load-statdesc`: output equal to the B1 run except `manifest_format`; `resolve-corpus` (PoE1): summary equal to B3's except `inputs` (79.1%). Manifests and cross-check summaries replaced in `docs/spikes/spike-a/`.
+
+## 20. Essences added for Spike B (PR B4y)
+Spike B's Mods filter (PR B4a) left 93 non-unique lines ambiguous because the other reading was backed by an essence-only `Mods` row. Essence-only rows have spawn weight 0 everywhere; which item classes an essence puts them on is in `Essences`. Maintainer decision 2026-11-10: extract the table and use it in one PR.
+
+**Root:** `Essences` (PoE1 only, `MOD_SOURCE_TABLES_POE1` in `tools/extractor/src/extract.rs`). It brings two new referenced tables, `EssenceType` (26 rows) and `Words` (4,117); `Essences` has 106 rows, 0 dangling keys. The PoE1 schema has one `*_ModsKey` column per item class (`Helmet_ModsKey`, `Staff_ModsKey`, ...) plus `Display_*` summary columns; the quiver column PoB's export reads (`QuiverMod` in `v2.67.2:src/Export/Scripts/essence.lua`) has no name in the vendored schema, and `Display_Quiver_ModsKey` is the only column that names the 25 quiver essence rows. 125 of the 462 essence-only rows are named by no column: legacy essence mods (`ChanceToDodgeEssence4`, `LifeLeechPermyriadEssence1`, ...).
+
+**Not a root: `CraftingBenchOptions`.** Measured on a dev extract: its class lists (`ItemClasses` plus `CraftingItemClassCategories.ItemClasses`) equal `Mods.CraftingItemClassRestrictions` on all 791 bench rows, so it adds nothing the filter does not have. The ambiguous `{crafted}` lines are backed by legacy bench rows (`StrMasterFlatArmourCrafted1`, ...) that the table does not list. It would also pull in about 30 unrelated tables (hideouts, NPCs, quests, world areas).
+
+**Evidence, maintainer workstation, 2026-11-10, from clean tool commit `674837f`.** Steam build unchanged (PoE1 26530219).
+- `check-determinism.sh` (PoE1): byte-identical, 550 files (547 + `Essences`, `EssenceType`, `Words`); manifest SHA-256 `9d410b8c…`; 85 tables `ok`, 0 dangling keys.
+- Compared with the B4x output (tool `c3c7e15`), every earlier output file is byte-identical; only the manifest changes.
+- `cross-check` (PoE1), two runs byte-identical: only `inputs` differs from the B4x summary. `load-statdesc`: unchanged.
+- PoE2: root list unchanged (unit test `roots_should_have_a_vendored_schema_for_their_game`); not re-run.
+- Manifest and cross-check summary replaced in `docs/spikes/spike-a/`.
