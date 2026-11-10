@@ -15,8 +15,9 @@
 --
 -- The adapter patches no PoB file. It replaces three globals with named
 -- shims (shims.lua: `Inflate`, `pairs` for ambiguous gem variant tables,
--- and `io.open`), records them and what they did in the document, and records which modules `require` loads. The
--- output contract is tools/oracle/schema/oracle-output.schema.json.
+-- and `io.open`), records them and what they did in the document, and
+-- records which modules `require` loads. The output contract is
+-- tools/oracle/schema/oracle-output.schema.json.
 
 -- launch, build, common, loadBuildFromXML are PoB's globals.
 ---@diagnostic disable: undefined-global
@@ -105,6 +106,9 @@ pairs = shims.orderedPairs(basePairs, orderedTables, function(gameId)
 		orderedSeen[gameId] = true
 		result.probe.variant_order[#result.probe.variant_order + 1] = gameId
 	end
+end, function(gameId)
+	-- Cannot be sorted, so PoB's order (which changes per run) decides.
+	addPartial("variant_order: unordered table " .. gameId)
 end)
 
 -- Replaces the wrapper's Inflate stub. Each call is recorded in the probe.

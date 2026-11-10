@@ -126,9 +126,11 @@ check("registers only ambiguous tables", count == 1 and ordered[gemsByGameId.vaa
 check("leaves distinct variants alone", ordered[gemsByGameId.plain] == nil and ordered[gemsByGameId.single] == nil)
 
 -- variant_order: iteration
-local seen = {}
+local seen, unordered = {}, {}
 local orderedPairs = shims.orderedPairs(pairs, ordered, function(label)
 	seen[#seen + 1] = label
+end, function(label)
+	unordered[#unordered + 1] = label
 end)
 local keys = {}
 for k, v in orderedPairs(gemsByGameId.vaal) do
@@ -163,6 +165,7 @@ for _ in orderedPairs(mixed) do
 	mixedCount = mixedCount + 1
 end
 check("non-string key falls back to pairs", mixedCount == 2 and #seen == 2, mixedCount)
+check("fallback reported", #unordered == 1 and unordered[1] == "mixed", #unordered)
 -- An empty registered table iterates nothing.
 local empty = {}
 ordered[empty] = "empty"

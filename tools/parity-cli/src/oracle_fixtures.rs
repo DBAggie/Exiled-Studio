@@ -458,6 +458,33 @@ mod tests {
     }
 
     #[test]
+    fn parse_should_keep_community_fixtures_in_their_folder() {
+        let community = |v: &mut Value| -> usize {
+            v["fixtures"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .position(|e| e["tier"] == "community")
+                .unwrap()
+        };
+        // A community build outside community/.
+        let err = manifest_with(|v| {
+            let i = community(v);
+            let id = v["fixtures"][i]["id"].clone();
+            v["fixtures"][i]["path"] = id;
+        })
+        .unwrap_err();
+        assert!(err.contains("live in community/"), "{err}");
+        // Another tier inside community/.
+        let err = manifest_with(|v| {
+            let i = community(v);
+            v["fixtures"][i]["tier"] = "synthetic".into();
+        })
+        .unwrap_err();
+        assert!(err.contains("live in community/"), "{err}");
+    }
+
+    #[test]
     fn resolve_should_refuse_changed_bytes() {
         let mut manifest = Manifest::parse(COMMITTED).unwrap();
         manifest.fixtures.retain(|e| e.source == Source::Local);

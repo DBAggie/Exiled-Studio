@@ -164,13 +164,19 @@ end
 -- registered as ambiguous in sorted key order; every other table goes to
 -- the original `pairs` unchanged. Sorted order puts the base gem first
 -- ("VaalDetonateDead" < "VaalDetonateDeadAltX"), the gem a save from
--- before transfigured gems meant.
+-- before transfigured gems meant. This is the one shim that chooses a
+-- result PoB leaves to chance, not just a harness artifact: the oracle
+-- value for such a gem is the base variant (recorded in the Spike C
+-- context file, "Decisions in C3b+C4"). Scope: only the lookup above;
+-- other `pairs` over gem tables are untouched (the corpus and the fixtures
+-- are 3/3 identical with that scope).
 
 -- Returns a `pairs` that iterates a table registered in `ordered` (table
 -- -> label) in sorted key order and calls `onOrdered(label)` each time;
--- other tables, and registered tables with a key that is not a string,
--- go to `basePairs`.
-function M.orderedPairs(basePairs, ordered, onOrdered)
+-- other tables go to `basePairs`. A registered table with a key that is
+-- not a string cannot be sorted: it goes to `basePairs` and
+-- `onUnordered(label)` is called, so the caller can mark the result.
+function M.orderedPairs(basePairs, ordered, onOrdered, onUnordered)
 	return function(t)
 		local label = ordered[t]
 		if label == nil then
@@ -179,6 +185,7 @@ function M.orderedPairs(basePairs, ordered, onOrdered)
 		local keys = {}
 		for k in basePairs(t) do
 			if type(k) ~= "string" then
+				onUnordered(label)
 				return basePairs(t)
 			end
 			keys[#keys + 1] = k
