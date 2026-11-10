@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5g)
+Last Updated: 2026-11-10 (PR B5d)
 
 # Spike B: tasks
 
@@ -142,7 +142,10 @@ Last Updated: 2026-11-10 (PR B5g)
 - [x] Open PR
 
 ## PR B5d: item properties
-- [ ] Typed item properties from game data
+- [x] `properties.rs` (templates, label, catalyst quality), kinds `item-property` / `catalyst-quality`, `property_inputs`; tests (unit and load fixture)
+- [x] Corpus run from clean `b4550c7`, two runs byte-identical: 99.3%, 15 / 15 non-unique property lines
+- [ ] Review with `code-architecture-reviewer`; apply findings
+- [ ] Open PR
 
 ## PR B5e: the rest (near-miss, split-section, only-shadowed)
 - [ ] As recommended
