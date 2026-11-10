@@ -799,8 +799,8 @@ fn resolve_should_not_panic_on_arbitrary_text() {
 
 /// Names for `passive_hash` (keys 7 and 9 share a name, 10 is blank),
 /// `display_indexable_support` (a name with a number), and
-/// `tree_expansion_jewel_passive` (a two-line name, and its first line
-/// alone as another key).
+/// `tree_expansion_jewel_passive` (a two-line name, its first line alone
+/// as another key, and a name with a blank line inside).
 struct Names;
 
 impl Lookup for Names {
@@ -823,6 +823,7 @@ impl Lookup for Names {
             LookupHandler::TreeExpansionJewelPassive => vec![
                 (3, "Grant: 12% Fire\n  Grant: 8%  Cold ".to_owned()),
                 (4, "Grant: 12% Fire".to_owned()),
+                (5, "Grant: Ice\n \nGrant: Snow".to_owned()),
             ],
             _ => Vec::new(),
         }
@@ -859,6 +860,12 @@ fn resolve_lines_should_read_a_looked_up_name_that_spans_lines() {
     assert_eq!(
         (two[0].lines, values(&two[0])),
         (2, vec![("n".to_owned(), RawValue::Lookup(vec![3]))])
+    );
+    // A blank line inside a name is dropped, as the renderer drops it.
+    let gap = index.resolve_lines(&["Grant: Ice", "Grant: Snow"]);
+    assert_eq!(
+        (gap[0].lines, values(&gap[0])),
+        (2, vec![("n".to_owned(), RawValue::Lookup(vec![5]))])
     );
     let one = index.resolve_lines(&["Grant: 12% Fire"]);
     assert_eq!(

@@ -142,10 +142,10 @@ fn tree_expansion_names(read: Read<'_>, extract: &Extract) -> Result<TreeNames, 
         .iter()
         .find(|r| Table::text(r, id) == Some(SMALL_PASSIVE_STRING))
         .and_then(|r| Table::text(r, text))
-        .filter(|t| t.contains("{0}"))
+        .filter(|t| t.contains("{0}") && !has_other_placeholder(t))
     else {
         return Ok(Err(format!(
-            "ClientStrings has no {SMALL_PASSIVE_STRING} with a {{0}}"
+            "ClientStrings has no {SMALL_PASSIVE_STRING} with {{0}} as its only placeholder"
         )));
     };
     let Some(path) = extract.files.iter().find(|p| {
@@ -169,7 +169,11 @@ fn tree_expansion_names(read: Read<'_>, extract: &Extract) -> Result<TreeNames, 
         .map(|c| passives.column(c))
         .collect::<Result<Vec<_>, _>>()?;
     let (mut names, mut skipped) = (BTreeMap::new(), 0);
-    for (key, row) in skills.rows.iter().enumerate() {
+    for (n, row) in skills.rows.iter().enumerate() {
+        let Ok(key) = i64::try_from(n) else {
+            skipped += 1;
+            continue;
+        };
         let passive = Table::int(row, node)
             .and_then(|n| usize::try_from(n).ok())
             .and_then(|n| passives.rows.get(n));
@@ -187,8 +191,8 @@ fn tree_expansion_names(read: Read<'_>, extract: &Extract) -> Result<TreeNames, 
                 .collect()
         });
         let rendered = given.map(|g| scope.render(&g, &NoLookup, VariantFilter::default()));
-        match (rendered, i64::try_from(key)) {
-            (Some(r), Ok(key)) if r.not_rendered.is_empty() && !r.lines.is_empty() => {
+        match rendered {
+            Some(r) if r.not_rendered.is_empty() && !r.lines.is_empty() => {
                 let lines: Vec<String> = r
                     .lines
                     .iter()
@@ -200,6 +204,17 @@ fn tree_expansion_names(read: Read<'_>, extract: &Extract) -> Result<TreeNames, 
         }
     }
     Ok(Ok((names, skipped)))
+}
+
+/// Whether `text` has a `{n}` placeholder other than `{0}` (a template the
+/// small-passive line cannot fill).
+fn has_other_placeholder(text: &str) -> bool {
+    text.split('{')
+        .skip(1)
+        .filter_map(|rest| rest.split_once('}'))
+        .any(|(inner, _)| {
+            inner != "0" && inner.chars().all(|c| c.is_ascii_digit()) && !inner.is_empty()
+        })
 }
 
 impl TableLookup {
@@ -325,8 +340,9 @@ mod tests {
         )
     }
 
-    /// Small passives: row 0 one stat, row 1 two stats, row 2 a stat with
-    /// no description (skipped).
+    /// Small passives: row 0 one stat, row 1 two stats; skipped: row 2 a
+    /// stat with no description, row 3 a stat that needs a lookup to
+    /// render, row 4 more stats than value columns, row 5 a null value.
     fn cluster_read(path: &str, template: bool) -> Result<Vec<u8>, String> {
         let text = match path {
             "manifest.json" => MANIFEST.to_owned(),
@@ -344,12 +360,18 @@ mod tests {
                 &[
                     desc(1, "fire", "{0}% increased Fire Damage", ""),
                     desc(2, "cold", "{0}% increased Cold Damage", ""),
+                    desc(
+                        3,
+                        "named",
+                        "Allocates {0}",
+                        r#"{"name": "passive_hash", "stat": 1}"#,
+                    ),
                 ],
             ),
             "tables/PassiveTreeExpansionSkills.json" => table(
                 "PassiveTreeExpansionSkills",
                 &["PassiveSkillsKey"],
-                &[&["0"], &["1"], &["2"]],
+                &[&["0"], &["1"], &["2"], &["3"], &["4"], &["5"]],
             ),
             "tables/PassiveSkills.json" => table(
                 "PassiveSkills",
@@ -367,12 +389,29 @@ mod tests {
                     &["[0]", "12", "0", "0", "0", "0", "100", r#""A""#],
                     &["[0, 1]", "10", "8", "0", "0", "0", "101", r#""B""#],
                     &["[2]", "5", "0", "0", "0", "0", "102", r#""C""#],
+                    &["[3]", "5", "0", "0", "0", "0", "103", r#""D""#],
+                    &[
+                        "[0, 0, 0, 0, 0, 0]",
+                        "1",
+                        "1",
+                        "1",
+                        "1",
+                        "1",
+                        "104",
+                        r#""E""#,
+                    ],
+                    &["[0]", "null", "0", "0", "0", "0", "105", r#""F""#],
                 ],
             ),
             "tables/Stats.json" => table(
                 "Stats",
                 &["Id"],
-                &[&[r#""fire""#], &[r#""cold""#], &[r#""none""#]],
+                &[
+                    &[r#""fire""#],
+                    &[r#""cold""#],
+                    &[r#""none""#],
+                    &[r#""named""#],
+                ],
             ),
             "tables/ClientStrings.json" if template => table(
                 "ClientStrings",
@@ -404,11 +443,20 @@ mod tests {
                  Added Small Passive Skills grant: 8% increased Cold Damage"
             )
         );
-        assert_eq!(lookup.name(h, 2), None);
+        for skipped in 2..=5 {
+            assert_eq!(lookup.name(h, skipped), None, "row {skipped}");
+        }
         assert_eq!(
             report.skipped_rows.get("tree_expansion_jewel_passive"),
-            Some(&1)
+            Some(&4)
         );
+    }
+
+    #[test]
+    fn has_other_placeholder_should_find_any_numbered_placeholder_but_zero() {
+        assert!(!has_other_placeholder("Grant: {0}"));
+        assert!(has_other_placeholder("Grant: {0} and {1}"));
+        assert!(!has_other_placeholder("Grant: {0} {x}"));
     }
 
     #[test]
@@ -450,6 +498,8 @@ mod tests {
             (one.lines, c.stats[0].stat.as_str()),
             (2, "local_jewel_expansion_passive_node_index")
         );
+        // Pins the key-form hypothesis (0-based row index), not evidence:
+        // change it on purpose if the key form is ever settled.
         assert_eq!(
             c.stats[0].value,
             loom_parser::resolve::RawValue::Lookup(vec![1])

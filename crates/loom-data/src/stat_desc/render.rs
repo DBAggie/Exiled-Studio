@@ -690,6 +690,43 @@ mod tests {
             VariantFilter::default(),
         );
         assert_eq!(r.unwrap().1, vec!["Grant: A", "Grant: B"]);
+        // Template text attaches to the first and last line of the name.
+        let around = handled(
+            &["s"],
+            "Pre {0} post",
+            &[("tree_expansion_jewel_passive", Some(1))],
+        );
+        let r = render_description(
+            &around,
+            Hand::Main,
+            &[StatValue::exact(3)],
+            &TwoLines,
+            VariantFilter::default(),
+        );
+        assert_eq!(r.unwrap().1, vec!["Pre Grant: A", "Grant: B post"]);
+    }
+
+    #[test]
+    fn render_should_drop_a_blank_line_inside_a_looked_up_name() {
+        struct Gap;
+        impl Lookup for Gap {
+            fn name(&self, _: LookupHandler, _: i64) -> Option<String> {
+                Some("A\n \nB".to_owned())
+            }
+
+            fn entries(&self, _: LookupHandler) -> Vec<(i64, String)> {
+                Vec::new()
+            }
+        }
+        let d = handled(&["s"], "{0}", &[("tree_expansion_jewel_passive", Some(1))]);
+        let r = render_description(
+            &d,
+            Hand::Main,
+            &[StatValue::exact(3)],
+            &Gap,
+            VariantFilter::default(),
+        );
+        assert_eq!(r.unwrap().1, vec!["A", "B"]);
     }
 
     #[test]
