@@ -38,7 +38,12 @@
 //! **Filter** of an ambiguous line, each step applied only when it keeps at
 //! least one candidate and removes at least one:
 //! 1. `mods`: candidates backed by a fitting row. When no candidate is
-//!    backed, every candidate stays (`no-backed-candidate`), no tie-break.
+//!    backed, no tie-break runs (`no-backed-candidate`); if some fitting
+//!    row carries a candidate's stat at `(0, 0)` (note `row-value-unset`:
+//!    the value is set outside the row, as for anoints), `unset-fit` keeps
+//!    the candidates with such a row, then `numbered-stat` runs (step 5).
+//!    Backed candidates never reach `numbered-stat`: several backed rows are
+//!    a real ambiguity, not an unknown slot.
 //! 2. `base-implicit` (implicit, not eldritch): candidates backed by one of
 //!    the base's `Implicit_ModsKeys` rows.
 //! 3. `spawn-tags` (tie-breaker, reported): candidates backed by a fitting
@@ -56,6 +61,15 @@
 //!    without an eldritch flag.
 //! 4. `values` (tie-breaker, reported): candidates backed at the values
 //!    level.
+//! 5. `numbered-stat` (Spike B step 4d, maintainer decision 2026-11-10;
+//!    only after `unset-fit`): candidates whose stats are equal up to a numbered suffix (`x`, `x_2`
+//!    .. `x_9`; anoints: `mod_granted_passive_hash` .. `_5`) are one
+//!    reading; the one with the lowest numbers is kept, the others are
+//!    dropped as alternatives (note `numbered-stat-equivalents`). No game
+//!    data says which of the five an anoint uses (`BlightCraftingResults`
+//!    names only the passive), and PoB does not pick one either (`allocates
+//!    (.+)` gives one `GrantedPassive` list mod, `v2.67.2:
+//!    src/Modules/ModParser.lua`).
 //!
 //! One candidate left: the line is resolved, with the steps that narrowed it.
 
@@ -746,8 +760,16 @@ pub fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) ->
         ..Decision::default()
     };
     if !d.backed_any {
-        if candidates.iter().any(|c| ctx.unset_fit(line, &c.stats)) {
+        let unset: Vec<bool> = candidates
+            .iter()
+            .map(|c| ctx.unset_fit(line, &c.stats))
+            .collect();
+        if unset.contains(&true) {
             d.notes.insert("row-value-unset");
+            narrow(&mut d.kept, &mut d.rules, "unset-fit", |i| {
+                unset.get(i).copied().unwrap_or(false)
+            });
+            numbered_stat(&mut d, candidates);
         }
         return d;
     }
@@ -795,6 +817,56 @@ pub fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) ->
         });
     }
     d
+}
+
+/// A stat ID without a numbered suffix `_2` .. `_9` (`mod_granted_passive_hash_3`
+/// to `mod_granted_passive_hash`); other IDs unchanged.
+fn unnumbered(stat: &str) -> (&str, u8) {
+    if let Some((base, n)) = stat.rsplit_once('_')
+        && let [d @ b'2'..=b'9'] = n.as_bytes()
+    {
+        return (base, d - b'0');
+    }
+    (stat, 1)
+}
+
+/// `numbered-stat` (step 4d, maintainer decision 2026-11-10), run only after
+/// `unset-fit` (no candidate backed; every kept candidate has a fitting row
+/// whose value is set outside it, the anoint case): when every
+/// kept candidate has the same stats up to a numbered suffix (the anoint
+/// stats `mod_granted_passive_hash`, `_2` .. `_5`: no game data says which
+/// one an anoint uses), they are one reading. The candidate with the lowest
+/// numbers is kept; the others are dropped (listed as alternatives) and the
+/// note `numbered-stat-equivalents` is set.
+fn numbered_stat(d: &mut Decision, candidates: &[Candidate]) {
+    if d.kept.len() < 2 {
+        return;
+    }
+    let shape = |i: usize| -> Option<(Vec<&str>, Vec<u8>)> {
+        let c = candidates.get(i)?;
+        Some(c.stats.iter().map(|s| unnumbered(&s.stat)).unzip())
+    };
+    let shapes: Option<Vec<(Vec<&str>, Vec<u8>)>> = d.kept.iter().map(|i| shape(*i)).collect();
+    let Some(shapes) = shapes else {
+        return;
+    };
+    let Some((first, first_numbers)) = shapes.first() else {
+        return;
+    };
+    let numbers_differ = shapes.iter().any(|(_, n)| n != first_numbers);
+    if !numbers_differ || !shapes.iter().all(|(s, _)| s == first) {
+        return;
+    }
+    let best = shapes
+        .iter()
+        .zip(&d.kept)
+        .min_by(|(a, _), (b, _)| a.1.cmp(&b.1))
+        .map(|(_, i)| *i);
+    if let Some(best) = best {
+        d.kept = vec![best];
+        d.rules.push("numbered-stat");
+        d.notes.insert("numbered-stat-equivalents");
+    }
 }
 
 /// `mod-backed` of a resolved line: `Ok((true, id))` backed by an equal

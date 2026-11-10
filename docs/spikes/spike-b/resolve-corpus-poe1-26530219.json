@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "a38237dbfa8a5281b06b98997f5ce1cf69ff4299",
+      "commit": "39bd52dac28a14d53740a5d6bdcb3e4d3b4b7bae",
       "dirty": false
     },
     "builds": [
@@ -31,6 +31,306 @@
       "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
       "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
       "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870"
+    ],
+    "pob": [
+      {
+        "tag": "v2.4.0",
+        "files": {
+          "ClusterJewels.lua": 126,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1216,
+          "ModFlask.lua": 61,
+          "ModItem.lua": 4937,
+          "ModJewel.lua": 414,
+          "ModJewelAbyss.lua": 723,
+          "ModJewelCluster.lua": 507,
+          "ModMaster.lua": 0,
+          "Uniques/Special/Generated.lua": 29,
+          "Uniques/Special/New.lua": 7,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/amulet.lua": 530,
+          "Uniques/axe.lua": 224,
+          "Uniques/belt.lua": 399,
+          "Uniques/body.lua": 651,
+          "Uniques/boots.lua": 486,
+          "Uniques/bow.lua": 272,
+          "Uniques/claw.lua": 187,
+          "Uniques/dagger.lua": 164,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 209,
+          "Uniques/gloves.lua": 462,
+          "Uniques/helmet.lua": 670,
+          "Uniques/jewel.lua": 673,
+          "Uniques/mace.lua": 422,
+          "Uniques/quiver.lua": 159,
+          "Uniques/ring.lua": 617,
+          "Uniques/shield.lua": 552,
+          "Uniques/staff.lua": 316,
+          "Uniques/sword.lua": 504,
+          "Uniques/wand.lua": 180
+        },
+        "keys": 4580,
+        "sha256": "923eded4b1f40309b37f9815ab607a708f2ebbb2846922a6aa64a529f9bac8ab"
+      },
+      {
+        "tag": "v2.21.1",
+        "files": {
+          "ClusterJewels.lua": 130,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBody.lua": 83,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentFlask.lua": 21,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1323,
+          "EnchantmentWeapon.lua": 187,
+          "ModFlask.lua": 340,
+          "ModItem.lua": 12004,
+          "ModJewel.lua": 423,
+          "ModJewelAbyss.lua": 728,
+          "ModJewelCluster.lua": 550,
+          "ModMaster.lua": 0,
+          "ModVeiled.lua": 347,
+          "Uniques/Special/Generated.lua": 31,
+          "Uniques/Special/New.lua": 27,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/Special/race.lua": 60,
+          "Uniques/amulet.lua": 615,
+          "Uniques/axe.lua": 218,
+          "Uniques/belt.lua": 433,
+          "Uniques/body.lua": 720,
+          "Uniques/boots.lua": 560,
+          "Uniques/bow.lua": 293,
+          "Uniques/claw.lua": 189,
+          "Uniques/dagger.lua": 168,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 230,
+          "Uniques/gloves.lua": 521,
+          "Uniques/helmet.lua": 754,
+          "Uniques/jewel.lua": 713,
+          "Uniques/mace.lua": 430,
+          "Uniques/quiver.lua": 219,
+          "Uniques/ring.lua": 674,
+          "Uniques/shield.lua": 606,
+          "Uniques/staff.lua": 317,
+          "Uniques/sword.lua": 516,
+          "Uniques/wand.lua": 189
+        },
+        "keys": 5854,
+        "sha256": "fcaf5a651d04feb8e02e71b092cb8de03f06894d1ddc49a0c863335ef210568a"
+      },
+      {
+        "tag": "v2.35.3",
+        "files": {
+          "ClusterJewels.lua": 130,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBody.lua": 83,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentFlask.lua": 21,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1338,
+          "EnchantmentWeapon.lua": 187,
+          "ModFlask.lua": 340,
+          "ModItem.lua": 12006,
+          "ModJewel.lua": 436,
+          "ModJewelAbyss.lua": 725,
+          "ModJewelCluster.lua": 556,
+          "ModMap.lua": 0,
+          "ModMaster.lua": 0,
+          "ModVeiled.lua": 347,
+          "Uniques/Special/Generated.lua": 34,
+          "Uniques/Special/New.lua": 42,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/Special/race.lua": 60,
+          "Uniques/amulet.lua": 659,
+          "Uniques/axe.lua": 230,
+          "Uniques/belt.lua": 466,
+          "Uniques/body.lua": 744,
+          "Uniques/boots.lua": 569,
+          "Uniques/bow.lua": 326,
+          "Uniques/claw.lua": 194,
+          "Uniques/dagger.lua": 175,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 239,
+          "Uniques/gloves.lua": 552,
+          "Uniques/helmet.lua": 804,
+          "Uniques/jewel.lua": 657,
+          "Uniques/mace.lua": 436,
+          "Uniques/quiver.lua": 203,
+          "Uniques/ring.lua": 721,
+          "Uniques/shield.lua": 634,
+          "Uniques/staff.lua": 321,
+          "Uniques/sword.lua": 546,
+          "Uniques/wand.lua": 217
+        },
+        "keys": 5847,
+        "sha256": "0a318114452c6123d5e970b5ed4dcfc1a8a98cf2faf1581d3bdab9a17ea520e5"
+      },
+      {
+        "tag": "v2.48.0",
+        "files": {
+          "ClusterJewels.lua": 130,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBody.lua": 83,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentFlask.lua": 21,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1338,
+          "EnchantmentWeapon.lua": 187,
+          "ModFlask.lua": 340,
+          "ModItem.lua": 12193,
+          "ModJewel.lua": 439,
+          "ModJewelAbyss.lua": 725,
+          "ModJewelCharm.lua": 255,
+          "ModJewelCluster.lua": 556,
+          "ModMap.lua": 0,
+          "ModMaster.lua": 0,
+          "ModNecropolis.lua": 51,
+          "ModTincture.lua": 72,
+          "ModVeiled.lua": 349,
+          "Uniques/Special/Generated.lua": 36,
+          "Uniques/Special/New.lua": 92,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/Special/race.lua": 60,
+          "Uniques/amulet.lua": 685,
+          "Uniques/axe.lua": 232,
+          "Uniques/belt.lua": 482,
+          "Uniques/body.lua": 764,
+          "Uniques/boots.lua": 587,
+          "Uniques/bow.lua": 327,
+          "Uniques/claw.lua": 194,
+          "Uniques/dagger.lua": 175,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 246,
+          "Uniques/gloves.lua": 565,
+          "Uniques/helmet.lua": 830,
+          "Uniques/jewel.lua": 685,
+          "Uniques/mace.lua": 441,
+          "Uniques/quiver.lua": 203,
+          "Uniques/ring.lua": 774,
+          "Uniques/shield.lua": 647,
+          "Uniques/staff.lua": 360,
+          "Uniques/sword.lua": 553,
+          "Uniques/tincture.lua": 0,
+          "Uniques/wand.lua": 224
+        },
+        "keys": 6061,
+        "sha256": "2af0c142903998bf710b95227e0286b91e35e61ec2fe10b049d6c2416750ca32"
+      },
+      {
+        "tag": "v2.57.0",
+        "files": {
+          "ClusterJewels.lua": 130,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBody.lua": 83,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentFlask.lua": 21,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1338,
+          "EnchantmentWeapon.lua": 187,
+          "ModFlask.lua": 340,
+          "ModItem.lua": 12306,
+          "ModJewel.lua": 441,
+          "ModJewelAbyss.lua": 725,
+          "ModJewelCharm.lua": 255,
+          "ModJewelCluster.lua": 556,
+          "ModMap.lua": 0,
+          "ModMaster.lua": 0,
+          "ModNecropolis.lua": 51,
+          "ModTincture.lua": 72,
+          "ModVeiled.lua": 382,
+          "Uniques/Special/BoundByDestiny.lua": 0,
+          "Uniques/Special/Generated.lua": 40,
+          "Uniques/Special/New.lua": 0,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/Special/race.lua": 60,
+          "Uniques/amulet.lua": 690,
+          "Uniques/axe.lua": 244,
+          "Uniques/belt.lua": 501,
+          "Uniques/body.lua": 788,
+          "Uniques/boots.lua": 601,
+          "Uniques/bow.lua": 331,
+          "Uniques/claw.lua": 196,
+          "Uniques/dagger.lua": 178,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 255,
+          "Uniques/gloves.lua": 578,
+          "Uniques/helmet.lua": 890,
+          "Uniques/jewel.lua": 699,
+          "Uniques/mace.lua": 461,
+          "Uniques/quiver.lua": 227,
+          "Uniques/ring.lua": 819,
+          "Uniques/shield.lua": 661,
+          "Uniques/staff.lua": 381,
+          "Uniques/sword.lua": 563,
+          "Uniques/tincture.lua": 22,
+          "Uniques/wand.lua": 232
+        },
+        "keys": 6181,
+        "sha256": "d04511297b71f35c1511b5a0012353fa4749cfa98a60e674e6d4f1b7775138c6"
+      },
+      {
+        "tag": "v2.67.2",
+        "files": {
+          "ClusterJewels.lua": 130,
+          "EnchantmentBelt.lua": 15,
+          "EnchantmentBody.lua": 83,
+          "EnchantmentBoots.lua": 48,
+          "EnchantmentFlask.lua": 21,
+          "EnchantmentGloves.lua": 60,
+          "EnchantmentHelmet.lua": 1338,
+          "EnchantmentWeapon.lua": 187,
+          "ModCorrupted.lua": 375,
+          "ModDelve.lua": 190,
+          "ModEldritch.lua": 4086,
+          "ModExplicit.lua": 5130,
+          "ModFlask.lua": 340,
+          "ModFoulborn.lua": 378,
+          "ModGraft.lua": 503,
+          "ModItemExclusive.lua": 9899,
+          "ModJewel.lua": 442,
+          "ModJewelAbyss.lua": 725,
+          "ModJewelCharm.lua": 257,
+          "ModJewelCluster.lua": 558,
+          "ModMap.lua": 0,
+          "ModMaster.lua": 0,
+          "ModNecropolis.lua": 51,
+          "ModScourge.lua": 1262,
+          "ModSynthesis.lua": 1344,
+          "ModTincture.lua": 72,
+          "ModVeiled.lua": 384,
+          "Uniques/Special/BoundByDestiny.lua": 0,
+          "Uniques/Special/Generated.lua": 40,
+          "Uniques/Special/New.lua": 0,
+          "Uniques/Special/WatchersEye.lua": 0,
+          "Uniques/Special/race.lua": 60,
+          "Uniques/amulet.lua": 729,
+          "Uniques/axe.lua": 256,
+          "Uniques/belt.lua": 535,
+          "Uniques/body.lua": 797,
+          "Uniques/boots.lua": 607,
+          "Uniques/bow.lua": 319,
+          "Uniques/claw.lua": 203,
+          "Uniques/dagger.lua": 186,
+          "Uniques/fishing.lua": 11,
+          "Uniques/flask.lua": 268,
+          "Uniques/gloves.lua": 605,
+          "Uniques/graft.lua": 0,
+          "Uniques/helmet.lua": 927,
+          "Uniques/jewel.lua": 730,
+          "Uniques/mace.lua": 517,
+          "Uniques/quiver.lua": 232,
+          "Uniques/ring.lua": 924,
+          "Uniques/shield.lua": 694,
+          "Uniques/staff.lua": 421,
+          "Uniques/sword.lua": 600,
+          "Uniques/tincture.lua": 22,
+          "Uniques/wand.lua": 279
+        },
+        "keys": 7277,
+        "sha256": "a672e6b301b749666f705951bb8519afc1d8ccfce274004b785ed0891402ccb8"
+      }
     ]
   },
   "lookup": {
@@ -137,25 +437,26 @@
   "non_unique": {
     "lines": 3938,
     "outcomes": {
-      "ambiguous": 107,
+      "ambiguous": 72,
+      "excluded/author-note": 238,
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3213,
-      "unresolved/no-template": 331,
+      "resolved": 3248,
+      "unresolved/no-template": 93,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
       "enchant": {
-        "ambiguous": 35,
-        "resolved": 224,
+        "resolved": 259,
         "unresolved/no-template": 3
       },
       "explicit": {
         "ambiguous": 70,
+        "excluded/author-note": 238,
         "excluded/pob-custom": 54,
         "resolved": 2489,
-        "unresolved/no-template": 313,
+        "unresolved/no-template": 75,
         "unresolved/only-shadowed": 1
       },
       "implicit": {
@@ -170,23 +471,24 @@
   "unique": {
     "lines": 2389,
     "outcomes": {
-      "ambiguous": 43,
+      "ambiguous": 36,
+      "excluded/author-note": 15,
       "excluded/not-a-modifier": 36,
       "excluded/not-selected-variant": 1415,
-      "resolved": 811,
-      "unresolved/no-template": 79,
+      "resolved": 818,
+      "unresolved/no-template": 64,
       "unresolved/no-variant-fits": 5
     },
     "by_section": {
       "enchant": {
-        "ambiguous": 7,
-        "resolved": 21
+        "resolved": 28
       },
       "explicit": {
         "ambiguous": 35,
+        "excluded/author-note": 15,
         "excluded/not-selected-variant": 1387,
         "resolved": 703,
-        "unresolved/no-template": 79,
+        "unresolved/no-template": 64,
         "unresolved/no-variant-fits": 4
       },
       "implicit": {
@@ -199,14 +501,14 @@
     "with_shadowed_matches": 0
   },
   "rate": {
-    "denominator": 3652,
-    "resolved": 3213,
-    "rate": 0.8797918948521358,
-    "excluded": 286,
-    "excluded_share": 0.07262569832402235,
-    "distinct": 1507,
-    "distinct_resolved": 1239,
-    "distinct_rate": 0.8221632382216324,
+    "denominator": 3414,
+    "resolved": 3248,
+    "rate": 0.9513766842413591,
+    "excluded": 524,
+    "excluded_share": 0.13306246825799897,
+    "distinct": 1360,
+    "distinct_resolved": 1257,
+    "distinct_rate": 0.924264705882353,
     "distinct_with_mixed_outcomes": 6,
     "meets_rate": false
   },
@@ -1022,326 +1324,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "Allocates Aggressive Bastion": {
-      "non_unique": 4,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates As The Mountain": {
-      "non_unique": 2,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Ash, Frost and Storm": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Charisma": {
-      "non_unique": 0,
-      "unique": 3,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Cleaving": {
-      "non_unique": 2,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Corruption": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Dirty Techniques": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Disciple of the Unyielding": {
-      "non_unique": 9,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Dreamer": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Entrench": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Farsight": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Fervour": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Fury Bolts": {
-      "non_unique": 2,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Hardened Scars": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates High Voltage": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Sanctuary": {
-      "non_unique": 0,
-      "unique": 1,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Testudo": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Undertaker": {
-      "non_unique": 4,
-      "unique": 2,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Vampirism": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
-    "Allocates Whispers of Doom": {
-      "non_unique": 1,
-      "unique": 1,
-      "detail": [
-        "local_weapon_passive_tree_granted_passive_hash",
-        "mod_granted_passive_hash",
-        "mod_granted_passive_hash_2",
-        "mod_granted_passive_hash_3",
-        "mod_granted_passive_hash_4",
-        "mod_granted_passive_hash_5"
-      ],
-      "reasons": [
-        "ambiguous/no-backed-candidate",
-        "row-value-unset"
-      ]
-    },
     "Hits against Nearby Enemies have 50% increased Critical Strike Chance": {
       "non_unique": 0,
       "unique": 1,
@@ -1377,1335 +1359,978 @@
       ]
     }
   },
-  "unresolved": {
-    "unresolved/no-template": {
-      "sha256:0132e4b2ffc6f009": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:020cff69bd980771": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0303f6e0a6dd0731": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0365febc7716bdb5": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:046fd1cea5fdeae4": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:049a475de9367b40": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:04d8c909baf55ee1": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:07427b322af662d4": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:09d8cfc529824b1f": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0aaf6b812ad8d29f": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0b8adc4b17ff5c5d": {
+  "categories": {
+    "non_unique": {
+      "data-gap/legacy-text": 48,
+      "excluded/not-selected-variant": 2,
+      "parser-gap/ambiguous": 72,
+      "parser-gap/client-string": 15,
+      "parser-gap/near-miss": 11,
+      "parser-gap/only-shadowed": 1,
+      "parser-gap/split-section": 4,
+      "special-case/author-note": 238,
+      "special-case/item-property": 15,
+      "special-case/not-a-modifier": 230,
+      "special-case/pob-custom": 54
+    },
+    "unique": {
+      "data-gap/legacy-text": 29,
+      "excluded/not-selected-variant": 1415,
+      "parser-gap/ambiguous": 36,
+      "parser-gap/near-miss": 32,
+      "special-case/author-note": 15,
+      "special-case/item-property": 8,
+      "special-case/not-a-modifier": 36
+    }
+  },
+  "categorized": {
+    "data-gap/legacy-text": {
+      "(30-40)% chance when you Kill a Scorched Enemy to Burn Each surrounding Enemy for 4 seconds, dealing 8% of the Killed Enemy's Life as Fire Damage per second": {
         "non_unique": 0,
         "unique": 1,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
       },
-      "sha256:0c494ff6dd5ed883": {
+      "+1 to Maximum Frenzy Charge": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "+1 to maximum number of Golems": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "+2 to Melee Weapon Range per White Socket": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "+3 to maximum number of Golems": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "1 Life Regenerated per second per Level": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "10% increased Area of Effect of Area Skills": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "10% increased Movement Speed during Flask effect": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "12% increased Cast Speed during Flask effect": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:0ce9b6e449b2857e": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
+      "20% increased Stun Recovery": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:0ceebdc98e2eb60d": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0d8c38df51743574": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:0e6263df5b4b2087": {
+      "20% reduced Charges used": {
         "non_unique": 4,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:103eafd3e454dfaa": {
+      "23% reduced Charges used": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:11a08574e70d52ef": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:11b40be900e8e8e9": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:11c6fc5b458c81b2": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:13d877c0af2f3895": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:140a35bbb3c5793f": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:140b67eee017e1e3": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:15502f0b4d9fdf60": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:15e5e9c68b4d6a98": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1740cdc9717113dd": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:1823c9798dee83ee": {
+      "25% increased Physical Damage with Weapons per Red Socket": {
         "non_unique": 0,
         "unique": 1,
-        "detail": []
+        "detail": [
+          "pob v2.4.0"
+        ]
       },
-      "sha256:1892d940797db22f": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1abfccef3a3a2b68": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1be374a9c625e944": {
+      "25% reduced Bleed duration": {
         "non_unique": 0,
         "unique": 1,
-        "detail": []
-      },
-      "sha256:1cf63c2d67893b89": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1d373de48c242a29": {
-        "non_unique": 24,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1d7bf3205c7f56ea": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1d86a96f1bbc6128": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1da0216e9d00b1c0": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1dfb934b417686cd": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:1e7da5eaa3f8d2f8": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:1e9179e4f09d7407": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:1ea7db8002be9d59": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:204c1f867bfa22bd": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:235621ee516ab08d": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:239d6fa63c44a10b": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:24fa06196ee3a16e": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:27c9e20636d415e9": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:296c6fac537b2aba": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:2ab97d1921073f3a": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:2bb0f441a84db6b6": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:2bec2fce5ec8b5f8": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:2e6b1bd9e8cb2e61": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:2e87e1f9f9e78a2b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:2ee7853a0786a2eb": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:303c5e4a48f6878b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:31824b6b284a887c": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:318ce5596a2f8664": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3290b73378020fb3": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:333faf9ca1163827": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:346854c9fe58851e": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:353ff3d0eea2470f": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3553324dda3a9c89": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:38abd8471b7c41ff": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:391607581dffe2a5": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3b59923f52e53b08": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3cd3b182b22c3786": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:3cef85ddf90acc37": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3d516dc29666e7c8": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:3d9f0ba646895ce2": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3e36f9d037a07fa1": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3e62b0f6d62df80c": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:3e78ab78282cbfea": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3f163d9a311d03ec": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:40ff2933d2d269ab": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:41445a9985f51b72": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:422c6203a7f32405": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:42db1a23a9c64f7a": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:438fd3e571938ac2": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:44a3ced90889d27f": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:44eb972f3e1c2a14": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:45b0e748d9a68630": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:4a12962baa6266de": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:4a5d3eccb99981ab": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:4a98eb839fd797a8": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:4c174ae42b473557": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:4c6d314949b8377a": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:4e2128e5db698694": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:4ea11232927209d7": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:4f5043051e8fb973": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:51273e6b276a5fbb": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:525bf575f6cfc420": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:552ee5b45f5c51f8": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:560236ba6fdd5cff": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:568c8708d7a9088a": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:582325f40087503f": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:58652bfbecfbc687": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:592a51a85124711c": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:59526cd80d8cb50c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5a2fa9e186a6aac9": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:5a45779bfef5d40a": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5ac793412abc67bc": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5b5df646739ce159": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5c5082a4d6042e02": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5d15df2d4256fd13": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:5d80f680f8605f12": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:601172c5ff8da310": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:60bb6c072a7ea914": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:61442de9a7b77371": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:617d1df0e3548acc": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:61dd7057afde34a3": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:63116dc2be1052de": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:642d8502d6e55b53": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:6441edc7c4dc34a5": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:671355ebd911f5c7": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:67dd0ab619219bfa": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:6876f5dc153aa5eb": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:6949b4caec51abd0": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:6a36df54466608c9": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:6edb29e13f97fb03": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:70582c2dc1a15771": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:713840ead0fe5dbc": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:71918a93e81843a2": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:72026f5f5ece6f4c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:757e9a94591dd4ba": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7596bfd9a792f353": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:763e9a80d0f92773": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:773ddc5c346f6be9": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:7900db9c9b99dceb": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7920164935a76db7": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:79d756d7eb6b2967": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:79ec35d890b31526": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7a0f84df889b53bc": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7a65c9b46a7c6308": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:7a666771f64a0a0b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7c1bd5c78f30356d": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:7c6be38326673ee5": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7c8d13f2514d06a4": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7de352413a87ae40": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:804455ee26e819ed": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:81244af62be3602b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:81727e6a1264a561": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:822cd4701d372cc7": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:8305e8924b446334": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:83f55447009355bb": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:868f9721bf1badcf": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:87f394d1c46b1762": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:88948f1ee6b12b19": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:88c416793f60232d": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:88fb98278d292a71": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:89c75b971fe3dd62": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:89f317d47a3e5c88": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:8b75f4f0f13050be": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:8cb07dd9b50c45c2": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:8d1b5b1e2a7f6fb1": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:8ffe9d6786a446c5": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:90ae080f17c70546": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:9273cab741813e5e": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:92ccbbe1001c8f55": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:975644b6970ffcec": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:981f70a48866730e": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:987b61efe3df447d": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:9881ec87992ba641": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:99b9930ecdb38b58": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:9b4cdafad9de9244": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:9db4e7307c15aa28": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:9e0289e46cc13de7": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a01217c651ef4b9c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a14d16be0af504c5": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a1739f2be51f82c1": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:a1a347f530c2e520": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:a1de44538693cc03": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a2fa2c55415df447": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a4717d127ef25be2": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:a48fd6407e3d9c41": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a4e77d75c98ba34f": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a5c526336b5b1d13": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a669fac7acecb093": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a66dfea77a5d13d7": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:a7659904542ab15c": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:a8e905baa0e33b45": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:acf8dceaa8618d48": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ad4fed80d0d67f16": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:aeb9149c509ab411": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:b02e38690a6baf18": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b153e36faefec380": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b45493719b63c60a": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b464313ddd570203": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b49b2bf9769f8267": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b4c2ce6caab53e5b": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b5bab07b7fa8218b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b64a95e3a3667b42": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b780354a10d6a816": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b7ca5de6b407cd95": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b8b5c7cb7d920ed9": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:b9077942c23bb36f": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:b94a9cbb82d6c287": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:bb0b170adf9aae37": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:bb8950c54852c367": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:bbcb8866204a357d": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:bd3186b17dd4fa7f": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:bd59214aab354050": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:bfc88d198d42d96c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c0d71bcf62aa3862": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c0d962071cb23b16": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c10e43e58d2c8dd7": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c2b0df8cb2c0a2e8": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c32723dd9e232a05": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c40f6acdff651f30": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c5d31eec05e7f104": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c85655da2219c768": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:c9aa4d4c47d4a257": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:ca4991c81e636476": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:cab5822883053a33": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:cb11358cd2bedc0b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:cbf690f12feb1482": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:cdd9444d1d92feb2": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:ce8ca419115277cf": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:cf6f407eaf739961": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d0c52962c3855b0f": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d0deee26f05a5a8a": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:d34411d7ed9480d4": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d3896c9efb93ea4e": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d440a91b4fbb0053": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d49ba0174bd1d2e1": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:d5ca7b9ae10c2f02": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d63735a531dc3eb9": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d6dc0b80585b9ff8": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d80a2acd936e8b13": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d80f2a8749de1aff": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d85dca2ad4b474ca": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d9546be765147c7a": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:d9b22801461d8d32": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:db9575036437d334": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:dc348852a2b299cc": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:dc5d347673920da4": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:dc8123605ef3dcf6": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:dda39e821fe09a59": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:de3787b347aeb5c1": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:de67e98132754a72": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:df6f35a95d373937": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:e18273a4303ea15a": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:e2bd25645f01d72b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:e36429f46f2123a8": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:e4f7429e77897f2c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:eb01b40a53b9f42e": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:eba9474100dba61c": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ebcc312505788391": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ec70c403d130a694": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ec8e2d6e477a960c": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:ecc2c4e2b04dc196": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:ee05e077087dd0a9": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ee6db706f0838e48": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:eea0e3c2b62cbe0d": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:eee1d3350f894706": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:ef16e3b0d646a836": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": []
-      },
-      "sha256:f020e0a7485a88e8": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": []
-      },
-      "sha256:f03ed072cfb43e8e": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f44112645f2df8c3": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f569b4a1d06dea6a": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f59880926df2f3fa": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f86ff6a37776613a": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f9b04e39b01f4e84": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:fa4d733005e267e5": {
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "25% reduced Charges used": {
         "non_unique": 5,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:fb909952b6f106a1": {
+      "27% additional Elemental Resistances during Flask effect": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "45% increased Armour during Flask effect": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "50% reduced Effect of Curses on you during Flask Effect": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "pob v2.21.1"
+        ]
+      },
+      "60% increased Armour during Flask effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "70% increased Armour during Flask effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "70% increased Evasion Rating during Flask effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "75% increased Evasion Rating during Flask effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "8% additional Chance to Block while Dual Wielding": {
         "non_unique": 0,
         "unique": 1,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:fc1a94dd1e6d8165": {
+      "85% increased Critical Strike Chance for Spells": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0 v2.67.2"
+        ]
       },
-      "sha256:fea7faf91a55f11c": {
+      "Added Small Passive Skills grant: +4% to Physical Damage over Time Multiplier": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0"
+        ]
       },
-      "sha256:ff88c03be487231d": {
+      "Can Consume 4 Support Gems": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "Can have up to 1 additional Totem summoned at a time": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Chill Enemy for 1 second when Hit": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "Consumes Socketed Support Gems when they reach Maximum Level": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "Corrupted": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0 v2.67.2"
+        ]
+      },
+      "Curse Enemies with Flammability on Hit, with 20% increased Effect": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       },
-      "sha256:ffb598aa1df65329": {
+      "Flask Effect does not Queue": {
         "non_unique": 1,
         "unique": 0,
-        "detail": []
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "Flask Effect is not removed at Full Mana": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Grants Level 30 Reckoning Skill": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3"
+        ]
+      },
+      "Immune to Curses during Flask effect": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Immunity to Bleeding and Corrupted Blood during Flask effect": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "Immunity to Freeze and Chill during Flask effect": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "Immunity to Shock during Flask effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "Inflicts a random Hex on you when your Totems die, with 80% more Effect": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
+      },
+      "Minions have (6-8)% increased Area of Effect of Area Skills": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "Passives in Radius can be Allocated without being connected to your tree": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob v2.4.0 v2.21.1 v2.35.3 v2.48.0 v2.57.0"
+        ]
+      },
+      "Reflects your other Ring": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.21.1 v2.35.3 v2.48.0"
+        ]
+      },
+      "Removes Bleeding and Corrupted Blood on use": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Removes Freeze and Chill on use": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Removes Shock on use": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "Wave of Conviction's Exposure applies -6% Elemental Resistance": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "pob v2.4.0"
+        ]
+      },
+      "You are Cursed with Vulnerability, with 80% increased Effect": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "pob v2.4.0 v2.21.1"
+        ]
       }
     },
-    "unresolved/no-variant-fits": {
+    "parser-gap/ambiguous": {
+      "(10-20)% increased Reservation Efficiency of Skills": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "(15-20)% increased Evasion Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "(16-22)% Chance to Block Spell Damage": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "(18-21)% increased Armour": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "(6-9)% increased Attack Speed": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "(7-10)% increased Attack Speed": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "(7-12)% increased Attack Speed": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "(8-10)% increased Attack Speed": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "(80-100)% increased Evasion Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+(10-20) to maximum Energy Shield": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+(15-25) to maximum Energy Shield": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+(180-220) to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+(50-100) to maximum Energy Shield": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+1 to maximum number of Skeletons": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+11 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+12% chance to Suppress Spell Damage": {
+        "non_unique": 17,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed",
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+13 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+13% chance to Suppress Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+146 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+15% chance to Suppress Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+150 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+180 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+188 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+19% chance to Suppress Spell Damage": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+196 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+199 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+201 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+21 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+216 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+230 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+250 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+257 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+26 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+283 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+290 to Accuracy Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+292 to Accuracy Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+294 to Accuracy Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+30 to Accuracy Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+33 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+35 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+39 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+407 to Evasion Rating": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+41 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+42 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+429 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+45 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+459 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+46 to maximum Energy Shield": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+50 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+539 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+595 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "+664 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+680 to Armour": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "+75 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed crafted-no-spawn-tags"
+        ]
+      },
+      "+78 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "-(15-25)% to all Elemental Resistances": {
+        "non_unique": 0,
+        "unique": 4,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "0.2% of Fire Damage Leeched as Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "0.23% of Physical Attack Damage Leeched as Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "0.29% of Physical Attack Damage Leeched as Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "0.4% of Physical Attack Damage Leeched as Mana": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "10% increased Attack Speed": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "10% increased Mana Reservation Efficiency of Skills": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "12% increased Attack Speed": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "13% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "14% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "15% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "17% Chance to Block Spell Damage": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "7% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed",
+          "ambiguous/several-backed essence-tags-unknown"
+        ]
+      },
+      "8% increased Attack Speed": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "Adds (20-24) to (38-46) Fire Damage": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "Hits against Nearby Enemies have 50% increased Critical Strike Chance": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      },
+      "Projectiles Pierce an additional Target": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ambiguous/several-backed influence-tags-unknown"
+        ]
+      },
+      "Socketed Gems are Supported by Level 15 Inspiration": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ambiguous/several-backed"
+        ]
+      }
+    },
+    "parser-gap/client-string": {
+      "Uses level (1-30) Hardening Uulgraft": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "Uses level (1-30) Impaling Uulgraft": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "Uses level 30 Call the Pyre": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "Uses level 30 Heart of Flame": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "Uses level 30 Preserving Stillness": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "Uses level 30 Tender Embrace": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, +(17-19)% to Chaos Damage over Time Multiplier": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, +(17-19)% to Fire Damage over Time Multiplier": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, +(20-22)% to Chaos Damage over Time Multiplier": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, +31% to Critical Strike Multiplier for Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, 11% increased Cooldown Recovery Rate": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, 15% increased Flammability Curse Effect": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      },
+      "While a Unique Enemy is in your Presence, Drops Scorched Ground while moving, lasting 5 seconds": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
+        ]
+      }
+    },
+    "parser-gap/near-miss": {
+      "(300-350)% Increased Physical Damage": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:47973"
+        ]
+      },
       "(4-6)% Chance to Block Spell Damage during Effect": {
         "non_unique": 0,
         "unique": 2,
@@ -2720,39 +2345,1649 @@
           "sign-mismatch"
         ]
       },
+      "+(10-20) to maximum Charges": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:32150"
+        ]
+      },
+      "+1 to Maximum number of Sacred Wisps": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:203049"
+        ]
+      },
+      "+1 to number of Sacred Wisps Summoned": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:203049"
+        ]
+      },
+      "+100% Chance to Block Spell Damage if you have Blocked Attack Damage Recently": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:407656"
+        ]
+      },
+      "+132 to Maximum Life": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:61930"
+        ]
+      },
+      "+30 to maximum energy shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:61479"
+        ]
+      },
+      "+40 to maximum energy shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:61479"
+        ]
+      },
+      "-(80-70)% to All Elemental Resistances": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:64012"
+        ]
+      },
       "18% Chance to Block Attack Damage while wielding a Staff": {
         "non_unique": 0,
         "unique": 1,
         "detail": [
           "sign-mismatch"
         ]
+      },
+      "40% increased Damage with hits against Chilled Enemies": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:244898"
+        ]
+      },
+      "40% reduced Effect of Curses on You": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:85597"
+        ]
+      },
+      "Bathed in the blood of (100-8000) sacrificed in the name of Doryani": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:357"
+        ]
+      },
+      "Carved to glorify (2000-10000) new faithful converted by High Templar Avarius": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:369"
+        ]
+      },
+      "Commanded leadership over 13927 warriors under Akoya": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:361"
+        ]
+      },
+      "Gain Adrenaline for 3 seconds on kill": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:271188"
+        ]
+      },
+      "Passive Skills in Radius also grant 5% Increased Global Critical Strike Chance": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:325572"
+        ]
+      },
+      "Passive Skills in Radius can be Allocated without being connected to your tree": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:431236"
+        ]
+      },
+      "Passives in radius are Conquered by the Karui": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:358"
+        ]
+      },
+      "Passives in radius are Conquered by the Templars": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:366"
+        ]
+      },
+      "Passives in radius are Conquered by the Vaal": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:354"
+        ]
+      },
+      "Socketed Gems Have no Reservation": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:20172"
+        ]
+      },
+      "Socketed Gems are Supported by level 15 Pierce": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:19461"
+        ]
+      },
+      "Socketed Gems are Supported by level 20 Spell Totem": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:17864"
+        ]
+      },
+      "Summoned Skeleton Warriors are Permanent and Follow you": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:404386"
+        ]
+      },
+      "Trigger a Socketed Spell when you Use a Skill, with a 8 second Cooldown": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:31989"
+        ]
+      },
+      "recover 5% of energy shield when you block": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "metadata/statdescriptions/stat_descriptions.txt:97130"
+        ]
       }
     },
-    "unresolved/only-shadowed": {
+    "parser-gap/only-shadowed": {
       "24% increased effect of Offerings": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "every match is shadowed"
+        ]
+      }
+    },
+    "parser-gap/split-section": {
+      "Added Small Passive Skills grant: 10% increased Life Recovery from Flasks": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "resolves with item line 15"
+        ]
+      },
+      "Added Small Passive Skills grant: 10% increased Mana Recovery from Flasks": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "resolves with item line 14"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Mine Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "resolves with item line 14"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Trap Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "resolves with item line 15"
+        ]
+      }
+    },
+    "special-case/author-note": {
+      "sha256:0132e4b2ffc6f009": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:0303f6e0a6dd0731": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:046fd1cea5fdeae4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:04d8c909baf55ee1": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:09d8cfc529824b1f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:0d8c38df51743574": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:0e6263df5b4b2087": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:11c6fc5b458c81b2": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:140a35bbb3c5793f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:140b67eee017e1e3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:15502f0b4d9fdf60": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:15e5e9c68b4d6a98": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1892d940797db22f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1abfccef3a3a2b68": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1be374a9c625e944": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1cf63c2d67893b89": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1d373de48c242a29": {
+        "non_unique": 24,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:1d7bf3205c7f56ea": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1dfb934b417686cd": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1e7da5eaa3f8d2f8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:1e9179e4f09d7407": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:1ea7db8002be9d59": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:204c1f867bfa22bd": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:235621ee516ab08d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:239d6fa63c44a10b": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:2bb0f441a84db6b6": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:2e6b1bd9e8cb2e61": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "pob-note-spec"
+        ]
+      },
+      "sha256:3290b73378020fb3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:353ff3d0eea2470f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:3553324dda3a9c89": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:38abd8471b7c41ff": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:391607581dffe2a5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:3b59923f52e53b08": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:3d9f0ba646895ce2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:3e36f9d037a07fa1": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:3f163d9a311d03ec": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:422c6203a7f32405": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:42db1a23a9c64f7a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:438fd3e571938ac2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:44a3ced90889d27f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:45b0e748d9a68630": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:4c6d314949b8377a": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:4ea11232927209d7": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:51273e6b276a5fbb": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:525bf575f6cfc420": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:552ee5b45f5c51f8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:568c8708d7a9088a": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:582325f40087503f": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:58652bfbecfbc687": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:592a51a85124711c": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:59526cd80d8cb50c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:5a45779bfef5d40a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:5ac793412abc67bc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:5b5df646739ce159": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:5c5082a4d6042e02": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:5d80f680f8605f12": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:601172c5ff8da310": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:60bb6c072a7ea914": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:61dd7057afde34a3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:63116dc2be1052de": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:642d8502d6e55b53": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:6441edc7c4dc34a5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:671355ebd911f5c7": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:67dd0ab619219bfa": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:6876f5dc153aa5eb": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:6949b4caec51abd0": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:6a36df54466608c9": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:70582c2dc1a15771": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:713840ead0fe5dbc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:757e9a94591dd4ba": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7596bfd9a792f353": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:763e9a80d0f92773": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7900db9c9b99dceb": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7920164935a76db7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:79d756d7eb6b2967": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:79ec35d890b31526": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:7a0f84df889b53bc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7a666771f64a0a0b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7c6be38326673ee5": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:7c8d13f2514d06a4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:7de352413a87ae40": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:804455ee26e819ed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:81244af62be3602b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:822cd4701d372cc7": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:8305e8924b446334": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:868f9721bf1badcf": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:88948f1ee6b12b19": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:88c416793f60232d": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:89c75b971fe3dd62": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:8b75f4f0f13050be": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:8cb07dd9b50c45c2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:8ffe9d6786a446c5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:90ae080f17c70546": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:92ccbbe1001c8f55": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:975644b6970ffcec": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:981f70a48866730e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:987b61efe3df447d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:9881ec87992ba641": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:9b4cdafad9de9244": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:9db4e7307c15aa28": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:9e0289e46cc13de7": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a01217c651ef4b9c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a14d16be0af504c5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a1a347f530c2e520": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:a1de44538693cc03": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a2fa2c55415df447": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:a4717d127ef25be2": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a48fd6407e3d9c41": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:a5c526336b5b1d13": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:a66dfea77a5d13d7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:acf8dceaa8618d48": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b45493719b63c60a": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b464313ddd570203": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:b49b2bf9769f8267": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:b4c2ce6caab53e5b": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:b64a95e3a3667b42": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b780354a10d6a816": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b7ca5de6b407cd95": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b9077942c23bb36f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:b94a9cbb82d6c287": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:bb0b170adf9aae37": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:bbcb8866204a357d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:bd59214aab354050": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:bfc88d198d42d96c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:c0d962071cb23b16": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:c10e43e58d2c8dd7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:c40f6acdff651f30": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:c5d31eec05e7f104": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:c85655da2219c768": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:ca4991c81e636476": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:cb11358cd2bedc0b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:cf6f407eaf739961": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:d0c52962c3855b0f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:d34411d7ed9480d4": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:d3896c9efb93ea4e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:d5ca7b9ae10c2f02": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:d63735a531dc3eb9": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:d80a2acd936e8b13": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:d85dca2ad4b474ca": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:db9575036437d334": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:dc348852a2b299cc": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:dda39e821fe09a59": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:de3787b347aeb5c1": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:de67e98132754a72": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:df6f35a95d373937": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:e2bd25645f01d72b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:e4f7429e77897f2c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:eb01b40a53b9f42e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:eba9474100dba61c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:ec70c403d130a694": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:ee05e077087dd0a9": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:ee6db706f0838e48": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:f03ed072cfb43e8e": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      },
+      "sha256:f44112645f2df8c3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:f569b4a1d06dea6a": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:f59880926df2f3fa": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:f86ff6a37776613a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:f9b04e39b01f4e84": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:fea7faf91a55f11c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "no-game-text"
+        ]
+      },
+      "sha256:ffb598aa1df65329": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "color-code"
+        ]
+      }
+    },
+    "special-case/item-property": {
+      "Consumes 15 of 40 Charges on use": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
+        ]
+      },
+      "Consumes 20 of 40 Charges on use": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
+        ]
+      },
+      "Consumes 30 of 60 Charges on use": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
+        ]
+      },
+      "Consumes 40 of 70 Charges on use": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
+        ]
+      },
+      "Currently has 40 Charges": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesNCharges"
+        ]
+      },
+      "Currently has 60 Charges": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesNCharges"
+        ]
+      },
+      "Currently has 70 Charges": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayChargesNCharges"
+        ]
+      },
+      "Has not Consumed any Gems": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayHasEffect"
+        ]
+      },
+      "Lasts 3.70 Seconds": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
+        ]
+      },
+      "Lasts 6 Seconds": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
+        ]
+      },
+      "Lasts 6.40 Seconds": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
+        ]
+      },
+      "Lasts 9.70 Seconds": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
+        ]
+      },
+      "Memory Strands: 63": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "pob-spec:Memory Strands"
+        ]
+      },
+      "Quality (Attribute Modifiers): +20%": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "pob-spec:Quality (Attribute Modifiers)"
+        ]
+      },
+      "Quality (Defence Modifiers): +20%": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "pob-spec:Quality (Defence Modifiers)"
+        ]
+      }
+    },
+    "special-case/pob-custom": {
+      "sha256:03605509f631531e": {
+        "non_unique": 5,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:05fcbaebf2b16b47": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0c05dc0b7ab2e731": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1a51873a5bcc218a": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:295d7900a9cf950a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2c614dd986046401": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2fa01a1c014a59f3": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3b6b8da966f0f202": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3e76ad084788d62d": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:42854d60b2a2d42b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4748c1287ac2af59": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:524a3b5e12880808": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:528f7e5c67e5c88b": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:63203bf7298f8acf": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:64a222f48a71dd37": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:72347035f1d104a9": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:752ea63df19d91e5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:77c18db6f8a305f4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:79731d958b7ed9ba": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:79862dd1e7539b38": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7c69e31d18bbd7cb": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7d41a24a8eb0baae": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:88f7978a50fda721": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:8e238da2de17bcd4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:929b3deca52350b9": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9d35ba620b7a3fa2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9d807d9175efe1ce": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ad56b44ada811f50": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:bb9150e35257b03d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:cbd118952b818c0a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d10195c05f821060": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ddbd37faa4afd581": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:e5b3f924bcd649c1": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ea35fc16c89575ed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f7cc0f8b739aa121": {
         "non_unique": 1,
         "unique": 0,
         "detail": []
       }
     }
   },
+  "colour_code_in_game_text": false,
+  "gate": {
+    "resolution": false,
+    "unresolved_allowed": 68,
+    "unresolved": 166,
+    "uncategorized": 0,
+    "inputs_recorded": true,
+    "met": false
+  },
   "pob_base_suffix_removed": 10,
   "duplicate_builds": 0,
   "items_with_several_texts": 0,
   "unsupported_features": {},
-  "marks": {
-    "color-code": {
-      "non_unique/unresolved/no-template": 105,
-      "unique/unresolved/no-template": 6
-    },
-    "small-passive-grant": {
-      "non_unique/unresolved/no-template": 5
-    },
-    "spec-shaped": {
-      "non_unique/unresolved/no-template": 8,
-      "unique/unresolved/no-template": 1
-    }
-  },
+  "class_requirement_lines": 0,
   "mods_rows": 40355,
   "mods_bad_spawn_rows": 0,
   "essence_rows_known": 337,
@@ -2760,26 +3995,28 @@
   "bases_with_unknown_tags": 0,
   "filter": {
     "non_unique": {
-      "ambiguous/no-backed-candidate": 35,
       "ambiguous/several-backed": 72,
       "resolved/base-implicit": 18,
       "resolved/mods": 130,
       "resolved/spawn-tags": 96,
+      "resolved/unset-fit+numbered-stat": 35,
       "resolved/values": 29
     },
     "unique": {
-      "ambiguous/no-backed-candidate": 7,
       "ambiguous/several-backed": 36,
       "resolved/base-implicit": 4,
       "resolved/mods": 22,
       "resolved/spawn-tags": 2,
+      "resolved/unset-fit+numbered-stat": 7,
       "resolved/values": 37
     },
     "notes": {
       "non_unique/crafted-no-spawn-tags": 21,
       "non_unique/essence-tags-unknown": 58,
       "non_unique/influence-tags-unknown": 1,
+      "non_unique/numbered-stat-equivalents": 35,
       "non_unique/row-value-unset": 35,
+      "unique/numbered-stat-equivalents": 7,
       "unique/row-value-unset": 7
     },
     "resolved": {
@@ -4018,6 +5255,146 @@
           "spawn-tags: local_minimum_added_fire_damage=90"
         ]
       },
+      "Allocates Aggressive Bastion": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:861"
+        ]
+      },
+      "Allocates As The Mountain": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:44191"
+        ]
+      },
+      "Allocates Ash, Frost and Storm": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:45317"
+        ]
+      },
+      "Allocates Charisma": {
+        "non_unique": 0,
+        "unique": 3,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:6799"
+        ]
+      },
+      "Allocates Cleaving": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:4940"
+        ]
+      },
+      "Allocates Corruption": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:26620"
+        ]
+      },
+      "Allocates Dirty Techniques": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:59766"
+        ]
+      },
+      "Allocates Disciple of the Unyielding": {
+        "non_unique": 9,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:64882"
+        ]
+      },
+      "Allocates Dreamer": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:10835"
+        ]
+      },
+      "Allocates Entrench": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:59866"
+        ]
+      },
+      "Allocates Farsight": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:47743"
+        ]
+      },
+      "Allocates Fervour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:48614"
+        ]
+      },
+      "Allocates Fury Bolts": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:60002"
+        ]
+      },
+      "Allocates Hardened Scars": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:56207"
+        ]
+      },
+      "Allocates High Voltage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:58168"
+        ]
+      },
+      "Allocates Sanctuary": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:20832|39790"
+        ]
+      },
+      "Allocates Testudo": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:44207"
+        ]
+      },
+      "Allocates Undertaker": {
+        "non_unique": 4,
+        "unique": 2,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:25439"
+        ]
+      },
+      "Allocates Vampirism": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:11784"
+        ]
+      },
+      "Allocates Whispers of Doom": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": [
+          "unset-fit+numbered-stat: mod_granted_passive_hash=keys:22535"
+        ]
+      },
       "Curse Enemies with Flammability on Hit": {
         "non_unique": 1,
         "unique": 0,
@@ -4245,9 +5622,9 @@
     }
   },
   "mod_backed": {
-    "resolved": 3213,
+    "resolved": 3248,
     "backed": 3063,
-    "share": 0.9533146591970122,
+    "share": 0.9430418719211823,
     "template_resolved": 2940,
     "template_backed": 2797,
     "template_share": 0.9513605442176871,
@@ -4256,7 +5633,7 @@
     "not_backed": {
       "no-fitting-row": 6,
       "no-row-with-stats": 5,
-      "row-value-unset": 91,
+      "row-value-unset": 126,
       "values-outside": 48
     },
     "not_backed_texts": {
@@ -4846,6 +6223,186 @@
         "unique": 0,
         "detail": [
           "local_jewel_expansion_passive_node_count=8"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Aggressive Bastion": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:861"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates As The Mountain": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:44191"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Ash, Frost and Storm": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:45317"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Cleaving": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:4940"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Corruption": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:26620"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Dirty Techniques": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:59766"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Disciple of the Unyielding": {
+        "non_unique": 9,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:64882"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Dreamer": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:10835"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Entrench": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:59866"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Farsight": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:47743"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Fervour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:48614"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Fury Bolts": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:60002"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Hardened Scars": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:56207"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates High Voltage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:58168"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Testudo": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:44207"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Undertaker": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:25439"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Vampirism": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:11784"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Allocates Whispers of Doom": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mod_granted_passive_hash=keys:22535"
         ],
         "reasons": [
           "row-value-unset"

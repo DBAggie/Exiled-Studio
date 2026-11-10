@@ -38,7 +38,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 - **Fallback:** RePOE as input; ADR-005 amended.
 
 ### Spike B: Text to stat-ID resolution
-- Using Spike A stat descriptions, resolve every item mod line in the maintainer's 22 PoE1 builds.
+- Using Spike A stat descriptions, resolve every item mod line in the maintainer's 21 PoE1 builds (22 until 2026-11-09; the maintainer confirmed 21).
 - **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps).
 - **Fallback:** hybrid model per ADR-015, decided per area.
 
@@ -69,4 +69,4 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); passiv
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
 
 ## Next action
-Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B is in progress (`dev/active/spike-b-text-stat-resolution/`; PRs B0 through B4y merged; PR #24 (B4c, cluster jewel small passives) open, in review); next: the anoint equivalence PR, then PR B4b. The live state and the exact next step are in the handoff's **Current state** and **Next action**.
+Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B: **gate not met** (2026-11-10, PR #25 (B4b), open, in review): 95.1% of non-unique lines resolve (98% asked), every line categorized (`uncategorized` 0); report `docs/spikes/spike-b-resolution.md`. Next: the maintainer's fallback decision per area (ADR-015; report section 6). Task docs: `dev/active/spike-b-text-stat-resolution/`. The live state and the exact next step are in the handoff's **Current state** and **Next action**.
