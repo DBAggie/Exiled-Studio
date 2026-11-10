@@ -489,6 +489,7 @@ fn mods_table() -> String {
         "InfluenceTypes",
         "CraftingItemClassRestrictions",
         "IsEssenceOnlyModifier",
+        "ModTypeKey",
     ]
     .into_iter()
     .map(str::to_owned)
@@ -509,6 +510,7 @@ fn mods_table() -> String {
         "6".to_owned(),
         "[]".to_owned(),
         "true".to_owned(),
+        "0".to_owned(),
     ];
     // Slot 1: stat 0 from 5 to 3 (min and max swapped); slot 2: stat 1 at
     // (0, 0); slot 8: stat 2; the rest empty.
@@ -534,6 +536,11 @@ fn mods_table() -> String {
     )
 }
 
+/// `Stats` with `s0` (`IsLocal`), `s1` (`IsWeaponLocal`), and `s2`.
+fn stats_table() -> String {
+    r#"{"table": "Stats", "columns": [{"name": "Id", "references": null}, {"name": "IsLocal", "references": null}, {"name": "IsWeaponLocal", "references": null}], "rows": [["s0", true, false], ["s1", true, true], ["s2", false, false]]}"#.to_owned()
+}
+
 fn id_table(name: &str, ids: &[&str]) -> String {
     let rows: Vec<String> = ids.iter().map(|i| format!(r#"["{i}"]"#)).collect();
     format!(
@@ -547,7 +554,7 @@ fn load_should_read_eight_stat_slots_and_drop_zero_stats() {
     let read = |p: &str| -> Result<Vec<u8>, String> {
         Ok(match p {
             "tables/Mods.json" => mods_table(),
-            "tables/Stats.json" => id_table("Stats", &["s0", "s1", "s2"]),
+            "tables/Stats.json" => stats_table(),
             "tables/Tags.json" => id_table("Tags", &["default", "ring"]),
             _ => return Err(format!("{p}: not found")),
         }
@@ -566,6 +573,14 @@ fn load_should_read_eight_stat_slots_and_drop_zero_stats() {
         (None, true, 1, 2)
     );
     assert_eq!(mods.rows_for(&[exact("s2", 8)]).len(), 1);
+    assert_eq!(r.mod_type, Some(0));
+    assert_eq!(
+        mods.locality
+            .iter()
+            .map(|(k, v)| (k.as_str(), *v))
+            .collect::<Vec<_>>(),
+        [("s0", Locality::Item), ("s1", Locality::Weapon)]
+    );
 }
 
 #[test]
@@ -800,7 +815,7 @@ fn essence_read(p: &str, ids: &[&str], mods_rows: usize) -> Result<Vec<u8>, Stri
             let row = row.trim_end_matches("]}");
             format!("{head}\"rows\": [{}]}}", vec![row; mods_rows].join(", "))
         }
-        "tables/Stats.json" => id_table("Stats", &["s0", "s1", "s2"]),
+        "tables/Stats.json" => stats_table(),
         "tables/Tags.json" => id_table("Tags", &["default", "ring"]),
         "tables/Essences.json" => essences_table(),
         "tables/ItemClasses.json" => id_table("ItemClasses", ids),
@@ -892,4 +907,163 @@ fn filter_should_keep_backed_numbered_candidates_ambiguous() {
     );
     assert_eq!(d.name(), "ambiguous/several-backed");
     assert!(!d.notes.contains("numbered-stat-equivalents"));
+}
+
+/// Crafted `local_es` and `global_es` rows (no spawn tags for crafted
+/// lines), `local_es` an `IsLocal` stat.
+fn local_global_mods() -> Mods {
+    let mut mods = Mods::from_rows(vec![
+        row(domain::CRAFTED, PRE, &[("local_es", 10, 20)], &[]),
+        row(domain::CRAFTED, PRE, &[("global_es", 10, 20)], &[]),
+    ]);
+    mods.locality.insert("local_es".to_owned(), Locality::Item);
+    mods
+}
+
+const CRAFTED: LineContext = LineContext {
+    crafted: true,
+    ..EXPLICIT
+};
+
+#[test]
+fn filter_should_keep_the_local_reading_on_a_base_that_carries_the_property() {
+    let mods = local_global_mods();
+    let bases = [base(Some(&["armour", "helmet"]))];
+    let d = filter(&ctx(&mods, &bases), CRAFTED, &es_candidates(15));
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![0], "resolved/local-stat".to_owned())
+    );
+}
+
+#[test]
+fn filter_should_keep_the_global_reading_on_a_base_without_the_property() {
+    let mods = local_global_mods();
+    let bases = [base(Some(&["ring"]))];
+    let d = filter(&ctx(&mods, &bases), CRAFTED, &es_candidates(15));
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![1], "resolved/local-stat".to_owned())
+    );
+}
+
+#[test]
+fn filter_should_need_the_weapon_tag_for_a_weapon_local_stat() {
+    let mut mods = local_global_mods();
+    mods.locality
+        .insert("local_es".to_owned(), Locality::Weapon);
+    let bases = [base(Some(&["armour", "gloves"]))];
+    let d = filter(&ctx(&mods, &bases), CRAFTED, &es_candidates(15));
+    assert_eq!(d.kept, vec![1]);
+}
+
+#[test]
+fn filter_should_not_apply_local_stat_to_unique_or_implicit_lines() {
+    let mods = local_global_mods();
+    let bases = [base(Some(&["ring"]))];
+    let implicit = line(Section::Implicit);
+    let d = filter(&ctx(&mods, &bases), implicit, &es_candidates(15));
+    assert!(!d.rules.contains(&"local-stat"));
+    let unique = Context {
+        unique: true,
+        ..ctx(&mods, &bases)
+    };
+    assert!(
+        !filter(&unique, CRAFTED, &es_candidates(15))
+            .rules
+            .contains(&"local-stat")
+    );
+}
+
+#[test]
+fn filter_should_not_drop_a_local_reading_that_spawns_on_the_base() {
+    let mut mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("local_es", 10, 20)], &[("flask", 1)]),
+        row(ITEM, PRE, &[("global_es", 10, 20)], &[("flask", 1)]),
+    ]);
+    mods.locality.insert("local_es".to_owned(), Locality::Item);
+    let bases = [base(Some(&["flask"]))];
+    let d = filter(&ctx(&mods, &bases), EXPLICIT, &es_candidates(15));
+    assert_eq!(d.kept, vec![0, 1]);
+    assert!(d.notes.contains("local-stat-spawns"));
+}
+
+#[test]
+fn filter_should_read_a_legacy_essence_row_through_its_mod_type() {
+    // The essence row's `ModType` (1) has a row that is not essence-only and
+    // spawns nowhere: the essence row spawns nowhere, and `spawn-tags` runs.
+    let mut essence = row(ITEM, PRE, &[("old_es", 10, 20)], &[]);
+    essence.essence_only = true;
+    essence.mod_type = Some(1);
+    let mut sibling = row(ITEM, PRE, &[("old_es", 1, 2)], &[("default", 0)]);
+    sibling.mod_type = Some(1);
+    let mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("new_es", 10, 20)], &[("helmet", 1)]),
+        essence,
+        sibling,
+    ]);
+    assert_eq!(mods.row(1).unwrap().type_spawn, Some(Vec::new()));
+    let bases = [base(Some(&["helmet"]))];
+    let cs = vec![
+        cand(vec![exact("new_es", 15)]),
+        cand(vec![exact("old_es", 15)]),
+    ];
+    let d = filter(&ctx(&mods, &bases), EXPLICIT, &cs);
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![0], "resolved/spawn-tags".to_owned())
+    );
+}
+
+#[test]
+fn filter_should_count_a_legacy_essence_row_where_its_mod_type_spawns() {
+    let mut essence = row(ITEM, PRE, &[("old_es", 10, 20)], &[]);
+    essence.essence_only = true;
+    essence.mod_type = Some(1);
+    let mut sibling = row(ITEM, PRE, &[("old_es", 1, 2)], &[("helmet", 5)]);
+    sibling.mod_type = Some(1);
+    let mods = Mods::from_rows(vec![essence, sibling]);
+    let r = mods.row(0).unwrap();
+    assert!(r.type_spawns_on(&["helmet".to_owned()]) && !r.type_spawns_on(&["ring".to_owned()]));
+    assert!(!r.essence_unknown());
+}
+
+#[test]
+fn filter_should_break_a_tie_by_a_spawning_row_with_the_value() {
+    // Both readings spawn; only `new_es` through a row whose range holds 15.
+    let mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("new_es", 10, 20)], &[("helmet", 1)]),
+        row(ITEM, PRE, &[("old_es", 1, 2)], &[("helmet", 1)]),
+        row(ITEM, PRE, &[("old_es", 10, 20)], &[("helmet", 0)]),
+    ]);
+    let bases = [base(Some(&["helmet"]))];
+    let cs = vec![
+        cand(vec![exact("new_es", 15)]),
+        cand(vec![exact("old_es", 15)]),
+    ];
+    let d = filter(&ctx(&mods, &bases), EXPLICIT, &cs);
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![0], "resolved/spawn-values".to_owned())
+    );
+}
+
+#[test]
+fn filter_should_not_break_a_tie_by_spawn_values_when_spawn_tags_was_skipped() {
+    let mods = Mods::from_rows(vec![
+        row(
+            domain::CRAFTED,
+            PRE,
+            &[("new_es", 10, 20)],
+            &[("helmet", 1)],
+        ),
+        row(domain::CRAFTED, PRE, &[("old_es", 10, 20)], &[]),
+    ]);
+    let bases = [base(Some(&["helmet"]))];
+    let cs = vec![
+        cand(vec![exact("new_es", 15)]),
+        cand(vec![exact("old_es", 15)]),
+    ];
+    let d = filter(&ctx(&mods, &bases), CRAFTED, &cs);
+    assert_eq!(d.kept, vec![0, 1]);
 }

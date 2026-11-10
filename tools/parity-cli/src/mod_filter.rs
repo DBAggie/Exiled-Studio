@@ -46,6 +46,19 @@
 //!    a real ambiguity, not an unknown slot.
 //! 2. `base-implicit` (implicit, not eldritch): candidates backed by one of
 //!    the base's `Implicit_ModsKeys` rows.
+//! 2b. `local-stat` (PR B5a; explicit lines of non-unique items): when the
+//!    kept candidates are a local and a global reading (some carry a local
+//!    stat, `Stats.IsLocal` or `IsWeaponLocal`, the others none), a base with
+//!    the property keeps the local reading and any other base the global
+//!    one. The property is the base tag `weapon` for `IsWeaponLocal` stats
+//!    and `armour` for the other local stats (a local stat changes the
+//!    item's own weapon or defence values, which only those bases have).
+//!    Skipped when the base's tags are unknown, and (note
+//!    `local-stat-spawns`) when a global base would drop a local reading
+//!    that a fitting row spawns on the base. Measured on PoE1 26530219:
+//!    every line the later steps had already resolved between such a pair
+//!    (107) gets the same reading, except one PoB-crafted Crystal Belt line
+//!    the `values` step had read as local ES (belts have no ES property).
 //! 3. `spawn-tags` (tie-breaker, reported): candidates backed by a fitting
 //!    row with a positive spawn weight on the base's tags (the first row tag
 //!    the base has gives the weight). Skipped, with a note, for `{crafted}`
@@ -58,9 +71,19 @@
 //!    counts as spawning, essence-only or not (`Essences` also names
 //!    ordinary affixes, such as `ColdResist7` on armour): an essence can put
 //!    it on the item, so the base can carry it whatever its tag weight. Eldritch rows do not count on implicit lines
-//!    without an eldritch flag.
+//!    without an eldritch flag. A legacy essence row (essence-only, no
+//!    `Essences` column names it) whose `ModType` has rows that are not
+//!    essence-only counts as spawning where those rows spawn, and nowhere
+//!    when they spawn nowhere (PR B5a: `ChanceToDodgeEssence4`..`7` share
+//!    `ChanceToSuppressSpellsOld` with rows that no longer spawn); only a
+//!    legacy essence row whose `ModType` has no other row keeps the guard.
 //! 4. `values` (tie-breaker, reported): candidates backed at the values
 //!    level.
+//! 4b. `spawn-values` (PR B5a; tie-breaker, reported; only when
+//!    `spawn-tags` ran): candidates backed by one fitting row that both
+//!    spawns on the base and holds the line's values (a candidate that
+//!    spawns only through a row whose range misses the value, and holds the
+//!    value only on rows that do not spawn, is dropped).
 //! 5. `numbered-stat` (Spike B step 4d, maintainer decision 2026-11-10;
 //!    only after `unset-fit`): candidates whose stats are equal up to a numbered suffix (`x`, `x_2`
 //!    .. `x_9`; anoints: `mod_granted_passive_hash` .. `_5`) are one
@@ -179,6 +202,12 @@ pub struct ModRow {
     /// `ItemClasses` rows an essence puts this mod on (`Essences`), `None`
     /// when no `Essences` column names the row or the table is absent.
     pub essence_classes: Option<Vec<i64>>,
+    /// `ModTypeKey`.
+    pub mod_type: Option<i64>,
+    /// For an essence-only row with unknown classes: the tags on which a
+    /// row of the same `ModType` that is not essence-only has a positive
+    /// spawn weight; `None` when the `ModType` has no such row (PR B5a).
+    pub type_spawn: Option<Vec<String>>,
 }
 
 impl ModRow {
@@ -205,6 +234,24 @@ impl ModRow {
         self.essence_classes
             .as_ref()
             .is_some_and(|c| base.class.is_some_and(|k| c.contains(&k)))
+    }
+
+    /// Whether this is a legacy essence row (essence-only, no `Essences`
+    /// column names it) whose `ModType` spawns on one of `tags` (PR B5a).
+    fn type_spawns_on(&self, tags: &[String]) -> bool {
+        self.essence_only
+            && self.essence_classes.is_none()
+            && self
+                .type_spawn
+                .as_ref()
+                .is_some_and(|t| t.iter().any(|x| tags.contains(x)))
+    }
+
+    /// Whether this is a legacy essence row whose classes stay unknown: no
+    /// `Essences` column names it and its `ModType` has no row that is not
+    /// essence-only.
+    fn essence_unknown(&self) -> bool {
+        self.essence_only && self.essence_classes.is_none() && self.type_spawn.is_none()
     }
 
     fn range(&self, stat: &str) -> Option<(i64, i64)> {
@@ -255,12 +302,36 @@ fn admits(value: &RawValue, lo: i64, hi: i64) -> bool {
     }
 }
 
+/// Which item property a local stat (`Stats.IsLocal` or `IsWeaponLocal`)
+/// applies to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Locality {
+    /// `IsWeaponLocal`: the item's weapon properties (base tag `weapon`).
+    Weapon,
+    /// `IsLocal` without `IsWeaponLocal`: the item's own properties; for the
+    /// `local-stat` step, the defences of a base tagged `armour`.
+    Item,
+}
+
+impl Locality {
+    /// The base tag of items that carry the property.
+    #[must_use]
+    pub fn carrier_tag(self) -> &'static str {
+        match self {
+            Self::Weapon => "weapon",
+            Self::Item => "armour",
+        }
+    }
+}
+
 /// The `Mods` table, indexed by stat.
 #[derive(Debug, Default)]
 pub struct Mods {
     rows: Vec<ModRow>,
     by_stat: BTreeMap<String, Vec<usize>>,
     by_unset: BTreeMap<String, Vec<usize>>,
+    /// Local stats (`Stats`), by ID.
+    pub locality: BTreeMap<String, Locality>,
     /// Rows whose spawn tag and weight arrays differ in length (read with
     /// no spawn weights).
     pub bad_spawn_rows: usize,
@@ -387,6 +458,60 @@ fn essence_classes(read: Read<'_>) -> Result<Option<BTreeMap<usize, BTreeSet<i64
     Ok(Some(out))
 }
 
+/// Local stats of `Stats` (`IsWeaponLocal`, else `IsLocal`).
+///
+/// # Errors
+/// A message when the table or a column is missing.
+fn locality(read: Read<'_>) -> Result<BTreeMap<String, Locality>, String> {
+    let t = Table::require(read, "Stats")?;
+    let (id, local, weapon) = (
+        t.column("Id")?,
+        t.column("IsLocal")?,
+        t.column("IsWeaponLocal")?,
+    );
+    let flag = |r: &[Value], c: usize| r.get(c).and_then(Value::as_bool).unwrap_or(false);
+    Ok(t.rows
+        .iter()
+        .filter_map(|r| {
+            let kind = if flag(r, weapon) {
+                Locality::Weapon
+            } else if flag(r, local) {
+                Locality::Item
+            } else {
+                return None;
+            };
+            Some((Table::text(r, id)?.to_owned(), kind))
+        })
+        .collect())
+}
+
+/// Sets `type_spawn` on the legacy essence rows (essence-only, no
+/// `Essences` column names them): the tags on which the rows of the same
+/// `ModType` that are not essence-only spawn. A `ModType` with such rows
+/// and no positive weight gives an empty list: the row spawns nowhere.
+fn set_type_spawn(rows: &mut [ModRow]) {
+    let mut by_type: BTreeMap<i64, BTreeSet<String>> = BTreeMap::new();
+    for r in rows.iter().filter(|r| !r.essence_only) {
+        if let Some(t) = r.mod_type {
+            by_type.entry(t).or_default().extend(
+                r.spawn
+                    .iter()
+                    .filter(|(_, w)| *w > 0)
+                    .map(|(tag, _)| tag.clone()),
+            );
+        }
+    }
+    for r in rows
+        .iter_mut()
+        .filter(|r| r.essence_only && r.essence_classes.is_none())
+    {
+        r.type_spawn = r
+            .mod_type
+            .and_then(|t| by_type.get(&t))
+            .map(|tags| tags.iter().cloned().collect());
+    }
+}
+
 impl Mods {
     /// Reads `Mods`, `Stats`, and `Tags`, and `Essences` with `ItemClasses`
     /// when the extract has them. Row `n` of the result is row `n`
@@ -396,10 +521,12 @@ impl Mods {
     /// A message when a table or column is missing.
     pub fn load(read: Read<'_>) -> Result<Self, String> {
         let stats = ids(read, "Stats")?;
+        let locality = locality(read)?;
         let tags = tag_ids(read)?;
         let t = Table::require(read, "Mods")?;
         let col = |n: &str| t.column(n);
         let (id, dom, gen_) = (col("Id")?, col("Domain")?, col("GenerationType")?);
+        let mod_type = col("ModTypeKey")?;
         let (spawn_tags, spawn_values) = (col("SpawnWeight_TagsKeys")?, col("SpawnWeight_Values")?);
         let (influence, craft, essence) = (
             col("InfluenceTypes")?,
@@ -446,6 +573,8 @@ impl Mods {
                 craft_classes: ints(r, craft),
                 essence_only: r.get(essence).and_then(Value::as_bool).unwrap_or(false),
                 essence_classes: None,
+                mod_type: Table::int(r, mod_type),
+                type_spawn: None,
             });
         }
         if let Some(classes) = essence_classes(read)? {
@@ -458,7 +587,19 @@ impl Mods {
         }
         let mut mods = Self::from_rows(rows);
         mods.bad_spawn_rows = bad_spawn_rows;
+        mods.locality = locality;
         Ok(mods)
+    }
+
+    /// The locality of the first local stat of `stats`, if any; `Err` when
+    /// two local stats differ in locality.
+    fn local_kind(&self, stats: &[ResolvedStat]) -> Result<Option<Locality>, ()> {
+        let mut kinds = stats.iter().filter_map(|s| self.locality.get(&s.stat));
+        let first = kinds.next().copied();
+        if kinds.any(|k| Some(*k) != first) {
+            return Err(());
+        }
+        Ok(first)
     }
 
     /// Essence-only rows whose item classes `Essences` gives, and the rest.
@@ -469,10 +610,11 @@ impl Mods {
         (known, only.count() - known)
     }
 
-    /// Indexes rows (row `n` keeps index `n`). Rows keep their
-    /// `essence_classes`.
+    /// Indexes rows (row `n` keeps index `n`) and sets `type_spawn`. Rows
+    /// keep their `essence_classes`.
     #[must_use]
-    pub fn from_rows(rows: Vec<ModRow>) -> Self {
+    pub fn from_rows(mut rows: Vec<ModRow>) -> Self {
+        set_type_spawn(&mut rows);
         fn add(index: &mut BTreeMap<String, Vec<usize>>, stat: &str, n: usize) {
             let list = index.entry(stat.to_owned()).or_default();
             if list.last() != Some(&n) {
@@ -492,6 +634,7 @@ impl Mods {
             rows,
             by_stat,
             by_unset,
+            locality: BTreeMap::new(),
             bad_spawn_rows: 0,
         }
     }
@@ -654,29 +797,36 @@ impl Context<'_> {
     /// they have spawn weights and `UNIQUE` / `CORRUPTED` rows do not, so
     /// counting them would favour an eldritch reading by construction.
     fn spawns(&self, line: LineContext, fits_: &[Fit]) -> bool {
+        fits_
+            .iter()
+            .any(|f| self.row(*f).is_some_and(|row| self.row_spawns(line, row)))
+    }
+
+    /// Whether one fitting row spawns on one of the base rows ([`Self::spawns`]).
+    /// A legacy essence row counts where its `ModType` spawns (PR B5a).
+    fn row_spawns(&self, line: LineContext, row: &ModRow) -> bool {
         let unflagged_implicit = line.section == Section::Implicit && !line.exarch && !line.eater;
-        fits_.iter().any(|f| {
-            self.row(*f).is_some_and(|row| {
-                let eldritch = [generation::EXARCH, generation::EATER].contains(&row.generation);
-                !(unflagged_implicit && eldritch)
-                    && self.bases.iter().any(|b| {
-                        fits(row, b, self.unique, line)
-                            && (b.tags.as_ref().is_some_and(|t| row.weight(t) > 0)
-                                || row.essence_known_on(b))
-                    })
+        let eldritch = [generation::EXARCH, generation::EATER].contains(&row.generation);
+        !(unflagged_implicit && eldritch)
+            && self.bases.iter().any(|b| {
+                fits(row, b, self.unique, line)
+                    && (b
+                        .tags
+                        .as_ref()
+                        .is_some_and(|t| row.weight(t) > 0 || row.type_spawns_on(t))
+                        || row.essence_known_on(b))
             })
-        })
     }
 
     /// Whether some fitting row is essence-only with unknown classes
     /// (essence mods spawn through `Essences`, not the base's tags; the
     /// legacy essence mods that no read `Essences` column names have no
-    /// known classes).
+    /// known classes, unless their `ModType` has rows that are not
+    /// essence-only: then they count where those rows spawn, PR B5a).
     fn essence_backed(&self, fits_: &[Fit]) -> bool {
-        fits_.iter().any(|f| {
-            self.row(*f)
-                .is_some_and(|row| row.essence_only && row.essence_classes.is_none())
-        })
+        fits_
+            .iter()
+            .any(|f| self.row(*f).is_some_and(ModRow::essence_unknown))
     }
 
     /// Whether some fitting row is an influence row of one of the item's
@@ -784,6 +934,12 @@ pub fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) ->
         });
     }
 
+    if d.kept.len() > 1 && line.section == Section::Explicit && !ctx.unique {
+        local_stat(ctx, line, candidates, &fit, &mut d);
+    }
+
+    // Whether `spawn-tags` ran (no guard skipped it); `spawn-values` needs it.
+    let mut spawn_known = false;
     if d.kept.len() > 1 {
         let spawns = |i: usize| fit.get(i).is_some_and(|f| ctx.spawns(line, f));
         if line.crafted {
@@ -803,6 +959,7 @@ pub fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) ->
         {
             d.notes.insert("essence-tags-unknown");
         } else {
+            spawn_known = true;
             narrow(&mut d.kept, &mut d.rules, "spawn-tags", spawns);
         }
     }
@@ -816,7 +973,80 @@ pub fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) ->
                 .any(|x| ctx.row(*x).is_some_and(|r| r.values_overlap(&c.stats)))
         });
     }
+
+    if d.kept.len() > 1 && spawn_known {
+        narrow(&mut d.kept, &mut d.rules, "spawn-values", |i| {
+            let (Some(c), Some(f)) = (candidates.get(i), fit.get(i)) else {
+                return false;
+            };
+            f.iter().any(|x| {
+                ctx.row(*x)
+                    .is_some_and(|r| r.values_overlap(&c.stats) && ctx.row_spawns(line, r))
+            })
+        });
+    }
     d
+}
+
+/// `local-stat` (PR B5a): on an explicit line of a non-unique item whose
+/// kept candidates are local and global readings of one line (some have a
+/// local stat of one [`Locality`], the others none), the base decides. A
+/// base with the locality's carrier tag (`weapon`, `armour`) keeps the
+/// local readings, any other base the global ones. Skipped, with a note,
+/// when the base's tags are unknown, or when a global base would drop a
+/// local reading that a fitting row spawns on the base
+/// (`local-stat-spawns`: the game data says the local stat goes there).
+fn local_stat(
+    ctx: &Context<'_>,
+    line: LineContext,
+    candidates: &[Candidate],
+    fit: &[Vec<Fit>],
+    d: &mut Decision,
+) {
+    let kinds: Option<Vec<Option<Locality>>> = d
+        .kept
+        .iter()
+        .map(|&i| {
+            candidates
+                .get(i)
+                .and_then(|c| ctx.mods.local_kind(&c.stats).ok())
+        })
+        .collect();
+    let Some(kinds) = kinds else {
+        return;
+    };
+    let locals: BTreeSet<Locality> = kinds.iter().flatten().copied().collect();
+    let [kind] = locals.iter().copied().collect::<Vec<_>>()[..] else {
+        return;
+    };
+    if !kinds.contains(&None) {
+        return;
+    }
+    if ctx.bases.iter().all(|b| b.tags.is_none()) {
+        d.notes.insert("local-stat-tags-unknown");
+        return;
+    }
+    let carries = ctx.bases.iter().any(|b| {
+        b.tags
+            .as_ref()
+            .is_some_and(|t| t.iter().any(|x| x == kind.carrier_tag()))
+    });
+    let local_at = |i: usize| {
+        candidates
+            .get(i)
+            .is_some_and(|c| matches!(ctx.mods.local_kind(&c.stats), Ok(Some(_))))
+    };
+    if !carries
+        && d.kept
+            .iter()
+            .any(|&i| local_at(i) && fit.get(i).is_some_and(|f| ctx.spawns(line, f)))
+    {
+        d.notes.insert("local-stat-spawns");
+        return;
+    }
+    narrow(&mut d.kept, &mut d.rules, "local-stat", |i| {
+        local_at(i) == carries
+    });
 }
 
 /// A stat ID without a numbered suffix `_2` .. `_9` (`mod_granted_passive_hash_3`
