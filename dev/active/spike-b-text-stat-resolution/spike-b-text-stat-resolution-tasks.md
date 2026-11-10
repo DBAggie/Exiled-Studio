@@ -48,7 +48,7 @@ Last Updated: 2026-11-09 (PR B3)
 - [x] `parity-cli resolve-corpus` with `report.json` / `summary.json`; scrubbing
 - [x] XML dependency through `cargo deny` (`roxmltree` 0.21.2, MIT OR Apache-2.0)
 - [x] Corpus run, two runs byte-identical, first rate (79.1%), ambiguous set measured (380 lines, 289 texts)
-- [ ] Review with `code-architecture-reviewer`; apply findings
+- [x] Review with `code-architecture-reviewer`; apply findings
 - [ ] Open PR
 
 ## PR B4a: disambiguation and `mod-backed`
