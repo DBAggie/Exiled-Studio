@@ -42,7 +42,7 @@ Exit codes: a failure class of a run (10 to 18) when a fixture has no output on 
 
 ## Adding an entry
 
-1. Reproduce the difference with `oracle-compare`, and find out which side is right: game evidence for `game-truth` (ADR-001), a PoB issue or code citation for `pob-bug`.
+1. Reproduce the difference with `oracle-compare`, and find out which side is right: game evidence for `game-truth` (ADR-001), a PoB issue or code citation for `pob-bug`. GGG's official patch notes are a primary source for `game-truth` and `data-version` entries (a mechanic or value changed in a patch after the oracle's tag): PoE1 [Patch Notes forum](https://www.pathofexile.com/forum/view-forum/patch-notes), PoE2 [Early Access Patch Notes forum](https://www.pathofexile.com/forum/view-forum/2212); cite the thread URL in `evidence`.
 2. Add a test that pins the successor's value.
 3. Add the entry with the next free id, `exact` unless the difference is numerical noise that has a written reason for its tolerance.
 4. Run `loom-parity-cli divergence-check docs/parity/divergence-register.json` (also part of `cargo test`), and `oracle-compare` with `--register` to see it classified as expected.
