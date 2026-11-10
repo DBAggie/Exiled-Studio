@@ -978,7 +978,6 @@ pub fn run(request: &Request) -> Result<Report, String> {
     if request.out.exists() {
         return Err(format!("{}: already exists", request.out.display()));
     }
-    let fixtures = collect_fixtures(&request.fixtures, &request.oracle_dir, request.anonymous)?;
     let adapter_files = adapter_files(&request.adapter)?;
     let manifest_bytes =
         std::fs::read(&request.manifest).map_err(|e| format!("manifest file: {}", e.kind()));
@@ -989,6 +988,14 @@ pub fn run(request: &Request) -> Result<Report, String> {
         &platform,
         oracle_verify::run_probe,
     );
+    // Fixtures are collected only from a verified oracle: PoB's fixtures are
+    // pinned by blob in the checkout, so a missing checkout must surface as
+    // the verification's ORACLE_ACQUISITION, not as a fixture error.
+    let fixtures = if verified.class.is_none() {
+        collect_fixtures(&request.fixtures, &request.oracle_dir, request.anonymous)?
+    } else {
+        Vec::new()
+    };
     std::fs::create_dir_all(&request.out).map_err(|e| format!("{}: {e}", request.out.display()))?;
     let mut report = Report {
         format: 1,

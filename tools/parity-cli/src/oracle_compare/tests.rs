@@ -185,7 +185,10 @@ fn compare_should_not_cover_other_values_or_fixtures() {
         .iter()
         .map(|d| d.note.as_deref().unwrap_or("-"))
         .collect();
-    assert!(notes[0].starts_with("DIV-0002: difference"), "{notes:?}");
+    assert!(
+        notes[0].starts_with("DIV-0002: 1 and 1.2 are further apart"),
+        "{notes:?}"
+    );
     assert!(
         notes[1].starts_with("DIV-0001 registers 1 -> 1.1"),
         "{notes:?}"
@@ -266,9 +269,17 @@ fn compare_should_refuse_bad_inputs() {
     assert!(run(&request).unwrap_err().contains("already exists"));
 }
 
+/// A fixture of [`run_dir`]: id, status, class, output.
+type RunEntry = (
+    &'static str,
+    &'static str,
+    Option<&'static str>,
+    Option<Value>,
+);
+
 /// Writes an oracle-run directory with `fixtures` as `(id, status,
 /// class, output)`.
-fn run_dir(dir: &Path, platform: &str, fixtures: &[(&str, &str, Option<&str>, Option<Value>)]) {
+fn run_dir(dir: &Path, platform: &str, fixtures: &[RunEntry]) {
     let list: Vec<Value> = fixtures
         .iter()
         .map(|(id, status, class, _)| {
@@ -418,4 +429,147 @@ fn not_compared_roots_should_cover_every_other_document_field() {
     let mut fields = crate::oracle_output::FIELDS.to_vec();
     fields.sort_unstable();
     assert_eq!(roots, fields);
+}
+
+fn runs_request(temp: &Temp, left: PathBuf, right: PathBuf, register: Option<PathBuf>) -> Request {
+    Request {
+        left,
+        right,
+        register,
+        fixture: None,
+        out: temp.0.join("out"),
+    }
+}
+
+/// Review blocker: an expected difference (19) must not hide an
+/// unexpected one (20) or an unpaired fixture; a run failure still wins.
+#[test]
+fn report_class_should_not_let_expected_hide_unexpected() {
+    let register = Some(crate_path(DISCREPANCY_REGISTER));
+    let id = "discrepancy-movement-speed.xml";
+    let cases: [(&str, &[RunEntry], FailureClass); 3] = [
+        (
+            "expected-and-unexpected",
+            &[("other.xml", "ok", None, Some(document(1.1)))],
+            FailureClass::UnexpectedDifference,
+        ),
+        (
+            "expected-and-unpaired",
+            &[],
+            FailureClass::UnexpectedDifference,
+        ),
+        (
+            "expected-and-failed",
+            &[("other.xml", "failed", Some("ORACLE_TIMEOUT"), None)],
+            FailureClass::Timeout,
+        ),
+    ];
+    for (name, extra, class) in cases {
+        let temp = Temp::new(name);
+        let (left, right) = (temp.0.join("l"), temp.0.join("r"));
+        let mut l = vec![(id, "ok", None, Some(document(1.0)))];
+        let mut r = vec![(id, "ok", None, Some(document(1.1)))];
+        l.push(("other.xml", "ok", None, Some(document(1.0))));
+        r.extend(extra.iter().cloned());
+        run_dir(&left, "p", &l);
+        run_dir(&right, "p", &r);
+        let report = compare(&runs_request(&temp, left, right, register.clone())).unwrap();
+        assert_eq!(report.fixtures[0].status, "expected", "{name}");
+        assert_eq!(report.class, Some(class), "{name}");
+        assert_ne!(report.status, "expected", "{name}");
+    }
+}
+
+#[test]
+fn compare_should_match_failures_both_sides_expected() {
+    let temp = Temp::new("expected-failure");
+    let (left, right) = (temp.0.join("l"), temp.0.join("r"));
+    let fixture = |met: bool| {
+        json!({"id": "malformed.xml", "sha256": "a".repeat(64), "status": "failed",
+            "class": "ORACLE_IMPORT", "expect": "ORACLE_IMPORT", "met": met})
+    };
+    for (dir, met) in [(&left, true), (&right, true)] {
+        write(
+            &dir.join("report.json"),
+            &json!({"platform": "p", "tool": {}, "fixtures": [fixture(met)]}),
+        );
+    }
+    let report = compare(&runs_request(&temp, left.clone(), right.clone(), None)).unwrap();
+    assert_eq!(report.fixtures[0].status, "expected_failure");
+    assert_eq!((report.status, report.class), ("identical", None));
+    assert_eq!(report.counts.expected_failures, 1);
+    // Unmet on a side: not compared, with both sides' classes named.
+    write(
+        &right.join("report.json"),
+        &json!({"platform": "p", "tool": {}, "fixtures": [fixture(false)]}),
+    );
+    let report = compare(&runs_request(&temp, left, right, None)).unwrap();
+    assert_eq!(report.fixtures[0].status, "not_compared");
+    assert_eq!(report.class, Some(FailureClass::Import));
+    let reason = report.fixtures[0].reason.as_deref().unwrap();
+    assert!(
+        reason.contains("left ORACLE_IMPORT, right ORACLE_IMPORT"),
+        "{reason}"
+    );
+}
+
+#[test]
+fn compare_should_refuse_truncated_outputs() {
+    let temp = Temp::new("truncated");
+    let request = files_request(
+        &temp,
+        &json!({"protocol": 2}),
+        &json!({"protocol": 2}),
+        None,
+    );
+    assert!(
+        compare(&request)
+            .unwrap_err()
+            .contains("exactly the fields")
+    );
+    let mut failed = document(1.0);
+    failed["stage"] = json!("calculate");
+    let request = files_request(&temp, &failed, &document(1.0), None);
+    assert!(compare(&request).unwrap_err().contains("complete run"));
+}
+
+#[test]
+fn compare_should_flag_differing_inputs_and_refuse_path_ids() {
+    let temp = Temp::new("inputs");
+    let (left, right) = (temp.0.join("l"), temp.0.join("r"));
+    run_dir(&left, "p", &[("a.xml", "ok", None, Some(document(1.0)))]);
+    run_dir(&right, "p", &[("a.xml", "ok", None, Some(document(1.0)))]);
+    let mut report: Value =
+        serde_json::from_slice(&std::fs::read(right.join("report.json")).unwrap()).unwrap();
+    report["fixtures"][0]["sha256"] = json!("b".repeat(64));
+    write(&right.join("report.json"), &report);
+    let compared = compare(&runs_request(&temp, left.clone(), right.clone(), None)).unwrap();
+    assert!(compared.fixtures[0].input_differs);
+    assert_eq!(compared.fixtures[0].status, "identical");
+    report["fixtures"][0]["id"] = json!("../a.xml");
+    write(&right.join("report.json"), &report);
+    let err = compare(&runs_request(&temp, left, right, None)).unwrap_err();
+    assert!(err.contains("not a file name"), "{err}");
+}
+
+#[test]
+fn compare_should_cover_an_absent_field_with_a_null_entry() {
+    let temp = Temp::new("absent");
+    let mut register: Value =
+        serde_json::from_slice(&std::fs::read(crate_path(DISCREPANCY_REGISTER)).unwrap()).unwrap();
+    register["entries"] = json!([{
+        "id": "DIV-0003", "mechanic": "m", "fixture": "discrepancy-movement-speed.xml",
+        "field": "/main_output/New", "comparison": {"type": "exact"},
+        "oracle_value": null, "successor_value": true, "kind": "harness",
+        "evidence": ["e"], "test": "t", "added": "2026-11-10", "status": "accepted"
+    }]);
+    let path = temp.0.join("register.json");
+    write(&path, &register);
+    let mut right = document(1.0);
+    right["main_output"]["New"] = json!(true);
+    let report = compare(&files_request(&temp, &document(1.0), &right, Some(path))).unwrap();
+    let difference = &report.fixtures[0].differences[0];
+    assert_eq!(difference.change, "only_right");
+    assert_eq!(difference.entry.as_deref(), Some("DIV-0003"));
+    assert_eq!(report.class, Some(FailureClass::ExpectedDifference));
 }

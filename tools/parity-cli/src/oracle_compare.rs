@@ -14,8 +14,11 @@
 //! `ORACLE_EXPECTED_DIFFERENCE`, any other `ORACLE_UNEXPECTED_DIFFERENCE`;
 //! a fixture without output on a side (it failed there) is not compared
 //! and carries that side's class, so an environment failure is never read
-//! as a difference. A fixture present on one side only is unexpected. The
-//! report's class is the smallest of these.
+//! as a difference, unless both sides failed with the class their fixture
+//! manifest expects (`malformed.xml`), which is a match. A fixture present
+//! on one side only is unexpected. The report's class is the smallest
+//! failure class (10 to 18) if there is one, else the larger difference
+//! class: one unregistered difference makes the whole report unexpected.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -126,7 +129,7 @@ fn walk(
 pub fn classify(
     raw: Vec<(String, Option<Value>, Option<Value>)>,
     id: &str,
-    sha256: Option<&str>,
+    sha256: &[&str],
     register: Option<&Register>,
 ) -> (Vec<Difference>, BTreeSet<String>) {
     let mut used = BTreeSet::new();
@@ -179,8 +182,15 @@ pub struct FixtureComparison {
     pub left_output_sha256: Option<String>,
     /// See `left_output_sha256`.
     pub right_output_sha256: Option<String>,
-    /// `identical`, `expected`, `unexpected`, or `not_compared`.
+    /// `identical`, `expected`, `unexpected`, `expected_failure` (both
+    /// sides failed with the class their fixture manifest expects), or
+    /// `not_compared`.
     pub status: &'static str,
+    /// The two sides ran different bytes (`sha256` differs). Expected for
+    /// PoB's fixtures across platforms (CRLF on Windows, LF on Linux);
+    /// for anything else the inputs differ.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub input_differs: bool,
     /// The fixture's class: the larger difference class, or the class of
     /// the side that has no output.
     pub class: Option<FailureClass>,
@@ -199,8 +209,11 @@ impl FixtureComparison {
         register: Option<&Register>,
     ) -> (Self, BTreeSet<String>) {
         let raw = diff(&outputs.0.value, &outputs.1.value);
-        let hash = sha256.1.as_deref().or(sha256.0.as_deref());
-        let (differences, used) = classify(raw, id, hash, register);
+        let hashes: Vec<&str> = [&sha256.0, &sha256.1]
+            .into_iter()
+            .filter_map(|h| h.as_deref())
+            .collect();
+        let (differences, used) = classify(raw, id, &hashes, register);
         let class = differences.iter().map(|d| d.class).max();
         let status = match class {
             None => "identical",
@@ -210,6 +223,7 @@ impl FixtureComparison {
         (
             Self {
                 id: id.to_owned(),
+                input_differs: matches!(&sha256, (Some(l), Some(r)) if l != r),
                 left_sha256: sha256.0,
                 right_sha256: sha256.1,
                 left_output_sha256: Some(outputs.0.sha256.clone()),
@@ -266,6 +280,8 @@ pub struct Counts {
     pub expected: usize,
     /// At least one unexpected difference.
     pub unexpected: usize,
+    /// Both sides failed as their fixture manifest expects.
+    pub expected_failures: usize,
     /// Without output on a side.
     pub not_compared: usize,
     /// Expected differences over all fixtures.
@@ -341,6 +357,7 @@ impl Report {
                 "identical" => counts.identical += 1,
                 "expected" => counts.expected += 1,
                 "unexpected" => counts.unexpected += 1,
+                "expected_failure" => counts.expected_failures += 1,
                 _ => counts.not_compared += 1,
             }
             for d in &f.differences {
@@ -352,12 +369,13 @@ impl Report {
             }
         }
         self.counts = counts;
-        self.class = self
+        let classes: Vec<FailureClass> = self
             .fixtures
             .iter()
             .filter_map(|f| f.class)
             .chain((!self.unpaired.is_empty()).then_some(FailureClass::UnexpectedDifference))
-            .min();
+            .collect();
+        self.class = report_class(&classes);
         self.status = match self.class {
             None => "identical",
             Some(FailureClass::ExpectedDifference) => "expected",
@@ -371,10 +389,13 @@ impl Report {
                 .filter(|e| e.status == Status::Accepted && !used.contains(&e.id))
                 .filter(|e| {
                     self.fixtures.iter().any(|f| {
-                        f.status != "not_compared"
+                        matches!(f.status, "identical" | "expected" | "unexpected")
                             && e.names_fixture(
                                 &f.id,
-                                f.right_sha256.as_deref().or(f.left_sha256.as_deref()),
+                                &[&f.left_sha256, &f.right_sha256]
+                                    .into_iter()
+                                    .filter_map(|h| h.as_deref())
+                                    .collect::<Vec<_>>(),
                             )
                     })
                 })
@@ -389,7 +410,8 @@ impl Report {
         let c = &self.counts;
         let mut text = format!(
             "# oracle-compare\n\nStatus: **{}**{}. Mode `{}`; {} fixtures: {} identical, {} expected, \
-             {} unexpected, {} not compared; differences: {} expected, {} unexpected.\n",
+             {} unexpected, {} expected failures, {} not compared; differences: {} expected, {} \
+             unexpected.\n",
             self.status,
             self.class
                 .map(|c| format!(" ({})", c.name()))
@@ -399,16 +421,24 @@ impl Report {
             c.identical,
             c.expected,
             c.unexpected,
+            c.expected_failures,
             c.not_compared,
             c.expected_differences,
             c.unexpected_differences,
         );
-        for f in self.fixtures.iter().filter(|f| f.status != "identical") {
+        for f in self
+            .fixtures
+            .iter()
+            .filter(|f| !matches!(f.status, "identical" | "expected_failure"))
+        {
             text.push_str(&format!(
                 "\n## {} ({})\n\n",
                 f.id.replace(['\r', '\n'], " "),
                 f.status
             ));
+            if f.input_differs {
+                text.push_str("The two sides ran different fixture bytes.\n\n");
+            }
             if let Some(reason) = &f.reason {
                 text.push_str(&format!("{reason}\n"));
                 continue;
@@ -450,6 +480,25 @@ impl Report {
     }
 }
 
+/// The report's class from the fixtures' (and unpaired fixtures') classes:
+/// the smallest failure class of a run (10 to 18) when there is one, else
+/// the larger difference class. A minimum over all classes would let an
+/// expected difference (19) hide an unexpected one (20).
+fn report_class(classes: &[FailureClass]) -> Option<FailureClass> {
+    let difference = |c: &&FailureClass| {
+        matches!(
+            c,
+            FailureClass::ExpectedDifference | FailureClass::UnexpectedDifference
+        )
+    };
+    classes
+        .iter()
+        .filter(|c| !difference(c))
+        .min()
+        .or_else(|| classes.iter().filter(difference).max())
+        .copied()
+}
+
 /// A value for a table cell: scalars as JSON, containers shortened.
 fn short(value: &Value) -> String {
     let text = value.to_string();
@@ -483,17 +532,38 @@ pub struct Output {
     pub sha256: String,
 }
 
-/// Reads an output document: a JSON object with this reader's protocol.
+/// Reads an output document of a complete run: a JSON object with this
+/// reader's protocol, exactly the protocol's fields, stage `done`, and
+/// objects for `main_output` and `breakdowns` (so a truncated document is
+/// refused rather than compared as empty).
 fn read_output(path: &Path) -> Result<Output, String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let value: Value =
         serde_json::from_slice(&bytes).map_err(|e| format!("{}: not JSON: {e}", path.display()))?;
+    let bad = |what: String| Err(format!("{}: {what}", path.display()));
     if value.get("protocol").and_then(Value::as_u64) != Some(u64::from(oracle::PROTOCOL)) {
-        return Err(format!(
-            "{}: not an output document of adapter protocol {}",
-            path.display(),
+        return bad(format!(
+            "not an output document of adapter protocol {}",
             oracle::PROTOCOL
         ));
+    }
+    let Some(top) = value.as_object() else {
+        return bad("not an object".to_owned());
+    };
+    let mut keys: Vec<&str> = top.keys().map(String::as_str).collect();
+    keys.sort_unstable();
+    let mut expected = crate::oracle_output::FIELDS.to_vec();
+    expected.sort_unstable();
+    if keys != expected {
+        return bad(format!("expected exactly the fields {expected:?}"));
+    }
+    if value["stage"] != "done"
+        || !value["main_output"].is_object()
+        || !value["breakdowns"].is_object()
+    {
+        return bad(
+            "not the output of a complete run (stage done, main_output, breakdowns)".to_owned(),
+        );
     }
     Ok(Output {
         value,
@@ -507,6 +577,9 @@ struct RunFixture {
     sha256: Option<String>,
     status: String,
     class: Option<FailureClass>,
+    /// The outcome the fixture manifest named, and whether it was met.
+    expect: Option<String>,
+    met: Option<bool>,
 }
 
 /// An oracle-run directory: its report's fixtures and record.
@@ -528,12 +601,22 @@ fn read_run(dir: &Path) -> Result<RunDir, String> {
         .ok_or_else(|| format!("{}: no fixtures list", path.display()))?
         .iter()
         .map(|f| {
+            let id =
+                text(&f["id"]).ok_or_else(|| format!("{}: a fixture has no id", path.display()))?;
+            // Joined into a path below: a file name only.
+            if id.is_empty() || id == "." || id == ".." || id.contains(['/', '\\']) {
+                return Err(format!(
+                    "{}: fixture id {id:?} is not a file name",
+                    path.display()
+                ));
+            }
             Ok(RunFixture {
-                id: text(&f["id"])
-                    .ok_or_else(|| format!("{}: a fixture has no id", path.display()))?,
+                id,
                 sha256: text(&f["sha256"]),
                 status: text(&f["status"]).unwrap_or_default(),
                 class: serde_json::from_value(f["class"].clone()).unwrap_or(None),
+                expect: text(&f["expect"]),
+                met: f["met"].as_bool(),
             })
         })
         .collect::<Result<Vec<_>, String>>()?;
@@ -617,25 +700,54 @@ pub fn compare(request: &Request) -> Result<Report, String> {
                 };
                 let has_output = |f: &RunFixture| matches!(f.status.as_str(), "ok" | "partial");
                 if !(has_output(l) && has_output(r)) {
-                    let (side, f) = if has_output(l) {
-                        ("right", r)
+                    let describe =
+                        |f: &RunFixture| f.class.map_or(f.status.clone(), |c| c.name().to_owned());
+                    // Both sides failed as the fixture manifest expects
+                    // (the same expectation, met on both): a match.
+                    let expected_failure = l.status == "failed"
+                        && r.status == "failed"
+                        && l.met == Some(true)
+                        && r.met == Some(true)
+                        && l.expect.is_some()
+                        && l.expect == r.expect
+                        && l.class == r.class;
+                    let (status, class, reason) = if expected_failure {
+                        (
+                            "expected_failure",
+                            None,
+                            format!("both sides failed as expected ({})", describe(l)),
+                        )
                     } else {
-                        ("left", l)
+                        let failed: Vec<&RunFixture> =
+                            [l, r].into_iter().filter(|f| !has_output(f)).collect();
+                        let sides = match (has_output(l), has_output(r)) {
+                            (true, _) => format!("the right side ({})", describe(r)),
+                            (_, true) => format!("the left side ({})", describe(l)),
+                            _ => {
+                                format!("either side (left {}, right {})", describe(l), describe(r))
+                            }
+                        };
+                        (
+                            "not_compared",
+                            // A failed run without a class cannot be written
+                            // by oracle-run; treat it as a protocol problem.
+                            failed
+                                .iter()
+                                .map(|f| f.class.unwrap_or(FailureClass::Protocol))
+                                .min(),
+                            format!("no output on {sides}"),
+                        )
                     };
                     report.fixtures.push(FixtureComparison {
                         id: l.id.clone(),
+                        input_differs: l.sha256 != r.sha256,
                         left_sha256: l.sha256.clone(),
                         right_sha256: r.sha256.clone(),
                         left_output_sha256: None,
                         right_output_sha256: None,
-                        status: "not_compared",
-                        // A failed run without a class cannot be written by
-                        // oracle-run; treat it as a protocol problem.
-                        class: Some(f.class.unwrap_or(FailureClass::Protocol)),
-                        reason: Some(format!(
-                            "no output on the {side} side ({})",
-                            f.class.map_or(f.status.as_str(), |c| c.name())
-                        )),
+                        status,
+                        class,
+                        reason: Some(reason),
                         differences: Vec::new(),
                     });
                     continue;

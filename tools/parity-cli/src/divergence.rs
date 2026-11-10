@@ -78,6 +78,17 @@ pub enum Comparison {
     },
 }
 
+impl Comparison {
+    /// Whether `a` and `b` are within the tolerance (`exact`: equal).
+    pub fn within(self, a: f64, b: f64) -> bool {
+        match self {
+            Self::Exact {} => a == b,
+            Self::Abs { tolerance } => (a - b).abs() <= tolerance,
+            Self::Rel { tolerance } => (a - b).abs() <= tolerance * a.abs().max(b.abs()),
+        }
+    }
+}
+
 /// Why a difference exists.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -223,11 +234,20 @@ impl Entry {
                 if !(tolerance.is_finite() && tolerance > 0.0) {
                     problems.push("comparison.tolerance: not a positive number".to_owned());
                 }
-                if !(self.oracle_value.is_number() && self.successor_value.is_number()) {
-                    problems.push(
+                match (self.oracle_value.as_f64(), self.successor_value.as_f64()) {
+                    (Some(o), Some(s)) => {
+                        let valid = tolerance.is_finite() && tolerance > 0.0;
+                        if valid && !self.comparison.within(o, s) {
+                            problems.push(
+                                "oracle_value and successor_value: further apart than the tolerance"
+                                    .to_owned(),
+                            );
+                        }
+                    }
+                    _ => problems.push(
                         "oracle_value and successor_value: a tolerance needs two numbers"
                             .to_owned(),
-                    );
+                    ),
                 }
             }
         }
@@ -258,36 +278,48 @@ impl Entry {
                     ))
                 }
             }
-            Comparison::Abs { tolerance } | Comparison::Rel { tolerance } => {
+            Comparison::Abs { .. } | Comparison::Rel { .. } => {
                 let (Some(l), Some(r)) = (left.as_f64(), right.as_f64()) else {
                     return Err(format!("{} compares numbers only", self.id));
                 };
-                let difference = (l - r).abs();
-                let limit = match self.comparison {
-                    Comparison::Rel { .. } => tolerance * l.abs().max(r.abs()),
-                    _ => tolerance,
-                };
-                if difference <= limit {
-                    Ok(())
-                } else {
+                let (o, s) = (
+                    self.oracle_value.as_f64().unwrap_or(f64::NAN),
+                    self.successor_value.as_f64().unwrap_or(f64::NAN),
+                );
+                // The tolerance applies between the two sides and between
+                // each side and its registered value, so a moved value is
+                // unexpected again even when the two sides stay close.
+                if !self.comparison.within(l, r) {
                     Err(format!(
-                        "{}: difference {difference} is over the limit {limit}",
+                        "{}: {l} and {r} are further apart than the tolerance",
                         self.id
                     ))
+                } else if !(self.comparison.within(l, o) && self.comparison.within(r, s)) {
+                    Err(format!(
+                        "{} registers {o} -> {s}, outside the tolerance",
+                        self.id
+                    ))
+                } else {
+                    Ok(())
                 }
             }
         }
     }
 
-    /// Whether this entry names `fixture` (by id or by `sha256:` hash).
-    pub fn names_fixture(&self, id: &str, sha256: Option<&str>) -> bool {
+    /// Whether this entry names the fixture `id` (by id, or by the
+    /// `sha256:` hash of either side's bytes).
+    pub fn names_fixture(&self, id: &str, sha256: &[&str]) -> bool {
         self.fixture == id
-            || sha256.is_some_and(|h| self.fixture.strip_prefix("sha256:") == Some(h))
+            || self
+                .fixture
+                .strip_prefix("sha256:")
+                .is_some_and(|h| sha256.contains(&h))
     }
 }
 
 /// Equal JSON values, with numbers compared as doubles (so `1` equals
-/// `1.0`; `-0.0` equals `0`).
+/// `1.0`; `-0.0` equals `0`; integers above 2^53 may compare equal when
+/// they differ, which PoB's doubles cannot produce).
 pub fn same_value(a: &Value, b: &Value) -> bool {
     match (a, b) {
         (Value::Number(x), Value::Number(y)) => x.as_f64() == y.as_f64(),
@@ -507,6 +539,11 @@ mod tests {
                 json!("1"),
                 "two numbers",
             ),
+            (
+                json!({"type": "abs", "tolerance": 0.05}),
+                json!(1),
+                "further apart",
+            ),
         ] {
             let mut e = entry();
             e["comparison"] = comparison;
@@ -560,8 +597,13 @@ mod tests {
         assert!(abs.covers(Some(&json!(1)), Some(&json!(1.25))).is_ok());
         assert!(abs.covers(Some(&json!(1)), Some(&json!(1.3))).is_err());
         assert!(abs.covers(Some(&json!(1)), Some(&json!("1"))).is_err());
+        // Close to each other, but both moved away from the registered values.
+        let moved = abs.covers(Some(&json!(5)), Some(&json!(5.1))).unwrap_err();
+        assert!(moved.contains("registers"), "{moved}");
         let mut rel = entry();
         rel["comparison"] = json!({"type": "rel", "tolerance": 0.1});
+        rel["oracle_value"] = json!(100);
+        rel["successor_value"] = json!(105);
         let rel: Entry = serde_json::from_value(rel).unwrap();
         assert!(rel.covers(Some(&json!(100)), Some(&json!(110))).is_ok());
         assert!(rel.covers(Some(&json!(100)), Some(&json!(112))).is_err());
@@ -570,11 +612,13 @@ mod tests {
     #[test]
     fn names_fixture_should_match_id_or_hash() {
         let mut e: Entry = serde_json::from_value(entry()).unwrap();
-        assert!(e.names_fixture("a.xml", None));
-        assert!(!e.names_fixture("b.xml", Some("ab")));
+        assert!(e.names_fixture("a.xml", &[]));
+        assert!(!e.names_fixture("b.xml", &["ab"]));
         e.fixture = format!("sha256:{}", "a".repeat(64));
-        assert!(e.names_fixture("b.xml", Some(&"a".repeat(64))));
-        assert!(!e.names_fixture("b.xml", None));
+        let hash = "a".repeat(64);
+        assert!(e.names_fixture("b.xml", &[&hash]));
+        assert!(e.names_fixture("b.xml", &["other", &hash]));
+        assert!(!e.names_fixture("b.xml", &[]));
     }
 
     #[test]
