@@ -190,6 +190,16 @@ impl Properties {
         Ok(out)
     }
 
+    /// What was read, for the summary: `(templates, labels, quality types)`.
+    #[must_use]
+    pub fn inputs(&self) -> (usize, usize, usize) {
+        (
+            self.templates.len(),
+            self.labels.len(),
+            self.qualities.len(),
+        )
+    }
+
     /// The property a line shows, if any (module docs).
     #[must_use]
     pub fn resolve(&self, line: &str) -> Option<Property> {
@@ -283,6 +293,75 @@ mod tests {
         assert_eq!(q.detail, ["jewellery_attribute_quality=1", "quality=20"]);
         assert_eq!(p.resolve("Quality (Unknown): +20%"), None);
         assert_eq!(p.resolve("Memory Strands: many"), None);
+    }
+
+    fn table(name: &str, columns: &[&str], rows: &str) -> String {
+        let cols: Vec<String> = columns
+            .iter()
+            .map(|c| format!(r#"{{"name": "{c}", "references": null}}"#))
+            .collect();
+        format!(
+            r#"{{"table": "{name}", "columns": [{}], "rows": {rows}}}"#,
+            cols.join(", ")
+        )
+    }
+
+    fn read(path: &str) -> Result<Vec<u8>, String> {
+        let mut mod_cols = vec!["Id".to_owned()];
+        for n in 1..=8 {
+            mod_cols.extend([
+                format!("StatsKey{n}"),
+                format!("Stat{n}Min"),
+                format!("Stat{n}Max"),
+            ]);
+        }
+        let mod_cols: Vec<&str> = mod_cols.iter().map(String::as_str).collect();
+        let mut row = vec![r#""JewelleryAttributeQuality""#.to_owned()];
+        for n in 1..=8 {
+            row.extend(
+                match n {
+                    1 => ["0", "1", "1"],
+                    _ => ["null", "0", "0"],
+                }
+                .map(str::to_owned),
+            );
+        }
+        let text = match path {
+            "tables/ClientStrings.json" => table(
+                "ClientStrings",
+                &["Id", "Text"],
+                r#"[["ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"],
+                    ["ZanaInfluencedItem", "Memory Strands"], ["Other", "Lasts {0} Seconds"]]"#,
+            ),
+            "tables/AlternateQualityTypes.json" => table(
+                "AlternateQualityTypes",
+                &["Description", "CatalystMod"],
+                r#"[["Quality (Attribute Modifiers)", 0], ["Quality (Rarity)", null]]"#,
+            ),
+            "tables/Mods.json" => table("Mods", &mod_cols, &format!("[[{}]]", row.join(", "))),
+            "tables/Stats.json" => table("Stats", &["Id"], r#"[["jewellery_attribute_quality"]]"#),
+            _ => return Err(format!("{path}: not found")),
+        };
+        Ok(text.into_bytes())
+    }
+
+    #[test]
+    fn load_should_read_named_texts_and_catalyst_stats() {
+        let p = Properties::load(&read).unwrap();
+        assert_eq!(p.inputs(), (1, 1, 2));
+        assert_eq!(
+            p.resolve("Quality (Attribute Modifiers): +20%")
+                .unwrap()
+                .detail,
+            ["jewellery_attribute_quality=1", "quality=20"]
+        );
+        assert_eq!(
+            p.resolve("Quality (Rarity): +10%").unwrap().detail,
+            ["quality=10"]
+        );
+        assert!(p.resolve("Lasts 2 Seconds").is_some());
+        let none = |_: &str| -> Result<Vec<u8>, String> { Err("absent".to_owned()) };
+        assert_eq!(Properties::load(&none).unwrap().inputs(), (0, 0, 0));
     }
 
     #[test]

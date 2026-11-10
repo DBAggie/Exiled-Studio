@@ -526,6 +526,9 @@ pub struct Summary {
     /// Resolved lines whose result is not stat IDs, by group and kind
     /// (`non_unique/granted-skill`); counted as resolved in the rate.
     pub resolved_kinds: BTreeMap<String, usize>,
+    /// Item property rule inputs (B5d): `(ClientStrings templates,
+    /// labels, AlternateQualityTypes rows)`.
+    pub property_inputs: (usize, usize, usize),
     /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
     pub compositions_missing: Vec<String>,
     /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
@@ -1128,6 +1131,7 @@ pub fn run(
         compositions_missing: game.compositions_missing.clone(),
         graft_bases: bases.grafts.len(),
         graft_inputs: bases.grafts.inputs(),
+        property_inputs: bases.properties.inputs(),
         resolved_kinds: BTreeMap::new(),
         composition_rows: game
             .compositions
