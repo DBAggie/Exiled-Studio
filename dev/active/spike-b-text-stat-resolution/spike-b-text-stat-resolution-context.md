@@ -208,6 +208,13 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no blockers; ADR-015 position judged defensible (disambiguation between matcher candidates from game tables, no text patterns). Applied: `local-stat` skips with a note when base rows disagree or some have unknown tags (`local-stat-bases-differ`) and when a candidate mixes localities (`local-stat-mixed`); `type_spawn` restricted to the same `ModType`, domain, and generation type (100 rows, was 111; the pierce line's note goes back to `influence-tags-unknown`, totals unchanged); `LocalKind` enum; a test pins the Crystal Belt case; doc list renumbered (steps 1-7). Noted for the maintainer: the weapon/armour carrier tags are a hand-written mapping validated on this build's spawn data, and the gate counted with legacy text excluded is a gate redefinition by maintainer decision (record it in ACTION-PLAN with B5b).
 - **Verify:** `cargo test -p loom-parity-cli`; the `resolve-corpus` command in the report, section 8.
 
+## PR B5b: legacy text out of the rate, ADR-007 (PR #27, open, branch `spike-b/b5b-legacy-text`, stacked on PR #26)
+- Maintainer decision 2026-11-10: "exclude legacy text from the gate"; "Update ADR-007 to resolve the issue" (the 22 vs 21 count).
+- `categorize::EXCLUDED` gains `data-gap/legacy-text`; no rule changed, so the 48 lines are the same as B5a's. ADR-007 text and status line edited (an ADR edit asked for by the maintainer, not an amendment of the decision). The ACTION-PLAN gate text lists every exclusion.
+- **Evidence** (run from clean `fbf8379`, `local/b5b-rc3|rc4`, byte-identical): 3,315 / 3,366 = 98.5%, 51 unresolved (67 allowed), excluded 572, `gate.met` true, exit 0.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: ADR-015 wording (the exclusion is a rate rule; legacy lines stay quarantined in the product), the ACTION-PLAN gate bullet names the redefinition, the unadjusted rate, and the 572 excluded lines; ADR-007's history moved to its status line with the confirmation date 2026-11-09; a test that only the named categories are excluded; doc reflow.
+- **Assumption for review:** the area-3 graft lines need tables that are not extracted, so they split into an extractor PR and a resolver PR (the plan's "extractor PR first" rule).
+
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).
 - Decided 2026-11-10 (maintainer): author notes are excluded (`special-case/author-note`).

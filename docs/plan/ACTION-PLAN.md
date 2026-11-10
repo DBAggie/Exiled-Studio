@@ -39,7 +39,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 
 ### Spike B: Text to stat-ID resolution
 - Using Spike A stat descriptions, resolve every item mod line in the maintainer's 21 PoE1 builds (22 until 2026-11-09; the maintainer confirmed 21).
-- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps).
+- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps). Excluded from the rate, counted apart (maintainer decisions): PoB custom lines, flag and class-requirement lines, unselected variants, author notes (2026-11-10), and legacy text the game no longer has (`data-gap/legacy-text`, 2026-11-10). This redefines the gate (maintainer decisions 2026-11-10, B4b and B5b): exclusions total 572 lines (14.5%) of the corpus; without the legacy-text exclusion the rate is 97.1% (3,315 / 3,414). The exclusion is a rate rule only: per ADR-015, excluded lines stay quarantined and shown, never dropped.
 - **Fallback:** hybrid model per ADR-015, decided per area.
 
 ### Spike C: Thin oracle harness (about two weeks maximum)
@@ -69,4 +69,4 @@ PoE1 mechanics expansion (each promoted through corpus and oracle gates); passiv
 Public product name (before first release), WASM addon runtime, hosted sharing, in-app Claude assistant panel, macOS as a release gate, offline-root signing ceremony.
 
 ## Next action
-Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B: **gate not met** (2026-11-10, PR #26 (B5a), open): 97.1% of non-unique lines resolve (98% asked), every line categorized (`uncategorized` 0); report `docs/spikes/spike-b-resolution.md`. The maintainer decided the areas on 2026-11-10 (report section 7a); the area PRs B5a-B5e follow (handoff, Next action). Task docs: `dev/active/spike-b-text-stat-resolution/`. The live state and the exact next step are in the handoff's **Current state** and **Next action**.
+Phase 0 is done (gate passed 2026-11-08). Spike A is done (gate met 2026-11-09, PR A6b). Spike B: **gate met** with PR #27 (B5b) (2026-11-10; stacked on PR #26 (B5a); both open): 98.5% of non-unique lines resolve (98% asked), every line categorized (`uncategorized` 0); report `docs/spikes/spike-b-resolution.md`. The maintainer's remaining area PRs (B5c-B5e) follow (handoff, Next action). Task docs: `dev/active/spike-b-text-stat-resolution/`. The live state and the exact next step are in the handoff's **Current state** and **Next action**.

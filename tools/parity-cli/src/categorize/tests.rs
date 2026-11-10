@@ -189,6 +189,15 @@ fn categorize_should_apply_each_rule() {
     assert_eq!(cat(&g, t, "Use jeweler orbs").evidence, "no-game-text");
     assert!(cat(&g, t, "Use jeweler orbs").excluded());
     assert!(!cat(&g, t, "+132 to Maximum Life").excluded());
+    assert!(cat(&g, t, "Immune to Curses during Flask effect").excluded());
+    // Only the named categories are excluded, not the `data-gap/` family.
+    for name in [
+        "data-gap/other-scope",
+        "parser-gap/near-miss",
+        "uncategorized",
+    ] {
+        assert!(!Category::new(name, "").excluded(), "{name}");
+    }
 }
 
 #[test]

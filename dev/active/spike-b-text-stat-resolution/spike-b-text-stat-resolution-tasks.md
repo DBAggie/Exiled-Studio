@@ -106,7 +106,7 @@ Last Updated: 2026-11-10 (PR B4b)
 
 ## After B4b (maintainer)
 - [x] Decision per area, 2026-11-10 (report section 7a): (1) local/global: what is needed; (2) legacy text excluded from the rate; (3) client-composed: write the code; (4) item properties: attempt to resolve; (5) the rest as recommended
-- [ ] ADR-007 corpus count 22 -> 21 (maintainer asked for it; B5b)
+- [x] ADR-007 corpus count 22 -> 21 (maintainer asked for it; B5b)
 
 ## PR B5a: local/global pairs from game data
 - [x] Check PR #25 merge (`bc159a5`, main CI run 42754901070 green)
@@ -117,11 +117,18 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; re-run from clean `4031f1c`)
 - [x] Open PR (#26)
 
-## PR B5b: legacy text out of the rate, ADR-007
-- [ ] `data-gap/legacy-text` in `EXCLUDED`; test; corpus run; ADR-007 21 builds; ACTION-PLAN gate text records the exclusion
+## PR B5b: legacy text out of the rate, ADR-007 (PR #27)
+- [x] `data-gap/legacy-text` in `EXCLUDED`; tests; ADR-007 21 builds; ACTION-PLAN gate text records the exclusions
+- [x] Corpus run from clean `fbf8379`, two runs byte-identical: 98.5%, gate met; summary replaced; report
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#27)
 
-## PR B5c: client-composed lines
-- [ ] Eldritch presence wrapper and graft skill line from game data
+## PR B5c: client-composed lines (eldritch)
+- [ ] Eldritch presence wrapper from game data (9 lines)
+
+## PR B5x / B5g: graft skill lines
+- [ ] Extractor: `BrequelGrafts`, `BrequelGraftTypes`, `BrequelGraftGrantedSkillLevels`
+- [ ] Resolver: `Uses level {1} {0}` (6 lines)
 
 ## PR B5d: item properties
 - [ ] Typed item properties from game data

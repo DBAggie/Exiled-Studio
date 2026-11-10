@@ -33,9 +33,9 @@
 //!   line is backed or not by a fitting `Mods` row (`mod_filter::backing`).
 //! - **Categories (B4b):** every line that is not resolved gets one
 //!   category with its evidence (`categorize`); `special-case/author-note`
-//!   lines are excluded (maintainer approval 2026-11-10), and class
-//!   requirement lines are excluded as `not-a-modifier`. The gate is
-//!   computed in [`Gate`].
+//!   and `data-gap/legacy-text` lines are excluded (maintainer decisions
+//!   2026-11-10, B4b and B5b), and class requirement lines are excluded as
+//!   `not-a-modifier`. The gate is computed in [`Gate`].
 //!
 //! **Scrubbing (ADR-007):** builds are named by the SHA-256 of their
 //! content; item names, `{custom}` text, and unrecognized lines are never
