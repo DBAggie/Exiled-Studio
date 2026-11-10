@@ -359,7 +359,7 @@ fn probe_script(manifest: &Manifest) -> String {
 /// inherited `GIT_*` variable is removed (`GIT_DIR`, `GIT_WORK_TREE`,
 /// `GIT_INDEX_FILE` set by a hook or a shell would point `git` at another
 /// repository), and the system config is skipped.
-fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
+pub fn git(dir: &Path, args: &[&str]) -> Result<String, String> {
     if !dir.join(".git").exists() {
         return Err("not a git checkout".to_owned());
     }

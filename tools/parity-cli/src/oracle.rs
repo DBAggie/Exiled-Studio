@@ -18,11 +18,10 @@ use sha2::{Digest, Sha256};
 /// (`docs/spikes/spike-c-legacy-oracle.md`, "Failure taxonomy"). Only the
 /// CLI assigns a class. Variants are ordered upstream first, so the
 /// smallest failing class is the one a report names. Exit codes are fixed
-/// per class and never reused: 10 `ORACLE_ACQUISITION` to 18
-/// `ORACLE_NONDETERMINISM`, in taxonomy order; 19
-/// `ORACLE_EXPECTED_DIFFERENCE` and 20 `ORACLE_UNEXPECTED_DIFFERENCE` are
-/// reserved for `oracle-compare` (C3), which adds those variants.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
+/// per class and never reused: 10 `ORACLE_ACQUISITION` to 20
+/// `ORACLE_UNEXPECTED_DIFFERENCE`, in taxonomy order. The two difference
+/// classes are `oracle-compare`'s; the others come from running the oracle.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum FailureClass {
     /// The pinned source is unavailable or differs from the manifest
     /// (wrong commit, dirty checkout, unreadable manifest).
@@ -60,6 +59,13 @@ pub enum FailureClass {
     /// Repeated runs of one fixture had different outcomes.
     #[serde(rename = "ORACLE_NONDETERMINISM")]
     Nondeterminism,
+    /// Two outputs differ, and a divergence register entry covers the
+    /// difference (a known discrepancy reproduced).
+    #[serde(rename = "ORACLE_EXPECTED_DIFFERENCE")]
+    ExpectedDifference,
+    /// Two outputs differ, and no register entry covers the difference.
+    #[serde(rename = "ORACLE_UNEXPECTED_DIFFERENCE")]
+    UnexpectedDifference,
 }
 
 impl FailureClass {
@@ -75,6 +81,8 @@ impl FailureClass {
             Self::Calculation => "ORACLE_CALCULATION",
             Self::Normalization => "ORACLE_NORMALIZATION",
             Self::Nondeterminism => "ORACLE_NONDETERMINISM",
+            Self::ExpectedDifference => "ORACLE_EXPECTED_DIFFERENCE",
+            Self::UnexpectedDifference => "ORACLE_UNEXPECTED_DIFFERENCE",
         }
     }
 
@@ -90,8 +98,25 @@ impl FailureClass {
             Self::Calculation => 16,
             Self::Normalization => 17,
             Self::Nondeterminism => 18,
+            Self::ExpectedDifference => 19,
+            Self::UnexpectedDifference => 20,
         }
     }
+
+    /// Every class, in taxonomy order.
+    pub const ALL: [Self; 11] = [
+        Self::Acquisition,
+        Self::Environment,
+        Self::Launch,
+        Self::Timeout,
+        Self::Protocol,
+        Self::Import,
+        Self::Calculation,
+        Self::Normalization,
+        Self::Nondeterminism,
+        Self::ExpectedDifference,
+        Self::UnexpectedDifference,
+    ];
 }
 
 /// `tools/oracle/manifest.json`.
@@ -184,7 +209,7 @@ pub struct Adapter {
 }
 
 /// The adapter protocol this reader knows.
-pub const PROTOCOL: u32 = 2;
+pub const PROTOCOL: u32 = 3;
 
 impl Manifest {
     /// Parses and checks a manifest.
@@ -359,7 +384,10 @@ mod tests {
         assert_eq!(manifest.pob.tag, "v2.67.2");
         assert_eq!(manifest.adapter.protocol, PROTOCOL);
         assert_eq!(manifest.luajit.security.get("prng"), Some(&0));
-        assert_eq!(manifest.adapter.shims, ["inflate", "write_guard"]);
+        assert_eq!(
+            manifest.adapter.shims,
+            ["inflate", "variant_order", "write_guard"]
+        );
         // Every supported platform has a zlib library.
         for platform in ["windows-x86_64", "linux-x86_64"] {
             assert!(manifest.adapter.zlib.contains_key(platform), "{platform}");
@@ -467,24 +495,17 @@ mod tests {
 
     #[test]
     fn exit_codes_should_follow_taxonomy_order_from_10() {
-        let classes = [
-            FailureClass::Acquisition,
-            FailureClass::Environment,
-            FailureClass::Launch,
-            FailureClass::Timeout,
-            FailureClass::Protocol,
-            FailureClass::Import,
-            FailureClass::Calculation,
-            FailureClass::Normalization,
-            FailureClass::Nondeterminism,
-        ];
+        let classes = FailureClass::ALL;
         for (i, class) in classes.iter().enumerate() {
             assert_eq!(usize::from(class.exit_code()), 10 + i, "{class:?}");
             assert_eq!(
                 serde_json::to_value(class).unwrap(),
                 serde_json::Value::from(class.name())
             );
+            let back: FailureClass = serde_json::from_value(class.name().into()).unwrap();
+            assert_eq!(back, *class);
         }
+        assert_eq!(FailureClass::UnexpectedDifference.exit_code(), 20);
         assert!(classes.windows(2).all(|w| w[0] < w[1]));
     }
 }

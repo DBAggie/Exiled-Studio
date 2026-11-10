@@ -5,7 +5,8 @@
 -- timeless jewel data (zlib streams in src/Data/TimelessJewelData/) would
 -- load empty: a harness artifact, not PoB behavior. And PoB's jewel loader
 -- caches the inflated data as a .bin file inside the checkout. oracle.lua
--- uses this module for two named shims, recorded in every output document:
+-- uses this module for three named shims, recorded in every output document
+-- (variant_order is described at its functions below):
 --   inflate      replaces the global Inflate with zlib through LuaJIT FFI
 --                (the pinned library: on Windows the checkout's own
 --                runtime/zlib1.dll, loaded in place).
@@ -146,6 +147,88 @@ function M.writeGuard(open, refused)
 		end
 		return open(path, mode)
 	end
+end
+
+-- variant_order (PR C3b). PoB v2.67.2 resolves a saved gem without a
+-- variantId (the save format before 3.23) by its gemId and skillId:
+-- SkillsTab:Load loops `pairs(data.gemsByGameId[gemId])` and takes the
+-- first variant whose grantedEffectId is the skillId (Classes/SkillsTab.lua
+-- 446-451). Data.lua adds an AltX and AltY copy of every Vaal gem that has
+-- transfigured variants, with the base gem's grantedEffectId, so three
+-- variants match and the first one in `pairs` order wins. LuaJIT orders a
+-- string key by its string ID, which depends on the run (reseeded from
+-- the PRNG the JIT also draws from; even a linear ID moves with garbage
+-- collection), so PoB itself loads such a build differently from run to
+-- run. The shim replaces the global `pairs` before PoB starts (PoB's files
+-- copy it into a local when they load) and iterates exactly the tables
+-- registered as ambiguous in sorted key order; every other table goes to
+-- the original `pairs` unchanged. Sorted order puts the base gem first
+-- ("VaalDetonateDead" < "VaalDetonateDeadAltX"), the gem a save from
+-- before transfigured gems meant. This is the one shim that chooses a
+-- result PoB leaves to chance, not just a harness artifact: the oracle
+-- value for such a gem is the base variant (recorded in the Spike C
+-- context file, "Decisions in C3b+C4"). Scope: only the lookup above;
+-- other `pairs` over gem tables are untouched (the corpus and the fixtures
+-- are 3/3 identical with that scope).
+
+-- Returns a `pairs` that iterates a table registered in `ordered` (table
+-- -> label) in sorted key order and calls `onOrdered(label)` each time;
+-- other tables go to `basePairs`. A registered table with a key that is
+-- not a string cannot be sorted: it goes to `basePairs` and
+-- `onUnordered(label)` is called, so the caller can mark the result.
+function M.orderedPairs(basePairs, ordered, onOrdered, onUnordered)
+	return function(t)
+		local label = ordered[t]
+		if label == nil then
+			return basePairs(t)
+		end
+		local keys = {}
+		for k in basePairs(t) do
+			if type(k) ~= "string" then
+				onUnordered(label)
+				return basePairs(t)
+			end
+			keys[#keys + 1] = k
+		end
+		table.sort(keys)
+		onOrdered(label)
+		local i = 0
+		return function()
+			i = i + 1
+			local k = keys[i]
+			if k ~= nil then
+				return k, t[k]
+			end
+		end, t, nil
+	end
+end
+
+-- Registers in `ordered` every variant table of `gemsByGameId` (gameId ->
+-- variantId -> gem) in which two or more variants share a
+-- grantedEffectId, labelled with its gameId. Returns how many it
+-- registered. `basePairs` is the original pairs (the result does not
+-- depend on its order).
+function M.registerAmbiguousVariants(gemsByGameId, ordered, basePairs)
+	local count = 0
+	for gameId, variants in basePairs(gemsByGameId) do
+		if type(variants) == "table" then
+			local seen, ambiguous = {}, false
+			for _, gem in basePairs(variants) do
+				local effect = type(gem) == "table" and gem.grantedEffectId
+				if effect ~= nil and effect ~= false then
+					if seen[effect] then
+						ambiguous = true
+					end
+					seen[effect] = true
+				end
+			end
+			if ambiguous then
+				ordered[variants] = gameId
+				count = count + 1
+			end
+		end
+	end
+	return count
 end
 
 return M

@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "entries": [
+    {
+      "id": "DIV-0001",
+      "mechanic": "movement speed (test entry for the intentional discrepancy)",
+      "fixture": "discrepancy-movement-speed.xml",
+      "field": "/main_output/MovementSpeedMod",
+      "comparison": { "type": "exact" },
+      "oracle_value": 1,
+      "successor_value": 1.1,
+      "kind": "harness",
+      "evidence": ["tools/oracle/fixtures/discrepancy-movement-speed.xml adds 10% increased Movement Speed to minimal-level1.xml"],
+      "test": "tools/parity-cli/src/oracle_compare/tests.rs: compare_should_classify_the_discrepancy_pair",
+      "added": "2026-11-10",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0002",
+      "mechanic": "movement speed (test entry for the intentional discrepancy)",
+      "fixture": "discrepancy-movement-speed.xml",
+      "field": "/main_output/EffectiveMovementSpeedMod",
+      "comparison": { "type": "abs", "tolerance": 0.125 },
+      "oracle_value": 1,
+      "successor_value": 1.1,
+      "kind": "harness",
+      "evidence": ["tools/oracle/fixtures/discrepancy-movement-speed.xml adds 10% increased Movement Speed to minimal-level1.xml"],
+      "test": "tools/parity-cli/src/oracle_compare/tests.rs: compare_should_classify_the_discrepancy_pair",
+      "added": "2026-11-10",
+      "status": "accepted"
+    }
+  ]
+}

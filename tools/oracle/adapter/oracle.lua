@@ -1,4 +1,4 @@
--- loom oracle adapter, protocol 2 (Spike C, dev/active/spike-c-oracle-harness/).
+-- loom oracle adapter, protocol 3 (Spike C, dev/active/spike-c-oracle-harness/).
 -- Original code of this project (MIT); not part of Path of Building.
 --
 -- Run by `loom-parity-cli oracle-run` with the pinned LuaJIT, the working
@@ -13,15 +13,16 @@
 -- Exit codes: 0 when the document says "done", 1 when it records a
 -- failure, 2 when no document could be written.
 --
--- The adapter patches no PoB file. It replaces two globals with named
--- shims (shims.lua: `Inflate` and `io.open`), records them and what they
--- did in the document, and records which modules `require` loads. The
--- output contract is tools/oracle/schema/oracle-output.schema.json.
+-- The adapter patches no PoB file. It replaces three globals with named
+-- shims (shims.lua: `Inflate`, `pairs` for ambiguous gem variant tables,
+-- and `io.open`), records them and what they did in the document, and
+-- records which modules `require` loads. The output contract is
+-- tools/oracle/schema/oracle-output.schema.json.
 
 -- launch, build, common, loadBuildFromXML are PoB's globals.
 ---@diagnostic disable: undefined-global
 
-local PROTOCOL = 2
+local PROTOCOL = 3
 local BREAKDOWN_SOURCE = "calcsTab.calcsEnv.player.breakdown"
 
 -- PoB's startup replaces the global `arg`, so the arguments (and arg[0],
@@ -54,8 +55,9 @@ local result = {
 	main_output = nil,
 	breakdowns = nil,
 	breakdown_source = BREAKDOWN_SOURCE,
-	-- What the shims did: every Inflate call, every refused write.
-	probe = { inflate = {}, writes_refused = {} },
+	-- What the shims did: every Inflate call, every refused write, every
+	-- gem variant table iterated in sorted order (by gameId, once each).
+	probe = { inflate = {}, writes_refused = {}, variant_order = {} },
 }
 
 local partialSeen = {}
@@ -92,6 +94,23 @@ io.open = shims.writeGuard(openFile, result.probe.writes_refused)
 
 local zlib, zlibError = shims.loadZlib(zlibLibrary)
 
+-- variant_order: installed before PoB starts, since PoB's files copy the
+-- global `pairs` into locals when they load. Tables are registered after
+-- startup, when Data.lua has built data.gemsByGameId.
+local basePairs = pairs
+local orderedTables = setmetatable({}, { __mode = "k" })
+local orderedSeen = {}
+local variantTables
+pairs = shims.orderedPairs(basePairs, orderedTables, function(gameId)
+	if not orderedSeen[gameId] then
+		orderedSeen[gameId] = true
+		result.probe.variant_order[#result.probe.variant_order + 1] = gameId
+	end
+end, function(gameId)
+	-- Cannot be sorted, so PoB's order (which changes per run) decides.
+	addPartial("variant_order: unordered table " .. gameId)
+end)
+
 -- Replaces the wrapper's Inflate stub. Each call is recorded in the probe.
 -- Without zlib it returns what the stub returns (""), and the result is
 -- partial; a zlib error returns nil (PoB's loader then has no data), and
@@ -118,6 +137,12 @@ end
 local function shimRecords()
 	return {
 		{ name = "inflate", replaces = "Inflate", installed = zlib ~= nil, detail = zlib and ("zlib " .. zlib.version) or zlibError },
+		{
+			name = "variant_order",
+			replaces = "pairs",
+			installed = variantTables ~= nil,
+			detail = variantTables and (variantTables .. " ambiguous gem variant tables") or "data.gemsByGameId not found",
+		},
 		{ name = "write_guard", replaces = "io.open", installed = true },
 	}
 end
@@ -166,6 +191,13 @@ local function startup()
 	if type(build) ~= "table" or type(loadBuildFromXML) ~= "function" then
 		fail("adapter", "the wrapper did not define build and loadBuildFromXML")
 		return false
+	end
+	if type(data) == "table" and type(data.gemsByGameId) == "table" then
+		variantTables = shims.registerAmbiguousVariants(data.gemsByGameId, orderedTables, basePairs)
+	else
+		-- Without the table, an old-format Vaal gem may load a different
+		-- variant per run: the result cannot be trusted as complete.
+		addPartial("variant_order: data.gemsByGameId not found")
 	end
 	-- GetUserPath() returns "" headless, so PoB looks for its settings at
 	-- "<userPath>Settings.xml". A run must not depend on a file there.
@@ -324,7 +356,8 @@ local function probeJson()
 			.. ',"adler32":' .. integerOrNull(call.adler32) .. ',"trailing_bytes":' .. integerOrNull(call.trailing_bytes)
 			.. ',"error":' .. stringOrNull(call.error) .. "}"
 	end
-	return '{"inflate":[' .. table.concat(calls, ",") .. '],"writes_refused":' .. stringList(result.probe.writes_refused) .. "}"
+	return '{"inflate":[' .. table.concat(calls, ",") .. '],"variant_order":' .. stringList(result.probe.variant_order)
+		.. ',"writes_refused":' .. stringList(result.probe.writes_refused) .. "}"
 end
 
 local function document()
@@ -361,6 +394,9 @@ if not ok then
 	end
 	for _, call in ipairs(result.probe.inflate) do
 		call.error = call.error and "(not valid UTF-8)"
+	end
+	for i, gameId in ipairs(result.probe.variant_order) do
+		result.probe.variant_order[i] = (gameId:gsub("[\128-\255]", "?"))
 	end
 	for i, reason in ipairs(result.partial) do
 		result.partial[i] = (reason:gsub("[\128-\255]", "?"))

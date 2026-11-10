@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
+Last Updated: 2026-11-10 (PR C3b+C4: determinism shim, community builds, CI job)
 
 # Spike C: tasks
 
@@ -40,22 +40,27 @@ Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
 - [x] Corpus timeless-jewel builds show jewel data loaded; non-jewel computed data unchanged (6 C2a fixtures byte-identical)
 - [x] Linux (WSL 2 Ubuntu 24.04): unit and real-runtime tests, fixtures 3/3 under `unshare -rn`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; context file)
-- [x] Open PR (#36)
+- [x] Open PR (#36; merged 2026-11-10 as `91b1438`; main CI run 42860826266 failed only on a cancelled macOS job, rerun)
 
 ## PR C3: fixtures, compare, divergence register
-- [ ] Fixture manifest (PoB test builds by blob hash, synthetic fixtures, discrepancy pair)
-- [ ] `parity-cli oracle-compare`; register schema, empty register, `divergence-check`, `docs/parity/README.md`
-- [ ] Corpus run 3 times on Windows; scrubbed summary in `docs/spikes/spike-c/`
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Fixture manifest (PoB test builds by blob hash, synthetic fixtures, discrepancy pair); expectations in `oracle-run` (exit 4 unmet); `--anonymous`
+- [x] `parity-cli oracle-compare`; register schema, empty register, `divergence-check`, `docs/parity/README.md`
+- [x] Intentional discrepancy: unexpected (exit 20), then expected with the test register (exit 19); real-runtime ignored test
+- [x] Corpus run 3 times on Windows (twice); scrubbed summary in `docs/spikes/spike-c/` with a scrub test. Result: 3 of 21 builds nondeterministic (context file)
+- [x] Review with `code-architecture-reviewer`; apply findings (1 blocker fixed; should-fix applied)
+- [x] Open PR (#37)
 
-## PR C4: CI
-- [ ] `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`
-- [ ] Injected wrong-hash run; cross-platform comparison
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+## PR C3b+C4: corpus nondeterminism and CI (one PR, maintainer decision 2026-11-10)
+- [x] C3b: reproduce on the 3 builds with `--runs 20`; find where PoB picks a transfigured gem variant (`SkillsTab:Load` old-format lookup; string-ID `pairs` order)
+- [x] C3b: adapter-side fix (named, recorded shim) or fallback (`BLOCKED` for the affected fields); corpus rerun 3 times (`variant_order` shim, protocol 3; 4 corpus invocations identical)
+- [x] Community builds (maintainer decision 2026-11-10; 11 of 16 acquired, 7 guides publish no PoB export; ADR-007 Amendment 1 after the terms check): acquire the agreed list (context file, "Community builds") with source, author, date, terms; `tools/oracle/fixtures/community/` + `SOURCES.md` (opens with the removal-on-request note; one line in `README.md`); tier `community` in `fixtures.json`; 3 runs each; propose CI inclusion
+- [x] C4: `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`; `divergence-check` step
+- [x] C4: injected wrong-hash run; cross-platform comparison (run 42889081685: exit 11 on both runners)
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#38, stacked on #37)
 
 ## PR C5: report and gate
 - [ ] `docs/spikes/spike-c-oracle.md` (completion report, gate verdict, feasibility decision)
+- [ ] Promote the `oracle` job into `ci-ok` after 10 consecutive green runs on both runners; then `oracle-compare` exit 20 fails the job
 - [ ] ACTION-PLAN status, handoff, CLAUDE.md
 - [ ] Open PR

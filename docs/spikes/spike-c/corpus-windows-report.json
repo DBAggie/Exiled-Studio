@@ -1,0 +1,1651 @@
+{
+  "format": 1,
+  "status": "ok",
+  "class": null,
+  "platform": "windows-x86_64",
+  "oracle": {
+    "status": "ok",
+    "class": null,
+    "platform": "windows-x86_64",
+    "manifest_sha256": "bb2d487619caf3597b36ac8557773fd05420214ccc136ee171f300eb77066e2e",
+    "manifest": {
+      "format": 1,
+      "pob": {
+        "repository": "https://github.com/PathOfBuildingCommunity/PathOfBuilding.git",
+        "tag": "v2.67.2",
+        "commit": "b32759ab0f31a1c8499a0d420cb0f0633d4fe478",
+        "tree": "74b90d3b89994d6e738d3cb836e9c48162ca6b57"
+      },
+      "luajit": {
+        "repository": "https://github.com/LuaJIT/LuaJIT.git",
+        "commit": "2460b3ff93a1c955de3d62cfc825de7d68dc272e",
+        "version": "LuaJIT 2.1.1784580905",
+        "defines": [
+          "LUAJIT_SECURITY_PRNG=0"
+        ],
+        "security": {
+          "mcode": 1,
+          "prng": 0,
+          "strhash": 1,
+          "strid": 1
+        }
+      },
+      "luautf8": {
+        "repository": "https://github.com/starwing/luautf8.git",
+        "version": "0.1.6",
+        "rock": "luautf8 0.1.6-1",
+        "commit": "1bb70d45208d4033dcc75efee968be70534dd3ab",
+        "module": "lua-utf8"
+      },
+      "adapter": {
+        "protocol": 3,
+        "breakdowns": [
+          "Armour",
+          "ChaosResist",
+          "ColdResist",
+          "EnergyShield",
+          "Evasion",
+          "FireResist",
+          "Life",
+          "LightningResist",
+          "Mana",
+          "TotalDPS"
+        ],
+        "opaque_keys": [
+          "sourceGem"
+        ],
+        "shims": [
+          "inflate",
+          "variant_order",
+          "write_guard"
+        ],
+        "zlib": {
+          "linux-x86_64": "libz.so.1",
+          "windows-x86_64": "pob/runtime/zlib1.dll"
+        }
+      }
+    },
+    "environment": [
+      "LUA_CPATH",
+      "LUA_PATH",
+      "SystemRoot"
+    ],
+    "toolchain": "Microsoft (R) C/C++ Optimizing Compiler Version 19.51.36260 for x64",
+    "checks": [
+      {
+        "name": "pob.commit",
+        "class": "ORACLE_ACQUISITION",
+        "ok": true,
+        "expected": "b32759ab0f31a1c8499a0d420cb0f0633d4fe478",
+        "actual": "b32759ab0f31a1c8499a0d420cb0f0633d4fe478"
+      },
+      {
+        "name": "pob.tree",
+        "class": "ORACLE_ACQUISITION",
+        "ok": true,
+        "expected": "74b90d3b89994d6e738d3cb836e9c48162ca6b57",
+        "actual": "74b90d3b89994d6e738d3cb836e9c48162ca6b57"
+      },
+      {
+        "name": "pob.clean",
+        "class": "ORACLE_ACQUISITION",
+        "ok": true,
+        "expected": "clean",
+        "actual": "clean"
+      },
+      {
+        "name": "luajit.commit",
+        "class": "ORACLE_ACQUISITION",
+        "ok": true,
+        "expected": "2460b3ff93a1c955de3d62cfc825de7d68dc272e",
+        "actual": "2460b3ff93a1c955de3d62cfc825de7d68dc272e"
+      },
+      {
+        "name": "luautf8.commit",
+        "class": "ORACLE_ACQUISITION",
+        "ok": true,
+        "expected": "1bb70d45208d4033dcc75efee968be70534dd3ab",
+        "actual": "1bb70d45208d4033dcc75efee968be70534dd3ab"
+      },
+      {
+        "name": "build.platform",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "windows-x86_64",
+        "actual": "windows-x86_64"
+      },
+      {
+        "name": "build.luajit_commit",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "2460b3ff93a1c955de3d62cfc825de7d68dc272e",
+        "actual": "2460b3ff93a1c955de3d62cfc825de7d68dc272e"
+      },
+      {
+        "name": "build.luautf8_commit",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "1bb70d45208d4033dcc75efee968be70534dd3ab",
+        "actual": "1bb70d45208d4033dcc75efee968be70534dd3ab"
+      },
+      {
+        "name": "build.defines",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "LUAJIT_SECURITY_PRNG=0",
+        "actual": "LUAJIT_SECURITY_PRNG=0"
+      },
+      {
+        "name": "file:bin/luajit.exe",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "202964ca292c4263c428f9825b1dbf6df5e5fae717df4573c3cbabfcbf51dac7",
+        "actual": "202964ca292c4263c428f9825b1dbf6df5e5fae717df4573c3cbabfcbf51dac7"
+      },
+      {
+        "name": "file:bin/lua51.dll",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "033ab0ef6baa301488127d290d97668cd9219c209f7e978a7b9ee5a5f55aedb3",
+        "actual": "033ab0ef6baa301488127d290d97668cd9219c209f7e978a7b9ee5a5f55aedb3"
+      },
+      {
+        "name": "file:bin/lua-utf8.dll",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "9d5e69759f5d7699bc9c2dea6e77b238a8788a816773009f930e9b22043d3f44",
+        "actual": "9d5e69759f5d7699bc9c2dea6e77b238a8788a816773009f930e9b22043d3f44"
+      },
+      {
+        "name": "runtime.version",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "LuaJIT 2.1.1784580905",
+        "actual": "LuaJIT 2.1.1784580905"
+      },
+      {
+        "name": "runtime.security.mcode",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "1",
+        "actual": "1"
+      },
+      {
+        "name": "runtime.security.prng",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "0",
+        "actual": "0"
+      },
+      {
+        "name": "runtime.security.strhash",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "1",
+        "actual": "1"
+      },
+      {
+        "name": "runtime.security.strid",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "1",
+        "actual": "1"
+      },
+      {
+        "name": "runtime.module",
+        "class": "ORACLE_ENVIRONMENT",
+        "ok": true,
+        "expected": "5",
+        "actual": "5"
+      }
+    ]
+  },
+  "adapter": {
+    "file": "oracle.lua",
+    "files": {
+      "json.lua": "7f16a79a15b0d9517b8969ec441f4b6a4b206593e7434c2316fb01b7941ed7b6",
+      "oracle.lua": "de4031a18b0594c86639668e778fee7a95f043751736a2a8461806135697b755",
+      "shims.lua": "70c6e8d63d657ca84492d13c79dd8d58987ba534bf955b2bfc2bae885c2543a8"
+    },
+    "protocol": 3,
+    "arguments": [
+      "breakdown=Armour",
+      "breakdown=ChaosResist",
+      "breakdown=ColdResist",
+      "breakdown=EnergyShield",
+      "breakdown=Evasion",
+      "breakdown=FireResist",
+      "breakdown=Life",
+      "breakdown=LightningResist",
+      "breakdown=Mana",
+      "breakdown=TotalDPS",
+      "opaque=sourceGem",
+      "zlib=pob/runtime/zlib1.dll"
+    ],
+    "zlib": {
+      "library": "pob/runtime/zlib1.dll",
+      "file": "pob/runtime/zlib1.dll",
+      "sha256": "27f24e10860d28611b52c7f2e82e6f7e87c73fac44c8143ea511c73afd81a5c8"
+    }
+  },
+  "environment": {
+    "names": [
+      "LUA_CPATH",
+      "LUA_PATH",
+      "SystemRoot"
+    ],
+    "lua_path": "./?.lua;../runtime/lua/?.lua;../runtime/lua/?/init.lua",
+    "working_directory": "pob/src"
+  },
+  "runs": 3,
+  "timeout_s": 120,
+  "tool": {
+    "commit": "2535abeb4d4bb87d3a697fd779b91b21af39d497",
+    "dirty": false
+  },
+  "fixtures": [
+    {
+      "id": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "sha256": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "2c9d5de82708cb0f5fe885bf1301aad4efcabf93ac132ae849d548a94086e4d1"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3253,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 615,
+            "sha256": "d029e2526ba187ac39c72d7d92dc26dbbde4fd48e8da8c92b6e74dfed1c5b0c1"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3303,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 615,
+            "sha256": "d029e2526ba187ac39c72d7d92dc26dbbde4fd48e8da8c92b6e74dfed1c5b0c1"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3038,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 615,
+            "sha256": "d029e2526ba187ac39c72d7d92dc26dbbde4fd48e8da8c92b6e74dfed1c5b0c1"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "sha256": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "46ffd2a02e399e313e42b0fe6251fcd0d9f5631dee61d49e00fbcf7f01aaf314"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2214,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2124,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2140,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "sha256": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "5280119db67d8b2b77273f4e18dd78d17a9d1e7e84174a20345aa2108e507c3d"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1874,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1893,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1895,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "sha256": "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "9761ebe4f419e7d76072979cfd660a37d96ade55fd41ae04025f05418b9cdb63"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1927,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1901,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1883,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "sha256": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "ea9f37d1491d4077e9f04c16983731d9ff87096c27fbebc9cef3e0a559596d4c"
+      },
+      "probe": {
+        "inflate_calls": 1,
+        "inflate_errors": 0,
+        "inflated_bytes": 51651890,
+        "writes_refused": 1,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalDetonateDead"
+        ],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3992,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1029,
+            "sha256": "c5ab9ee98247ff4221dfd6bc2b50e470945c4076b3ac0bf818ec4471bc2fd1e8"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3961,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1029,
+            "sha256": "c5ab9ee98247ff4221dfd6bc2b50e470945c4076b3ac0bf818ec4471bc2fd1e8"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3842,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1029,
+            "sha256": "c5ab9ee98247ff4221dfd6bc2b50e470945c4076b3ac0bf818ec4471bc2fd1e8"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "sha256": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "dfa8398bcce5fdd74464c28a26252bdca9704f2bed8d8e010491b3c42928b48d"
+      },
+      "probe": {
+        "inflate_calls": 1,
+        "inflate_errors": 0,
+        "inflated_bytes": 3632454,
+        "writes_refused": 1,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalDetonateDead"
+        ],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3059,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 561,
+            "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2775,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 561,
+            "sha256": "59f233558e5408e1a777a0d22f3743a41a38d445ab9f1748bb644535db0034b5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2843,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 561,
+            "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "sha256": "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "25887b42ed279294314171a9c2c003a201e8ad7d6ef8b0dc94968871e3dbae8a"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2169,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2155,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2279,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "sha256": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "ae5464fcf330551fab26cb1f7b8f62091457fc78f1fb855ae1b0fe0d936ab27a"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2500,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2387,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2627,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "sha256": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "479edfe99efa1a9ef6d4e89343ee7f6aec26cf153d2f5c1165adb6c4dcb3e353"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2371,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 516,
+            "sha256": "8e434ffa6209e29825ca094f42770edfbb8be9b8b1cb463a1ad40775b6b3c6fb"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2267,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 516,
+            "sha256": "8e434ffa6209e29825ca094f42770edfbb8be9b8b1cb463a1ad40775b6b3c6fb"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2333,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 516,
+            "sha256": "8e434ffa6209e29825ca094f42770edfbb8be9b8b1cb463a1ad40775b6b3c6fb"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "sha256": "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "d285546e39902c1c1817bfcc96e60f1b4d8c48ce432b861d3374b9eb76e77957"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3058,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2854,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2861,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "sha256": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "4916c3a399bb202638c0f9c44d0151eb020c6740787c1601bc0084f37d9d347d"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalAbsolution",
+          "Metadata/Items/Gems/SkillGemVaalSummonSkeletons"
+        ],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3117,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3065,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3801,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "sha256": "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "2dcc8b4ee5bfab30bf57bc9a03d00754638c156b1185b021f32eaee56efc592c"
+      },
+      "probe": {
+        "inflate_calls": 1,
+        "inflate_errors": 0,
+        "inflated_bytes": 3587054,
+        "writes_refused": 1,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3112,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 695,
+            "sha256": "9535361b65077934de9e9032ed227153348cccb863d557416afec303ebc57080"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2330,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 695,
+            "sha256": "9535361b65077934de9e9032ed227153348cccb863d557416afec303ebc57080"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2402,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 695,
+            "sha256": "209f3120ef167af15cff8655eb0f13c85a0ae469ded99459ea8726ffd4b3d91c"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "sha256": "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "696a1a371cc9c737c9d2ed2a1746aa8e5fc82ddc77d44fea46bfd5dc30cb45a1"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3040,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3122,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3051,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "sha256": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "0b0eaac47a3fa8b2bebcfddae328be4c405af12d44333442191f9c9969411838"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2400,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 492,
+            "sha256": "5621c4f469ad05bcccba69f55cdae0e658313153e689b50a5a3efdc103a7601f"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2363,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 492,
+            "sha256": "5621c4f469ad05bcccba69f55cdae0e658313153e689b50a5a3efdc103a7601f"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2283,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 492,
+            "sha256": "5621c4f469ad05bcccba69f55cdae0e658313153e689b50a5a3efdc103a7601f"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "sha256": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "3bafb1e666ceb6ec991eab38ccc3b1e6826525dcd41bdf549569dd82c6b083ff"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3374,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3383,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3353,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "sha256": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "4c93b21eb81ccbdd8a1304d267ac749a38de59fb82bca5a0cc81098030bf573f"
+      },
+      "probe": {
+        "inflate_calls": 1,
+        "inflate_errors": 0,
+        "inflated_bytes": 3632454,
+        "writes_refused": 1,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2568,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1085,
+            "sha256": "c7f61496a664b4f0c6649cece1ebf65ec8e70c65ac1bb02d15520161845b3b5e"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2501,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1085,
+            "sha256": "34b6b33a3c58ef8e13d366d18ad03e813e1a036360cca12ca3fccb31958d4a51"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2491,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1085,
+            "sha256": "c7f61496a664b4f0c6649cece1ebf65ec8e70c65ac1bb02d15520161845b3b5e"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "sha256": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "f4da042a6a2f745acb44bd1d490c20c464f95dbfb9cfc0a3c2038d915de453df"
+      },
+      "probe": {
+        "inflate_calls": 1,
+        "inflate_errors": 0,
+        "inflated_bytes": 3632454,
+        "writes_refused": 1,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2083,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 693,
+            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2052,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 693,
+            "sha256": "02f9abd070ed85f6a3f4186e51d3aaabdf9464d70ceb3122b3ab8d714f96b505"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2139,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 693,
+            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "sha256": "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "515c55585f77145c5897ed78ff8c8b8550c558cbe07fe48ab65c09c8139f4660"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3155,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3050,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3022,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "sha256": "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "fadf1e0fec51888728e05dfdc42fe72ba2c406104f6e7dcafce7fe2dedd3cb47"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3590,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3517,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3399,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "sha256": "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "29afae06e327b22eebea03c8a9846cdabdb165f3fa5522dc36c01b626dbb6766"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2773,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2802,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2732,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 514,
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "id": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "sha256": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "status": "ok",
+      "class": null,
+      "determinism": {
+        "runs": 3,
+        "identical": 3
+      },
+      "outcome": {
+        "status": "ok",
+        "class": null,
+        "stage": "done",
+        "message": null,
+        "output_sha256": "cf5c41e441faf8caeda60b8f92ebdb518f90b57633e8a7fc556770ddd0a503e4"
+      },
+      "probe": {
+        "inflate_calls": 0,
+        "inflate_errors": 0,
+        "inflated_bytes": 0,
+        "writes_refused": 0,
+        "variant_order": [],
+        "not_installed": []
+      },
+      "runs": [
+        {
+          "exit_code": 0,
+          "elapsed_ms": 4006,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 4038,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3804,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    }
+  ],
+  "after": [
+    {
+      "name": "pob.clean",
+      "class": "ORACLE_ACQUISITION",
+      "ok": true,
+      "expected": "clean",
+      "actual": "clean"
+    }
+  ],
+  "skipped": []
+}

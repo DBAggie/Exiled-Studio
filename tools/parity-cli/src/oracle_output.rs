@@ -1,4 +1,4 @@
-//! The adapter's output document (protocol 2): the hand-written schema
+//! The adapter's output document (protocol 3): the hand-written schema
 //! check and the canonical form `oracle-run` hashes and compares. The
 //! contract is documented in `tools/oracle/schema/oracle-output.schema.json`;
 //! this module is what enforces it (Spike C plan: no JSON-schema crate).
@@ -33,6 +33,9 @@ pub const FIELDS: [&str; 11] = [
 /// The fields of one shim record.
 const SHIM_FIELDS: [&str; 4] = ["name", "replaces", "installed", "detail"];
 
+/// The fields of the probe, in the order the schema lists them.
+const PROBE_FIELDS: [&str; 3] = ["inflate", "variant_order", "writes_refused"];
+
 /// The fields of one recorded `Inflate` call.
 const INFLATE_FIELDS: [&str; 5] = [
     "input_bytes",
@@ -53,6 +56,10 @@ pub struct Probe {
     pub inflated_bytes: u64,
     /// Opens for writing the write guard refused.
     pub writes_refused: usize,
+    /// Gem variant tables (by gameId) the `variant_order` shim iterated in
+    /// sorted order: gems saved without a variant whose lookup PoB would
+    /// otherwise leave to `pairs` order.
+    pub variant_order: Vec<String>,
     /// Shims that are not installed (by name).
     pub not_installed: Vec<String>,
 }
@@ -247,14 +254,16 @@ fn check_probe(value: &Value) -> Result<Probe, String> {
     let Value::Object(probe) = value else {
         return Err("probe: not an object".to_owned());
     };
-    exact_keys(probe, &["inflate", "writes_refused"], "probe")?;
+    exact_keys(probe, &PROBE_FIELDS, "probe")?;
     let writes_refused = string_list(&probe["writes_refused"], "probe.writes_refused")?.len();
+    let variant_order = string_list(&probe["variant_order"], "probe.variant_order")?;
     let Value::Array(calls) = &probe["inflate"] else {
         return Err("probe.inflate: not an array".to_owned());
     };
     let mut summary = Probe {
         inflate_calls: calls.len(),
         writes_refused,
+        variant_order,
         ..Probe::default()
     };
     for (i, call) in calls.iter().enumerate() {
@@ -422,10 +431,14 @@ mod tests {
 
     fn adapter() -> Adapter {
         Adapter {
-            protocol: 2,
+            protocol: 3,
             breakdowns: vec!["Life".to_owned(), "TotalDPS".to_owned()],
             opaque_keys: vec!["sourceGem".to_owned()],
-            shims: vec!["inflate".to_owned(), "write_guard".to_owned()],
+            shims: vec![
+                "inflate".to_owned(),
+                "variant_order".to_owned(),
+                "write_guard".to_owned(),
+            ],
             zlib: std::collections::BTreeMap::new(),
         }
     }
@@ -433,6 +446,7 @@ mod tests {
     fn shims() -> Value {
         json!([
             {"name": "inflate", "replaces": "Inflate", "installed": true, "detail": "zlib 1.3.1"},
+            {"name": "variant_order", "replaces": "pairs", "installed": true, "detail": "37 ambiguous gem variant tables"},
             {"name": "write_guard", "replaces": "io.open", "installed": true, "detail": null}
         ])
     }
@@ -443,14 +457,18 @@ mod tests {
 
     fn done() -> Value {
         json!({
-            "protocol": 2,
+            "protocol": 3,
             "stage": "done",
             "error": null,
             "partial": [],
             "modules": ["lua-utf8", "xml"],
             "settings": {"path": "/Settings.xml", "found": false},
             "shims": shims(),
-            "probe": {"inflate": [inflated()], "writes_refused": ["./Data/x.bin"]},
+            "probe": {
+                "inflate": [inflated()],
+                "variant_order": ["Metadata/Items/Gems/SkillGemVaalDetonateDead"],
+                "writes_refused": ["./Data/x.bin"]
+            },
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": {"Life": ["1 (base)", "= 1"], "TotalDPS": null},
             "main_output": {
@@ -466,14 +484,14 @@ mod tests {
 
     fn failed(stage: &str) -> Value {
         json!({
-            "protocol": 2,
+            "protocol": 3,
             "stage": stage,
             "error": {"source": "pob", "message": "bad"},
             "partial": [],
             "modules": [],
             "settings": {"path": "/Settings.xml", "found": false},
             "shims": shims(),
-            "probe": {"inflate": [], "writes_refused": []},
+            "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": null,
             "main_output": null
@@ -497,6 +515,7 @@ mod tests {
                 inflate_errors: 0,
                 inflated_bytes: 40,
                 writes_refused: 1,
+                variant_order: vec!["Metadata/Items/Gems/SkillGemVaalDetonateDead".to_owned()],
                 not_installed: vec![],
             }
         );
@@ -678,7 +697,10 @@ mod tests {
             .map(|v| v.as_str().unwrap())
             .collect();
         assert_eq!(required, FIELDS);
-        assert_eq!(schema["properties"]["protocol"]["const"], 2);
+        assert_eq!(
+            schema["properties"]["protocol"]["const"],
+            crate::oracle::PROTOCOL
+        );
         let keys = |value: &Value| -> Vec<String> {
             value["required"]
                 .as_array()
@@ -689,6 +711,7 @@ mod tests {
         };
         assert_eq!(keys(&schema["$defs"]["shim"]), SHIM_FIELDS);
         assert_eq!(keys(&schema["$defs"]["inflate_call"]), INFLATE_FIELDS);
+        assert_eq!(keys(&schema["properties"]["probe"]), PROBE_FIELDS);
         assert_eq!(
             schema["properties"]["breakdown_source"]["const"],
             BREAKDOWN_SOURCE
