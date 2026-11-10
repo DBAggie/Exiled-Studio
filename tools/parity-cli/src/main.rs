@@ -7,8 +7,10 @@
 //! LuaJIT at a pinned public PoB tag, ADR-006) comes with Spike C.
 
 mod extract;
+mod item_tags;
 mod load_statdesc;
 mod lookup;
+mod mod_filter;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
@@ -147,6 +149,7 @@ fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool,
     let loaded = extract::load(&read)?;
     let (lookup, lookup_report) = lookup::TableLookup::load(&read)?;
     let bases = resolve_corpus::Bases::load(&read)?;
+    let mods = mod_filter::Mods::load(&read)?;
     let mut builds = Vec::new();
     for entry in
         std::fs::read_dir(builds_dir).map_err(|e| format!("{}: {e}", builds_dir.display()))?
@@ -164,8 +167,15 @@ fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool,
         commit: git(&["rev-parse", "HEAD"]),
         dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
     };
-    let (summary, report) =
-        resolve_corpus::run(&loaded, &lookup, lookup_report, &bases, &builds, tool)?;
+    let (summary, report) = resolve_corpus::run(
+        &loaded,
+        &lookup,
+        lookup_report,
+        &bases,
+        &mods,
+        &builds,
+        tool,
+    )?;
     write_out(out, &summary, &report)?;
     let json = serde_json::to_string_pretty(&summary.rate).map_err(|e| e.to_string())?;
     println!("{json}");
