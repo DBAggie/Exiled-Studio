@@ -1176,3 +1176,52 @@ fn resolve_lines_should_read_back_multi_line_and_lookup_renders() {
         );
     }
 }
+
+const PRESENCE: &str = "While a Unique Enemy is in your Presence, {0}";
+
+fn presence() -> compose::Composition {
+    compose::Composition::new("Presence", PRESENCE, "requires_presence", 1).unwrap()
+}
+
+#[test]
+fn resolve_lines_composed_should_add_the_wrapper_stat_to_the_remainder() {
+    let set = one_file(vec![increased_reduced("x_+%"), simple("y", "Gain {0} Y")]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let lines = [
+        "Gain 3 Y",
+        "While a Unique Enemy is in your Presence, 12% increased X",
+        "While a Unique Enemy is in your Presence, nothing known",
+    ];
+    let out = index.resolve_lines_composed(&lines, &[presence()]);
+    assert_eq!(out.len(), 3);
+    assert_eq!(out[0].composition, None);
+    assert_eq!(out[1].composition, Some(0));
+    let c = resolved(&out[1].resolution);
+    let stats: Vec<&str> = c.stats.iter().map(|s| s.stat.as_str()).collect();
+    assert_eq!(stats, ["x_+%", "requires_presence"]);
+    assert_eq!(out[1].resolution.line, lines[1]);
+    // The remainder does not resolve: the line keeps its plain outcome.
+    assert_eq!(out[2].composition, None);
+    assert!(matches!(
+        out[2].resolution.outcome,
+        Outcome::Unresolved(Unresolved::NoTemplate)
+    ));
+}
+
+#[test]
+fn resolve_lines_composed_should_prefer_a_description_with_the_whole_text() {
+    let whole = simple(
+        "own",
+        "While a Unique Enemy is in your Presence, Gain {0} Y",
+    );
+    let set = one_file(vec![whole, simple("y", "Gain {0} Y")]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let out = index.resolve_lines_composed(
+        &["While a Unique Enemy is in your Presence, Gain 3 Y"],
+        &[presence()],
+    );
+    assert_eq!(out[0].composition, None);
+    assert_eq!(resolved(&out[0].resolution).stats[0].stat, "own");
+}

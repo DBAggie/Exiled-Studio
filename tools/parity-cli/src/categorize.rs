@@ -45,7 +45,9 @@
 //! 9. `parser-gap/client-string`: a line matching a `ClientStrings` text the
 //!    client composes a modifier with (`While a Unique Enemy is in your
 //!    Presence, {0}`, `Uses level {1} {0}`); the composed remainder is not
-//!    resolved, and the evidence says so.
+//!    resolved, and the evidence says so. Since PR B5c the resolver reads
+//!    the [`COMPOSITIONS`] wrappers itself, so a presence line gets here
+//!    only when its remainder does not resolve.
 //! 10. `parser-gap/near-miss`: the word key equals a variant line of the
 //!     item's scope (case, sign, missing value, or one line of a multi-line
 //!     variant); a lookup variant's placeholder matches one or more words.
@@ -63,6 +65,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Handler, Segment, StatDescriptions};
 use loom_parser::pob_item;
+use loom_parser::resolve::compose::Composition;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -103,6 +106,23 @@ pub const CLIENT_STRINGS: [(&str, ClientKind); 12] = [
     ),
     // `Uses level {1} {0}`: the skill a graft's implicit grants.
     ("BrequelGraftSkillString", ClientKind::Modifier),
+];
+
+/// `ClientStrings` wrappers the resolver reads through (PR B5c;
+/// [`loom_parser::resolve::compose`]), each with the stat the wrapper
+/// stands for, value 1. Pairing: every `Mods` row with the stat is an
+/// eldritch implicit (`*EldritchImplicitUniquePresence*`,
+/// `*PinnaclePresence*`) whose other stat's line the client wraps in the
+/// text (PoE1 26530219).
+pub const COMPOSITIONS: [(&str, &str); 2] = [
+    (
+        "InfluenceStatConditionPresenceUniqueMonster",
+        "local_influence_mod_requires_unique_monster_presence",
+    ),
+    (
+        "InfluenceStatConditionPresenceCelestialBoss",
+        "local_influence_mod_requires_celestial_boss_presence",
+    ),
 ];
 
 /// What a `ClientStrings` line is.
@@ -375,6 +395,9 @@ pub struct GameText {
     pob: Vec<PobText>,
     /// Whether a description or client text holds `^` and a digit or `x`.
     pub colour_code_in_game_text: bool,
+    /// The [`COMPOSITIONS`] whose `ClientStrings` text was found and has
+    /// one `{0}`, in that order.
+    pub compositions: Vec<Composition>,
 }
 
 impl GameText {
@@ -436,6 +459,11 @@ impl GameText {
                 continue;
             };
             out.colour_code_in_game_text |= has_colour_code(t);
+            if let Some((_, stat)) = COMPOSITIONS.iter().find(|(id, _)| *id == i)
+                && let Some(c) = Composition::new(i, t, stat, 1)
+            {
+                out.compositions.push(c);
+            }
             let Some(kind) = client_kind(i) else {
                 continue;
             };
@@ -449,6 +477,8 @@ impl GameText {
                 });
             }
         }
+        out.compositions
+            .sort_by_key(|c| COMPOSITIONS.iter().position(|(id, _)| *id == c.id));
         Ok(out)
     }
 

@@ -124,6 +124,7 @@ fn game(pob: bool) -> GameText {
         ],
         pob: if pob { vec![pob_text] } else { Vec::new() },
         colour_code_in_game_text: false,
+        compositions: Vec::new(),
     }
 }
 

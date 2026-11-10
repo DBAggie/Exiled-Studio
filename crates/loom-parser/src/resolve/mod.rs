@@ -53,8 +53,12 @@
 //! condition holds on one side. A looked-up name gives [`RawValue::Lookup`],
 //! every key with that name that meets the condition.
 //!
+//! **Composed lines (B5c):** [`compose`] reads lines the client wraps in a
+//! `ClientStrings` text, with the stat the wrapper stands for.
+//!
 //! Every line ends in exactly one [`Outcome`]; nothing is dropped.
 
+pub mod compose;
 pub mod token;
 
 use std::collections::BTreeMap;
