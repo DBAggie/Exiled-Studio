@@ -22,6 +22,7 @@ fn adapter() -> Adapter {
 fn shims() -> Value {
     json!([
         {"name": "inflate", "replaces": "Inflate", "installed": true, "detail": "zlib 1.3.1"},
+        {"name": "variant_order", "replaces": "pairs", "installed": true, "detail": "37 ambiguous gem variant tables"},
         {"name": "write_guard", "replaces": "io.open", "installed": true, "detail": null}
     ])
 }
@@ -33,14 +34,14 @@ fn done_document() -> Value {
         .map(|b| (b.clone(), Value::Null))
         .collect();
     json!({
-        "protocol": 2,
+        "protocol": 3,
         "stage": "done",
         "error": null,
         "partial": [],
         "modules": ["lua-utf8", "xml"],
         "settings": {"path": "/Settings.xml", "found": false},
         "shims": shims(),
-        "probe": {"inflate": [], "writes_refused": []},
+        "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": breakdowns,
         "main_output": {"Life": 60, "Mana": 40.5}
@@ -49,14 +50,14 @@ fn done_document() -> Value {
 
 fn failed_document(stage: &str, message: &str) -> Value {
     json!({
-        "protocol": 2,
+        "protocol": 3,
         "stage": stage,
         "error": {"source": "lua", "message": message},
         "partial": [],
         "modules": [],
         "settings": if stage == "startup" { Value::Null } else { json!({"path": "/Settings.xml", "found": false}) },
         "shims": shims(),
-        "probe": {"inflate": [], "writes_refused": []},
+        "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": null,
         "main_output": null
@@ -218,6 +219,7 @@ fn run_fixture_should_report_the_first_runs_probe() {
     let mut document = done_document();
     document["probe"] = json!({
         "inflate": [{"input_bytes": 9, "output_bytes": 30, "adler32": 5, "trailing_bytes": 0, "error": null}],
+        "variant_order": ["Metadata/Items/Gems/SkillGemVaalDetonateDead"],
         "writes_refused": ["./Data/TimelessJewelData/MilitantFaith.bin"]
     });
     let result = run_scripted("probe", &Scripted::same(Step::Write(document, 0)));

@@ -737,12 +737,12 @@ impl Report {
             ));
         }
         text.push_str(
-            "| Fixture | Status | Class | Expected | Identical runs | Inflate calls (bytes out) | Writes refused | Output SHA-256 |\n\
-             |---|---|---|---|---|---|---|---|\n",
+            "| Fixture | Status | Class | Expected | Identical runs | Inflate calls (bytes out) | Writes refused | Variant order | Output SHA-256 |\n\
+             |---|---|---|---|---|---|---|---|---|\n",
         );
         for f in &self.fixtures {
-            let (inflate, refused) = f.probe.as_ref().map_or_else(
-                || ("-".to_owned(), "-".to_owned()),
+            let (inflate, refused, ordered) = f.probe.as_ref().map_or_else(
+                || ("-".to_owned(), "-".to_owned(), "-".to_owned()),
                 |p| {
                     let errors = if p.inflate_errors > 0 {
                         format!(", {} failed", p.inflate_errors)
@@ -752,6 +752,7 @@ impl Report {
                     (
                         format!("{} ({}{errors})", p.inflate_calls, p.inflated_bytes),
                         p.writes_refused.to_string(),
+                        p.variant_order.len().to_string(),
                     )
                 },
             );
@@ -761,7 +762,7 @@ impl Report {
                 _ => "-".to_owned(),
             };
             text.push_str(&format!(
-                "| {} | {} | {} | {expected} | {}/{} | {inflate} | {refused} | {} |\n",
+                "| {} | {} | {} | {expected} | {}/{} | {inflate} | {refused} | {ordered} | {} |\n",
                 f.id.replace('|', "\\|"),
                 f.status,
                 f.class.map_or("-", FailureClass::name),

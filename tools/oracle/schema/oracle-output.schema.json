@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "loom oracle adapter output, protocol 2",
-  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted; shims names exactly the manifest's adapter.shims, in that order; partial is not empty when an Inflate call in the probe has an error. Protocol 2 (PR C2b) added shims and probe.",
+  "title": "loom oracle adapter output, protocol 3",
+  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted; shims names exactly the manifest's adapter.shims, in that order; partial is not empty when an Inflate call in the probe has an error. Protocol 2 (PR C2b) added shims and probe; protocol 3 (PR C3b+C4) added the variant_order shim and probe.variant_order.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,7 +18,7 @@
     "main_output"
   ],
   "properties": {
-    "protocol": { "const": 2 },
+    "protocol": { "const": 3 },
     "stage": {
       "description": "The stage reached: done, or the stage that failed.",
       "enum": ["startup", "import", "calculate", "normalize", "done"]
@@ -54,12 +54,17 @@
       "description": "What the shims did in this run.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["inflate", "writes_refused"],
+      "required": ["inflate", "variant_order", "writes_refused"],
       "properties": {
         "inflate": {
           "description": "Every call of the Inflate shim, in order (PoB inflates timeless jewel data when a build needs it).",
           "type": "array",
           "items": { "$ref": "#/$defs/inflate_call" }
+        },
+        "variant_order": {
+          "description": "Game ids of the gem variant tables the variant_order shim iterated in sorted order, once each, in first-use order: gems saved without a variantId whose variant PoB would otherwise pick by pairs order (old-format Vaal gems with transfigured copies).",
+          "type": "array",
+          "items": { "type": "string" }
         },
         "writes_refused": {
           "description": "Paths PoB tried to open for writing, which the write guard refused (for example the jewel loader's .bin cache), in order.",
@@ -110,7 +115,7 @@
       "required": ["name", "replaces", "installed", "detail"],
       "properties": {
         "name": { "type": "string" },
-        "replaces": { "description": "The PoB global the shim replaces.", "type": "string" },
+        "replaces": { "description": "The global the shim replaces (Inflate, pairs, io.open).", "type": "string" },
         "installed": { "description": "Whether the shim works (inflate: zlib loaded).", "type": "boolean" },
         "detail": {
           "description": "inflate: the zlib version, or why zlib did not load (without paths).",

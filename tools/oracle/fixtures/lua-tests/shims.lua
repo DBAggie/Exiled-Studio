@@ -106,6 +106,75 @@ check("passes the default mode", guarded("./Data/x.zip") == "handle")
 check("passes the arguments unchanged", opened[3] == "./Data/x.zip|nil", opened[3])
 check("refused list unchanged by reads", #refused == 8)
 
+-- variant_order: registration
+local base = { name = "base" }
+local gemsByGameId = {
+	-- A Vaal gem with transfigured copies: three variants, one grantedEffectId.
+	vaal = {
+		VaalX = { grantedEffectId = "VaalX" },
+		VaalXAltX = { grantedEffectId = "VaalX" },
+		VaalXAltY = { grantedEffectId = "VaalX" },
+	},
+	-- Transfigured variants with their own grantedEffectIds: not ambiguous.
+	plain = { X = { grantedEffectId = "X" }, XAltX = { grantedEffectId = "XAltX" } },
+	single = { Y = { grantedEffectId = "Y" } },
+	broken = "not a table",
+}
+local ordered = {}
+local count = shims.registerAmbiguousVariants(gemsByGameId, ordered, pairs)
+check("registers only ambiguous tables", count == 1 and ordered[gemsByGameId.vaal] == "vaal", count)
+check("leaves distinct variants alone", ordered[gemsByGameId.plain] == nil and ordered[gemsByGameId.single] == nil)
+
+-- variant_order: iteration
+local seen, unordered = {}, {}
+local orderedPairs = shims.orderedPairs(pairs, ordered, function(label)
+	seen[#seen + 1] = label
+end, function(label)
+	unordered[#unordered + 1] = label
+end)
+local keys = {}
+for k, v in orderedPairs(gemsByGameId.vaal) do
+	keys[#keys + 1] = k
+	check("value of " .. k, v == gemsByGameId.vaal[k])
+end
+check("sorted order, base first", table.concat(keys, ",") == "VaalX,VaalXAltX,VaalXAltY", table.concat(keys, ","))
+check("ordered use reported", #seen == 1 and seen[1] == "vaal", #seen)
+-- The first match wins, as in PoB's SkillsTab:Load: always the base gem.
+local picked
+for _, variant in orderedPairs(gemsByGameId.vaal) do
+	if variant.grantedEffectId == "VaalX" then
+		picked = variant
+		break
+	end
+end
+check("first match is the base gem", picked == gemsByGameId.vaal.VaalX)
+-- Other tables: exactly the original pairs (same iterator function).
+local f, t, k0 = orderedPairs(gemsByGameId.plain)
+check("other tables use next", f == next and t == gemsByGameId.plain and k0 == nil)
+check("other tables not reported", #seen == 2, #seen)
+local count2 = 0
+for _ in orderedPairs({ a = 1, b = 2, [base] = 3 }) do
+	count2 = count2 + 1
+end
+check("unregistered table with a table key", count2 == 3, count2)
+-- A registered table with a key that is not a string falls back.
+local mixed = { a = 1, [1] = 2 }
+ordered[mixed] = "mixed"
+local mixedCount = 0
+for _ in orderedPairs(mixed) do
+	mixedCount = mixedCount + 1
+end
+check("non-string key falls back to pairs", mixedCount == 2 and #seen == 2, mixedCount)
+check("fallback reported", #unordered == 1 and unordered[1] == "mixed", #unordered)
+-- An empty registered table iterates nothing.
+local empty = {}
+ordered[empty] = "empty"
+local emptyCount = 0
+for _ in orderedPairs(empty) do
+	emptyCount = emptyCount + 1
+end
+check("empty registered table", emptyCount == 0)
+
 if #failures > 0 then
 	print(table.concat(failures, "\n"))
 	os.exit(1)

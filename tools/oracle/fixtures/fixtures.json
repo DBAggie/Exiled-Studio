@@ -88,6 +88,209 @@
       "expect": "ok",
       "pair": "minimal-level1.xml",
       "description": "minimal-level1.xml plus the custom modifier 10% increased Movement Speed. oracle-compare of its pair against it reports exactly /main_output/MovementSpeedMod and /main_output/EffectiveMovementSpeedMod (1 -> 1.1): unexpected without a register, expected with tools/oracle/fixtures/discrepancy-register.json."
+    },
+    {
+      "id": "rf-chieftain-league-start.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/rf-chieftain-league-start.xml",
+      "sha256": "e03e83c6fc34bfe37a35b90154b6787da6e79986ef45ad4a4854c81047158e11",
+      "expect": "ok",
+      "description": "Pohx (pohx.net), \"RF Chief League Start (Best)\"; credit, retrieval and terms in community/SOURCES.md. Covers: Righteous Fire self-burn damage over time; opens on the levelling spec (level 30 Marauder, 10 tree specs)."
+    },
+    {
+      "id": "rf-chieftain-life-stack.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/rf-chieftain-life-stack.xml",
+      "sha256": "8fe627327785d4999f118185d030fd011b5360d30770d36dd01d218e40a325ba",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "Pohx (pohx.net), \"RF Chief Life Stack\"; credit, retrieval and terms in community/SOURCES.md. Covers: Righteous Fire Chieftain at level 100: life stacking, regeneration, burning damage over time."
+    },
+    {
+      "id": "winter-orb-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/winter-orb-elementalist.xml",
+      "sha256": "3befee75af0864a3c67eb3368e25c5298d7390e0d44be55aec05e3bc69f11b59",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "legi (Maxroll), Winter Orb Elementalist League Starter; credit, retrieval and terms in community/SOURCES.md. Covers: Channelled cold spell, exposure; opens on a level 64 spec (11 specs)."
+    },
+    {
+      "id": "penance-brand-ignite-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/penance-brand-ignite-elementalist.xml",
+      "sha256": "48ff126f4f6408b9cabf86c51d4b1e058fbc9fa5a19ba69b006d5252868bd8ca",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "goratha (Maxroll), Penance Brand Ignite Elementalist; credit, retrieval and terms in community/SOURCES.md. Covers: Brands, ignite, burning ground."
+    },
+    {
+      "id": "boneshatter-juggernaut.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/boneshatter-juggernaut.xml",
+      "sha256": "74a4042b212e5b5064f963f88a022a2b470b1c1821d623bb00a7b7f465dcae41",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "zizaran (Maxroll), Boneshatter Juggernaut League Starter; credit, retrieval and terms in community/SOURCES.md. Covers: Melee attacks, endurance charges, self-damage."
+    },
+    {
+      "id": "kinetic-blast-of-clustering-necromancer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/kinetic-blast-of-clustering-necromancer.xml",
+      "sha256": "29745e99170905ea5a54a8f5cfeff2cc600a5d0293c54e066727ea73a475086f",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "legi (Maxroll), Kinetic Blast of Clustering Necromancer; credit, retrieval and terms in community/SOURCES.md. Covers: Transfigured gem (saved with variantId), wand projectiles, Mirage Archer."
+    },
+    {
+      "id": "elemental-hit-of-the-spectrum-deadeye.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/elemental-hit-of-the-spectrum-deadeye.xml",
+      "sha256": "454bcb2afd4b0b34dec072bb3c9f8c109f22151cb98af999144a8fab06722202",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "havoc (Maxroll), Elemental Hit of the Spectrum Deadeye; credit, retrieval and terms in community/SOURCES.md. Covers: Bow attacks, transfigured gem, Mirage Archer, culling."
+    },
+    {
+      "id": "poisonous-concoction-of-bouncing-pathfinder.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/poisonous-concoction-of-bouncing-pathfinder.xml",
+      "sha256": "8cead3c0a9115d2807bf8ec48b05d5575bde9c48e7623db66e09114e6201771e",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "havoc (Maxroll), Poisonous Concoction of Bouncing Pathfinder; credit, retrieval and terms in community/SOURCES.md. Covers: Flask-based skill, poison."
+    },
+    {
+      "id": "cyclone-shockwave-slayer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/cyclone-shockwave-slayer.xml",
+      "sha256": "7b64c6c6733598d6d8f15237a77be3e7e5e0a4617802127d6499baff9f25cd7d",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "cptngarbage (Maxroll), Cyclone Shockwave Slayer; credit, retrieval and terms in community/SOURCES.md. Covers: Channelled melee with a triggered skill, impale, culling."
+    },
+    {
+      "id": "facebreaker-luminary.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/facebreaker-luminary.xml",
+      "sha256": "f10c76a7247bcd42af9e31c960a4199eb1b9d8f38b28fee828b1136e872f7d34",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "shayd (Maxroll), Facebreaker Luminary; credit, retrieval and terms in community/SOURCES.md. Covers: Scion Luminary ascendancy, unarmed Earthshatter slam, bleed."
+    },
+    {
+      "id": "arakaalis-raise-spider-occultist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/arakaalis-raise-spider-occultist.xml",
+      "sha256": "f73eb8969b1b3113bd048e2c012d38a01c1afe1ce9452aecedbf1cae456b8e56",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "shayd (Maxroll), Arakaali's Raise Spider Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Minions granted by a unique (Raise Spiders), poison."
+    },
+    {
+      "id": "lightning-trap-of-sparking-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/lightning-trap-of-sparking-elementalist.xml",
+      "sha256": "144ad7a1a2cbbc2639c4789c0fba39110de91d55c67606b5fdd50f24a034b069",
+      "expect": "ok",
+      "description": "velyna (Maxroll), Lightning Trap of Sparking Elementalist; credit, retrieval and terms in community/SOURCES.md. Covers: Traps (Lightning Trap of Sparking), crit, energy shield."
+    },
+    {
+      "id": "holy-flame-totem-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/holy-flame-totem-hierophant.xml",
+      "sha256": "2a5b188f47069653b3cac0f9cfbb22894231fcc46497fbf9cdc9c01415c44f2e",
+      "expect": "ok",
+      "description": "aer0 (Maxroll), Holy Flame Totem Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Spell totems (Holy Flame Totem), crit."
+    },
+    {
+      "id": "kinetic-fusillade-ballista-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/kinetic-fusillade-ballista-hierophant.xml",
+      "sha256": "4e0d521fbf773bc184a4ae2cc5b4285541f6abf9d9f5a7011a9107d98c34fe74",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "Palsteron (video guide, pobb.in), Kinetic Fusillade Ballista Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Ballista totems firing Kinetic Fusillade."
+    },
+    {
+      "id": "ethereal-knives-mines-assassin.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ethereal-knives-mines-assassin.xml",
+      "sha256": "bbd0fff4de858ba4fe273e6763346770e6f859216f35b59c50ee2e214516ed66",
+      "expect": "ok",
+      "description": "Kankar (video guide, pobb.in), Ethereal Knives Mines Assassin; credit, retrieval and terms in community/SOURCES.md. Covers: Mines (Ethereal Knives with Minefield, High-Impact and Charged Mines)."
+    },
+    {
+      "id": "lacerate-bleed-gladiator.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/lacerate-bleed-gladiator.xml",
+      "sha256": "0000d4e84a3a16e16dec132b3e12af5ed5f226ba71e86c80458ca9e37153d009",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "kosx-01 (video guide, pobb.in), Lacerate Bleed Gladiator; credit, retrieval and terms in community/SOURCES.md. Covers: Bleed (Lacerate of Haemorrhage, a transfigured gem), Gladiator block."
+    },
+    {
+      "id": "forged-frostbearer-spectre-necromancer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/forged-frostbearer-spectre-necromancer.xml",
+      "sha256": "e6a6685e6b620d1425f28ebaefd73246858e9c008b522ba6ba1551db458b02a2",
+      "expect": "ok",
+      "description": "helmbreaker (Maxroll), Forged Frostbearer Spectre Necromancer; credit, retrieval and terms in community/SOURCES.md. Covers: Spectres, skeletons, zombies."
+    },
+    {
+      "id": "animate-guardian-guardian.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/animate-guardian-guardian.xml",
+      "sha256": "94dc1f47297d53a3bbac68af18c56f6af349f0f7471cef3d2208027f58dd4e61",
+      "expect": "ok",
+      "description": "Thyworm (video guide, pobb.in), Animate Guardian Guardian; credit, retrieval and terms in community/SOURCES.md. Covers: Animate Guardian, Summon Raging Spirit, Sentinel of Radiance (Guardian minions)."
+    },
+    {
+      "id": "flicker-strike-berserker.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/flicker-strike-berserker.xml",
+      "sha256": "3f0b4085e2f50447b02702282e65ef8ad47c1493af4f3e22968260ddf92b7a04",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "cptngarbage (Maxroll), Flicker Strike Berserker; credit, retrieval and terms in community/SOURCES.md. Covers: Vaal Flicker Strike (saved with variantId), Greater Multistrike, Berserker rage."
+    },
+    {
+      "id": "shock-nova-archmage-hierophant.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/shock-nova-archmage-hierophant.xml",
+      "sha256": "66a71b3aa4570ce686b13bb18603f61c26f7225847bc50b2a6fa921236d6bce2",
+      "expect": "ok",
+      "description": "goratha (Maxroll), Shock Nova of Procession Archmage Hierophant; credit, retrieval and terms in community/SOURCES.md. Covers: Archmage mana stacking, Shock Nova of Procession, Spell Echo."
+    },
+    {
+      "id": "essence-drain-contagion-occultist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/essence-drain-contagion-occultist.xml",
+      "sha256": "0044adb6b97377900d22cee9d83f273937f1976e0a59a4595aa09c86f7e29799",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "goratha (Maxroll), Essence Drain Contagion Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Chaos damage over time (Essence Drain, Blight of Contagion), Chaos Inoculation."
     }
   ]
 }
