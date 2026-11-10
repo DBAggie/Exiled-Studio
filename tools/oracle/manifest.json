@@ -20,5 +20,20 @@
     "commit": "1bb70d45208d4033dcc75efee968be70534dd3ab",
     "module": "lua-utf8"
   },
-  "adapter": { "protocol": 1 }
+  "adapter": {
+    "protocol": 1,
+    "breakdowns": [
+      "Armour",
+      "ChaosResist",
+      "ColdResist",
+      "EnergyShield",
+      "Evasion",
+      "FireResist",
+      "Life",
+      "LightningResist",
+      "Mana",
+      "TotalDPS"
+    ],
+    "opaque_keys": ["sourceGem"]
+  }
 }

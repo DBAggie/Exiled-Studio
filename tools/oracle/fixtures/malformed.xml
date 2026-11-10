@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic oracle fixture (loom, Spike C): not well-formed XML (the
+     Build element is never closed), so the import stage must fail. -->
+<PathOfBuilding>
+	<Build level="1" className="Scion">
+</PathOfBuilding>

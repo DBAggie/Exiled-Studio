@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic oracle fixture (loom, Spike C): a level 1 Scion with no
+     passives, skills, items, or configuration. Original; not from PoB. -->
+<PathOfBuilding>
+	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="0" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items/>
+	<Config/>
+</PathOfBuilding>

@@ -11,13 +11,15 @@
 //! `ORACLE_ACQUISITION` (the upstream failure); every check is listed.
 
 use std::collections::BTreeMap;
+use std::ffi::OsString;
 use std::path::Path;
 use std::process::{Command, Stdio};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use serde::Serialize;
 
 use crate::oracle::{self, BuildRecord, FailureClass, Manifest};
+use crate::oracle_process;
 
 /// How long the runtime probe may take.
 const PROBE_TIMEOUT: Duration = Duration::from_secs(10);
@@ -83,17 +85,26 @@ impl Checks {
         expected: &str,
         actual: Result<String, String>,
     ) {
-        let (ok, actual) = match actual {
-            Ok(actual) => (actual == expected, actual),
-            Err(error) => (false, format!("error: {error}")),
-        };
-        self.0.push(Check {
-            name: name.into(),
-            class,
-            ok,
-            expected: expected.to_owned(),
-            actual,
-        });
+        self.0.push(check(name, class, expected, actual));
+    }
+}
+
+fn check(
+    name: impl Into<String>,
+    class: FailureClass,
+    expected: &str,
+    actual: Result<String, String>,
+) -> Check {
+    let (ok, actual) = match actual {
+        Ok(actual) => (actual == expected, actual),
+        Err(error) => (false, format!("error: {error}")),
+    };
+    Check {
+        name: name.into(),
+        class,
+        ok,
+        expected: expected.to_owned(),
+        actual,
     }
 }
 
@@ -156,19 +167,7 @@ fn check_sources(checks: &mut Checks, manifest: &Manifest, oracle_dir: &Path) {
         &manifest.pob.tree,
         git(&pob, &["rev-parse", "HEAD^{tree}"]),
     );
-    // Ignored files count: PoB writes caches its own .gitignore hides
-    // (src/Data/TimelessJewelData/*.bin).
-    let status = git(
-        &pob,
-        &[
-            "status",
-            "--porcelain=v1",
-            "--ignored",
-            "--untracked-files=all",
-        ],
-    )
-    .map(|text| describe_status(&text));
-    checks.compare("pob.clean", acquisition, "clean", status);
+    checks.0.push(clean_check(oracle_dir));
     for (name, dir, commit) in [
         (
             "luajit.commit",
@@ -188,6 +187,24 @@ fn check_sources(checks: &mut Checks, manifest: &Manifest, oracle_dir: &Path) {
             git(&dir, &["rev-parse", "HEAD^{commit}"]),
         );
     }
+}
+
+/// The `pob.clean` check: no untracked, ignored, or modified file in the
+/// PoB checkout. Ignored files count: PoB writes caches its own
+/// `.gitignore` hides (`src/Data/TimelessJewelData/*.bin`). `oracle-run`
+/// repeats it after its runs.
+pub fn clean_check(oracle_dir: &Path) -> Check {
+    let status = git(
+        &oracle_dir.join("pob"),
+        &[
+            "status",
+            "--porcelain=v1",
+            "--ignored",
+            "--untracked-files=all",
+        ],
+    )
+    .map(|text| describe_status(&text));
+    check("pob.clean", FailureClass::Acquisition, "clean", status)
 }
 
 /// `clean`, or the number of status entries and the first few.
@@ -382,61 +399,22 @@ pub fn run_probe(luajit: &Path, script: &str) -> Result<String, String> {
     let bin = luajit
         .parent()
         .ok_or_else(|| "luajit has no parent directory".to_owned())?;
-    let suffix = if cfg!(windows) { "dll" } else { "so" };
-    let mut command = Command::new(&luajit);
-    command
-        .env_clear()
-        .env("LUA_PATH", "")
-        .env("LUA_CPATH", bin.join(format!("?.{suffix}")))
-        .current_dir(bin)
-        .arg("-e")
-        .arg(script)
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-    if cfg!(windows)
-        && let Some(root) = std::env::var_os("SystemRoot")
-    {
-        command.env("SystemRoot", root);
+    let env = [
+        ("LUA_PATH".to_owned(), OsString::new()),
+        ("LUA_CPATH".to_owned(), oracle_process::cpath(bin)),
+    ];
+    let args = [OsString::from("-e"), OsString::from(script)];
+    let finished = oracle_process::run(&luajit, &args, bin, &env, PROBE_TIMEOUT)?;
+    if finished.timed_out {
+        return Err(format!("no exit within {}s", PROBE_TIMEOUT.as_secs()));
     }
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("cannot start luajit: {}", e.kind()))?;
-    // Both pipes are drained on their own threads while we wait, so a
-    // child that writes a lot cannot block on a full pipe.
-    let stdout = drain(child.stdout.take());
-    let stderr = drain(child.stderr.take());
-    let start = Instant::now();
-    let status = loop {
-        if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
-            break status;
-        }
-        if start.elapsed() > PROBE_TIMEOUT {
-            // Best effort: the child may have exited meanwhile.
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(format!("no exit within {}s", PROBE_TIMEOUT.as_secs()));
-        }
-        std::thread::sleep(Duration::from_millis(10));
-    };
-    let stdout = stdout.join().unwrap_or_default();
-    let stderr = stderr.join().unwrap_or_default();
-    if !status.success() {
-        return Err(format!("{status}: {}", stderr.trim()));
+    if finished.code != Some(0) {
+        let code = finished
+            .code
+            .map_or_else(|| "no exit code".to_owned(), |c| format!("exit code {c}"));
+        return Err(format!("{code}: {}", finished.stderr.trim()));
     }
-    Ok(stdout)
-}
-
-/// Reads a child's pipe to the end on a thread (lossy UTF-8).
-fn drain(pipe: Option<impl std::io::Read + Send + 'static>) -> std::thread::JoinHandle<String> {
-    std::thread::spawn(move || {
-        let mut bytes = Vec::new();
-        if let Some(mut pipe) = pipe {
-            // A read error keeps what was read so far.
-            let _ = pipe.read_to_end(&mut bytes);
-        }
-        String::from_utf8_lossy(&bytes).into_owned()
-    })
+    Ok(finished.stdout)
 }
 
 #[cfg(test)]
