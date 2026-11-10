@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4c)
+Last Updated: 2026-11-10 (PR B4b)
 
 # Spike B: tasks
 
@@ -91,12 +91,19 @@ Last Updated: 2026-11-10 (PR B4c)
 - [x] Open PR (#24)
 - [x] Merge `main` after PR #23 (B4y) merged; evidence re-run on the combined code (88.0%)
 
-## PR B4d: anoint equivalence (after B4y)
-- [ ] Rule in the filter; tests; corpus run; plan "Ambiguity" text
+## PR B4b: anoints (step 4d) and categories, gate (combined by the maintainer, 2026-11-10)
+- [x] Check PR #24 merge (`ee06632`, main CI run 42750620783 green)
+- [x] Anoint rule in the filter (`unset-fit`, `numbered-stat`); tests; plan "Ambiguity" text; 42 / 42 anoint lines resolve
+- [x] Category rules with positive evidence and tests (`categorize.rs`); `uncategorized = 0`
+- [x] Author notes excluded (maintainer approval 2026-11-10); every note line reviewed by hand (report section 5)
+- [x] Class-requirement lines under `special-case/not-a-modifier`, class kept on the item record (0 in the corpus)
+- [x] The 4 cluster lines split across sections: `parser-gap/split-section` (each half alone matches no template; the pair resolves)
+- [x] PoB legacy-text sources: six tags, `--pob <tag>=<dir>`
+- [x] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict (not met)
+- [x] ACTION-PLAN status and corpus count 21; ADR-007's "22" left for the maintainer (ADR text)
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [ ] Open PR
 
-## PR B4b: categories, gate
-- [ ] Category rules with positive evidence and tests; `uncategorized = 0`
-- [ ] Class-requirement lines under `special-case/not-a-modifier`, class value kept on the item (maintainer decision 2026-11-09; plan step 4b)
-- [ ] Categorize the 4 cluster lines that PoB's `Implicits:` count splits across the enchant and explicit sections (two-stat nodes; context file, "PR B4c"); check the first half cannot resolve alone to another node
-- [ ] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict
-- [ ] ACTION-PLAN status and corpus count 21; ADR-007 count via the maintainer
+## After B4b (maintainer)
+- [ ] Fallback decision per area (report section 6): local/global ambiguity (72), legacy text (48), item properties (16, exclusion?), client-composed lines (15, resolver feature)
+- [ ] ADR-007 corpus count 22 -> 21

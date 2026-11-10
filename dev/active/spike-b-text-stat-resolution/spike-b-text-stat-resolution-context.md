@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4c: cluster jewel small passives)
+Last Updated: 2026-11-10 (PR B4b: anoints, categories, gate verdict)
 
 # Spike B: context
 
@@ -19,10 +19,12 @@ Last Updated: 2026-11-10 (PR B4c: cluster jewel small passives)
 - `tools/parity-cli/src/` (PR B2b): `extract.rs` (extract and table reader), `lookup.rs` (table-backed `Lookup`, key-form evidence), `round_trip.rs`, `render_check.rs`. Summaries: `docs/spikes/spike-b/`.
 - `crates/loom-parser/src/pob_item/` (PR B3): PoB item text reader. `tools/parity-cli/src/resolve_corpus.rs` (PR B3): `resolve-corpus`.
 - `tools/extractor/src/itemtype.rs` (PR B4x): item type files (`*.it`) to `item_types/**/*.json`; Spike A report section 19.
+- `tools/parity-cli/src/categorize.rs` (PR B4b): category rules and their sources; `docs/spikes/spike-b-resolution.md`: the Spike B report and gate verdict.
 
 ## Inputs on the maintainer workstation
 - Corpus: `D:\Documents\Path of Building\Builds` (21 XML files). Never commit anything from it unscrubbed.
 - Extract: `local/determinism/poe1/run1` (PoE1 build 26530219) from B4y tool commit `674837f` (B4x's files plus `Essences`, `EssenceType`, `Words`; B4x's PoE1 output kept in `local/b4x-poe1/`) and `local/determinism/poe2/run1` (PoE2 26476662) from B4x tool commit `c3c7e15`; manifests committed in `docs/spikes/spike-a/`. Handler counts are in each `manifest.json`, `stat_descriptions.handlers`. The lookup tables of B1x are in `tables/`; `CraftingBenchOptions` is not extracted (B4y measured it as redundant).
+- PoB text for `data-gap/legacy-text` (PR B4b): `local/pob-<tag>/src/Data` for `v2.4.0`, `v2.21.1`, `v2.35.3`, `v2.48.0`, `v2.57.0`, `v2.67.2`, made with `git -C "D:\POE Dev\PathOfBuilding" archive <tag> src/Data | tar -x -C local/pob-<tag>` (read only; commits in the report, section 2).
 - PoB references, cited at the pinned tag only (`git show v2.67.2:<path>` in `D:\POE Dev\PathOfBuilding`, read only; its working tree is at `v2.67.2-122-g3dbca4463` and must not be cited):
   - `src/Modules/StatDescriber.lua`: `getScope` (precedence), `matchLimit` (conditions; skips `gem_quality`), `applySpecial` (handler rounding).
   - `src/Modules/ItemTools.lua`: `itemLib.applyRange` (ranges, antonyms, `modScalability`, catalyst scalar). Not reproduced in Spike B.
@@ -160,7 +162,7 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no correctness blockers; doc and evidence items (this section, plan step 4y, Spike A section 20, manifests) done. Code items applied in `7c20caa`: unknown base class excludes nothing; a reference outside `Mods` errors; stale quiver comments; the spawning reasoning documented; tests for `Mods::load` with `Essences` (Warstaff, the error, `essence_rows`), the unread `Display_*` column, an ordinary row with essence classes, an unknown base class.
 - **Verify:** `cargo test -p loom-parity-cli -p loom-extractor`; `tools/extractor/scripts/check-determinism.sh "<PoE1 install>" poe1`; `cargo run --release -p loom-parity-cli -- resolve-corpus "<builds>" local/determinism/poe1/run1 --out <dir>`.
 
-## PR B4c: cluster jewel small passives (PR #24, open, branch `spike-b/b4c-cluster-small-passives`)
+## PR B4c: cluster jewel small passives (PR #24, merged 2026-11-10 as `ee06632`; main CI run 42750620783 green)
 - Maintainer request 2026-11-10: resolve every lookup line that a survey or code support can settle. PR #22 (B4a) merged 2026-11-10 as `08b7d9c` (main CI run 42745121406 green); PR #23 (B4y) merged 2026-11-10 as `cd1899c` (main CI run 42750094015) while this PR was open, and `main` was merged into the branch (`a38237d`).
 - **Survey (throwaway scripts):**
   - The 12 variants hidden by unsupported lookups in `stat_descriptions.txt`: 9 Delirium reward types (`affliction_reward_type`), unique map boss drops (`mod_value_to_item_class`), weapon-tree sell price (`weapon_tree_unique_base_type_name`), and `local_jewel_expansion_passive_node_index` (`{0}`, `tree_expansion_jewel_passive`, reminder `ReminderTextSmallPassives`). Only the last appears on items.
@@ -176,9 +178,27 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no code blockers. Applied: evidence and docs committed; a template with any other numbered placeholder makes the handler unavailable; the key is computed before rendering; tests for a passive whose stat needs a lookup, more stats than value columns, a null value, template text around a two-line name, and a blank line inside a name (renderer and index). Not changed: a column missing from a table this handler reads still fails the whole load, as for the other sources (PoE2 unaffected).
 - **Verify:** `cargo test -p loom-data -p loom-parser -p loom-parity-cli`; `cargo run --release -p loom-parity-cli -- resolve-corpus "<builds>" local/determinism/poe1/run1 --out <dir>`; `round-trip` likewise.
 
+## PR B4b: anoints (step 4d), categories, gate (open, branch `spike-b/b4b-anoints-categories-gate`)
+- PR #24 (B4c) merged 2026-11-10 as `ee06632` (main CI run 42750620783 green). Maintainer, 2026-11-10: "Do both anoint and B4b together. I approve of leaving notes out if they seem irrelevant."
+- **Anoints** (`mod_filter.rs`): `unset-fit` and `numbered-stat` (plan "Ambiguity"); 35 non-unique and 7 unique lines `resolved/unset-fit+numbered-stat`.
+- **Survey of the 331 no-template lines** (throwaway script in the session scratchpad, then the Rust rules): 105 colour-coded notes; about 130 plain notes (advice, wish lists without values, passive names); pre-3.15 flask mods (PoB `v2.4.0`); eldritch presence lines and graft skill lines (`ClientStrings` `InfluenceStatConditionPresenceUniqueMonster`, `BrequelGraftSkillString`); pasted item properties (`ClientStrings` `ItemDisplay*`; PoB spec lines); 4 split cluster halves; a few author edits. `local_influence_mod_requires_unique_monster_presence` is the stat behind the presence wrapper (Mods rows `*EldritchImplicitUniquePresence*`).
+- **Decisions:**
+  - Word key (lowercase, values and placeholders `#`, punctuation dropped) for every text comparison; per template line, so one line of a multi-line variant counts as a near-miss.
+  - PoB legacy text from six tags, one per year of data: two tags (`v2.4.0`, `v2.67.2`) left `50% reduced Effect of Curses on you during Flask Effect` (in PoB data 2021-10 to 2022-12) and the unique `Reflects your other Ring` as notes; the six tags fix both and change nothing else. PoB files read: `Mod*.lua` (mod entries, as `render-check`), `Enchantment*.lua` and `ClusterJewels.lua` (value strings), `Uniques/**` (`[[ ]]` block lines). `ModCache.lua` is not read: it caches any text PoB parsed, author text included.
+  - `no-description` becomes `author-note` evidence `no-game-text`: no source holds the text. Without any `--pob` source those lines are `uncategorized`, so a missing input cannot exclude them.
+  - `Note: ...` lines are PoB's own note spec: `author-note` (`pob-note-spec`), not an item property.
+  - `ClientStrings` matching is limited to named ids (`CLIENT_STRINGS`), with `#` matching one or more words; an id prefix `ItemDisplay*` covers the property lines.
+  - `item-property` stays in the denominator: excluding it is a new rule for the maintainer.
+  - `resolve-corpus` exits 1 until `gate.met` (rate, `uncategorized` 0, inputs recorded with a clean tool tree and a PoB source).
+  - Class requirement lines: excluded `not-a-modifier` before resolution; `ItemRecord.class_requirement` keeps the class (0 lines in the corpus).
+  - Removed from the summary: `marks` (replaced by categories) and `unresolved` (replaced by `categorized`, whose author-note, custom, unknown-base, and uncategorized texts are hashed).
+- **Evidence:** see the report (sections 4 to 8) and the committed summary. Dev runs before the evidence commit: `local/b4b-dev1` (two tags), `local/b4b-dev2` (six tags).
+- **Verify:** `cargo test -p loom-parity-cli`; the `resolve-corpus` command in the report, section 8.
+
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).
-- Exclusion rules beyond the three named ones, if B4b finds a need, come to the maintainer in that PR.
+- Decided 2026-11-10 (maintainer): author notes are excluded (`special-case/author-note`).
+- **Open (B4b result):** the Spike B fallback per area (report section 6): local vs global ambiguity, legacy text, item properties (exclusion?), client-composed lines (resolver feature). ADR-007's corpus count (22 -> 21).
 - Decided 2026-11-09 (maintainer): class-requirement lines (`Requires Class <class>` in the modifier section) go under `special-case/not-a-modifier` in B4b, with the class value kept on the item. Evidence and rule in the plan, step 4b.
 
 ## Facts found while planning
