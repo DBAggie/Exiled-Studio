@@ -122,6 +122,7 @@ Verdict: proceed with changes. All applied in this plan:
 
 ## Open questions for the maintainer
 - None now. Exclusion rules beyond the three named ones, if B4b finds a need, come to the maintainer in that PR.
+- Decided 2026-11-09 (maintainer): class-requirement lines (`Requires Class <class>` in the modifier section) go under `special-case/not-a-modifier` in B4b, with the class value kept on the item. Evidence and rule in the plan, step 4b.
 
 ## Facts found while planning
 - PoB stores ranged lines as `{range:r}` plus `(a-b)` text, or as `<ModRange id range>` children (legacy; mixed XML content).

@@ -57,5 +57,6 @@ Last Updated: 2026-11-09 (PR B3)
 
 ## PR B4b: categories, gate
 - [ ] Category rules with positive evidence and tests; `uncategorized = 0`
+- [ ] Class-requirement lines under `special-case/not-a-modifier`, class value kept on the item (maintainer decision 2026-11-09; plan step 4b)
 - [ ] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict
 - [ ] ACTION-PLAN status and corpus count 21; ADR-007 count via the maintainer
