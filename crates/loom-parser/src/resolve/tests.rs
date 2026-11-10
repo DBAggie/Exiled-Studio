@@ -797,8 +797,10 @@ fn resolve_should_not_panic_on_arbitrary_text() {
     assert!(outcomes.len() >= 3, "{outcomes:?}");
 }
 
-/// Names for `passive_hash` (keys 7 and 9 share a name, 10 is blank) and
-/// `display_indexable_support` (a name with a number).
+/// Names for `passive_hash` (keys 7 and 9 share a name, 10 is blank),
+/// `display_indexable_support` (a name with a number), and
+/// `tree_expansion_jewel_passive` (a two-line name, and its first line
+/// alone as another key).
 struct Names;
 
 impl Lookup for Names {
@@ -818,6 +820,10 @@ impl Lookup for Names {
                 (10, "  ".to_owned()),
             ],
             LookupHandler::DisplayIndexableSupport => vec![(1, "Level 2 Thing".to_owned())],
+            LookupHandler::TreeExpansionJewelPassive => vec![
+                (3, "Grant: 12% Fire\n  Grant: 8%  Cold ".to_owned()),
+                (4, "Grant: 12% Fire".to_owned()),
+            ],
             _ => Vec::new(),
         }
     }
@@ -834,6 +840,31 @@ fn outcome_name(r: &Resolution) -> &'static str {
         Outcome::Ambiguous(_) => "ambiguous",
         Outcome::Unresolved(u) => u.name(),
     }
+}
+
+#[test]
+fn resolve_lines_should_read_a_looked_up_name_that_spans_lines() {
+    let set = one_file(vec![desc(
+        &["n"],
+        vec![variant(
+            &[ANY],
+            "{0}",
+            &[("tree_expansion_jewel_passive", 0)],
+        )],
+    )]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build_with(&scope, &Names);
+    let two = index.resolve_lines(&["Grant: 12% Fire", "Grant: 8% Cold"]);
+    assert_eq!(two.len(), 1);
+    assert_eq!(
+        (two[0].lines, values(&two[0])),
+        (2, vec![("n".to_owned(), RawValue::Lookup(vec![3]))])
+    );
+    let one = index.resolve_lines(&["Grant: 12% Fire"]);
+    assert_eq!(
+        values(&one[0]),
+        vec![("n".to_owned(), RawValue::Lookup(vec![4]))]
+    );
 }
 
 #[test]

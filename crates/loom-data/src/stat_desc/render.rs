@@ -334,7 +334,18 @@ pub fn render_description(
                     TemplateError::PlaceholderOutOfRange.name().to_owned(),
                 ))?;
                 let text = match (&s.name, format) {
-                    (Some(name), _) => name.clone(),
+                    (Some(name), _) => {
+                        // A name can span lines (`tree_expansion_jewel_passive`
+                        // names a passive with several stats): each break in
+                        // it starts a new line, as a template line break does.
+                        for (i, part) in name.split('\n').enumerate() {
+                            if i > 0 {
+                                lines.push(String::new());
+                            }
+                            push(&mut lines, part);
+                        }
+                        continue;
+                    }
                     (None, PlaceholderFormat::Other(f)) => {
                         return Err(NotRenderedReason::UnsupportedFormat(f.clone()));
                     }
@@ -656,6 +667,29 @@ mod tests {
             VariantFilter::default(),
         );
         assert_eq!(range, Err(NotRenderedReason::LookupRange("passive_hash")));
+    }
+
+    #[test]
+    fn render_should_split_a_looked_up_name_that_spans_lines() {
+        struct TwoLines;
+        impl Lookup for TwoLines {
+            fn name(&self, _: LookupHandler, _: i64) -> Option<String> {
+                Some("Grant: A \n Grant: B".to_owned())
+            }
+
+            fn entries(&self, _: LookupHandler) -> Vec<(i64, String)> {
+                Vec::new()
+            }
+        }
+        let d = handled(&["s"], "{0}", &[("tree_expansion_jewel_passive", Some(1))]);
+        let r = render_description(
+            &d,
+            Hand::Main,
+            &[StatValue::exact(3)],
+            &TwoLines,
+            VariantFilter::default(),
+        );
+        assert_eq!(r.unwrap().1, vec!["Grant: A", "Grant: B"]);
     }
 
     #[test]
