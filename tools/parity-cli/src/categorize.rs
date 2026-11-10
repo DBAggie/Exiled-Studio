@@ -51,7 +51,8 @@
 //!     variant); a lookup variant's placeholder matches one or more words.
 //! 11. `data-gap/other-scope`: the same against another file only.
 //! 12. `data-gap/legacy-text`: the word key equals a PoB text line and no
-//!     current game text.
+//!     current game text. **Excluded** (maintainer decision 2026-11-10,
+//!     B5b). Needs a PoB source, as rule 13.
 //! 13. `special-case/author-note` (`no-game-text`): the word key equals no
 //!     line of any source above, so it is not modifier text of the game
 //!     now or in PoB's data. **Excluded** (as rule 5). Needs at least one
@@ -113,9 +114,11 @@ pub enum ClientKind {
     Modifier,
 }
 
-/// Categories whose lines are excluded from the rate. `author-note` is
-/// approved by the maintainer (2026-11-10).
-pub const EXCLUDED: [&str; 1] = ["special-case/author-note"];
+/// Categories whose lines are excluded from the rate, each approved by the
+/// maintainer on 2026-11-10: `author-note` (B4b) and `legacy-text` (B5b:
+/// text a PoB source holds and no current game text does; the game no
+/// longer generates it, so the resolver cannot be measured on it).
+pub const EXCLUDED: [&str; 2] = ["special-case/author-note", "data-gap/legacy-text"];
 
 /// The word key of a text (module docs).
 #[must_use]

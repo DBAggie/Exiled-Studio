@@ -189,6 +189,7 @@ fn categorize_should_apply_each_rule() {
     assert_eq!(cat(&g, t, "Use jeweler orbs").evidence, "no-game-text");
     assert!(cat(&g, t, "Use jeweler orbs").excluded());
     assert!(!cat(&g, t, "+132 to Maximum Life").excluded());
+    assert!(cat(&g, t, "Immune to Curses during Flask effect").excluded());
 }
 
 #[test]

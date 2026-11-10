@@ -454,9 +454,10 @@ fn run_should_categorize_every_line_that_is_not_resolved() {
     assert_eq!(c.get("data-gap/legacy-text"), Some(&1));
     assert_eq!(c.get("parser-gap/near-miss"), Some(&1));
     assert_eq!(s.gate.uncategorized, 0);
-    // Notes are excluded; the other three count as unresolved.
-    assert_eq!((s.rate.denominator, s.rate.excluded), (3, 2));
-    assert_eq!(s.gate.unresolved, 3);
+    // Notes and legacy text are excluded (B4b, B5b); the other two count
+    // as unresolved.
+    assert_eq!((s.rate.denominator, s.rate.excluded), (2, 3));
+    assert_eq!(s.gate.unresolved, 2);
     // Note text is hashed in the summary; matched game text is written.
     let json = serde_json::to_string(&s).unwrap();
     assert!(!json.contains("Buy this one") && !json.contains("Some words"));
