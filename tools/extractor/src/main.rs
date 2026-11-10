@@ -14,14 +14,18 @@
 //!   `<dir>/stat_descriptions/**/*.json` (see [`loom_extractor::statdesc`]),
 //!   every passive skill graph (`*.psg`) into
 //!   `<dir>/passive_skill_graphs/**/*.json` (see [`loom_extractor::psg`]),
-//!   plus `<dir>/manifest.json` (see [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
+//!   every item type file (`*.it`) into `<dir>/item_types/**/*.json` (see
+//!   [`loom_extractor::itemtype`]), plus `<dir>/manifest.json` (see
+//!   [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
 //!   checked before anything is decoded. Exits with an error if a root table
 //!   is not `ok`, any table failed, any key is past the end of its target,
 //!   no stat-description file was found, or one did not decode, or no graph
-//!   was found, one did not parse, or one has a dangling connection
-//!   (`Manifest::problems`); the output is written either way. Stat-description
-//!   lines that were not parsed are listed in the manifest, not errors.
+//!   was found, one did not parse, or one has a dangling connection, or no
+//!   item type file was found, one did not parse, or an `extends` chain is
+//!   dangling or loops (`Manifest::problems`); the output is written either
+//!   way. Stat-description lines that were not parsed are listed in the
+//!   manifest, not errors.
 //!
 //! - `cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out <dir>`:
 //!   compares an `extract` output with a Path of Building checkout and writes
@@ -52,6 +56,7 @@ use loom_extractor::index::{FileRecord, Index, Listing};
 use loom_extractor::install::{
     INDEX_PATH, InstallError, InstallIndex, hex, read_files, read_index, steam_build_id,
 };
+use loom_extractor::itemtype::{self, ItemTypeManifest, ItemTypeStatus};
 use loom_extractor::psg::{self, GraphManifest};
 use loom_extractor::schema::{Game, Schema};
 use loom_extractor::statdesc::{FileStatus, StatDescManifest, source_kind};
@@ -356,7 +361,10 @@ fn planned_files(
         plan.sources().map(|path| (path, Vec::new())).collect();
     for file in &listing.files {
         let path = file.path.to_ascii_lowercase();
-        if source_kind(plan.game(), &path).is_some() || psg::is_graph(&path) {
+        if source_kind(plan.game(), &path).is_some()
+            || psg::is_graph(&path)
+            || itemtype::is_item_type(&path)
+        {
             by_path.entry(path.clone()).or_default();
         }
         if let Some(records) = by_path.get_mut(&path) {
@@ -487,6 +495,27 @@ fn print_graphs(graphs: &GraphManifest) {
     }
 }
 
+/// Prints the item type part of the run summary: counts, then each file
+/// that failed and each chain problem.
+fn print_item_types(item_types: &ItemTypeManifest) {
+    let ok = item_types
+        .files
+        .values()
+        .filter(|f| f.status == ItemTypeStatus::Ok)
+        .count();
+    println!(
+        "item type files      {} ({ok} ok, {} dangling extends, {} on cycles)",
+        item_types.files.len(),
+        item_types.dangling_extends.len(),
+        item_types.cycles.len()
+    );
+    for (path, f) in &item_types.files {
+        if let Some(e) = &f.error {
+            println!("  {path}: [{}] {}", e.code, e.message);
+        }
+    }
+}
+
 /// Prints the run summary.
 fn print_summary(m: &Manifest, manifest: &[u8]) {
     let mut by_status: BTreeMap<Status, usize> = BTreeMap::new();
@@ -531,6 +560,7 @@ fn print_summary(m: &Manifest, manifest: &[u8]) {
     println!("non-finite floats    {non_finite}");
     print_stat_descriptions(&m.stat_descriptions);
     print_graphs(&m.passive_skill_graphs);
+    print_item_types(&m.item_types);
     println!("files written        {} ({rows} rows)", m.files.len());
     println!("manifest sha256      {}", hex(&Sha256::digest(manifest)));
 }
@@ -887,6 +917,9 @@ mod tests {
                 ("data/statdescriptions/d.csd", 7),
                 // Passive skill graphs: every .psg file.
                 ("Metadata/PassiveSkillGraph.psg", 8),
+                // Item types: every .it file, not .ot.
+                ("Metadata/Items/Rings/AbstractRing.it", 9),
+                ("metadata/items/rings/abstractring.ot", 10),
             ]),
         )
         .unwrap();
@@ -894,12 +927,16 @@ mod tests {
             paths,
             [
                 "data/stats.datc64",
+                "metadata/items/rings/abstractring.it",
                 "metadata/passiveskillgraph.psg",
                 "metadata/statdescriptions/a.txt",
                 "metadata/statdescriptions/b_filters.txt",
             ]
         );
-        assert_eq!(records, [record(1), record(8), record(4), record(5)]);
+        assert_eq!(
+            records,
+            [record(1), record(9), record(8), record(4), record(5)]
+        );
 
         let (paths, _) = planned_files(&plan, &listing(&[])).unwrap();
         assert!(paths.is_empty());
