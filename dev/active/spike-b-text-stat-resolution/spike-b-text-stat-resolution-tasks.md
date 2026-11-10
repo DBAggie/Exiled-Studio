@@ -67,7 +67,7 @@ Last Updated: 2026-11-10 (PR B4a)
 - [x] `mod-backed` with listed exceptions (template-only share reported apart)
 - [x] Corpus run from clean `b02003d`, two runs byte-identical; summary replaced in `docs/spikes/spike-b/`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers)
-- [ ] Open PR
+- [x] Open PR (#22)
 
 ## Maintainer decision (from B4a)
 - [ ] `Essences` and `CraftingBenchOptions` through an extractor PR (B4y), or categorize the 107 lines as `parser-gap/ambiguous` in B4b
