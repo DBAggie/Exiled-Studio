@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C0: plan)
+Last Updated: 2026-11-10 (PR C1: manifest hash decision; step 1 done in C1)
 
 # Spike C: thin oracle harness (plan)
 
@@ -16,7 +16,7 @@ Authority: the ACTION-PLAN and ADR-006 define the spike. `docs/spikes/spike-c-le
 
 ## Target state
 - `tools/oracle/` (new, non-Rust, MIT, our own code):
-  - `manifest.json`: PoB repository URL, tag, commit, expected git tree hash of the checkout; LuaJIT repository, commit; `luautf8` source and version; adapter protocol version. Per platform: expected SHA-256 of the built `luajit` binary and `lua-utf8` module, recorded after the first reproducible build (or a documented reason why a build hash is not stable, then the source commit is the pin and the binary hash is recorded per run).
+  - `manifest.json`: PoB repository URL, tag, commit, expected git tree hash of the checkout; LuaJIT repository, commit, build defines, expected `jit.version` and `jit.security` values; `luautf8` source, version, commit, module name; adapter protocol version. **Binary hashes are not in the manifest** (C1 measured that MSVC builds embed the build path, so hashes differ per machine): the acquire scripts record them in `local/oracle/build.json`, `oracle-verify` checks the files against it and probes the runtime's version and flags (context file, Decisions).
   - `adapter/oracle.lua`: the minimal Lua adapter (protocol v1).
   - `schema/oracle-output.schema.json`: normalized output contract.
   - `fixtures/`: fixture manifest and synthetic fixtures (our own XML, committed).

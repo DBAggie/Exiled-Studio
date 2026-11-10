@@ -7,7 +7,7 @@ Rules for anyone contributing, human or AI agent. `CLAUDE.md` adds Claude Code s
 - Never modify the legacy PoB repository. Legacy source is fetched at a pinned public tag, never copied in (ADR-006).
 - Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). Local game data and extractor output go in `local/` or `out/` (both ignored).
 - Modifiers are `(stat_id, values)`. Text parsing lives only in import adapters; unresolved content is quarantined and shown, never dropped (ADR-015).
-- No telemetry. Network access only in `loom-integrations` (ADR-011).
+- No telemetry. Network access only in `loom-integrations` (ADR-011). One exception outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`; no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged).
 - Do not contradict an ADR. Propose an amendment and wait for the maintainer.
 
 ## Layout
@@ -25,6 +25,7 @@ crates/
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
+  oracle              not a crate: PoB oracle manifest and acquire scripts (Spike C)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes
 ```
@@ -84,6 +85,15 @@ cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build
 # while the Spike B gate is not met. Each --pob is a `git archive <tag> src/Data` of the legacy repo
 # (read-only), the legacy-text evidence; Spike B used the six tags listed in docs/spikes/spike-b-resolution.md:
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/extract/poe1/<build> --out <dir> --pob <tag>=local/pob-<tag> [--pob ...]
+
+# PoB oracle (Spike C). Acquire: fetch PoB, LuaJIT and luautf8 at the commits in tools/oracle/manifest.json
+# into local/oracle/ and build the runtime there (network: git fetch only; nothing installed elsewhere).
+# Windows needs Visual Studio with the C++ workload; Linux needs git, make, cc, python3:
+powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools/oracle/acquire.sh
+# Verify (offline): PoB commit, tree, clean checkout including ignored files, runtime sources, built
+# files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
+# exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
+cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

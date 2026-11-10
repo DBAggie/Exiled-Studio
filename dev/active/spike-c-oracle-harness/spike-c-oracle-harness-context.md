@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C0: plan)
+Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 
 # Spike C: context
 
@@ -16,11 +16,19 @@ Last Updated: 2026-11-10 (PR C0: plan)
 - Legacy repo `D:\POE Dev\PathOfBuilding` (read only; working tree at `v2.67.2-122-g3dbca4463`, past the pin; tags available for `git show v2.67.2:<path>`).
 - Corpus `D:\Documents\Path of Building\Builds` (21 PoB XML files; never committed).
 - `local/pob-v2.67.2/` holds a `src/` copy from Spike B (`render-check`); Spike C uses a real git checkout in `local/oracle/pob/` instead.
-- No LuaJIT or Lua installed (checked 2026-11-10: `luajit`, `lua` not on PATH).
+- A winget LuaJIT (`DEVCOM.LuaJIT`, `jit.version` 2.1.1720049189, default security flags) is on the user PATH since 2026-11-10. The oracle never uses it: `oracle-verify` checks `local/oracle/bin/` only, and the runtime runs with a cleared environment. It served as the "wrong runtime" in C1's injected-failure run.
+- `local/oracle/` (C1, ignored): `pob/` (shallow checkout at `b32759ab`), `src/luajit/`, `src/luautf8/`, `bin/` (`luajit.exe`, `lua51.dll`, `lua-utf8.dll`), `build.json`, `build.cmd`, `toolchain.txt`. Recreate with `tools/oracle/acquire.ps1` (about 15 s once PoB is fetched).
+- WSL: Ubuntu 18.04 (WSL 1) with git and python3 3.6 but **no gcc or make** (installing needs sudo), so `acquire.sh` is checked only with `bash -n` and a test of its manifest reader there; its first full run is C4's CI job.
 
 ## Decisions
 - Spike B closed in PR C0, following the B0 precedent (B0 closed Spike A in the same PR as the Spike B plan).
 - Plan decisions: plan file, "Design constraints and decisions".
+- **Maintainer answers (2026-11-10, start of the C1 session):** all four asked were answered with the plan's recommendation: runtime built from source (LuaJIT `2460b3ff`, `luautf8 0.1.6-1`); local builds in `local/oracle/` approved; layout `tools/oracle/` + `docs/parity/`; timeless-jewel handling by named adapter shims (C2b). Not yet asked (needed by C3/C4): open question 2 (CI fixtures) and 4 (CI gating).
+- **C1: binary hashes are recorded per machine, not pinned in the manifest.** Measured: two Windows builds in the same folder are byte-identical (`/Brepro` through the `CL` and `LINK` variables), but `luajit.exe` and `lua51.dll` contain the build path (PDB path; `msvcbuild.bat` links with `/DEBUG`), so their hashes differ by folder, machine, and toolchain (CI included). So the manifest pins source commits, defines, and the expected `jit.version` and `jit.security` values; the acquire scripts write `local/oracle/build.json` (platform, commits, defines, compiler line, SHA-256 per built file); `oracle-verify` checks the files against `build.json` **and** runs the runtime (`luajit -e`) to check version, flags, and that `lua-utf8` loads and counts UTF-8. The probe is what ties the binary to the pin: `jit.version` embeds the commit time of the source it was built from. This replaces the plan's "per platform expected SHA-256 in the manifest".
+- **C1: build flag `LUAJIT_SECURITY_PRNG=0`.** At `2460b3ff`, `src/lj_arch.h` defaults to `PRNG=1` (seed from OS entropy), `STRHASH=1`, `STRID=1`, `MCODE=1`; `lj_str.c` seeds string hashing from that PRNG (`g->str.seed = lj_prng_u64(...)`), so with the default `pairs` order over string keys changes per run. `PRNG=0` gives a fixed seed; the other three stay at their defaults. PoB's own runtime and test image use the default, so this is a harness choice, recorded in the manifest and checked by the probe (`jit.security("prng") == 0`). Not fixed by it: `pairs` order over table or function keys (hashed by address); C2a's repeated runs will show whether that matters.
+- **C1: failure class for a bad manifest** is `ORACLE_ACQUISITION` (the pin itself cannot be read, so nothing can be shown acquired). Exit codes are fixed per class in `tools/parity-cli/src/oracle.rs` (10 to 20, taxonomy order); later PRs add variants, never renumber.
+- **C1: `tools/oracle` excluded from the Cargo workspace** (`members = ["tools/*"]` would treat it as a crate).
+- **C1: PS 5.1 and agent shells.** `acquire.ps1` relies on exit codes only (PS 5.1 turns native stderr into errors when output is redirected) and clears `NoDefaultCurrentDirectoryInExePath` inside its `cmd` build script: Claude Code's shell sets it to 1, and `msvcbuild.bat` runs `minilua` and `buildvm` from the current directory.
 
 ## plan-reviewer (2026-11-10) summary
 Verdict: proceed with changes. All findings applied to the plan.
@@ -29,6 +37,7 @@ Verdict: proceed with changes. All findings applied to the plan.
 - Nits: AGENTS.md network rule exemption for acquire scripts (C1); `src/` working directory dependency noted; `GetTime` stub recorded as relied on; PoB's 3.13 test builds marked `old-tree`.
 
 ## Open questions for the maintainer
+Questions 1, 3, and 5 were answered 2026-11-10 (recommendations accepted, see Decisions); 2 and 4 are still open.
 1. **Headless shims.** The tag's wrapper stubs `Inflate`, so timeless jewels (in 9 of the 21 corpus builds) compute without their data. Plan: two named adapter shims, recorded in every output: `Inflate` through LuaJIT FFI to a pinned zlib, and an `io.open` guard that refuses writes into the checkout (PoB writes a `.bin` cache there). The `NewFileSearch` stub is kept on purpose. Alternative: accept those builds as `partial`. Recommendation: shims.
 2. **CI fixtures.** Default: CI runs PoB's own 5 test builds (from the pinned checkout, not copied) plus synthetic fixtures; the 21 corpus builds run only on the workstation, with scrubbed summaries committed. Alternative: commit a few scrubbed corpus builds (the repository is public).
 3. **Runtime pin.** Plan: LuaJIT at `2460b3ff` and `luautf8 0.1.6-1`, the versions PoB's own test image uses, built from source on both platforms. Alternative on Windows: PoB's shipped `runtime/lua51.dll` (unknown LuaJIT commit).
@@ -48,3 +57,20 @@ Verdict: proceed with changes. All findings applied to the plan.
 - `spec/TestBuilds/3.13/` at the tag: 5 XML builds with expected `.lua` outputs (Dual Savior, Dual Wield Cospris CoC, Generals Perforate Zerker, Mirage Archer Toxic Rain, OccVortex).
 - Corpus: 9 of the 21 builds contain a timeless jewel (name match on Glorious Vanity, Lethal Pride, Brutal Restraint, Militant Faith, Elegant Hubris, Heroic Tragedy).
 - Windows `runtime/` at the tag ships `lua51.dll` (616,448 bytes), `lua-utf8.dll`, `zlib1.dll`, and no `luajit.exe`.
+
+## Facts measured in C1 (2026-11-10)
+- Tag `v2.67.2` tree hash `74b90d3b89994d6e738d3cb836e9c48162ca6b57`. `luautf8` tag `0.1.6` = commit `1bb70d45208d4033dcc75efee968be70534dd3ab` (the rockspec `luautf8-0.1.6-1` downloads that tag's GitHub tarball; build type `builtin`, one file `lutf8lib.c`, entry `luaopen_utf8`). LuaJIT `2460b3ff` committer time 1784580905, so `jit.version` = `LuaJIT 2.1.1784580905`.
+- Windows build (MSVC `cl` 19.51.36260, VS 2026): `msvcbuild.bat` (default dynamic build) + `cl /MD /O2 /LD lutf8lib.c ... /EXPORT:luaopen_utf8 lua51.lib`. Hashes on the workstation (`local/oracle/`): `luajit.exe` `202964ca…dac7`, `lua51.dll` `033ab0ef…edb3`, `lua-utf8.dll` `9d5e6975…3f44`. A second full `acquire.ps1` run gave an identical `build.json` (byte comparison).
+- **Wrapper smoke (by hand, twice):** from `local/oracle/pob/src` with only `SystemRoot`, `LUA_PATH=./?.lua;../runtime/lua/?.lua;../runtime/lua/?/init.lua`, and `LUA_CPATH=<bin>\?.dll`, `dofile("HeadlessWrapper.lua")` reaches `OnFrame` (prints `Startup time: 0 ms`) and sets the globals `build` (with `calcsTab`) and `loadBuildFromXML`; about 1.8 s. `./?.lua` must be on the path (PoB requires its own modules relative to `src/`; without it: `module 'Data.StatDescriptions.stat_descriptions' not found`, a startup error). `mainObject` is local to the wrapper, so the adapter cannot read `mainObject.promptMsg` after `dofile` as the plan assumed; C2a must detect a startup error another way (for example `build == nil`, plus the printed `promptMsg` on stdout, or a hook before `dofile`).
+- **Correction to the plan review:** the bare wrapper did **not** write a `.bin` file: `git status --porcelain --ignored` of the checkout was empty after two wrapper runs. The `.bin` write is expected only when a build with a timeless jewel loads (C2b checks it).
+- `oracle-verify` on the workstation: `ok`, 18 checks (manifest SHA-256 `33db152f…8902`). Injected failures with the real runtime: winget's `luajit.exe` alone -> exit 11 (hash; start fails `0xc0000139`, entry point not found against our `lua51.dll`); winget's `luajit.exe` + `lua51.dll` -> exit 11 (two hashes, `runtime.version` 2.1.1720049189, `runtime.security.prng` 1); an ignored `src/Data/TimelessJewelData/GloriousVanity.bin` in the checkout -> exit 10 (`pob.clean`: `!! src/Data/...`). Restored afterwards; `ok` again.
+
+## code-architecture-reviewer on C1 (2026-11-10)
+No blockers. Applied: the manifest must list exactly the four `jit.security` flags with `prng` 0 (dropping a flag cannot drop its check); the acquire scripts force-checkout the runtime sources before `clean -fdx` (an edited tracked file was built and recorded as the pin; checked: an appended line in `src/luajit/src/lj_str.c` was reverted and the rebuild was byte-identical, the third identical build); `git` in `oracle-verify` runs without inherited `GIT_*` variables and without the system config; an unreadable manifest also gets the JSON report; the probe drains stdout and stderr on threads; `build.cmd` written as UTF-8 under `chcp 65001`; `remote set-url` on existing clones; `build.json` documented as self-attested (the probe is the real tie to the pin); AGENTS.md exception cites the plan item. New tests: manifest flag set, unreadable manifest, extra recorded file, unknown `build.json` field, status truncation, probe of a missing runtime. Not applied (noted): typed errors instead of `Result<_, String>` (follows the crate's convention; revisit in C2a); assume-unchanged / skip-worktree index flags could hide an edit from `git status` (a fresh `acquire` never sets them); `pob.tag` is not checked against the commit (the commit and tree hashes cover integrity).
+Also found while re-testing: Windows PowerShell 5.1 run with `-File` leaves `$PSScriptRoot` empty in `param()` defaults, so `acquire.ps1` computes its defaults in the body.
+
+## Next steps (C2a)
+1. Session start: `gh pr view <C1 number>`; record the merge.
+2. `local/oracle/` exists on the workstation; run `oracle-verify` first (rerun `acquire.ps1` if it fails).
+3. Write `tools/oracle/adapter/oracle.lua` and `oracle-run` per plan step 2a; the probe runner in `oracle_verify.rs` (`run_probe`: cleared environment, polling timeout) is the starting point for the launch code, but `oracle-run` must read stdout and stderr while waiting (PoB prints a lot; the probe's polling only works for tiny output).
+4. Resolve the startup-error detection (`mainObject` is local, see above).

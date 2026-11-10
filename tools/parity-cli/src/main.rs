@@ -4,7 +4,8 @@
 //! here (Spike B plan, `dev/completed/spike-b-text-stat-resolution/`).
 //!
 //! The PoB oracle harness (drives legacy `HeadlessWrapper.lua` on pinned
-//! LuaJIT at a pinned public PoB tag, ADR-006) comes with Spike C.
+//! LuaJIT at a pinned public PoB tag, ADR-006) is Spike C's
+//! (`dev/active/spike-c-oracle-harness/`): `oracle-verify` so far.
 
 mod categorize;
 mod extract;
@@ -13,6 +14,8 @@ mod item_tags;
 mod load_statdesc;
 mod lookup;
 mod mod_filter;
+mod oracle;
+mod oracle_verify;
 mod properties;
 mod render_check;
 mod resolve_corpus;
@@ -44,7 +47,14 @@ const USAGE: &str = "usage:
       report.json (builds by content hash, no item names) to <dir>, which
       must not exist. Each --pob names a `git archive` of a PoB tag's
       src/Data (<dir>/src/Data), the legacy-text evidence. Exit 1 while
-      the Spike B gate is not met or a build is unreadable.";
+      the Spike B gate is not met or a build is unreadable.
+  loom-parity-cli oracle-verify <manifest> <oracle-dir>
+      Check an oracle directory written by tools/oracle/acquire.ps1 or
+      acquire.sh against the manifest (tools/oracle/manifest.json): PoB
+      checkout commit, tree, and no untracked, ignored, or modified file;
+      runtime source commits; built files against build.json; the
+      runtime's version and build flags. Offline. Print a JSON report.
+      Exit 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure.";
 
 /// Runs `git` in this crate's source tree; `None` if it fails.
 fn git(args: &[&str]) -> Option<String> {
@@ -243,8 +253,42 @@ fn resolve_corpus(
     Ok(summary.gate.met && summary.unreadable_builds.is_empty())
 }
 
+fn oracle_verify(manifest: &Path, oracle_dir: &Path) -> ExitCode {
+    let bytes = std::fs::read(manifest).map_err(|e| format!("manifest file: {}", e.kind()));
+    let report = oracle_verify::verify(
+        bytes.as_deref().map_err(Clone::clone),
+        oracle_dir,
+        &oracle::platform(),
+        oracle_verify::run_probe,
+    );
+    match serde_json::to_string_pretty(&report) {
+        Ok(json) => println!("{json}"),
+        Err(e) => {
+            eprintln!("loom-parity-cli: {e}");
+            return ExitCode::FAILURE;
+        }
+    }
+    match report.class {
+        None => ExitCode::SUCCESS,
+        Some(class) => {
+            for check in report.checks.iter().filter(|c| !c.ok) {
+                eprintln!(
+                    "{}: expected {}, found {}",
+                    check.name, check.expected, check.actual
+                );
+            }
+            ExitCode::from(class.exit_code())
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, manifest, oracle_dir] = args.as_slice()
+        && cmd == "oracle-verify"
+    {
+        return oracle_verify(Path::new(manifest), Path::new(oracle_dir));
+    }
     let result = match args.as_slice() {
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
