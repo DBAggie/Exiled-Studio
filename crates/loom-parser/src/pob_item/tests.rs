@@ -160,6 +160,49 @@ fn read_should_mark_variant_base_lines_and_their_selection() {
 }
 
 #[test]
+fn read_should_consume_an_unknown_rarity_line_and_keep_the_default() {
+    let item = read("Rarity: GEM\nN\nB\nImplicits: 0\n");
+    assert_eq!(item.rarity, None);
+    assert_eq!(item.name.as_deref(), Some("N"));
+    assert_eq!(item.base.as_deref(), Some("B"));
+}
+
+#[test]
+fn read_should_take_the_last_variant_prefix_and_select_nothing_for_an_empty_one() {
+    let item = read(
+        "Rarity: UNIQUE\nN\nB\nVariant: A\nVariant: B\nSelected Variant: 2\nImplicits: 0\n{variant:2}{variant:1}Last wins\n{variant:}Empty\n",
+    );
+    assert!(!modifier(&item, "Last wins").selected);
+    assert!(!modifier(&item, "Empty").selected);
+    assert_eq!(modifier(&item, "Empty").variants(), Some(vec![]));
+}
+
+#[test]
+fn unsupported_features_should_name_each_feature_the_reader_skips() {
+    let item = read(
+        "Rarity: UNIQUE\nEnergy Blade\nB\nVersion: 1\nHas Variants: x\nImplicits: 0\n{group:1}{modGroup:a}A\n{ Prefix Modifier \"X\" }\n12(10-15)% increased Y\n(Reminder text)\nRequirements:\n--------\nPlain line\n",
+    );
+    let got = unsupported_features(&item);
+    for feature in [
+        "energy-blade-base",
+        "spec/Version",
+        "spec/Has Variants",
+        "prefix/group",
+        "prefix/modGroup",
+        "advanced-copy-line",
+        "value-then-range",
+        "reminder-text",
+        "requirements-line",
+        "body-separator",
+    ] {
+        assert_eq!(got.get(feature), Some(&1), "{feature}: {got:?}");
+    }
+    assert!(
+        unsupported_features(&read("Rarity: RARE\nN\nB\nImplicits: 0\n+(1-2) to X\n")).is_empty()
+    );
+}
+
+#[test]
 fn read_should_read_a_repeated_base_line_as_a_base() {
     let item = read(
         "Rarity: UNIQUE\nN\nTimeless Jewel\nVariant: A\nSelected Variant: 1\nTimeless Jewel\nImplicits: 0\n",

@@ -40,10 +40,20 @@
 //!   self.variant or #variantList)`, the same for alt variants.
 //!
 //! Not reproduced (none occurs in the maintainer's corpus, 2026-11-09 survey;
-//! each is counted by the harness): variant groups and versions (`{group}`,
-//! `{version}`, `Selected Variant Group`), `{modGroup}` line joining, the
-//! advanced copy format (`{ ... }` lines and `value(min-max)` text), flask
-//! and tincture buff lines, mod lines that equal a base name.
+//! [`unsupported_features`] names each one a line shows, and the corpus
+//! harness counts them): variant groups and versions (`{group}`,
+//! `{version}`, `Version:`, `Selected Version`, `Selected Variant Group`;
+//! with them `ParseRaw` uses other selection rules), `Has Variants` and
+//! `Selected Variants` (`ParseRaw` skips the line after them), `{modGroup}`
+//! line joining, the advanced copy format (`{ ... }` lines and
+//! `value(min-max)` text), reminder text (`ParseRaw` skips lines from
+//! `^%(%a+` to `%)$`), `Requirements:`, a `--------` after the header
+//! (`ParseRaw` resets prefixes there), flask and tincture buff lines, mod
+//! lines that equal a base name, and the Energy Blade base special case.
+//!
+//! Scope: PoB's **PoE1** item format (`v2.67.2` of `PathOfBuilding`). The
+//! influence, spec, and line-flag lists are that version's; PoB for PoE2
+//! differs and would need its own lists.
 
 #[cfg(test)]
 #[expect(
@@ -297,6 +307,14 @@ impl Modifier {
             .and_then(|p| p.value.as_deref())
     }
 
+    /// The line's variant list: the **last** `{variant:...}` (`ParseRaw`'s
+    /// gsub callback replaces `modLine.variantList` each time), `Some(vec![])`
+    /// for an empty one (a list that selects nothing), `None` without one.
+    #[must_use]
+    pub fn variants(&self) -> Option<Vec<u32>> {
+        variants_of(&self.prefixes)
+    }
+
     /// Prefix keys that are neither line flags nor value prefixes.
     #[must_use]
     pub fn unknown_prefixes(&self) -> Vec<&str> {
@@ -306,6 +324,14 @@ impl Modifier {
             .filter(|k| !is_known_prefix(k))
             .collect()
     }
+}
+
+fn variants_of(prefixes: &[Prefix]) -> Option<Vec<u32>> {
+    prefixes
+        .iter()
+        .rev()
+        .find(|p| p.key == "variant")
+        .map(|p| p.value.as_deref().map(variant_list).unwrap_or_default())
 }
 
 /// Whether `key` is a line flag or a value prefix `ParseRaw` reads.
@@ -319,7 +345,7 @@ pub fn is_known_prefix(key: &str) -> bool {
 pub enum LineKind {
     /// `Item Class: ...`.
     ItemClass,
-    /// `Rarity: ...` with a known rarity.
+    /// `Rarity: <word>` (`^Rarity: (%a+)`), known word or not.
     Rarity,
     /// `--------` separator.
     Separator,
@@ -418,7 +444,8 @@ impl Variants {
 /// One item read from its text.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Item {
-    /// Rarity; `None` without a `Rarity:` line or with an unknown word.
+    /// Rarity; `None` without a `Rarity:` line or with an unknown word
+    /// (`ParseRaw` then keeps its default, unique).
     pub rarity: Option<Rarity>,
     /// The name line.
     pub name: Option<String>,
@@ -440,6 +467,90 @@ impl Item {
             _ => None,
         })
     }
+}
+
+/// Spec keys of `ParseRaw` features this reader does not reproduce.
+const UNSUPPORTED_SPECS: [&str; 5] = [
+    "Version",
+    "Selected Version",
+    "Selected Variant Group",
+    "Has Variants",
+    "Selected Variants",
+];
+
+/// Prefix keys of `ParseRaw` features this reader does not reproduce.
+const UNSUPPORTED_PREFIXES: [&str; 3] = ["group", "version", "modGroup"];
+
+/// `value(min-max)` advanced copy text: a digit right before `(` and a
+/// digit or `-`.
+fn has_value_then_range(text: &str) -> bool {
+    let b = text.as_bytes();
+    b.windows(3).any(
+        |w| matches!(w, [d, b'(', n] if d.is_ascii_digit() && (n.is_ascii_digit() || *n == b'-')),
+    )
+}
+
+/// The `ParseRaw` features named in the module docs as not reproduced that
+/// the item's lines show, each with the number of lines showing it. Empty
+/// when the reader's rules cover the item.
+#[must_use]
+pub fn unsupported_features(item: &Item) -> std::collections::BTreeMap<&'static str, usize> {
+    let mut out = std::collections::BTreeMap::new();
+    let mut add = |feature: &'static str| *out.entry(feature).or_insert(0) += 1;
+    if item
+        .name
+        .as_deref()
+        .is_some_and(|n| n.contains("Energy Blade"))
+    {
+        add("energy-blade-base");
+    }
+    for line in &item.lines {
+        let raw = line.raw.as_str();
+        if raw.starts_with("{ ") {
+            add("advanced-copy-line");
+        }
+        if raw == "Requirements:" {
+            add("requirements-line");
+        }
+        if raw == "--------" && line.kind != LineKind::Separator {
+            add("body-separator");
+        }
+        match &line.kind {
+            LineKind::Spec { key, .. } => {
+                if let Some(k) = UNSUPPORTED_SPECS.iter().find(|k| **k == key) {
+                    add(match *k {
+                        "Version" => "spec/Version",
+                        "Selected Version" => "spec/Selected Version",
+                        "Selected Variant Group" => "spec/Selected Variant Group",
+                        "Has Variants" => "spec/Has Variants",
+                        _ => "spec/Selected Variants",
+                    });
+                }
+            }
+            LineKind::Modifier(m) => {
+                for key in UNSUPPORTED_PREFIXES {
+                    if m.has(key) {
+                        add(match key {
+                            "group" => "prefix/group",
+                            "version" => "prefix/version",
+                            _ => "prefix/modGroup",
+                        });
+                    }
+                }
+                if has_value_then_range(&m.text) {
+                    add("value-then-range");
+                }
+                let mut chars = m.text.chars();
+                if chars.next() == Some('(')
+                    && chars.next().is_some_and(|c| c.is_ascii_alphabetic())
+                {
+                    add("reminder-text");
+                }
+            }
+            _ => {}
+        }
+    }
+    out
 }
 
 /// The key of a spec-shaped line: `^([%a %(%)]+:?): (.+)$` or
@@ -635,8 +746,10 @@ pub fn read(text: &str) -> Item {
     }
     if let Some(word) = raw.get(at).and_then(|l| l.strip_prefix("Rarity: ")) {
         let word: String = word.chars().take_while(char::is_ascii_alphabetic).collect();
-        if let Some(rarity) = Rarity::parse(&word) {
-            item.rarity = Some(rarity);
+        // `^Rarity: (%a+)` consumes the line; an unknown word keeps the
+        // default rarity (`colorCodes[rarity:upper()]` fails).
+        if !word.is_empty() {
+            item.rarity = Rarity::parse(&word);
             set(&mut kinds, at, LineKind::Rarity);
             at += 1;
         }
@@ -728,8 +841,7 @@ pub fn read(text: &str) -> Item {
             } else {
                 let mut m = read_modifier(line);
                 m.section = section(&m, implicits, &mut counts);
-                let list = m.value("variant").map(variant_list);
-                m.selected = item.variants.includes(list.as_deref());
+                m.selected = item.variants.includes(m.variants().as_deref());
                 LineKind::Modifier(m)
             };
             set(&mut kinds, i, kind);
@@ -740,12 +852,7 @@ pub fn read(text: &str) -> Item {
     for (i, line) in raw.iter().enumerate() {
         if let Some(Some(LineKind::VariantBase { selected, .. })) = kinds.get_mut(i) {
             let (_, prefixes) = strip_prefixes(line);
-            let list = prefixes
-                .iter()
-                .find(|p| p.key == "variant")
-                .and_then(|p| p.value.as_deref())
-                .map(variant_list);
-            *selected = item.variants.includes(list.as_deref());
+            *selected = item.variants.includes(variants_of(&prefixes).as_deref());
         }
     }
 

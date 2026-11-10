@@ -32,7 +32,8 @@ const USAGE: &str = "usage:
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
       <dir>, which must not exist. Exit 1 if a difference is uncategorized.
   loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir>
-      Read every <Item> of the PoB builds (*.xml) in <builds-dir>, resolve
+      Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
+      subfolders are not read; identical files count once), resolve
       each modifier line in its item's scope (PoE1 extract); write
       summary.json and report.json (builds by content hash, no item names)
       to <dir>, which must not exist. Exit 1 while the resolution rate of

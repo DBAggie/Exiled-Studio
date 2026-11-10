@@ -29,6 +29,17 @@
 //! **Scrubbing (ADR-007):** builds are named by the SHA-256 of their
 //! content; item names, `{custom}` text, and unrecognized lines are never
 //! written (only a hash of the text). Mod lines from game text are written.
+//! The hash is SHA-256 cut to 64 bits and not salted, so a short, guessable
+//! text could be confirmed by guessing; it hides, it does not encrypt.
+//! Spec and prefix keys are written only when they are on the reader's
+//! fixed lists (else hashed), so author text cannot leak through them.
+//!
+//! **Item text:** `v2.67.2:src/Classes/ItemsTab.lua` (load) calls
+//! `item:ParseRaw(child)` for **each** string child of `<Item>`, and each
+//! call starts the item over, so the last string child is the item; legacy
+//! `<ModRange>` children only set ranges. The harness takes the last
+//! non-blank direct text child the same way and counts items with more than
+//! one (`items_with_several_texts`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -107,10 +118,11 @@ impl Bases {
     }
 
     /// The item's scope, or why there is none; `true` when the base was
-    /// found only after removing a PoB-only ` (...)` suffix (PoB names the
-    /// three `Two-Toned Boots` rows `Two-Toned Boots (Armour/Energy
-    /// Shield)` and so on; `v2.67.2:src/Classes/Item.lua` `ParseRaw` has a
-    /// "Hack for Two-Toned Boots", and removes ` %(.+%)` from magic names).
+    /// found only after removing PoB's ` (...)` suffix from
+    /// `Two-Toned Boots (...)` (PoB names the three `Two-Toned Boots` rows
+    /// `Two-Toned Boots (Armour/Energy Shield)` and so on;
+    /// `v2.67.2:src/Classes/Item.lua` `ParseRaw` has a "Hack for Two-Toned
+    /// Boots"). Only that base: any other name is looked up as written.
     fn scope(&self, item: &Item) -> Result<(&'static str, bool), String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
@@ -125,9 +137,9 @@ impl Bases {
             _ => return Err("no-name".to_owned()),
         };
         let stripped = name
-            .strip_suffix(')')
-            .and_then(|n| n.rsplit_once(" ("))
-            .map(|(n, _)| n);
+            .starts_with("Two-Toned Boots (")
+            .then_some("Two-Toned Boots")
+            .filter(|_| name.ends_with(')'));
         let (scopes, suffix) = match (self.scopes.get(&name), stripped) {
             (Some(s), _) => (s, false),
             (None, Some(n)) => (
@@ -167,6 +179,17 @@ impl Build {
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// A spec or prefix key as written if it is on the reader's fixed lists
+/// (`KNOWN_SPECS`, line flags, value prefixes); otherwise a hash, since
+/// author text (`My note: ...`, `{anything}`) can reach these maps.
+fn safe_key(key: &str) -> String {
+    if pob_item::KNOWN_SPECS.contains(&key) || pob_item::is_known_prefix(key) {
+        key.to_owned()
+    } else {
+        scrub(key)
+    }
 }
 
 /// A short hash of text that must not be written (names, custom lines).
@@ -310,9 +333,17 @@ pub struct Summary {
     /// a template matched (`no-variant-fits`, `only-shadowed`), so it is
     /// game text; other text is a hash (it may be the author's own words).
     pub unresolved: BTreeMap<String, BTreeMap<String, Distinct>>,
-    /// Items whose base was found only after removing a PoB-only
-    /// ` (...)` suffix.
+    /// Items whose base was found only after removing PoB's
+    /// `Two-Toned Boots (...)` suffix.
     pub pob_base_suffix_removed: usize,
+    /// Build files whose content equals an earlier file's (counted once).
+    pub duplicate_builds: usize,
+    /// Items with more than one non-blank text child (the last is read).
+    pub items_with_several_texts: usize,
+    /// `ParseRaw` features the reader does not reproduce, to lines showing
+    /// them (`pob_item::unsupported_features`); must be empty for the
+    /// reader's rules to cover the corpus.
+    pub unsupported_features: BTreeMap<&'static str, usize>,
     /// Measurements for B4b's categories, not categories: mark to
     /// `<group>/<outcome>` to lines not resolved (see [`marks`]).
     pub marks: BTreeMap<&'static str, BTreeMap<String, usize>>,
@@ -502,6 +533,21 @@ impl<'i> Lines<'i> {
                     self.push_resolution(&run, at, &resolution, section(at));
                     at += resolution.lines;
                 }
+                // `resolve_lines` covers every input line; if it ever does
+                // not, the uncovered lines are recorded, never lost.
+                for (n, (line, m)) in run.iter().enumerate().skip(at) {
+                    self.records.push((
+                        LineRecord {
+                            line: *line,
+                            section: section(n),
+                            outcome: "internal/not-covered".to_owned(),
+                            text: m.text.clone(),
+                            joined: 1,
+                            detail: Vec::new(),
+                        },
+                        false,
+                    ));
+                }
             }
             _ => {
                 let reason = scope_err.unwrap_or("no-index");
@@ -676,11 +722,16 @@ pub fn run(
         ..Summary::default()
     };
     let mut report = Report::default();
-    let mut sorted: Vec<&Build> = builds.iter().collect();
-    sorted.sort_by(|a, b| a.hash.cmp(&b.hash));
+    // One build per content hash: a copied file counts once.
+    let mut unique_builds: BTreeMap<&str, &Build> = BTreeMap::new();
+    for build in builds {
+        if unique_builds.insert(&build.hash, build).is_some() {
+            s.duplicate_builds += 1;
+        }
+    }
     let mut distinct: BTreeMap<(String, String), BTreeSet<String>> = BTreeMap::new();
 
-    for build in sorted {
+    for build in unique_builds.into_values() {
         s.inputs.builds.push(build.hash.clone());
         let Some(text) = &build.text else {
             s.unreadable_builds
@@ -701,16 +752,21 @@ pub fn run(
             .filter(|n| n.has_tag_name("Item"))
             .enumerate()
         {
-            let text: String = node
-                .descendants()
+            let texts: Vec<&str> = node
+                .children()
                 .filter(roxmltree::Node::is_text)
                 .filter_map(|t| t.text())
+                .filter(|t| !t.trim().is_empty())
                 .collect();
+            if texts.len() > 1 {
+                s.items_with_several_texts += 1;
+            }
+            let text = texts.last().copied().unwrap_or("");
             let ranges = node
                 .children()
                 .filter(|c| c.has_tag_name("ModRange"))
                 .count();
-            let item = pob_item::read(&text);
+            let item = pob_item::read(text);
             let record = count_item(&mut s, &mut distinct, n, &item, ranges, bases, &indexes);
             items.push(record);
         }
@@ -738,6 +794,9 @@ fn count_item(
         s.mod_range_items += 1;
         s.mod_range_elements += ranges;
     }
+    for (feature, n) in pob_item::unsupported_features(item) {
+        *s.unsupported_features.entry(feature).or_default() += n;
+    }
     let mut catalyst = false;
     for line in &item.lines {
         *s.line_kinds.entry(line.kind.name()).or_default() += 1;
@@ -745,15 +804,15 @@ fn count_item(
             LineKind::Spec { key, known } => {
                 catalyst |= key == "Catalyst";
                 if !known {
-                    *s.unknown_spec_keys.entry(key.clone()).or_default() += 1;
+                    *s.unknown_spec_keys.entry(safe_key(key)).or_default() += 1;
                 }
             }
             LineKind::Modifier(m) => {
                 for p in &m.prefixes {
-                    *s.prefix_keys.entry(p.key.clone()).or_default() += 1;
+                    *s.prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
                 }
                 for k in m.unknown_prefixes() {
-                    *s.unknown_prefix_keys.entry(k.to_owned()).or_default() += 1;
+                    *s.unknown_prefix_keys.entry(safe_key(k)).or_default() += 1;
                 }
             }
             _ => {}

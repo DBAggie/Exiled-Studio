@@ -51,6 +51,7 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
 fn bases() -> Bases {
     Bases::from_pairs(&[
         ("Coral Ring", 1),
+        ("Two-Toned Boots", 1),
         ("Ring", 1),
         ("Ironwood Tincture", 34),
         ("Fleshgraft", 38),
@@ -154,6 +155,85 @@ fn run_should_put_every_item_line_under_one_outcome() {
 }
 
 #[test]
+fn run_should_account_for_every_line_as_an_outcome_or_structure() {
+    let (s, _) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
+    let all: usize = s.line_kinds.values().sum();
+    let structure: usize = s
+        .line_kinds
+        .iter()
+        .filter(|(k, _)| !matches!(**k, "modifier" | "flag" | "influence" | "unrecognized"))
+        .map(|(_, n)| n)
+        .sum();
+    assert_eq!(all, structure + s.non_unique.lines + s.unique.lines);
+    assert!(
+        s.non_unique
+            .outcomes
+            .keys()
+            .all(|o| !o.starts_with("internal/"))
+    );
+}
+
+#[test]
+fn run_should_read_the_last_text_of_an_item_with_mod_range_children() {
+    // `ItemsTab.lua` calls `ParseRaw` for each string child; the last wins.
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        Old
+        Coral Ring
+        Implicits: 0
+        +1 to maximum Life
+        <ModRange range="0.5" id="1"/>
+        Rarity: RARE
+        New
+        Coral Ring
+        Implicits: 0
+        +2 to maximum Life
+        +3 to maximum Life
+        <ModRange range="0.5" id="2"/>
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    assert_eq!(s.items_with_several_texts, 1);
+    assert_eq!(s.mod_range_elements, 2);
+    assert_eq!(s.non_unique.outcomes.get("resolved"), Some(&2));
+    let texts: Vec<&str> = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .map(|l| l.text.as_str())
+        .collect();
+    assert_eq!(texts, ["+2 to maximum Life", "+3 to maximum Life"]);
+}
+
+#[test]
+fn run_should_count_a_copied_build_once() {
+    let one = Build::new(BUILD.as_bytes().to_vec());
+    let (s, r) = run_one(&[one.clone_for_test(), one]);
+    assert_eq!(
+        (s.duplicate_builds, s.items, s.inputs.builds.len()),
+        (1, 4, 1)
+    );
+    assert_eq!(r.builds.len(), 1);
+}
+
+#[test]
+fn run_should_hash_unknown_spec_and_prefix_keys() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        My secret: words
+        Implicits: 0
+        {secretword}+1 to maximum Life
+    </Item></Items></PathOfBuilding>"#;
+    let (s, _) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    let json = serde_json::to_string(&s).unwrap();
+    assert!(!json.contains("My secret") && !json.contains("secretword"));
+    assert_eq!(s.unknown_spec_keys.len(), 1);
+    assert_eq!(s.unknown_prefix_keys.len(), 1);
+}
+
+#[test]
 fn run_should_never_write_item_names_or_custom_text() {
     let (s, r) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
     let json = serde_json::to_string(&s).unwrap() + &serde_json::to_string(&r).unwrap();
@@ -224,12 +304,17 @@ fn bases_scope_should_follow_the_mod_domain() {
     );
     assert_eq!(
         b.scope(&item(
-            "Rarity: RARE\nN\nCoral Ring (PoB Name)\nImplicits: 0\n"
+            "Rarity: RARE\nN\nTwo-Toned Boots (Armour/Evasion)\nImplicits: 0\n"
         )),
         Ok(("stat_descriptions", true))
     );
     assert_eq!(
         b.scope(&item("Rarity: RARE\nN\nNope (X)\nImplicits: 0\n")),
+        Err("not-in-base-item-types".to_owned())
+    );
+    // Only PoB's Two-Toned Boots names lose their suffix.
+    assert_eq!(
+        b.scope(&item("Rarity: RARE\nN\nCoral Ring (X)\nImplicits: 0\n")),
         Err("not-in-base-item-types".to_owned())
     );
 }
