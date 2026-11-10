@@ -627,3 +627,44 @@ fn run_should_read_a_line_through_a_client_wrapper() {
         ]
     );
 }
+
+#[test]
+fn granted_skill_should_change_only_unresolved_no_template_lines() {
+    let grafts = Grafts::default();
+    let mut record = LineRecord {
+        outcome: "unresolved/no-template".to_owned(),
+        text: "Uses level 30 Preserving Stillness".to_owned(),
+        ..LineRecord::default()
+    };
+    // No graft data: the line is left as it is.
+    granted_skill(&mut record, &grafts, "Aegis Tulgraft");
+    assert_eq!(
+        (record.outcome.as_str(), record.kind),
+        ("unresolved/no-template", None)
+    );
+    let mut resolved = LineRecord {
+        outcome: "resolved".to_owned(),
+        ..LineRecord::default()
+    };
+    granted_skill(&mut resolved, &grafts, "Aegis Tulgraft");
+    assert_eq!(resolved.kind, None);
+    // With the graft: resolved, typed, wrapper named.
+    let grafts = Grafts::with_one("Aegis Tulgraft", "TulGraft4", "Preserving Stillness");
+    granted_skill(&mut record, &grafts, "Aegis Tulgraft");
+    assert_eq!(
+        (
+            record.outcome.as_str(),
+            record.kind,
+            record.composed.as_deref()
+        ),
+        (
+            "resolved",
+            Some("granted-skill"),
+            Some("BrequelGraftSkillString")
+        )
+    );
+    assert_eq!(
+        record.detail,
+        ["graft=TulGraft4", "skill=Preserving Stillness", "level=30"]
+    );
+}

@@ -61,6 +61,9 @@ impl Wrapper {
         let rest = line.trim().strip_prefix(self.prefix.as_str())?;
         let (level, name) = rest.split_once(self.middle.as_str())?;
         let name = name.strip_suffix(self.suffix.as_str())?;
+        if level.is_empty() || !level.bytes().all(|b| b.is_ascii_digit()) {
+            return None;
+        }
         let level = level.parse().ok()?;
         (!name.is_empty()).then_some((level, name))
     }
@@ -71,7 +74,23 @@ impl Wrapper {
 pub struct Grafts {
     by_base: BTreeMap<String, Graft>,
     wrapper: Option<Wrapper>,
+    /// Lowest and highest `SkillLevel`; a level in between is allowed even
+    /// if no row names it (the table has every level 1..30 in PoE1
+    /// 26530219).
     levels: Option<(i64, i64)>,
+    conflicts: Vec<String>,
+}
+
+/// What [`Grafts::load`] read, for the summary: a missing wrapper or level
+/// table would turn every graft line back to `parser-gap`, so it is shown.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct Inputs {
+    /// `BrequelGraftSkillString` found with `{1}` then `{0}`.
+    pub wrapper: bool,
+    /// The `SkillLevel` range.
+    pub levels: Option<(i64, i64)>,
+    /// Base names whose rows name different skills (dropped).
+    pub conflicts: Vec<String>,
 }
 
 /// A resolved graft line.
@@ -86,8 +105,9 @@ pub struct GrantedSkill {
 impl Grafts {
     /// Reads `BrequelGrafts`, `SkillGems`, `BaseItemTypes`,
     /// `BrequelGraftGrantedSkillLevels`, and the wrapper from
-    /// `ClientStrings`. An extract without `BrequelGrafts` (before PR B5x)
-    /// gives no grafts.
+    /// `ClientStrings`. The graft tables are optional on purpose: an
+    /// extract before PR B5x, or a test fixture, gives no grafts; what was
+    /// read is in [`Grafts::inputs`].
     ///
     /// # Errors
     /// A message when a table or column the others need is missing.
@@ -124,14 +144,24 @@ impl Grafts {
             };
             let segment = id.rsplit('/').next().unwrap_or(id);
             if let Some(skill) = skill_of.get(segment) {
-                out.by_base.insert(
-                    name.to_owned(),
-                    Graft {
-                        id: segment.to_owned(),
-                        skill: skill.clone(),
-                    },
-                );
+                let graft = Graft {
+                    id: segment.to_owned(),
+                    skill: skill.clone(),
+                };
+                match out.by_base.get(name) {
+                    Some(old) if *old != graft => {
+                        out.conflicts.push(name.to_owned());
+                    }
+                    _ => {
+                        out.by_base.insert(name.to_owned(), graft);
+                    }
+                }
             }
+        }
+        out.conflicts.sort();
+        out.conflicts.dedup();
+        for name in &out.conflicts {
+            out.by_base.remove(name);
         }
         if let Some(levels) = Table::read(read, "BrequelGraftGrantedSkillLevels")? {
             let c = levels.column("SkillLevel")?;
@@ -152,6 +182,36 @@ impl Grafts {
                 .and_then(Wrapper::new);
         }
         Ok(out)
+    }
+
+    /// What was read, for the summary.
+    #[must_use]
+    pub fn inputs(&self) -> Inputs {
+        Inputs {
+            wrapper: self.wrapper.is_some(),
+            levels: self.levels,
+            conflicts: self.conflicts.clone(),
+        }
+    }
+
+    /// One graft base with the standard wrapper and levels 1..30 (tests of
+    /// other modules).
+    #[cfg(test)]
+    #[must_use]
+    pub fn with_one(base: &str, id: &str, skill: &str) -> Self {
+        Self {
+            by_base: [(
+                base.to_owned(),
+                Graft {
+                    id: id.to_owned(),
+                    skill: skill.to_owned(),
+                },
+            )]
+            .into(),
+            wrapper: Wrapper::new("Uses level {1} {0}"),
+            levels: Some((1, 30)),
+            conflicts: Vec::new(),
+        }
     }
 
     /// Number of graft bases read.
@@ -190,7 +250,84 @@ mod tests {
             .into(),
             wrapper: Wrapper::new("Uses level {1} {0}"),
             levels: Some((1, 30)),
+            conflicts: Vec::new(),
         }
+    }
+
+    fn table(name: &str, columns: &[&str], rows: &str) -> String {
+        let cols: Vec<String> = columns
+            .iter()
+            .map(|c| format!(r#"{{"name": "{c}", "references": null}}"#))
+            .collect();
+        format!(
+            r#"{{"table": "{name}", "columns": [{}], "rows": {rows}}}"#,
+            cols.join(", ")
+        )
+    }
+
+    /// Two graft bases (`TulGraft4`; `XophGraft1` twice under one name with
+    /// different skills), their gems, levels 1..30, and the wrapper.
+    fn read(path: &str) -> Result<Vec<u8>, String> {
+        let text = match path {
+            "tables/BrequelGrafts.json" => table(
+                "BrequelGrafts",
+                &["Id", "SkillGem"],
+                r#"[["TulGraft4", 0], ["XophGraft1", 1], ["XophGraft2", 0]]"#,
+            ),
+            "tables/SkillGems.json" => table("SkillGems", &["BaseItemTypesKey"], "[[0], [1]]"),
+            "tables/BaseItemTypes.json" => table(
+                "BaseItemTypes",
+                &["Id", "Name"],
+                r#"[["Gems/Stillness", "Preserving Stillness"], ["Gems/Flame", "Heart of Flame"],
+                    ["Metadata/Items/Chayula/TulGraft4", "Aegis Tulgraft"],
+                    ["Metadata/Items/Chayula/XophGraft1", "Twin Xophgraft"],
+                    ["Metadata/Items/Chayula/XophGraft2", "Twin Xophgraft"]]"#,
+            ),
+            "tables/BrequelGraftGrantedSkillLevels.json" => table(
+                "BrequelGraftGrantedSkillLevels",
+                &["SkillLevel"],
+                "[[1], [30]]",
+            ),
+            "tables/ClientStrings.json" => table(
+                "ClientStrings",
+                &["Id", "Text"],
+                r#"[["BrequelGraftSkillString", "Uses level {1} {0}"]]"#,
+            ),
+            _ => return Err(format!("{path}: not found")),
+        };
+        Ok(text.into_bytes())
+    }
+
+    #[test]
+    fn load_should_join_bases_grafts_and_gems_and_drop_conflicts() {
+        let g = Grafts::load(&read).unwrap();
+        assert_eq!(g.len(), 1);
+        assert_eq!(
+            g.inputs(),
+            Inputs {
+                wrapper: true,
+                levels: Some((1, 30)),
+                conflicts: vec!["Twin Xophgraft".to_owned()],
+            }
+        );
+        let r = g
+            .resolve("Aegis Tulgraft", "Uses level 12 Preserving Stillness")
+            .unwrap();
+        assert_eq!(
+            (r.graft.skill.as_str(), r.level),
+            ("Preserving Stillness", 12)
+        );
+        assert_eq!(
+            g.resolve("Twin Xophgraft", "Uses level 1 Heart of Flame"),
+            None
+        );
+    }
+
+    #[test]
+    fn load_should_give_no_grafts_without_the_table() {
+        let none = |_: &str| -> Result<Vec<u8>, String> { Err("absent".to_owned()) };
+        let g = Grafts::load(&none).unwrap();
+        assert_eq!((g.len(), g.inputs()), (0, Inputs::default()));
     }
 
     #[test]

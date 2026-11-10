@@ -266,7 +266,8 @@ impl Bases {
 
 /// An item's base as [`Bases::find`] found it.
 struct Found<'b> {
-    /// The base's name, as found in `BaseItemTypes`.
+    /// The base's name, as found in `BaseItemTypes` (after removing a PoB
+    /// suffix, see `suffix_removed`).
     name: String,
     scope: &'static str,
     suffix_removed: bool,
@@ -394,6 +395,11 @@ pub struct Rate {
     pub distinct_with_mixed_outcomes: usize,
     /// `rate >= 0.98`.
     pub meets_rate: bool,
+    /// Of `resolved`, lines resolved to a description's stat IDs (no
+    /// `kind`; B5g): the stat-only figure beside the headline.
+    pub stat_resolved: usize,
+    /// `stat_resolved / denominator`.
+    pub stat_rate: f64,
 }
 
 /// One distinct text with a given outcome.
@@ -510,6 +516,9 @@ pub struct Summary {
     pub compositions: Vec<(String, String)>,
     /// Graft bases with a granted skill (`grafts`, B5g).
     pub graft_bases: usize,
+    /// What the graft rule read: the wrapper found, the level range, and
+    /// base names dropped because their rows disagree on the skill.
+    pub graft_inputs: grafts::Inputs,
     /// Resolved lines whose result is not stat IDs, by group and kind
     /// (`non_unique/granted-skill`); counted as resolved in the rate.
     pub resolved_kinds: BTreeMap<String, usize>,
@@ -1112,6 +1121,7 @@ pub fn run(
             .collect(),
         compositions_missing: game.compositions_missing.clone(),
         graft_bases: bases.grafts.len(),
+        graft_inputs: bases.grafts.inputs(),
         resolved_kinds: BTreeMap::new(),
         composition_rows: game
             .compositions
@@ -1490,6 +1500,14 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
         }
     }
     r.rate = ratio(r.resolved, r.denominator);
+    let kinds: usize = s
+        .resolved_kinds
+        .iter()
+        .filter(|(k, _)| k.starts_with("non_unique/"))
+        .map(|(_, n)| n)
+        .sum();
+    r.stat_resolved = r.resolved.saturating_sub(kinds);
+    r.stat_rate = ratio(r.stat_resolved, r.denominator);
     r.excluded_share = ratio(r.excluded, r.denominator + r.excluded);
     r.distinct = distinct.len();
     r.distinct_resolved = distinct
