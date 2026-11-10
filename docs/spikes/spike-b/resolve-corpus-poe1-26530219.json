@@ -6,7 +6,7 @@
       "manifest_sha256": "119bb8258b9fa6d61080389fa5a749f88e7618e00b43ac260ac3f6709408be9f"
     },
     "tool": {
-      "commit": "69f8357e9c387045c5237fc29c7c18f94601da46",
+      "commit": "c437709791153fb08af0634b414e79f3ebf09ace",
       "dirty": false
     },
     "builds": [
@@ -443,8 +443,8 @@
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3324,
-      "unresolved/no-template": 36,
+      "resolved": 3328,
+      "unresolved/no-template": 32,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
@@ -465,8 +465,8 @@
       "implicit": {
         "ambiguous": 2,
         "excluded/not-selected-variant": 2,
-        "resolved": 509,
-        "unresolved/no-template": 6
+        "resolved": 513,
+        "unresolved/no-template": 2
       }
     },
     "with_shadowed_matches": 1
@@ -507,15 +507,17 @@
   },
   "rate": {
     "denominator": 3366,
-    "resolved": 3324,
-    "rate": 0.9875222816399287,
+    "resolved": 3328,
+    "rate": 0.9887106357694593,
     "excluded": 572,
     "excluded_share": 0.1452513966480447,
     "distinct": 1335,
-    "distinct_resolved": 1304,
-    "distinct_rate": 0.9767790262172285,
+    "distinct_resolved": 1308,
+    "distinct_rate": 0.9797752808988764,
     "distinct_with_mixed_outcomes": 1,
-    "meets_rate": true
+    "meets_rate": true,
+    "stat_resolved": 3324,
+    "stat_rate": 0.9875222816399287
   },
   "ambiguous": {
     "(10-20)% increased Reservation Efficiency of Skills": {
@@ -900,7 +902,7 @@
       "data-gap/legacy-text": 48,
       "excluded/not-selected-variant": 2,
       "parser-gap/ambiguous": 5,
-      "parser-gap/client-string": 6,
+      "parser-gap/client-string": 2,
       "parser-gap/near-miss": 11,
       "parser-gap/only-shadowed": 1,
       "parser-gap/split-section": 4,
@@ -1500,34 +1502,6 @@
         ]
       },
       "Uses level (1-30) Impaling Uulgraft": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
-        ]
-      },
-      "Uses level 30 Call the Pyre": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
-        ]
-      },
-      "Uses level 30 Heart of Flame": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
-        ]
-      },
-      "Uses level 30 Preserving Stillness": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
-        ]
-      },
-      "Uses level 30 Tender Embrace": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
@@ -3197,6 +3171,18 @@
       "local_influence_mod_requires_celestial_boss_presence"
     ]
   ],
+  "graft_bases": 16,
+  "graft_inputs": {
+    "wrapper": true,
+    "levels": [
+      1,
+      30
+    ],
+    "conflicts": []
+  },
+  "resolved_kinds": {
+    "non_unique/granted-skill": 4
+  },
   "compositions_missing": [],
   "composition_rows": {
     "local_influence_mod_requires_celestial_boss_presence": [
@@ -3211,7 +3197,7 @@
   "gate": {
     "resolution": true,
     "unresolved_allowed": 67,
-    "unresolved": 42,
+    "unresolved": 38,
     "uncategorized": 0,
     "inputs_recorded": true,
     "met": true

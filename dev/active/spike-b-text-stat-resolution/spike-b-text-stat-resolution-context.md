@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5x: catalyst quality and graft tables)
+Last Updated: 2026-11-10 (PR B5g: graft skill lines)
 
 # Spike B: context
 
@@ -228,6 +228,12 @@ Verdict: proceed with changes. All applied in this plan:
 - `BrequelGraftTypes` (in the schema) has no file in PoE1 26530219; first run failed `NoFile`, so it was dropped.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers; confirmed the manifest SHA-256 matches both summaries, the evidence came from the code under review (`69f8357`; later commits are docs), and the manifest diff is additive (4 tables, 0 dangling). Applied: doc headers, this record, a clause that the extractor did not change between B4y and B5x.
 - **Evidence:** section 21 of the Spike A report.
+
+## PR B5g: graft skill lines (PR #30, open, branch `spike-b/b5g-graft-skills`, stacked on PR #29)
+- Survey (B5x tables): 16 grafts; every corpus graft line's skill matches its base's `BrequelGrafts` -> `SkillGem` (Aegis Tulgraft: Preserving Stillness; Hardening Uulgraft: Tender Embrace; Molten Xophgraft: Heart of Flame; Flamecaller Xophgraft: Call the Pyre).
+- **Decisions (assumptions for review):** the result is a typed `granted-skill` (no stat stands for it), counted as resolved in the rate and shown apart in `resolved_kinds`; the graft table loads inside `Bases` (optional tables, so older extracts and test fixtures give no grafts); the 2 PoB placeholder lines keep `parser-gap/client-string`.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers; counting `granted-skill` as resolved judged acceptable with the stat-only figure shown and an ADR-015 clarification proposed. Applied: `rate.stat_resolved` / `stat_rate` (98.8%), `graft_inputs` (wrapper, levels, conflicting names dropped), digit-only levels, tests for `Grafts::load` (joins, conflict, missing table) and `granted_skill`, report 4b/6/7 wording.
+- **Evidence** (run from clean `c437709`, `local/b5g-rc3|rc4`, byte-identical): 3,328 / 3,366 = 98.9%, 38 unresolved; no other line changed against B5c.
 
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).

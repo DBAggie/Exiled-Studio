@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5x)
+Last Updated: 2026-11-10 (PR B5g)
 
 # Spike B: tasks
 
@@ -135,8 +135,11 @@ Last Updated: 2026-11-10 (PR B5x)
 - [x] Review with `code-architecture-reviewer`; apply findings
 - [x] Open PR (#29)
 
-## PR B5g: graft skill lines
-- [ ] Resolver: `Uses level {1} {0}` (6 lines)
+## PR B5g: graft skill lines (PR #30)
+- [x] `grafts.rs` (load, wrapper, levels), `granted-skill` kind, summary `graft_bases` / `resolved_kinds`; tests
+- [x] Corpus run from clean `c437709`, two runs byte-identical: 98.9%, 4 / 6 graft lines (2 PoB placeholders)
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `c437709`)
+- [x] Open PR
 
 ## PR B5d: item properties
 - [ ] Typed item properties from game data

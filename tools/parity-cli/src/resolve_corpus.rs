@@ -68,6 +68,7 @@ use sha2::{Digest, Sha256};
 
 use crate::categorize::{self, GameText, LineFacts};
 use crate::extract::{Extract, Inputs, Read, Table};
+use crate::grafts::{self, Grafts};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
@@ -119,6 +120,8 @@ pub struct Bases {
     rows: BTreeMap<String, Vec<BaseRow>>,
     /// Named rows whose tags are unknown (`item_tags`).
     pub tags_unknown: usize,
+    /// Graft bases and their granted skills (B5g).
+    pub grafts: Grafts,
 }
 
 impl Bases {
@@ -181,6 +184,7 @@ impl Bases {
                 implicits: index_list(row, implicits),
             });
         }
+        bases.grafts = Grafts::load(read)?;
         Ok(bases)
     }
 
@@ -250,6 +254,7 @@ impl Bases {
             self.scopes.get(key).map(|s| s.iter().copied().collect());
         match scopes.as_deref() {
             Some([one]) => Ok(Found {
+                name: key.to_owned(),
                 scope: one,
                 suffix_removed,
                 rows: self.rows.get(key).map_or(&[], Vec::as_slice),
@@ -261,6 +266,9 @@ impl Bases {
 
 /// An item's base as [`Bases::find`] found it.
 struct Found<'b> {
+    /// The base's name, as found in `BaseItemTypes` (after removing a PoB
+    /// suffix, see `suffix_removed`).
+    name: String,
     scope: &'static str,
     suffix_removed: bool,
     rows: &'b [BaseRow],
@@ -387,6 +395,11 @@ pub struct Rate {
     pub distinct_with_mixed_outcomes: usize,
     /// `rate >= 0.98`.
     pub meets_rate: bool,
+    /// Of `resolved`, lines resolved to a description's stat IDs (no
+    /// `kind`; B5g): the stat-only figure beside the headline.
+    pub stat_resolved: usize,
+    /// `stat_resolved / denominator`.
+    pub stat_rate: f64,
 }
 
 /// One distinct text with a given outcome.
@@ -501,6 +514,14 @@ pub struct Summary {
     /// `ClientStrings` ids of the wrappers the resolver read through, with
     /// their stats (B5c; `categorize::COMPOSITIONS`).
     pub compositions: Vec<(String, String)>,
+    /// Graft bases with a granted skill (`grafts`, B5g).
+    pub graft_bases: usize,
+    /// What the graft rule read: the wrapper found, the level range, and
+    /// base names dropped because their rows disagree on the skill.
+    pub graft_inputs: grafts::Inputs,
+    /// Resolved lines whose result is not stat IDs, by group and kind
+    /// (`non_unique/granted-skill`); counted as resolved in the rate.
+    pub resolved_kinds: BTreeMap<String, usize>,
     /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
     pub compositions_missing: Vec<String>,
     /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
@@ -635,6 +656,10 @@ pub struct LineRecord {
     /// The backing row's `Mods.Id`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backed_by: Option<String>,
+    /// What a resolved line resolved to when it is not stat IDs:
+    /// `granted-skill` (B5g; `detail` names the graft, skill, and level).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<&'static str>,
     /// The `ClientStrings` wrapper the line was read through (B5c).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composed: Option<String>,
@@ -1095,6 +1120,9 @@ pub fn run(
             .map(|c| (c.id.clone(), c.stat.clone()))
             .collect(),
         compositions_missing: game.compositions_missing.clone(),
+        graft_bases: bases.grafts.len(),
+        graft_inputs: bases.grafts.inputs(),
+        resolved_kinds: BTreeMap::new(),
         composition_rows: game
             .compositions
             .iter()
@@ -1168,6 +1196,24 @@ struct Corpus<'c, 'i> {
     /// Scope name to the sources of its chain's files.
     chains: &'c BTreeMap<&'static str, BTreeSet<String>>,
     game: &'c GameText,
+}
+
+/// Resolves a graft's `Uses level {1} {0}` line as a granted skill
+/// (`grafts`, B5g); other lines are left as they are.
+fn granted_skill(record: &mut LineRecord, grafts: &Grafts, base: &str) {
+    if record.outcome != "unresolved/no-template" {
+        return;
+    }
+    if let Some(g) = grafts.resolve(base, &record.text) {
+        record.outcome = "resolved".to_owned();
+        record.kind = Some("granted-skill");
+        record.composed = Some(grafts::WRAPPER_ID.to_owned());
+        record.detail = vec![
+            format!("graft={}", g.graft.id),
+            format!("skill={}", g.graft.skill),
+            format!("level={}", g.level),
+        ];
+    }
 }
 
 /// The category of a line that is not resolved, from its outcome; excluded
@@ -1279,6 +1325,11 @@ fn count_item(
         ctx.as_ref(),
         &corpus.game.compositions,
     );
+    if let Ok(f) = &found {
+        for (record, _) in &mut records {
+            granted_skill(record, &bases.grafts, &f.name);
+        }
+    }
     let empty = BTreeSet::new();
     let chain = found
         .as_ref()
@@ -1316,6 +1367,11 @@ fn count_item(
                 .insert(record.outcome.clone());
         }
         count_b4a(s, record, unique);
+        if let Some(kind) = record.kind {
+            *s.resolved_kinds
+                .entry(format!("{group}/{kind}"))
+                .or_default() += 1;
+        }
         if record.outcome == "ambiguous" {
             let entry = s.ambiguous.entry(record.text.clone()).or_default();
             if unique {
@@ -1444,6 +1500,14 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
         }
     }
     r.rate = ratio(r.resolved, r.denominator);
+    let kinds: usize = s
+        .resolved_kinds
+        .iter()
+        .filter(|(k, _)| k.starts_with("non_unique/"))
+        .map(|(_, n)| n)
+        .sum();
+    r.stat_resolved = r.resolved.saturating_sub(kinds);
+    r.stat_rate = ratio(r.stat_resolved, r.denominator);
     r.excluded_share = ratio(r.excluded, r.denominator + r.excluded);
     r.distinct = distinct.len();
     r.distinct_resolved = distinct
