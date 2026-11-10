@@ -149,9 +149,9 @@ Last Updated: 2026-11-10 (PR B5e)
 
 ## PR B5e: the rest (near-miss, split-section, only-shadowed)
 - [x] `Index::resolve_case_folded`; split-section pairs resolve; `adapted` on lines and in the summary; tests
-- [x] Corpus run from clean `cb30e5c`, two runs byte-identical: 99.7%, 10 unresolved
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Corpus run from clean `d6db8dd`, two runs byte-identical: 99.7%, 10 unresolved
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `d6db8dd`)
+- [x] Open PR
 
 ## After the area PRs (maintainer)
 - [ ] Merge #26 .. B5e in order (retarget each to `main`)
