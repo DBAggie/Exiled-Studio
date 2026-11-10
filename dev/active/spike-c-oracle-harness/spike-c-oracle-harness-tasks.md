@@ -26,7 +26,7 @@ Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 ## PR C2a: adapter and `oracle-run` (no shims)
 - [ ] `tools/oracle/adapter/oracle.lua` (protocol v1), output schema, hand-written schema check
 - [ ] Startup-error handling (`build` nil; `mainObject` is local to the wrapper, so `promptMsg` is not readable after `dofile`, context file), settings probe
-- [ ] `oracle-run` reads stdout/stderr while waiting (C1's probe runner polls, fine only for tiny output)
+- [ ] `oracle-run` launch: reuse or generalize C1's `run_probe` (cleared environment, pipes drained on threads, polling timeout)
 - [ ] `parity-cli oracle-run` (env allow-list, timeout, normalization, 3 repeats)
 - [ ] Breakdown selection measured and recorded in the manifest
 - [ ] Tests with fake adapter scripts for each failure class; real runs of the public fixtures on Windows

@@ -72,5 +72,5 @@ Also found while re-testing: Windows PowerShell 5.1 run with `-File` leaves `$PS
 ## Next steps (C2a)
 1. Session start: `gh pr view <C1 number>`; record the merge.
 2. `local/oracle/` exists on the workstation; run `oracle-verify` first (rerun `acquire.ps1` if it fails).
-3. Write `tools/oracle/adapter/oracle.lua` and `oracle-run` per plan step 2a; the probe runner in `oracle_verify.rs` (`run_probe`: cleared environment, polling timeout) is the starting point for the launch code, but `oracle-run` must read stdout and stderr while waiting (PoB prints a lot; the probe's polling only works for tiny output).
+3. Write `tools/oracle/adapter/oracle.lua` and `oracle-run` per plan step 2a; the probe runner in `oracle_verify.rs` (`run_probe`: cleared environment, polling timeout) is the starting point for the launch code (it already drains stdout and stderr on threads while polling for exit, so PoB's large output cannot block it).
 4. Resolve the startup-error detection (`mainObject` is local, see above).
