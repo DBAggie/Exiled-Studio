@@ -85,9 +85,25 @@ pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "Ind
 /// rows (PoE1 26530219), and it would pull in about 30 unrelated tables.
 pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
 
+/// Tables that give item lines a stat or a skill outside the stat
+/// descriptions (Spike B PR B5x, areas 3 and 4 of the B4b verdict,
+/// `docs/spikes/spike-b-resolution.md` section 7a). PoE1
+/// only, as [`MOD_SOURCE_TABLES_POE1`]:
+/// - `AlternateQualityTypes`: catalyst quality (`Quality (Attribute
+///   Modifiers): +20%`): `Description` and the stat it scales,
+///   `ModEffectStat`;
+/// - `BrequelGrafts`, `BrequelGraftGrantedSkillLevels`: the skill a graft
+///   grants and its level (`Uses level 30 <skill>`). The schema's
+///   `BrequelGraftTypes` has no file in PoE1 26530219.
+pub const ITEM_LINE_TABLES_POE1: [&str; 3] = [
+    "AlternateQualityTypes",
+    "BrequelGrafts",
+    "BrequelGraftGrantedSkillLevels",
+];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
-/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`] and
-/// [`MOD_SOURCE_TABLES_POE1`].
+/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
+/// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
@@ -95,6 +111,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
+        roots.extend(ITEM_LINE_TABLES_POE1);
     }
     roots
 }
@@ -1817,9 +1834,15 @@ mod tests {
             LOOKUP_TABLES_POE1
                 .iter()
                 .chain(&MOD_SOURCE_TABLES_POE1)
+                .chain(&ITEM_LINE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
-        assert!(MOD_SOURCE_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
+        assert!(
+            MOD_SOURCE_TABLES_POE1
+                .iter()
+                .chain(&ITEM_LINE_TABLES_POE1)
+                .all(|t| !poe2.contains(t))
+        );
     }
 
     #[test]

@@ -37,7 +37,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "674837fbf1c2db7ebe15435109a799a760a66178",
+    "commit": "69f8357e9c387045c5237fc29c7c18f94601da46",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1922,6 +1922,10 @@
       "rows": 1941,
       "sha256": "3febbb0770073b14f6ba06d24cebbca0ea168ea9445a579535bce7aa2bbf26b2"
     },
+    "tables/AlternateQualityTypes.json": {
+      "rows": 18,
+      "sha256": "eca5d82a9affa25f2c39b0ec48b5b2ec5fbff9fb593611ad249222b54c02ba70"
+    },
     "tables/AlternateSkillTargetingBehaviours.json": {
       "rows": 8,
       "sha256": "d1eb2ce3da69f8b136daabdcd448f8f06c1991014176b14005742d31f5689ed4"
@@ -1945,6 +1949,14 @@
     "tables/BloodTypes.json": {
       "rows": 18,
       "sha256": "ed79eb5879550e5409c8ec3a500fcecdf66a277f101943981d9ceba23d6cd056"
+    },
+    "tables/BrequelGraftGrantedSkillLevels.json": {
+      "rows": 31,
+      "sha256": "515e0636fc2c878950ee1f3ded9ca6a80bc9072e11cd1d3ce27ae8ac9af52f2c"
+    },
+    "tables/BrequelGrafts.json": {
+      "rows": 16,
+      "sha256": "19855e371c985ce7a179aa86dc55eb87b5c1d85cf08f9296747d0ea19767d651"
     },
     "tables/BrequelPassiveSubTrees.json": {
       "rows": 4,
@@ -2085,6 +2097,10 @@
     "tables/MiscObjects.json": {
       "rows": 1836,
       "sha256": "6dff3c9b5c02c28ddba237a8efb8b80ee30cf7155a90d0d63a16ffb4721158c0"
+    },
+    "tables/ModEffectStats.json": {
+      "rows": 45,
+      "sha256": "8c3a0ac7268f6ed2a86ed7f297949cc16dfb9a45e6556d7b451581e4c342390d"
     },
     "tables/ModFamily.json": {
       "rows": 7844,
@@ -9184,6 +9200,43 @@
       "source_sha256": "0d547eae10bfd63b2a64b3e2a4f6560f5a8f086a0c0095b9c510be9244429f7d",
       "status": "ok"
     },
+    "AlternateQualityTypes": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "CatalystMod": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 10
+        },
+        "Item": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 18
+        },
+        "MapStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 6
+        },
+        "ModEffectStat": {
+          "dangling": 0,
+          "target": "ModEffectStats",
+          "values": 12
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/AlternateQualityTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 87,
+      "row_size_mismatch": null,
+      "rows": 18,
+      "source": "data/alternatequalitytypes.datc64",
+      "source_sha256": "7d5cd72beb582543783a8eb94e836eac6a044e31537d233aabe30605cf767ff2",
+      "status": "ok"
+    },
     "AlternateSkillTargetingBehaviours": {
       "columns": 7,
       "columns_read": 7,
@@ -9389,6 +9442,7 @@
       "non_finite_floats": 0,
       "output": "tables/BaseItemTypes.json",
       "referenced_by": [
+        "AlternateQualityTypes",
         "BaseItemTypes",
         "BrequelPassiveSubTrees",
         "Characters",
@@ -9486,6 +9540,44 @@
       "rows": 18,
       "source": "data/bloodtypes.datc64",
       "source_sha256": "e961b4c8e3af02d8a65afd403545420e651b6cd8bc1f4b721e7acd5272f74929",
+      "status": "ok"
+    },
+    "BrequelGraftGrantedSkillLevels": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/BrequelGraftGrantedSkillLevels.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 31,
+      "source": "data/brequelgraftgrantedskilllevels.datc64",
+      "source_sha256": "f11e5aa4dbd2c2c560f262c7183adf3ea7f404edd69e2949ab956aeee5e4ba0f",
+      "status": "ok"
+    },
+    "BrequelGrafts": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {
+        "SkillGem": {
+          "dangling": 0,
+          "target": "SkillGems",
+          "values": 16
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/BrequelGrafts.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 44,
+      "row_size_mismatch": null,
+      "rows": 16,
+      "source": "data/brequelgrafts.datc64",
+      "source_sha256": "2965d55a62774eb8a8e3123882e84b441baa3692b0542d12d6c1bb294adedd17",
       "status": "ok"
     },
     "BrequelPassiveSubTrees": {
@@ -10977,6 +11069,35 @@
       "source_sha256": "422712f8acb9b7deec89f23b4c7093047c20f67374d52ca8a5551d41abeeb6b6",
       "status": "ok"
     },
+    "ModEffectStats": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "StatsKey": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 45
+        },
+        "TagsKeys": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 56
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ModEffectStats.json",
+      "referenced_by": [
+        "AlternateQualityTypes"
+      ],
+      "root": false,
+      "row_len": 45,
+      "row_size_mismatch": null,
+      "rows": 45,
+      "source": "data/modeffectstats.datc64",
+      "source_sha256": "5f339a12205ae073929e90bc62d301b9d1dfaec8aa89bde28c1b6f3a79d70c3d",
+      "status": "ok"
+    },
     "ModFamily": {
       "columns": 1,
       "columns_read": 1,
@@ -11181,6 +11302,7 @@
       "non_finite_floats": 0,
       "output": "tables/Mods.json",
       "referenced_by": [
+        "AlternateQualityTypes",
         "BaseItemTypes",
         "Characters",
         "Essences",
@@ -12090,6 +12212,7 @@
       "non_finite_floats": 0,
       "output": "tables/SkillGems.json",
       "referenced_by": [
+        "BrequelGrafts",
         "Characters",
         "IndexableNonActiveSupportGems",
         "IndexableSkillGems",
@@ -12187,6 +12310,7 @@
       "referenced_by": [
         "ActiveSkillType",
         "ActiveSkills",
+        "AlternateQualityTypes",
         "Animation",
         "BuffDefinitions",
         "BuffTemplates",
@@ -12196,6 +12320,7 @@
         "GemTags",
         "GrantedEffectStatSets",
         "ItemVisualIdentity",
+        "ModEffectStats",
         "ModType",
         "Mods",
         "PassiveSkillMasteryEffects",
@@ -12221,6 +12346,7 @@
       "output": "tables/Tags.json",
       "referenced_by": [
         "BaseItemTypes",
+        "ModEffectStats",
         "Mods",
         "MonsterCategories",
         "MonsterVarieties",

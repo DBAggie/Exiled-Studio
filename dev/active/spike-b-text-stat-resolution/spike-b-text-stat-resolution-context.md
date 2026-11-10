@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4b: anoints, categories, gate verdict)
+Last Updated: 2026-11-10 (PR B5x: catalyst quality and graft tables)
 
 # Spike B: context
 
@@ -222,6 +222,12 @@ Verdict: proceed with changes. All applied in this plan:
 - The scrub test's `Uniq` probe matched the wrapper id `...PresenceUniqueMonster` now recorded in the summary; the test removes that known game id before probing.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: compose only lines `resolve_lines` left as single `NoTemplate` (no split of multi-line templates, no double resolve); no duplicate wrapper stat; tests for an ambiguous remainder, a suffix wrapper, the multi-line case, the missing Pinnacle row; the run fails on a paired stat missing from `Stats`; `compositions_missing` and `composition_rows` (1,362 / 1,362 eldritch for both stats) in the summary; the scrub test asserts the exempted id is really written.
 - **Evidence** (run from clean `cb68936`, `local/b5c-rc3|rc4`, byte-identical): 3,324 / 3,366 = 98.8%, 42 unresolved; the 9 presence lines `equal`-backed; no other line changed against B5b.
+
+## PR B5x: catalyst quality and graft tables (PR #29, open, branch `spike-b/b5x-extract-quality-graft`, stacked on PR #28)
+- One extractor PR for areas 3 and 4 (plan rule: an extra table comes through an extractor PR first). Survey: `Quality (Attribute Modifiers): +20%` matches `AlternateQualityTypes.Description`; its `CatalystMod` row carries `jewellery_attribute_quality` = 1 (the type), the 20% is the item's quality. `Memory Strands` has no stat (`ClientStrings` `ZanaInfluencedItem`). Graft bases link to `BrequelGrafts` by id segment.
+- `BrequelGraftTypes` (in the schema) has no file in PoE1 26530219; first run failed `NoFile`, so it was dropped.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers; confirmed the manifest SHA-256 matches both summaries, the evidence came from the code under review (`69f8357`; later commits are docs), and the manifest diff is additive (4 tables, 0 dangling). Applied: doc headers, this record, a clause that the extractor did not change between B4y and B5x.
+- **Evidence:** section 21 of the Spike A report.
 
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).

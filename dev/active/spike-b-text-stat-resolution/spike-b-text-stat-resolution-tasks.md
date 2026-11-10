@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4b)
+Last Updated: 2026-11-10 (PR B5x)
 
 # Spike B: tasks
 
@@ -129,8 +129,13 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `cb68936`)
 - [x] Open PR
 
-## PR B5x / B5g: graft skill lines
-- [ ] Extractor: `BrequelGrafts`, `BrequelGraftTypes`, `BrequelGraftGrantedSkillLevels`
+## PR B5x: catalyst quality and graft tables (PR #29)
+- [x] Roots `AlternateQualityTypes`, `BrequelGrafts`, `BrequelGraftGrantedSkillLevels` (`BrequelGraftTypes`: no file); test
+- [x] Determinism from clean `69f8357` (554 files); earlier outputs unchanged; cross-check; corpus report unchanged; summaries replaced; Spike A section 21
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#29)
+
+## PR B5g: graft skill lines
 - [ ] Resolver: `Uses level {1} {0}` (6 lines)
 
 ## PR B5d: item properties

@@ -440,3 +440,17 @@ Spike B's Mods filter (PR B4a) left 93 non-unique lines ambiguous because the ot
 - `cross-check` (PoE1), two runs byte-identical: only `inputs` differs from the B4x summary. `load-statdesc`: unchanged.
 - PoE2: root list unchanged (unit test `roots_should_have_a_vendored_schema_for_their_game`); not re-run.
 - Manifest and cross-check summary replaced in `docs/spikes/spike-a/`.
+
+## 21. Catalyst quality and graft tables for Spike B (PR B5x)
+Spike B areas 3 and 4 (maintainer decisions 2026-11-10) need game data that no extracted table held: which stat a catalyst quality line stands for, and which skill a graft grants. Following the plan's rule (an extractor PR first), three PoE1 roots were added (`ITEM_LINE_TABLES_POE1` in `tools/extractor/src/extract.rs`):
+- `AlternateQualityTypes` (18 rows): `Description` is the item text (`Quality (Attribute Modifiers)`), `CatalystMod` the `Mods` row of the catalyst (`JewelleryAttributeQuality`: stat `jewellery_attribute_quality` at 1). It brings `ModEffectStats` (45 rows) through `ModEffectStat`.
+- `BrequelGrafts` (16 rows): `Id` equals the last segment of the graft base's metadata id (`UulNetolGraft4`), `SkillGem` the granted skill.
+- `BrequelGraftGrantedSkillLevels` (31 rows): area level to skill level and required level.
+- The schema's `BrequelGraftTypes` has no file in PoE1 26530219 (a root without a file fails the run), so it is not a root.
+
+**Evidence, maintainer workstation, 2026-11-10, from clean tool commit `69f8357`.** Steam build unchanged (PoE1 26530219).
+- `check-determinism.sh` (PoE1): byte-identical, 554 files (550 + the four tables); manifest SHA-256 `119bb825…`; 89 tables `ok`, 0 dangling keys.
+- Compared with the B4y output (tool `674837f`; the extractor did not change between B4y and B5x apart from these roots), every earlier output file is byte-identical; only the manifest changes. Spike B's `resolve-corpus` on the new extract gives a `report.json` byte-identical to B5c's.
+- `cross-check` (PoE1), two runs byte-identical: only `inputs` differs from the B4y summary.
+- PoE2: root list unchanged (unit test); not re-run.
+- Manifest and cross-check summary replaced in `docs/spikes/spike-a/`.
