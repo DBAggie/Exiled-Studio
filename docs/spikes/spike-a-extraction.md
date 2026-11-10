@@ -450,7 +450,7 @@ Spike B areas 3 and 4 (maintainer decisions 2026-11-10) need game data that no e
 
 **Evidence, maintainer workstation, 2026-11-10, from clean tool commit `69f8357`.** Steam build unchanged (PoE1 26530219).
 - `check-determinism.sh` (PoE1): byte-identical, 554 files (550 + the four tables); manifest SHA-256 `119bb825…`; 89 tables `ok`, 0 dangling keys.
-- Compared with the B4y output (tool `674837f`), every earlier output file is byte-identical; only the manifest changes. Spike B's `resolve-corpus` on the new extract gives a `report.json` byte-identical to B5c's.
+- Compared with the B4y output (tool `674837f`; the extractor did not change between B4y and B5x apart from these roots), every earlier output file is byte-identical; only the manifest changes. Spike B's `resolve-corpus` on the new extract gives a `report.json` byte-identical to B5c's.
 - `cross-check` (PoE1), two runs byte-identical: only `inputs` differs from the B4y summary.
 - PoE2: root list unchanged (unit test); not re-run.
 - Manifest and cross-check summary replaced in `docs/spikes/spike-a/`.

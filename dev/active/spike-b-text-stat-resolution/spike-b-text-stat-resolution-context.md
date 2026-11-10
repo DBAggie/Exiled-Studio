@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4b: anoints, categories, gate verdict)
+Last Updated: 2026-11-10 (PR B5x: catalyst quality and graft tables)
 
 # Spike B: context
 
@@ -226,7 +226,7 @@ Verdict: proceed with changes. All applied in this plan:
 ## PR B5x: catalyst quality and graft tables (branch `spike-b/b5x-extract-quality-graft`, stacked on PR #28)
 - One extractor PR for areas 3 and 4 (plan rule: an extra table comes through an extractor PR first). Survey: `Quality (Attribute Modifiers): +20%` matches `AlternateQualityTypes.Description`; its `CatalystMod` row carries `jewellery_attribute_quality` = 1 (the type), the 20% is the item's quality. `Memory Strands` has no stat (`ClientStrings` `ZanaInfluencedItem`). Graft bases link to `BrequelGrafts` by id segment.
 - `BrequelGraftTypes` (in the schema) has no file in PoE1 26530219; first run failed `NoFile`, so it was dropped.
-- Reviewed by `code-architecture-reviewer` before the PR (see below).
+- **`code-architecture-reviewer` (2026-11-10):** no blockers; confirmed the manifest SHA-256 matches both summaries, the evidence came from the code under review (`69f8357`; later commits are docs), and the manifest diff is additive (4 tables, 0 dangling). Applied: doc headers, this record, a clause that the extractor did not change between B4y and B5x.
 - **Evidence:** section 21 of the Spike A report.
 
 ## Open questions for the maintainer

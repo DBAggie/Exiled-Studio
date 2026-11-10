@@ -86,7 +86,8 @@ pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "Ind
 pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
 
 /// Tables that give item lines a stat or a skill outside the stat
-/// descriptions (Spike B PR B5x, areas 3 and 4 of the B4b verdict). PoE1
+/// descriptions (Spike B PR B5x, areas 3 and 4 of the B4b verdict,
+/// `docs/spikes/spike-b-resolution.md` section 7a). PoE1
 /// only, as [`MOD_SOURCE_TABLES_POE1`]:
 /// - `AlternateQualityTypes`: catalyst quality (`Quality (Attribute
 ///   Modifiers): +20%`): `Description` and the stat it scales,
