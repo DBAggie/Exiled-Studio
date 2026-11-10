@@ -44,31 +44,31 @@ First match wins; each rule needs evidence named on the line (`evidence` in `rep
 | `parser-gap/only-shadowed` | Only matches shadowed by include precedence | no |
 | `parser-gap/unsupported-handler` / `near-miss` | A template matched, no variant verified; rejection reasons | no |
 | `parser-gap/split-section` | The line and the adjacent line of another section resolve as one multi-line description | no |
-| `special-case/item-property` | A `ParseRaw` spec line, or a `ClientStrings` `ItemDisplay*` text (`Lasts {0} Seconds`, ...) | no (candidate, section 6) |
-| `parser-gap/client-string` | A `ClientStrings` text the client composes a modifier with (`InfluenceStatConditionPresence*`, `BrequelGraftSkillString`) | no |
-| `parser-gap/near-miss` | Word key equals a variant line of the item's scope | no |
+| `special-case/item-property` | A `ParseRaw` spec line with a number as value, or one of nine named `ClientStrings` `ItemDisplay*` texts (`Lasts {0} Seconds`, ...) | no (candidate, section 6) |
+| `parser-gap/client-string` | A `ClientStrings` text the client composes a modifier with (`InfluenceStatConditionPresence*`, `BrequelGraftSkillString`); the remainder is not resolved | no |
+| `parser-gap/near-miss` | Word key equals a variant line of the item's scope (a lookup placeholder matches one or more words) | no |
 | `data-gap/other-scope` | Word key equals a variant line of another file only | no |
 | `data-gap/legacy-text` | Word key equals PoB text at one of the tags, and no current game text | no |
 | `uncategorized` | Anything else (also: no PoB source given) | no |
 
 The plan's `data-gap/no-description` (no variant covers the line's words) is the third `author-note` evidence: with PoB's text at six tags checked as well, a line that matches no source is not modifier text of the game now or in PoB's data.
 
-**Author notes, reviewed by hand** (241 non-unique lines: 105 colour code, 2 `Note:`, 134 no game text): build advice (`Use jeweler orbs at the bench ...`), wish lists (`% increased Spell Damage`, `Cast Speed`, `Double Multi`), passive and skill names (`Golem's Blood`, `Assassin's Mark`). Two borderline texts: `+51 Dexterity` (2 lines, an author's edit of `+{0} to Dexterity`; PoB's lenient parser may read it) and `Graftblood: 0/18827` (2 lines, a graft property pasted from the game; no extracted table holds `Graftblood: `). Neither is game text, so the rule's evidence holds.
+**Author notes, reviewed by hand** (238 non-unique lines: 105 colour code, 2 `Note:`, 131 no game text): build advice (`Use jeweler orbs at the bench ...`), wish lists (`% increased Spell Damage`, `Cast Speed`, `Double Multi`), passive and skill names (`Golem's Blood`, `Assassin's Mark`), and a lone `Abyss`. Two borderline texts: `+51 Dexterity` (2 lines, an author's edit of `+{0} to Dexterity`; PoB's lenient parser may read it) and `Graftblood: 0/18827` (2 lines, a graft property pasted from the game; no extracted table holds `Graftblood: `). Neither is game text, so the rule's evidence holds.
 
 ## 6. Results (PoE1 26530219)
-**Rate:** non-unique **3,248 / 3,415 = 95.1%** (distinct 92.4%); 167 unresolved, the gate allows 68 (2%). Excluded 523 lines (13.3% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator).
+**Rate:** non-unique **3,248 / 3,414 = 95.1%** (distinct 92.4%); 166 unresolved, the gate allows 68 (2%). Excluded 524 lines (13.3% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator).
 
 | Non-unique lines | Lines |
 |---|---:|
 | resolved | 3,248 |
 | `parser-gap/ambiguous` | 72 |
 | `data-gap/legacy-text` | 48 |
-| `special-case/item-property` | 16 |
+| `special-case/item-property` | 15 |
 | `parser-gap/client-string` | 15 |
 | `parser-gap/near-miss` | 11 |
 | `parser-gap/split-section` | 4 |
 | `parser-gap/only-shadowed` | 1 |
-| excluded `special-case/author-note` | 237 |
+| excluded `special-case/author-note` | 238 |
 | excluded `special-case/not-a-modifier` | 230 |
 | excluded `special-case/pob-custom` | 54 |
 | excluded `not-selected-variant` | 2 |
@@ -79,20 +79,20 @@ Unique lines (not in the rate): 818 resolved; ambiguous 36, legacy-text 29, near
 1. **Local vs global ambiguity, 72.** 55 are backed on both sides and spawn tags are skipped because a legacy essence-only row (`ChanceToDodgeEssence4-7`, `IncreasedAttackSpeedEssenceJewellery4-7`, ...) that no `Essences` column names backs one side; 14 are `{crafted}` lines backed by legacy bench rows without class restrictions (bench crafts do not spawn); 2 several-backed; 1 influence guard. The game data cannot tell them apart. Options: a curated rule per stat pair (ADR-015 fallback), or reading the item's other context.
 2. **Legacy text, 48.** Pre-3.15 flask mods (`25% reduced Charges used`, `Immune to Curses during Flask effect`, 40 lines from `v2.4.0`), 3.16-3.20 `reduced Effect of Curses on you during Flask Effect` (4), and single old texts. The game no longer has these texts. Options: re-import the builds, or curated legacy patterns (ADR-015 quarantine).
 3. **Client-composed lines, 15.** Eldritch `While a Unique Enemy is in your Presence, ...` (9) and graft `Uses level 30 <skill>` (6). Resolvable from game data (`ClientStrings` plus `local_influence_mod_requires_unique_monster_presence`, and the graft mod's granted skill); a resolver feature, not a fallback.
-4. **Item properties, 16.** `Lasts 6 Seconds`, `Currently has 40 Charges`, `Quality (Attribute Modifiers): +20%`, `Memory Strands: 63`: not modifiers. Excluding them is a new exclusion rule and needs the maintainer.
+4. **Item properties, 15.** `Lasts 6 Seconds`, `Currently has 40 Charges`, `Quality (Attribute Modifiers): +20%`, `Memory Strands: 63`: not modifiers. Excluding them is a new exclusion rule and needs the maintainer.
 5. **Author edits and old wording, 11 near-miss** (`+132 to Maximum Life`, `recover 5% of energy shield when you block`), **4 split-section** (cluster jewels whose `Implicits:` count is one short), **1 only-shadowed** (`24% increased effect of Offerings`, the B2b `patch-delta` text).
 
 **Arithmetic** (allowance = 2% of the denominator, rounded down):
-- areas 3 and 4 only (+15 resolved, −16 from the denominator): 136 unresolved of 3,399, allowance 67: not met;
+- areas 3 and 4 only (+15 resolved, −15 from the denominator): 136 unresolved of 3,399, allowance 67: not met;
 - areas 2, 3, and 4 (legacy text excluded too): 88 of 3,351, allowance 67: not met;
 - area 1 with areas 3 and 4: 64 of 3,399, allowance 67: met;
-- area 1 with area 2: 47 of 3,367, allowance 67: met.
+- area 1 with area 2: 46 of 3,366, allowance 67: met.
 
 Every combination that meets the gate needs a decision on area 1.
 
 **`mod-backed`** (reported, not gated): 3,063 / 3,248 = 94.3%; resolver-only lines 2,797 / 2,940 = 95.1%. Not backed: `row-value-unset` 126 (anoints 35, cluster jewel nodes 51, others 40; the value is set outside the row by design), `values-outside` 48, `no-fitting-row` 6, `no-row-with-stats` 5. So the resolved lines are "stat-ID resolved, not verified correct" for the 59 lines outside `row-value-unset`.
 
-**Determinism and inputs:** two runs from the clean evidence commit gave byte-identical `summary.json` and `report.json` (section 8); the summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, and the six PoB sources.
+**Determinism and inputs:** two runs from clean commit `39bd52d` (code `cc98f59`) gave byte-identical `summary.json` and `report.json`; the summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, and the six PoB sources.
 
 ## 7. Verdict
 Gate items 2, 3, and 4 hold. Item 1 does not: 95.1% < 98%. Spike B's conclusion for ADR-015: reverse-matching game data resolves the corpus's current game text; what it cannot resolve is (1) local/global pairs whose game rows cannot be told apart, (2) text the game no longer has, and (3) a few client-composed lines that game data can still cover. Areas 1 and 2 are the fallback candidates. The next step is the maintainer's decision (handoff, Next action).

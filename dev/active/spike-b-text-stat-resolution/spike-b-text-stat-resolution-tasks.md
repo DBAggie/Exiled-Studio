@@ -105,5 +105,5 @@ Last Updated: 2026-11-10 (PR B4b)
 - [ ] Open PR
 
 ## After B4b (maintainer)
-- [ ] Fallback decision per area (report section 6): local/global ambiguity (72), legacy text (48), item properties (16, exclusion?), client-composed lines (15, resolver feature)
+- [ ] Fallback decision per area (report section 6): local/global ambiguity (72), legacy text (48), item properties (15, exclusion?), client-composed lines (15, resolver feature)
 - [ ] ADR-007 corpus count 22 -> 21
