@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-0: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-10 (PR P2-0, #41: plan written, plan-reviewer findings applied)
 
 # Phase 2: context
 

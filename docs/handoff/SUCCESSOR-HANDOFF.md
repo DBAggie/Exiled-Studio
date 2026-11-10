@@ -24,8 +24,8 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, Phase 2 plan PR (P2-0) open, in review, branch `plan/phase-2-canonical-model`)
-- **PR P2-0: Phase 2 plan (open, in review, branch `plan/phase-2-canonical-model`).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted. Its main CI run 42922016104 was still in progress when this PR opened; P2-1 checks its result.
+## Current state (updated 2026-11-10, Phase 2 plan PR #41 (P2-0) open, in review, branch `plan/phase-2-canonical-model`)
+- **PR P2-0: Phase 2 plan (PR #41, open, in review, branch `plan/phase-2-canonical-model`).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted. Its main CI run 42922016104 was still in progress when this PR opened; P2-1 checks its result.
   - **Task docs:** new `dev/active/phase-2-canonical-model/` (plan, context, tasks), made with `/dev-docs`.
   - **Steps:** 11 steps in about 15 PRs:
     - P2-1, domain model;
@@ -110,7 +110,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Merge check for the Phase 2 plan PR (P2-0)** (`gh pr view <N>`). Record the squash commit and the main CI run in the next PR's Current state. Also record the result of main CI run 42922016104 (PR #40). If the maintainer answered Q1 to Q6 differently from the defaults, or asked for changes, update the plan on the same branch first.
+1. **Merge check for the Phase 2 plan PR #41 (P2-0)** (`gh pr view 41`). Record the squash commit and the main CI run in the next PR's Current state. Also record the result of main CI run 42922016104 (PR #40). If the maintainer answered Q1 to Q6 differently from the defaults, or asked for changes, update the plan on the same branch first.
 2. **P2-1: domain model** (plan step 1, `dev/active/phase-2-canonical-model/`). Build the aggregate in `loom-domain`:
    - `Game`; IDs; `GameSpecific::Poe1`; typed values with their source strings;
    - items with every line typed by kind, a `continues` link for split-section pairs, and the fields the import pipeline reads (rarity, sections, influences, flags, variant selection, prefixes);

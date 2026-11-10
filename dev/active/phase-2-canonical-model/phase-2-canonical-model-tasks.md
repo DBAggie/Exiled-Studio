@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-0: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-10 (PR P2-0, #41: plan written, plan-reviewer findings applied)
 
 # Phase 2: tasks
 
@@ -8,10 +8,10 @@ Last Updated: 2026-11-10 (PR P2-0: plan written, plan-reviewer findings applied)
 - [x] Write plan, context, tasks
 - [x] plan-reviewer; record its summary and the changes in the context file (2 blocking, 11 should-fix, 5 nits; all applied)
 - [x] Update handoff (Current state, Next action; record PR #40's merge), CLAUDE.md Status, ACTION-PLAN Next action
-- [ ] Open PR; write the PR number into the docs right after
+- [x] Open PR (#41); write the PR number into the docs right after
 
 ## PR P2-1: domain model (step 1)
-- [ ] Check main CI run 42922016104 (PR #40) and the plan PR's merge
+- [ ] Check main CI run 42922016104 (PR #40) and PR #41's merge
 - [ ] `Game`, IDs, Build, character, `GameSpecific`, passive spec, skills, items, item sets, slots, config inputs
 - [ ] Modifier line enum (stat IDs, typed `kind`, unresolved with reason), `Adapted`
 - [ ] Every item line typed by kind; `continues` for split pairs; typed values keep source strings
