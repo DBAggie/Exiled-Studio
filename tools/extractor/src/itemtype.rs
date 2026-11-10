@@ -50,6 +50,11 @@ pub const EXTENSION: &str = ".it";
 /// treats it as the base case too.
 pub const ROOT: &str = "nothing";
 
+/// Deepest block nesting read (the installs nest 2 deep). A cap keeps
+/// rendering and dropping a hostile file, which recurse per level, off the
+/// end of the stack.
+pub const MAX_DEPTH: usize = 32;
+
 /// Whether `path` (as listed in the index) is an item type file.
 #[must_use]
 pub fn is_item_type(path: &str) -> bool {
@@ -73,9 +78,16 @@ pub fn target_path(extends: &str) -> Option<String> {
 /// [`code`](Self::code).
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum ItemTypeError {
-    /// Not UTF-16LE text.
+    /// Not UTF-16LE text (the stat-description decoder's error, given an
+    /// `EXTRACT_IT_*` code here so the manifest names the file kind).
     #[error(transparent)]
     Text(#[from] StatDescError),
+    /// Blocks nested deeper than [`MAX_DEPTH`].
+    #[error("line {line}: blocks nested deeper than {MAX_DEPTH}")]
+    TooDeep {
+        /// 1-based line number.
+        line: usize,
+    },
     /// A line that is no construct of the grammar, or one in the wrong place.
     #[error("line {line}: unexpected {text:?}")]
     Unexpected {
@@ -105,7 +117,9 @@ impl ItemTypeError {
     #[must_use]
     pub const fn code(&self) -> &'static str {
         match self {
-            Self::Text(e) => e.code(),
+            Self::Text(StatDescError::OddLength { .. }) => "EXTRACT_IT_ODD_LENGTH",
+            Self::Text(StatDescError::BadUtf16 { .. }) => "EXTRACT_IT_BAD_UTF16",
+            Self::TooDeep { .. } => "EXTRACT_IT_TOO_DEEP",
             Self::Unexpected { .. } => "EXTRACT_IT_UNEXPECTED_LINE",
             Self::Repeated { .. } => "EXTRACT_IT_REPEATED_HEADER",
             Self::Missing(_) => "EXTRACT_IT_MISSING_HEADER",
@@ -268,6 +282,14 @@ impl State {
         Ok(true)
     }
 
+    fn push(&mut self, n: usize, block: Block) -> Result<(), ItemTypeError> {
+        if self.open.len() >= MAX_DEPTH {
+            return Err(ItemTypeError::TooDeep { line: n });
+        }
+        self.open.push(block);
+        Ok(())
+    }
+
     fn line(&mut self, n: usize, line: &str) -> Result<(), ItemTypeError> {
         let unexpected = || ItemTypeError::Unexpected {
             line: n,
@@ -277,12 +299,14 @@ impl State {
             if line != "{" {
                 return Err(unexpected());
             }
-            self.open.push(Block {
-                blocks: Vec::new(),
-                entries: Vec::new(),
-                name,
-            });
-            return Ok(());
+            return self.push(
+                n,
+                Block {
+                    blocks: Vec::new(),
+                    entries: Vec::new(),
+                    name,
+                },
+            );
         }
         if line == "}" {
             let block = self.open.pop().ok_or_else(unexpected)?;
@@ -300,7 +324,7 @@ impl State {
             };
             match opens {
                 Opens::Pending(name) => self.pending = Some(name.to_owned()),
-                Opens::Open(name) => self.open.push(new(name)),
+                Opens::Open(name) => self.push(n, new(name))?,
                 Opens::Empty(name) => self.close(new(name)),
             }
             return Ok(());
@@ -441,14 +465,18 @@ impl ItemTypeManifest {
     }
 }
 
-/// The `extends` chain checks over parsed files (`path -> extends`).
+/// The `extends` chain checks over parsed files (`path -> extends`). A
+/// target is dangling only when no file of the index has its path (`known`,
+/// failed files included), so a failed parent is reported once, as failed,
+/// not again for each child.
 fn chain_checks(
     extends: &BTreeMap<String, String>,
+    known: &BTreeSet<String>,
 ) -> (BTreeMap<String, String>, BTreeSet<String>) {
     let mut dangling = BTreeMap::new();
     let mut cycles = BTreeSet::new();
     for (path, target) in extends {
-        if target_path(target).is_some_and(|t| !extends.contains_key(&t)) {
+        if target_path(target).is_some_and(|t| !known.contains(&t)) {
             dangling.insert(path.clone(), target.clone());
         }
         // Walk up from `path`; coming back to it means it is on a cycle. A
@@ -570,7 +598,8 @@ impl Collection {
             }
             entries.insert(key, entry);
         }
-        let (dangling_extends, cycles) = chain_checks(&extends);
+        let known: BTreeSet<String> = entries.keys().cloned().collect();
+        let (dangling_extends, cycles) = chain_checks(&extends, &known);
         (
             files,
             ItemTypeManifest {
@@ -686,10 +715,27 @@ mod tests {
             err(&format!("{head}Base\n{{\nabstract\n}}\n")),
             "EXTRACT_IT_UNEXPECTED_LINE"
         );
+        assert_eq!(parse(b"abc").unwrap_err().code(), "EXTRACT_IT_ODD_LENGTH");
         assert_eq!(
-            parse(b"abc").unwrap_err().code(),
-            "EXTRACT_STATDESC_ODD_LENGTH"
+            parse(&[0x00, 0xd8]).unwrap_err().code(),
+            "EXTRACT_IT_BAD_UTF16"
         );
+        let deep = |n: usize| format!("{head}{}{}", "X {\n".repeat(n), "}\n".repeat(n));
+        assert!(parse(&utf16(&deep(MAX_DEPTH))).is_ok());
+        assert_eq!(err(&deep(MAX_DEPTH + 1)), "EXTRACT_IT_TOO_DEEP");
+        let pending = format!("{head}{}X\n{{\n", "X {\n".repeat(MAX_DEPTH));
+        assert_eq!(err(&pending), "EXTRACT_IT_TOO_DEEP");
+    }
+
+    #[test]
+    fn finish_should_report_a_failed_parent_once() {
+        let mut c = Collection::new();
+        c.add("metadata/items/parent.it", b"odd").unwrap();
+        c.add("metadata/items/child.it", &file("Metadata/Items/Parent"))
+            .unwrap();
+        let (_, m) = c.finish();
+        assert!(m.dangling_extends.is_empty());
+        assert_eq!(m.problems(), ["metadata/items/parent.it: Failed"]);
     }
 
     #[test]

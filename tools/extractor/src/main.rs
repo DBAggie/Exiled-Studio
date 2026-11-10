@@ -15,16 +15,17 @@
 //!   every passive skill graph (`*.psg`) into
 //!   `<dir>/passive_skill_graphs/**/*.json` (see [`loom_extractor::psg`]),
 //!   every item type file (`*.it`) into `<dir>/item_types/**/*.json` (see
-//!   [`loom_extractor::itemtype`]),
-//!   plus `<dir>/manifest.json` (see [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
+//!   [`loom_extractor::itemtype`]), plus `<dir>/manifest.json` (see
+//!   [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
 //!   checked before anything is decoded. Exits with an error if a root table
 //!   is not `ok`, any table failed, any key is past the end of its target,
 //!   no stat-description file was found, or one did not decode, or no graph
 //!   was found, one did not parse, or one has a dangling connection, or no
 //!   item type file was found, one did not parse, or an `extends` chain is
-//!   dangling or loops (`Manifest::problems`); the output is written either way. Stat-description
-//!   lines that were not parsed are listed in the manifest, not errors.
+//!   dangling or loops (`Manifest::problems`); the output is written either
+//!   way. Stat-description lines that were not parsed are listed in the
+//!   manifest, not errors.
 //!
 //! - `cross-check <extract-dir> <pob-dir> --game poe1|poe2 --out <dir>`:
 //!   compares an `extract` output with a Path of Building checkout and writes

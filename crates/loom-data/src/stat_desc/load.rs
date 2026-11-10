@@ -461,6 +461,21 @@ mod tests {
     }
 
     #[test]
+    fn manifest_should_read_format_4_with_item_types_and_refuse_5() {
+        let json = |format: u32| {
+            format!(
+                r#"{{"format": {format}, "game": "poe1", "item_types": {{"cycles": [],
+                "dangling_extends": {{}}, "dir": "item_types", "files": {{}}}},
+                "stat_descriptions": {{"dir": "x", "files": {{}}, "handlers": {{}}}}}}"#
+            )
+        };
+        let m = StatDescManifest::from_json(json(4).as_bytes()).unwrap();
+        assert_eq!(m.format, 4);
+        let err = StatDescManifest::from_json(json(5).as_bytes()).unwrap_err();
+        assert_eq!(err.code(), "DATA_STATDESC_FORMAT");
+    }
+
+    #[test]
     fn manifest_should_read_files_and_handler_counts() {
         let m = StatDescManifest::from_json(
             br#"{"format": 3, "game": "poe1", "steam_build_id": "26530219", "tables": {},
