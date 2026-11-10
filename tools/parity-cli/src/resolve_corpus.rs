@@ -499,6 +499,11 @@ pub struct Summary {
     pub mods_rows: usize,
     /// `Mods` rows whose spawn tag and weight arrays differ in length.
     pub mods_bad_spawn_rows: usize,
+    /// Essence-only `Mods` rows whose item classes `Essences` gives.
+    pub essence_rows_known: usize,
+    /// Essence-only `Mods` rows with no known classes (no `Essences` table,
+    /// or no named column refers to them, e.g. quiver mods).
+    pub essence_rows_unknown: usize,
     /// Named `BaseItemTypes` rows whose tags are unknown.
     pub bases_with_unknown_tags: usize,
     /// The `Mods` filter on ambiguous lines.
@@ -948,6 +953,8 @@ pub fn run(
             .collect(),
         mods_rows: mods.row_count(),
         mods_bad_spawn_rows: mods.bad_spawn_rows,
+        essence_rows_known: mods.essence_rows().0,
+        essence_rows_unknown: mods.essence_rows().1,
         bases_with_unknown_tags: bases.tags_unknown,
         ..Summary::default()
     };

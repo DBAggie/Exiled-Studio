@@ -77,14 +77,24 @@ pub const LOOKUP_TABLES: [&str; 4] = [
 /// file fails the run.
 pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "IndexableSkillGems"];
 
+/// Tables that say which item classes a mod with no spawn weights goes on
+/// (Spike B PR B4y, plan "Ambiguity"): essence mods (`Essences`, one mod
+/// column per item class). PoE1 only: Spike B resolves PoE1 builds, and the
+/// PoE2 table has other columns. `CraftingBenchOptions` is not a root: its
+/// class lists equal `Mods.CraftingItemClassRestrictions` on all 791 bench
+/// rows (PoE1 26530219), and it would pull in about 30 unrelated tables.
+pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
-/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`].
+/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`] and
+/// [`MOD_SOURCE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
     roots.extend(LOOKUP_TABLES);
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
+        roots.extend(MOD_SOURCE_TABLES_POE1);
     }
     roots
 }
@@ -1806,8 +1816,10 @@ mod tests {
         assert!(
             LOOKUP_TABLES_POE1
                 .iter()
+                .chain(&MOD_SOURCE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
+        assert!(MOD_SOURCE_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
     }
 
     #[test]
