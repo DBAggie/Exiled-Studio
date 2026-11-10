@@ -1,13 +1,13 @@
 {
   "format": 1,
-  "status": "failed",
-  "class": "ORACLE_NONDETERMINISM",
+  "status": "ok",
+  "class": null,
   "platform": "windows-x86_64",
   "oracle": {
     "status": "ok",
     "class": null,
     "platform": "windows-x86_64",
-    "manifest_sha256": "d7c8b81234c6a1973af7ecabc62df3f62f6a1de200e32dbe5f9ee7e09f7b66be",
+    "manifest_sha256": "bb2d487619caf3597b36ac8557773fd05420214ccc136ee171f300eb77066e2e",
     "manifest": {
       "format": 1,
       "pob": {
@@ -38,7 +38,7 @@
         "module": "lua-utf8"
       },
       "adapter": {
-        "protocol": 2,
+        "protocol": 3,
         "breakdowns": [
           "Armour",
           "ChaosResist",
@@ -56,6 +56,7 @@
         ],
         "shims": [
           "inflate",
+          "variant_order",
           "write_guard"
         ],
         "zlib": {
@@ -203,10 +204,10 @@
     "file": "oracle.lua",
     "files": {
       "json.lua": "7f16a79a15b0d9517b8969ec441f4b6a4b206593e7434c2316fb01b7941ed7b6",
-      "oracle.lua": "0e1035813671d27091b277415ae7251ef704621dbf26994d8b92da5dea3c281f",
-      "shims.lua": "a31906bf65d3bfb07a87e91405c01fac3ef39acc39bda3712a60ebe0732e46ff"
+      "oracle.lua": "de4031a18b0594c86639668e778fee7a95f043751736a2a8461806135697b755",
+      "shims.lua": "70c6e8d63d657ca84492d13c79dd8d58987ba534bf955b2bfc2bae885c2543a8"
     },
-    "protocol": 2,
+    "protocol": 3,
     "arguments": [
       "breakdown=Armour",
       "breakdown=ChaosResist",
@@ -239,7 +240,7 @@
   "runs": 3,
   "timeout_s": 120,
   "tool": {
-    "commit": "4a2e6d1c973526773a47e97e7dd877627e31a767",
+    "commit": "2535abeb4d4bb87d3a697fd779b91b21af39d497",
     "dirty": false
   },
   "fixtures": [
@@ -257,19 +258,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "39c002427beb57b3d9993daa6e3d1e0361abf7d8072de2379511c5d950ca8559"
+        "output_sha256": "2c9d5de82708cb0f5fe885bf1301aad4efcabf93ac132ae849d548a94086e4d1"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3049,
+          "elapsed_ms": 3253,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
@@ -282,7 +284,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3073,
+          "elapsed_ms": 3303,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
@@ -295,7 +297,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3205,
+          "elapsed_ms": 3038,
           "same_as_first": true,
           "stdout": {
             "bytes": 615,
@@ -322,32 +324,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "ef2c8d25921dc7bb5de841603dee016a0f3d33c47adac144cec3a5d2a707e1cd"
+        "output_sha256": "46ffd2a02e399e313e42b0fe6251fcd0d9f5631dee61d49e00fbcf7f01aaf314"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2207,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 805,
-            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2163,
+          "elapsed_ms": 2214,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
@@ -360,11 +350,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2139,
+          "elapsed_ms": 2124,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
-            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2140,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 805,
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
           },
           "stderr": {
             "bytes": 0,
@@ -387,32 +390,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "469e0b6f6b34e0dd3e0b3ee737ba20fcfe18a470f06bb3899a7e3c7cdac0d3d6"
+        "output_sha256": "5280119db67d8b2b77273f4e18dd78d17a9d1e7e84174a20345aa2108e507c3d"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 1922,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 1937,
+          "elapsed_ms": 1874,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -425,7 +416,20 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1943,
+          "elapsed_ms": 1893,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 570,
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 1895,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -452,23 +456,24 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "14efc8a80acdaae0da3cee6894c7cb21abd4ce59f474a1b4dba0b45139b32d15"
+        "output_sha256": "9761ebe4f419e7d76072979cfd660a37d96ade55fd41ae04025f05418b9cdb63"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 1934,
+          "elapsed_ms": 1927,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -477,11 +482,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1938,
+          "elapsed_ms": 1901,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -490,11 +495,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1938,
+          "elapsed_ms": 1883,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -506,30 +511,33 @@
     {
       "id": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
       "sha256": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
-      "status": "failed",
-      "class": "ORACLE_NONDETERMINISM",
+      "status": "ok",
+      "class": null,
       "determinism": {
         "runs": 3,
-        "identical": 1
+        "identical": 3
       },
       "outcome": {
         "status": "ok",
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "0cf6840cac81bac148b33dc281481686920675e02c9a5caaf68f4aa4cbaabab2"
+        "output_sha256": "ea9f37d1491d4077e9f04c16983731d9ff87096c27fbebc9cef3e0a559596d4c"
       },
       "probe": {
         "inflate_calls": 1,
         "inflate_errors": 0,
         "inflated_bytes": 51651890,
         "writes_refused": 1,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalDetonateDead"
+        ],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3969,
+          "elapsed_ms": 3992,
           "same_as_first": true,
           "stdout": {
             "bytes": 1029,
@@ -542,18 +550,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3931,
-          "same_as_first": false,
-          "outcome": {
-            "status": "ok",
-            "class": null,
-            "stage": "done",
-            "message": null,
-            "output_sha256": "1ecbc4f1f6a59cc0a1f5565e39a9d15295ae5ea9e997ec6dfd5157ef194b5456"
-          },
+          "elapsed_ms": 3961,
+          "same_as_first": true,
           "stdout": {
             "bytes": 1029,
-            "sha256": "6fea9c82b47bf8734e6d3dc6e517957c4e5328ec26d8e10aacd377ab8c6756b9"
+            "sha256": "c5ab9ee98247ff4221dfd6bc2b50e470945c4076b3ac0bf818ec4471bc2fd1e8"
           },
           "stderr": {
             "bytes": 0,
@@ -562,15 +563,8 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 4083,
-          "same_as_first": false,
-          "outcome": {
-            "status": "ok",
-            "class": null,
-            "stage": "done",
-            "message": null,
-            "output_sha256": "27a678742910ce26ce3c4c20e430ee55af7b5492565d55b3b9dcdce7867158aa"
-          },
+          "elapsed_ms": 3842,
+          "same_as_first": true,
           "stdout": {
             "bytes": 1029,
             "sha256": "c5ab9ee98247ff4221dfd6bc2b50e470945c4076b3ac0bf818ec4471bc2fd1e8"
@@ -585,30 +579,33 @@
     {
       "id": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
       "sha256": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
-      "status": "failed",
-      "class": "ORACLE_NONDETERMINISM",
+      "status": "ok",
+      "class": null,
       "determinism": {
         "runs": 3,
-        "identical": 2
+        "identical": 3
       },
       "outcome": {
         "status": "ok",
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "4788e86d01298a142e99f03209edfc03d809a374d21801d700ab5bf765a08b18"
+        "output_sha256": "dfa8398bcce5fdd74464c28a26252bdca9704f2bed8d8e010491b3c42928b48d"
       },
       "probe": {
         "inflate_calls": 1,
         "inflate_errors": 0,
         "inflated_bytes": 3632454,
         "writes_refused": 1,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalDetonateDead"
+        ],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2789,
+          "elapsed_ms": 3059,
           "same_as_first": true,
           "stdout": {
             "bytes": 561,
@@ -621,31 +618,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2724,
+          "elapsed_ms": 2775,
           "same_as_first": true,
-          "stdout": {
-            "bytes": 561,
-            "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2694,
-          "same_as_first": false,
-          "outcome": {
-            "status": "ok",
-            "class": null,
-            "stage": "done",
-            "message": null,
-            "output_sha256": "34b17e5606a56b026fb2f4d1f3dafd53190353191269f33a07c63e82e3f3fefc"
-          },
           "stdout": {
             "bytes": 561,
             "sha256": "59f233558e5408e1a777a0d22f3743a41a38d445ab9f1748bb644535db0034b5"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2843,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 561,
+            "sha256": "f70e99e67f83e4795d58bd1d7b89821a9c098b20297db80f2e34c14955199a16"
           },
           "stderr": {
             "bytes": 0,
@@ -668,19 +658,33 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "5845cb5d7342e5b731bdf975441ab81ee834e2d1b74b8bc520e253271d091587"
+        "output_sha256": "25887b42ed279294314171a9c2c003a201e8ad7d6ef8b0dc94968871e3dbae8a"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2149,
+          "elapsed_ms": 2169,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2155,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -693,24 +697,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2163,
+          "elapsed_ms": 2279,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2191,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 436,
-            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
           },
           "stderr": {
             "bytes": 0,
@@ -733,23 +724,24 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "03c2f2711f8fefd878c67c9a7415609866d9cb6770edcbab958eccf14fa86750"
+        "output_sha256": "ae5464fcf330551fab26cb1f7b8f62091457fc78f1fb855ae1b0fe0d936ab27a"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2455,
+          "elapsed_ms": 2500,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -758,11 +750,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2450,
+          "elapsed_ms": 2387,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -771,11 +763,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2432,
+          "elapsed_ms": 2627,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -798,19 +790,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "078ae69da5c7ce69551ac60c07f7872c8ed7adb6b87dca7150a8198aa608e9a6"
+        "output_sha256": "479edfe99efa1a9ef6d4e89343ee7f6aec26cf153d2f5c1165adb6c4dcb3e353"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2319,
+          "elapsed_ms": 2371,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
@@ -823,7 +816,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2292,
+          "elapsed_ms": 2267,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
@@ -836,11 +829,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2297,
+          "elapsed_ms": 2333,
           "same_as_first": true,
           "stdout": {
             "bytes": 516,
-            "sha256": "5cb171e144921936b40e68988a0edc09d7448ce81743cb5ca2606b77a3357cb9"
+            "sha256": "8e434ffa6209e29825ca094f42770edfbb8be9b8b1cb463a1ad40775b6b3c6fb"
           },
           "stderr": {
             "bytes": 0,
@@ -863,19 +856,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "8bd908f81d59830e2ffab00bf549fc960eba2318bbe4c26595c31dbb1577c7f0"
+        "output_sha256": "d285546e39902c1c1817bfcc96e60f1b4d8c48ce432b861d3374b9eb76e77957"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2974,
+          "elapsed_ms": 3058,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
@@ -888,11 +882,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2850,
+          "elapsed_ms": 2854,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
-            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
           },
           "stderr": {
             "bytes": 0,
@@ -901,7 +895,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2833,
+          "elapsed_ms": 2861,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
@@ -917,30 +911,47 @@
     {
       "id": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
       "sha256": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
-      "status": "failed",
-      "class": "ORACLE_NONDETERMINISM",
+      "status": "ok",
+      "class": null,
       "determinism": {
         "runs": 3,
-        "identical": 2
+        "identical": 3
       },
       "outcome": {
         "status": "ok",
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "2d7cc37686f82ef477c5283aae9e3e0ce12958e5df4733760b60213f390cb7bc"
+        "output_sha256": "4916c3a399bb202638c0f9c44d0151eb020c6740787c1601bc0084f37d9d347d"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [
+          "Metadata/Items/Gems/SkillGemVaalAbsolution",
+          "Metadata/Items/Gems/SkillGemVaalSummonSkeletons"
+        ],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2821,
+          "elapsed_ms": 3117,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 436,
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 3065,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -953,31 +964,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2863,
-          "same_as_first": false,
-          "outcome": {
-            "status": "ok",
-            "class": null,
-            "stage": "done",
-            "message": null,
-            "output_sha256": "6ed671239cdb60232329151500b30f5b14545756fe80118847189ec2f15f8338"
-          },
-          "stdout": {
-            "bytes": 436,
-            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2844,
+          "elapsed_ms": 3801,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "419e8694cd8e9490caa4713a5bac46c03acaf9ec8fb95599f46cae6033169303"
+            "sha256": "da286b244e3c349c72f194f9ec1a91be50348cdee6c92e41b5351b481e96b063"
           },
           "stderr": {
             "bytes": 0,
@@ -1000,19 +991,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "87462f75f3a5a7afc9c0f8228e29dafcac209c3cd3a80e3abebd3febe3327af8"
+        "output_sha256": "2dcc8b4ee5bfab30bf57bc9a03d00754638c156b1185b021f32eaee56efc592c"
       },
       "probe": {
         "inflate_calls": 1,
         "inflate_errors": 0,
         "inflated_bytes": 3587054,
         "writes_refused": 1,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2313,
+          "elapsed_ms": 3112,
           "same_as_first": true,
           "stdout": {
             "bytes": 695,
@@ -1025,11 +1017,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2292,
+          "elapsed_ms": 2330,
           "same_as_first": true,
           "stdout": {
             "bytes": 695,
-            "sha256": "209f3120ef167af15cff8655eb0f13c85a0ae469ded99459ea8726ffd4b3d91c"
+            "sha256": "9535361b65077934de9e9032ed227153348cccb863d557416afec303ebc57080"
           },
           "stderr": {
             "bytes": 0,
@@ -1038,7 +1030,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2260,
+          "elapsed_ms": 2402,
           "same_as_first": true,
           "stdout": {
             "bytes": 695,
@@ -1065,19 +1057,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "b3d7894b286550b39deeb1b9a38ce7ea6ab5248c32eb02233b35422b51f152bd"
+        "output_sha256": "696a1a371cc9c737c9d2ed2a1746aa8e5fc82ddc77d44fea46bfd5dc30cb45a1"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2998,
+          "elapsed_ms": 3040,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -1090,7 +1083,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2844,
+          "elapsed_ms": 3122,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -1103,11 +1096,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2895,
+          "elapsed_ms": 3051,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "92d002a09b0c02b13601c6c648c30dc17bc47b511b015fe0b9ee796d828047d9"
+            "sha256": "d4249252ee5e397880521348d3202a8c93b430f3eecde1e341f677d3178f0a5a"
           },
           "stderr": {
             "bytes": 0,
@@ -1130,19 +1123,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "8d2a811b67a9cdac0273147220d9678593766585e6809d7d61db32f96666f472"
+        "output_sha256": "0b0eaac47a3fa8b2bebcfddae328be4c405af12d44333442191f9c9969411838"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2210,
+          "elapsed_ms": 2400,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
@@ -1155,7 +1149,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2221,
+          "elapsed_ms": 2363,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
@@ -1168,11 +1162,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2238,
+          "elapsed_ms": 2283,
           "same_as_first": true,
           "stdout": {
             "bytes": 492,
-            "sha256": "9751ba341e54df8648077d9883a8c1476a020c4c8b8336891bb4b68896a1334a"
+            "sha256": "5621c4f469ad05bcccba69f55cdae0e658313153e689b50a5a3efdc103a7601f"
           },
           "stderr": {
             "bytes": 0,
@@ -1195,19 +1189,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "52754223af3724825c5c652e99f0bff73839a65cc04f852e69f66a74ae4cb318"
+        "output_sha256": "3bafb1e666ceb6ec991eab38ccc3b1e6826525dcd41bdf549569dd82c6b083ff"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3206,
+          "elapsed_ms": 3374,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
@@ -1220,11 +1215,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3213,
+          "elapsed_ms": 3383,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
-            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
           },
           "stderr": {
             "bytes": 0,
@@ -1233,11 +1228,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3183,
+          "elapsed_ms": 3353,
           "same_as_first": true,
           "stdout": {
             "bytes": 805,
-            "sha256": "790d9e17f60277d4a711cb595736c30ec07494b717deb58808c8e2226928ffc5"
+            "sha256": "e76c1b669a158a770a3526db237587ad3fe8dc510ae59a6545284a75543207b7"
           },
           "stderr": {
             "bytes": 0,
@@ -1260,32 +1255,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "a5583b015b007e5b603b489f5c85022ab5d96c5a7942554efa12e23990b38bf0"
+        "output_sha256": "4c93b21eb81ccbdd8a1304d267ac749a38de59fb82bca5a0cc81098030bf573f"
       },
       "probe": {
         "inflate_calls": 1,
         "inflate_errors": 0,
         "inflated_bytes": 3632454,
         "writes_refused": 1,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2457,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 1085,
-            "sha256": "34b6b33a3c58ef8e13d366d18ad03e813e1a036360cca12ca3fccb31958d4a51"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 2399,
+          "elapsed_ms": 2568,
           "same_as_first": true,
           "stdout": {
             "bytes": 1085,
@@ -1298,11 +1281,24 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2465,
+          "elapsed_ms": 2501,
           "same_as_first": true,
           "stdout": {
             "bytes": 1085,
             "sha256": "34b6b33a3c58ef8e13d366d18ad03e813e1a036360cca12ca3fccb31958d4a51"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2491,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 1085,
+            "sha256": "c7f61496a664b4f0c6649cece1ebf65ec8e70c65ac1bb02d15520161845b3b5e"
           },
           "stderr": {
             "bytes": 0,
@@ -1325,19 +1321,33 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "283d80e7a0c9ea5b7671ab9ad2af559adb7e8f7aee32a282eacd3dfb0e3947c7"
+        "output_sha256": "f4da042a6a2f745acb44bd1d490c20c464f95dbfb9cfc0a3c2038d915de453df"
       },
       "probe": {
         "inflate_calls": 1,
         "inflate_errors": 0,
         "inflated_bytes": 3632454,
         "writes_refused": 1,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 1979,
+          "elapsed_ms": 2083,
+          "same_as_first": true,
+          "stdout": {
+            "bytes": 693,
+            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
+          },
+          "stderr": {
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "exit_code": 0,
+          "elapsed_ms": 2052,
           "same_as_first": true,
           "stdout": {
             "bytes": 693,
@@ -1350,24 +1360,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 1999,
+          "elapsed_ms": 2139,
           "same_as_first": true,
           "stdout": {
             "bytes": 693,
-            "sha256": "02f9abd070ed85f6a3f4186e51d3aaabdf9464d70ceb3122b3ab8d714f96b505"
-          },
-          "stderr": {
-            "bytes": 0,
-            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-          }
-        },
-        {
-          "exit_code": 0,
-          "elapsed_ms": 1984,
-          "same_as_first": true,
-          "stdout": {
-            "bytes": 693,
-            "sha256": "02f9abd070ed85f6a3f4186e51d3aaabdf9464d70ceb3122b3ab8d714f96b505"
+            "sha256": "92b20cbeb41c16285d4c92216c096942bdfcfe7002aacc6858be92cffe88f50a"
           },
           "stderr": {
             "bytes": 0,
@@ -1390,23 +1387,24 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "c7b32a152d1fbbc7851b43463843cab33302fd8cbae232b0a1b92b129bbdfc9b"
+        "output_sha256": "515c55585f77145c5897ed78ff8c8b8550c558cbe07fe48ab65c09c8139f4660"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2980,
+          "elapsed_ms": 3155,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
           },
           "stderr": {
             "bytes": 0,
@@ -1415,11 +1413,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2966,
+          "elapsed_ms": 3050,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
           },
           "stderr": {
             "bytes": 0,
@@ -1428,7 +1426,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2943,
+          "elapsed_ms": 3022,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -1455,23 +1453,24 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "7f7d520355c7d1ffd200b28cb824095307ae074fb9ea7fd6dae3bdb6c94d386f"
+        "output_sha256": "fadf1e0fec51888728e05dfdc42fe72ba2c406104f6e7dcafce7fe2dedd3cb47"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3861,
+          "elapsed_ms": 3590,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
           },
           "stderr": {
             "bytes": 0,
@@ -1480,11 +1479,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3322,
+          "elapsed_ms": 3517,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
-            "sha256": "fafa67e98ec6cfc0215613521537d5abe34e4ab254115ee96a7292b2a7f0ed30"
+            "sha256": "4bcdda22874119bf322bcd8325bac961361103b09367631378f4929dfa32dd26"
           },
           "stderr": {
             "bytes": 0,
@@ -1493,7 +1492,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3365,
+          "elapsed_ms": 3399,
           "same_as_first": true,
           "stdout": {
             "bytes": 436,
@@ -1520,19 +1519,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "b354752ae60c5a3888bb9030a14833a161b142e0e75c7146a13e837fdd3f8c22"
+        "output_sha256": "29afae06e327b22eebea03c8a9846cdabdb165f3fa5522dc36c01b626dbb6766"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 2680,
+          "elapsed_ms": 2773,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
@@ -1545,11 +1545,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2717,
+          "elapsed_ms": 2802,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
-            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
           },
           "stderr": {
             "bytes": 0,
@@ -1558,11 +1558,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 2646,
+          "elapsed_ms": 2732,
           "same_as_first": true,
           "stdout": {
             "bytes": 514,
-            "sha256": "975e204a05529057c225328e6284a72e6f52dc739edf0c14e2d0ae147b7d2543"
+            "sha256": "faa77510a921f9480a7b9789dc55a51116a41e59ddb23635156c65222365d393"
           },
           "stderr": {
             "bytes": 0,
@@ -1585,19 +1585,20 @@
         "class": null,
         "stage": "done",
         "message": null,
-        "output_sha256": "5c2d8a083566a5486446ab9634d11903b0273f59e08fad43af2d8f4d496d154b"
+        "output_sha256": "cf5c41e441faf8caeda60b8f92ebdb518f90b57633e8a7fc556770ddd0a503e4"
       },
       "probe": {
         "inflate_calls": 0,
         "inflate_errors": 0,
         "inflated_bytes": 0,
         "writes_refused": 0,
+        "variant_order": [],
         "not_installed": []
       },
       "runs": [
         {
           "exit_code": 0,
-          "elapsed_ms": 3689,
+          "elapsed_ms": 4006,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
@@ -1610,11 +1611,11 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3729,
+          "elapsed_ms": 4038,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
-            "sha256": "9cd1430974fb9400bfa78e556b0bce3dd416ffa33b79e1b4749f96f2f2c7ac31"
+            "sha256": "1b6c126a976b365705b95daac27ccd75ac6b806de9c4759c97d8e31b398be092"
           },
           "stderr": {
             "bytes": 0,
@@ -1623,7 +1624,7 @@
         },
         {
           "exit_code": 0,
-          "elapsed_ms": 3682,
+          "elapsed_ms": 3804,
           "same_as_first": true,
           "stdout": {
             "bytes": 570,
