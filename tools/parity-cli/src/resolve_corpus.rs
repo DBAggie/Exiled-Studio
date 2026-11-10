@@ -72,6 +72,7 @@ use crate::grafts::{self, Grafts};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
+use crate::properties::Properties;
 
 /// Scope root files by name, in the order domains are tested.
 const SCOPES: [&str; 3] = [
@@ -122,6 +123,8 @@ pub struct Bases {
     pub tags_unknown: usize,
     /// Graft bases and their granted skills (B5g).
     pub grafts: Grafts,
+    /// Item property texts and catalyst quality types (B5d).
+    pub properties: Properties,
 }
 
 impl Bases {
@@ -185,6 +188,7 @@ impl Bases {
             });
         }
         bases.grafts = Grafts::load(read)?;
+        bases.properties = Properties::load(read)?;
         Ok(bases)
     }
 
@@ -656,8 +660,10 @@ pub struct LineRecord {
     /// The backing row's `Mods.Id`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backed_by: Option<String>,
-    /// What a resolved line resolved to when it is not stat IDs:
-    /// `granted-skill` (B5g; `detail` names the graft, skill, and level).
+    /// What a resolved line resolved to when it is not (only) a
+    /// description's stat IDs: `granted-skill` (B5g; `detail` names the
+    /// graft, skill, and level), `item-property` and `catalyst-quality`
+    /// (B5d; `properties`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<&'static str>,
     /// The `ClientStrings` wrapper the line was read through (B5c).
@@ -1216,6 +1222,19 @@ fn granted_skill(record: &mut LineRecord, grafts: &Grafts, base: &str) {
     }
 }
 
+/// Resolves an item property line (`properties`, B5d); other lines are
+/// left as they are.
+fn item_property(record: &mut LineRecord, properties: &Properties) {
+    if record.outcome != "unresolved/no-template" {
+        return;
+    }
+    if let Some(p) = properties.resolve(&record.text) {
+        record.outcome = "resolved".to_owned();
+        record.kind = Some(p.kind);
+        record.detail = p.detail;
+    }
+}
+
 /// The category of a line that is not resolved, from its outcome; excluded
 /// categories turn the outcome into `excluded/<rule>`.
 fn categorize_line(record: &mut LineRecord, scope: &BTreeSet<String>, game: &GameText) {
@@ -1329,6 +1348,9 @@ fn count_item(
         for (record, _) in &mut records {
             granted_skill(record, &bases.grafts, &f.name);
         }
+    }
+    for (record, _) in &mut records {
+        item_property(record, &bases.properties);
     }
     let empty = BTreeSet::new();
     let chain = found

@@ -13,6 +13,7 @@ mod item_tags;
 mod load_statdesc;
 mod lookup;
 mod mod_filter;
+mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
