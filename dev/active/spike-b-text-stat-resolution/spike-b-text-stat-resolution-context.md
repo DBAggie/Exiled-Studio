@@ -215,7 +215,7 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: ADR-015 wording (the exclusion is a rate rule; legacy lines stay quarantined in the product), the ACTION-PLAN gate bullet names the redefinition, the unadjusted rate, and the 572 excluded lines; ADR-007's history moved to its status line with the confirmation date 2026-11-09; a test that only the named categories are excluded; doc reflow.
 - **Assumption for review:** the area-3 graft lines need tables that are not extracted, so they split into an extractor PR and a resolver PR (the plan's "extractor PR first" rule).
 
-## PR B5c: eldritch presence lines (branch `spike-b/b5c-eldritch-presence`, stacked on PR #27)
+## PR B5c: eldritch presence lines (PR #28, open, branch `spike-b/b5c-eldritch-presence`, stacked on PR #27)
 - Maintainer, 2026-11-10, area 3: "write the code to solve this".
 - **Design:** the wrapper is client logic, so it lives in `loom-parser::resolve::compose` (core, wasm-safe): `Composition::new(id, ClientStrings text, stat, value)`; `Index::resolve_lines_composed` splits runs at composed lines, so multi-line matching is unchanged elsewhere. A composed reading needs the whole line to have no key and the remainder to resolve; otherwise the plain outcome stays (nothing dropped). The categorizer's `client-string` rule stays for what is left.
 - **Survey:** graft lines need `BrequelGrafts` (`SkillGem`), `BrequelGraftTypes` (`BaseItemType`), `BrequelGraftGrantedSkillLevels`: not extracted; split to an extractor PR (plan rule).
