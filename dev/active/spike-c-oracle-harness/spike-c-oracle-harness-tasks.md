@@ -53,7 +53,7 @@ Last Updated: 2026-11-10 (PR C3: fixtures, compare, register, corpus run)
 ## PR C3b+C4: corpus nondeterminism and CI (one PR, maintainer decision 2026-11-10)
 - [ ] C3b: reproduce on the 3 builds with `--runs 20`; find where PoB picks a transfigured gem variant
 - [ ] C3b: adapter-side fix (named, recorded shim) or fallback (`BLOCKED` for the affected fields); corpus rerun 3 times
-- [ ] Community builds (maintainer decision 2026-11-10): acquire the agreed list (context file, "Community builds") with source, author, date, terms; `tools/oracle/fixtures/community/` + `SOURCES.md`; tier `community` in `fixtures.json`; 3 runs each; propose CI inclusion
+- [ ] Community builds (maintainer decision 2026-11-10): acquire the agreed list (context file, "Community builds") with source, author, date, terms; `tools/oracle/fixtures/community/` + `SOURCES.md` (opens with the removal-on-request note; one line in `README.md`); tier `community` in `fixtures.json`; 3 runs each; propose CI inclusion
 - [ ] C4: `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`; `divergence-check` step
 - [ ] C4: injected wrong-hash run; cross-platform comparison
 - [ ] Review with `code-architecture-reviewer`; apply findings
