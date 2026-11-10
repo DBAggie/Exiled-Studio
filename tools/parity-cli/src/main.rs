@@ -95,7 +95,7 @@ fn write_out(out: &Path, summary: &impl Serialize, report: &impl Serialize) -> R
 fn round_trip(extract: &Path, out: &Path) -> Result<bool, String> {
     let read = reader(extract);
     let loaded = extract::load(&read)?;
-    let (lookup, lookup_report) = lookup::TableLookup::load(&read)?;
+    let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
     let (summary, report) = round_trip::run(&loaded, &lookup, lookup_report)?;
     write_out(out, &summary, &report)?;
     let json = serde_json::to_string_pretty(&summary.outcomes).map_err(|e| e.to_string())?;
@@ -147,7 +147,7 @@ fn render_check(extract: &Path, pob: &Path, out: &Path) -> Result<bool, String> 
 fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool, String> {
     let read = reader(extract);
     let loaded = extract::load(&read)?;
-    let (lookup, lookup_report) = lookup::TableLookup::load(&read)?;
+    let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
     let bases = resolve_corpus::Bases::load(&read)?;
     let mods = mod_filter::Mods::load(&read)?;
     let mut builds = Vec::new();

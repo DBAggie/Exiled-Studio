@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B4y)
+Last Updated: 2026-11-10 (PR B4c)
 
 # Spike B: tasks
 
@@ -70,8 +70,8 @@ Last Updated: 2026-11-10 (PR B4y)
 - [x] Open PR (#22)
 
 ## Maintainer decision (from B4a)
-- [x] `Essences` and `CraftingBenchOptions`: option (a), extractor and filter in one PR (B4y), 2026-11-10
-- [ ] Anoint source (35 lines) or `parser-gap/ambiguous` (B4b)
+- [x] `Essences` and `CraftingBenchOptions`: option (a), extractor and filter in one PR (B4y, PR #23), 2026-11-10
+- [x] Anoint source surveyed (none in the data); equivalence rule approved 2026-11-10 (step 4d)
 
 ## PR B4y: `Essences` for the Mods filter
 - [x] Check PR #22 merge (`08b7d9c`, main CI run 42745121406 green); Steam build unchanged
@@ -82,8 +82,21 @@ Last Updated: 2026-11-10 (PR B4y)
 - [x] Review with `code-architecture-reviewer`; apply findings
 - [x] Open PR (#23)
 
+## PR B4c: cluster jewel small passives
+- [x] Check PR #22 merge (`08b7d9c`, main CI run 42745121406 green)
+- [x] Survey unsupported lookups on items (only `tree_expansion_jewel_passive`) and the anoint source (`BlightCraftingResults`: none)
+- [x] `tree_expansion_jewel_passive` from game data; multi-line names in `loom-parser` and the renderer; tests
+- [x] Corpus, round-trip (both games), render-check from clean `1cf7c3d`; summaries replaced
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#24)
+- [x] Merge `main` after PR #23 (B4y) merged; evidence re-run on the combined code (88.0%)
+
+## PR B4d: anoint equivalence (after B4y)
+- [ ] Rule in the filter; tests; corpus run; plan "Ambiguity" text
+
 ## PR B4b: categories, gate
 - [ ] Category rules with positive evidence and tests; `uncategorized = 0`
 - [ ] Class-requirement lines under `special-case/not-a-modifier`, class value kept on the item (maintainer decision 2026-11-09; plan step 4b)
+- [ ] Categorize the 4 cluster lines that PoB's `Implicits:` count splits across the enchant and explicit sections (two-stat nodes; context file, "PR B4c"); check the first half cannot resolve alone to another node
 - [ ] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict
 - [ ] ACTION-PLAN status and corpus count 21; ADR-007 count via the maintainer

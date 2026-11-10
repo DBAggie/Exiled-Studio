@@ -529,7 +529,7 @@ mod tests {
     #[test]
     fn run_should_count_every_sample_under_one_outcome() {
         let extract = load(&read).unwrap();
-        let (lookup, report) = TableLookup::load(&read).unwrap();
+        let (lookup, report) = TableLookup::load(&read, &extract).unwrap();
         let (s, r) = run(&extract, &lookup, report).unwrap();
         assert_eq!(s.scopes, 1);
         assert_eq!(s.variants.get("tried"), Some(&4));

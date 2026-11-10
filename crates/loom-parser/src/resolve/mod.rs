@@ -519,9 +519,16 @@ impl NameCache {
         self.0.entry(handler).or_insert_with(|| {
             let mut names: BTreeMap<String, Vec<i64>> = BTreeMap::new();
             for (key, name) in lookup.entries(handler) {
-                // Shown text is trimmed by the renderer; a blank name
-                // writes no text and cannot be matched (counted).
-                let shown = collapse(&name);
+                // Shown text is trimmed by the renderer, line by line (a
+                // name can span lines: `tree_expansion_jewel_passive` names
+                // a passive with several stats); a blank name writes no
+                // text and cannot be matched (counted).
+                let shown = name
+                    .split('\n')
+                    .map(collapse)
+                    .filter(|l| !l.is_empty())
+                    .collect::<Vec<_>>()
+                    .join("\n");
                 if shown.is_empty() {
                     stats.lookup_blank_names += 1;
                 } else {

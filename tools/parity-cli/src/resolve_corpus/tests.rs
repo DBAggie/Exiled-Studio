@@ -107,7 +107,7 @@ fn run_one(builds: &[Build]) -> (Summary, Report) {
 
 fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
     let extract = load(&read).unwrap();
-    let (lookup, lookup_report) = TableLookup::load(&read).unwrap();
+    let (lookup, lookup_report) = TableLookup::load(&read, &extract).unwrap();
     run(
         &extract,
         &lookup,

@@ -2,7 +2,7 @@
   "inputs": {
     "game": "poe2",
     "steam_build_id": "26476662",
-    "manifest_sha256": "4a77f23378a3fb51535d4649eea94799f88ecabb89a0f7a95171f3af03511afb"
+    "manifest_sha256": "c23684c3ef0d4faf4fdd6ed1e8dc2abaf92c4bac5e4930c82784c7be218772e2"
   },
   "lookup": {
     "keys": {
@@ -20,7 +20,7 @@
       "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
       "specific_skill": "no supported key form (see parity-cli lookup.rs)",
       "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
-      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "passive_skill_stat_descriptions.txt is not in the extract",
       "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
       "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
     }
