@@ -137,9 +137,9 @@ Last Updated: 2026-11-10 (PR B5g)
 
 ## PR B5g: graft skill lines
 - [x] `grafts.rs` (load, wrapper, levels), `granted-skill` kind, summary `graft_bases` / `resolved_kinds`; tests
-- [x] Corpus run from clean `3e7a87b`, two runs byte-identical: 98.9%, 4 / 6 graft lines (2 PoB placeholders)
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Corpus run from clean `c437709`, two runs byte-identical: 98.9%, 4 / 6 graft lines (2 PoB placeholders)
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `c437709`)
+- [x] Open PR
 
 ## PR B5d: item properties
 - [ ] Typed item properties from game data

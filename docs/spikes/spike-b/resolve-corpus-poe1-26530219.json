@@ -6,7 +6,7 @@
       "manifest_sha256": "119bb8258b9fa6d61080389fa5a749f88e7618e00b43ac260ac3f6709408be9f"
     },
     "tool": {
-      "commit": "3e7a87bffab5116e88af8a6cf8ff55d33763ed06",
+      "commit": "c437709791153fb08af0634b414e79f3ebf09ace",
       "dirty": false
     },
     "builds": [
@@ -515,7 +515,9 @@
     "distinct_resolved": 1308,
     "distinct_rate": 0.9797752808988764,
     "distinct_with_mixed_outcomes": 1,
-    "meets_rate": true
+    "meets_rate": true,
+    "stat_resolved": 3324,
+    "stat_rate": 0.9875222816399287
   },
   "ambiguous": {
     "(10-20)% increased Reservation Efficiency of Skills": {
@@ -3170,6 +3172,14 @@
     ]
   ],
   "graft_bases": 16,
+  "graft_inputs": {
+    "wrapper": true,
+    "levels": [
+      1,
+      30
+    ],
+    "conflicts": []
+  },
   "resolved_kinds": {
     "non_unique/granted-skill": 4
   },
