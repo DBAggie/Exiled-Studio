@@ -102,7 +102,7 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict (not met)
 - [x] ACTION-PLAN status and corpus count 21; ADR-007's "22" left for the maintainer (ADR text)
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#25)
 
 ## After B4b (maintainer)
 - [ ] Fallback decision per area (report section 6): local/global ambiguity (72), legacy text (48), item properties (15, exclusion?), client-composed lines (15, resolver feature)

@@ -1,6 +1,6 @@
 # Spike B: text to stat-ID resolution (report)
 
-Status: **gate not met** (2026-11-10, PR B4b). Every line is categorized; 95.1% of non-unique lines resolve, against 98% asked. The fallback decision (ADR-015, per area) is the maintainer's; section 6 gives the areas and the arithmetic.
+Status: **gate not met** (2026-11-10, PR #25, B4b). Every line is categorized; 95.1% of non-unique lines resolve, against 98% asked. The fallback decision (ADR-015, per area) is the maintainer's; section 6 gives the areas and the arithmetic.
 
 Plan, decisions, and per-PR details: `dev/active/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
 
