@@ -66,9 +66,12 @@ const USAGE: &str = "usage:
       <manifest dir>/adapter/oracle.lua) with a time limit of <s> seconds
       per run (default 120). Offline. Write report.json, summary.md, the
       canonical output per fixture (outputs/), and each run's raw document
-      (runs/) to <dir>, which must not exist. Exit 0 when every fixture is
-      ok or partial with identical runs and the checkout is still clean;
-      else the exit code of the smallest failing class (10 to 18).";
+      (runs/) to <dir>, which must not exist. The checkout is checked
+      after each fixture; a change stops the run. Exit 0 when every
+      fixture is ok with identical runs and the checkout is still clean;
+      3 when, otherwise so, a fixture is partial (a shim it needed
+      failed); else the exit code of the smallest failing class (10 to
+      18).";
 
 /// Runs `git` in this crate's source tree; `None` if it fails.
 fn git(args: &[&str]) -> Option<String> {
@@ -382,6 +385,7 @@ fn oracle_run(manifest: &Path, oracle_dir: &Path, rest: &[String]) -> ExitCode {
     };
     print!("{}", report.summary_markdown());
     match report.class {
+        None if report.status == "partial" => ExitCode::from(oracle_run::EXIT_PARTIAL),
         None => ExitCode::SUCCESS,
         Some(class) => ExitCode::from(class.exit_code()),
     }

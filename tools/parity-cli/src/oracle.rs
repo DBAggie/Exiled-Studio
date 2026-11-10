@@ -172,7 +172,19 @@ pub struct Adapter {
     /// input objects (gem instances) whose game data is not calculation
     /// output.
     pub opaque_keys: Vec<String>,
+    /// The headless shims the adapter installs (`tools/oracle/adapter/
+    /// shims.lua`), by name, sorted; every output document must record
+    /// exactly these.
+    pub shims: Vec<String>,
+    /// The zlib library the `inflate` shim loads, per platform key: a path
+    /// relative to the oracle dir when it contains `/` (Windows: PoB's own
+    /// `pob/runtime/zlib1.dll`, covered by the checkout's tree hash), else
+    /// a library name for the system loader (Linux: `libz.so.1`).
+    pub zlib: BTreeMap<String, String>,
 }
+
+/// The adapter protocol this reader knows.
+pub const PROTOCOL: u32 = 2;
 
 impl Manifest {
     /// Parses and checks a manifest.
@@ -191,15 +203,16 @@ impl Manifest {
                 return Err(format!("{name}: not a 40-digit lowercase hex hash"));
             }
         }
-        if manifest.adapter.protocol != 1 {
+        if manifest.adapter.protocol != PROTOCOL {
             return Err(format!(
-                "adapter.protocol: this reader knows 1, found {}",
+                "adapter.protocol: this reader knows {PROTOCOL}, found {}",
                 manifest.adapter.protocol
             ));
         }
         for (name, list) in [
             ("adapter.breakdowns", &manifest.adapter.breakdowns),
             ("adapter.opaque_keys", &manifest.adapter.opaque_keys),
+            ("adapter.shims", &manifest.adapter.shims),
         ] {
             // Passed to the adapter as `<kind>=<name>` arguments and used
             // as JSON keys: plain identifiers only, sorted, no duplicates.
@@ -208,6 +221,17 @@ impl Manifest {
             }
             if !list.windows(2).all(|w| w[0] < w[1]) {
                 return Err(format!("{name}: must be sorted, without duplicates"));
+            }
+        }
+        for (platform, library) in &manifest.adapter.zlib {
+            if runtime_files(platform).is_none() {
+                return Err(format!("adapter.zlib: unknown platform {platform}"));
+            }
+            if !is_library_reference(library) {
+                return Err(format!(
+                    "adapter.zlib.{platform}: {library:?} is neither a relative path inside \
+                     the oracle dir nor a plain library name"
+                ));
             }
         }
         let module = &manifest.luautf8.module;
@@ -297,6 +321,20 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
+/// A relative `/`-separated path without `.` or `..` parts, or a plain
+/// library name (letters, digits, `.`, `-`, `_`).
+fn is_library_reference(text: &str) -> bool {
+    let plain = |part: &str| {
+        !part.is_empty()
+            && part != "."
+            && part != ".."
+            && part
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_'))
+    };
+    text.split('/').all(plain)
+}
+
 fn is_identifier(text: &str) -> bool {
     let mut chars = text.chars();
     chars
@@ -319,8 +357,37 @@ mod tests {
     fn committed_manifest_should_parse() {
         let manifest = Manifest::parse(COMMITTED).unwrap();
         assert_eq!(manifest.pob.tag, "v2.67.2");
-        assert_eq!(manifest.adapter.protocol, 1);
+        assert_eq!(manifest.adapter.protocol, PROTOCOL);
         assert_eq!(manifest.luajit.security.get("prng"), Some(&0));
+        assert_eq!(manifest.adapter.shims, ["inflate", "write_guard"]);
+        // Every supported platform has a zlib library.
+        for platform in ["windows-x86_64", "linux-x86_64"] {
+            assert!(manifest.adapter.zlib.contains_key(platform), "{platform}");
+        }
+    }
+
+    #[test]
+    fn parse_should_reject_bad_zlib_references() {
+        for (platform, library) in [
+            ("windows-x86_64", "../outside/zlib1.dll"),
+            ("windows-x86_64", "pob\\runtime\\zlib1.dll"),
+            ("windows-x86_64", "/usr/lib/libz.so.1"),
+            ("linux-x86_64", "libz.so.1 --x"),
+            ("plan9-x86_64", "libz.so.1"),
+        ] {
+            let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
+            value["adapter"]["zlib"][platform] = library.into();
+            let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
+            assert!(err.starts_with("adapter.zlib"), "{library}: {err}");
+        }
+    }
+
+    #[test]
+    fn parse_should_reject_unsorted_shims() {
+        let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
+        value["adapter"]["shims"] = serde_json::json!(["write_guard", "inflate"]);
+        let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
+        assert!(err.starts_with("adapter.shims"), "{err}");
     }
 
     #[test]
@@ -393,7 +460,7 @@ mod tests {
     #[test]
     fn parse_should_reject_other_protocol() {
         let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
-        value["adapter"]["protocol"] = 2.into();
+        value["adapter"]["protocol"] = 1.into();
         let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
         assert!(err.starts_with("adapter.protocol"), "{err}");
     }

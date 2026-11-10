@@ -1,4 +1,4 @@
-//! The adapter's output document (protocol 1): the hand-written schema
+//! The adapter's output document (protocol 2): the hand-written schema
 //! check and the canonical form `oracle-run` hashes and compares. The
 //! contract is documented in `tools/oracle/schema/oracle-output.schema.json`;
 //! this module is what enforces it (Spike C plan: no JSON-schema crate).
@@ -16,17 +16,46 @@ use crate::oracle::Adapter;
 pub const BREAKDOWN_SOURCE: &str = "calcsTab.calcsEnv.player.breakdown";
 
 /// The top-level fields, in the order the schema lists them.
-pub const FIELDS: [&str; 9] = [
+pub const FIELDS: [&str; 11] = [
     "protocol",
     "stage",
     "error",
     "partial",
     "modules",
     "settings",
+    "shims",
+    "probe",
     "breakdown_source",
     "breakdowns",
     "main_output",
 ];
+
+/// The fields of one shim record.
+const SHIM_FIELDS: [&str; 4] = ["name", "replaces", "installed", "detail"];
+
+/// The fields of one recorded `Inflate` call.
+const INFLATE_FIELDS: [&str; 5] = [
+    "input_bytes",
+    "output_bytes",
+    "adler32",
+    "trailing_bytes",
+    "error",
+];
+
+/// What the shims did in one run, summed from the document's `probe`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct Probe {
+    /// `Inflate` calls.
+    pub inflate_calls: usize,
+    /// `Inflate` calls that failed (no zlib, or a zlib error).
+    pub inflate_errors: usize,
+    /// Bytes `Inflate` returned, over all calls.
+    pub inflated_bytes: u64,
+    /// Opens for writing the write guard refused.
+    pub writes_refused: usize,
+    /// Shims that are not installed (by name).
+    pub not_installed: Vec<String>,
+}
 
 /// The stage a run reached; every stage but `Done` is where it failed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -80,11 +109,13 @@ pub struct Document {
     pub modules: Vec<String>,
     /// Whether a PoB settings file was found; `None` before startup ended.
     pub settings_found: Option<bool>,
+    /// What the shims did.
+    pub probe: Probe,
     /// The whole document with sorted keys.
     pub canonical: Value,
 }
 
-/// Parses and checks `bytes` against protocol 1 for `adapter`.
+/// Parses and checks `bytes` against the protocol of `adapter`.
 pub fn parse(bytes: &[u8], adapter: &Adapter) -> Result<Document, String> {
     let value: Value = serde_json::from_slice(bytes).map_err(|e| format!("not JSON: {e}"))?;
     let Value::Object(top) = &value else {
@@ -124,6 +155,12 @@ pub fn parse(bytes: &[u8], adapter: &Adapter) -> Result<Document, String> {
         (Value::Object(settings), _) => Some(check_settings(settings)?),
         _ => return Err("settings: not an object".to_owned()),
     };
+    let mut probe = check_probe(field("probe")?)?;
+    probe.not_installed = check_shims(field("shims")?, adapter)?;
+    // A result that depends on a failed shim is partial, never ok.
+    if probe.inflate_errors > 0 && partial.is_empty() {
+        return Err("partial: empty although an Inflate call failed".to_owned());
+    }
     if field("breakdown_source")?.as_str() != Some(BREAKDOWN_SOURCE) {
         return Err(format!("breakdown_source: expected {BREAKDOWN_SOURCE}"));
     }
@@ -161,8 +198,106 @@ pub fn parse(bytes: &[u8], adapter: &Adapter) -> Result<Document, String> {
         partial,
         modules,
         settings_found,
+        probe,
         canonical: canonical(&value),
     })
+}
+
+/// Checks the shim records: exactly the manifest's shims, in its order.
+/// Returns the names of those not installed.
+fn check_shims(value: &Value, adapter: &Adapter) -> Result<Vec<String>, String> {
+    let Value::Array(records) = value else {
+        return Err("shims: not an array".to_owned());
+    };
+    let mut names = Vec::new();
+    let mut not_installed = Vec::new();
+    for record in records {
+        let Value::Object(record) = record else {
+            return Err("shims: a record is not an object".to_owned());
+        };
+        exact_keys(record, &SHIM_FIELDS, "shims")?;
+        let name = record["name"]
+            .as_str()
+            .ok_or_else(|| "shims.name: not a string".to_owned())?;
+        if !record["replaces"].is_string() {
+            return Err(format!("shims.{name}.replaces: not a string"));
+        }
+        if !(record["detail"].is_string() || record["detail"].is_null()) {
+            return Err(format!("shims.{name}.detail: not a string or null"));
+        }
+        let installed = record["installed"]
+            .as_bool()
+            .ok_or_else(|| format!("shims.{name}.installed: not a boolean"))?;
+        if !installed {
+            not_installed.push(name.to_owned());
+        }
+        names.push(name);
+    }
+    if names != adapter.shims {
+        return Err(format!(
+            "shims: expected {:?}, found {names:?}",
+            adapter.shims
+        ));
+    }
+    Ok(not_installed)
+}
+
+/// Checks the probe and sums it up.
+fn check_probe(value: &Value) -> Result<Probe, String> {
+    let Value::Object(probe) = value else {
+        return Err("probe: not an object".to_owned());
+    };
+    exact_keys(probe, &["inflate", "writes_refused"], "probe")?;
+    let writes_refused = string_list(&probe["writes_refused"], "probe.writes_refused")?.len();
+    let Value::Array(calls) = &probe["inflate"] else {
+        return Err("probe.inflate: not an array".to_owned());
+    };
+    let mut summary = Probe {
+        inflate_calls: calls.len(),
+        writes_refused,
+        ..Probe::default()
+    };
+    for (i, call) in calls.iter().enumerate() {
+        let path = format!("probe.inflate[{}]", i + 1);
+        let Value::Object(call) = call else {
+            return Err(format!("{path}: not an object"));
+        };
+        exact_keys(call, &INFLATE_FIELDS, &path)?;
+        if call["input_bytes"].as_u64().is_none() {
+            return Err(format!("{path}.input_bytes: not a count"));
+        }
+        let results = ["output_bytes", "adler32", "trailing_bytes"];
+        match &call["error"] {
+            Value::String(_) => {
+                if results.iter().any(|k| !call[*k].is_null()) {
+                    return Err(format!("{path}: results present with an error"));
+                }
+                summary.inflate_errors += 1;
+            }
+            Value::Null => {
+                if results.iter().any(|k| call[*k].as_u64().is_none()) {
+                    return Err(format!("{path}: results missing without an error"));
+                }
+                if call["adler32"]
+                    .as_u64()
+                    .is_some_and(|a| a > u64::from(u32::MAX))
+                {
+                    return Err(format!("{path}.adler32: not a 32-bit value"));
+                }
+                summary.inflated_bytes += call["output_bytes"].as_u64().unwrap_or(0);
+            }
+            _ => return Err(format!("{path}.error: not a string or null")),
+        }
+    }
+    Ok(summary)
+}
+
+/// `map` has exactly the keys `expected`.
+fn exact_keys(map: &Map<String, Value>, expected: &[&str], path: &str) -> Result<(), String> {
+    if map.len() != expected.len() || !expected.iter().all(|k| map.contains_key(*k)) {
+        return Err(format!("{path}: expected exactly the keys {expected:?}"));
+    }
+    Ok(())
 }
 
 fn check_error(error: &Map<String, Value>) -> Result<(String, String), String> {
@@ -287,20 +422,35 @@ mod tests {
 
     fn adapter() -> Adapter {
         Adapter {
-            protocol: 1,
+            protocol: 2,
             breakdowns: vec!["Life".to_owned(), "TotalDPS".to_owned()],
             opaque_keys: vec!["sourceGem".to_owned()],
+            shims: vec!["inflate".to_owned(), "write_guard".to_owned()],
+            zlib: std::collections::BTreeMap::new(),
         }
+    }
+
+    fn shims() -> Value {
+        json!([
+            {"name": "inflate", "replaces": "Inflate", "installed": true, "detail": "zlib 1.3.1"},
+            {"name": "write_guard", "replaces": "io.open", "installed": true, "detail": null}
+        ])
+    }
+
+    fn inflated() -> Value {
+        json!({"input_bytes": 10, "output_bytes": 40, "adler32": 7, "trailing_bytes": 0, "error": null})
     }
 
     fn done() -> Value {
         json!({
-            "protocol": 1,
+            "protocol": 2,
             "stage": "done",
             "error": null,
             "partial": [],
             "modules": ["lua-utf8", "xml"],
             "settings": {"path": "/Settings.xml", "found": false},
+            "shims": shims(),
+            "probe": {"inflate": [inflated()], "writes_refused": ["./Data/x.bin"]},
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": {"Life": ["1 (base)", "= 1"], "TotalDPS": null},
             "main_output": {
@@ -316,12 +466,14 @@ mod tests {
 
     fn failed(stage: &str) -> Value {
         json!({
-            "protocol": 1,
+            "protocol": 2,
             "stage": stage,
             "error": {"source": "pob", "message": "bad"},
             "partial": [],
             "modules": [],
             "settings": {"path": "/Settings.xml", "found": false},
+            "shims": shims(),
+            "probe": {"inflate": [], "writes_refused": []},
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": null,
             "main_output": null
@@ -338,6 +490,33 @@ mod tests {
         assert_eq!(document.stage, Stage::Done);
         assert_eq!(document.settings_found, Some(false));
         assert_eq!(document.error, None);
+        assert_eq!(
+            document.probe,
+            Probe {
+                inflate_calls: 1,
+                inflate_errors: 0,
+                inflated_bytes: 40,
+                writes_refused: 1,
+                not_installed: vec![],
+            }
+        );
+    }
+
+    #[test]
+    fn parse_should_accept_a_failed_inflate_in_a_partial_result() {
+        let mut value = done();
+        value["shims"][0]["installed"] = false.into();
+        value["shims"][0]["detail"] = "cannot load the zlib library".into();
+        value["probe"]["inflate"][0] = json!({"input_bytes": 10, "output_bytes": null,
+            "adler32": null, "trailing_bytes": null, "error": "cannot load the zlib library"});
+        value["partial"] = json!(["inflate: cannot load the zlib library"]);
+        let probe = check(&value).unwrap().probe;
+        assert_eq!(probe.inflate_errors, 1);
+        assert_eq!(probe.not_installed, ["inflate"]);
+        // The same without a partial reason breaks the contract.
+        value["partial"] = json!([]);
+        let err = check(&value).unwrap_err();
+        assert!(err.starts_with("partial"), "{err}");
     }
 
     #[test]
@@ -366,7 +545,50 @@ mod tests {
                     v.as_object_mut().unwrap().remove("modules");
                 }),
             ),
-            ("protocol", Box::new(|v| v["protocol"] = 2.into())),
+            ("protocol", Box::new(|v| v["protocol"] = 1.into())),
+            (
+                "shim missing",
+                Box::new(|v| {
+                    v["shims"].as_array_mut().unwrap().pop();
+                }),
+            ),
+            (
+                "shims out of order",
+                Box::new(|v| v["shims"].as_array_mut().unwrap().reverse()),
+            ),
+            (
+                "shim extra key",
+                Box::new(|v| v["shims"][0]["library"] = "C:/zlib1.dll".into()),
+            ),
+            (
+                "shim installed not boolean",
+                Box::new(|v| v["shims"][1]["installed"] = "yes".into()),
+            ),
+            ("probe missing", Box::new(|v| v["probe"] = Value::Null)),
+            (
+                "probe extra key",
+                Box::new(|v| v["probe"]["other"] = json!([])),
+            ),
+            (
+                "inflate call without results",
+                Box::new(|v| v["probe"]["inflate"][0]["output_bytes"] = Value::Null),
+            ),
+            (
+                "inflate call with results and an error",
+                Box::new(|v| v["probe"]["inflate"][0]["error"] = "x".into()),
+            ),
+            (
+                "inflate negative size",
+                Box::new(|v| v["probe"]["inflate"][0]["input_bytes"] = (-1).into()),
+            ),
+            (
+                "adler32 above 32 bits",
+                Box::new(|v| v["probe"]["inflate"][0]["adler32"] = 4_294_967_296_u64.into()),
+            ),
+            (
+                "refused write not a string",
+                Box::new(|v| v["probe"]["writes_refused"] = json!([1])),
+            ),
             ("stage", Box::new(|v| v["stage"] = "later".into())),
             (
                 "error on done",
@@ -456,7 +678,17 @@ mod tests {
             .map(|v| v.as_str().unwrap())
             .collect();
         assert_eq!(required, FIELDS);
-        assert_eq!(schema["properties"]["protocol"]["const"], 1);
+        assert_eq!(schema["properties"]["protocol"]["const"], 2);
+        let keys = |value: &Value| -> Vec<String> {
+            value["required"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap().to_owned())
+                .collect()
+        };
+        assert_eq!(keys(&schema["$defs"]["shim"]), SHIM_FIELDS);
+        assert_eq!(keys(&schema["$defs"]["inflate_call"]), INFLATE_FIELDS);
         assert_eq!(
             schema["properties"]["breakdown_source"]["const"],
             BREAKDOWN_SOURCE

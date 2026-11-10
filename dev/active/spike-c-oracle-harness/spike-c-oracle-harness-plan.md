@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C2a: step 2a done; startup errors through `launch.promptMsg`)
+Last Updated: 2026-11-10 (PR C2b: step 2b done; adapter protocol 2)
 
 # Spike C: thin oracle harness (plan)
 
@@ -66,6 +66,7 @@ Authority: the ACTION-PLAN and ADR-006 define the spike. `docs/spikes/spike-c-le
 The FFI `Inflate` with pinned zlib, the `io.open` write guard, the jewel probe, the ignored-files tree check after runs.
 - Accept: the synthetic timeless-jewel fixture and the 9 timeless-jewel corpus builds show jewel data loaded (probe); no file is written into the checkout (tree check, test); outcomes of the 2a fixtures without jewels are unchanged.
 - Depends on: 2a.
+- Done in C2b (context file, "Decisions in C2b"). Changes from this plan: the document gained `shims` and `probe`, so the adapter protocol is 2 and whole-document hashes changed; "unchanged" was checked on the computed data (`main_output`, `breakdowns`), byte-identical for all 6 C2a fixtures. The write guard refuses every write, not only paths in the checkout. A `partial` fixture makes the report `partial` (exit 3).
 
 ### 3. Fixtures, `oracle-compare`, divergence register (M)
 Fixture manifest (tiers 1-3), `oracle-compare`, register schema, `divergence-check`, `docs/parity/README.md`. The 21 corpus builds run twice locally.

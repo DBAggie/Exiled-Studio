@@ -19,6 +19,13 @@ fn adapter() -> Adapter {
     Manifest::parse(COMMITTED).unwrap().adapter
 }
 
+fn shims() -> Value {
+    json!([
+        {"name": "inflate", "replaces": "Inflate", "installed": true, "detail": "zlib 1.3.1"},
+        {"name": "write_guard", "replaces": "io.open", "installed": true, "detail": null}
+    ])
+}
+
 fn done_document() -> Value {
     let breakdowns: serde_json::Map<String, Value> = adapter()
         .breakdowns
@@ -26,12 +33,14 @@ fn done_document() -> Value {
         .map(|b| (b.clone(), Value::Null))
         .collect();
     json!({
-        "protocol": 1,
+        "protocol": 2,
         "stage": "done",
         "error": null,
         "partial": [],
         "modules": ["lua-utf8", "xml"],
         "settings": {"path": "/Settings.xml", "found": false},
+        "shims": shims(),
+        "probe": {"inflate": [], "writes_refused": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": breakdowns,
         "main_output": {"Life": 60, "Mana": 40.5}
@@ -40,12 +49,14 @@ fn done_document() -> Value {
 
 fn failed_document(stage: &str, message: &str) -> Value {
     json!({
-        "protocol": 1,
+        "protocol": 2,
         "stage": stage,
         "error": {"source": "lua", "message": message},
         "partial": [],
         "modules": [],
         "settings": if stage == "startup" { Value::Null } else { json!({"path": "/Settings.xml", "found": false}) },
+        "shims": shims(),
+        "probe": {"inflate": [], "writes_refused": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": null,
         "main_output": null
@@ -188,10 +199,82 @@ fn run_fixture_should_report_ok_for_identical_runs() {
 #[test]
 fn run_fixture_should_report_partial_without_a_class() {
     let mut document = done_document();
-    document["partial"] = json!(["Inflate stub: timeless jewel data not loaded"]);
+    document["shims"][0]["installed"] = false.into();
+    document["shims"][0]["detail"] = "cannot load the zlib library".into();
+    document["probe"]["inflate"] = json!([{"input_bytes": 9, "output_bytes": null,
+        "adler32": null, "trailing_bytes": null, "error": "cannot load the zlib library"}]);
+    document["partial"] = json!(["inflate: cannot load the zlib library"]);
     let result = run_scripted("partial", &Scripted::same(Step::Write(document, 0)));
     assert_eq!(result.report.status, "partial");
     assert_eq!(result.report.class, None);
+    let probe = result.report.probe.unwrap();
+    assert_eq!(probe.inflate_errors, 1);
+    assert_eq!(probe.not_installed, ["inflate"]);
+}
+
+#[test]
+fn run_fixture_should_report_the_first_runs_probe() {
+    let mut document = done_document();
+    document["probe"] = json!({
+        "inflate": [{"input_bytes": 9, "output_bytes": 30, "adler32": 5, "trailing_bytes": 0, "error": null}],
+        "writes_refused": ["./Data/TimelessJewelData/MilitantFaith.bin"]
+    });
+    let result = run_scripted("probe", &Scripted::same(Step::Write(document, 0)));
+    assert_eq!(result.report.status, "ok");
+    let probe = result.report.probe.as_ref().unwrap();
+    assert_eq!(
+        (
+            probe.inflate_calls,
+            probe.inflated_bytes,
+            probe.writes_refused
+        ),
+        (1, 30, 1)
+    );
+    // No probe without a valid document.
+    let failed = run_scripted("no-probe", &Scripted::same(Step::Exit(1)));
+    assert!(failed.report.probe.is_none());
+}
+
+#[test]
+fn classify_should_reject_a_failed_inflate_without_partial() {
+    let mut document = done_document();
+    document["probe"]["inflate"] = json!([{"input_bytes": 9, "output_bytes": null,
+        "adler32": null, "trailing_bytes": null, "error": "inflate returned -3"}]);
+    assert_eq!(
+        class_of(Step::Write(document, 0)),
+        Some(FailureClass::Protocol)
+    );
+}
+
+#[test]
+fn resolve_zlib_should_hash_a_path_inside_the_oracle_dir() {
+    let temp = Temp::new("zlib-path");
+    std::fs::create_dir_all(temp.0.join("pob/runtime")).unwrap();
+    std::fs::write(temp.0.join("pob/runtime/zlib1.dll"), b"zlib").unwrap();
+    let mut adapter = adapter();
+    adapter
+        .zlib
+        .insert("test-x86_64".to_owned(), "pob/runtime/zlib1.dll".to_owned());
+    let (record, argument) = resolve_zlib(&adapter, &temp.0, "test-x86_64").unwrap();
+    assert_eq!(record.file.as_deref(), Some("pob/runtime/zlib1.dll"));
+    assert_eq!(record.sha256, Some(oracle::sha256_hex(b"zlib")));
+    assert!(Path::new(&argument).is_absolute());
+    assert!(Path::new(&argument).ends_with("pob/runtime/zlib1.dll"));
+    std::fs::remove_file(temp.0.join("pob/runtime/zlib1.dll")).unwrap();
+    assert!(resolve_zlib(&adapter, &temp.0, "test-x86_64").is_err());
+    assert!(resolve_zlib(&adapter, &temp.0, "other-x86_64").is_err());
+}
+
+#[test]
+fn resolve_zlib_should_pass_a_library_name_unchanged() {
+    let mut adapter = adapter();
+    adapter
+        .zlib
+        .insert("test-x86_64".to_owned(), "libloom-none.so.1".to_owned());
+    let (record, argument) = resolve_zlib(&adapter, Path::new("."), "test-x86_64").unwrap();
+    assert_eq!(argument, OsString::from("libloom-none.so.1"));
+    assert_eq!(record.file, None);
+    assert_eq!(record.sha256, None);
 }
 
 #[test]
@@ -232,7 +315,10 @@ fn run_fixture_should_keep_a_repeated_failure_failed() {
 
 /// The class of a single run.
 fn class_of(step: Step) -> Option<FailureClass> {
-    run_scripted("class", &Scripted::new(vec![step]))
+    // Tests run in parallel: each call gets its own directory.
+    static CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    run_scripted(&format!("class-{n}"), &Scripted::new(vec![step]))
         .report
         .class
 }
@@ -266,7 +352,7 @@ fn classify_should_map_each_failure_to_its_class() {
         ),
         (
             "not JSON",
-            Step::Raw("{\"protocol\":1,", 0),
+            Step::Raw("{\"protocol\":2,", 0),
             FailureClass::Protocol,
         ),
         (
@@ -527,6 +613,48 @@ fn finish_should_fail_on_a_dirty_checkout_after_the_runs() {
 }
 
 #[test]
+fn finish_should_report_partial_unless_something_failed() {
+    let temp = Temp::new("finish-partial");
+    let request = request(&temp, temp.0.join("no-oracle"));
+    let mut report = run(&request).unwrap();
+    report.oracle.class = None;
+    let mut document = done_document();
+    document["probe"]["inflate"] = json!([{"input_bytes": 9, "output_bytes": null,
+        "adler32": null, "trailing_bytes": null, "error": "no zlib"}]);
+    document["partial"] = json!(["inflate: no zlib"]);
+    let partial = run_scripted(
+        "finish-partial-fixture",
+        &Scripted::same(Step::Write(document, 0)),
+    );
+    let ok = run_scripted(
+        "finish-ok-fixture",
+        &Scripted::same(Step::Write(done_document(), 0)),
+    );
+    report.fixtures = vec![ok.report, partial.report];
+    let report = report.finish();
+    assert_eq!((report.status, report.class), ("partial", None));
+    let failed = run_scripted("finish-failed-fixture", &Scripted::same(Step::Exit(1)));
+    let mut report = report;
+    report.fixtures.push(failed.report);
+    let report = report.finish();
+    assert_eq!(report.status, "failed");
+    assert_eq!(report.class, Some(FailureClass::Launch));
+}
+
+#[test]
+fn summary_should_list_fixtures_skipped_after_a_dirty_checkout() {
+    let temp = Temp::new("skipped");
+    let request = request(&temp, temp.0.join("no-oracle"));
+    let mut report = run(&request).unwrap();
+    report.skipped = vec!["b.xml".to_owned(), "c.xml".to_owned()];
+    assert!(
+        report
+            .summary_markdown()
+            .contains("Not run (the checkout changed): b.xml, c.xml")
+    );
+}
+
+#[test]
 fn adapter_arguments_should_name_breakdowns_then_opaque_keys() {
     let arguments = adapter_arguments(&adapter());
     assert_eq!(
@@ -558,6 +686,7 @@ fn adapters_should_get_their_class_on_the_real_runtime() {
     let fakes = repo("oracle/fixtures/fake-adapters");
     let minimal = repo("oracle/fixtures/minimal-level1.xml");
     let malformed = repo("oracle/fixtures/malformed.xml");
+    let timeless = repo("oracle/fixtures/timeless-militant-faith.xml");
     let real = repo("oracle/adapter/oracle.lua");
     let cases = [
         (
@@ -593,6 +722,7 @@ fn adapters_should_get_their_class_on_the_real_runtime() {
         (fakes.join("environment.lua"), &minimal, None),
         (real.clone(), &minimal, None),
         (real.clone(), &malformed, Some(FailureClass::Import)),
+        (real.clone(), &timeless, None),
     ];
     for (adapter, fixture, class) in cases {
         let name = format!(
@@ -638,7 +768,97 @@ fn adapters_should_get_their_class_on_the_real_runtime() {
             report.after.iter().all(|c| c.ok),
             "{name}: checkout changed"
         );
+        if fixture == &timeless {
+            // The jewel data was inflated, and its .bin cache refused.
+            let probe = report.fixtures[0].probe.as_ref().unwrap();
+            assert_eq!(probe.inflate_calls, 1, "{name}: {probe:?}");
+            assert_eq!(probe.inflate_errors, 0, "{name}: {probe:?}");
+            assert!(probe.inflated_bytes > 1_000_000, "{name}: {probe:?}");
+            assert_eq!(probe.writes_refused, 1, "{name}: {probe:?}");
+            assert_eq!(report.fixtures[0].status, "ok");
+        }
     }
+}
+
+/// Spec case 8 on the real runtime: with a zlib entry that is not a
+/// library (PoB's own LICENSE.md, a file in the verified checkout), the
+/// inflate shim is not installed, and a build that needs jewel data is
+/// `partial`; a build that does not is still `ok`. Same requirements as
+/// above.
+#[test]
+#[ignore = "needs an acquired oracle in LOOM_ORACLE_DIR"]
+fn real_adapter_should_be_partial_when_zlib_does_not_load() {
+    let temp = Temp::new("no-zlib");
+    let mut manifest: Value =
+        serde_json::from_slice(&std::fs::read(repo("oracle/manifest.json")).unwrap()).unwrap();
+    manifest["adapter"]["zlib"][oracle::platform()] = "pob/LICENSE.md".into();
+    let manifest_path = temp.0.join("manifest.json");
+    std::fs::write(&manifest_path, manifest.to_string()).unwrap();
+    let request = Request {
+        manifest: manifest_path,
+        oracle_dir: oracle_dir(),
+        adapter: repo("oracle/adapter/oracle.lua"),
+        fixtures: vec![
+            repo("oracle/fixtures/minimal-level1.xml"),
+            repo("oracle/fixtures/timeless-militant-faith.xml"),
+        ],
+        out: temp.0.join("out"),
+        options: Options {
+            runs: 2,
+            timeout: Duration::from_secs(120),
+        },
+        tool: Tool {
+            commit: None,
+            dirty: None,
+        },
+    };
+    let report = run(&request).unwrap();
+    assert_eq!(report.oracle.class, None, "oracle not verified");
+    let [minimal, timeless] = &report.fixtures[..] else {
+        panic!("{:?}", report.fixtures);
+    };
+    assert_eq!(minimal.status, "ok", "{minimal:?}");
+    assert_eq!(timeless.status, "partial", "{timeless:?}");
+    assert_eq!(timeless.class, None);
+    assert_eq!(timeless.determinism.identical, 2);
+    let probe = timeless.probe.as_ref().unwrap();
+    assert_eq!(probe.not_installed, ["inflate"]);
+    assert_eq!((probe.inflate_calls, probe.inflate_errors), (1, 1));
+    assert_eq!(report.status, "partial");
+    assert_eq!(report.class, None);
+    assert!(report.after.iter().all(|c| c.ok), "checkout changed");
+}
+
+/// The shims' Lua tests (`tools/oracle/fixtures/lua-tests/shims.lua`) on
+/// the real runtime with the manifest's zlib. Same requirements as above.
+#[test]
+#[ignore = "needs an acquired oracle in LOOM_ORACLE_DIR"]
+fn shims_should_pass_their_lua_tests() {
+    let platform = oracle::platform();
+    let oracle_dir = std::path::absolute(oracle_dir()).unwrap();
+    let luajit = oracle_dir.join(oracle::runtime_files(&platform).unwrap()[0]);
+    let (_, zlib) = resolve_zlib(&adapter(), &oracle_dir, &platform).unwrap();
+    let args = [
+        repo("oracle/fixtures/lua-tests/shims.lua").into_os_string(),
+        repo("oracle/adapter/shims.lua").into_os_string(),
+        zlib,
+    ];
+    let finished = oracle_process::run(
+        &luajit,
+        &args,
+        &std::env::temp_dir(),
+        &[],
+        Duration::from_secs(60),
+    )
+    .unwrap();
+    assert_eq!(
+        finished.code,
+        Some(0),
+        "{}{}",
+        finished.stdout,
+        finished.stderr
+    );
+    assert!(finished.stdout.starts_with("ok "), "{}", finished.stdout);
 }
 
 /// The JSON writer's Lua tests (`tools/oracle/fixtures/lua-tests/`) on the

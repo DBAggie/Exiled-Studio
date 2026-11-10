@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "loom oracle adapter output, protocol 1",
-  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted.",
+  "title": "loom oracle adapter output, protocol 2",
+  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted; shims names exactly the manifest's adapter.shims, in that order; partial is not empty when an Inflate call in the probe has an error. Protocol 2 (PR C2b) added shims and probe.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,12 +11,14 @@
     "partial",
     "modules",
     "settings",
+    "shims",
+    "probe",
     "breakdown_source",
     "breakdowns",
     "main_output"
   ],
   "properties": {
-    "protocol": { "const": 1 },
+    "protocol": { "const": 2 },
     "stage": {
       "description": "The stage reached: done, or the stage that failed.",
       "enum": ["startup", "import", "calculate", "normalize", "done"]
@@ -39,9 +41,32 @@
       ]
     },
     "partial": {
-      "description": "Reasons the result is incomplete (named shims that did not run; first filled in C2b, always empty in C2a). Empty: complete.",
+      "description": "Reasons the result is incomplete: a shim the build needed failed (for example inflate: cannot load the zlib library). Empty: complete.",
       "type": "array",
       "items": { "type": "string" }
+    },
+    "shims": {
+      "description": "The named headless shims (tools/oracle/adapter/shims.lua), in the manifest's order.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/shim" }
+    },
+    "probe": {
+      "description": "What the shims did in this run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inflate", "writes_refused"],
+      "properties": {
+        "inflate": {
+          "description": "Every call of the Inflate shim, in order (PoB inflates timeless jewel data when a build needs it).",
+          "type": "array",
+          "items": { "$ref": "#/$defs/inflate_call" }
+        },
+        "writes_refused": {
+          "description": "Paths PoB tried to open for writing, which the write guard refused (for example the jewel loader's .bin cache), in order.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
     },
     "modules": {
       "description": "Every module PoB loaded through require, sorted.",
@@ -79,6 +104,39 @@
     }
   },
   "$defs": {
+    "shim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "replaces", "installed", "detail"],
+      "properties": {
+        "name": { "type": "string" },
+        "replaces": { "description": "The PoB global the shim replaces.", "type": "string" },
+        "installed": { "description": "Whether the shim works (inflate: zlib loaded).", "type": "boolean" },
+        "detail": {
+          "description": "inflate: the zlib version, or why zlib did not load (without paths).",
+          "oneOf": [{ "type": "null" }, { "type": "string" }]
+        }
+      }
+    },
+    "inflate_call": {
+      "description": "One Inflate call: the results are integers and error is null, or the results are null and error is a string.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_bytes", "output_bytes", "adler32", "trailing_bytes", "error"],
+      "properties": {
+        "input_bytes": { "type": "integer", "minimum": 0 },
+        "output_bytes": { "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }] },
+        "adler32": {
+          "description": "The zlib stream's Adler-32 of the inflated bytes (checked by zlib).",
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }]
+        },
+        "trailing_bytes": {
+          "description": "Input bytes after the end of the zlib stream.",
+          "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 0 }]
+        },
+        "error": { "oneOf": [{ "type": "null" }, { "type": "string" }] }
+      }
+    },
     "value": {
       "description": "A Lua value written as data. Numbers are written with %.17g (exact for a double); null never occurs.",
       "oneOf": [

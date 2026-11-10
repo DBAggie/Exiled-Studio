@@ -21,7 +21,13 @@
 //!   `ORACLE_NORMALIZATION`;
 //! - done, but PoB found a user settings file or loaded a network module:
 //!   `ORACLE_ENVIRONMENT` (the result depends on something outside the
-//!   pinned inputs).
+//!   pinned inputs);
+//! - done with partial reasons (a shim the build needed failed, such as
+//!   `Inflate` without zlib): status `partial`, no class.
+//!
+//! The checkout is checked after each fixture (including ignored files,
+//! so a `.bin` cache the write guard missed is caught); a dirty checkout
+//! stops the run, since later fixtures would run on changed inputs.
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
@@ -31,13 +37,18 @@ use std::time::Duration;
 use serde::Serialize;
 
 use crate::oracle::{self, Adapter, FailureClass};
-use crate::oracle_output::{self, Stage};
+use crate::oracle_output::{self, Probe, Stage};
 use crate::oracle_process::{self, Finished};
 use crate::oracle_verify::{self, Check};
 
 /// Modules whose loading means PoB could reach the network. The wrapper
 /// answers `lcurl.safe` itself without loading it, so it never appears.
 const NETWORK_MODULES: &[&str] = &["lcurl", "socket", "ssl", "http"];
+
+/// Exit code of `oracle-run` when nothing failed but a fixture is
+/// `partial`: distinct from success, from file (1) and usage (2) errors,
+/// and from the failure classes (10 to 20).
+pub const EXIT_PARTIAL: u8 = 3;
 
 /// How many characters of a failed run's standard output and error the
 /// report keeps.
@@ -136,6 +147,9 @@ pub struct FixtureReport {
     pub determinism: Determinism,
     /// The first run's outcome.
     pub outcome: Outcome,
+    /// What the shims did in the first run (when it wrote a valid
+    /// document); the document's `probe` itself is part of the outcome.
+    pub probe: Option<Probe>,
     /// Every run.
     pub runs: Vec<Run>,
 }
@@ -219,21 +233,24 @@ fn failed(class: FailureClass, stage: Option<Stage>, message: String) -> Outcome
     }
 }
 
+/// One classified run: the outcome; for `ok` and `partial`, the pretty
+/// canonical document; and the probe of any valid document.
+pub type Classified = (Outcome, Option<String>, Option<Probe>);
+
 /// Classifies one run from what the process did and the output file:
 /// its bytes, `None` when it was not written, or the error reading it.
-/// Returns the outcome and, for `ok` and `partial`, the pretty canonical
-/// document. A document left behind by a run that hit the time limit is
-/// ignored.
+/// A document left behind by a run that hit the time limit is ignored.
 pub fn classify(
     started: &Result<Finished, String>,
     document: Result<Option<&[u8]>, &str>,
     adapter: &Adapter,
     scrub: &Scrub,
-) -> (Outcome, Option<String>) {
+) -> Classified {
     let finished = match started {
         Err(error) => {
             return (
                 failed(FailureClass::Environment, None, scrub.apply(error)),
+                None,
                 None,
             );
         }
@@ -242,110 +259,85 @@ pub fn classify(
     if finished.timed_out {
         // No elapsed time in the message: it differs per run.
         let message = "time limit reached".to_owned();
-        return (failed(FailureClass::Timeout, None, message), None);
+        return (failed(FailureClass::Timeout, None, message), None, None);
     }
     let document = match document {
         Ok(document) => document,
         Err(error) => {
             let message = format!("output document unreadable: {error}");
-            return (failed(FailureClass::Protocol, None, message), None);
+            return (failed(FailureClass::Protocol, None, message), None, None);
         }
     };
     let Some(bytes) = document else {
-        return match finished.code {
-            Some(0) => (
-                failed(
-                    FailureClass::Protocol,
-                    None,
-                    "exit code 0 without an output document".to_owned(),
-                ),
+        let outcome = match finished.code {
+            Some(0) => failed(
+                FailureClass::Protocol,
                 None,
+                "exit code 0 without an output document".to_owned(),
             ),
-            code => (
-                failed(
-                    FailureClass::Launch,
-                    None,
-                    format!(
-                        "{} without an output document",
-                        code.map_or_else(
-                            || "no exit code".to_owned(),
-                            |c| format!("exit code {c}")
-                        )
-                    ),
-                ),
+            code => failed(
+                FailureClass::Launch,
                 None,
+                format!(
+                    "{} without an output document",
+                    code.map_or_else(|| "no exit code".to_owned(), |c| format!("exit code {c}"))
+                ),
             ),
         };
+        return (outcome, None, None);
     };
     let document = match oracle_output::parse(bytes, adapter) {
         Ok(document) => document,
         Err(error) => {
-            return (
-                failed(
-                    FailureClass::Protocol,
-                    None,
-                    format!("output document: {error}"),
-                ),
-                None,
-            );
+            let message = format!("output document: {error}");
+            return (failed(FailureClass::Protocol, None, message), None, None);
         }
     };
+    let probe = Some(document.probe.clone());
+    let stage = Some(document.stage);
     let expected_code = if document.stage == Stage::Done { 0 } else { 1 };
-    if finished.code != Some(expected_code) {
-        return (
-            failed(
-                FailureClass::Protocol,
-                Some(document.stage),
-                format!(
-                    "stage {} with exit code {:?} (expected {expected_code})",
-                    document.stage.name(),
-                    finished.code
-                ),
+    let problem = if finished.code != Some(expected_code) {
+        Some((
+            FailureClass::Protocol,
+            format!(
+                "stage {} with exit code {:?} (expected {expected_code})",
+                document.stage.name(),
+                finished.code
             ),
-            None,
-        );
-    }
-    if let Some((source, message)) = &document.error {
+        ))
+    } else if let Some((source, message)) = &document.error {
         let class = match document.stage {
             Stage::Startup => FailureClass::Launch,
             Stage::Import => FailureClass::Import,
             Stage::Calculate => FailureClass::Calculation,
             Stage::Normalize | Stage::Done => FailureClass::Normalization,
         };
-        let message = format!("{source}: {}", scrub.apply(message));
-        return (failed(class, Some(document.stage), message), None);
-    }
-    if document.settings_found == Some(true) {
-        return (
-            failed(
-                FailureClass::Environment,
-                Some(document.stage),
-                "PoB found a user settings file".to_owned(),
-            ),
-            None,
-        );
-    }
-    if let Some(module) = document.modules.iter().find(|m| is_network_module(m)) {
-        return (
-            failed(
-                FailureClass::Environment,
-                Some(document.stage),
-                format!("PoB loaded the network module {module}"),
-            ),
-            None,
-        );
+        Some((class, format!("{source}: {}", scrub.apply(message))))
+    } else if document.settings_found == Some(true) {
+        Some((
+            FailureClass::Environment,
+            "PoB found a user settings file".to_owned(),
+        ))
+    } else {
+        document
+            .modules
+            .iter()
+            .find(|m| is_network_module(m))
+            .map(|module| {
+                (
+                    FailureClass::Environment,
+                    format!("PoB loaded the network module {module}"),
+                )
+            })
+    };
+    if let Some((class, message)) = problem {
+        return (failed(class, stage, message), None, probe);
     }
     let mut text = match serde_json::to_string_pretty(&document.canonical) {
         Ok(text) => text,
         Err(error) => {
-            return (
-                failed(
-                    FailureClass::Normalization,
-                    Some(document.stage),
-                    error.to_string(),
-                ),
-                None,
-            );
+            let outcome = failed(FailureClass::Normalization, stage, error.to_string());
+            return (outcome, None, probe);
         }
     };
     text.push('\n');
@@ -360,7 +352,7 @@ pub fn classify(
         message: None,
         output_sha256: Some(oracle::sha256_hex(text.as_bytes())),
     };
-    (outcome, Some(text))
+    (outcome, Some(text), probe)
 }
 
 fn is_network_module(name: &str) -> bool {
@@ -386,7 +378,7 @@ pub fn run_fixture(
     scrub: &Scrub,
 ) -> Result<FixtureResult, String> {
     std::fs::create_dir_all(raw_dir).map_err(|e| format!("{}: {e}", raw_dir.display()))?;
-    let mut first: Option<(Outcome, Option<String>)> = None;
+    let mut first: Option<Classified> = None;
     let mut reports = Vec::new();
     for n in 1..=runs {
         let output = raw_dir.join(format!("{n}.json"));
@@ -403,12 +395,12 @@ pub fn run_fixture(
             Err(e) => Err(e.kind().to_string()),
         };
         let document = bytes.as_ref().map(Option::as_deref).map_err(String::as_str);
-        let (outcome, text) = classify(&started, document, adapter, scrub);
+        let (outcome, text, probe) = classify(&started, document, adapter, scrub);
         let (exit_code, elapsed_ms) = match &started {
             Ok(f) => (f.code, f.elapsed.as_millis()),
             Err(_) => (None, 0),
         };
-        let same_as_first = first.as_ref().is_none_or(|(o, _)| *o == outcome);
+        let same_as_first = first.as_ref().is_none_or(|(o, _, _)| *o == outcome);
         let failed = outcome.status == "failed";
         let tail_of = |text: &str| scrub.apply(tail(text.trim_end(), STREAM_TAIL));
         let (stdout, stderr, stdout_tail, stderr_tail) = match &started {
@@ -431,10 +423,10 @@ pub fn run_fixture(
             stderr_tail,
         });
         if first.is_none() {
-            first = Some((outcome, text));
+            first = Some((outcome, text, probe));
         }
     }
-    let (outcome, output) = first.ok_or_else(|| "at least one run is needed".to_owned())?;
+    let (outcome, output, probe) = first.ok_or_else(|| "at least one run is needed".to_owned())?;
     let identical = reports.iter().filter(|r| r.same_as_first).count();
     let (status, class) = if identical == runs {
         (outcome.status, outcome.class)
@@ -449,6 +441,7 @@ pub fn run_fixture(
             class,
             determinism: Determinism { runs, identical },
             outcome,
+            probe,
             runs: reports,
         },
         output,
@@ -477,8 +470,84 @@ pub struct AdapterRecord {
     pub files: BTreeMap<String, String>,
     /// Protocol version.
     pub protocol: u32,
-    /// Arguments after the fixture and output paths.
+    /// Arguments after the fixture and output paths (the `zlib` argument
+    /// as the manifest names it; the launch passes it resolved).
     pub arguments: Vec<String>,
+    /// The zlib library the `inflate` shim loads.
+    pub zlib: ZlibRecord,
+}
+
+/// The zlib library of the `inflate` shim, as recorded.
+#[derive(Debug, Serialize)]
+pub struct ZlibRecord {
+    /// As the manifest names it for this platform.
+    pub library: String,
+    /// The file it resolves to: relative to the oracle dir for a path, the
+    /// system file for a library name; `None` if no file was found (the
+    /// adapter then reports the shim as not installed).
+    pub file: Option<String>,
+    /// SHA-256 of that file.
+    pub sha256: Option<String>,
+}
+
+/// Where the system loader finds a library by name on the supported Linux
+/// (Debian and Ubuntu multiarch first). Searched in this order to record
+/// the file a name like `libz.so.1` loads; C4 confirms it on CI.
+const SYSTEM_LIBRARY_DIRS: &[&str] = &[
+    "/lib/x86_64-linux-gnu",
+    "/usr/lib/x86_64-linux-gnu",
+    "/lib64",
+    "/usr/lib64",
+    "/lib",
+    "/usr/lib",
+];
+
+/// Resolves the manifest's zlib library for `platform`: the record and the
+/// value to pass as the adapter's `zlib=` argument (an absolute path for a
+/// path, so the adapter can load it with its own folder searched for its
+/// dependencies; a library name as is).
+pub fn resolve_zlib(
+    adapter: &Adapter,
+    oracle_dir: &Path,
+    platform: &str,
+) -> Result<(ZlibRecord, OsString), String> {
+    let library = adapter
+        .zlib
+        .get(platform)
+        .ok_or_else(|| format!("adapter.zlib: no library for platform {platform}"))?;
+    if library.contains('/') {
+        let path = absolute(&oracle_dir.join(library))?;
+        let bytes =
+            std::fs::read(&path).map_err(|e| format!("adapter.zlib {library}: {}", e.kind()))?;
+        let record = ZlibRecord {
+            library: library.clone(),
+            file: Some(library.clone()),
+            sha256: Some(oracle::sha256_hex(&bytes)),
+        };
+        return Ok((record, path.into_os_string()));
+    }
+    let found = SYSTEM_LIBRARY_DIRS
+        .iter()
+        .map(|dir| Path::new(dir).join(library))
+        .find(|path| path.is_file())
+        .and_then(|path| std::fs::canonicalize(path).ok());
+    let sha256 = found
+        .as_ref()
+        .and_then(|path| std::fs::read(path).ok())
+        .map(|bytes| oracle::sha256_hex(&bytes));
+    // The adapter loads the file that was hashed, by its canonical path;
+    // only when none is found does the system loader resolve the name (the
+    // record then has no file, and the shim reports what it loaded).
+    let argument = found.as_ref().map_or_else(
+        || OsString::from(library),
+        |path| path.clone().into_os_string(),
+    );
+    let record = ZlibRecord {
+        library: library.clone(),
+        file: found.map(|path| path.to_string_lossy().into_owned()),
+        sha256,
+    };
+    Ok((record, argument))
 }
 
 /// SHA-256 of every `*.lua` file next to `adapter`; the adapter itself
@@ -536,8 +605,9 @@ pub struct Tool {
 pub struct Report {
     /// Report format; 1.
     pub format: u32,
-    /// `ok` when every fixture is `ok` or `partial` and the checkout is
-    /// still clean; else `failed`.
+    /// `failed` when there is a class; else `partial` when a fixture is
+    /// `partial` (a shim it needed failed: complete runs, incomplete
+    /// result; exit 3); else `ok`.
     pub status: &'static str,
     /// The smallest failing class over the verification, the fixtures, and
     /// the checks after the runs.
@@ -559,8 +629,11 @@ pub struct Report {
     /// Every fixture.
     pub fixtures: Vec<FixtureReport>,
     /// Checks after the runs (the checkout must still be clean, including
-    /// ignored files).
+    /// ignored files): after the last fixture, or the failed check after
+    /// the fixture that changed it.
     pub after: Vec<Check>,
+    /// Fixtures not run because the checkout changed before their turn.
+    pub skipped: Vec<String>,
 }
 
 /// `LUA_PATH` for runs: PoB's modules relative to `pob/src` and the Lua
@@ -588,7 +661,13 @@ impl Report {
             .chain(self.after.iter().filter(|c| !c.ok).map(|c| c.class))
             .min();
         self.class = class;
-        self.status = if class.is_none() { "ok" } else { "failed" };
+        self.status = if class.is_some() {
+            "failed"
+        } else if self.fixtures.iter().any(|f| f.status == "partial") {
+            "partial"
+        } else {
+            "ok"
+        };
         self
     }
 
@@ -613,10 +692,27 @@ impl Report {
                 manifest.adapter.protocol
             ));
         }
-        text.push_str("| Fixture | Status | Class | Identical runs | Output SHA-256 |\n|---|---|---|---|---|\n");
+        text.push_str(
+            "| Fixture | Status | Class | Identical runs | Inflate calls (bytes out) | Writes refused | Output SHA-256 |\n\
+             |---|---|---|---|---|---|---|\n",
+        );
         for f in &self.fixtures {
+            let (inflate, refused) = f.probe.as_ref().map_or_else(
+                || ("-".to_owned(), "-".to_owned()),
+                |p| {
+                    let errors = if p.inflate_errors > 0 {
+                        format!(", {} failed", p.inflate_errors)
+                    } else {
+                        String::new()
+                    };
+                    (
+                        format!("{} ({}{errors})", p.inflate_calls, p.inflated_bytes),
+                        p.writes_refused.to_string(),
+                    )
+                },
+            );
             text.push_str(&format!(
-                "| {} | {} | {} | {}/{} | {} |\n",
+                "| {} | {} | {} | {}/{} | {inflate} | {refused} | {} |\n",
                 f.id.replace('|', "\\|"),
                 f.status,
                 f.class.map_or("-", FailureClass::name),
@@ -634,6 +730,12 @@ impl Report {
             for check in dirty {
                 text.push_str(&format!("- {}: {}\n", check.name, check.actual));
             }
+        }
+        if !self.skipped.is_empty() {
+            text.push_str(&format!(
+                "\nNot run (the checkout changed): {}\n",
+                self.skipped.join(", ")
+            ));
         }
         text
     }
@@ -691,14 +793,15 @@ pub struct Options {
 }
 
 /// Starts the adapter on the pinned runtime: `luajit <adapter> <fixture>
-/// <output> <arguments>` in `pob/src` with [`LUA_PATH`] and `LUA_CPATH`
-/// (the runtime's own directory) only.
+/// <output> <arguments> zlib=<library>` in `pob/src` with [`LUA_PATH`] and
+/// `LUA_CPATH` (the runtime's own directory) only.
 pub struct ProcessLauncher {
     luajit: PathBuf,
     adapter: PathBuf,
     working_directory: PathBuf,
     env: Vec<(String, OsString)>,
     arguments: Vec<String>,
+    zlib: OsString,
     timeout: Duration,
 }
 
@@ -711,6 +814,7 @@ impl Launcher for ProcessLauncher {
             ("fixture", fixture.as_path()),
             ("output", output.as_path()),
             ("runtime", self.luajit.as_path()),
+            ("zlib", Path::new(&self.zlib)),
         ];
         if let Some(name) = non_ascii_path(&paths) {
             return Err(format!(
@@ -724,6 +828,9 @@ impl Launcher for ProcessLauncher {
             output.into_os_string(),
         ];
         args.extend(self.arguments.iter().map(OsString::from));
+        let mut zlib = OsString::from("zlib=");
+        zlib.push(&self.zlib);
+        args.push(zlib);
         oracle_process::run(
             &self.luajit,
             &args,
@@ -815,12 +922,18 @@ pub fn run(request: &Request) -> Result<Report, String> {
         },
         fixtures: Vec::new(),
         after: Vec::new(),
+        skipped: Vec::new(),
         oracle: verified,
     };
     // Nothing runs on an oracle that failed verification.
     if let (None, Some(manifest)) = (report.oracle.class, report.oracle.manifest.clone()) {
         let adapter = &manifest.adapter;
         let arguments = adapter_arguments(adapter);
+        let runtime = oracle::runtime_files(&platform)
+            .and_then(|files| files.first())
+            .ok_or_else(|| format!("unsupported platform {platform}"))?;
+        let oracle_dir = absolute(&request.oracle_dir)?;
+        let (zlib_record, zlib) = resolve_zlib(adapter, &oracle_dir, &platform)?;
         report.adapter = Some(AdapterRecord {
             file: request
                 .adapter
@@ -829,12 +942,13 @@ pub fn run(request: &Request) -> Result<Report, String> {
                 .unwrap_or_default(),
             files: adapter_files,
             protocol: adapter.protocol,
-            arguments: arguments.clone(),
+            arguments: arguments
+                .iter()
+                .cloned()
+                .chain([format!("zlib={}", zlib_record.library)])
+                .collect(),
+            zlib: zlib_record,
         });
-        let runtime = oracle::runtime_files(&platform)
-            .and_then(|files| files.first())
-            .ok_or_else(|| format!("unsupported platform {platform}"))?;
-        let oracle_dir = absolute(&request.oracle_dir)?;
         let bin = oracle_dir.join("bin");
         let launcher = ProcessLauncher {
             luajit: oracle_dir.join(runtime),
@@ -845,6 +959,7 @@ pub fn run(request: &Request) -> Result<Report, String> {
                 ("LUA_CPATH".to_owned(), oracle_process::cpath(&bin)),
             ],
             arguments,
+            zlib,
             timeout: request.options.timeout,
         };
         let out = absolute(&request.out)?;
@@ -855,7 +970,7 @@ pub fn run(request: &Request) -> Result<Report, String> {
         ];
         let outputs = out.join("outputs");
         std::fs::create_dir_all(&outputs).map_err(|e| format!("{}: {e}", outputs.display()))?;
-        for fixture in &fixtures {
+        for (index, fixture) in fixtures.iter().enumerate() {
             scrub_paths.push((absolute(&fixture.path)?, "<fixture>"));
             let scrub = Scrub::new(
                 &scrub_paths
@@ -878,10 +993,19 @@ pub fn run(request: &Request) -> Result<Report, String> {
                 std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
             }
             report.fixtures.push(result.report);
+            let mut clean = oracle_verify::clean_check(&request.oracle_dir);
+            if !clean.ok {
+                // Names the fixture after which the checkout changed; the
+                // remaining fixtures do not run on changed inputs.
+                clean.name = format!("pob.clean after {}", fixture.id);
+                report.after.push(clean);
+                report.skipped = fixtures[index + 1..].iter().map(|f| f.id.clone()).collect();
+                break;
+            }
+            if report.fixtures.len() == fixtures.len() {
+                report.after.push(clean);
+            }
         }
-        report
-            .after
-            .push(oracle_verify::clean_check(&request.oracle_dir));
     }
     let report = report.finish();
     let mut json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;

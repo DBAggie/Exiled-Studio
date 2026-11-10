@@ -94,13 +94,16 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
-# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua) on the pinned runtime, 3 times each
-# (offline; verifies first). Writes report.json, summary.md, outputs/, runs/ to <dir> (must not exist);
-# exits with the smallest failing class (10-18). The public fixtures:
-cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> local/oracle/pob/spec/TestBuilds/3.13 tools/oracle/fixtures/minimal-level1.xml
-# Fake adapters, the real adapter on the synthetic fixtures, and the adapter's JSON writer tests, all on the
-# real runtime (ignored in plain `cargo test`; Windows paths handed to LuaJIT must be ASCII):
-LOOM_ORACLE_DIR=local/oracle cargo test -p loom-parity-cli -- --ignored
+# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 2, with the shims in
+# shims.lua: Inflate through zlib, io.open write guard) on the pinned runtime, 3 times each (offline;
+# verifies first; checks the checkout after each fixture). Writes report.json, summary.md, outputs/,
+# runs/ to <dir> (must not exist); exits 3 if a fixture is partial, else with the smallest failing
+# class (10-18). The public and synthetic fixtures:
+cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> local/oracle/pob/spec/TestBuilds/3.13 tools/oracle/fixtures/minimal-level1.xml tools/oracle/fixtures/timeless-militant-faith.xml
+# Fake adapters, the real adapter on the synthetic fixtures (and a partial result without zlib), and the
+# Lua tests of json.lua and shims.lua, all on the real runtime (ignored in plain `cargo test`; Windows
+# paths handed to LuaJIT must be ASCII). LOOM_ORACLE_DIR must be absolute (cargo test runs in the crate):
+LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

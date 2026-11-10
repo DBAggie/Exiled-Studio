@@ -21,7 +21,7 @@
     "module": "lua-utf8"
   },
   "adapter": {
-    "protocol": 1,
+    "protocol": 2,
     "breakdowns": [
       "Armour",
       "ChaosResist",
@@ -34,6 +34,11 @@
       "Mana",
       "TotalDPS"
     ],
-    "opaque_keys": ["sourceGem"]
+    "opaque_keys": ["sourceGem"],
+    "shims": ["inflate", "write_guard"],
+    "zlib": {
+      "linux-x86_64": "libz.so.1",
+      "windows-x86_64": "pob/runtime/zlib1.dll"
+    }
   }
 }
