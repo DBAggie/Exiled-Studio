@@ -147,13 +147,13 @@ Last Updated: 2026-11-10 (PR B5e)
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `8bce4ee`)
 - [x] Open PR
 
-## PR B5e: the rest (near-miss, split-section, only-shadowed)
+## PR B5e: the rest (near-miss, split-section, only-shadowed) (PR #32)
 - [x] `Index::resolve_case_folded`; split-section pairs resolve; `adapted` on lines and in the summary; tests
 - [x] Corpus run from clean `d6db8dd`, two runs byte-identical: 99.7%, 10 unresolved
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `d6db8dd`)
 - [x] Open PR
 
 ## After the area PRs (maintainer)
-- [ ] Merge #26 .. B5e in order (retarget each to `main`)
+- [ ] Merge #26 .. #32 in order (retarget each to `main`)
 - [ ] Accept the ADR-015 clarification on typed resolutions, or decide otherwise
 - [ ] Move this folder to `dev/completed/`; Spike C
