@@ -85,7 +85,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: local/oracle
-          key: oracle-${{ runner.os }}-${{ hashFiles('tools/oracle/manifest.json', 'tools/oracle/acquire.sh', 'tools/oracle/acquire.ps1') }}
+          key: inject-oracle-${{ runner.os }}-${{ hashFiles('tools/oracle/manifest.json', 'tools/oracle/acquire.sh', 'tools/oracle/acquire.ps1') }}
       - name: Acquire the oracle (Linux)
         if: runner.os == 'Linux' && steps.oracle-cache.outputs.cache-hit != 'true'
         run: tools/oracle/acquire.sh
@@ -93,6 +93,17 @@ jobs:
         if: runner.os == 'Windows' && steps.oracle-cache.outputs.cache-hit != 'true'
         shell: pwsh
         run: powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1
+      # ONE-OFF (branch spike-c/c4-inject-wrong-hash, never merged): a wrong
+      # recorded hash for the LuaJIT binary must fail oracle-verify (exit 11,
+      # ORACLE_ENVIRONMENT) and stop the job.
+      - name: Inject a wrong hash
+        run: |
+          py="$(command -v python3 || command -v python)"
+          "$py" -I - <<'EOF'
+          import json; p = "local/oracle/build.json"; b = json.load(open(p))
+          k = next(k for k in b["files"] if "luajit" in k); b["files"][k] = "0" * 64
+          json.dump(b, open(p, "w"), indent=2); print("injected", k)
+          EOF
       - name: Verify the oracle
         run: target/release/loom-parity-cli oracle-verify tools/oracle/manifest.json local/oracle
       # Linux runs without a network (a user and network namespace); Ubuntu
