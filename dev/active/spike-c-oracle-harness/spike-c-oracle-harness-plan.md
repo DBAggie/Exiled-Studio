@@ -124,8 +124,7 @@ Each PR is one session and updates the handoff and this task folder (`/dev-docs-
 | C2a | Step 2a: adapter, schema, `oracle-run`, no shims. | Unit tests (fake adapter scripts); 3-run outcomes for the public fixtures on Windows. |
 | C2b | Step 2b: `Inflate` shim, write guard, jewel probe. | Tests; probe on the synthetic and corpus timeless-jewel builds; tree check. |
 | C3 | Step 3: fixtures, `oracle-compare`, divergence register, corpus run. | Tests; intentional discrepancy report; corpus summary (scrubbed); `cargo deny`. |
-| C3b | Corpus nondeterminism (found in C3): root cause, adapter fix or fallback per "Fallback". | Repeated corpus runs; affected fields. |
-| C4 | Step 4: CI `oracle` job. | CI runs on both runners; injected-failure run; cross-platform comparison. |
+| C3b+C4 | One PR (maintainer decision 2026-11-10). C3b: corpus nondeterminism (found in C3): root cause, adapter fix or fallback per "Fallback". C4: step 4, CI `oracle` job. | Repeated corpus runs and affected fields; CI runs on both runners; injected-failure run; cross-platform comparison. |
 | C5 | Step 5: report, gate verdict, ACTION-PLAN status. | Committed summaries; gate pass/fail. |
 
 Reviewed by `plan-reviewer` on 2026-11-10 (verdict: proceed with changes; 2 blockers, 11 should-fix, 4 nits, all applied above; summary in the context file).
