@@ -72,6 +72,7 @@ use crate::grafts::{self, Grafts};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
+use crate::properties::Properties;
 
 /// Scope root files by name, in the order domains are tested.
 const SCOPES: [&str; 3] = [
@@ -122,6 +123,8 @@ pub struct Bases {
     pub tags_unknown: usize,
     /// Graft bases and their granted skills (B5g).
     pub grafts: Grafts,
+    /// Item property texts and catalyst quality types (B5d).
+    pub properties: Properties,
 }
 
 impl Bases {
@@ -185,6 +188,7 @@ impl Bases {
             });
         }
         bases.grafts = Grafts::load(read)?;
+        bases.properties = Properties::load(read)?;
         Ok(bases)
     }
 
@@ -522,6 +526,11 @@ pub struct Summary {
     /// Resolved lines whose result is not stat IDs, by group and kind
     /// (`non_unique/granted-skill`); counted as resolved in the rate.
     pub resolved_kinds: BTreeMap<String, usize>,
+    /// Item property rule inputs (B5d): `(ClientStrings templates,
+    /// labels, AlternateQualityTypes rows)`.
+    pub property_inputs: (usize, usize, usize),
+    /// Property ids not read and quality descriptions dropped (B5d).
+    pub property_missing: Vec<String>,
     /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
     pub compositions_missing: Vec<String>,
     /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
@@ -656,8 +665,10 @@ pub struct LineRecord {
     /// The backing row's `Mods.Id`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backed_by: Option<String>,
-    /// What a resolved line resolved to when it is not stat IDs:
-    /// `granted-skill` (B5g; `detail` names the graft, skill, and level).
+    /// What a resolved line resolved to when it is not (only) a
+    /// description's stat IDs: `granted-skill` (B5g; `detail` names the
+    /// graft, skill, and level), `item-property` and `catalyst-quality`
+    /// (B5d; `properties`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<&'static str>,
     /// The `ClientStrings` wrapper the line was read through (B5c).
@@ -1122,6 +1133,8 @@ pub fn run(
         compositions_missing: game.compositions_missing.clone(),
         graft_bases: bases.grafts.len(),
         graft_inputs: bases.grafts.inputs(),
+        property_inputs: bases.properties.inputs(),
+        property_missing: bases.properties.missing().to_vec(),
         resolved_kinds: BTreeMap::new(),
         composition_rows: game
             .compositions
@@ -1213,6 +1226,19 @@ fn granted_skill(record: &mut LineRecord, grafts: &Grafts, base: &str) {
             format!("skill={}", g.graft.skill),
             format!("level={}", g.level),
         ];
+    }
+}
+
+/// Resolves an item property line (`properties`, B5d); other lines are
+/// left as they are.
+fn item_property(record: &mut LineRecord, properties: &Properties) {
+    if record.outcome != "unresolved/no-template" {
+        return;
+    }
+    if let Some(p) = properties.resolve(&record.text) {
+        record.outcome = "resolved".to_owned();
+        record.kind = Some(p.kind);
+        record.detail = p.detail;
     }
 }
 
@@ -1329,6 +1355,9 @@ fn count_item(
         for (record, _) in &mut records {
             granted_skill(record, &bases.grafts, &f.name);
         }
+    }
+    for (record, _) in &mut records {
+        item_property(record, &bases.properties);
     }
     let empty = BTreeSet::new();
     let chain = found

@@ -41,7 +41,9 @@
 //!    number as its value (`Memory Strands: 63`), or one of the named
 //!    `ClientStrings` item-display properties (`Lasts {0} Seconds`,
 //!    `Currently has {0} Charges`): item properties pasted from the game,
-//!    not modifiers. Unresolved (an exclusion needs the maintainer).
+//!    not modifiers. Since PR B5d `resolve-corpus` resolves these lines as
+//!    typed properties first (`properties`), so a line gets here only when
+//!    its value or label matches no game data.
 //! 9. `parser-gap/client-string`: a line matching a `ClientStrings` text the
 //!    client composes a modifier with (`While a Unique Enemy is in your
 //!    Presence, {0}`, `Uses level {1} {0}`); the composed remainder is not

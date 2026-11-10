@@ -6,7 +6,7 @@
       "manifest_sha256": "119bb8258b9fa6d61080389fa5a749f88e7618e00b43ac260ac3f6709408be9f"
     },
     "tool": {
-      "commit": "c437709791153fb08af0634b414e79f3ebf09ace",
+      "commit": "8bce4ee2a02024b4f5c1ec2f93193a04ec82d229",
       "dirty": false
     },
     "builds": [
@@ -443,8 +443,8 @@
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3328,
-      "unresolved/no-template": 32,
+      "resolved": 3343,
+      "unresolved/no-template": 17,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
@@ -458,8 +458,8 @@
         "excluded/author-note": 238,
         "excluded/legacy-text": 47,
         "excluded/pob-custom": 54,
-        "resolved": 2556,
-        "unresolved/no-template": 28,
+        "resolved": 2571,
+        "unresolved/no-template": 13,
         "unresolved/only-shadowed": 1
       },
       "implicit": {
@@ -479,8 +479,8 @@
       "excluded/legacy-text": 29,
       "excluded/not-a-modifier": 36,
       "excluded/not-selected-variant": 1415,
-      "resolved": 818,
-      "unresolved/no-template": 35,
+      "resolved": 825,
+      "unresolved/no-template": 28,
       "unresolved/no-variant-fits": 5
     },
     "by_section": {
@@ -492,8 +492,8 @@
         "excluded/author-note": 15,
         "excluded/legacy-text": 29,
         "excluded/not-selected-variant": 1387,
-        "resolved": 703,
-        "unresolved/no-template": 35,
+        "resolved": 710,
+        "unresolved/no-template": 28,
         "unresolved/no-variant-fits": 4
       },
       "implicit": {
@@ -507,13 +507,13 @@
   },
   "rate": {
     "denominator": 3366,
-    "resolved": 3328,
-    "rate": 0.9887106357694593,
+    "resolved": 3343,
+    "rate": 0.9931669637551991,
     "excluded": 572,
     "excluded_share": 0.1452513966480447,
     "distinct": 1335,
-    "distinct_resolved": 1308,
-    "distinct_rate": 0.9797752808988764,
+    "distinct_resolved": 1318,
+    "distinct_rate": 0.9872659176029962,
     "distinct_with_mixed_outcomes": 1,
     "meets_rate": true,
     "stat_resolved": 3324,
@@ -907,7 +907,6 @@
       "parser-gap/only-shadowed": 1,
       "parser-gap/split-section": 4,
       "special-case/author-note": 238,
-      "special-case/item-property": 15,
       "special-case/not-a-modifier": 230,
       "special-case/pob-custom": 54
     },
@@ -917,7 +916,7 @@
       "parser-gap/ambiguous": 36,
       "parser-gap/near-miss": 32,
       "special-case/author-note": 15,
-      "special-case/item-property": 8,
+      "special-case/item-property": 1,
       "special-case/not-a-modifier": 36
     }
   },
@@ -2876,109 +2875,11 @@
       }
     },
     "special-case/item-property": {
-      "Consumes 15 of 40 Charges on use": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
-        ]
-      },
-      "Consumes 20 of 40 Charges on use": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
-        ]
-      },
-      "Consumes 30 of 60 Charges on use": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
-        ]
-      },
-      "Consumes 40 of 70 Charges on use": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesConsumptionOnUseNCharges"
-        ]
-      },
-      "Currently has 40 Charges": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesNCharges"
-        ]
-      },
-      "Currently has 60 Charges": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesNCharges"
-        ]
-      },
-      "Currently has 70 Charges": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayChargesNCharges"
-        ]
-      },
       "Has not Consumed any Gems": {
         "non_unique": 0,
         "unique": 1,
         "detail": [
           "ClientStrings:ItemDisplayHasEffect"
-        ]
-      },
-      "Lasts 3.70 Seconds": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
-        ]
-      },
-      "Lasts 6 Seconds": {
-        "non_unique": 1,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
-        ]
-      },
-      "Lasts 6.40 Seconds": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
-        ]
-      },
-      "Lasts 9.70 Seconds": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:ItemDisplayFlaskBuffDurationNSeconds"
-        ]
-      },
-      "Memory Strands: 63": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "pob-spec:Memory Strands"
-        ]
-      },
-      "Quality (Attribute Modifiers): +20%": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": [
-          "pob-spec:Quality (Attribute Modifiers)"
-        ]
-      },
-      "Quality (Defence Modifiers): +20%": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "pob-spec:Quality (Defence Modifiers)"
         ]
       }
     },
@@ -3181,8 +3082,18 @@
     "conflicts": []
   },
   "resolved_kinds": {
-    "non_unique/granted-skill": 4
+    "non_unique/catalyst-quality": 4,
+    "non_unique/granted-skill": 4,
+    "non_unique/item-property": 11,
+    "unique/catalyst-quality": 1,
+    "unique/item-property": 6
   },
+  "property_inputs": [
+    8,
+    1,
+    18
+  ],
+  "property_missing": [],
   "compositions_missing": [],
   "composition_rows": {
     "local_influence_mod_requires_celestial_boss_presence": [
@@ -3197,7 +3108,7 @@
   "gate": {
     "resolution": true,
     "unresolved_allowed": 67,
-    "unresolved": 38,
+    "unresolved": 23,
     "uncategorized": 0,
     "inputs_recorded": true,
     "met": true
