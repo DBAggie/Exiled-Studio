@@ -117,10 +117,11 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; re-run from clean `4031f1c`)
 - [x] Open PR (#26)
 
-## PR B5b: legacy text out of the rate, ADR-007
+## PR B5b: legacy text out of the rate, ADR-007 (PR #27)
 - [x] `data-gap/legacy-text` in `EXCLUDED`; tests; ADR-007 21 builds; ACTION-PLAN gate text records the exclusions
 - [x] Corpus run from clean `fbf8379`, two runs byte-identical: 98.5%, gate met; summary replaced; report
-- [ ] Open PR
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#27)
 
 ## PR B5c: client-composed lines (eldritch)
 - [ ] Eldritch presence wrapper from game data (9 lines)
