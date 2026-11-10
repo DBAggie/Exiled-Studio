@@ -91,12 +91,12 @@ pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
 /// - `AlternateQualityTypes`: catalyst quality (`Quality (Attribute
 ///   Modifiers): +20%`): `Description` and the stat it scales,
 ///   `ModEffectStat`;
-/// - `BrequelGrafts`, `BrequelGraftTypes`, `BrequelGraftGrantedSkillLevels`:
-///   the skill a graft grants and its level (`Uses level 30 <skill>`).
-pub const ITEM_LINE_TABLES_POE1: [&str; 4] = [
+/// - `BrequelGrafts`, `BrequelGraftGrantedSkillLevels`: the skill a graft
+///   grants and its level (`Uses level 30 <skill>`). The schema's
+///   `BrequelGraftTypes` has no file in PoE1 26530219.
+pub const ITEM_LINE_TABLES_POE1: [&str; 3] = [
     "AlternateQualityTypes",
     "BrequelGrafts",
-    "BrequelGraftTypes",
     "BrequelGraftGrantedSkillLevels",
 ];
 
