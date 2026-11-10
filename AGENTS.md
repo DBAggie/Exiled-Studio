@@ -25,7 +25,7 @@ crates/
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
-  oracle              not a crate: PoB oracle manifest and acquire scripts (Spike C)
+  oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes
 ```
@@ -94,6 +94,13 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
+# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua) on the pinned runtime, 3 times each
+# (offline; verifies first). Writes report.json, summary.md, outputs/, runs/ to <dir> (must not exist);
+# exits with the smallest failing class (10-18). The public fixtures:
+cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> local/oracle/pob/spec/TestBuilds/3.13 tools/oracle/fixtures/minimal-level1.xml
+# Fake adapters, the real adapter on the synthetic fixtures, and the adapter's JSON writer tests, all on the
+# real runtime (ignored in plain `cargo test`; Windows paths handed to LuaJIT must be ASCII):
+LOOM_ORACLE_DIR=local/oracle cargo test -p loom-parity-cli -- --ignored
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
