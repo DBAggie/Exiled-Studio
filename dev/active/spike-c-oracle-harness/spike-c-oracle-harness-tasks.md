@@ -21,7 +21,7 @@ Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 - [x] Injected-failure runs with the real runtime (wrong runtime -> 11, ignored file in checkout -> 10)
 - [ ] `acquire.sh` full run on Linux: deferred to C4 (no compiler in the workstation's WSL)
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; 4 should-fix and most nits applied, context file)
-- [ ] Open PR
+- [x] Open PR (#34)
 
 ## PR C2a: adapter and `oracle-run` (no shims)
 - [ ] `tools/oracle/adapter/oracle.lua` (protocol v1), output schema, hand-written schema check
