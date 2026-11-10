@@ -39,7 +39,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 
 ### Spike B: Text to stat-ID resolution
 - Using Spike A stat descriptions, resolve every item mod line in the maintainer's 21 PoE1 builds (22 until 2026-11-09; the maintainer confirmed 21).
-- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps). Excluded from the rate, counted apart (maintainer decisions): PoB custom lines, flag and class-requirement lines, unselected variants, author notes (2026-11-10), and legacy text the game no longer has (`data-gap/legacy-text`, 2026-11-10).
+- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps). Excluded from the rate, counted apart (maintainer decisions): PoB custom lines, flag and class-requirement lines, unselected variants, author notes (2026-11-10), and legacy text the game no longer has (`data-gap/legacy-text`, 2026-11-10). This redefines the gate (maintainer decisions 2026-11-10, B4b and B5b): exclusions total 572 lines (14.5%) of the corpus; without the legacy-text exclusion the rate is 97.1% (3,315 / 3,414). The exclusion is a rate rule only: per ADR-015, excluded lines stay quarantined and shown, never dropped.
 - **Fallback:** hybrid model per ADR-015, decided per area.
 
 ### Spike C: Thin oracle harness (about two weeks maximum)

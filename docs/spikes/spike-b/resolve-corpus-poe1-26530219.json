@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "1b5440002bd0f6f3b7c1170e9130cac653001c3c",
+      "commit": "fbf8379ce039dbe163bc8c268bb105398fbdcdd5",
       "dirty": false
     },
     "builds": [
