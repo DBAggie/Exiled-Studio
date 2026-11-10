@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "fbf8379ce039dbe163bc8c268bb105398fbdcdd5",
+      "commit": "cb689368db16532d882a64d47891162ed571e0e1",
       "dirty": false
     },
     "builds": [
@@ -443,8 +443,8 @@
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3315,
-      "unresolved/no-template": 45,
+      "resolved": 3324,
+      "unresolved/no-template": 36,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
@@ -465,8 +465,8 @@
       "implicit": {
         "ambiguous": 2,
         "excluded/not-selected-variant": 2,
-        "resolved": 500,
-        "unresolved/no-template": 15
+        "resolved": 509,
+        "unresolved/no-template": 6
       }
     },
     "with_shadowed_matches": 1
@@ -507,13 +507,13 @@
   },
   "rate": {
     "denominator": 3366,
-    "resolved": 3315,
-    "rate": 0.9848484848484849,
+    "resolved": 3324,
+    "rate": 0.9875222816399287,
     "excluded": 572,
     "excluded_share": 0.1452513966480447,
     "distinct": 1335,
-    "distinct_resolved": 1297,
-    "distinct_rate": 0.9715355805243445,
+    "distinct_resolved": 1304,
+    "distinct_rate": 0.9767790262172285,
     "distinct_with_mixed_outcomes": 1,
     "meets_rate": true
   },
@@ -900,7 +900,7 @@
       "data-gap/legacy-text": 48,
       "excluded/not-selected-variant": 2,
       "parser-gap/ambiguous": 5,
-      "parser-gap/client-string": 15,
+      "parser-gap/client-string": 6,
       "parser-gap/near-miss": 11,
       "parser-gap/only-shadowed": 1,
       "parser-gap/split-section": 4,
@@ -1532,55 +1532,6 @@
         "unique": 0,
         "detail": [
           "ClientStrings:BrequelGraftSkillString (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, +(17-19)% to Chaos Damage over Time Multiplier": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, +(17-19)% to Fire Damage over Time Multiplier": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, +(20-22)% to Chaos Damage over Time Multiplier": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, +31% to Critical Strike Multiplier for Spell Damage": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, 11% increased Cooldown Recovery Rate": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, 15% increased Flammability Curse Effect": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
-        ]
-      },
-      "While a Unique Enemy is in your Presence, Drops Scorched Ground while moving, lasting 5 seconds": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ClientStrings:InfluenceStatConditionPresenceUniqueMonster (the composed remainder is not resolved)"
         ]
       }
     },
@@ -3236,10 +3187,31 @@
     }
   },
   "colour_code_in_game_text": false,
+  "compositions": [
+    [
+      "InfluenceStatConditionPresenceUniqueMonster",
+      "local_influence_mod_requires_unique_monster_presence"
+    ],
+    [
+      "InfluenceStatConditionPresenceCelestialBoss",
+      "local_influence_mod_requires_celestial_boss_presence"
+    ]
+  ],
+  "compositions_missing": [],
+  "composition_rows": {
+    "local_influence_mod_requires_celestial_boss_presence": [
+      1362,
+      1362
+    ],
+    "local_influence_mod_requires_unique_monster_presence": [
+      1362,
+      1362
+    ]
+  },
   "gate": {
     "resolution": true,
     "unresolved_allowed": 67,
-    "unresolved": 51,
+    "unresolved": 42,
     "uncategorized": 0,
     "inputs_recorded": true,
     "met": true
@@ -3259,7 +3231,7 @@
       "ambiguous/several-backed": 5,
       "resolved/base-implicit": 18,
       "resolved/local-stat": 153,
-      "resolved/mods": 130,
+      "resolved/mods": 131,
       "resolved/spawn-tags": 20,
       "resolved/spawn-values": 5,
       "resolved/unset-fit+numbered-stat": 35,
@@ -5131,17 +5103,25 @@
         "detail": [
           "mods: local_display_socketed_gems_supported_by_level_x_increased_burning_damage=25"
         ]
+      },
+      "While a Unique Enemy is in your Presence, Drops Scorched Ground while moving, lasting 5 seconds": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mods: boots_implicit_ground_scorched_duration_ms=5000",
+          "mods: local_influence_mod_requires_unique_monster_presence=1"
+        ]
       }
     }
   },
   "mod_backed": {
-    "resolved": 3315,
-    "backed": 3129,
-    "share": 0.9438914027149321,
-    "template_resolved": 2940,
-    "template_backed": 2797,
-    "template_share": 0.9513605442176871,
-    "equal": 2796,
+    "resolved": 3324,
+    "backed": 3138,
+    "share": 0.944043321299639,
+    "template_resolved": 2948,
+    "template_backed": 2805,
+    "template_share": 0.9514925373134329,
+    "equal": 2805,
     "hybrid": 333,
     "not_backed": {
       "no-fitting-row": 6,

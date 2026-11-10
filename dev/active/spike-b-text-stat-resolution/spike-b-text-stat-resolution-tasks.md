@@ -123,8 +123,11 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Review with `code-architecture-reviewer`; apply findings
 - [x] Open PR (#27)
 
-## PR B5c: client-composed lines (eldritch)
-- [ ] Eldritch presence wrapper from game data (9 lines)
+## PR B5c: client-composed lines (eldritch) (PR #28)
+- [x] `loom-parser::resolve::compose` and `COMPOSITIONS`; tests (parser and corpus); wasm32 check
+- [x] Corpus run from clean `cb68936`, two runs byte-identical: 98.8%, 9 / 9 presence lines resolved and backed
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `cb68936`)
+- [x] Open PR
 
 ## PR B5x / B5g: graft skill lines
 - [ ] Extractor: `BrequelGrafts`, `BrequelGraftTypes`, `BrequelGraftGrantedSkillLevels`

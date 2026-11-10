@@ -31,6 +31,9 @@
 //!   filter's steps in `filter`; otherwise `ambiguous`, with the reason.
 //! - **`mod-backed` (B4a, reported, not gated):** every resolved non-unique
 //!   line is backed or not by a fitting `Mods` row (`mod_filter::backing`).
+//! - **Composed lines (B5c):** lines the client wraps in a `ClientStrings`
+//!   text (`categorize::COMPOSITIONS`) are read through the wrapper
+//!   (`Index::resolve_lines_composed`); the record names the wrapper.
 //! - **Categories (B4b):** every line that is not resolved gets one
 //!   category with its evidence (`categorize`); `special-case/author-note`
 //!   and `data-gap/legacy-text` lines are excluded (maintainer decisions
@@ -56,6 +59,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Hand, Scope};
 use loom_parser::pob_item::{self, BaseMatch, Item, LineKind, Modifier, Rarity, Section};
+use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
 };
@@ -494,6 +498,14 @@ pub struct Summary {
     /// Whether any stat description or `ClientStrings` text holds a PoB
     /// colour escape (the `color-code` rule needs `false`).
     pub colour_code_in_game_text: bool,
+    /// `ClientStrings` ids of the wrappers the resolver read through, with
+    /// their stats (B5c; `categorize::COMPOSITIONS`).
+    pub compositions: Vec<(String, String)>,
+    /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
+    pub compositions_missing: Vec<String>,
+    /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
+    /// the pairing holds when the two are equal and not zero.
+    pub composition_rows: BTreeMap<String, (usize, usize)>,
     /// The gate (plan, "Gate").
     pub gate: Gate,
     /// Items whose base was found only after removing the suffix of one of
@@ -623,6 +635,9 @@ pub struct LineRecord {
     /// The backing row's `Mods.Id`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backed_by: Option<String>,
+    /// The `ClientStrings` wrapper the line was read through (B5c).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub composed: Option<String>,
     /// An unresolved line that resolves together with this adjacent line of
     /// another section (index among the item's lines).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -725,6 +740,7 @@ struct Lines<'i, 'c> {
     records: Vec<(LineRecord, bool)>,
     run: Vec<(usize, &'i Modifier)>,
     ctx: Option<&'c Context<'c>>,
+    compositions: &'c [Composition],
 }
 
 impl<'i> Lines<'i, '_> {
@@ -738,8 +754,13 @@ impl<'i> Lines<'i, '_> {
             (Some(index), None) => {
                 let texts: Vec<&str> = run.iter().map(|(_, m)| m.text.as_str()).collect();
                 let mut at = 0;
-                for resolution in index.resolve_lines(&texts) {
-                    self.push_resolution(&run, at, &resolution, section(at));
+                for composed in index.resolve_lines_composed(&texts, self.compositions) {
+                    let resolution = &composed.resolution;
+                    let via = composed
+                        .composition
+                        .and_then(|n| self.compositions.get(n))
+                        .map(|c| c.id.clone());
+                    self.push_resolution(&run, at, resolution, section(at), via);
                     at += resolution.lines;
                 }
                 // `resolve_lines` covers every input line; if it ever does
@@ -785,9 +806,11 @@ impl<'i> Lines<'i, '_> {
         at: usize,
         resolution: &Resolution,
         section: Option<&'static str>,
+        composed: Option<String>,
     ) {
         let mut record = LineRecord {
             section,
+            composed,
             outcome: outcome_name(&resolution.outcome),
             text: resolution.line.clone(),
             joined: resolution.lines,
@@ -877,11 +900,13 @@ fn item_lines(
     index: Option<&Index<'_>>,
     scope_err: Option<&str>,
     ctx: Option<&Context<'_>>,
+    compositions: &[Composition],
 ) -> Vec<(LineRecord, bool)> {
     let mut lines = Lines {
         records: Vec::new(),
         run: Vec::new(),
         ctx,
+        compositions,
     };
     for (n, line) in item.lines.iter().enumerate() {
         match &line.kind {
@@ -1064,6 +1089,17 @@ pub fn run(
         essence_rows_unknown,
         bases_with_unknown_tags: bases.tags_unknown,
         colour_code_in_game_text: game.colour_code_in_game_text,
+        compositions: game
+            .compositions
+            .iter()
+            .map(|c| (c.id.clone(), c.stat.clone()))
+            .collect(),
+        compositions_missing: game.compositions_missing.clone(),
+        composition_rows: game
+            .compositions
+            .iter()
+            .map(|c| (c.stat.clone(), mods.eldritch_share(&c.stat)))
+            .collect(),
         ..Summary::default()
     };
     let mut report = Report::default();
@@ -1241,6 +1277,7 @@ fn count_item(
         index,
         found.as_ref().err().map(String::as_str),
         ctx.as_ref(),
+        &corpus.game.compositions,
     );
     let empty = BTreeSet::new();
     let chain = found

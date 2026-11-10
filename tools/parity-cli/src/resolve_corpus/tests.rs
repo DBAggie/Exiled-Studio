@@ -47,7 +47,8 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
         "graft.json" => file("graft_stat_descriptions.txt", &[]),
         "tables/ClientStrings.json" => r#"{"table": "ClientStrings", "columns": [
             {"name": "Id", "references": null}, {"name": "Text", "references": null}],
-            "rows": [["ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"]]}"#
+            "rows": [["ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"],
+            ["InfluenceStatConditionPresenceUniqueMonster", "While a Unique Enemy is in your Presence, {0}"]]}"#
             .to_owned(),
         _ => return Err(format!("{path}: not found")),
     };
@@ -308,6 +309,10 @@ fn run_should_hash_unknown_spec_and_prefix_keys() {
 fn run_should_never_write_item_names_or_custom_text() {
     let (s, r) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
     let json = serde_json::to_string(&s).unwrap() + &serde_json::to_string(&r).unwrap();
+    // Game ids recorded as inputs (the wrapper `...PresenceUniqueMonster`)
+    // are not item text; the probes below look for item text only.
+    assert!(json.contains("InfluenceStatConditionPresenceUniqueMonster"));
+    let json = json.replace("InfluenceStatConditionPresenceUniqueMonster", "");
     // A line no template matches may be the author's words: hashed in the
     // summary (the local report keeps it).
     let summary = serde_json::to_string(&s).unwrap();
@@ -578,4 +583,47 @@ fn rate_should_use_the_integer_form_of_98_percent() {
     s.rate = Rate::default();
     finish_rate(&mut s, &BTreeMap::new());
     assert!(!s.rate.meets_rate);
+}
+
+#[test]
+fn run_should_read_a_line_through_a_client_wrapper() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 1
+        While a Unique Enemy is in your Presence, +5 to maximum Life
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    assert_eq!(
+        s.compositions,
+        [(
+            "InfluenceStatConditionPresenceUniqueMonster".to_owned(),
+            "local_influence_mod_requires_unique_monster_presence".to_owned()
+        )]
+    );
+    // The fixture has no Pinnacle wrapper row: recorded, not skipped.
+    assert_eq!(
+        s.compositions_missing,
+        ["InfluenceStatConditionPresenceCelestialBoss"]
+    );
+    let line = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .find(|l| l.text.starts_with("While a Unique Enemy"))
+        .unwrap();
+    assert_eq!(line.outcome, "resolved");
+    assert_eq!(
+        line.composed.as_deref(),
+        Some("InfluenceStatConditionPresenceUniqueMonster")
+    );
+    assert_eq!(
+        line.detail,
+        [
+            "life=5",
+            "local_influence_mod_requires_unique_monster_presence=1"
+        ]
+    );
 }

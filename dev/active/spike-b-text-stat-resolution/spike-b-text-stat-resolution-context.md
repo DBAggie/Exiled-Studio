@@ -215,6 +215,14 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: ADR-015 wording (the exclusion is a rate rule; legacy lines stay quarantined in the product), the ACTION-PLAN gate bullet names the redefinition, the unadjusted rate, and the 572 excluded lines; ADR-007's history moved to its status line with the confirmation date 2026-11-09; a test that only the named categories are excluded; doc reflow.
 - **Assumption for review:** the area-3 graft lines need tables that are not extracted, so they split into an extractor PR and a resolver PR (the plan's "extractor PR first" rule).
 
+## PR B5c: eldritch presence lines (PR #28, open, branch `spike-b/b5c-eldritch-presence`, stacked on PR #27)
+- Maintainer, 2026-11-10, area 3: "write the code to solve this".
+- **Design:** the wrapper is client logic, so it lives in `loom-parser::resolve::compose` (core, wasm-safe): `Composition::new(id, ClientStrings text, stat, value)`; `Index::resolve_lines_composed` splits runs at composed lines, so multi-line matching is unchanged elsewhere. A composed reading needs the whole line to have no key and the remainder to resolve; otherwise the plain outcome stays (nothing dropped). The categorizer's `client-string` rule stays for what is left.
+- **Survey:** graft lines need `BrequelGrafts` (`SkillGem`), `BrequelGraftTypes` (`BaseItemType`), `BrequelGraftGrantedSkillLevels`: not extracted; split to an extractor PR (plan rule).
+- The scrub test's `Uniq` probe matched the wrapper id `...PresenceUniqueMonster` now recorded in the summary; the test removes that known game id before probing.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: compose only lines `resolve_lines` left as single `NoTemplate` (no split of multi-line templates, no double resolve); no duplicate wrapper stat; tests for an ambiguous remainder, a suffix wrapper, the multi-line case, the missing Pinnacle row; the run fails on a paired stat missing from `Stats`; `compositions_missing` and `composition_rows` (1,362 / 1,362 eldritch for both stats) in the summary; the scrub test asserts the exempted id is really written.
+- **Evidence** (run from clean `cb68936`, `local/b5c-rc3|rc4`, byte-identical): 3,324 / 3,366 = 98.8%, 42 unresolved; the 9 presence lines `equal`-backed; no other line changed against B5b.
+
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).
 - Decided 2026-11-10 (maintainer): author notes are excluded (`special-case/author-note`).
