@@ -14,8 +14,12 @@
 //! Tiers: `pob-test` (PoB's own `spec/TestBuilds/3.13` builds, read from
 //! the pinned checkout, never copied), `synthetic` (our own XML next to
 //! the manifest), `discrepancy` (a synthetic fixture that changes one
-//! input of its `pair`, for `oracle-compare`). The maintainer's corpus is
-//! not listed: it stays on the workstation (ADR-007).
+//! input of its `pair`, for `oracle-compare`), `community` (public
+//! community builds in `community/`, credited in `community/SOURCES.md`
+//! under ADR-007 Amendment 1; a creator can have one removed, so nothing
+//! may depend on a community fixture by name outside this manifest). The
+//! maintainer's corpus is not listed: it stays on the workstation
+//! (ADR-007).
 
 use std::path::{Path, PathBuf};
 
@@ -90,7 +94,7 @@ pub struct Manifest {
 pub struct Entry {
     /// Fixture id: the file name of `path`, unique.
     pub id: String,
-    /// `pob-test`, `synthetic`, or `discrepancy`.
+    /// `pob-test`, `synthetic`, `discrepancy`, or `community`.
     pub tier: Tier,
     /// Where `path` is relative to.
     pub source: Source,
@@ -124,6 +128,8 @@ pub enum Tier {
     Synthetic,
     /// Our own fixture that changes one input of its pair.
     Discrepancy,
+    /// A public community build in `community/` (ADR-007 Amendment 1).
+    Community,
 }
 
 /// Where a fixture's path is relative to.
@@ -235,6 +241,11 @@ impl Manifest {
                     "{at}: pob-test fixtures, and only they, come from pob"
                 ));
             }
+            if (entry.tier == Tier::Community) != entry.path.starts_with("community/") {
+                return Err(format!(
+                    "{at}: community fixtures, and only they, live in community/"
+                ));
+            }
         }
         Ok(manifest)
     }
@@ -306,6 +317,7 @@ mod tests {
         assert_eq!(tiers(Tier::PobTest), 5);
         assert!(tiers(Tier::Synthetic) >= 3);
         assert_eq!(tiers(Tier::Discrepancy), 1);
+        assert!(tiers(Tier::Community) >= 1);
         // Local fixtures resolve without an oracle (their hashes are checked
         // here, in every cargo test); PoB's are checked by oracle-run.
         let local = Manifest {
@@ -324,12 +336,16 @@ mod tests {
                 .iter()
                 .any(|r| r.expect == Expect::Fails(FailureClass::Import))
         );
-        // Every local XML fixture is listed.
-        let mut on_disk: Vec<String> = std::fs::read_dir(fixtures_dir())
-            .unwrap()
-            .filter_map(|e| e.ok()?.file_name().into_string().ok())
-            .filter(|n| n.ends_with(".xml"))
-            .collect();
+        // Every local XML fixture is listed (community builds included).
+        let xml_in = |dir: PathBuf| -> Vec<String> {
+            std::fs::read_dir(dir)
+                .unwrap()
+                .filter_map(|e| e.ok()?.file_name().into_string().ok())
+                .filter(|n| n.ends_with(".xml"))
+                .collect()
+        };
+        let mut on_disk = xml_in(fixtures_dir());
+        on_disk.extend(xml_in(fixtures_dir().join("community")));
         on_disk.sort();
         let mut listed: Vec<String> = resolved.iter().map(|r| r.id.clone()).collect();
         listed.sort();

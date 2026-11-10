@@ -11,7 +11,7 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [004](004-api-state-and-concurrency.md) | Application API, state, and concurrency | Accepted |
 | [005](005-build-and-data-compatibility.md) | Build formats and game-data source | Revised; Amendment 1 (Oodle via external tool) |
 | [006](006-parity-and-oracle.md) | Parity verification, oracle, divergence register | Revised |
-| [007](007-corpus-and-coverage.md) | Parity corpus and coverage | Revised |
+| [007](007-corpus-and-coverage.md) | Parity corpus and coverage | Revised; Amendment 1 (credited community builds, removal on request) |
 | [008](008-ui-and-accessibility.md) | UI, UX, and accessibility | Accepted |
 | [009](009-persistence-and-recovery.md) | Persistence, undo, and recovery | Accepted |
 | [010](010-updates-security-and-offline.md) | Updates, signing, addons, offline | Revised |

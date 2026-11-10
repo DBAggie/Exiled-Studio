@@ -88,6 +88,115 @@
       "expect": "ok",
       "pair": "minimal-level1.xml",
       "description": "minimal-level1.xml plus the custom modifier 10% increased Movement Speed. oracle-compare of its pair against it reports exactly /main_output/MovementSpeedMod and /main_output/EffectiveMovementSpeedMod (1 -> 1.1): unexpected without a register, expected with tools/oracle/fixtures/discrepancy-register.json."
+    },
+    {
+      "id": "rf-chieftain-league-start.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/rf-chieftain-league-start.xml",
+      "sha256": "e03e83c6fc34bfe37a35b90154b6787da6e79986ef45ad4a4854c81047158e11",
+      "expect": "ok",
+      "description": "Pohx (pohx.net), \"RF Chief League Start (Best)\"; credit, retrieval and terms in community/SOURCES.md. Covers: Righteous Fire self-burn damage over time; opens on the levelling spec (level 30 Marauder, 10 tree specs)."
+    },
+    {
+      "id": "rf-chieftain-life-stack.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/rf-chieftain-life-stack.xml",
+      "sha256": "8fe627327785d4999f118185d030fd011b5360d30770d36dd01d218e40a325ba",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "Pohx (pohx.net), \"RF Chief Life Stack\"; credit, retrieval and terms in community/SOURCES.md. Covers: Righteous Fire Chieftain at level 100: life stacking, regeneration, burning damage over time."
+    },
+    {
+      "id": "winter-orb-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/winter-orb-elementalist.xml",
+      "sha256": "3befee75af0864a3c67eb3368e25c5298d7390e0d44be55aec05e3bc69f11b59",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "legi (Maxroll), Winter Orb Elementalist League Starter; credit, retrieval and terms in community/SOURCES.md. Covers: Channelled cold spell, exposure; opens on a level 64 spec (11 specs)."
+    },
+    {
+      "id": "penance-brand-ignite-elementalist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/penance-brand-ignite-elementalist.xml",
+      "sha256": "48ff126f4f6408b9cabf86c51d4b1e058fbc9fa5a19ba69b006d5252868bd8ca",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "goratha (Maxroll), Penance Brand Ignite Elementalist; credit, retrieval and terms in community/SOURCES.md. Covers: Brands, ignite, burning ground."
+    },
+    {
+      "id": "boneshatter-juggernaut.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/boneshatter-juggernaut.xml",
+      "sha256": "74a4042b212e5b5064f963f88a022a2b470b1c1821d623bb00a7b7f465dcae41",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "zizaran (Maxroll), Boneshatter Juggernaut League Starter; credit, retrieval and terms in community/SOURCES.md. Covers: Melee attacks, endurance charges, self-damage."
+    },
+    {
+      "id": "kinetic-blast-of-clustering-necromancer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/kinetic-blast-of-clustering-necromancer.xml",
+      "sha256": "29745e99170905ea5a54a8f5cfeff2cc600a5d0293c54e066727ea73a475086f",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "legi (Maxroll), Kinetic Blast of Clustering Necromancer; credit, retrieval and terms in community/SOURCES.md. Covers: Transfigured gem (saved with variantId), wand projectiles, Mirage Archer."
+    },
+    {
+      "id": "elemental-hit-of-the-spectrum-deadeye.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/elemental-hit-of-the-spectrum-deadeye.xml",
+      "sha256": "454bcb2afd4b0b34dec072bb3c9f8c109f22151cb98af999144a8fab06722202",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "havoc (Maxroll), Elemental Hit of the Spectrum Deadeye; credit, retrieval and terms in community/SOURCES.md. Covers: Bow attacks, transfigured gem, Mirage Archer, culling."
+    },
+    {
+      "id": "poisonous-concoction-of-bouncing-pathfinder.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/poisonous-concoction-of-bouncing-pathfinder.xml",
+      "sha256": "8cead3c0a9115d2807bf8ec48b05d5575bde9c48e7623db66e09114e6201771e",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "havoc (Maxroll), Poisonous Concoction of Bouncing Pathfinder; credit, retrieval and terms in community/SOURCES.md. Covers: Flask-based skill, poison."
+    },
+    {
+      "id": "cyclone-shockwave-slayer.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/cyclone-shockwave-slayer.xml",
+      "sha256": "7b64c6c6733598d6d8f15237a77be3e7e5e0a4617802127d6499baff9f25cd7d",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "cptngarbage (Maxroll), Cyclone Shockwave Slayer; credit, retrieval and terms in community/SOURCES.md. Covers: Channelled melee with a triggered skill, impale, culling."
+    },
+    {
+      "id": "facebreaker-luminary.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/facebreaker-luminary.xml",
+      "sha256": "f10c76a7247bcd42af9e31c960a4199eb1b9d8f38b28fee828b1136e872f7d34",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "shayd (Maxroll), Facebreaker Luminary; credit, retrieval and terms in community/SOURCES.md. Covers: Scion Luminary ascendancy, unarmed Earthshatter slam, bleed."
+    },
+    {
+      "id": "arakaalis-raise-spider-occultist.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/arakaalis-raise-spider-occultist.xml",
+      "sha256": "f73eb8969b1b3113bd048e2c012d38a01c1afe1ce9452aecedbf1cae456b8e56",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "shayd (Maxroll), Arakaali's Raise Spider Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Minions granted by a unique (Raise Spiders), poison."
     }
   ]
 }

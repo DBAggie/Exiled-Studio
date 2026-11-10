@@ -42,3 +42,5 @@ Read `AGENTS.md`. Pull requests are small and single-purpose and carry their own
 
 ## License
 [MIT](LICENSE).
+
+The community builds in `tools/oracle/fixtures/community/` are test fixtures credited to their creators, not covered by this project's license; any creator can have their build removed (see [SOURCES.md](tools/oracle/fixtures/community/SOURCES.md)).
