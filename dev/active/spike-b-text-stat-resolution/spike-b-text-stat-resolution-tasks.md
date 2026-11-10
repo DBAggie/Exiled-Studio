@@ -89,6 +89,7 @@ Last Updated: 2026-11-10 (PR B4c)
 - [x] Corpus, round-trip (both games), render-check from clean `1cf7c3d`; summaries replaced
 - [x] Review with `code-architecture-reviewer`; apply findings
 - [x] Open PR (#24)
+- [x] Merge `main` after PR #23 (B4y) merged; evidence re-run on the combined code (88.0%)
 
 ## PR B4d: anoint equivalence (after B4y)
 - [ ] Rule in the filter; tests; corpus run; plan "Ambiguity" text
