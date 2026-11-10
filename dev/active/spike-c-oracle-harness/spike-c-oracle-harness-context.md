@@ -139,9 +139,41 @@ No blockers. Applied: S1 inflate input copied into an FFI buffer held until `inf
 ## code-architecture-reviewer on C3 (2026-11-10)
 Blocker 1 (report class `min()` let 19 hide 20; also unpaired) fixed with a two-step reduction and a three-case test. Should-fix applied: S2 met expected failures match across run dirs, both failing sides named; S3 incomplete output documents refused; S4 tolerance entries pin their values (validator and `covers`); S5 `input_differs` flag (not a failure: PoB fixtures differ by line endings); S6 fixtures collected after verification. Nits applied: report ids must be file names; `sha256:` entries match either side; README documents `null` = absent, the id-vs-hash naming rule, and 2^53. Not applied, recorded: fixture status strings instead of an enum; the output file's hash is not checked against the run report; a run-level `failed` report is still compared per fixture (each fixture carries its own class).
 
+## Community builds (maintainer decisions 2026-11-10, after PR #37 opened)
+The maintainer wants better, representative builds in the test set, from community staples:
+1. **Commit them, credited.** The maintainer considers public guide builds usable with credit to the source; they are committed in the repository (not only kept locally) so the community can say when a build is not representative. ADR-007 already allows "public community builds ... where their terms permit or the author consents", so no amendment is needed; the PR records each source's credit and terms (check the Maxroll, pohx.net, Mobalytics terms pages and note what they say next to the credit).
+2. **Pull whatever information is needed** (guide pages, PoB exports, gem and item notes, patch notes) to understand each build and choose representative cases. GGG's patch notes forums are listed in the handoff, "Local resources".
+3. **In the next PR** (C3b+C4). The maintainer agreed with the list below. The maintainer's 21 corpus builds stay local as before; some stay as unique cases (below).
+
+Found while researching (2026-11-10): the current PoE1 league is **3.29 Curse of the Allflame** (poe.ninja economy path `allflame`; Maxroll guides tagged 3.29, some updated to patch 3.29.3 as late as 2026-11-09). The oracle's PoB tag `v2.67.2` (2026-08-08) knows trees up to `3_29`, but a build updated for a later 3.29.x patch may use content PoB added after the tag: run each new build through `oracle-run` first and record any import or calculation failure instead of dropping the build. A secondhand poe.ninja snapshot (week 11, 124,390 characters level 80-100) has Winter Orb Occultist and Righteous Fire Chieftain tied as most played (4.4% each), then Winter Orb Elementalist, Animate Guardian Luminary, Raise Spectre Necromancer, Penance Brand Elementalist.
+
+**Agreed list** (source, what it covers):
+| Build | Source | Covers |
+|---|---|---|
+| RF Chieftain, "RF Chief League Start" (marked Best, updated 2026-07-21) and "RF Chief Life Stack" | pohx.net (Pohx; 3.29) | self-burn DoT, life stacking, regen |
+| Winter Orb Elementalist | maxroll.gg/poe/build-guides/winter-orb-elementalist-league-starter (PoB `maxroll.gg/poe/pob/g312000h`) | channelled spell, cold, exposure |
+| Penance Brand Ignite Elementalist | maxroll.gg/poe/build-guides/penance-brand-ignite-elementalist | brands, ignite |
+| Poison SRS Necromancer | maxroll.gg/poe/build-guides/poison-srs-necromancer-league-starter | minions, poison |
+| Arakaali's Raise Spider Occultist | maxroll.gg/poe/build-guides/arakaalis-raise-spider-occultist-league-starter | spiders, unique-granted skill |
+| Earthshatter Slayer | maxroll.gg/poe/build-guides/earthshatter-slayer-league-starter | slams, warcries |
+| Boneshatter Juggernaut | maxroll.gg/poe/build-guides/boneshatter-juggernaut-league-starter | attacks, endurance charges, self-damage |
+| Kinetic Blast of Clustering Necromancer | maxroll.gg/poe/build-guides/kinetic-blast-of-clustering-necromancer-league-starter | transfigured gem (probes the C3b nondeterminism) |
+| Lightning Arrow Deadeye or Elemental Hit of the Spectrum Deadeye | maxroll.gg/poe/build-guides/lightning-arrow-deadeye-league-starter, .../elemental-hit-of-the-spectrum-deadeye-league-starter | bow projectiles |
+| Poisonous Concoction of Bouncing Pathfinder | maxroll.gg/poe/build-guides/poisonous-concoction-of-bouncing-pathfinder-league-starter | flask skill |
+| Explosive Arrow Ballista Champion | maxroll.gg/poe/build-guides/explosive-arrow-ballista-champion-league-starter | totems, ballistae |
+| Ice Trap Trickster; Rolling Magma Mines Saboteur | maxroll.gg/poe/build-guides/ice-trap-trickster-league-starter, .../rolling-magma-mines-saboteur-league-starter | traps, mines |
+| Eviscerate Bleed Gladiator | maxroll.gg/poe/build-guides/eviscerate-bleed-gladiator-league-starter | bleed, block |
+| Cyclone Shockwave Slayer | maxroll.gg/poe/build-guides/cyclone-shockwave-slayer-league-starter | channelled melee, triggered skill |
+| Facebreaker Luminary | maxroll.gg/poe/build-guides/facebreaker-luminary-league-starter | Scion's Luminary ascendancy: does the pinned PoB handle it |
+
+**Keep from the maintainer's corpus** (local, by hash): the 3 nondeterministic builds `2c336bb9…`, `2fcbf03a…` (also the Glorious Vanity, 51.7 MB), `ed8da491…`; the Militant Faith builds; the build that names a timeless jewel only in text (`4d7d92ac…`).
+
+**Acquisition notes:** Maxroll guide pages link "Open in PoB" to `maxroll.gg/poe/pob/<id>` (find how that serves the PoB code; PoB exports are URL-safe base64 of zlib-compressed XML, decode to XML in a scratch script, never into the repo unreviewed). pohx.net's "Copy link" buttons are script-driven (a plain fetch saw no URLs; `pohx.net/builds` is 404); try the page's script/data, the linked Mobalytics guide (`mobalytics.gg/poe/builds/pohx-righteous-fire-chieftain`), or ask the maintainer to paste the codes. Mobalytics returns 403 to plain fetches; poe.ninja renders client-side (its old `api/data/0/getbuildoverview` is 404). Record per build: source URL, author, retrieval date, guide patch, PoB link, the decoded XML's SHA-256, and what it covers. Proposed layout: `tools/oracle/fixtures/community/` with the XML files, a `SOURCES.md` (credit, terms, link) and entries in `fixtures.json` (new tier `community`, `expect` from the first runs). Whether they join the CI `oracle` job: propose in the PR (they are public), maintainer confirms.
+
 ## Next steps (C3b+C4)
 Maintainer decision 2026-11-10 (after PR #37 opened): C3b and C4 are done in **one PR**, C3b first.
 1. Session start: `gh pr view` the C3 PR; record the merge (squash commit, main CI run).
 2. **C3b part: corpus nondeterminism.** Reproduce with `--runs 20` on `2c336bb9…`, `2fcbf03a…`, `ed8da491…` (`--anonymous` names; the builds are in the corpus folder). Find where PoB picks a transfigured gem variant (gem lookup by name in `v2.67.2:src/Classes/` / `Modules/`; candidates: name-to-gem maps built with `pairs`, `pairs` over table-keyed tables in `CalcSetup.lua` 1838/1843). If the adapter can make it deterministic without patching PoB (for example a shim that orders a lookup, named and recorded), do it and rerun the corpus; else record the affected fields per the plan's fallback (`BLOCKED` for those fields, maintainer decides).
-3. **C4 part, same PR:** CI `oracle` job (plan step 4); `divergence-check` as a CI step; cross-platform `oracle-compare` of the Windows and Linux runs (expect `input_differs` on PoB's fixtures).
-4. Still open: a real startup error through PoB (spec case 7).
+3. **Community builds, same PR** (section "Community builds" above): acquire the agreed list with credit, add them to the fixture manifest, run them 3 times, and use the transfigured-gem ones in the C3b investigation.
+4. **C4 part, same PR:** CI `oracle` job (plan step 4); `divergence-check` as a CI step; cross-platform `oracle-compare` of the Windows and Linux runs (expect `input_differs` on PoB's fixtures).
+5. Still open: a real startup error through PoB (spec case 7).
