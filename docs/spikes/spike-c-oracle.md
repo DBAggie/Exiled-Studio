@@ -82,11 +82,20 @@ The real-runtime tests (`#[ignore]`, fake adapters and the real adapter on PoB) 
 ## 7. CI: the `oracle` jobs become required
 The maintainer decided (2026-11-10) that the `oracle` job starts informational and becomes part of `ci-ok` after 10 consecutive green runs on both runners, counted from PR #38's runs on. Runs cancelled because a newer push superseded them are not results and do not break the count.
 
-<!-- C5-RUNS -->
+| # | Run | Commit | Event | `oracle` Linux / Windows | Cross-platform |
+|---|---|---|---|---|---|
+| 1 | [42888981382](https://github.com/DBAggie/Exiled-Studio/actions/runs/42888981382) | `ff59fcd` (PR #38) | dispatch | green / green | identical (20) |
+| 2 | [42890650849](https://github.com/DBAggie/Exiled-Studio/actions/runs/42890650849) | `4d9102b` (PR #38) | pull_request | green / green | identical (20) |
+| 3 | [42894655422](https://github.com/DBAggie/Exiled-Studio/actions/runs/42894655422) | `402001a` (PR #38) | pull_request | green / green | identical (30) |
+| 4 | [42896631829](https://github.com/DBAggie/Exiled-Studio/actions/runs/42896631829) | `17edb76` (PR #37) | pull_request | green / green | identical (30) |
+| 5 | [42898641516](https://github.com/DBAggie/Exiled-Studio/actions/runs/42898641516) | `aa940fd` (`main`) | push, runtime cache miss | green / green | identical (30) |
+| 6-10 | [42900481125](https://github.com/DBAggie/Exiled-Studio/actions/runs/42900481125), [42902380634](https://github.com/DBAggie/Exiled-Studio/actions/runs/42902380634), [42904023279](https://github.com/DBAggie/Exiled-Studio/actions/runs/42904023279), [42905960826](https://github.com/DBAggie/Exiled-Studio/actions/runs/42905960826), [42907423940](https://github.com/DBAggie/Exiled-Studio/actions/runs/42907423940) | `aa940fd` (`main`) | dispatch, one at a time | green / green | identical (30) |
+
+Not counted: 42890599670 and 42894633985 (cancelled by a newer push), the injected wrong-hash run 42889081685 (C4, a one-off branch), and the injected-difference run below. Runs 6 to 10 repeat one commit with a warm runtime cache, so they show that the run is stable, not that acquisition is; acquisition from scratch is shown by run 5 (and run 1, the job's first run).
 
 With the count met, this PR adds `oracle` and `oracle-compare` (`oracle cross-platform`) to `ci-ok`'s `needs`, and `oracle-compare` exit 20 (an unregistered cross-platform difference) now fails the job (ADR-006: unregistered differences fail a parity gate). Exit 19 (only registered differences) passes. The compare job also no longer runs when the run was cancelled (`!cancelled()` instead of `always()`), so a superseded run no longer shows a red compare job (`ci-ok` of a cancelled run is still red, as before). When an `oracle` leg fails, the compare job still runs and fails too (a run is missing).
 
-<!-- C5-EXIT20 -->
+Exit 20 failing the job is shown by a one-off run on the branch `spike-c/c5-inject-difference` (never merged), which adds 1 to `main_output.Life` of `minimal-level1.xml` in the Linux output before the comparison: run [42901853806](https://github.com/DBAggie/Exiled-Studio/actions/runs/42901853806), `oracle-compare` "unexpected (ORACLE_UNEXPECTED_DIFFERENCE) ... 28 identical, 1 unexpected, 1 expected failures", exit 20; `oracle cross-platform` failed and so did `ci-ok`, with every other job green.
 
 What a required oracle costs: the job runs on every PR, docs-only ones included (no path filter). On a runtime cache miss (new pins, or 7 days without use) it fetches PoB, LuaJIT and luautf8 from GitHub and builds them; the Linux leg needs `sudo sysctl` to allow user namespaces on `ubuntu-latest`, a floating image. A network failure or an image change can therefore block unrelated PRs. The maintainer accepted this with the 10-run rule; a red run caused by the runner (not the oracle's outcome) is cleared with a full `gh run rerun`.
 
