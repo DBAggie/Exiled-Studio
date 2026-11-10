@@ -40,7 +40,7 @@ Last Updated: 2026-11-10 (PR C2b: shims, adapter protocol 2)
 - [x] Corpus timeless-jewel builds show jewel data loaded; non-jewel computed data unchanged (6 C2a fixtures byte-identical)
 - [x] Linux (WSL 2 Ubuntu 24.04): unit and real-runtime tests, fixtures 3/3 under `unshare -rn`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; context file)
-- [ ] Open PR
+- [x] Open PR (#36)
 
 ## PR C3: fixtures, compare, divergence register
 - [ ] Fixture manifest (PoB test builds by blob hash, synthetic fixtures, discrepancy pair)
