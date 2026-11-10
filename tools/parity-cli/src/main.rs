@@ -5,9 +5,12 @@
 //!
 //! The PoB oracle harness (drives legacy `HeadlessWrapper.lua` on pinned
 //! LuaJIT at a pinned public PoB tag, ADR-006) is Spike C's
-//! (`dev/active/spike-c-oracle-harness/`): `oracle-verify` so far.
+//! (`dev/active/spike-c-oracle-harness/`): `oracle-verify`, `oracle-run`,
+//! `oracle-compare`, and `divergence-check` (the divergence register,
+//! `docs/parity/`).
 
 mod categorize;
+mod divergence;
 mod extract;
 mod grafts;
 mod item_tags;
@@ -15,6 +18,8 @@ mod load_statdesc;
 mod lookup;
 mod mod_filter;
 mod oracle;
+mod oracle_compare;
+mod oracle_fixtures;
 mod oracle_output;
 mod oracle_process;
 mod oracle_run;
@@ -59,19 +64,39 @@ const USAGE: &str = "usage:
       runtime's version and build flags. Offline. Print a JSON report.
       Exit 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure.
   loom-parity-cli oracle-run <manifest> <oracle-dir> --out <dir> [--runs <n>] [--timeout <s>]
-                  [--adapter <file>] <fixture>...
+                  [--adapter <file>] [--anonymous] <fixture>...
       Verify the oracle directory as oracle-verify does, then run each
-      fixture (a PoB build XML file, or every *.xml directly in a
-      directory) <n> times (default 3) through the adapter (default
-      <manifest dir>/adapter/oracle.lua) with a time limit of <s> seconds
-      per run (default 120). Offline. Write report.json, summary.md, the
-      canonical output per fixture (outputs/), and each run's raw document
-      (runs/) to <dir>, which must not exist. The checkout is checked
-      after each fixture; a change stops the run. Exit 0 when every
-      fixture is ok with identical runs and the checkout is still clean;
-      3 when, otherwise so, a fixture is partial (a shim it needed
-      failed); else the exit code of the smallest failing class (10 to
-      18).";
+      fixture (a PoB build XML file, every *.xml directly in a directory,
+      or the fixtures of a fixture manifest *.json such as
+      tools/oracle/fixtures/fixtures.json, checked against their pins and
+      with the outcome each must have) <n> times (default 3) through the
+      adapter (default <manifest dir>/adapter/oracle.lua) with a time
+      limit of <s> seconds per run (default 120). --anonymous names each
+      fixture by its SHA-256 instead of its file name (corpus builds).
+      Offline. Write report.json, summary.md, the canonical output per
+      fixture (outputs/), and each run's raw document (runs/) to <dir>,
+      which must not exist. The checkout is checked after each fixture; a
+      change stops the run. Exit 0 when every fixture is ok with identical
+      runs (or has the outcome its manifest names) and the checkout is
+      still clean; else the exit code of the smallest failing class (10
+      to 18); else 4 when a fixture did not have the outcome its manifest
+      names; else 3 when a fixture is partial (a shim it needed failed).
+  loom-parity-cli oracle-compare <left> <right> --out <dir> [--register <file>] [--fixture <id>]
+      Compare two canonical output documents (oracle-run's outputs/*.json;
+      the fixture id is --fixture, or the right file name without .json),
+      or every fixture of two oracle-run output directories (paired by
+      id), field by field: stage, partial, main_output, breakdowns. A
+      difference is expected when an accepted entry of the divergence
+      register (docs/parity/divergence-register.json) covers it, else
+      unexpected. Write report.json and summary.md to <dir>, which must
+      not exist. Exit 0 when identical, 19 (ORACLE_EXPECTED_DIFFERENCE)
+      when every difference is registered, 20
+      (ORACLE_UNEXPECTED_DIFFERENCE) otherwise, or the class of a fixture
+      that has no output on a side when that is smaller.
+  loom-parity-cli divergence-check <register>
+      Validate a divergence register (docs/parity/divergence-register.json)
+      against its format (docs/parity/README.md). Print a JSON report.
+      Exit 1 if it is invalid.";
 
 /// Runs `git` in this crate's source tree; `None` if it fails.
 fn git(args: &[&str]) -> Option<String> {
@@ -315,6 +340,7 @@ fn oracle_run_request(
         .join("adapter")
         .join("oracle.lua");
     let mut out = None;
+    let mut anonymous = false;
     let mut fixtures = Vec::new();
     let mut rest = rest;
     while let [first, tail @ ..] = rest {
@@ -338,6 +364,10 @@ fn oracle_run_request(
             }
             ("--adapter", [value, tail @ ..]) => {
                 adapter = value.into();
+                rest = tail;
+            }
+            ("--anonymous", tail) => {
+                anonymous = true;
                 rest = tail;
             }
             (flag, _) if flag.starts_with("--") => {
@@ -364,6 +394,7 @@ fn oracle_run_request(
             commit: git(&["rev-parse", "HEAD"]),
             dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
         },
+        anonymous,
     })
 }
 
@@ -384,10 +415,86 @@ fn oracle_run(manifest: &Path, oracle_dir: &Path, rest: &[String]) -> ExitCode {
         }
     };
     print!("{}", report.summary_markdown());
-    match report.class {
-        None if report.status == "partial" => ExitCode::from(oracle_run::EXIT_PARTIAL),
-        None => ExitCode::SUCCESS,
-        Some(class) => ExitCode::from(class.exit_code()),
+    ExitCode::from(report.exit_code())
+}
+
+/// Parses the arguments after `oracle-compare <left> <right>`.
+fn oracle_compare_request(
+    left: &Path,
+    right: &Path,
+    rest: &[String],
+) -> Result<oracle_compare::Request, String> {
+    let mut out = None;
+    let mut register = None;
+    let mut fixture = None;
+    let mut rest = rest;
+    while let [flag, value, tail @ ..] = rest {
+        match flag.as_str() {
+            "--out" => out = Some(value.into()),
+            "--register" => register = Some(value.into()),
+            "--fixture" => fixture = Some(value.clone()),
+            _ => return Err(format!("{flag}: unknown option")),
+        }
+        rest = tail;
+    }
+    if !rest.is_empty() {
+        return Err(format!("unexpected argument {}", rest.join(" ")));
+    }
+    Ok(oracle_compare::Request {
+        left: left.to_path_buf(),
+        right: right.to_path_buf(),
+        register,
+        fixture,
+        out: out.ok_or_else(|| "--out <dir> is required".to_owned())?,
+    })
+}
+
+fn oracle_compare(left: &Path, right: &Path, rest: &[String]) -> ExitCode {
+    let request = match oracle_compare_request(left, right, rest) {
+        Ok(request) => request,
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            eprintln!("{USAGE}");
+            return ExitCode::from(2);
+        }
+    };
+    match oracle_compare::run(&request) {
+        Ok(report) => {
+            print!("{}", report.summary_markdown());
+            ExitCode::from(report.class.map_or(0, oracle::FailureClass::exit_code))
+        }
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn divergence_check(register: &Path) -> ExitCode {
+    let report = match std::fs::read(register) {
+        Ok(bytes) => divergence::Register::check(&bytes),
+        Err(e) => divergence::CheckReport {
+            status: "invalid",
+            format: None,
+            entries: None,
+            accepted: None,
+            problems: vec![format!("{}: {e}", register.display())],
+        },
+    };
+    match serde_json::to_string_pretty(&report) {
+        Ok(json) => println!("{json}"),
+        Err(e) => {
+            eprintln!("loom-parity-cli: {e}");
+            return ExitCode::FAILURE;
+        }
+    }
+    for problem in &report.problems {
+        eprintln!("problem: {problem}");
+    }
+    if report.problems.is_empty() {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
     }
 }
 
@@ -402,6 +509,16 @@ fn main() -> ExitCode {
         && cmd == "oracle-run"
     {
         return oracle_run(Path::new(manifest), Path::new(oracle_dir), rest);
+    }
+    if let [cmd, left, right, rest @ ..] = args.as_slice()
+        && cmd == "oracle-compare"
+    {
+        return oracle_compare(Path::new(left), Path::new(right), rest);
+    }
+    if let [cmd, register] = args.as_slice()
+        && cmd == "divergence-check"
+    {
+        return divergence_check(Path::new(register));
     }
     let result = match args.as_slice() {
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),

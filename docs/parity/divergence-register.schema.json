@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/loom/docs/parity/divergence-register.schema.json",
+  "title": "Divergence register (ADR-006), format 1",
+  "description": "Accepted differences between the PoB oracle and the successor. Documents the contract; `loom-parity-cli divergence-check` enforces it, including the rules this schema cannot express: ids unique, at most one accepted entry per fixture and field, `oracle_value` and `successor_value` not equal for an `exact` entry, a valid JSON pointer under a compared root. See docs/parity/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "entries"],
+  "properties": {
+    "format": { "const": 1 },
+    "entries": { "type": "array", "items": { "$ref": "#/$defs/entry" } }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mechanic",
+        "fixture",
+        "field",
+        "comparison",
+        "oracle_value",
+        "successor_value",
+        "kind",
+        "evidence",
+        "test",
+        "added",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "description": "DIV- and four digits; unique, never reused.",
+          "type": "string",
+          "pattern": "^DIV-[0-9]{4}$"
+        },
+        "mechanic": {
+          "description": "The game mechanic the difference is about.",
+          "type": "string",
+          "minLength": 1
+        },
+        "fixture": {
+          "description": "A fixture id (its file name) or sha256:<hex> of its bytes.",
+          "type": "string",
+          "pattern": "^(sha256:[0-9a-f]{64}|[^/\\\\]+)$"
+        },
+        "field": {
+          "description": "JSON pointer (RFC 6901) into the output document under a compared root.",
+          "type": "string",
+          "pattern": "^/(stage|partial|main_output|breakdowns)(/|$)"
+        },
+        "comparison": {
+          "description": "exact: both values must be the registered ones. abs / rel: numbers within the tolerance (|l - r| <= t, or <= t * max(|l|, |r|)).",
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": { "type": { "const": "exact" } }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "tolerance"],
+              "properties": {
+                "type": { "enum": ["abs", "rel"] },
+                "tolerance": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            }
+          ]
+        },
+        "oracle_value": {
+          "description": "The oracle's (left) value; null when the field is absent there."
+        },
+        "successor_value": {
+          "description": "The successor's (right) value; null when the field is absent there."
+        },
+        "kind": {
+          "description": "game-truth: the game behaves as the successor computes (game evidence required, ADR-001). pob-bug: a PoB defect. data-version: game data differs. harness: caused by the harness.",
+          "enum": ["game-truth", "pob-bug", "data-version", "harness"]
+        },
+        "evidence": {
+          "description": "Links or citations.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "test": {
+          "description": "The test that pins the difference.",
+          "type": "string",
+          "minLength": 1
+        },
+        "added": {
+          "description": "Date added.",
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$"
+        },
+        "status": {
+          "description": "accepted entries cover differences; retired ones are kept for history.",
+          "enum": ["accepted", "retired"]
+        }
+      }
+    }
+  }
+}

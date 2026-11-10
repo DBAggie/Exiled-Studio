@@ -27,7 +27,7 @@ tools/
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
 ui/                   React + TypeScript + Vite (pnpm)
-docs/                 ADRs, plans, handoff, spikes
+docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
 
 ### Crate boundaries
@@ -97,11 +97,23 @@ cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.js
 # Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 2, with the shims in
 # shims.lua: Inflate through zlib, io.open write guard) on the pinned runtime, 3 times each (offline;
 # verifies first; checks the checkout after each fixture). Writes report.json, summary.md, outputs/,
-# runs/ to <dir> (must not exist); exits 3 if a fixture is partial, else with the smallest failing
-# class (10-18). The public and synthetic fixtures:
-cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> local/oracle/pob/spec/TestBuilds/3.13 tools/oracle/fixtures/minimal-level1.xml tools/oracle/fixtures/timeless-militant-faith.xml
-# Fake adapters, the real adapter on the synthetic fixtures (and a partial result without zlib), and the
-# Lua tests of json.lua and shims.lua, all on the real runtime (ignored in plain `cargo test`; Windows
+# runs/ to <dir> (must not exist); exits with the smallest failing class (10-18), else 4 if a fixture
+# did not have the outcome its fixture manifest names, else 3 if a fixture is partial. The public
+# fixtures from their manifest (PoB's 3.13 builds pinned by git blob, ours by SHA-256, each with its
+# expected outcome; exit 0 when all are met):
+cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> tools/oracle/fixtures/fixtures.json
+# The maintainer's corpus (local only, ADR-007): --anonymous names builds by SHA-256, so the report
+# holds no file names; commit only scrubbed summaries (docs/spikes/spike-c/):
+cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> --anonymous "<builds-dir>"
+# Compare two outputs (oracle-run's outputs/<id>.json) or two oracle-run directories field by field,
+# classified with the divergence register (docs/parity/README.md); exits 0 identical, 19 only
+# registered differences, 20 an unregistered one. The intentional discrepancy pair:
+cargo run --release -p loom-parity-cli -- oracle-compare <dir>/outputs/minimal-level1.xml.json <dir>/outputs/discrepancy-movement-speed.xml.json --out <dir2> [--register tools/oracle/fixtures/discrepancy-register.json]
+# Validate the divergence register (also checked by cargo test); exit 1 if invalid:
+cargo run --release -p loom-parity-cli -- divergence-check docs/parity/divergence-register.json
+# Fake adapters, the real adapter on the synthetic fixtures (a partial result without zlib, the
+# discrepancy pair through oracle-compare), and the Lua tests of json.lua and shims.lua, all on the
+# real runtime (ignored in plain `cargo test`; Windows
 # paths handed to LuaJIT must be ASCII). LOOM_ORACLE_DIR must be absolute (cargo test runs in the crate):
 LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 

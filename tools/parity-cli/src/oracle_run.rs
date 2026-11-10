@@ -28,6 +28,13 @@
 //! The checkout is checked after each fixture (including ignored files,
 //! so a `.bin` cache the write guard missed is caught); a dirty checkout
 //! stops the run, since later fixtures would run on changed inputs.
+//!
+//! Fixtures from a fixture manifest (`tools/oracle/fixtures/fixtures.json`,
+//! [`crate::oracle_fixtures`]) carry the outcome they must have. A fixture
+//! that meets it does not count against the report, even when that
+//! outcome is a failure class (`malformed.xml` must fail to import); one
+//! that does not meets it fails the report with its class, or with status
+//! `unmet` (exit 4) when it has none (an expected failure that ran `ok`).
 
 use std::collections::BTreeMap;
 use std::ffi::OsString;
@@ -37,6 +44,7 @@ use std::time::Duration;
 use serde::Serialize;
 
 use crate::oracle::{self, Adapter, FailureClass};
+use crate::oracle_fixtures::{self, Expect};
 use crate::oracle_output::{self, Probe, Stage};
 use crate::oracle_process::{self, Finished};
 use crate::oracle_verify::{self, Check};
@@ -49,6 +57,10 @@ const NETWORK_MODULES: &[&str] = &["lcurl", "socket", "ssl", "http"];
 /// `partial`: distinct from success, from file (1) and usage (2) errors,
 /// and from the failure classes (10 to 20).
 pub const EXIT_PARTIAL: u8 = 3;
+
+/// Exit code of `oracle-run` when nothing failed with a class but a
+/// fixture did not have the outcome its fixture manifest names.
+pub const EXIT_UNMET: u8 = 4;
 
 /// How many characters of a failed run's standard output and error the
 /// report keeps.
@@ -63,6 +75,8 @@ pub struct Fixture {
     pub path: PathBuf,
     /// SHA-256 of its bytes.
     pub sha256: String,
+    /// The outcome it must have (fixtures from a fixture manifest).
+    pub expect: Option<Expect>,
 }
 
 /// The outcome of one run: what repeated runs must reproduce.
@@ -143,6 +157,13 @@ pub struct FixtureReport {
     pub status: &'static str,
     /// Failure class; `ORACLE_NONDETERMINISM` when runs disagree.
     pub class: Option<FailureClass>,
+    /// The outcome the fixture manifest names (`ok`, `partial`, or a
+    /// class).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expect: Option<&'static str>,
+    /// Whether `status` and `class` meet `expect`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub met: Option<bool>,
     /// Agreement of the runs.
     pub determinism: Determinism,
     /// The first run's outcome.
@@ -439,6 +460,8 @@ pub fn run_fixture(
             sha256: fixture.sha256.clone(),
             status,
             class,
+            expect: fixture.expect.map(Expect::name),
+            met: fixture.expect.map(|e| e.met(status, class)),
             determinism: Determinism { runs, identical },
             outcome,
             probe,
@@ -605,12 +628,15 @@ pub struct Tool {
 pub struct Report {
     /// Report format; 1.
     pub format: u32,
-    /// `failed` when there is a class; else `partial` when a fixture is
-    /// `partial` (a shim it needed failed: complete runs, incomplete
-    /// result; exit 3); else `ok`.
+    /// `failed` when there is a class; else `unmet` when a fixture did
+    /// not have the outcome its fixture manifest names (exit 4); else
+    /// `partial` when a fixture is `partial` without being expected to be
+    /// (a shim it needed failed: complete runs, incomplete result; exit
+    /// 3); else `ok`.
     pub status: &'static str,
-    /// The smallest failing class over the verification, the fixtures, and
-    /// the checks after the runs.
+    /// The smallest failing class over the verification, the fixtures
+    /// (except those that met their expectation), and the checks after the
+    /// runs.
     pub class: Option<FailureClass>,
     /// Platform key.
     pub platform: String,
@@ -653,22 +679,40 @@ pub fn adapter_arguments(adapter: &Adapter) -> Vec<String> {
 impl Report {
     /// The overall class and status from the parts.
     pub fn finish(mut self) -> Self {
+        let counts = |f: &&FixtureReport| f.met != Some(true);
         let class = self
             .oracle
             .class
             .into_iter()
-            .chain(self.fixtures.iter().filter_map(|f| f.class))
+            .chain(self.fixtures.iter().filter(counts).filter_map(|f| f.class))
             .chain(self.after.iter().filter(|c| !c.ok).map(|c| c.class))
             .min();
         self.class = class;
         self.status = if class.is_some() {
             "failed"
-        } else if self.fixtures.iter().any(|f| f.status == "partial") {
+        } else if self.fixtures.iter().any(|f| f.met == Some(false)) {
+            "unmet"
+        } else if self
+            .fixtures
+            .iter()
+            .filter(counts)
+            .any(|f| f.status == "partial")
+        {
             "partial"
         } else {
             "ok"
         };
         self
+    }
+
+    /// The process exit code for this report.
+    pub fn exit_code(&self) -> u8 {
+        match (self.class, self.status) {
+            (Some(class), _) => class.exit_code(),
+            (None, "unmet") => EXIT_UNMET,
+            (None, "partial") => EXIT_PARTIAL,
+            _ => 0,
+        }
     }
 
     /// A short Markdown summary.
@@ -693,8 +737,8 @@ impl Report {
             ));
         }
         text.push_str(
-            "| Fixture | Status | Class | Identical runs | Inflate calls (bytes out) | Writes refused | Output SHA-256 |\n\
-             |---|---|---|---|---|---|---|\n",
+            "| Fixture | Status | Class | Expected | Identical runs | Inflate calls (bytes out) | Writes refused | Output SHA-256 |\n\
+             |---|---|---|---|---|---|---|---|\n",
         );
         for f in &self.fixtures {
             let (inflate, refused) = f.probe.as_ref().map_or_else(
@@ -711,8 +755,13 @@ impl Report {
                     )
                 },
             );
+            let expected = match (f.expect, f.met) {
+                (Some(e), Some(true)) => format!("{e} (met)"),
+                (Some(e), _) => format!("{e} (**not met**)"),
+                _ => "-".to_owned(),
+            };
             text.push_str(&format!(
-                "| {} | {} | {} | {}/{} | {inflate} | {refused} | {} |\n",
+                "| {} | {} | {} | {expected} | {}/{} | {inflate} | {refused} | {} |\n",
                 f.id.replace('|', "\\|"),
                 f.status,
                 f.class.map_or("-", FailureClass::name),
@@ -741,13 +790,38 @@ impl Report {
     }
 }
 
-/// Fixtures from `paths`: each file as given, and the `*.xml` files
-/// directly inside each directory, sorted by name. Ids (file names) must
-/// be unique.
-pub fn collect_fixtures(paths: &[PathBuf]) -> Result<Vec<Fixture>, String> {
+/// Fixtures from `paths`: each `*.json` file as a fixture manifest (its
+/// fixtures, checked against their pins; PoB's under `oracle_dir`), each
+/// other file as given, and the `*.xml` files directly inside each
+/// directory, sorted by name. Ids (file names) must be unique. With
+/// `anonymous`, every id is the fixture's SHA-256 instead (for corpus
+/// builds, whose file names are personal).
+pub fn collect_fixtures(
+    paths: &[PathBuf],
+    oracle_dir: &Path,
+    anonymous: bool,
+) -> Result<Vec<Fixture>, String> {
+    let mut fixtures: Vec<Fixture> = Vec::new();
     let mut files = Vec::new();
     for path in paths {
-        if path.is_dir() {
+        let is_manifest = path.is_file()
+            && path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("json"));
+        if is_manifest {
+            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let manifest = oracle_fixtures::Manifest::parse(&bytes)
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            let local = path.parent().unwrap_or(Path::new("."));
+            for resolved in manifest.resolve(local, oracle_dir, oracle_fixtures::git_blob)? {
+                fixtures.push(Fixture {
+                    id: resolved.id,
+                    path: resolved.path,
+                    sha256: resolved.sha256,
+                    expect: Some(resolved.expect),
+                });
+            }
+        } else if path.is_dir() {
             let mut inside: Vec<PathBuf> = std::fs::read_dir(path)
                 .map_err(|e| format!("{}: {e}", path.display()))?
                 .filter_map(|entry| entry.ok().map(|e| e.path()))
@@ -761,21 +835,32 @@ pub fn collect_fixtures(paths: &[PathBuf]) -> Result<Vec<Fixture>, String> {
             files.push(path.clone());
         }
     }
-    let mut fixtures: Vec<Fixture> = Vec::new();
     for path in files {
         let id = path
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .ok_or_else(|| format!("{}: no file name", path.display()))?;
-        if fixtures.iter().any(|f| f.id == id) {
-            return Err(format!("two fixtures are named {id}"));
-        }
         let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         fixtures.push(Fixture {
             id,
             sha256: oracle::sha256_hex(&bytes),
             path,
+            expect: None,
         });
+    }
+    if anonymous {
+        for fixture in &mut fixtures {
+            fixture.id.clone_from(&fixture.sha256);
+        }
+    }
+    for (i, fixture) in fixtures.iter().enumerate() {
+        if fixtures[..i].iter().any(|f| f.id == fixture.id) {
+            return Err(if anonymous {
+                format!("two fixtures have the same bytes ({})", fixture.id)
+            } else {
+                format!("two fixtures are named {}", fixture.id)
+            });
+        }
     }
     if fixtures.is_empty() {
         return Err("no fixtures".to_owned());
@@ -876,6 +961,8 @@ pub struct Request {
     pub options: Options,
     /// This tool's commit and dirty flag.
     pub tool: Tool,
+    /// Name fixtures by their SHA-256 instead of their file name.
+    pub anonymous: bool,
 }
 
 /// Runs `oracle-verify`, then every fixture, then the clean-checkout
@@ -891,7 +978,7 @@ pub fn run(request: &Request) -> Result<Report, String> {
     if request.out.exists() {
         return Err(format!("{}: already exists", request.out.display()));
     }
-    let fixtures = collect_fixtures(&request.fixtures)?;
+    let fixtures = collect_fixtures(&request.fixtures, &request.oracle_dir, request.anonymous)?;
     let adapter_files = adapter_files(&request.adapter)?;
     let manifest_bytes =
         std::fs::read(&request.manifest).map_err(|e| format!("manifest file: {}", e.kind()));

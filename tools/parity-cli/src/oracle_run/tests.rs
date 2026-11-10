@@ -161,6 +161,7 @@ fn fixture() -> Fixture {
         id: "build.xml".to_owned(),
         path: PathBuf::from("build.xml"),
         sha256: "0".repeat(64),
+        expect: None,
     }
 }
 
@@ -517,10 +518,106 @@ fn collect_fixtures_should_read_xml_files_of_a_directory_in_order() {
     std::fs::write(temp.0.join("b build.xml"), "<b/>").unwrap();
     std::fs::write(temp.0.join("Ä build.xml"), "<a/>").unwrap();
     std::fs::write(temp.0.join("notes.txt"), "x").unwrap();
-    let fixtures = collect_fixtures(std::slice::from_ref(&temp.0)).unwrap();
+    let fixtures = collect_fixtures(std::slice::from_ref(&temp.0), &temp.0, false).unwrap();
     let ids: Vec<&str> = fixtures.iter().map(|f| f.id.as_str()).collect();
     assert_eq!(ids, ["b build.xml", "Ä build.xml"]);
     assert_eq!(fixtures[0].sha256, oracle::sha256_hex(b"<b/>"));
+    assert!(fixtures.iter().all(|f| f.expect.is_none()));
+    // Anonymous: ids are content hashes, so no file name is reported.
+    let fixtures = collect_fixtures(std::slice::from_ref(&temp.0), &temp.0, true).unwrap();
+    assert_eq!(fixtures[0].id, oracle::sha256_hex(b"<b/>"));
+    assert_eq!(fixtures[1].id, oracle::sha256_hex(b"<a/>"));
+}
+
+#[test]
+fn collect_fixtures_should_read_a_fixture_manifest() {
+    let temp = Temp::new("collect-manifest");
+    std::fs::write(temp.0.join("a.xml"), "<a/>").unwrap();
+    let manifest = json!({"format": 1, "fixtures": [{
+        "id": "a.xml", "tier": "synthetic", "source": "local", "path": "a.xml",
+        "sha256": oracle::sha256_hex(b"<a/>"), "expect": "ORACLE_IMPORT",
+        "description": "test"
+    }]});
+    let path = temp.0.join("fixtures.json");
+    std::fs::write(&path, manifest.to_string()).unwrap();
+    let fixtures = collect_fixtures(std::slice::from_ref(&path), &temp.0, false).unwrap();
+    assert_eq!(fixtures[0].id, "a.xml");
+    assert_eq!(
+        fixtures[0].expect,
+        Some(Expect::Fails(FailureClass::Import))
+    );
+    std::fs::write(temp.0.join("a.xml"), "<b/>").unwrap();
+    let err = collect_fixtures(&[path], &temp.0, false).unwrap_err();
+    assert!(err.contains("differs from the manifest"), "{err}");
+}
+
+#[test]
+fn finish_should_not_count_fixtures_that_met_their_expectation() {
+    let temp = Temp::new("finish-expect");
+    let request = request(&temp, temp.0.join("no-oracle"));
+    let mut report = run(&request).unwrap();
+    report.oracle.class = None;
+    let scripted = |name: &str, step: Step, expect: Option<Expect>| {
+        let temp = Temp::new(name);
+        let scrub = Scrub::new(&[]);
+        let fixture = Fixture {
+            expect,
+            ..fixture()
+        };
+        let launcher = Scripted::same(step);
+        run_fixture(
+            &fixture,
+            2,
+            &temp.0.join("runs"),
+            &adapter(),
+            &launcher,
+            &scrub,
+        )
+        .unwrap()
+        .report
+    };
+    let import = Some(Expect::Fails(FailureClass::Import));
+    let failed_import = failed_document("import", "pob: bad xml");
+    // An expected failure is met: the report is ok, exit 0.
+    report.fixtures = vec![
+        scripted(
+            "expect-ok",
+            Step::Write(done_document(), 0),
+            Some(Expect::Ok),
+        ),
+        scripted(
+            "expect-import",
+            Step::Write(failed_import.clone(), 1),
+            import,
+        ),
+    ];
+    assert_eq!(report.fixtures[1].met, Some(true));
+    let report = report.finish();
+    assert_eq!(
+        (report.status, report.class, report.exit_code()),
+        ("ok", None, 0)
+    );
+    // An expected failure that ran ok is unmet: exit 4.
+    let mut report = report;
+    report.fixtures = vec![scripted("unmet", Step::Write(done_document(), 0), import)];
+    let report = report.finish();
+    assert_eq!((report.status, report.class), ("unmet", None));
+    assert_eq!(report.exit_code(), EXIT_UNMET);
+    assert!(
+        report
+            .summary_markdown()
+            .contains("ORACLE_IMPORT (**not met**)")
+    );
+    // A fixture expected ok that fails fails the report with its class.
+    let mut report = report;
+    report.fixtures = vec![scripted(
+        "fails",
+        Step::Write(failed_import, 1),
+        Some(Expect::Ok),
+    )];
+    let report = report.finish();
+    assert_eq!(report.class, Some(FailureClass::Import));
+    assert_eq!(report.exit_code(), 15);
 }
 
 #[test]
@@ -530,10 +627,13 @@ fn collect_fixtures_should_reject_duplicate_names_and_empty_input() {
     std::fs::create_dir_all(temp.0.join("b")).unwrap();
     std::fs::write(temp.0.join("a/x.xml"), "<a/>").unwrap();
     std::fs::write(temp.0.join("b/x.xml"), "<b/>").unwrap();
-    let err = collect_fixtures(&[temp.0.join("a"), temp.0.join("b")]).unwrap_err();
-    assert!(err.contains("two fixtures"), "{err}");
+    let err = collect_fixtures(&[temp.0.join("a"), temp.0.join("b")], &temp.0, false).unwrap_err();
+    assert!(err.contains("two fixtures are named"), "{err}");
+    std::fs::write(temp.0.join("b/x.xml"), "<a/>").unwrap();
+    let err = collect_fixtures(&[temp.0.join("a"), temp.0.join("b")], &temp.0, true).unwrap_err();
+    assert!(err.contains("same bytes"), "{err}");
     std::fs::create_dir_all(temp.0.join("empty")).unwrap();
-    assert!(collect_fixtures(&[temp.0.join("empty")]).is_err());
+    assert!(collect_fixtures(&[temp.0.join("empty")], &temp.0, false).is_err());
 }
 
 #[test]
@@ -564,6 +664,7 @@ fn request(temp: &Temp, oracle_dir: PathBuf) -> Request {
             commit: None,
             dirty: None,
         },
+        anonymous: false,
     }
 }
 
@@ -747,6 +848,7 @@ fn adapters_should_get_their_class_on_the_real_runtime() {
                 commit: None,
                 dirty: None,
             },
+            anonymous: false,
         };
         let report = run(&request).unwrap();
         assert_eq!(report.oracle.class, None, "{name}: oracle not verified");
@@ -811,6 +913,7 @@ fn real_adapter_should_be_partial_when_zlib_does_not_load() {
             commit: None,
             dirty: None,
         },
+        anonymous: false,
     };
     let report = run(&request).unwrap();
     assert_eq!(report.oracle.class, None, "oracle not verified");
@@ -888,4 +991,66 @@ fn json_writer_should_pass_its_lua_tests() {
         finished.stderr
     );
     assert!(finished.stdout.starts_with("ok "), "{}", finished.stdout);
+}
+
+/// The intentional discrepancy on the real runtime: `oracle-compare` of
+/// the pair's real outputs reports exactly the two movement-speed fields,
+/// unexpected without a register and expected with the test register.
+#[test]
+#[ignore = "needs an acquired oracle in LOOM_ORACLE_DIR"]
+fn discrepancy_pair_should_differ_in_exactly_the_registered_fields() {
+    use crate::oracle_compare;
+    let temp = Temp::new("discrepancy-pair");
+    let request = Request {
+        manifest: repo("oracle/manifest.json"),
+        oracle_dir: oracle_dir(),
+        adapter: repo("oracle/adapter/oracle.lua"),
+        fixtures: vec![
+            repo("oracle/fixtures/minimal-level1.xml"),
+            repo("oracle/fixtures/discrepancy-movement-speed.xml"),
+        ],
+        out: temp.0.join("out"),
+        options: Options {
+            runs: 2,
+            timeout: Duration::from_secs(120),
+        },
+        tool: Tool {
+            commit: None,
+            dirty: None,
+        },
+        anonymous: false,
+    };
+    let report = run(&request).unwrap();
+    assert_eq!((report.status, report.class), ("ok", None), "{report:?}");
+    let outputs = temp.0.join("out/outputs");
+    let compare = |register: Option<PathBuf>, out: &str| {
+        oracle_compare::compare(&oracle_compare::Request {
+            left: outputs.join("minimal-level1.xml.json"),
+            right: outputs.join("discrepancy-movement-speed.xml.json"),
+            register,
+            fixture: None,
+            out: temp.0.join(out),
+        })
+        .unwrap()
+    };
+    let unregistered = compare(None, "compare-1");
+    assert_eq!(unregistered.class, Some(FailureClass::UnexpectedDifference));
+    let fields: Vec<&str> = unregistered.fixtures[0]
+        .differences
+        .iter()
+        .map(|d| d.field.as_str())
+        .collect();
+    assert_eq!(
+        fields,
+        [
+            "/main_output/EffectiveMovementSpeedMod",
+            "/main_output/MovementSpeedMod"
+        ]
+    );
+    let registered = compare(
+        Some(repo("oracle/fixtures/discrepancy-register.json")),
+        "compare-2",
+    );
+    assert_eq!(registered.class, Some(FailureClass::ExpectedDifference));
+    assert!(registered.unused_entries.is_empty());
 }

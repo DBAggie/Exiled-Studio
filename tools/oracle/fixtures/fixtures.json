@@ -1,0 +1,93 @@
+{
+  "format": 1,
+  "fixtures": [
+    {
+      "id": "Dual Savior.xml",
+      "tier": "pob-test",
+      "source": "pob",
+      "path": "spec/TestBuilds/3.13/Dual Savior.xml",
+      "blob": "3f79ed55787095cfa3d3ebd0658b88a943a1d9e1",
+      "expect": "ok",
+      "tags": ["old-tree"],
+      "description": "PoB's own 3.13 test build, run from the pinned checkout (not copied). PoB converts its tree on load."
+    },
+    {
+      "id": "Dual Wield Cospris CoC.xml",
+      "tier": "pob-test",
+      "source": "pob",
+      "path": "spec/TestBuilds/3.13/Dual Wield Cospris CoC.xml",
+      "blob": "0304b23e24df4e81b04d78b8a1f8b3389b0947d0",
+      "expect": "ok",
+      "tags": ["old-tree"],
+      "description": "PoB's own 3.13 test build, run from the pinned checkout (not copied). PoB converts its tree on load."
+    },
+    {
+      "id": "Generals Perforate Zerker.xml",
+      "tier": "pob-test",
+      "source": "pob",
+      "path": "spec/TestBuilds/3.13/Generals Perforate Zerker.xml",
+      "blob": "15b707a9a45c1e54ebd9b8acfa7dc4ec138586c7",
+      "expect": "ok",
+      "tags": ["old-tree"],
+      "description": "PoB's own 3.13 test build, run from the pinned checkout (not copied). PoB converts its tree on load."
+    },
+    {
+      "id": "Mirage Archer Toxic Rain.xml",
+      "tier": "pob-test",
+      "source": "pob",
+      "path": "spec/TestBuilds/3.13/Mirage Archer Toxic Rain.xml",
+      "blob": "56327275418585142fe815d522606a74b7a0e80d",
+      "expect": "ok",
+      "tags": ["old-tree"],
+      "description": "PoB's own 3.13 test build, run from the pinned checkout (not copied). PoB converts its tree on load."
+    },
+    {
+      "id": "OccVortex.xml",
+      "tier": "pob-test",
+      "source": "pob",
+      "path": "spec/TestBuilds/3.13/OccVortex.xml",
+      "blob": "2e6df661d8797d26c7ada2fe1ccbca55a49ff20f",
+      "expect": "ok",
+      "tags": ["old-tree"],
+      "description": "PoB's own 3.13 test build, run from the pinned checkout (not copied). PoB converts its tree on load."
+    },
+    {
+      "id": "minimal-level1.xml",
+      "tier": "synthetic",
+      "source": "local",
+      "path": "minimal-level1.xml",
+      "sha256": "8dc3a76ac145ad633ba0d60d92733554888fcef1654fdc1db24e3c381fa48db4",
+      "expect": "ok",
+      "description": "A level 1 Scion with nothing allocated or equipped; the smallest complete build."
+    },
+    {
+      "id": "malformed.xml",
+      "tier": "synthetic",
+      "source": "local",
+      "path": "malformed.xml",
+      "sha256": "b4cfc0c03d6d6160d2b1acfc939a0f9ea0c0d4eef8e314fcb76b0beaa1fc2657",
+      "expect": "ORACLE_IMPORT",
+      "description": "XML that is not well-formed: the import stage must fail, never reach a calculation."
+    },
+    {
+      "id": "timeless-militant-faith.xml",
+      "tier": "synthetic",
+      "source": "local",
+      "path": "timeless-militant-faith.xml",
+      "sha256": "b1f1acd2621e1e300da60397f9b9febb5bcd223d9e7a3a08a22c02a24bd147b8",
+      "expect": "ok",
+      "tags": ["timeless-jewel"],
+      "description": "A Militant Faith jewel in a socket on a connected path: covers the inflate shim (one Inflate call) and the write guard (one refused .bin write); Devotion 50 with the jewel data, 45 without."
+    },
+    {
+      "id": "discrepancy-movement-speed.xml",
+      "tier": "discrepancy",
+      "source": "local",
+      "path": "discrepancy-movement-speed.xml",
+      "sha256": "1ac34ea1ea6057758ab51e0aa52aa2cd18df008fa1c5fad03ee710f2d884ed9b",
+      "expect": "ok",
+      "pair": "minimal-level1.xml",
+      "description": "minimal-level1.xml plus the custom modifier 10% increased Movement Speed. oracle-compare of its pair against it reports exactly /main_output/MovementSpeedMod and /main_output/EffectiveMovementSpeedMod (1 -> 1.1): unexpected without a register, expected with tools/oracle/fixtures/discrepancy-register.json."
+    }
+  ]
+}

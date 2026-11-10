@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic oracle fixture (loom, Spike C): minimal-level1.xml plus
+     one custom modifier, 10% increased Movement Speed. The intentional
+     discrepancy pair: compared with minimal-level1.xml, only
+     MovementSpeedMod and EffectiveMovementSpeedMod change (1 -> 1.1).
+     Original; not from PoB. -->
+<PathOfBuilding>
+	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="0" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items/>
+	<Config>
+		<Input name="customMods" string="10% increased Movement Speed"/>
+	</Config>
+</PathOfBuilding>
