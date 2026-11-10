@@ -1,0 +1,4088 @@
+{
+  "inputs": {
+    "extract": {
+      "game": "poe1",
+      "steam_build_id": "26530219",
+      "manifest_sha256": "c23d4c0ffbbfd59e2a04703130dac84e1010164f0026efe734e33a00753aac0f"
+    },
+    "tool": {
+      "commit": "c12859de28c6cb3e103eb3e6a2669e9056e9f877",
+      "dirty": false
+    },
+    "builds": [
+      "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870"
+    ]
+  },
+  "lookup": {
+    "keys": {
+      "display_indexable_non_active_support": 164,
+      "display_indexable_skill": 287,
+      "display_indexable_support": 172,
+      "passive_hash": 5706
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  },
+  "scopes": {
+    "graft_stat_descriptions": {
+      "indexed": 15927,
+      "multi_line": 463,
+      "lookup": 21,
+      "keys": 28255,
+      "max_lines": 8,
+      "gem_quality": 0,
+      "table_only": 0,
+      "bad_template": 0,
+      "empty_text": 1,
+      "lookup_unavailable": 12,
+      "lookup_multi": 0
+    },
+    "stat_descriptions": {
+      "indexed": 15760,
+      "multi_line": 463,
+      "lookup": 21,
+      "keys": 28090,
+      "max_lines": 8,
+      "gem_quality": 0,
+      "table_only": 0,
+      "bad_template": 0,
+      "empty_text": 1,
+      "lookup_unavailable": 12,
+      "lookup_multi": 0
+    },
+    "tincture_stat_descriptions": {
+      "indexed": 15888,
+      "multi_line": 468,
+      "lookup": 21,
+      "keys": 28212,
+      "max_lines": 8,
+      "gem_quality": 0,
+      "table_only": 0,
+      "bad_template": 0,
+      "empty_text": 1,
+      "lookup_unavailable": 12,
+      "lookup_multi": 0
+    }
+  },
+  "unreadable_builds": {},
+  "items": 1055,
+  "items_by_rarity": {
+    "magic": 257,
+    "normal": 8,
+    "rare": 561,
+    "relic": 7,
+    "unique": 222
+  },
+  "mod_range_items": 950,
+  "mod_range_elements": 5431,
+  "catalyst_items": 40,
+  "items_by_scope": {
+    "graft_stat_descriptions": 6,
+    "stat_descriptions": 1049
+  },
+  "line_kinds": {
+    "base": 812,
+    "flag": 65,
+    "influence": 201,
+    "modifier": 6061,
+    "name": 1055,
+    "rarity": 1055,
+    "spec": 9588,
+    "variant-base": 5
+  },
+  "unknown_spec_keys": {},
+  "prefix_keys": {
+    "crafted": 746,
+    "custom": 54,
+    "eater": 42,
+    "exarch": 38,
+    "fractured": 31,
+    "mutated": 11,
+    "range": 1511,
+    "tags": 831,
+    "variant": 1611
+  },
+  "unknown_prefix_keys": {},
+  "non_unique": {
+    "lines": 3938,
+    "outcomes": {
+      "ambiguous": 380,
+      "excluded/not-a-modifier": 230,
+      "excluded/not-selected-variant": 2,
+      "excluded/pob-custom": 54,
+      "resolved": 2889,
+      "unresolved/no-template": 382,
+      "unresolved/only-shadowed": 1
+    },
+    "by_section": {
+      "enchant": {
+        "ambiguous": 35,
+        "resolved": 173,
+        "unresolved/no-template": 54
+      },
+      "explicit": {
+        "ambiguous": 292,
+        "excluded/pob-custom": 54,
+        "resolved": 2267,
+        "unresolved/no-template": 313,
+        "unresolved/only-shadowed": 1
+      },
+      "implicit": {
+        "ambiguous": 53,
+        "excluded/not-selected-variant": 2,
+        "resolved": 449,
+        "unresolved/no-template": 15
+      }
+    },
+    "with_shadowed_matches": 1
+  },
+  "unique": {
+    "lines": 2389,
+    "outcomes": {
+      "ambiguous": 108,
+      "excluded/not-a-modifier": 36,
+      "excluded/not-selected-variant": 1415,
+      "resolved": 746,
+      "unresolved/no-template": 79,
+      "unresolved/no-variant-fits": 5
+    },
+    "by_section": {
+      "enchant": {
+        "ambiguous": 7,
+        "resolved": 21
+      },
+      "explicit": {
+        "ambiguous": 90,
+        "excluded/not-selected-variant": 1387,
+        "resolved": 648,
+        "unresolved/no-template": 79,
+        "unresolved/no-variant-fits": 4
+      },
+      "implicit": {
+        "ambiguous": 11,
+        "excluded/not-selected-variant": 28,
+        "resolved": 77,
+        "unresolved/no-variant-fits": 1
+      }
+    },
+    "with_shadowed_matches": 0
+  },
+  "rate": {
+    "denominator": 3652,
+    "resolved": 2889,
+    "rate": 0.7910733844468785,
+    "excluded": 286,
+    "excluded_share": 0.07262569832402235,
+    "distinct": 1507,
+    "distinct_resolved": 1071,
+    "distinct_rate": 0.7106834771068348,
+    "distinct_with_mixed_outcomes": 0,
+    "meets_rate": false
+  },
+  "ambiguous": {
+    "(10-20)% increased Rarity of Items found": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_item_found_rarity_+%",
+        "item_found_rarity_+%"
+      ]
+    },
+    "(10-20)% increased Reservation Efficiency of Skills": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_reservation_efficiency_+%",
+        "reservation_efficiency_-2%_per_1"
+      ]
+    },
+    "(10-30)% increased Rarity of Items found": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_item_found_rarity_+%",
+        "item_found_rarity_+%"
+      ]
+    },
+    "(130-170)% increased Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "(15-20)% increased Evasion Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "evasion_rating_+%",
+        "local_evasion_rating_+%"
+      ]
+    },
+    "(16-22)% Chance to Block Spell Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "(18-21)% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "(20-25)% chance to Avoid being Stunned": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "avoid_stun_%",
+        "base_avoid_stun_%"
+      ]
+    },
+    "(20-30)% increased Rarity of Items found during Effect": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_flask_item_found_rarity_+%_during_flask_effect",
+        "local_unique_flask_item_rarity_+%_while_healing"
+      ]
+    },
+    "(200-250)% increased Armour": {
+      "non_unique": 0,
+      "unique": 3,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "(4-12)% chance to Impale Enemies on Hit with Attacks": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attacks_impale_on_hit_%_chance",
+        "local_attacks_impale_on_hit_%_chance"
+      ]
+    },
+    "(4-5)% Chance to Block Spell Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "(41-50)% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "(56-74)% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "(6-9)% increased Attack Speed": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "(7-10)% increased Attack Speed": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "(7-12)% increased Attack Speed": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "(8-10)% increased Attack Speed": {
+      "non_unique": 9,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "(8-12)% chance to gain Onslaught for 4 seconds on Kill": {
+      "non_unique": 9,
+      "unique": 0,
+      "detail": [
+        "chance_to_gain_onslaught_on_kill_%,onslaught_time_granted_on_kill_ms",
+        "chance_to_gain_onslaught_on_kill_for_4_seconds_%"
+      ]
+    },
+    "(80-100)% increased Evasion Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "evasion_rating_+%",
+        "local_evasion_rating_+%"
+      ]
+    },
+    "(80-120)% increased Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "+(1-2) to Level of Socketed Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_gem_level_+",
+        "local_socketed_gem_level_+"
+      ]
+    },
+    "+(10-20) to maximum Energy Shield": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+(10-30)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(15-25) to maximum Energy Shield": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+(15-25)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(16-24) to Strength and Intelligence": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+(180-220) to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+(20-30)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(21-25) to Strength and Intelligence": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+(42-48)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(5-10)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(5-20)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(50-100) to maximum Energy Shield": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+(6-15)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(60-80) to maximum Energy Shield": {
+      "non_unique": 5,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+(8-12)% to all Elemental Resistances": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+(9-20) to maximum Energy Shield": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+1 to Level of Socketed Gems": {
+      "non_unique": 4,
+      "unique": 1,
+      "detail": [
+        "local_gem_level_+",
+        "local_socketed_gem_level_+"
+      ]
+    },
+    "+1 to Level of all Raise Spectre Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "raise_spectre_gem_level_+",
+        "random_skill_gem_level_+_level,random_skill_gem_level_+_index"
+      ]
+    },
+    "+1 to Level of all Raise Zombie Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "raise_zombie_gem_level_+",
+        "random_skill_gem_level_+_level,random_skill_gem_level_+_index"
+      ]
+    },
+    "+1 to maximum Energy Shield": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+1 to maximum number of Skeletons": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_number_of_skeletons_allowed,quality_display_summon_skeleton_is_gem",
+        "number_of_skeletons_allowed_per_2_old"
+      ]
+    },
+    "+1 to maximum number of Summoned Totems": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_number_of_totems_allowed",
+        "number_of_additional_totems_allowed"
+      ]
+    },
+    "+10 to Strength and Intelligence": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+10% to all Elemental Resistances": {
+      "non_unique": 7,
+      "unique": 3,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+100 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+100 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+101 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+101 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+105 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+11 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+11% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 3,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+111 to Armour": {
+      "non_unique": 7,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+12% chance to Suppress Spell Damage": {
+      "non_unique": 17,
+      "unique": 0,
+      "detail": [
+        "base_spell_suppression_chance_%",
+        "base_spell_suppression_chance_150%_of_value"
+      ]
+    },
+    "+12% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+126 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+13 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+13% chance to Suppress Spell Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_spell_suppression_chance_%",
+        "base_spell_suppression_chance_150%_of_value"
+      ]
+    },
+    "+14% to all Elemental Resistances": {
+      "non_unique": 3,
+      "unique": 2,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+146 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+15% chance to Suppress Spell Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_spell_suppression_chance_%",
+        "base_spell_suppression_chance_150%_of_value"
+      ]
+    },
+    "+150 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+151 to Evasion Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_evasion_rating",
+        "local_base_evasion_rating"
+      ]
+    },
+    "+16% to all Elemental Resistances": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+18 to maximum Energy Shield": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+180 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+188 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+19 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+19% chance to Suppress Spell Damage": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "base_spell_suppression_chance_%",
+        "base_spell_suppression_chance_150%_of_value"
+      ]
+    },
+    "+19% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+196 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+199 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+2 to Level of Socketed Curse Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_socketed_curse_gem_level_+",
+        "local_socketed_hex_gem_level_+"
+      ]
+    },
+    "+2 to Level of Socketed Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_gem_level_+",
+        "local_socketed_gem_level_+"
+      ]
+    },
+    "+2% Chance to Block Attack Damage while holding a Shield": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "block_chance_%_while_holding_shield",
+        "shield_block_%"
+      ]
+    },
+    "+20 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+20% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+201 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+21 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+216 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+230 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+235 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+24 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+25 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+25 to Strength and Intelligence": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+25% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+250 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+251 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+257 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+26 to Strength and Intelligence": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+26 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+277 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+28 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+283 to Evasion Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_evasion_rating",
+        "local_base_evasion_rating"
+      ]
+    },
+    "+29% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+290 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+292 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+294 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+3 to Level of Socketed Curse Gems": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_socketed_curse_gem_level_+",
+        "local_socketed_hex_gem_level_+"
+      ]
+    },
+    "+3% Chance to Block Attack Damage while holding a Shield": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "block_chance_%_while_holding_shield",
+        "shield_block_%"
+      ]
+    },
+    "+30 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+30 to Strength and Intelligence": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "additional_strength_and_intelligence",
+        "base_strength_and_intelligence"
+      ]
+    },
+    "+33 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+330 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+332 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+34 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+35 to maximum Energy Shield": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+37 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+375 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+38 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+38 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+39 to maximum Energy Shield": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+40 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+400 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+407 to Evasion Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_evasion_rating",
+        "local_base_evasion_rating"
+      ]
+    },
+    "+41 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+42 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+429 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+45 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+45 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+456 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+459 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+46 to maximum Energy Shield": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+475 to Accuracy Rating": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+48 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+481 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+5% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+50 to Evasion Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_evasion_rating",
+        "local_base_evasion_rating"
+      ]
+    },
+    "+50 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+51 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+515 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+52 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+539 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+55 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+595 to Accuracy Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "accuracy_rating",
+        "local_accuracy_rating"
+      ]
+    },
+    "+6% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+66 to Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+664 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+680 to Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+75 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+78 to Evasion Rating": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_evasion_rating",
+        "local_base_evasion_rating"
+      ]
+    },
+    "+8% to all Elemental Resistances": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "+80 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+85 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+88 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+93 to Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_physical_damage_reduction_rating",
+        "local_base_physical_damage_reduction_rating"
+      ]
+    },
+    "+94 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "+97 to maximum Energy Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_maximum_energy_shield",
+        "local_energy_shield"
+      ]
+    },
+    "-(15-25)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 4,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "-(20-10)% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 3,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "-21% to all Elemental Resistances": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_resist_all_elements_%",
+        "local_unique_jewel_nearby_disconnected_passives_can_be_allocated,unique_thread_of_hope_base_resist_all_elements_%"
+      ]
+    },
+    "0.2% of Fire Damage Leeched as Life": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_life_leech_from_fire_damage_permyriad",
+        "horrible_ugly_life_leech_from_fire_damage_perhundredthousand"
+      ]
+    },
+    "0.23% of Physical Attack Damage Leeched as Life": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "life_leech_from_physical_attack_damage_permyriad",
+        "local_life_leech_from_physical_damage_permyriad"
+      ]
+    },
+    "0.29% of Physical Attack Damage Leeched as Life": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "life_leech_from_physical_attack_damage_permyriad",
+        "local_life_leech_from_physical_damage_permyriad"
+      ]
+    },
+    "0.3% of Fire Damage Leeched as Life": {
+      "non_unique": 5,
+      "unique": 0,
+      "detail": [
+        "base_life_leech_from_fire_damage_permyriad",
+        "horrible_ugly_life_leech_from_fire_damage_perhundredthousand"
+      ]
+    },
+    "0.4% of Physical Attack Damage Leeched as Mana": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_mana_leech_from_physical_damage_permyriad",
+        "mana_leech_from_physical_attack_damage_permyriad"
+      ]
+    },
+    "0.5% of Fire Damage Leeched as Life": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_life_leech_from_fire_damage_permyriad",
+        "horrible_ugly_life_leech_from_fire_damage_perhundredthousand"
+      ]
+    },
+    "10% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 1,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "10% increased Mana Reservation Efficiency of Skills": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_mana_reservation_efficiency_+%",
+        "mana_reservation_efficiency_-2%_per_1"
+      ]
+    },
+    "103% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "11% increased Rarity of Items found": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_item_found_rarity_+%",
+        "item_found_rarity_+%"
+      ]
+    },
+    "12% increased Attack Speed": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "13% Chance to Block Spell Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "13% chance to gain a Flask Charge when you deal a Critical Strike": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "gain_flask_chance_on_crit_%",
+        "local_recharge_on_crit_%"
+      ]
+    },
+    "13% increased Attack Speed": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "136% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "14% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "14% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "15% chance to gain Onslaught for 4 seconds on Kill": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "chance_to_gain_onslaught_on_kill_%,onslaught_time_granted_on_kill_ms",
+        "chance_to_gain_onslaught_on_kill_for_4_seconds_%"
+      ]
+    },
+    "15% increased Attack Speed": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "151% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "152% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "16% increased Attack Speed": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "17% Chance to Block Spell Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "18% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "19% Chance to Block Spell Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "19% increased Attack Speed": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "21% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "23% chance to gain a Flask Charge when you deal a Critical Strike": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "gain_flask_chance_on_crit_%",
+        "local_recharge_on_crit_%"
+      ]
+    },
+    "25% chance to Poison on Hit": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_chance_to_poison_on_hit_%",
+        "local_poison_on_hit_%"
+      ]
+    },
+    "25% reduced Light Radius": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "light_radius_+%",
+        "virtual_light_radius_+%"
+      ]
+    },
+    "27% chance to gain a Flask Charge when you deal a Critical Strike": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "gain_flask_chance_on_crit_%",
+        "local_recharge_on_crit_%"
+      ]
+    },
+    "30% chance to Avoid being Chilled during Effect": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_avoid_chill_%_during_flask_effect",
+        "local_unique_flask_avoid_chill_%_while_healing"
+      ]
+    },
+    "30% chance to Avoid being Frozen during Effect": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_avoid_freeze_%_during_flask_effect",
+        "local_unique_flask_avoid_freeze_%_while_healing"
+      ]
+    },
+    "30% increased Global Critical Strike Chance": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "critical_strike_chance_+%",
+        "old_dagger_implicit_critical_strike_chance_+30%"
+      ]
+    },
+    "32% increased Stun Duration on Enemies": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_stun_duration_+%",
+        "stun_duration_+%"
+      ]
+    },
+    "33% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "33% increased Energy Shield Recharge Rate": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "energy_shield_recharge_rate_+%",
+        "virtual_energy_shield_recharge_rate_+%"
+      ]
+    },
+    "34% chance to Avoid being Chilled during Effect": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_avoid_chill_%_during_flask_effect",
+        "local_unique_flask_avoid_chill_%_while_healing"
+      ]
+    },
+    "35% chance to Avoid being Frozen during Effect": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_avoid_freeze_%_during_flask_effect",
+        "local_unique_flask_avoid_freeze_%_while_healing"
+      ]
+    },
+    "35% reduced Ignite Duration on you": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_self_ignite_duration_-%",
+        "self_ignite_duration_-%"
+      ]
+    },
+    "392% increased Armour": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "4% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "40% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "5% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "50% increased Light Radius": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "light_radius_+%",
+        "virtual_light_radius_+%"
+      ]
+    },
+    "50% reduced Light Radius": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "light_radius_+%",
+        "virtual_light_radius_+%"
+      ]
+    },
+    "51% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "57% faster start of Energy Shield Recharge": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "energy_shield_delay_-%",
+        "virtual_energy_shield_delay_-%"
+      ]
+    },
+    "58% faster start of Energy Shield Recharge": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "energy_shield_delay_-%",
+        "virtual_energy_shield_delay_-%"
+      ]
+    },
+    "6% increased Attack Speed while holding a Shield": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "attack_speed_+%_while_holding_shield",
+        "shield_attack_speed_+%"
+      ]
+    },
+    "67% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "7% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 1,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "74% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "8% Chance to Block Spell Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_spell_block_%",
+        "old_do_not_use_spell_block_%_from_assumed_block_value"
+      ]
+    },
+    "8% increased Attack Speed": {
+      "non_unique": 1,
+      "unique": 2,
+      "detail": [
+        "attack_speed_+%",
+        "local_attack_speed_+%"
+      ]
+    },
+    "8% increased Mana Reservation Efficiency of Skills": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_mana_reservation_efficiency_+%",
+        "mana_reservation_efficiency_-2%_per_1"
+      ]
+    },
+    "84% increased Armour": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "9% chance to gain Onslaught for 4 seconds on Kill": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "chance_to_gain_onslaught_on_kill_%,onslaught_time_granted_on_kill_ms",
+        "chance_to_gain_onslaught_on_kill_for_4_seconds_%"
+      ]
+    },
+    "9% increased Rarity of Items found": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "base_item_found_rarity_+%",
+        "item_found_rarity_+%"
+      ]
+    },
+    "97% increased Armour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_physical_damage_reduction_rating_+%",
+        "physical_damage_reduction_rating_+%"
+      ]
+    },
+    "Adds (20-24) to (38-46) Fire Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds (60-70) to (71-80) Physical Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_physical_damage,global_maximum_added_physical_damage",
+        "local_minimum_added_physical_damage,local_maximum_added_physical_damage"
+      ]
+    },
+    "Adds (76-98) to (161-176) Fire Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 102 to 184 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 103 to 204 Cold Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_cold_damage,global_maximum_added_cold_damage",
+        "local_minimum_added_cold_damage,local_maximum_added_cold_damage"
+      ]
+    },
+    "Adds 111 to 200 Cold Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_cold_damage,global_maximum_added_cold_damage",
+        "local_minimum_added_cold_damage,local_maximum_added_cold_damage"
+      ]
+    },
+    "Adds 115 to 206 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 12 to 212 Lightning Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_lightning_damage,global_maximum_added_lightning_damage",
+        "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage"
+      ]
+    },
+    "Adds 12 to 23 Physical Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_physical_damage,global_maximum_added_physical_damage",
+        "local_minimum_added_physical_damage,local_maximum_added_physical_damage"
+      ]
+    },
+    "Adds 120 to 226 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 17 to 305 Lightning Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_lightning_damage,global_maximum_added_lightning_damage",
+        "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage"
+      ]
+    },
+    "Adds 176 to 296 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 19 to 32 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 23 to 399 Lightning Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_lightning_damage,global_maximum_added_lightning_damage",
+        "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage"
+      ]
+    },
+    "Adds 3 to 7 Cold Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_cold_damage,global_maximum_added_cold_damage",
+        "local_minimum_added_cold_damage,local_maximum_added_cold_damage"
+      ]
+    },
+    "Adds 32 to 65 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Adds 43 to 70 Physical Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_physical_damage,global_maximum_added_physical_damage",
+        "local_minimum_added_physical_damage,local_maximum_added_physical_damage"
+      ]
+    },
+    "Adds 43 to 74 Cold Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_cold_damage,global_maximum_added_cold_damage",
+        "local_minimum_added_cold_damage,local_maximum_added_cold_damage"
+      ]
+    },
+    "Adds 6 to 109 Lightning Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_lightning_damage,global_maximum_added_lightning_damage",
+        "local_minimum_added_lightning_damage,local_maximum_added_lightning_damage"
+      ]
+    },
+    "Adds 63 to 89 Physical Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_physical_damage,global_maximum_added_physical_damage",
+        "local_minimum_added_physical_damage,local_maximum_added_physical_damage"
+      ]
+    },
+    "Adds 63 to 91 Physical Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "global_minimum_added_physical_damage,global_maximum_added_physical_damage",
+        "local_minimum_added_physical_damage,local_maximum_added_physical_damage"
+      ]
+    },
+    "Adds 75 to 130 Cold Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_cold_damage,global_maximum_added_cold_damage",
+        "local_minimum_added_cold_damage,local_maximum_added_cold_damage"
+      ]
+    },
+    "Adds 90 to 183 Fire Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "global_minimum_added_fire_damage,global_maximum_added_fire_damage",
+        "local_minimum_added_fire_damage,local_maximum_added_fire_damage"
+      ]
+    },
+    "Allocates Aggressive Bastion": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates As The Mountain": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Ash, Frost and Storm": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Charisma": {
+      "non_unique": 0,
+      "unique": 3,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Cleaving": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Corruption": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Dirty Techniques": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Disciple of the Unyielding": {
+      "non_unique": 9,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Dreamer": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Entrench": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Farsight": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Fervour": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Fury Bolts": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Hardened Scars": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates High Voltage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Sanctuary": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Testudo": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Undertaker": {
+      "non_unique": 4,
+      "unique": 2,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Vampirism": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Allocates Whispers of Doom": {
+      "non_unique": 1,
+      "unique": 1,
+      "detail": [
+        "local_weapon_passive_tree_granted_passive_hash",
+        "mod_granted_passive_hash",
+        "mod_granted_passive_hash_2",
+        "mod_granted_passive_hash_3",
+        "mod_granted_passive_hash_4",
+        "mod_granted_passive_hash_5"
+      ]
+    },
+    "Curse Enemies with Flammability on Hit": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "curse_on_hit_%_flammability",
+        "curse_on_hit_level_flammability"
+      ]
+    },
+    "Gain (2-3) Life per Enemy Hit with Attacks": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "base_life_gain_per_target",
+        "life_gain_per_target"
+      ]
+    },
+    "Gain (6-8) Life per Enemy Hit with Attacks": {
+      "non_unique": 0,
+      "unique": 2,
+      "detail": [
+        "base_life_gain_per_target",
+        "life_gain_per_target"
+      ]
+    },
+    "Gain 2 Life per Enemy Hit with Attacks": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "base_life_gain_per_target",
+        "life_gain_per_target"
+      ]
+    },
+    "Hits against Nearby Enemies have 50% increased Critical Strike Chance": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_hits_against_nearby_enemies_critical_strike_chance_+50%",
+        "local_display_nearby_enemies_critical_strike_chance_+%_against_self"
+      ]
+    },
+    "Ignites you inflict spread to other Enemies within 1.2 metres": {
+      "non_unique": 10,
+      "unique": 0,
+      "detail": [
+        "gloves_ignite_proliferation_radius",
+        "passive_notable_ignite_proliferation_radius"
+      ]
+    },
+    "Ignites you inflict spread to other Enemies within 1.4 metres": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "gloves_ignite_proliferation_radius",
+        "passive_notable_ignite_proliferation_radius"
+      ]
+    },
+    "Instant Recovery": {
+      "non_unique": 11,
+      "unique": 0,
+      "detail": [
+        "local_flask_recovers_instantly",
+        "local_flask_recovery_amount_%_to_recover_instantly"
+      ]
+    },
+    "Minions deal (15-20)% increased Damage": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal (26-30)% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal (5-10)% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal 15% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal 18% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal 54% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Minions deal 67% increased Damage": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "minion_damage_+%",
+        "virtual_minion_damage_+%"
+      ]
+    },
+    "Onslaught": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "base_should_have_onslaught_from_stat",
+        "silver_flask_display_onslaught"
+      ]
+    },
+    "Projectiles Pierce an additional Target": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "projectile_base_number_of_targets_to_pierce",
+        "projectiles_pierce_1_additional_target_per_10_stat_value",
+        "projectiles_pierce_1_additional_target_per_15_stat_value",
+        "quiver_projectiles_pierce_1_additional_target"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Added Cold Damage": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_added_cold_damage",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Bonechill": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_bonechill",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Cold Penetration": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_cold_penetration",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Hypothermia": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_hypothermia",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Ice Bite": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_ice_bite",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 15 Inspiration": {
+      "non_unique": 0,
+      "unique": 1,
+      "detail": [
+        "local_display_socketed_gems_get_reduced_mana_cost_level",
+        "local_display_socketed_gems_supported_by_x_reduced_mana_cost",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 16 Burning Damage": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_increased_burning_damage",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 16 Concentrated Effect": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_get_concentrated_area_level",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 16 Hypothermia": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_hypothermia",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 16 Minion Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_x_increased_minion_damage_level",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 18 Burning Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_increased_burning_damage",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 18 Concentrated Effect": {
+      "non_unique": 4,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_get_concentrated_area_level",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 18 Immolate": {
+      "non_unique": 1,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_immolate",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 20 Burning Damage": {
+      "non_unique": 3,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_increased_burning_damage",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 20 Concentrated Effect": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_get_concentrated_area_level",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 20 Immolate": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_immolate",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    },
+    "Socketed Gems are Supported by Level 25 Burning Damage": {
+      "non_unique": 2,
+      "unique": 0,
+      "detail": [
+        "local_display_socketed_gems_supported_by_level_x_increased_burning_damage",
+        "local_random_support_gem_level,local_random_support_gem_index",
+        "local_random_support_gem_level_1,local_random_support_gem_index_1"
+      ]
+    }
+  },
+  "unresolved": {
+    "unresolved/no-template": {
+      "sha256:0132e4b2ffc6f009": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:020cff69bd980771": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0303f6e0a6dd0731": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0365febc7716bdb5": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:046fd1cea5fdeae4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:049a475de9367b40": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:04d8c909baf55ee1": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:04ded839fd078b6d": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:07427b322af662d4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:09d8cfc529824b1f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0aaf6b812ad8d29f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0b8adc4b17ff5c5d": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:0c494ff6dd5ed883": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0ce9b6e449b2857e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0ceebdc98e2eb60d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0d8c38df51743574": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:0e6263df5b4b2087": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:10332af0793efcbc": {
+        "non_unique": 9,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:103eafd3e454dfaa": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:11a08574e70d52ef": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:11b40be900e8e8e9": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:11c6fc5b458c81b2": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:13d877c0af2f3895": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:140a35bbb3c5793f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:140b67eee017e1e3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:15502f0b4d9fdf60": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:15e5e9c68b4d6a98": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1740cdc9717113dd": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:1823c9798dee83ee": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:1892d940797db22f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1abfccef3a3a2b68": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1be374a9c625e944": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:1c77dcf27715f46a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1cf63c2d67893b89": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1d373de48c242a29": {
+        "non_unique": 24,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1d7bf3205c7f56ea": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1d86a96f1bbc6128": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1da0216e9d00b1c0": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1dfb934b417686cd": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:1e7da5eaa3f8d2f8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:1e9179e4f09d7407": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:1ea7db8002be9d59": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:204c1f867bfa22bd": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:235621ee516ab08d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:239d6fa63c44a10b": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:24fa06196ee3a16e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:27c9e20636d415e9": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:296c6fac537b2aba": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:29ea32cda849076b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2ab97d1921073f3a": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:2bb0f441a84db6b6": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2bec2fce5ec8b5f8": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:2e6b1bd9e8cb2e61": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2e87e1f9f9e78a2b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:2ee7853a0786a2eb": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:303c5e4a48f6878b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:31824b6b284a887c": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:318ce5596a2f8664": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3290b73378020fb3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:333faf9ca1163827": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:346854c9fe58851e": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:34b6fc650182debb": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:353ff3d0eea2470f": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3553324dda3a9c89": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:38abd8471b7c41ff": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:391607581dffe2a5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3b59923f52e53b08": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3ba6601c28a549ee": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3cd3b182b22c3786": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:3cef85ddf90acc37": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3d516dc29666e7c8": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:3d9f0ba646895ce2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3e36f9d037a07fa1": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3e62b0f6d62df80c": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:3e78ab78282cbfea": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3e7cf2f2b6dfa7af": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:3f163d9a311d03ec": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:40ff2933d2d269ab": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:41445a9985f51b72": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:422c6203a7f32405": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:42db1a23a9c64f7a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:438fd3e571938ac2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:44a3ced90889d27f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:44eb972f3e1c2a14": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:45b0e748d9a68630": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4a12962baa6266de": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:4a5d3eccb99981ab": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:4a98eb839fd797a8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4c174ae42b473557": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:4c6d314949b8377a": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4e2128e5db698694": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4ea11232927209d7": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4f5043051e8fb973": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:4f947b326f9b99b1": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:50a90fd137e9c9be": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:51273e6b276a5fbb": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:525bf575f6cfc420": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:528eb4004a8e5f00": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:552ee5b45f5c51f8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:560236ba6fdd5cff": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:568c8708d7a9088a": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:571d29f629aa3375": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:582325f40087503f": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:58652bfbecfbc687": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:592a51a85124711c": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:59526cd80d8cb50c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5a2fa9e186a6aac9": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:5a45779bfef5d40a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5ac793412abc67bc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5b5df646739ce159": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5c5082a4d6042e02": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5d15df2d4256fd13": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:5d80f680f8605f12": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:601172c5ff8da310": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:60bb6c072a7ea914": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:61442de9a7b77371": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:617d1df0e3548acc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:61dd7057afde34a3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:63116dc2be1052de": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:642d8502d6e55b53": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:6441edc7c4dc34a5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:671355ebd911f5c7": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:67dd0ab619219bfa": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:6876f5dc153aa5eb": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:6949b4caec51abd0": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:6a36df54466608c9": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:6edb29e13f97fb03": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:70582c2dc1a15771": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:713840ead0fe5dbc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:71918a93e81843a2": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:72026f5f5ece6f4c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:757e9a94591dd4ba": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7596bfd9a792f353": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:763e9a80d0f92773": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:773ddc5c346f6be9": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:7900db9c9b99dceb": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7920164935a76db7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:79d756d7eb6b2967": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:79ec35d890b31526": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7a0f84df889b53bc": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7a65c9b46a7c6308": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:7a666771f64a0a0b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7bbe5df56f7c4c78": {
+        "non_unique": 10,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7c1bd5c78f30356d": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:7c6be38326673ee5": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7c8d13f2514d06a4": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:7de352413a87ae40": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:804455ee26e819ed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:81244af62be3602b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:81727e6a1264a561": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:822cd4701d372cc7": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:8305e8924b446334": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:83f55447009355bb": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:868f9721bf1badcf": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:87f394d1c46b1762": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:88948f1ee6b12b19": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:88c416793f60232d": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:88fb98278d292a71": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:89c75b971fe3dd62": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:89f317d47a3e5c88": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:8b75f4f0f13050be": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:8cb07dd9b50c45c2": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:8d1b5b1e2a7f6fb1": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:8ffe9d6786a446c5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:90ae080f17c70546": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9273cab741813e5e": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:92ccbbe1001c8f55": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:975644b6970ffcec": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:981f70a48866730e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:987b61efe3df447d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9881ec87992ba641": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:99b9930ecdb38b58": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:9b4cdafad9de9244": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9db4e7307c15aa28": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:9e0289e46cc13de7": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a01217c651ef4b9c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a14d16be0af504c5": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a1739f2be51f82c1": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:a1a347f530c2e520": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:a1de44538693cc03": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a2fa2c55415df447": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a4717d127ef25be2": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:a48fd6407e3d9c41": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a4e77d75c98ba34f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a5c526336b5b1d13": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a669fac7acecb093": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a66dfea77a5d13d7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:a7659904542ab15c": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:a8e905baa0e33b45": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:acf8dceaa8618d48": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ad4fed80d0d67f16": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:aeb9149c509ab411": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:b02e38690a6baf18": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b153e36faefec380": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b32f0b91ace38dac": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b45493719b63c60a": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b464313ddd570203": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b49b2bf9769f8267": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b4c2ce6caab53e5b": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b5bab07b7fa8218b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b64a95e3a3667b42": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b780354a10d6a816": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b7ca5de6b407cd95": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b8b5c7cb7d920ed9": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:b9077942c23bb36f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:b94a9cbb82d6c287": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:bb0b170adf9aae37": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:bb8950c54852c367": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:bbcb8866204a357d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:bd3186b17dd4fa7f": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:bd59214aab354050": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:bfc88d198d42d96c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c0d71bcf62aa3862": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c0d962071cb23b16": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c10e43e58d2c8dd7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c2b0df8cb2c0a2e8": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c32723dd9e232a05": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c40f6acdff651f30": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c5d31eec05e7f104": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c85655da2219c768": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:c9aa4d4c47d4a257": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:ca4991c81e636476": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:cab5822883053a33": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:cb11358cd2bedc0b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:cbf690f12feb1482": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:cdd9444d1d92feb2": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:ce8ca419115277cf": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:cf6f407eaf739961": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d0c52962c3855b0f": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d0deee26f05a5a8a": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:d34411d7ed9480d4": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d366b332810334f7": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d3896c9efb93ea4e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d440a91b4fbb0053": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d49ba0174bd1d2e1": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:d597bbb55a106669": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d5ca7b9ae10c2f02": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d63735a531dc3eb9": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d6dc0b80585b9ff8": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d80a2acd936e8b13": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d80f2a8749de1aff": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d85dca2ad4b474ca": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d9546be765147c7a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:d9b22801461d8d32": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:db9575036437d334": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:dc348852a2b299cc": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:dc5d347673920da4": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:dc8123605ef3dcf6": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:dda39e821fe09a59": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:de3787b347aeb5c1": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:de67e98132754a72": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:df6f35a95d373937": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:e18273a4303ea15a": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:e2bd25645f01d72b": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:e36429f46f2123a8": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:e4f7429e77897f2c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:e7a90cf122334512": {
+        "non_unique": 5,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:eb01b40a53b9f42e": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:eba9474100dba61c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ebcc312505788391": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ec70c403d130a694": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ec8e2d6e477a960c": {
+        "non_unique": 1,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:ecc2c4e2b04dc196": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:ee05e077087dd0a9": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ee6db706f0838e48": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:eea0e3c2b62cbe0d": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:eee1d3350f894706": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ef16e3b0d646a836": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": []
+      },
+      "sha256:f020e0a7485a88e8": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:f03ed072cfb43e8e": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f44112645f2df8c3": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f569b4a1d06dea6a": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f59880926df2f3fa": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f618e6b9f0add60c": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f86ff6a37776613a": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:f9b04e39b01f4e84": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:fa4d733005e267e5": {
+        "non_unique": 5,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:fb909952b6f106a1": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": []
+      },
+      "sha256:fc1a94dd1e6d8165": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:fea7faf91a55f11c": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ff88c03be487231d": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      },
+      "sha256:ffb598aa1df65329": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      }
+    },
+    "unresolved/no-variant-fits": {
+      "(4-6)% Chance to Block Spell Damage during Effect": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "sign-mismatch"
+        ]
+      },
+      "(8-12)% Chance to Block Attack Damage during Effect": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "sign-mismatch"
+        ]
+      },
+      "18% Chance to Block Attack Damage while wielding a Staff": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "sign-mismatch"
+        ]
+      }
+    },
+    "unresolved/only-shadowed": {
+      "24% increased effect of Offerings": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": []
+      }
+    }
+  },
+  "pob_base_suffix_removed": 10,
+  "duplicate_builds": 0,
+  "items_with_several_texts": 0,
+  "unsupported_features": {},
+  "marks": {
+    "color-code": {
+      "non_unique/unresolved/no-template": 105,
+      "unique/unresolved/no-template": 6
+    },
+    "small-passive-grant": {
+      "non_unique/unresolved/no-template": 56
+    },
+    "spec-shaped": {
+      "non_unique/unresolved/no-template": 8,
+      "unique/unresolved/no-template": 1
+    }
+  }
+}

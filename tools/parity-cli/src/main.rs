@@ -10,6 +10,7 @@ mod extract;
 mod load_statdesc;
 mod lookup;
 mod render_check;
+mod resolve_corpus;
 mod round_trip;
 
 use std::path::Path;
@@ -29,7 +30,28 @@ const USAGE: &str = "usage:
   loom-parity-cli render-check <extract-dir> <pob-dir> --out <dir>
       Render every PoE1 Mods row and compare with PoB's exported mod text
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
-      <dir>, which must not exist. Exit 1 if a difference is uncategorized.";
+      <dir>, which must not exist. Exit 1 if a difference is uncategorized.
+  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir>
+      Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
+      subfolders are not read; identical files count once), resolve
+      each modifier line in its item's scope (PoE1 extract); write
+      summary.json and report.json (builds by content hash, no item names)
+      to <dir>, which must not exist. Exit 1 while the resolution rate of
+      non-unique lines is below 98% or a build is unreadable.";
+
+/// Runs `git` in this crate's source tree; `None` if it fails.
+fn git(args: &[&str]) -> Option<String> {
+    let output = std::process::Command::new("git")
+        .arg("-C")
+        .arg(env!("CARGO_MANIFEST_DIR"))
+        .args(args)
+        .output()
+        .ok()?;
+    output
+        .status
+        .success()
+        .then(|| String::from_utf8_lossy(&output.stdout).trim().to_owned())
+}
 
 fn reader(dir: &Path) -> impl Fn(&str) -> Result<Vec<u8>, String> + '_ {
     move |relative| {
@@ -120,6 +142,36 @@ fn render_check(extract: &Path, pob: &Path, out: &Path) -> Result<bool, String> 
     Ok(!summary.outcomes.contains_key("differs/uncategorized"))
 }
 
+fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool, String> {
+    let read = reader(extract);
+    let loaded = extract::load(&read)?;
+    let (lookup, lookup_report) = lookup::TableLookup::load(&read)?;
+    let bases = resolve_corpus::Bases::load(&read)?;
+    let mut builds = Vec::new();
+    for entry in
+        std::fs::read_dir(builds_dir).map_err(|e| format!("{}: {e}", builds_dir.display()))?
+    {
+        let path = entry.map_err(|e| e.to_string())?.path();
+        let is_xml = path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("xml"));
+        if is_xml && path.is_file() {
+            let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
+            builds.push(resolve_corpus::Build::new(bytes));
+        }
+    }
+    let tool = resolve_corpus::Tool {
+        commit: git(&["rev-parse", "HEAD"]),
+        dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+    };
+    let (summary, report) =
+        resolve_corpus::run(&loaded, &lookup, lookup_report, &bases, &builds, tool)?;
+    write_out(out, &summary, &report)?;
+    let json = serde_json::to_string_pretty(&summary.rate).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(summary.rate.meets_rate && summary.unreadable_builds.is_empty())
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let result = match args.as_slice() {
@@ -129,6 +181,9 @@ fn main() -> ExitCode {
         }
         [cmd, extract, pob, flag, out] if cmd == "render-check" && flag == "--out" => {
             render_check(Path::new(extract), Path::new(pob), Path::new(out))
+        }
+        [cmd, builds, extract, flag, out] if cmd == "resolve-corpus" && flag == "--out" => {
+            resolve_corpus(Path::new(builds), Path::new(extract), Path::new(out))
         }
         _ => {
             eprintln!("{USAGE}");

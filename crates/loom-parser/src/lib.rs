@@ -4,6 +4,9 @@
 //!
 //! - [`resolve`]: the reverse matcher, one item line to stat IDs and raw
 //!   values through one stat-description scope (Spike B, PR B2a).
+//! - [`pob_item`]: reads one PoB item's text into typed lines (rarity,
+//!   name and base, specs, sections, prefixes, variant selection; Spike B,
+//!   PR B3).
 //!
 //! Core crate (ADR-016): compiles for `wasm32-unknown-unknown` and does no
 //! filesystem, thread, clock, environment, or network access. Item text is
@@ -11,4 +14,5 @@
 
 #![warn(clippy::indexing_slicing)]
 
+pub mod pob_item;
 pub mod resolve;
