@@ -1067,3 +1067,76 @@ fn filter_should_not_break_a_tie_by_spawn_values_when_spawn_tags_was_skipped() {
     let d = filter(&ctx(&mods, &bases), CRAFTED, &cs);
     assert_eq!(d.kept, vec![0, 1]);
 }
+
+#[test]
+fn filter_should_skip_local_stat_when_base_rows_differ_or_tags_are_unknown() {
+    let mods = local_global_mods();
+    let differ = [base(Some(&["armour"])), base(Some(&["ring"]))];
+    let d = filter(&ctx(&mods, &differ), CRAFTED, &es_candidates(15));
+    assert_eq!(d.kept, vec![0, 1]);
+    assert!(d.notes.contains("local-stat-bases-differ"));
+    let partly_unknown = [base(Some(&["ring"])), base(None)];
+    let d = filter(&ctx(&mods, &partly_unknown), CRAFTED, &es_candidates(15));
+    assert!(d.notes.contains("local-stat-bases-differ"));
+    let unknown = [base(None)];
+    let d = filter(&ctx(&mods, &unknown), CRAFTED, &es_candidates(15));
+    assert!(d.notes.contains("local-stat-tags-unknown"));
+}
+
+#[test]
+fn filter_should_note_a_candidate_with_weapon_and_item_local_stats() {
+    let mut mods = Mods::from_rows(vec![
+        row(
+            domain::CRAFTED,
+            PRE,
+            &[("local_es", 10, 20), ("local_acc", 10, 20)],
+            &[],
+        ),
+        row(domain::CRAFTED, PRE, &[("global_es", 10, 20)], &[]),
+    ]);
+    mods.locality.insert("local_es".to_owned(), Locality::Item);
+    mods.locality
+        .insert("local_acc".to_owned(), Locality::Weapon);
+    let cs = vec![
+        cand(vec![exact("local_es", 15), exact("local_acc", 15)]),
+        cand(vec![exact("global_es", 15)]),
+    ];
+    let bases = [base(Some(&["ring"]))];
+    let d = filter(&ctx(&mods, &bases), CRAFTED, &cs);
+    assert!(d.notes.contains("local-stat-mixed") && !d.rules.contains(&"local-stat"));
+}
+
+#[test]
+fn filter_should_read_global_on_a_belt_even_when_only_the_local_row_holds_the_value() {
+    // The B5a Crystal Belt line: `values` alone would keep the local reading
+    // (52 inside the local row only); belts carry no defence property.
+    let mut mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("local_es", 50, 60)], &[("armour", 1)]),
+        row(ITEM, PRE, &[("global_es", 10, 40)], &[("belt", 1)]),
+    ]);
+    mods.locality.insert("local_es".to_owned(), Locality::Item);
+    let bases = [base(Some(&["belt"]))];
+    let d = filter(&ctx(&mods, &bases), EXPLICIT, &es_candidates(52));
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![1], "resolved/local-stat".to_owned())
+    );
+}
+
+#[test]
+fn type_spawn_should_take_rows_of_the_same_domain_and_generation_only() {
+    let mut essence = row(ITEM, PRE, &[("old_es", 10, 20)], &[]);
+    essence.essence_only = true;
+    essence.mod_type = Some(1);
+    let mut suffix = row(
+        ITEM,
+        generation::SUFFIX,
+        &[("old_es", 1, 2)],
+        &[("helmet", 5)],
+    );
+    suffix.mod_type = Some(1);
+    let mods = Mods::from_rows(vec![essence, suffix]);
+    let r = mods.row(0).unwrap();
+    assert_eq!(r.type_spawn, None);
+    assert!(r.essence_unknown());
+}

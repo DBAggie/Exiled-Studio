@@ -41,25 +41,28 @@
 //!    backed, no tie-break runs (`no-backed-candidate`); if some fitting
 //!    row carries a candidate's stat at `(0, 0)` (note `row-value-unset`:
 //!    the value is set outside the row, as for anoints), `unset-fit` keeps
-//!    the candidates with such a row, then `numbered-stat` runs (step 5).
+//!    the candidates with such a row, then `numbered-stat` runs (step 7).
 //!    Backed candidates never reach `numbered-stat`: several backed rows are
 //!    a real ambiguity, not an unknown slot.
 //! 2. `base-implicit` (implicit, not eldritch): candidates backed by one of
 //!    the base's `Implicit_ModsKeys` rows.
-//! 2b. `local-stat` (PR B5a; explicit lines of non-unique items): when the
+//! 3. `local-stat` (PR B5a; explicit lines of non-unique items): when the
 //!    kept candidates are a local and a global reading (some carry a local
 //!    stat, `Stats.IsLocal` or `IsWeaponLocal`, the others none), a base with
 //!    the property keeps the local reading and any other base the global
 //!    one. The property is the base tag `weapon` for `IsWeaponLocal` stats
 //!    and `armour` for the other local stats (a local stat changes the
 //!    item's own weapon or defence values, which only those bases have).
-//!    Skipped when the base's tags are unknown, and (note
-//!    `local-stat-spawns`) when a global base would drop a local reading
-//!    that a fitting row spawns on the base. Measured on PoE1 26530219:
+//!    Skipped, with a note, when a base row's tags are unknown
+//!    (`local-stat-tags-unknown`), when the item's base rows disagree on the
+//!    carrier tag (`local-stat-bases-differ`), when a candidate mixes weapon
+//!    and item locality (`local-stat-mixed`), and when a global base would
+//!    drop a local reading that a fitting row spawns on the base
+//!    (`local-stat-spawns`; flask- and jewel-local stats). Measured on PoE1 26530219:
 //!    every line the later steps had already resolved between such a pair
 //!    (107) gets the same reading, except one PoB-crafted Crystal Belt line
 //!    the `values` step had read as local ES (belts have no ES property).
-//! 3. `spawn-tags` (tie-breaker, reported): candidates backed by a fitting
+//! 4. `spawn-tags` (tie-breaker, reported): candidates backed by a fitting
 //!    row with a positive spawn weight on the base's tags (the first row tag
 //!    the base has gives the weight). Skipped, with a note, for `{crafted}`
 //!    lines (bench crafts do not spawn), when the base's tags are unknown,
@@ -73,18 +76,19 @@
 //!    it on the item, so the base can carry it whatever its tag weight. Eldritch rows do not count on implicit lines
 //!    without an eldritch flag. A legacy essence row (essence-only, no
 //!    `Essences` column names it) whose `ModType` has rows that are not
-//!    essence-only counts as spawning where those rows spawn, and nowhere
+//!    essence-only (same domain and generation type) counts as spawning
+//!    where those rows spawn, and nowhere
 //!    when they spawn nowhere (PR B5a: `ChanceToDodgeEssence4`..`7` share
 //!    `ChanceToSuppressSpellsOld` with rows that no longer spawn); only a
 //!    legacy essence row whose `ModType` has no other row keeps the guard.
-//! 4. `values` (tie-breaker, reported): candidates backed at the values
+//! 5. `values` (tie-breaker, reported): candidates backed at the values
 //!    level.
-//! 4b. `spawn-values` (PR B5a; tie-breaker, reported; only when
+//! 6. `spawn-values` (PR B5a; tie-breaker, reported; only when
 //!    `spawn-tags` ran): candidates backed by one fitting row that both
 //!    spawns on the base and holds the line's values (a candidate that
 //!    spawns only through a row whose range misses the value, and holds the
 //!    value only on rows that do not spawn, is dropped).
-//! 5. `numbered-stat` (Spike B step 4d, maintainer decision 2026-11-10;
+//! 7. `numbered-stat` (Spike B step 4d, maintainer decision 2026-11-10;
 //!    only after `unset-fit`): candidates whose stats are equal up to a numbered suffix (`x`, `x_2`
 //!    .. `x_9`; anoints: `mod_granted_passive_hash` .. `_5`) are one
 //!    reading; the one with the lowest numbers is kept, the others are
@@ -324,6 +328,17 @@ impl Locality {
     }
 }
 
+/// The local stats of one candidate.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LocalKind {
+    /// No local stat.
+    Global,
+    /// Local stats of one locality.
+    Local(Locality),
+    /// Local stats of both localities.
+    Mixed,
+}
+
 /// The `Mods` table, indexed by stat.
 #[derive(Debug, Default)]
 pub struct Mods {
@@ -487,18 +502,21 @@ fn locality(read: Read<'_>) -> Result<BTreeMap<String, Locality>, String> {
 
 /// Sets `type_spawn` on the legacy essence rows (essence-only, no
 /// `Essences` column names them): the tags on which the rows of the same
-/// `ModType` that are not essence-only spawn. A `ModType` with such rows
+/// `ModType`, domain, and generation type that are not essence-only spawn. A `ModType` with such rows
 /// and no positive weight gives an empty list: the row spawns nowhere.
 fn set_type_spawn(rows: &mut [ModRow]) {
-    let mut by_type: BTreeMap<i64, BTreeSet<String>> = BTreeMap::new();
+    let mut by_type: BTreeMap<(i64, i64, i64), BTreeSet<String>> = BTreeMap::new();
     for r in rows.iter().filter(|r| !r.essence_only) {
         if let Some(t) = r.mod_type {
-            by_type.entry(t).or_default().extend(
-                r.spawn
-                    .iter()
-                    .filter(|(_, w)| *w > 0)
-                    .map(|(tag, _)| tag.clone()),
-            );
+            by_type
+                .entry((t, r.domain, r.generation))
+                .or_default()
+                .extend(
+                    r.spawn
+                        .iter()
+                        .filter(|(_, w)| *w > 0)
+                        .map(|(tag, _)| tag.clone()),
+                );
         }
     }
     for r in rows
@@ -507,7 +525,7 @@ fn set_type_spawn(rows: &mut [ModRow]) {
     {
         r.type_spawn = r
             .mod_type
-            .and_then(|t| by_type.get(&t))
+            .and_then(|t| by_type.get(&(t, r.domain, r.generation)))
             .map(|tags| tags.iter().cloned().collect());
     }
 }
@@ -591,15 +609,17 @@ impl Mods {
         Ok(mods)
     }
 
-    /// The locality of the first local stat of `stats`, if any; `Err` when
-    /// two local stats differ in locality.
-    fn local_kind(&self, stats: &[ResolvedStat]) -> Result<Option<Locality>, ()> {
+    /// Whether a candidate's stats are global, local of one locality, or
+    /// local of two.
+    fn local_kind(&self, stats: &[ResolvedStat]) -> LocalKind {
         let mut kinds = stats.iter().filter_map(|s| self.locality.get(&s.stat));
-        let first = kinds.next().copied();
-        if kinds.any(|k| Some(*k) != first) {
-            return Err(());
+        let Some(first) = kinds.next().copied() else {
+            return LocalKind::Global;
+        };
+        if kinds.any(|k| *k != first) {
+            return LocalKind::Mixed;
         }
-        Ok(first)
+        LocalKind::Local(first)
     }
 
     /// Essence-only rows whose item classes `Essences` gives, and the rest.
@@ -1003,38 +1023,57 @@ fn local_stat(
     fit: &[Vec<Fit>],
     d: &mut Decision,
 ) {
-    let kinds: Option<Vec<Option<Locality>>> = d
+    let kinds: Vec<LocalKind> = d
         .kept
         .iter()
         .map(|&i| {
             candidates
                 .get(i)
-                .and_then(|c| ctx.mods.local_kind(&c.stats).ok())
+                .map_or(LocalKind::Global, |c| ctx.mods.local_kind(&c.stats))
         })
         .collect();
-    let Some(kinds) = kinds else {
+    if kinds.contains(&LocalKind::Mixed) {
+        d.notes.insert("local-stat-mixed");
         return;
-    };
-    let locals: BTreeSet<Locality> = kinds.iter().flatten().copied().collect();
+    }
+    let locals: BTreeSet<Locality> = kinds
+        .iter()
+        .filter_map(|k| match k {
+            LocalKind::Local(l) => Some(*l),
+            _ => None,
+        })
+        .collect();
     let [kind] = locals.iter().copied().collect::<Vec<_>>()[..] else {
         return;
     };
-    if !kinds.contains(&None) {
+    if !kinds.contains(&LocalKind::Global) {
         return;
     }
-    if ctx.bases.iter().all(|b| b.tags.is_none()) {
-        d.notes.insert("local-stat-tags-unknown");
-        return;
-    }
-    let carries = ctx.bases.iter().any(|b| {
-        b.tags
-            .as_ref()
-            .is_some_and(|t| t.iter().any(|x| x == kind.carrier_tag()))
-    });
+    // Every base row must have known tags and agree on the carrier tag.
+    let carrier: BTreeSet<Option<bool>> = ctx
+        .bases
+        .iter()
+        .map(|b| {
+            b.tags
+                .as_ref()
+                .map(|t| t.iter().any(|x| x == kind.carrier_tag()))
+        })
+        .collect();
+    let carries = match carrier.iter().copied().collect::<Vec<_>>()[..] {
+        [Some(c)] => c,
+        [None] | [] => {
+            d.notes.insert("local-stat-tags-unknown");
+            return;
+        }
+        _ => {
+            d.notes.insert("local-stat-bases-differ");
+            return;
+        }
+    };
     let local_at = |i: usize| {
         candidates
             .get(i)
-            .is_some_and(|c| matches!(ctx.mods.local_kind(&c.stats), Ok(Some(_))))
+            .is_some_and(|c| matches!(ctx.mods.local_kind(&c.stats), LocalKind::Local(_)))
     };
     if !carries
         && d.kept
