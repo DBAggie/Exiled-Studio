@@ -53,6 +53,107 @@ jobs:
         run: cargo build --workspace --all-targets --locked
       - name: Test
         run: cargo test --workspace --all-features --locked
+      # Spike C gate item 3: the committed divergence register is valid (also
+      # checked by cargo test; this is the CLI a contributor runs).
+      - name: Divergence register
+        if: runner.os == 'Linux'
+        run: cargo run --locked -p loom-parity-cli -- divergence-check docs/parity/divergence-register.json
+
+  # Spike C step 4: the PoB oracle on the public fixtures (tools/oracle/fixtures/
+  # fixtures.json), 3 runs each. Informational: not in ci-ok until it has been
+  # green for 10 consecutive runs on both runners (maintainer, 2026-11-10; C5).
+  oracle:
+    name: oracle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Build loom-parity-cli
+        run: cargo build --release --locked -p loom-parity-cli
+      # The runtime is built from the pinned sources; the key changes with the
+      # pins or the scripts. A cached build is checked like a fresh one.
+      - name: Restore the oracle runtime
+        id: oracle-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: local/oracle
+          key: oracle-${{ runner.os }}-${{ hashFiles('tools/oracle/manifest.json', 'tools/oracle/acquire.sh', 'tools/oracle/acquire.ps1') }}
+      - name: Acquire the oracle (Linux)
+        if: runner.os == 'Linux' && steps.oracle-cache.outputs.cache-hit != 'true'
+        run: tools/oracle/acquire.sh
+      - name: Acquire the oracle (Windows)
+        if: runner.os == 'Windows' && steps.oracle-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1
+      - name: Verify the oracle
+        run: target/release/loom-parity-cli oracle-verify tools/oracle/manifest.json local/oracle
+      # Linux runs without a network (a user and network namespace); Ubuntu
+      # 24.04 restricts unprivileged user namespaces through AppArmor, so the
+      # restriction is lifted on this throwaway runner first.
+      - name: Run the fixtures (Linux, no network)
+        if: runner.os == 'Linux'
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          unshare -rn sh -c 'python3 -I -c "import socket; socket.create_connection((\"1.1.1.1\", 53), 3)" 2>/dev/null && { echo "network reachable inside the namespace" >&2; exit 1; } || echo "no network inside the namespace"'
+          unshare -rn target/release/loom-parity-cli oracle-run tools/oracle/manifest.json local/oracle \
+            --out out/oracle tools/oracle/fixtures/fixtures.json
+      - name: Run the fixtures (Windows)
+        if: runner.os == 'Windows'
+        run: >-
+          target/release/loom-parity-cli oracle-run tools/oracle/manifest.json local/oracle
+          --out out/oracle tools/oracle/fixtures/fixtures.json
+      - name: Summary
+        if: always()
+        run: |
+          [ -f out/oracle/summary.md ] && cat out/oracle/summary.md >> "$GITHUB_STEP_SUMMARY"
+          [ -f local/oracle/build.json ] && { echo '```json'; cat local/oracle/build.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: oracle-${{ runner.os }}
+          path: out/oracle
+          if-no-files-found: ignore
+
+  # Windows and Linux outputs compared field by field (oracle-compare). PoB's
+  # own fixtures are checked out with CRLF on Windows, so they show
+  # input_differs; differences are reported, not failed on (exit 19 or 20).
+  oracle-compare:
+    name: oracle cross-platform
+    needs: [oracle]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: out
+      - name: Compare Windows with Linux
+        run: |
+          [ -f out/oracle-Windows/report.json ] && [ -f out/oracle-Linux/report.json ] || { echo "an oracle run is missing" >&2; exit 1; }
+          set +e
+          cargo run --release --locked -p loom-parity-cli -- oracle-compare out/oracle-Windows out/oracle-Linux --out out/compare
+          code=$?
+          set -e
+          echo "oracle-compare exit $code (0 identical, 19 only registered differences, 20 unregistered differences)" >> "$GITHUB_STEP_SUMMARY"
+          [ -f out/compare/summary.md ] && cat out/compare/summary.md >> "$GITHUB_STEP_SUMMARY"
+          case $code in 0|19|20) exit 0 ;; *) exit "$code" ;; esac
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: oracle-compare
+          path: out/compare
+          if-no-files-found: ignore
 
   wasm:
     name: wasm32 core crates
