@@ -58,7 +58,7 @@ Last Updated: 2026-11-09 (PR B4x)
 - [x] Cross-check derived tags with PoB's exported base tags (PoE1 1,090/1,090 equal; PoE2 differences all PoB's `genesis_tree_*` injection)
 - [x] Determinism on both games (clean `c3c7e15`); earlier outputs unchanged; manifests and cross-check summaries replaced in `docs/spikes/spike-a/`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers)
-- [ ] Open PR
+- [x] Open PR (#21)
 
 ## PR B4a: disambiguation and `mod-backed`
 - [ ] Base tags: `InheritsFrom` chain (`tag`, `remove_tag`) plus `BaseItemTypes.TagsKeys`, from B4x's `item_types/`
