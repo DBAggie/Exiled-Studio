@@ -24,7 +24,14 @@
 //!   (`not-a-modifier`). Lines the reader could not place are
 //!   `unrecognized-line`. Header and spec lines are item structure, counted
 //!   by kind and not item lines.
-//! - Categories are provisional (B4b); ambiguity is not filtered (B4a).
+//! - **Ambiguity (B4a):** an ambiguous line goes through the `Mods` filter
+//!   (`mod_filter`, rules in its docs) with the item's base rows (domain,
+//!   class, tags from `item_tags`, implicits), rarity, influences, and the
+//!   line's section and flags. One candidate left: `resolved`, with the
+//!   filter's steps in `filter`; otherwise `ambiguous`, with the reason.
+//! - **`mod-backed` (B4a, reported, not gated):** every resolved non-unique
+//!   line is backed or not by a fitting `Mods` row (`mod_filter::backing`).
+//! - Categories are provisional (B4b).
 //!
 //! **Scrubbing (ADR-007):** builds are named by the SHA-256 of their
 //! content; item names, `{custom}` text, and unrecognized lines are never
@@ -52,7 +59,9 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use crate::extract::{Extract, Inputs, Read, Table};
+use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
+use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
 
 /// The resolution rate the Spike B gate asks for.
 pub const GATE_RATE: f64 = 0.98;
@@ -97,42 +106,105 @@ const POB_SUFFIXED_BASES: [&str; 13] = [
     "Two-Toned Boots (Evasion/Energy Shield)",
 ];
 
-/// `BaseItemTypes` names and the scopes their rows give.
+/// `BaseItemTypes` names, the scopes their rows give, and the rows.
 #[derive(Debug, Default)]
 pub struct Bases {
     scopes: BTreeMap<String, BTreeSet<&'static str>>,
+    rows: BTreeMap<String, Vec<BaseRow>>,
+    /// Named rows whose tags are unknown (`item_tags`).
+    pub tags_unknown: usize,
 }
 
 impl Bases {
-    /// Reads `BaseItemTypes` (`Name`, `ModDomain`).
+    /// Reads `BaseItemTypes` (`Name`, `ModDomain`, `ItemClassesKey`,
+    /// `InheritsFrom`, `TagsKeys`, `Implicit_ModsKeys`), `Tags`, and the
+    /// item type files of every `InheritsFrom`.
     ///
     /// # Errors
-    /// A message when the table or a column is missing.
+    /// A message when a table or a column is missing.
     pub fn load(read: Read<'_>) -> Result<Self, String> {
+        let tag_ids = mod_filter::tag_ids(read)?;
         let table = Table::require(read, "BaseItemTypes")?;
-        let (name, domain) = (table.column("Name")?, table.column("ModDomain")?);
+        let col = |n: &str| table.column(n);
+        let (name, domain, class) = (col("Name")?, col("ModDomain")?, col("ItemClassesKey")?);
+        let (inherits, tags, implicits) = (
+            col("InheritsFrom")?,
+            col("TagsKeys")?,
+            col("Implicit_ModsKeys")?,
+        );
+        let index_list = |row: &[serde_json::Value], c: usize| -> Vec<usize> {
+            row.get(c)
+                .and_then(serde_json::Value::as_array)
+                .map(|a| {
+                    a.iter()
+                        .filter_map(serde_json::Value::as_u64)
+                        .filter_map(|v| usize::try_from(v).ok())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        let mut item_tags = ItemTags::default();
         let mut bases = Self::default();
         for row in &table.rows {
-            if let Some(n) = Table::text(row, name).filter(|n| !n.is_empty()) {
-                bases
-                    .scopes
-                    .entry(n.to_owned())
-                    .or_default()
-                    .insert(scope_of_domain(Table::int(row, domain)));
+            let Some(n) = Table::text(row, name).filter(|n| !n.is_empty()) else {
+                continue;
+            };
+            let row_domain = Table::int(row, domain);
+            bases
+                .scopes
+                .entry(n.to_owned())
+                .or_default()
+                .insert(scope_of_domain(row_domain));
+            let row_tags = Table::text(row, inherits)
+                .and_then(|path| item_tags.tags(read, path))
+                .map(|mut t| {
+                    t.extend(
+                        index_list(row, tags)
+                            .into_iter()
+                            .filter_map(|i| tag_ids.get(i).cloned()),
+                    );
+                    t
+                });
+            if row_tags.is_none() {
+                bases.tags_unknown += 1;
             }
+            bases.rows.entry(n.to_owned()).or_default().push(BaseRow {
+                domain: row_domain.unwrap_or(0),
+                class: Table::int(row, class),
+                tags: row_tags,
+                implicits: index_list(row, implicits),
+            });
         }
         Ok(bases)
     }
 
     #[cfg(test)]
     pub fn from_pairs(pairs: &[(&str, i64)]) -> Self {
+        let rows: Vec<(&str, BaseRow)> = pairs
+            .iter()
+            .map(|(n, d)| {
+                (
+                    *n,
+                    BaseRow {
+                        domain: *d,
+                        ..BaseRow::default()
+                    },
+                )
+            })
+            .collect();
+        Self::from_rows(rows)
+    }
+
+    #[cfg(test)]
+    pub fn from_rows(rows: Vec<(&str, BaseRow)>) -> Self {
         let mut bases = Self::default();
-        for (n, d) in pairs {
+        for (n, row) in rows {
             bases
                 .scopes
-                .entry((*n).to_owned())
+                .entry(n.to_owned())
                 .or_default()
-                .insert(scope_of_domain(Some(*d)));
+                .insert(scope_of_domain(Some(row.domain)));
+            bases.rows.entry(n.to_owned()).or_default().push(row);
         }
         bases
     }
@@ -140,7 +212,13 @@ impl Bases {
     /// The item's scope, or why there is none; `true` when the base is one
     /// of [`POB_SUFFIXED_BASES`] and was found after removing its ` (...)`
     /// suffix. Any other name is looked up as written.
+    #[cfg(test)]
     fn scope(&self, item: &Item) -> Result<(&'static str, bool), String> {
+        self.find(item).map(|f| (f.scope, f.suffix_removed))
+    }
+
+    /// The item's base: its rows and scope, or why there is none.
+    fn find(&self, item: &Item) -> Result<Found<'_>, String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
             (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
@@ -157,21 +235,29 @@ impl Bases {
             .contains(&name.as_str())
             .then(|| name.rsplit_once(" (").map(|(n, _)| n))
             .flatten();
-        let (scopes, suffix) = match (self.scopes.get(&name), stripped) {
-            (Some(s), _) => (s, false),
-            (None, Some(n)) => (
-                self.scopes
-                    .get(n)
-                    .ok_or_else(|| "not-in-base-item-types".to_owned())?,
-                true,
-            ),
-            (None, None) => return Err("not-in-base-item-types".to_owned()),
+        let (key, suffix_removed) = match (self.scopes.contains_key(&name), stripped) {
+            (true, _) => (name.as_str(), false),
+            (false, Some(n)) if self.scopes.contains_key(n) => (n, true),
+            _ => return Err("not-in-base-item-types".to_owned()),
         };
-        match scopes.iter().collect::<Vec<_>>().as_slice() {
-            [one] => Ok((one, suffix)),
+        let scopes: Option<Vec<&'static str>> =
+            self.scopes.get(key).map(|s| s.iter().copied().collect());
+        match scopes.as_deref() {
+            Some([one]) => Ok(Found {
+                scope: one,
+                suffix_removed,
+                rows: self.rows.get(key).map_or(&[], Vec::as_slice),
+            }),
             _ => Err("scope-conflict".to_owned()),
         }
     }
+}
+
+/// An item's base as [`Bases::find`] found it.
+struct Found<'b> {
+    scope: &'static str,
+    suffix_removed: bool,
+    rows: &'b [BaseRow],
 }
 
 /// One build file: its content hash and text.
@@ -304,6 +390,51 @@ pub struct Distinct {
     pub unique: usize,
     /// Candidates (ambiguous) or rejection reasons (unresolved).
     pub detail: BTreeSet<String>,
+    /// Why the line is still ambiguous or not mod-backed (B4a).
+    #[serde(skip_serializing_if = "BTreeSet::is_empty")]
+    pub reasons: BTreeSet<String>,
+}
+
+/// The `Mods` filter's decisions (B4a), by group.
+#[derive(Debug, Default, Serialize)]
+pub struct FilterCounts {
+    /// Decision (`resolved/<steps>`, `ambiguous/<reason>`) to non-unique
+    /// lines.
+    pub non_unique: BTreeMap<String, usize>,
+    /// Decision to unique lines.
+    pub unique: BTreeMap<String, usize>,
+    /// `<group>/<note>` to lines.
+    pub notes: BTreeMap<String, usize>,
+    /// Texts the filter resolved: detail is `<steps>: <candidate>`.
+    pub resolved: BTreeMap<String, Distinct>,
+}
+
+/// `mod-backed` over resolved non-unique lines (B4a; reported, not gated).
+#[derive(Debug, Default, Serialize)]
+pub struct ModBacked {
+    /// Resolved non-unique lines with a known base.
+    pub resolved: usize,
+    /// Of those, backed by a fitting row with overlapping values.
+    pub backed: usize,
+    /// `backed / resolved`.
+    pub share: f64,
+    /// Of `resolved`, lines the resolver resolved alone (not through the
+    /// filter): the independent check, since a line the filter resolved was
+    /// chosen because a fitting row backs it.
+    pub template_resolved: usize,
+    /// Of those, backed.
+    pub template_backed: usize,
+    /// `template_backed / template_resolved`.
+    pub template_share: f64,
+    /// Backed lines with a row whose stats equal the candidate's.
+    pub equal: usize,
+    /// Backed lines with hybrid rows only.
+    pub hybrid: usize,
+    /// Reason to lines not backed.
+    pub not_backed: BTreeMap<String, usize>,
+    /// Texts not backed (game text: a template matched), with stats and
+    /// reasons.
+    pub not_backed_texts: BTreeMap<String, Distinct>,
 }
 
 /// `summary.json`.
@@ -364,6 +495,16 @@ pub struct Summary {
     /// Measurements for B4b's categories, not categories: mark to
     /// `<group>/<outcome>` to lines not resolved (see [`marks`]).
     pub marks: BTreeMap<&'static str, BTreeMap<String, usize>>,
+    /// `Mods` rows read.
+    pub mods_rows: usize,
+    /// `Mods` rows whose spawn tag and weight arrays differ in length.
+    pub mods_bad_spawn_rows: usize,
+    /// Named `BaseItemTypes` rows whose tags are unknown.
+    pub bases_with_unknown_tags: usize,
+    /// The `Mods` filter on ambiguous lines.
+    pub filter: FilterCounts,
+    /// `mod-backed` of resolved non-unique lines.
+    pub mod_backed: ModBacked,
 }
 
 /// Outcomes whose text a template matched.
@@ -432,7 +573,7 @@ impl From<IndexStats> for IndexFields {
 }
 
 /// One item line in `report.json`.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
 pub struct LineRecord {
     /// Index of the line among the item's non-blank lines.
     pub line: usize,
@@ -447,6 +588,22 @@ pub struct LineRecord {
     /// Resolved stats (`stat=value`), or candidates (`stat,stat`), or
     /// rejection reasons.
     pub detail: Vec<String>,
+    /// The `Mods` filter's decision on an ambiguous line.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub filter: Option<String>,
+    /// The filter's notes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub filter_notes: Vec<&'static str>,
+    /// Candidates the filter removed.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub dropped: Vec<String>,
+    /// `mod-backed` of a resolved non-unique line: `equal`, `hybrid`, or
+    /// `not/<reason>`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backed: Option<String>,
+    /// The backing row's `Mods.Id`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backed_by: Option<String>,
 }
 
 /// One item in `report.json`.
@@ -530,12 +687,13 @@ fn detail(outcome: &Outcome) -> Vec<String> {
 }
 
 /// Item lines of one item, before counting.
-struct Lines<'i> {
+struct Lines<'i, 'c> {
     records: Vec<(LineRecord, bool)>,
     run: Vec<(usize, &'i Modifier)>,
+    ctx: Option<&'c Context<'c>>,
 }
 
-impl<'i> Lines<'i> {
+impl<'i> Lines<'i, '_> {
     fn flush(&mut self, index: Option<&Index<'_>>, scope_err: Option<&str>) {
         if self.run.is_empty() {
             return;
@@ -561,6 +719,7 @@ impl<'i> Lines<'i> {
                             text: m.text.clone(),
                             joined: 1,
                             detail: Vec::new(),
+                            ..LineRecord::default()
                         },
                         false,
                     ));
@@ -577,6 +736,7 @@ impl<'i> Lines<'i> {
                             text: m.text.clone(),
                             joined: 1,
                             detail: Vec::new(),
+                            ..LineRecord::default()
                         },
                         false,
                     ));
@@ -592,18 +752,63 @@ impl<'i> Lines<'i> {
         resolution: &Resolution,
         section: Option<&'static str>,
     ) {
-        let outcome = outcome_name(&resolution.outcome);
-        let detail = detail(&resolution.outcome);
+        let mut record = LineRecord {
+            section,
+            outcome: outcome_name(&resolution.outcome),
+            text: resolution.line.clone(),
+            joined: resolution.lines,
+            detail: detail(&resolution.outcome),
+            ..LineRecord::default()
+        };
+        let line = run.get(at).map(|(_, m)| LineContext::of(m));
+        let mut resolved = match &resolution.outcome {
+            Outcome::Resolved(c) => Some(c),
+            _ => None,
+        };
+        if let (Some(ctx), Some(line), Outcome::Ambiguous(cs)) =
+            (self.ctx, line, &resolution.outcome)
+        {
+            let d = mod_filter::filter(ctx, line, cs);
+            record.filter = Some(d.name());
+            record.filter_notes = d.notes.iter().copied().collect();
+            record.dropped = cs
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| !d.kept.contains(i))
+                .map(|(_, c)| candidate_text(c))
+                .collect();
+            if let [one] = d.kept.as_slice() {
+                resolved = cs.get(*one);
+                if let Some(c) = resolved {
+                    record.outcome = "resolved".to_owned();
+                    record.detail = detail(&Outcome::Resolved(c.clone()));
+                }
+            } else {
+                record.detail = d
+                    .kept
+                    .iter()
+                    .filter_map(|i| cs.get(*i))
+                    .map(candidate_text)
+                    .collect();
+            }
+        }
+        if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line, resolved)
+            && !ctx.unique
+        {
+            match mod_filter::backing(ctx, line, &c.stats) {
+                Ok((equal, id)) => {
+                    record.backed = Some(if equal { "equal" } else { "hybrid" }.to_owned());
+                    record.backed_by = Some(id.to_owned());
+                }
+                Err(reason) => record.backed = Some(format!("not/{reason}")),
+            }
+        }
         for k in 0..resolution.lines {
-            if let Some((line, _)) = run.get(at + k) {
+            if let Some((n, _)) = run.get(at + k) {
                 self.records.push((
                     LineRecord {
-                        line: *line,
-                        section,
-                        outcome: outcome.clone(),
-                        text: resolution.line.clone(),
-                        joined: resolution.lines,
-                        detail: detail.clone(),
+                        line: *n,
+                        ..record.clone()
                     },
                     !resolution.shadowed.is_empty(),
                 ));
@@ -626,6 +831,7 @@ fn excluded(
             text,
             joined: 1,
             detail: Vec::new(),
+            ..LineRecord::default()
         },
         false,
     )
@@ -636,10 +842,12 @@ fn item_lines(
     item: &Item,
     index: Option<&Index<'_>>,
     scope_err: Option<&str>,
+    ctx: Option<&Context<'_>>,
 ) -> Vec<(LineRecord, bool)> {
     let mut lines = Lines {
         records: Vec::new(),
         run: Vec::new(),
+        ctx,
     };
     for (n, line) in item.lines.iter().enumerate() {
         match &line.kind {
@@ -677,6 +885,7 @@ fn item_lines(
                     text: scrub(&line.raw),
                     joined: 1,
                     detail: Vec::new(),
+                    ..LineRecord::default()
                 },
                 false,
             ),
@@ -698,6 +907,7 @@ pub fn run(
     lookup: &TableLookup,
     lookup_report: LookupReport,
     bases: &Bases,
+    mods: &Mods,
     builds: &[Build],
     tool: Tool,
 ) -> Result<(Summary, Report), String> {
@@ -736,6 +946,9 @@ pub fn run(
             .iter()
             .map(|(n, i)| (*n, i.stats().into()))
             .collect(),
+        mods_rows: mods.row_count(),
+        mods_bad_spawn_rows: mods.bad_spawn_rows,
+        bases_with_unknown_tags: bases.tags_unknown,
         ..Summary::default()
     };
     let mut report = Report::default();
@@ -784,7 +997,14 @@ pub fn run(
                 .filter(|c| c.has_tag_name("ModRange"))
                 .count();
             let item = pob_item::read(text);
-            let record = count_item(&mut s, &mut distinct, n, &item, ranges, bases, &indexes);
+            let record = count_item(
+                &mut s,
+                &mut distinct,
+                (n, &item, ranges),
+                bases,
+                mods,
+                &indexes,
+            );
             items.push(record);
         }
         report.builds.insert(build.hash.clone(), items);
@@ -798,10 +1018,9 @@ pub fn run(
 fn count_item(
     s: &mut Summary,
     distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
-    n: usize,
-    item: &Item,
-    ranges: usize,
+    (n, item, ranges): (usize, &Item, usize),
     bases: &Bases,
+    mods: &Mods,
     indexes: &BTreeMap<&'static str, Index<'_>>,
 ) -> ItemRecord {
     s.items += 1;
@@ -838,20 +1057,37 @@ fn count_item(
     if catalyst {
         s.catalyst_items += 1;
     }
-    let scope = bases.scope(item);
-    let scope_name = match &scope {
-        Ok((name, suffix)) => {
-            if *suffix {
+    let found = bases.find(item);
+    let scope_name = match &found {
+        Ok(f) => {
+            if f.suffix_removed {
                 s.pob_base_suffix_removed += 1;
             }
-            (*name).to_owned()
+            f.scope.to_owned()
         }
         Err(reason) => format!("unknown-base/{reason}"),
     };
     *s.items_by_scope.entry(scope_name.clone()).or_default() += 1;
-    let index = scope.as_ref().ok().and_then(|(name, _)| indexes.get(name));
-    let records = item_lines(item, index, scope.as_ref().err().map(String::as_str));
     let unique = item.rarity.is_none_or(Rarity::is_unique);
+    let index = found.as_ref().ok().and_then(|f| indexes.get(f.scope));
+    let ctx = found.as_ref().ok().map(|f| Context {
+        mods,
+        bases: f.rows,
+        unique,
+        influences: item
+            .lines
+            .iter()
+            .filter(|l| l.kind == LineKind::Influence)
+            .filter_map(|l| mod_filter::influence_type(&l.raw))
+            .collect(),
+    });
+    let records = item_lines(
+        item,
+        index,
+        found.as_ref().err().map(String::as_str),
+        ctx.as_ref(),
+    );
+    let group = if unique { "unique" } else { "non_unique" };
     for (record, shadowed) in &records {
         let counts = if unique {
             &mut s.unique
@@ -866,9 +1102,9 @@ fn count_item(
                 .or_default()
                 .insert(record.outcome.clone());
         }
+        count_b4a(s, record, unique);
         if !excluded && record.outcome != "resolved" {
             for mark in marks(&record.text) {
-                let group = if unique { "unique" } else { "non_unique" };
                 *s.marks
                     .entry(mark)
                     .or_default()
@@ -904,6 +1140,12 @@ fn count_item(
                 entry.non_unique += 1;
             }
             entry.detail.extend(record.detail.iter().cloned());
+            if record.outcome == "ambiguous" {
+                entry.reasons.extend(record.filter.iter().cloned());
+                entry
+                    .reasons
+                    .extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
+            }
         }
     }
     ItemRecord {
@@ -911,6 +1153,59 @@ fn count_item(
         rarity,
         scope: scope_name,
         lines: records.into_iter().map(|(r, _)| r).collect(),
+    }
+}
+
+/// Counts the filter's decision and `mod-backed` of one line (B4a).
+fn count_b4a(s: &mut Summary, record: &LineRecord, unique: bool) {
+    let group = if unique { "unique" } else { "non_unique" };
+    if let Some(decision) = &record.filter {
+        let counts = if unique {
+            &mut s.filter.unique
+        } else {
+            &mut s.filter.non_unique
+        };
+        *counts.entry(decision.clone()).or_default() += 1;
+        for note in &record.filter_notes {
+            *s.filter.notes.entry(format!("{group}/{note}")).or_default() += 1;
+        }
+        if let Some(steps) = decision.strip_prefix("resolved/") {
+            let entry = s.filter.resolved.entry(record.text.clone()).or_default();
+            if unique {
+                entry.unique += 1;
+            } else {
+                entry.non_unique += 1;
+            }
+            entry
+                .detail
+                .extend(record.detail.iter().map(|d| format!("{steps}: {d}")));
+        }
+    }
+    let Some(backed) = &record.backed else {
+        return;
+    };
+    let m = &mut s.mod_backed;
+    let template = record.filter.is_none();
+    m.resolved += 1;
+    m.template_resolved += usize::from(template);
+    match backed.as_str() {
+        "equal" | "hybrid" => {
+            m.backed += 1;
+            m.template_backed += usize::from(template);
+            if backed == "equal" {
+                m.equal += 1;
+            } else {
+                m.hybrid += 1;
+            }
+        }
+        other => {
+            let reason = other.strip_prefix("not/").unwrap_or(other).to_owned();
+            *m.not_backed.entry(reason.clone()).or_default() += 1;
+            let entry = m.not_backed_texts.entry(record.text.clone()).or_default();
+            entry.non_unique += 1;
+            entry.detail.extend(record.detail.iter().cloned());
+            entry.reasons.insert(reason);
+        }
     }
 }
 
@@ -941,6 +1236,9 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
     r.distinct_with_mixed_outcomes = distinct.values().filter(|o| o.len() > 1).count();
     r.distinct_rate = ratio(r.distinct_resolved, r.distinct);
     r.meets_rate = r.denominator > 0 && r.rate >= GATE_RATE;
+    let m = &mut s.mod_backed;
+    m.share = ratio(m.backed, m.resolved);
+    m.template_share = ratio(m.template_backed, m.template_resolved);
 }
 
 #[cfg(test)]

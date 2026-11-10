@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B4x)
+Last Updated: 2026-11-10 (PR B4a)
 
 # Spike B: tasks
 
@@ -61,9 +61,17 @@ Last Updated: 2026-11-09 (PR B4x)
 - [x] Open PR (#21)
 
 ## PR B4a: disambiguation and `mod-backed`
-- [ ] Base tags: `InheritsFrom` chain (`tag`, `remove_tag`) plus `BaseItemTypes.TagsKeys`, from B4x's `item_types/`
-- [ ] Mods filter (domain, generation type, stat set; spawn tags tie-break only)
-- [ ] `mod-backed` with listed exceptions
+- [x] Check PR #21 merge (`ad7a349`, main CI run 42739421598 green); Steam builds unchanged
+- [x] Base tags: `InheritsFrom` chain (`tag`, `remove_tag`) plus `BaseItemTypes.TagsKeys`, from B4x's `item_types/` (`item_tags.rs`)
+- [x] Mods filter (domain, generation type, stat set; spawn tags tie-break only; `values` tie-break; essence, influence, crafted guards) (`mod_filter.rs`)
+- [x] `mod-backed` with listed exceptions (template-only share reported apart)
+- [x] Corpus run from clean `b02003d`, two runs byte-identical; summary replaced in `docs/spikes/spike-b/`
+- [x] Review with `code-architecture-reviewer`; apply findings (no blockers)
+- [x] Open PR (#22)
+
+## Maintainer decision (from B4a)
+- [ ] `Essences` and `CraftingBenchOptions` through an extractor PR (B4y), or categorize the 107 lines as `parser-gap/ambiguous` in B4b
+- [ ] Anoint source (35 lines) or `parser-gap/ambiguous`
 
 ## PR B4b: categories, gate
 - [ ] Category rules with positive evidence and tests; `uncategorized = 0`

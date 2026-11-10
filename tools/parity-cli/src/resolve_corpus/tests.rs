@@ -102,6 +102,10 @@ const BUILD: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
 </Items></PathOfBuilding>"#;
 
 fn run_one(builds: &[Build]) -> (Summary, Report) {
+    run_with(builds, &Mods::default())
+}
+
+fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
     let extract = load(&read).unwrap();
     let (lookup, lookup_report) = TableLookup::load(&read).unwrap();
     run(
@@ -109,10 +113,60 @@ fn run_one(builds: &[Build]) -> (Summary, Report) {
         &lookup,
         lookup_report,
         &bases(),
+        mods,
         builds,
         Tool::default(),
     )
     .unwrap()
+}
+
+/// `speed_a` and `life` have `ITEM` prefix rows; `speed_b` has none.
+fn speed_mods() -> Mods {
+    let row = |stat: &str, lo, hi| mod_filter::ModRow {
+        id: format!("{stat}_row"),
+        domain: 1,
+        generation: 1,
+        stats: vec![(stat.to_owned(), lo, hi)],
+        ..mod_filter::ModRow::default()
+    };
+    Mods::from_rows(vec![row("speed_a", 10, 15), row("life", 20, 30)])
+}
+
+#[test]
+fn run_should_resolve_an_ambiguous_line_through_the_mods_filter() {
+    let (s, r) = run_with(&[Build::new(BUILD.as_bytes().to_vec())], &speed_mods());
+    assert_eq!(s.non_unique.outcomes.get("ambiguous"), None);
+    assert_eq!(s.filter.non_unique.get("resolved/mods"), Some(&1));
+    let line = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .find(|l| l.text == "12% increased Speed")
+        .unwrap();
+    assert_eq!(
+        (line.outcome.as_str(), line.dropped.as_slice()),
+        ("resolved", ["speed_b".to_owned()].as_slice())
+    );
+    assert_eq!(line.backed_by.as_deref(), Some("speed_a_row"));
+}
+
+#[test]
+fn run_should_count_mod_backed_over_resolved_non_unique_lines() {
+    let (s, _) = run_with(&[Build::new(BUILD.as_bytes().to_vec())], &speed_mods());
+    // Resolved: +10 Life (an implicit: the prefix row does not fit),
+    // +(20-30) Life, 12% Speed, and the tincture line (no row).
+    let m = &s.mod_backed;
+    assert_eq!((m.resolved, m.backed, m.equal), (4, 2, 2));
+    assert_eq!(m.not_backed.get("no-fitting-row"), Some(&1));
+    assert_eq!(m.not_backed.get("no-row-with-stats"), Some(&1));
+}
+
+#[test]
+fn run_should_list_the_reason_of_a_line_that_stays_ambiguous() {
+    let (s, _) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
+    let amb = s.ambiguous.get("12% increased Speed").unwrap();
+    assert!(amb.reasons.contains("ambiguous/no-backed-candidate"));
 }
 
 #[test]
@@ -342,4 +396,39 @@ impl Build {
             text: self.text.clone(),
         }
     }
+}
+
+#[test]
+fn run_should_filter_unique_lines_without_counting_them_as_mod_backed() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: UNIQUE
+        Uniq
+        Coral Ring
+        Implicits: 0
+        12% increased Speed
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_with(&[Build::new(xml.as_bytes().to_vec())], &speed_mods());
+    // `speed_a` has only a prefix row: on a unique nothing fits.
+    assert_eq!(
+        s.filter.unique.get("ambiguous/no-backed-candidate"),
+        Some(&1)
+    );
+    assert_eq!(s.mod_backed.resolved, 0);
+    let line = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .next()
+        .unwrap();
+    assert!(line.backed.is_none());
+}
+
+#[test]
+fn run_should_split_mod_backed_by_how_the_line_was_resolved() {
+    let (s, _) = run_with(&[Build::new(BUILD.as_bytes().to_vec())], &speed_mods());
+    let m = &s.mod_backed;
+    // The filter resolved `12% increased Speed`; the other three are the
+    // resolver's own, of which `+(20-30) to maximum Life` is backed.
+    assert_eq!((m.template_resolved, m.template_backed), (3, 1));
 }
