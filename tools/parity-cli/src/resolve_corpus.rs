@@ -529,6 +529,8 @@ pub struct Summary {
     /// Item property rule inputs (B5d): `(ClientStrings templates,
     /// labels, AlternateQualityTypes rows)`.
     pub property_inputs: (usize, usize, usize),
+    /// Property ids not read and quality descriptions dropped (B5d).
+    pub property_missing: Vec<String>,
     /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
     pub compositions_missing: Vec<String>,
     /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
@@ -1132,6 +1134,7 @@ pub fn run(
         graft_bases: bases.grafts.len(),
         graft_inputs: bases.grafts.inputs(),
         property_inputs: bases.properties.inputs(),
+        property_missing: bases.properties.missing().to_vec(),
         resolved_kinds: BTreeMap::new(),
         composition_rows: game
             .compositions

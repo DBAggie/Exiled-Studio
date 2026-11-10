@@ -115,8 +115,13 @@ pub struct Property {
 pub struct Properties {
     templates: Vec<(String, Template)>,
     labels: Vec<(String, String)>,
-    /// `AlternateQualityTypes.Description` to its `CatalystMod` stats.
-    qualities: BTreeMap<String, Vec<(String, i64)>>,
+    /// `AlternateQualityTypes.Description` to its `Id` and the fixed stats
+    /// of its `CatalystMod` row.
+    qualities: BTreeMap<String, (String, Vec<(String, i64)>)>,
+    /// Named ids not read (missing from `ClientStrings`, or a text of
+    /// another shape) and quality descriptions dropped because two rows
+    /// share them with different stats, recorded for the summary.
+    missing: Vec<String>,
 }
 
 impl Properties {
@@ -144,13 +149,25 @@ impl Properties {
             out.templates.sort_by(|a, b| a.0.cmp(&b.0));
             out.labels.sort();
         }
+        for id in PROPERTY_IDS.iter().chain(&LABEL_IDS) {
+            let read_ = out.templates.iter().any(|(i, _)| i == id)
+                || out.labels.iter().any(|(i, _)| i == id);
+            if !read_ {
+                out.missing.push((*id).to_owned());
+            }
+        }
         let Some(aq) = Table::read(read, "AlternateQualityTypes")? else {
             return Ok(out);
         };
         let mods = Table::require(read, "Mods")?;
         let stats = Table::require(read, "Stats")?;
         let stat_id = stats.column("Id")?;
-        let (desc, catalyst) = (aq.column("Description")?, aq.column("CatalystMod")?);
+        let (aq_id, desc, catalyst) = (
+            aq.column("Id")?,
+            aq.column("Description")?,
+            aq.column("CatalystMod")?,
+        );
+        let mut duplicates = Vec::new();
         let mut slots = Vec::new();
         for n in 1..=8 {
             slots.push((
@@ -164,7 +181,7 @@ impl Properties {
                 .and_then(|n| rows.get(n).cloned())
         };
         for r in &aq.rows {
-            let Some(d) = Table::text(r, desc) else {
+            let (Some(qid), Some(d)) = (Table::text(r, aq_id), Table::text(r, desc)) else {
                 continue;
             };
             let mut list = Vec::new();
@@ -185,9 +202,27 @@ impl Properties {
                     }
                 }
             }
-            out.qualities.insert(d.to_owned(), list);
+            match out.qualities.get(d) {
+                Some((_, old)) if *old != list => duplicates.push(d.to_owned()),
+                Some(_) => {}
+                None => {
+                    out.qualities.insert(d.to_owned(), (qid.to_owned(), list));
+                }
+            }
+        }
+        duplicates.sort();
+        duplicates.dedup();
+        for d in duplicates {
+            out.qualities.remove(&d);
+            out.missing.push(format!("AlternateQualityTypes:{d}"));
         }
         Ok(out)
+    }
+
+    /// Named ids not read and duplicate quality descriptions dropped.
+    #[must_use]
+    pub fn missing(&self) -> &[String] {
+        &self.missing
     }
 
     /// What was read, for the summary: `(templates, labels, quality types)`.
@@ -223,17 +258,21 @@ impl Properties {
                 detail: vec![format!("property={id}"), format!("value={value}")],
             });
         }
-        let stats = self.qualities.get(label)?;
+        let (qid, stats) = self.qualities.get(label)?;
         let n = value.strip_prefix('+')?.strip_suffix('%')?;
         if !number(n) {
             return None;
         }
         let mut detail: Vec<String> = stats.iter().map(|(s, v)| format!("{s}={v}")).collect();
+        detail.push(format!("quality_type={qid}"));
         detail.push(format!("quality={n}"));
-        Some(Property {
-            kind: "catalyst-quality",
-            detail,
-        })
+        // A type without a catalyst stat (map quality) is a property only.
+        let kind = if stats.is_empty() {
+            "item-property"
+        } else {
+            "catalyst-quality"
+        };
+        Some(Property { kind, detail })
     }
 }
 
@@ -254,9 +293,13 @@ mod tests {
             labels: vec![("ZanaInfluencedItem".to_owned(), "Memory Strands".to_owned())],
             qualities: [(
                 "Quality (Attribute Modifiers)".to_owned(),
-                vec![("jewellery_attribute_quality".to_owned(), 1)],
+                (
+                    "JewelleryAttributeQuality".to_owned(),
+                    vec![("jewellery_attribute_quality".to_owned(), 1)],
+                ),
             )]
             .into(),
+            missing: Vec::new(),
         }
     }
 
@@ -290,7 +333,14 @@ mod tests {
         );
         let q = p.resolve("Quality (Attribute Modifiers): +20%").unwrap();
         assert_eq!(q.kind, "catalyst-quality");
-        assert_eq!(q.detail, ["jewellery_attribute_quality=1", "quality=20"]);
+        assert_eq!(
+            q.detail,
+            [
+                "jewellery_attribute_quality=1",
+                "quality_type=JewelleryAttributeQuality",
+                "quality=20"
+            ]
+        );
         assert_eq!(p.resolve("Quality (Unknown): +20%"), None);
         assert_eq!(p.resolve("Memory Strands: many"), None);
     }
@@ -335,8 +385,10 @@ mod tests {
             ),
             "tables/AlternateQualityTypes.json" => table(
                 "AlternateQualityTypes",
-                &["Description", "CatalystMod"],
-                r#"[["Quality (Attribute Modifiers)", 0], ["Quality (Rarity)", null]]"#,
+                &["Id", "Description", "CatalystMod"],
+                r#"[["JewelleryAttributeQuality", "Quality (Attribute Modifiers)", 0],
+                    ["MapRarityQuality", "Quality (Rarity)", null],
+                    ["Twin1", "Quality (Twin)", 0], ["Twin2", "Quality (Twin)", null]]"#,
             ),
             "tables/Mods.json" => table("Mods", &mod_cols, &format!("[[{}]]", row.join(", "))),
             "tables/Stats.json" => table("Stats", &["Id"], r#"[["jewellery_attribute_quality"]]"#),
@@ -349,19 +401,82 @@ mod tests {
     fn load_should_read_named_texts_and_catalyst_stats() {
         let p = Properties::load(&read).unwrap();
         assert_eq!(p.inputs(), (1, 1, 2));
+        let q = p.resolve("Quality (Attribute Modifiers): +20%").unwrap();
         assert_eq!(
-            p.resolve("Quality (Attribute Modifiers): +20%")
-                .unwrap()
-                .detail,
-            ["jewellery_attribute_quality=1", "quality=20"]
+            (q.kind, q.detail.as_slice()),
+            (
+                "catalyst-quality",
+                [
+                    "jewellery_attribute_quality=1",
+                    "quality_type=JewelleryAttributeQuality",
+                    "quality=20"
+                ]
+                .map(str::to_owned)
+                .as_slice()
+            )
         );
+        // No catalyst stat: a property with the type's identity.
+        let r = p.resolve("Quality (Rarity): +10%").unwrap();
         assert_eq!(
-            p.resolve("Quality (Rarity): +10%").unwrap().detail,
-            ["quality=10"]
+            (r.kind, r.detail.as_slice()),
+            (
+                "item-property",
+                ["quality_type=MapRarityQuality", "quality=10"]
+                    .map(str::to_owned)
+                    .as_slice()
+            )
+        );
+        // Two rows with one description and different stats: dropped, recorded.
+        assert_eq!(p.resolve("Quality (Twin): +5%"), None);
+        assert!(
+            p.missing()
+                .contains(&"AlternateQualityTypes:Quality (Twin)".to_owned())
+        );
+        // Named ids absent from the fixture's `ClientStrings` are recorded.
+        assert!(
+            p.missing()
+                .contains(&"ItemDisplayChargesNCharges".to_owned())
         );
         assert!(p.resolve("Lasts 2 Seconds").is_some());
         let none = |_: &str| -> Result<Vec<u8>, String> { Err("absent".to_owned()) };
         assert_eq!(Properties::load(&none).unwrap().inputs(), (0, 0, 0));
+    }
+
+    #[test]
+    fn resolve_should_read_singular_and_current_of_max_templates() {
+        let tpl = |id: &str, t: &str| (id.to_owned(), Template::new(t).unwrap());
+        let p = Properties {
+            templates: vec![
+                tpl("ItemDisplayFlaskBuffDuration1Second", "Lasts {0} Second"),
+                tpl(
+                    "ItemDisplayChargesCurrentOfMaxN",
+                    "Currently has {0} of {1} Charges",
+                ),
+            ],
+            ..Properties::default()
+        };
+        assert_eq!(
+            p.resolve("Lasts 1 Second").unwrap().detail,
+            ["property=ItemDisplayFlaskBuffDuration1Second", "{0}=1"]
+        );
+        assert_eq!(
+            p.resolve("Currently has 20 of 40 Charges").unwrap().detail,
+            [
+                "property=ItemDisplayChargesCurrentOfMaxN",
+                "{0}=20",
+                "{1}=40"
+            ]
+        );
+    }
+
+    #[test]
+    fn number_should_take_plain_digits_with_an_optional_decimal_part() {
+        for ok in ["0", "40", "3.70"] {
+            assert!(number(ok), "{ok}");
+        }
+        for bad in ["", "3.", ".5", "1,000", "-1", "+1", "x"] {
+            assert!(!number(bad), "{bad}");
+        }
     }
 
     #[test]

@@ -56,7 +56,7 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
 }
 
 fn bases() -> Bases {
-    Bases::from_pairs(&[
+    let mut b = Bases::from_pairs(&[
         ("Coral Ring", 1),
         ("Two-Toned Boots", 1),
         ("Ring", 1),
@@ -64,7 +64,10 @@ fn bases() -> Bases {
         ("Fleshgraft", 38),
         ("Twin Base", 1),
         ("Twin Base", 34),
-    ])
+    ]);
+    // The fixture's `ClientStrings` has `Lasts {0} Seconds` (B5d).
+    b.properties = Properties::load(&read).unwrap();
+    b
 }
 
 const BUILD: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
@@ -455,14 +458,16 @@ fn run_should_categorize_every_line_that_is_not_resolved() {
     let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
     let c = s.categories.get("non_unique").unwrap();
     assert_eq!(c.get("special-case/author-note"), Some(&2), "{c:?}");
-    assert_eq!(c.get("special-case/item-property"), Some(&1));
+    // `Lasts 3 Seconds` resolves as a typed property since B5d.
+    assert_eq!(c.get("special-case/item-property"), None);
+    assert_eq!(s.resolved_kinds.get("non_unique/item-property"), Some(&1));
     assert_eq!(c.get("data-gap/legacy-text"), Some(&1));
     assert_eq!(c.get("parser-gap/near-miss"), Some(&1));
     assert_eq!(s.gate.uncategorized, 0);
-    // Notes and legacy text are excluded (B4b, B5b); the other two count
-    // as unresolved.
+    // Notes and legacy text are excluded (B4b, B5b); the property line
+    // resolves (B5d) and the near-miss stays unresolved.
     assert_eq!((s.rate.denominator, s.rate.excluded), (2, 3));
-    assert_eq!(s.gate.unresolved, 2);
+    assert_eq!(s.gate.unresolved, 1);
     // Note text is hashed in the summary; matched game text is written.
     let json = serde_json::to_string(&s).unwrap();
     assert!(!json.contains("Buy this one") && !json.contains("Some words"));
@@ -667,4 +672,45 @@ fn granted_skill_should_change_only_unresolved_no_template_lines() {
         record.detail,
         ["graft=TulGraft4", "skill=Preserving Stillness", "level=30"]
     );
+}
+
+#[test]
+fn item_property_should_change_only_unresolved_no_template_lines() {
+    let props = Properties::default();
+    let mut ambiguous = LineRecord {
+        outcome: "ambiguous".to_owned(),
+        text: "Lasts 3 Seconds".to_owned(),
+        ..LineRecord::default()
+    };
+    item_property(&mut ambiguous, &props);
+    assert_eq!(
+        (ambiguous.outcome.as_str(), ambiguous.kind),
+        ("ambiguous", None)
+    );
+}
+
+#[test]
+fn run_should_resolve_a_flask_property_line_as_a_typed_property() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 0
+        Lasts 3 Seconds
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    let line = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .find(|l| l.text == "Lasts 3 Seconds")
+        .unwrap();
+    assert_eq!(
+        (line.outcome.as_str(), line.kind),
+        ("resolved", Some("item-property"))
+    );
+    assert_eq!(s.resolved_kinds.get("non_unique/item-property"), Some(&1));
+    assert_eq!(s.property_inputs.0, 1);
+    assert_eq!(s.rate.stat_resolved, 0);
 }
