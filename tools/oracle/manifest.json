@@ -1,0 +1,24 @@
+{
+  "format": 1,
+  "pob": {
+    "repository": "https://github.com/PathOfBuildingCommunity/PathOfBuilding.git",
+    "tag": "v2.67.2",
+    "commit": "b32759ab0f31a1c8499a0d420cb0f0633d4fe478",
+    "tree": "74b90d3b89994d6e738d3cb836e9c48162ca6b57"
+  },
+  "luajit": {
+    "repository": "https://github.com/LuaJIT/LuaJIT.git",
+    "commit": "2460b3ff93a1c955de3d62cfc825de7d68dc272e",
+    "version": "LuaJIT 2.1.1784580905",
+    "defines": ["LUAJIT_SECURITY_PRNG=0"],
+    "security": { "prng": 0, "strhash": 1, "strid": 1, "mcode": 1 }
+  },
+  "luautf8": {
+    "repository": "https://github.com/starwing/luautf8.git",
+    "version": "0.1.6",
+    "rock": "luautf8 0.1.6-1",
+    "commit": "1bb70d45208d4033dcc75efee968be70534dd3ab",
+    "module": "lua-utf8"
+  },
+  "adapter": { "protocol": 1 }
+}

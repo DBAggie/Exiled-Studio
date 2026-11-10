@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C0: plan)
+Last Updated: 2026-11-10 (PR C1: manifest hash decision; step 1 done in C1)
 
 # Spike C: thin oracle harness (plan)
 
@@ -16,7 +16,7 @@ Authority: the ACTION-PLAN and ADR-006 define the spike. `docs/spikes/spike-c-le
 
 ## Target state
 - `tools/oracle/` (new, non-Rust, MIT, our own code):
-  - `manifest.json`: PoB repository URL, tag, commit, expected git tree hash of the checkout; LuaJIT repository, commit; `luautf8` source and version; adapter protocol version. Per platform: expected SHA-256 of the built `luajit` binary and `lua-utf8` module, recorded after the first reproducible build (or a documented reason why a build hash is not stable, then the source commit is the pin and the binary hash is recorded per run).
+  - `manifest.json`: PoB repository URL, tag, commit, expected git tree hash of the checkout; LuaJIT repository, commit, build defines, expected `jit.version` and `jit.security` values; `luautf8` source, version, commit, module name; adapter protocol version. **Binary hashes are not in the manifest** (C1 measured that MSVC builds embed the build path, so hashes differ per machine): the acquire scripts record them in `local/oracle/build.json`, `oracle-verify` checks the files against it and probes the runtime's version and flags (context file, Decisions).
   - `adapter/oracle.lua`: the minimal Lua adapter (protocol v1).
   - `schema/oracle-output.schema.json`: normalized output contract.
   - `fixtures/`: fixture manifest and synthetic fixtures (our own XML, committed).
@@ -45,7 +45,7 @@ Authority: the ACTION-PLAN and ADR-006 define the spike. `docs/spikes/spike-c-le
   1. *Public, in CI:* PoB's own `spec/TestBuilds/3.13/*.xml` (5 builds), read from the pinned checkout by path and blob hash (not copied), plus synthetic fixtures we write (a minimal level-1 build, one malformed XML, and a minimal build with one timeless jewel, so CI covers the `Inflate` shim and the no-write check). PoB's 3.13 builds are marked `old-tree` in the fixture manifest (PoB converts their tree on load). Timeout, protocol violations, startup errors, and nondeterminism are tested with separate fake adapter scripts that the Rust tests launch; `oracle.lua` holds no test code.
   2. *Corpus, local only:* the maintainer's 21 builds, keyed by content hash, run on the workstation. Only summaries (hashes, counts, classes) are committed, as in Spike B.
   3. *Intentional discrepancy:* a synthetic fixture pair whose second member changes one input (for example a gem level), so `oracle-compare` must report an `ORACLE_UNEXPECTED_DIFFERENCE` on the expected fields, and then `ORACLE_EXPECTED_DIFFERENCE` once a test register entry covers it.
-  Whether scrubbed corpus builds may be committed for CI is open question 2 (default: no).
+  Corpus builds are not committed for CI (open question 2, maintainer 2026-11-10).
 - **Divergence register (ADR-006):** one versioned JSON file. Each entry: `id`, `mechanic`, `fixture` (fixture id or content hash), `field` (normalized output path), `comparison` (`exact`, or `abs` / `rel` with a tolerance, so tolerances are field-specific and written down, ADR-006), `oracle_value`, `successor_value`, `kind` (`game-truth`, `pob-bug`, `data-version`, `harness`), `evidence` (links or citations; game evidence per ADR-001), `test` (the test that pins it), `added`, `status`. Unregistered differences fail a parity gate; Spike C only defines the format, the validator, and the comparison hook. `oracle-compare` compares exactly unless a register entry names a tolerance for that field; default tolerances per field family are Phase 3 work, when there is a successor value to compare (oracle-vs-oracle runs must match exactly). The register is in `docs/parity/` because it is a reviewed project record, not tool data.
 - **Rust side stays in `tools/parity-cli`** (AGENTS.md: "maintainer-run oracle and corpus harnesses"). It may use `std::process`, files, and the clock; no core crate changes. The output schema is small, so the check is written by hand in Rust against it (no JSON-schema crate); the `.schema.json` file documents the contract. Any new dependency (possibly `wait-timeout`) goes through `cargo deny` in the PR that adds it.
 - **PoE2:** out of scope (no PoE2 oracle; the spec says so).
@@ -74,7 +74,7 @@ Fixture manifest (tiers 1-3), `oracle-compare`, register schema, `divergence-che
 
 ### 4. CI on Windows and Linux (M)
 `oracle` job in `ci.yml` (matrix `ubuntu-latest`, `windows-latest`), runtime cached by commit hashes, Linux run without network, Windows vs Linux outputs compared and reported.
-- Accept: green on both runners; the job fails on an injected wrong hash (one-off branch run, linked); `ci-ok` includes it once stable (or it stays informational at first, maintainer's call, open question 4).
+- Accept: green on both runners; the job fails on an injected wrong hash (one-off branch run, linked); the job is informational (not in `ci-ok`); C5 makes it required after 10 consecutive green runs on both runners (open question 4, maintainer 2026-11-10).
 - Depends on: 3 (fixtures) and 2b.
 
 ### 5. Report and gate verdict (S-M)
