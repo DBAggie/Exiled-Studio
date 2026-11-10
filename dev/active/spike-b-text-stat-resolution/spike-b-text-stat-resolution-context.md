@@ -149,7 +149,7 @@ Verdict: proceed with changes. All applied in this plan:
 - **Verify:** `cargo test -p loom-parity-cli`; `cargo run --release -p loom-parity-cli -- resolve-corpus "<builds>" local/determinism/poe1/run1 --out <dir>` (exit 1 while below 98%).
 - **For the next PR (as written at B4a):** `Essences` (93 lines), `CraftingBenchOptions` (14), an anoint source (35). Maintainer decision 2026-11-10: option (a), extractor and filter in one PR (B4y).
 
-## PR B4y: `Essences` for the Mods filter (open, in review, branch `spike-b/b4y-essences-bench`)
+## PR B4y: `Essences` for the Mods filter (PR #23, open, branch `spike-b/b4y-essences-bench`)
 - PR #22 (B4a) merged 2026-11-10 as `08b7d9c` (main CI run 42745121406 green). Steam build unchanged (PoE1 26530219).
 - **Done:** `tools/extractor/src/extract.rs` `MOD_SOURCE_TABLES_POE1 = ["Essences"]` (PoE1 root); `tools/parity-cli/src/mod_filter.rs` `ESSENCE_COLUMNS`, `essence_classes`, `ModRow.essence_classes`, `essence_on` / `essence_known_on`, `Mods::essence_rows`; summary `essence_rows_known` (337) / `essence_rows_unknown` (125). Spike A report section 20.
 - **Decisions:**

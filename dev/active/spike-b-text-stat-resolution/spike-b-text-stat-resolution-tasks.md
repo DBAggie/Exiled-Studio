@@ -80,7 +80,7 @@ Last Updated: 2026-11-10 (PR B4y)
 - [x] Essence classes in `mod_filter` (fit, spawn-tags, guard for unknown classes); tests
 - [x] Corpus run (clean `7c20caa`), two runs byte-identical; summary replaced
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#23)
 
 ## PR B4b: categories, gate
 - [ ] Category rules with positive evidence and tests; `uncategorized = 0`
