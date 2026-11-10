@@ -141,7 +141,7 @@ Last Updated: 2026-11-10 (PR B5d)
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `c437709`)
 - [x] Open PR
 
-## PR B5d: item properties
+## PR B5d: item properties (PR #31)
 - [x] `properties.rs` (templates, label, catalyst quality), kinds `item-property` / `catalyst-quality`, `property_inputs`; tests (unit and load fixture)
 - [x] Corpus run from clean `8bce4ee`, two runs byte-identical: 99.3%, 15 / 15 non-unique property lines
 - [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `8bce4ee`)
