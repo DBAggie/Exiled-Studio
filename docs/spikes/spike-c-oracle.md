@@ -1,6 +1,6 @@
 # Spike C: thin oracle harness (report)
 
-Status: **gate met** (2026-11-10, PR C5). Decision: **`FEASIBLE_WITH_ADAPTATION`**: the adaptations are already made, documented, and recorded in every output; nothing blocks Phase 2 or Phase 3 (limitations in section 9).
+Status: **gate met** (2026-11-10, PR #39, C5). Decision: **`FEASIBLE_WITH_ADAPTATION`**: the adaptations are already made, documented, and recorded in every output; nothing blocks Phase 2 or Phase 3 (limitations in section 9).
 
 Plan and session records: `dev/completed/spike-c-oracle-harness/` (plan, context, tasks). Older, longer specification: `docs/spikes/spike-c-legacy-oracle.md` (the ACTION-PLAN wins where they conflict).
 
@@ -17,7 +17,7 @@ ACTION-PLAN gate: deterministic repeated runs on Windows and Linux; environment 
 | #35 (C2a) | 2a | Adapter `tools/oracle/adapter/oracle.lua` + `json.lua` (protocol 1), output schema, `oracle-run` (cleared environment, time limit, schema check, normalization, repeats, report). |
 | #36 (C2b) | 2b | Shims `inflate` (zlib through LuaJIT FFI) and `write_guard`; jewel probe; clean-checkout check after each fixture (protocol 2). |
 | #37 (C3, with #38 squashed into it) | 3, 3b, 4 | Fixture manifest, `oracle-compare`, divergence register and `divergence-check`; shim `variant_order` (protocol 3); 21 credited community builds (ADR-007 Amendment 1); CI jobs `oracle` (Linux, Windows) and `oracle cross-platform`. |
-| C5 (this PR) | 5 | This report; corpus evidence on Windows and Linux from `main`; the `oracle` jobs made required (section 7). |
+| #39 (C5, this PR) | 5 | This report; corpus evidence on Windows and Linux from `main`; the `oracle` jobs made required (section 7). |
 
 All oracle code is in `tools/parity-cli` (Rust) and `tools/oracle/` (Lua adapter, manifest, schema, fixtures, scripts). No core crate changed. PoB is run from a verified checkout in `local/oracle/pob/` and never copied or patched (ADR-006).
 

@@ -66,4 +66,4 @@ Last Updated: 2026-11-10 (PR C5: report and gate; task closed)
 - [x] Promote the `oracle` job into `ci-ok` after 10 consecutive green runs on both runners; `oracle-compare` exit 20 fails the job
 - [x] ACTION-PLAN status, handoff, CLAUDE.md, README, AGENTS.md; task folder to `dev/completed/`
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#39)
