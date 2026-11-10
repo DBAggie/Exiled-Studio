@@ -94,13 +94,16 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
-# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 2, with the shims in
-# shims.lua: Inflate through zlib, io.open write guard) on the pinned runtime, 3 times each (offline;
+# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 3, with the shims in
+# shims.lua: Inflate through zlib, variant_order (sorted pairs for PoB's ambiguous old-format Vaal gem
+# lookup; see docs/parity/README.md), io.open write guard) on the pinned runtime, 3 times each (offline;
 # verifies first; checks the checkout after each fixture). Writes report.json, summary.md, outputs/,
 # runs/ to <dir> (must not exist); exits with the smallest failing class (10-18), else 4 if a fixture
 # did not have the outcome its fixture manifest names, else 3 if a fixture is partial. The public
-# fixtures from their manifest (PoB's 3.13 builds pinned by git blob, ours by SHA-256, each with its
-# expected outcome; exit 0 when all are met):
+# fixtures from their manifest (PoB's 3.13 builds pinned by git blob, ours and the credited community
+# builds in tools/oracle/fixtures/community/ (SOURCES.md, ADR-007 Amendment 1) by SHA-256, each with
+# its expected outcome; exit 0 when all are met). CI runs the same in the informational `oracle` job
+# (Linux under `unshare -rn`, Windows) and compares the two platforms with oracle-compare:
 cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> tools/oracle/fixtures/fixtures.json
 # The maintainer's corpus (local only, ADR-007): --anonymous names builds by SHA-256, so the report
 # holds no file names; commit only scrubbed summaries (docs/spikes/spike-c/):

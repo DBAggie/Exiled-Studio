@@ -52,3 +52,6 @@ The intentional-discrepancy fixture pair (`tools/oracle/fixtures/minimal-level1.
 ## Where the oracle side comes from
 
 `tools/oracle/` holds the pinned oracle (manifest, adapter, fixtures); `AGENTS.md` lists the commands; `dev/active/spike-c-oracle-harness/` holds the plan and the measured facts (Spike C).
+
+### Where the oracle chooses for PoB
+Shims normally only undo headless artifacts (`inflate`, `write_guard`). One shim chooses a result that PoB itself leaves to chance: `variant_order` (adapter protocol 3, PR C3b+C4). PoB v2.67.2 loads a Vaal gem saved without a `variantId` (the save format before 3.23) as whichever of three variants (base, `AltX`, `AltY`) `pairs` yields first, which changes from run to run. The oracle always loads the **base** variant, the gem such a save meant; each output lists the affected gems in `probe.variant_order`. A successor that loads such a gem differently from the oracle needs a register entry like any other difference.
