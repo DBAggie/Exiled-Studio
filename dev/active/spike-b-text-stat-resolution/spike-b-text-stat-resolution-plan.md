@@ -129,6 +129,13 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 - **Depends on:** 4a, 4y (same filter code).
 - **Done:** rule as `unset-fit` + `numbered-stat` ("Ambiguity" above); 42 / 42 anoint lines resolve.
 
+### 5. Area PRs after the B4b verdict (maintainer decisions 2026-11-10; report section 7a)
+- **B5a, local/global pairs (done):** game-data filter steps, no ADR-015 fallback: `local-stat` (`Stats.IsLocal` / `IsWeaponLocal` with the base's `weapon` / `armour` tag), legacy essence rows read through their `ModType`, `spawn-values`. Accept: unit tests; every line the earlier steps already resolved keeps its stat or the change is explained; corpus run. Result 72 -> 5 ambiguous, 97.1%.
+- **B5b, legacy text:** `data-gap/legacy-text` excluded from the rate (as `author-note`); ADR-007 count 21.
+- **B5c, client-composed lines:** eldritch presence wrapper and graft skill line resolved from game data.
+- **B5d, item properties:** attempt to resolve as typed item properties from game data.
+- **B5e, the rest:** near-miss author edits, split-section, only-shadowed, as recommended.
+
 ### 4b. Categories, gate, report (M)
 - Fixed category list, first match wins. **Each category needs positive evidence; a line without it is `uncategorized`.**
   - `unique`: item rarity unique or relic. Not in the gate denominator. Its unresolved lines also carry a second-level category from this list (for the per-area fallback decision).

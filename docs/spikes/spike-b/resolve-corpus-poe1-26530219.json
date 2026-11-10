@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "39bd52dac28a14d53740a5d6bdcb3e4d3b4b7bae",
+      "commit": "4031f1c8b75050c547d5084b8b23cc2de6b8613f",
       "dirty": false
     },
     "builds": [
@@ -437,12 +437,12 @@
   "non_unique": {
     "lines": 3938,
     "outcomes": {
-      "ambiguous": 72,
+      "ambiguous": 5,
       "excluded/author-note": 238,
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3248,
+      "resolved": 3315,
       "unresolved/no-template": 93,
       "unresolved/only-shadowed": 1
     },
@@ -452,10 +452,10 @@
         "unresolved/no-template": 3
       },
       "explicit": {
-        "ambiguous": 70,
+        "ambiguous": 3,
         "excluded/author-note": 238,
         "excluded/pob-custom": 54,
-        "resolved": 2489,
+        "resolved": 2556,
         "unresolved/no-template": 75,
         "unresolved/only-shadowed": 1
       },
@@ -502,14 +502,14 @@
   },
   "rate": {
     "denominator": 3414,
-    "resolved": 3248,
-    "rate": 0.9513766842413591,
+    "resolved": 3315,
+    "rate": 0.9710017574692443,
     "excluded": 524,
     "excluded_share": 0.13306246825799897,
     "distinct": 1360,
-    "distinct_resolved": 1257,
-    "distinct_rate": 0.924264705882353,
-    "distinct_with_mixed_outcomes": 6,
+    "distinct_resolved": 1297,
+    "distinct_rate": 0.9536764705882353,
+    "distinct_with_mixed_outcomes": 1,
     "meets_rate": false
   },
   "ambiguous": {
@@ -546,18 +546,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "(18-21)% increased Armour": {
-      "non_unique": 2,
-      "unique": 0,
-      "detail": [
-        "local_physical_damage_reduction_rating_+%",
-        "physical_damage_reduction_rating_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
     "(6-9)% increased Attack Speed": {
       "non_unique": 0,
       "unique": 1,
@@ -578,30 +566,6 @@
       ],
       "reasons": [
         "ambiguous/several-backed"
-      ]
-    },
-    "(7-12)% increased Attack Speed": {
-      "non_unique": 3,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
-    "(8-10)% increased Attack Speed": {
-      "non_unique": 2,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
       ]
     },
     "(80-100)% increased Evasion Rating": {
@@ -671,102 +635,6 @@
         "crafted-no-spawn-tags"
       ]
     },
-    "+11 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+12% chance to Suppress Spell Damage": {
-      "non_unique": 17,
-      "unique": 0,
-      "detail": [
-        "base_spell_suppression_chance_%",
-        "base_spell_suppression_chance_150%_of_value"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+13 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+13% chance to Suppress Spell Damage": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_spell_suppression_chance_%",
-        "base_spell_suppression_chance_150%_of_value"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+146 to Armour": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_physical_damage_reduction_rating",
-        "local_base_physical_damage_reduction_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
-    "+15% chance to Suppress Spell Damage": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_spell_suppression_chance_%",
-        "base_spell_suppression_chance_150%_of_value"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+150 to Armour": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_physical_damage_reduction_rating",
-        "local_base_physical_damage_reduction_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
-    "+180 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
     "+188 to Armour": {
       "non_unique": 0,
       "unique": 1,
@@ -776,18 +644,6 @@
       ],
       "reasons": [
         "ambiguous/several-backed"
-      ]
-    },
-    "+19% chance to Suppress Spell Damage": {
-      "non_unique": 3,
-      "unique": 0,
-      "detail": [
-        "base_spell_suppression_chance_%",
-        "base_spell_suppression_chance_150%_of_value"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
       ]
     },
     "+196 to Armour": {
@@ -810,102 +666,6 @@
       ],
       "reasons": [
         "ambiguous/several-backed"
-      ]
-    },
-    "+201 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+21 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+216 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+230 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+250 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+257 to Armour": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_physical_damage_reduction_rating",
-        "local_base_physical_damage_reduction_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
-    "+26 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+283 to Evasion Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_evasion_rating",
-        "local_base_evasion_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
       ]
     },
     "+290 to Accuracy Rating": {
@@ -952,42 +712,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "+33 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+35 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+39 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
     "+407 to Evasion Rating": {
       "non_unique": 0,
       "unique": 1,
@@ -999,30 +723,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "+41 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+42 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
     "+429 to Armour": {
       "non_unique": 0,
       "unique": 1,
@@ -1032,78 +732,6 @@
       ],
       "reasons": [
         "ambiguous/several-backed"
-      ]
-    },
-    "+45 to maximum Energy Shield": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+459 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+46 to maximum Energy Shield": {
-      "non_unique": 4,
-      "unique": 0,
-      "detail": [
-        "base_maximum_energy_shield",
-        "local_energy_shield"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+50 to Evasion Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_evasion_rating",
-        "local_base_evasion_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+539 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "+595 to Accuracy Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "accuracy_rating",
-        "local_accuracy_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
       ]
     },
     "+664 to Armour": {
@@ -1128,30 +756,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "+75 to Armour": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_physical_damage_reduction_rating",
-        "local_base_physical_damage_reduction_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "crafted-no-spawn-tags"
-      ]
-    },
-    "+78 to Evasion Rating": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "base_evasion_rating",
-        "local_base_evasion_rating"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
     "-(15-25)% to all Elemental Resistances": {
       "non_unique": 0,
       "unique": 4,
@@ -1172,30 +776,6 @@
       ],
       "reasons": [
         "ambiguous/several-backed"
-      ]
-    },
-    "0.23% of Physical Attack Damage Leeched as Life": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "life_leech_from_physical_attack_damage_permyriad",
-        "local_life_leech_from_physical_damage_permyriad"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "0.29% of Physical Attack Damage Leeched as Life": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "life_leech_from_physical_attack_damage_permyriad",
-        "local_life_leech_from_physical_damage_permyriad"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
       ]
     },
     "0.4% of Physical Attack Damage Leeched as Mana": {
@@ -1231,54 +811,6 @@
         "ambiguous/several-backed"
       ]
     },
-    "12% increased Attack Speed": {
-      "non_unique": 3,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "13% increased Attack Speed": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "14% increased Attack Speed": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
-    "15% increased Attack Speed": {
-      "non_unique": 1,
-      "unique": 0,
-      "detail": [
-        "attack_speed_+%",
-        "local_attack_speed_+%"
-      ],
-      "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
-      ]
-    },
     "17% Chance to Block Spell Damage": {
       "non_unique": 0,
       "unique": 1,
@@ -1291,15 +823,14 @@
       ]
     },
     "7% increased Attack Speed": {
-      "non_unique": 1,
+      "non_unique": 0,
       "unique": 1,
       "detail": [
         "attack_speed_+%",
         "local_attack_speed_+%"
       ],
       "reasons": [
-        "ambiguous/several-backed",
-        "essence-tags-unknown"
+        "ambiguous/several-backed"
       ]
     },
     "8% increased Attack Speed": {
@@ -1363,7 +894,7 @@
     "non_unique": {
       "data-gap/legacy-text": 48,
       "excluded/not-selected-variant": 2,
-      "parser-gap/ambiguous": 72,
+      "parser-gap/ambiguous": 5,
       "parser-gap/client-string": 15,
       "parser-gap/near-miss": 11,
       "parser-gap/only-shadowed": 1,
@@ -1737,13 +1268,6 @@
           "ambiguous/several-backed"
         ]
       },
-      "(18-21)% increased Armour": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
       "(6-9)% increased Attack Speed": {
         "non_unique": 0,
         "unique": 1,
@@ -1756,20 +1280,6 @@
         "unique": 2,
         "detail": [
           "ambiguous/several-backed"
-        ]
-      },
-      "(7-12)% increased Attack Speed": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
-      "(8-10)% increased Attack Speed": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
         ]
       },
       "(80-100)% increased Evasion Rating": {
@@ -1814,75 +1324,11 @@
           "ambiguous/several-backed crafted-no-spawn-tags"
         ]
       },
-      "+11 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+12% chance to Suppress Spell Damage": {
-        "non_unique": 17,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed",
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+13 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+13% chance to Suppress Spell Damage": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+146 to Armour": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
-      "+15% chance to Suppress Spell Damage": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+150 to Armour": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
-      "+180 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
       "+188 to Armour": {
         "non_unique": 0,
         "unique": 1,
         "detail": [
           "ambiguous/several-backed"
-        ]
-      },
-      "+19% chance to Suppress Spell Damage": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
         ]
       },
       "+196 to Armour": {
@@ -1897,62 +1343,6 @@
         "unique": 1,
         "detail": [
           "ambiguous/several-backed"
-        ]
-      },
-      "+201 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+21 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+216 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+230 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+250 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+257 to Armour": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
-      "+26 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+283 to Evasion Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
         ]
       },
       "+290 to Accuracy Rating": {
@@ -1983,27 +1373,6 @@
           "ambiguous/several-backed"
         ]
       },
-      "+33 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+35 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+39 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
       "+407 to Evasion Rating": {
         "non_unique": 0,
         "unique": 1,
@@ -2011,67 +1380,11 @@
           "ambiguous/several-backed"
         ]
       },
-      "+41 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+42 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
       "+429 to Armour": {
         "non_unique": 0,
         "unique": 1,
         "detail": [
           "ambiguous/several-backed"
-        ]
-      },
-      "+45 to maximum Energy Shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+459 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+46 to maximum Energy Shield": {
-        "non_unique": 4,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+50 to Evasion Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+539 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "+595 to Accuracy Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
         ]
       },
       "+664 to Armour": {
@@ -2088,20 +1401,6 @@
           "ambiguous/several-backed"
         ]
       },
-      "+75 to Armour": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed crafted-no-spawn-tags"
-        ]
-      },
-      "+78 to Evasion Rating": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
       "-(15-25)% to all Elemental Resistances": {
         "non_unique": 0,
         "unique": 4,
@@ -2114,20 +1413,6 @@
         "unique": 0,
         "detail": [
           "ambiguous/several-backed"
-        ]
-      },
-      "0.23% of Physical Attack Damage Leeched as Life": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "0.29% of Physical Attack Damage Leeched as Life": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
         ]
       },
       "0.4% of Physical Attack Damage Leeched as Mana": {
@@ -2151,34 +1436,6 @@
           "ambiguous/several-backed"
         ]
       },
-      "12% increased Attack Speed": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "13% increased Attack Speed": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "14% increased Attack Speed": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
-      "15% increased Attack Speed": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "ambiguous/several-backed essence-tags-unknown"
-        ]
-      },
       "17% Chance to Block Spell Damage": {
         "non_unique": 0,
         "unique": 1,
@@ -2187,11 +1444,10 @@
         ]
       },
       "7% increased Attack Speed": {
-        "non_unique": 1,
+        "non_unique": 0,
         "unique": 1,
         "detail": [
-          "ambiguous/several-backed",
-          "ambiguous/several-backed essence-tags-unknown"
+          "ambiguous/several-backed"
         ]
       },
       "8% increased Attack Speed": {
@@ -3978,7 +3234,7 @@
   "gate": {
     "resolution": false,
     "unresolved_allowed": 68,
-    "unresolved": 166,
+    "unresolved": 99,
     "uncategorized": 0,
     "inputs_recorded": true,
     "met": false
@@ -3995,12 +3251,14 @@
   "bases_with_unknown_tags": 0,
   "filter": {
     "non_unique": {
-      "ambiguous/several-backed": 72,
+      "ambiguous/several-backed": 5,
       "resolved/base-implicit": 18,
+      "resolved/local-stat": 153,
       "resolved/mods": 130,
-      "resolved/spawn-tags": 96,
+      "resolved/spawn-tags": 20,
+      "resolved/spawn-values": 5,
       "resolved/unset-fit+numbered-stat": 35,
-      "resolved/values": 29
+      "resolved/values": 14
     },
     "unique": {
       "ambiguous/several-backed": 36,
@@ -4011,8 +3269,7 @@
       "resolved/values": 37
     },
     "notes": {
-      "non_unique/crafted-no-spawn-tags": 21,
-      "non_unique/essence-tags-unknown": 58,
+      "non_unique/crafted-no-spawn-tags": 2,
       "non_unique/influence-tags-unknown": 1,
       "non_unique/numbered-stat-equivalents": 35,
       "non_unique/row-value-unset": 35,
@@ -4039,6 +3296,13 @@
         "unique": 1,
         "detail": [
           "values: local_physical_damage_reduction_rating_+%=(130..170)"
+        ]
+      },
+      "(18-21)% increased Armour": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_physical_damage_reduction_rating_+%=(18..21)"
         ]
       },
       "(20-25)% chance to Avoid being Stunned": {
@@ -4080,21 +3344,29 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "values: local_physical_damage_reduction_rating_+%=(41..50)"
+          "local-stat: local_physical_damage_reduction_rating_+%=(41..50)"
         ]
       },
       "(56-74)% increased Armour": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "values: local_physical_damage_reduction_rating_+%=(56..74)"
+          "local-stat: local_physical_damage_reduction_rating_+%=(56..74)"
+        ]
+      },
+      "(7-12)% increased Attack Speed": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local-stat: attack_speed_+%=(7..12)"
         ]
       },
       "(8-10)% increased Attack Speed": {
-        "non_unique": 7,
+        "non_unique": 9,
         "unique": 0,
         "detail": [
-          "base-implicit: attack_speed_+%=(8..10)"
+          "base-implicit: attack_speed_+%=(8..10)",
+          "local-stat: local_attack_speed_+%=(8..10)"
         ]
       },
       "(8-12)% chance to gain Onslaught for 4 seconds on Kill": {
@@ -4228,7 +3500,7 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "values: base_maximum_energy_shield=1"
+          "local-stat: base_maximum_energy_shield=1"
         ]
       },
       "+1 to maximum number of Summoned Totems": {
@@ -4264,28 +3536,35 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=100"
+          "local-stat: local_energy_shield=100"
         ]
       },
       "+101 to Armour": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=101"
+          "local-stat: local_base_physical_damage_reduction_rating=101"
         ]
       },
       "+101 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=101"
+          "local-stat: local_energy_shield=101"
         ]
       },
       "+105 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=105"
+          "local-stat: local_base_physical_damage_reduction_rating=105"
+        ]
+      },
+      "+11 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=11"
         ]
       },
       "+11% to all Elemental Resistances": {
@@ -4300,7 +3579,15 @@
         "non_unique": 7,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=111"
+          "local-stat: local_base_physical_damage_reduction_rating=111"
+        ]
+      },
+      "+12% chance to Suppress Spell Damage": {
+        "non_unique": 17,
+        "unique": 0,
+        "detail": [
+          "spawn-tags: base_spell_suppression_chance_%=12",
+          "spawn-values: base_spell_suppression_chance_%=12"
         ]
       },
       "+12% to all Elemental Resistances": {
@@ -4315,7 +3602,21 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=126"
+          "local-stat: local_base_physical_damage_reduction_rating=126"
+        ]
+      },
+      "+13 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=13"
+        ]
+      },
+      "+13% chance to Suppress Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "spawn-tags: base_spell_suppression_chance_%=13"
         ]
       },
       "+14% to all Elemental Resistances": {
@@ -4327,11 +3628,32 @@
           "values: base_resist_all_elements_%=14"
         ]
       },
+      "+146 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_base_physical_damage_reduction_rating=146"
+        ]
+      },
+      "+15% chance to Suppress Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "spawn-tags: base_spell_suppression_chance_%=15"
+        ]
+      },
+      "+150 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_base_physical_damage_reduction_rating=150"
+        ]
+      },
       "+151 to Evasion Rating": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_evasion_rating=151"
+          "local-stat: local_base_evasion_rating=151"
         ]
       },
       "+16% to all Elemental Resistances": {
@@ -4345,14 +3667,28 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=18"
+          "local-stat: local_energy_shield=18"
+        ]
+      },
+      "+180 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=180"
         ]
       },
       "+19 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=19"
+          "local-stat: local_energy_shield=19"
+        ]
+      },
+      "+19% chance to Suppress Spell Damage": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "spawn-tags: base_spell_suppression_chance_%=19"
         ]
       },
       "+19% to all Elemental Resistances": {
@@ -4387,7 +3723,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=20"
+          "local-stat: local_energy_shield=20"
         ]
       },
       "+20% to all Elemental Resistances": {
@@ -4397,25 +3733,53 @@
           "values: base_resist_all_elements_%=20"
         ]
       },
+      "+201 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_accuracy_rating=201"
+        ]
+      },
+      "+21 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=21"
+        ]
+      },
+      "+216 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=216"
+        ]
+      },
+      "+230 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=230"
+        ]
+      },
       "+235 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=235"
+          "local-stat: local_base_physical_damage_reduction_rating=235"
         ]
       },
       "+24 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "values: base_maximum_energy_shield=24"
+          "local-stat: base_maximum_energy_shield=24"
         ]
       },
       "+25 to Armour": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=25"
+          "local-stat: local_base_physical_damage_reduction_rating=25"
         ]
       },
       "+25 to Strength and Intelligence": {
@@ -4432,11 +3796,25 @@
           "values: base_resist_all_elements_%=25"
         ]
       },
+      "+250 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=250"
+        ]
+      },
       "+251 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=251"
+          "local-stat: local_base_physical_damage_reduction_rating=251"
+        ]
+      },
+      "+257 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_base_physical_damage_reduction_rating=257"
         ]
       },
       "+26 to Strength and Intelligence": {
@@ -4446,18 +3824,32 @@
           "mods: additional_strength_and_intelligence=26"
         ]
       },
+      "+26 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=26"
+        ]
+      },
       "+277 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "values: base_physical_damage_reduction_rating=277"
+          "local-stat: base_physical_damage_reduction_rating=277"
         ]
       },
       "+28 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=28"
+          "local-stat: local_energy_shield=28"
+        ]
+      },
+      "+283 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_base_evasion_rating=283"
         ]
       },
       "+29% to all Elemental Resistances": {
@@ -4488,95 +3880,139 @@
           "mods: additional_strength_and_intelligence=30"
         ]
       },
+      "+33 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=33"
+        ]
+      },
       "+330 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=330"
+          "local-stat: local_base_physical_damage_reduction_rating=330"
         ]
       },
       "+332 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=332"
+          "local-stat: local_base_physical_damage_reduction_rating=332"
         ]
       },
       "+34 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=34"
+          "local-stat: local_energy_shield=34"
         ]
       },
       "+35 to maximum Energy Shield": {
-        "non_unique": 1,
+        "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=35"
+          "local-stat: base_maximum_energy_shield=35",
+          "local-stat: local_energy_shield=35"
         ]
       },
       "+37 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=37"
+          "local-stat: local_base_physical_damage_reduction_rating=37"
         ]
       },
       "+375 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=375"
+          "local-stat: local_base_physical_damage_reduction_rating=375"
         ]
       },
       "+38 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=38"
+          "local-stat: local_base_physical_damage_reduction_rating=38"
         ]
       },
       "+38 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=38"
+          "local-stat: local_energy_shield=38"
         ]
       },
       "+39 to maximum Energy Shield": {
-        "non_unique": 2,
+        "non_unique": 3,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=39"
+          "local-stat: base_maximum_energy_shield=39",
+          "local-stat: local_energy_shield=39"
         ]
       },
       "+40 to Armour": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: base_physical_damage_reduction_rating=40"
+          "local-stat: base_physical_damage_reduction_rating=40"
         ]
       },
       "+400 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=400"
+          "local-stat: local_base_physical_damage_reduction_rating=400"
+        ]
+      },
+      "+41 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=41"
+        ]
+      },
+      "+42 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=42"
         ]
       },
       "+45 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=45"
+          "local-stat: local_base_physical_damage_reduction_rating=45"
+        ]
+      },
+      "+45 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=45"
         ]
       },
       "+456 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: base_physical_damage_reduction_rating=456"
+          "local-stat: base_physical_damage_reduction_rating=456"
+        ]
+      },
+      "+459 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=459"
+        ]
+      },
+      "+46 to maximum Energy Shield": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=46"
         ]
       },
       "+475 to Accuracy Rating": {
@@ -4590,14 +4026,14 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=48"
+          "local-stat: local_energy_shield=48"
         ]
       },
       "+481 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=481"
+          "local-stat: local_base_physical_damage_reduction_rating=481"
         ]
       },
       "+5% to all Elemental Resistances": {
@@ -4607,39 +4043,60 @@
           "mods: base_resist_all_elements_%=5"
         ]
       },
+      "+50 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_evasion_rating=50"
+        ]
+      },
       "+50 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=50"
+          "local-stat: local_energy_shield=50"
         ]
       },
       "+51 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=51"
+          "local-stat: local_energy_shield=51"
         ]
       },
       "+515 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=515"
+          "local-stat: local_base_physical_damage_reduction_rating=515"
         ]
       },
       "+52 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "values: local_energy_shield=52"
+          "local-stat: base_maximum_energy_shield=52"
+        ]
+      },
+      "+539 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=539"
         ]
       },
       "+55 to Armour": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=55"
+          "local-stat: local_base_physical_damage_reduction_rating=55"
+        ]
+      },
+      "+595 to Accuracy Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: accuracy_rating=595"
         ]
       },
       "+6% to all Elemental Resistances": {
@@ -4653,7 +4110,21 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: base_physical_damage_reduction_rating=66"
+          "local-stat: base_physical_damage_reduction_rating=66"
+        ]
+      },
+      "+75 to Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_base_physical_damage_reduction_rating=75"
+        ]
+      },
+      "+78 to Evasion Rating": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_evasion_rating=78"
         ]
       },
       "+8% to all Elemental Resistances": {
@@ -4667,42 +4138,42 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=80"
+          "local-stat: local_energy_shield=80"
         ]
       },
       "+85 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=85"
+          "local-stat: local_base_physical_damage_reduction_rating=85"
         ]
       },
       "+88 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=88"
+          "local-stat: local_energy_shield=88"
         ]
       },
       "+93 to Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_base_physical_damage_reduction_rating=93"
+          "local-stat: local_base_physical_damage_reduction_rating=93"
         ]
       },
       "+94 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=94"
+          "local-stat: local_energy_shield=94"
         ]
       },
       "+97 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_energy_shield=97"
+          "local-stat: local_energy_shield=97"
         ]
       },
       "-(20-10)% to all Elemental Resistances": {
@@ -4717,6 +4188,20 @@
         "unique": 1,
         "detail": [
           "values: base_resist_all_elements_%=-21"
+        ]
+      },
+      "0.23% of Physical Attack Damage Leeched as Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: life_leech_from_physical_attack_damage_permyriad=23"
+        ]
+      },
+      "0.29% of Physical Attack Damage Leeched as Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: life_leech_from_physical_attack_damage_permyriad=29"
         ]
       },
       "0.3% of Fire Damage Leeched as Life": {
@@ -4745,7 +4230,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=103"
+          "local-stat: local_physical_damage_reduction_rating_+%=103"
         ]
       },
       "11% increased Rarity of Items found": {
@@ -4753,6 +4238,13 @@
         "unique": 0,
         "detail": [
           "mods: base_item_found_rarity_+%=11"
+        ]
+      },
+      "12% increased Attack Speed": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_attack_speed_+%=12"
         ]
       },
       "13% Chance to Block Spell Damage": {
@@ -4770,24 +4262,32 @@
         ]
       },
       "13% increased Attack Speed": {
-        "non_unique": 1,
+        "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: attack_speed_+%=13"
+          "local-stat: attack_speed_+%=13",
+          "local-stat: local_attack_speed_+%=13"
         ]
       },
       "136% increased Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=136"
+          "local-stat: local_physical_damage_reduction_rating_+%=136"
         ]
       },
       "14% increased Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: physical_damage_reduction_rating_+%=14"
+          "local-stat: physical_damage_reduction_rating_+%=14"
+        ]
+      },
+      "14% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_attack_speed_+%=14"
         ]
       },
       "15% chance to gain Onslaught for 4 seconds on Kill": {
@@ -4799,31 +4299,32 @@
         ]
       },
       "15% increased Attack Speed": {
-        "non_unique": 1,
+        "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: attack_speed_+%=15"
+          "local-stat: attack_speed_+%=15",
+          "local-stat: local_attack_speed_+%=15"
         ]
       },
       "151% increased Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=151"
+          "local-stat: local_physical_damage_reduction_rating_+%=151"
         ]
       },
       "152% increased Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=152"
+          "local-stat: local_physical_damage_reduction_rating_+%=152"
         ]
       },
       "16% increased Attack Speed": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: attack_speed_+%=16"
+          "local-stat: attack_speed_+%=16"
         ]
       },
       "18% increased Armour": {
@@ -4844,14 +4345,14 @@
         "non_unique": 4,
         "unique": 0,
         "detail": [
-          "values: local_attack_speed_+%=19"
+          "local-stat: local_attack_speed_+%=19"
         ]
       },
       "21% increased Attack Speed": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "values: local_attack_speed_+%=21"
+          "local-stat: local_attack_speed_+%=21"
         ]
       },
       "23% chance to gain a Flask Charge when you deal a Critical Strike": {
@@ -4865,7 +4366,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_poison_on_hit_%=25"
+          "local-stat: local_poison_on_hit_%=25"
         ]
       },
       "25% reduced Light Radius": {
@@ -4914,7 +4415,7 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=33"
+          "local-stat: local_physical_damage_reduction_rating_+%=33"
         ]
       },
       "33% increased Energy Shield Recharge Rate": {
@@ -4963,7 +4464,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=40"
+          "local-stat: local_physical_damage_reduction_rating_+%=40"
         ]
       },
       "5% increased Attack Speed": {
@@ -4991,7 +4492,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=51"
+          "local-stat: local_physical_damage_reduction_rating_+%=51"
         ]
       },
       "57% faster start of Energy Shield Recharge": {
@@ -5019,14 +4520,21 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=67"
+          "local-stat: local_physical_damage_reduction_rating_+%=67"
+        ]
+      },
+      "7% increased Attack Speed": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: local_attack_speed_+%=7"
         ]
       },
       "74% increased Armour": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=74"
+          "local-stat: local_physical_damage_reduction_rating_+%=74"
         ]
       },
       "8% Chance to Block Spell Damage": {
@@ -5054,7 +4562,7 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=84"
+          "local-stat: local_physical_damage_reduction_rating_+%=84"
         ]
       },
       "9% chance to gain Onslaught for 4 seconds on Kill": {
@@ -5076,7 +4584,7 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_physical_damage_reduction_rating_+%=97"
+          "local-stat: local_physical_damage_reduction_rating_+%=97"
         ]
       },
       "Adds (60-70) to (71-80) Physical Damage": {
@@ -5099,40 +4607,40 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=184",
-          "spawn-tags: local_minimum_added_fire_damage=102"
+          "local-stat: local_maximum_added_fire_damage=184",
+          "local-stat: local_minimum_added_fire_damage=102"
         ]
       },
       "Adds 103 to 204 Cold Damage": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_cold_damage=204",
-          "spawn-tags: local_minimum_added_cold_damage=103"
+          "local-stat: local_maximum_added_cold_damage=204",
+          "local-stat: local_minimum_added_cold_damage=103"
         ]
       },
       "Adds 111 to 200 Cold Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_cold_damage=200",
-          "spawn-tags: local_minimum_added_cold_damage=111"
+          "local-stat: local_maximum_added_cold_damage=200",
+          "local-stat: local_minimum_added_cold_damage=111"
         ]
       },
       "Adds 115 to 206 Fire Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=206",
-          "spawn-tags: local_minimum_added_fire_damage=115"
+          "local-stat: local_maximum_added_fire_damage=206",
+          "local-stat: local_minimum_added_fire_damage=115"
         ]
       },
       "Adds 12 to 212 Lightning Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_lightning_damage=212",
-          "spawn-tags: local_minimum_added_lightning_damage=12"
+          "local-stat: local_maximum_added_lightning_damage=212",
+          "local-stat: local_minimum_added_lightning_damage=12"
         ]
       },
       "Adds 12 to 23 Physical Damage": {
@@ -5147,56 +4655,56 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=226",
-          "spawn-tags: local_minimum_added_fire_damage=120"
+          "local-stat: local_maximum_added_fire_damage=226",
+          "local-stat: local_minimum_added_fire_damage=120"
         ]
       },
       "Adds 17 to 305 Lightning Damage": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_lightning_damage=305",
-          "spawn-tags: local_minimum_added_lightning_damage=17"
+          "local-stat: local_maximum_added_lightning_damage=305",
+          "local-stat: local_minimum_added_lightning_damage=17"
         ]
       },
       "Adds 176 to 296 Fire Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=296",
-          "spawn-tags: local_minimum_added_fire_damage=176"
+          "local-stat: local_maximum_added_fire_damage=296",
+          "local-stat: local_minimum_added_fire_damage=176"
         ]
       },
       "Adds 19 to 32 Fire Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=32",
-          "spawn-tags: local_minimum_added_fire_damage=19"
+          "local-stat: local_maximum_added_fire_damage=32",
+          "local-stat: local_minimum_added_fire_damage=19"
         ]
       },
       "Adds 23 to 399 Lightning Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_lightning_damage=399",
-          "spawn-tags: local_minimum_added_lightning_damage=23"
+          "local-stat: local_maximum_added_lightning_damage=399",
+          "local-stat: local_minimum_added_lightning_damage=23"
         ]
       },
       "Adds 3 to 7 Cold Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_cold_damage=7",
-          "spawn-tags: local_minimum_added_cold_damage=3"
+          "local-stat: local_maximum_added_cold_damage=7",
+          "local-stat: local_minimum_added_cold_damage=3"
         ]
       },
       "Adds 32 to 65 Fire Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=65",
-          "spawn-tags: local_minimum_added_fire_damage=32"
+          "local-stat: local_maximum_added_fire_damage=65",
+          "local-stat: local_minimum_added_fire_damage=32"
         ]
       },
       "Adds 43 to 70 Physical Damage": {
@@ -5211,16 +4719,16 @@
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "values: local_maximum_added_cold_damage=74",
-          "values: local_minimum_added_cold_damage=43"
+          "local-stat: local_maximum_added_cold_damage=74",
+          "local-stat: local_minimum_added_cold_damage=43"
         ]
       },
       "Adds 6 to 109 Lightning Damage": {
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_lightning_damage=109",
-          "spawn-tags: local_minimum_added_lightning_damage=6"
+          "local-stat: local_maximum_added_lightning_damage=109",
+          "local-stat: local_minimum_added_lightning_damage=6"
         ]
       },
       "Adds 63 to 89 Physical Damage": {
@@ -5243,16 +4751,16 @@
         "non_unique": 2,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_cold_damage=130",
-          "spawn-tags: local_minimum_added_cold_damage=75"
+          "local-stat: local_maximum_added_cold_damage=130",
+          "local-stat: local_minimum_added_cold_damage=75"
         ]
       },
       "Adds 90 to 183 Fire Damage": {
         "non_unique": 1,
         "unique": 0,
         "detail": [
-          "spawn-tags: local_maximum_added_fire_damage=183",
-          "spawn-tags: local_minimum_added_fire_damage=90"
+          "local-stat: local_maximum_added_fire_damage=183",
+          "local-stat: local_minimum_added_fire_damage=90"
         ]
       },
       "Allocates Aggressive Bastion": {
@@ -5622,19 +5130,19 @@
     }
   },
   "mod_backed": {
-    "resolved": 3248,
-    "backed": 3063,
-    "share": 0.9430418719211823,
+    "resolved": 3315,
+    "backed": 3129,
+    "share": 0.9438914027149321,
     "template_resolved": 2940,
     "template_backed": 2797,
     "template_share": 0.9513605442176871,
-    "equal": 2732,
-    "hybrid": 331,
+    "equal": 2796,
+    "hybrid": 333,
     "not_backed": {
       "no-fitting-row": 6,
       "no-row-with-stats": 5,
       "row-value-unset": 126,
-      "values-outside": 48
+      "values-outside": 49
     },
     "not_backed_texts": {
       "+101 to maximum Energy Shield": {
@@ -5762,6 +5270,16 @@
         "unique": 0,
         "detail": [
           "local_base_physical_damage_reduction_rating=515"
+        ],
+        "reasons": [
+          "values-outside"
+        ]
+      },
+      "+52 to maximum Energy Shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "base_maximum_energy_shield=52"
         ],
         "reasons": [
           "values-outside"

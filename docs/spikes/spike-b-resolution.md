@@ -1,6 +1,6 @@
 # Spike B: text to stat-ID resolution (report)
 
-Status: **gate not met** (2026-11-10, PR #25, B4b). Every line is categorized; 95.1% of non-unique lines resolve, against 98% asked. The fallback decision (ADR-015, per area) is the maintainer's; section 6 gives the areas and the arithmetic.
+Status: **gate not met** (2026-11-10, PR #26 (B5a)). Every line is categorized; 97.1% of non-unique lines resolve, against 98% asked. The maintainer decided the areas on 2026-11-10 (section 7a); B5a settled area 1 (local/global) from game data (section 4a). The next PRs are area 2 (legacy text out of the rate), area 3 (client-composed lines), area 4 (item properties), and area 5.
 
 Plan, decisions, and per-PR details: `dev/active/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
 
@@ -20,7 +20,7 @@ Can item modifier text be resolved to `(stat_id, values)` by reverse-matching th
 1. `loom-parser::pob_item` reads each item as PoB's `ParseRaw` does (B3); flag, influence, and class-requirement lines are not modifiers.
 2. Scope by `BaseItemTypes.ModDomain` (tincture and graft files for their domains, `stat_descriptions` otherwise).
 3. `loom-parser::resolve` reverse-matches each run of lines of one section against the scope's templates, with numeric handler inversion, conditions, multi-line templates, and lookup handlers (B2a, B2b, B4c).
-4. Ambiguous lines go through the `Mods` filter (B4a, B4y): domain and generation type per section, stat set, base implicits, spawn tags, values; then `unset-fit` and `numbered-stat` (section 4).
+4. Ambiguous lines go through the `Mods` filter (B4a, B4y, B5a): domain and generation type per section, stat set, base implicits, local stats (section 4a), spawn tags, values, spawning rows with the value; then `unset-fit` and `numbered-stat` (section 4).
 5. Every line not resolved gets one category with its evidence (`tools/parity-cli/src/categorize.rs`, section 5).
 
 ## 4. Anoints (plan step 4d)
@@ -29,6 +29,16 @@ The 35 non-unique (and 7 unique) `Allocates <notable>` lines matched six descrip
 - `numbered-stat`: candidates whose stats are equal up to a numbered suffix (`_2` .. `_9`) are one reading; the lowest numbers are kept, the others listed as dropped alternatives. PoB does not pick a stat either (`allocates (.+)` gives one `GrantedPassive` list mod, `v2.67.2:src/Modules/ModParser.lua`).
 
 Result: all 42 lines resolve (`resolved/unset-fit+numbered-stat`). Their `mod-backed` reason is `row-value-unset`, by design.
+
+## 4a. Local and global pairs (B5a)
+B4b left 72 non-unique lines ambiguous: 55 because a legacy essence row (essence-only, named by no `Essences` column) backed one reading and stopped `spawn-tags`, 14 `{crafted}` lines (bench crafts do not spawn), 2 several-backed, 1 influence guard. Three filter changes, all from game data (`tools/parity-cli/src/mod_filter.rs`, module docs):
+- **`local-stat`** (explicit lines of non-unique items, before `spawn-tags`): `Stats.IsLocal` and `Stats.IsWeaponLocal` mark local stats. When the kept readings are a local and a global one, a base tagged `weapon` (for `IsWeaponLocal` stats) or `armour` (for the other local stats) keeps the local reading, and any other base keeps the global one. The rule never drops a local reading that a fitting row spawns on the base (note `local-stat-spawns`), so flask-local and jewel-local stats are not overruled. Spawn data agrees: on PoE1 26530219 no prefix or suffix row of the global stat of these pairs spawns on the tags where the local stat applies. The only global `% increased Armour` rows on `body_armour` are eldritch implicits, and `local-stat` does not cover implicits.
+- **Legacy essence rows by `ModType`**: such a row counts as spawning where the rows of its `ModType` that are not essence-only spawn, and nowhere when those spawn nowhere. Rows count only when they share the `ModType`, domain, and generation type (review fix). 100 of the 125 legacy essence rows have such rows (52 of them spawn somewhere); the other 25 keep the `essence-tags-unknown` guard. Example: `ChanceToDodgeEssence4`..`7` share `ChanceToSuppressSpellsOld` (stat `base_spell_suppression_chance_150%_of_value`) with rows that no longer spawn, so `+12% chance to Suppress Spell Damage` on a helmet reads as the current `base_spell_suppression_chance_%`.
+- **`spawn-values`** (after `values`, only when `spawn-tags` ran): keep the readings backed by one row that both spawns on the base and holds the value. On boots, the 150% stat spawns only through the Delve row `DelveArmourDodgeAndSpellDodge_` (3-4), which does not hold the value.
+
+**Check against earlier steps:** `local-stat` now decides 107 lines that `spawn-tags` (93) or `values` (14) had already resolved. 106 get the same stat. One changes: `+52 to maximum Energy Shield` on a PoB-crafted Crystal Belt. `values` had read it as `local_energy_shield`, because 52 is inside `LocalIncreasedEnergyShield8` and outside every global row. Belts have no ES property, so the global reading is right; the line is now `mod-backed` `values-outside`. No unique line changed.
+
+**Result:** 67 of the 72 lines resolve (`local-stat` 45, `spawn-tags` 17, `spawn-values` 5). The 5 left are real ambiguities in the data: two `{crafted}` `+1 to maximum number of Skeletons` lines (the legacy bench row `IntMasterMaximumSkeletonsCrafted` and its `Updated` row back the two stats), `0.2% of Fire Damage Leeched as Life` (an eldritch implicit or a legacy corruption row; the item has no eldritch flag), `10% increased Mana Reservation Efficiency of Skills` (an implicit with two backed stats), and `Projectiles Pierce an additional Target` on a bow (the influence guard, as in B4b).
 
 ## 5. Categories
 First match wins; each rule needs evidence named on the line (`evidence` in `report.json`, `detail` in the summary). The word key compares text with case, numbers, and punctuation removed.
@@ -56,16 +66,16 @@ The plan's `data-gap/no-description` (no variant covers the line's words) is the
 **Author notes, reviewed by hand** (238 non-unique lines: 105 colour code, 2 `Note:`, 131 no game text): build advice (`Use jeweler orbs at the bench ...`), wish lists (`% increased Spell Damage`, `Cast Speed`, `Double Multi`), passive and skill names (`Golem's Blood`, `Assassin's Mark`), and a lone `Abyss`. Two borderline texts: `+51 Dexterity` (2 lines, an author's edit of `+{0} to Dexterity`; PoB's lenient parser may read it) and `Graftblood: 0/18827` (2 lines, a graft property pasted from the game; no extracted table holds `Graftblood: `). Neither is game text, so the rule's evidence holds.
 
 ## 6. Results (PoE1 26530219)
-**Rate:** non-unique **3,248 / 3,414 = 95.1%** (distinct 92.4%); 166 unresolved, the gate allows 68 (2%). Excluded 524 lines (13.3% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator).
+**Rate:** non-unique **3,315 / 3,414 = 97.1%** (distinct 95.4%); 99 unresolved, the gate allows 68 (2%). Excluded 524 lines (13.3% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator), B5a 97.1%.
 
 | Non-unique lines | Lines |
 |---|---:|
-| resolved | 3,248 |
-| `parser-gap/ambiguous` | 72 |
+| resolved | 3,315 |
 | `data-gap/legacy-text` | 48 |
 | `special-case/item-property` | 15 |
 | `parser-gap/client-string` | 15 |
 | `parser-gap/near-miss` | 11 |
+| `parser-gap/ambiguous` | 5 |
 | `parser-gap/split-section` | 4 |
 | `parser-gap/only-shadowed` | 1 |
 | excluded `special-case/author-note` | 238 |
@@ -73,29 +83,35 @@ The plan's `data-gap/no-description` (no variant covers the line's words) is the
 | excluded `special-case/pob-custom` | 54 |
 | excluded `not-selected-variant` | 2 |
 
-Unique lines (not in the rate): 818 resolved; ambiguous 36, legacy-text 29, near-miss 32 (old unique wording: `Passives in radius are Conquered by the Vaal`, `Gain Adrenaline for 3 seconds on kill`), item-property 8, author-note 15, not-a-modifier 36, not-selected-variant 1,415.
+Unique lines (not in the rate): 818 resolved; ambiguous 36, legacy-text 29, near-miss 32 (old unique wording: `Passives in radius are Conquered by the Vaal`, `Gain Adrenaline for 3 seconds on kill`), item-property 8, author-note 15, not-a-modifier 36, not-selected-variant 1,415. B5a changed none of them.
 
-**Unresolved non-unique lines by area** (the fallback input):
-1. **Local vs global ambiguity, 72.** 55 are backed on both sides and spawn tags are skipped because a legacy essence-only row (`ChanceToDodgeEssence4-7`, `IncreasedAttackSpeedEssenceJewellery4-7`, ...) that no `Essences` column names backs one side; 14 are `{crafted}` lines backed by legacy bench rows without class restrictions (bench crafts do not spawn); 2 several-backed; 1 influence guard. The game data cannot tell them apart. Options: a curated rule per stat pair (ADR-015 fallback), or reading the item's other context.
-2. **Legacy text, 48.** Pre-3.15 flask mods (`25% reduced Charges used`, `Immune to Curses during Flask effect`, 40 lines from `v2.4.0`), 3.16-3.20 `reduced Effect of Curses on you during Flask Effect` (4), and single old texts. The game no longer has these texts. Options: re-import the builds, or curated legacy patterns (ADR-015 quarantine).
-3. **Client-composed lines, 15.** Eldritch `While a Unique Enemy is in your Presence, ...` (9) and graft `Uses level 30 <skill>` (6). Resolvable from game data (`ClientStrings` plus `local_influence_mod_requires_unique_monster_presence`, and the graft mod's granted skill); a resolver feature, not a fallback.
-4. **Item properties, 15.** `Lasts 6 Seconds`, `Currently has 40 Charges`, `Quality (Attribute Modifiers): +20%`, `Memory Strands: 63`: not modifiers. Excluding them is a new exclusion rule and needs the maintainer.
+**Unresolved non-unique lines by area** (B4b numbering; decisions in section 7a):
+1. **Local vs global ambiguity: 72, now 5** (B5a, section 4a).
+2. **Legacy text, 48.** Pre-3.15 flask mods (`25% reduced Charges used`, `Immune to Curses during Flask effect`, 40 lines from `v2.4.0`), 3.16-3.20 `reduced Effect of Curses on you during Flask Effect` (4), and single old texts. The game no longer has these texts.
+3. **Client-composed lines, 15.** Eldritch `While a Unique Enemy is in your Presence, ...` (9) and graft `Uses level 30 <skill>` (6). Game data can resolve them (`ClientStrings` plus `local_influence_mod_requires_unique_monster_presence`, and the graft mod's granted skill).
+4. **Item properties, 15.** `Lasts 6 Seconds`, `Currently has 40 Charges`, `Quality (Attribute Modifiers): +20%`, `Memory Strands: 63`: not modifiers.
 5. **Author edits and old wording, 11 near-miss** (`+132 to Maximum Life`, `recover 5% of energy shield when you block`), **4 split-section** (cluster jewels whose `Implicits:` count is one short), **1 only-shadowed** (`24% increased effect of Offerings`, the B2b `patch-delta` text).
 
 **Arithmetic** (allowance = 2% of the denominator, rounded down):
-- areas 3 and 4 only (+15 resolved, −15 from the denominator): 136 unresolved of 3,399, allowance 67: not met;
-- areas 2, 3, and 4 (legacy text excluded too): 88 of 3,351, allowance 67: not met;
-- area 1 with areas 3 and 4: 64 of 3,399, allowance 67: met;
-- area 1 with area 2: 46 of 3,366, allowance 67: met.
+- now: 99 unresolved of 3,414, allowance 68: not met;
+- with area 2 excluded (decided 2026-11-10): 51 of 3,366, allowance 67: **met**;
+- with area 3 resolved as well: 36 of 3,366.
 
-Every combination that meets the gate needs a decision on area 1.
+**`mod-backed`** (reported, not gated): 3,129 / 3,315 = 94.4%; resolver-only lines 2,797 / 2,940 = 95.1%. Not backed: `row-value-unset` 126 (anoints 35, cluster jewel nodes 51, others 40; the value is set outside the row by design), `values-outside` 49 (one more than B4b: the Crystal Belt line of section 4a), `no-fitting-row` 6, `no-row-with-stats` 5. So 60 resolved lines outside `row-value-unset` are "stat-ID resolved, not verified correct".
 
-**`mod-backed`** (reported, not gated): 3,063 / 3,248 = 94.3%; resolver-only lines 2,797 / 2,940 = 95.1%. Not backed: `row-value-unset` 126 (anoints 35, cluster jewel nodes 51, others 40; the value is set outside the row by design), `values-outside` 48, `no-fitting-row` 6, `no-row-with-stats` 5. So the resolved lines are "stat-ID resolved, not verified correct" for the 59 lines outside `row-value-unset`.
-
-**Determinism and inputs:** two runs from clean commit `39bd52d` (code `cc98f59`) gave byte-identical `summary.json` and `report.json`; the summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, and the six PoB sources.
+**Determinism and inputs:** two runs from clean commit `4031f1c` gave byte-identical `summary.json` and `report.json`. The summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, and the six PoB sources.
 
 ## 7. Verdict
-Gate items 2, 3, and 4 hold. Item 1 does not: 95.1% < 98%. Spike B's conclusion for ADR-015: reverse-matching game data resolves the corpus's current game text; what it cannot resolve is (1) local/global pairs whose game rows cannot be told apart, (2) text the game no longer has, and (3) a few client-composed lines that game data can still cover. Areas 1 and 2 are the fallback candidates. The next step is the maintainer's decision (handoff, Next action).
+Gate items 2, 3, and 4 hold. Item 1 does not yet: 97.1% < 98%. Spike B's conclusion for ADR-015 so far: reverse-matching game data with the `Mods` filter resolves the corpus's current game text, the local/global pairs included (B5a). What it cannot resolve is text the game no longer has (area 2), plus a few client-composed lines that game data can still cover (area 3).
+
+## 7a. Maintainer decisions (2026-11-10)
+On B4b's areas (section 6):
+1. Local vs global: the maintainer asked what resolving it needs. B5a needed no fallback: game data settles 67 of the 72 lines (section 4a). The 5 left stay `parser-gap/ambiguous`.
+2. Legacy text: **excluded from the rate**, as author notes are. Next PR.
+3. Client-composed lines: write the resolver code. Later PR.
+4. Item properties: attempt to resolve them. Later PR.
+5. The rest: resolve them as recommended. Later PR.
+6. ADR-007's corpus count: correct it to 21 (with area 2's PR).
 
 ## 8. Reproduce
 ```
@@ -104,7 +120,7 @@ cargo run --release -p loom-parity-cli -- resolve-corpus "D:\Documents\Path of B
   --pob v2.4.0=local/pob-v2.4.0 --pob v2.21.1=local/pob-v2.21.1 --pob v2.35.3=local/pob-v2.35.3 \
   --pob v2.48.0=local/pob-v2.48.0 --pob v2.57.0=local/pob-v2.57.0 --pob v2.67.2=local/pob-v2.67.2
 ```
-Exit 1 while the gate is not met. Unit tests: `cargo test -p loom-parity-cli` (one test per category rule in `categorize/tests.rs`; the anoint steps in `mod_filter/tests.rs`; corpus-level categories, class requirement, split-section, and gate inputs in `resolve_corpus/tests.rs`).
+Exit 1 while the gate is not met. Unit tests: `cargo test -p loom-parity-cli` (one test per category rule in `categorize/tests.rs`; the anoint steps and the B5a steps (`local-stat`, legacy essence `ModType`, `spawn-values`) in `mod_filter/tests.rs`; corpus-level categories, class requirement, split-section, and gate inputs in `resolve_corpus/tests.rs`).
 
 ## 9. Divergence-register candidates (Spike C defines the format)
 The B2b `patch-delta` texts (4 descriptions), `rendered-double-sign`, and the anoint choice (`numbered-stat` picks `mod_granted_passive_hash`; PoB keeps no stat).

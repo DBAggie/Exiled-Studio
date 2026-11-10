@@ -105,5 +105,26 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Open PR (#25)
 
 ## After B4b (maintainer)
-- [ ] Fallback decision per area (report section 6): local/global ambiguity (72), legacy text (48), item properties (15, exclusion?), client-composed lines (15, resolver feature)
-- [ ] ADR-007 corpus count 22 -> 21
+- [x] Decision per area, 2026-11-10 (report section 7a): (1) local/global: what is needed; (2) legacy text excluded from the rate; (3) client-composed: write the code; (4) item properties: attempt to resolve; (5) the rest as recommended
+- [ ] ADR-007 corpus count 22 -> 21 (maintainer asked for it; B5b)
+
+## PR B5a: local/global pairs from game data
+- [x] Check PR #25 merge (`bc159a5`, main CI run 42754901070 green)
+- [x] Survey the 72 lines: 55 legacy essence guard, 14 crafted, 2 several-backed, 1 influence; `Stats.IsLocal` / `IsWeaponLocal` and spawn data per pair
+- [x] `local-stat`, legacy essence rows by `ModType`, `spawn-values` in `mod_filter.rs`; tests
+- [x] Check against earlier steps: 106 / 107 same stat, 1 correction (Crystal Belt ES); no unique line changed
+- [x] Corpus run from clean `4031f1c`, two runs byte-identical (97.1%, ambiguous 5); summary replaced; report sections 4a, 6, 7, 7a
+- [x] Review with `code-architecture-reviewer`; apply findings (no blockers; re-run from clean `4031f1c`)
+- [x] Open PR (#26)
+
+## PR B5b: legacy text out of the rate, ADR-007
+- [ ] `data-gap/legacy-text` in `EXCLUDED`; test; corpus run; ADR-007 21 builds; ACTION-PLAN gate text records the exclusion
+
+## PR B5c: client-composed lines
+- [ ] Eldritch presence wrapper and graft skill line from game data
+
+## PR B5d: item properties
+- [ ] Typed item properties from game data
+
+## PR B5e: the rest (near-miss, split-section, only-shadowed)
+- [ ] As recommended
