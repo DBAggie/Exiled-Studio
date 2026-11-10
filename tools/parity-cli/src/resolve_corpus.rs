@@ -526,6 +526,9 @@ pub struct Summary {
     /// Resolved lines whose result is not stat IDs, by group and kind
     /// (`non_unique/granted-skill`); counted as resolved in the rate.
     pub resolved_kinds: BTreeMap<String, usize>,
+    /// Resolved lines that needed an import tolerance, by group and
+    /// tolerance (`non_unique/case-folded`, B5e).
+    pub adapted: BTreeMap<String, usize>,
     /// Item property rule inputs (B5d): `(ClientStrings templates,
     /// labels, AlternateQualityTypes rows)`.
     pub property_inputs: (usize, usize, usize),
@@ -671,6 +674,11 @@ pub struct LineRecord {
     /// (B5d; `properties`).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub kind: Option<&'static str>,
+    /// An import tolerance the reading needed (B5e): `case-folded` (the
+    /// text differs from game text in letter case only) or `split-section`
+    /// (the line resolves with an adjacent line of another section).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adapted: Option<&'static str>,
     /// The `ClientStrings` wrapper the line was read through (B5c).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub composed: Option<String>,
@@ -791,13 +799,35 @@ impl<'i> Lines<'i, '_> {
                 let texts: Vec<&str> = run.iter().map(|(_, m)| m.text.as_str()).collect();
                 let mut at = 0;
                 for composed in index.resolve_lines_composed(&texts, self.compositions) {
-                    let resolution = &composed.resolution;
+                    let mut resolution = composed.resolution;
                     let via = composed
                         .composition
                         .and_then(|n| self.compositions.get(n))
                         .map(|c| c.id.clone());
-                    self.push_resolution(&run, at, resolution, section(at), via);
-                    at += resolution.lines;
+                    // A line game text holds in another letter case (B5e).
+                    let mut adapted = None;
+                    if via.is_none()
+                        && resolution.lines == 1
+                        && matches!(
+                            resolution.outcome,
+                            Outcome::Unresolved(Unresolved::NoTemplate)
+                        )
+                        && let Some(folded) = texts
+                            .get(at)
+                            .and_then(|t| index.resolve_case_folded(t))
+                            .filter(|r| !matches!(r.outcome, Outcome::Unresolved(_)))
+                    {
+                        resolution = folded;
+                        adapted = Some("case-folded");
+                    }
+                    let lines = resolution.lines;
+                    self.push_resolution(&run, at, &resolution, section(at), via);
+                    if let Some(a) = adapted
+                        && let Some((last, _)) = self.records.last_mut()
+                    {
+                        last.adapted = Some(a);
+                    }
+                    at += lines;
                 }
                 // `resolve_lines` covers every input line; if it ever does
                 // not, the uncovered lines are recorded, never lost.
@@ -1011,9 +1041,11 @@ fn resolvable(m: &Modifier) -> bool {
 
 /// Sets `split_with` on a `no-template` line when it and the adjacent
 /// resolvable line of another section resolve as one multi-line
-/// description (`parser-gap/split-section`): PoB's `Implicits:` count can
-/// put the two lines of one description in two sections, and the harness
-/// resolves sections apart.
+/// description: PoB's `Implicits:` count can put the two lines of one
+/// description in two sections, and the harness resolves sections apart.
+/// Since B5e the line is resolved with the pair's reading (`adapted:
+/// split-section`; not in `mod-backed`, the sections differ); before, it was
+/// `parser-gap/split-section`.
 fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, bool)]) {
     let modifier = |n: usize| match item.lines.get(n).map(|l| &l.kind) {
         Some(LineKind::Modifier(m)) if resolvable(m) => Some(m),
@@ -1039,10 +1071,16 @@ fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, 
             };
             let joined = index
                 .resolve_lines(&pair)
-                .first()
-                .is_some_and(|r| r.lines == 2 && matches!(r.outcome, Outcome::Resolved(_)));
-            if joined {
+                .into_iter()
+                .next()
+                .filter(|r| r.lines == 2 && matches!(r.outcome, Outcome::Resolved(_)));
+            if let Some(r) = joined {
+                // The pair is one description: both lines take its reading
+                // (B5e), as the lines of any multi-line template do.
                 record.split_with = Some(other);
+                record.outcome = "resolved".to_owned();
+                record.detail = detail(&r.outcome);
+                record.adapted = Some("split-section");
                 break;
             }
         }
@@ -1136,6 +1174,7 @@ pub fn run(
         property_inputs: bases.properties.inputs(),
         property_missing: bases.properties.missing().to_vec(),
         resolved_kinds: BTreeMap::new(),
+        adapted: BTreeMap::new(),
         composition_rows: game
             .compositions
             .iter()
@@ -1400,6 +1439,11 @@ fn count_item(
             *s.resolved_kinds
                 .entry(format!("{group}/{kind}"))
                 .or_default() += 1;
+        }
+        if let Some(a) = record.adapted
+            && record.outcome == "resolved"
+        {
+            *s.adapted.entry(format!("{group}/{a}")).or_default() += 1;
         }
         if record.outcome == "ambiguous" {
             let entry = s.ambiguous.entry(record.text.clone()).or_default();

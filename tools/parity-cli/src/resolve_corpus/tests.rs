@@ -453,6 +453,7 @@ fn run_should_categorize_every_line_that_is_not_resolved() {
         Lasts 3 Seconds
         25% reduced Charges used
         +5 to Maximum Life
+        Line one 5
         Some words of the author
     </Item></Items></PathOfBuilding>"#;
     let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
@@ -465,9 +466,11 @@ fn run_should_categorize_every_line_that_is_not_resolved() {
     assert_eq!(c.get("parser-gap/near-miss"), Some(&1));
     assert_eq!(s.gate.uncategorized, 0);
     // Notes and legacy text are excluded (B4b, B5b); the property line
-    // resolves (B5d) and the near-miss stays unresolved.
-    assert_eq!((s.rate.denominator, s.rate.excluded), (2, 3));
+    // (B5d) and the case-folded line (B5e) resolve; the near-miss (one line
+    // of a two-line template) stays unresolved.
+    assert_eq!((s.rate.denominator, s.rate.excluded), (3, 3));
     assert_eq!(s.gate.unresolved, 1);
+    assert_eq!(s.adapted.get("non_unique/case-folded"), Some(&1));
     // Note text is hashed in the summary; matched game text is written.
     let json = serde_json::to_string(&s).unwrap();
     assert!(!json.contains("Buy this one") && !json.contains("Some words"));
@@ -477,11 +480,24 @@ fn run_should_categorize_every_line_that_is_not_resolved() {
         .values()
         .flatten()
         .flat_map(|i| &i.lines)
+        .find(|l| l.text == "Line one 5")
+        .unwrap();
+    assert!(
+        line.evidence
+            .as_deref()
+            .is_some_and(|e| e.starts_with("metadata/statdescriptions/stat_descriptions.txt:")),
+        "{line:?}"
+    );
+    let folded = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
         .find(|l| l.text == "+5 to Maximum Life")
         .unwrap();
     assert_eq!(
-        line.evidence.as_deref(),
-        Some("metadata/statdescriptions/stat_descriptions.txt:1")
+        (folded.outcome.as_str(), folded.adapted),
+        ("resolved", Some("case-folded"))
     );
 }
 
@@ -506,7 +522,7 @@ fn run_should_exclude_class_requirement_lines_and_keep_the_class() {
 }
 
 #[test]
-fn run_should_name_the_halves_of_a_description_split_across_sections() {
+fn run_should_resolve_the_halves_of_a_description_split_across_sections() {
     // `Implicits: 1` puts the first line in the implicit section and the
     // second in the explicit section; each half alone matches nothing.
     let xml = r#"<PathOfBuilding><Items><Item id="1">
@@ -518,17 +534,21 @@ fn run_should_name_the_halves_of_a_description_split_across_sections() {
         Line two
     </Item></Items></PathOfBuilding>"#;
     let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
-    let c = s.categories.get("non_unique").unwrap();
-    assert_eq!(c.get("parser-gap/split-section"), Some(&2), "{c:?}");
-    let lines: Vec<Option<usize>> = r
+    // Since B5e both halves take the pair's reading.
+    assert_eq!(s.adapted.get("non_unique/split-section"), Some(&2));
+    let lines: Vec<(Option<usize>, &str, Option<&str>)> = r
         .builds
         .values()
         .flatten()
         .flat_map(|i| &i.lines)
-        .map(|l| l.split_with)
+        .map(|l| (l.split_with, l.outcome.as_str(), l.adapted))
         .collect();
     assert_eq!(lines.len(), 2);
-    assert!(lines.iter().all(Option::is_some));
+    assert!(
+        lines
+            .iter()
+            .all(|(w, o, a)| w.is_some() && *o == "resolved" && *a == Some("split-section"))
+    );
 }
 
 #[test]

@@ -145,6 +145,9 @@ struct Entry<'a> {
 pub struct Index<'a> {
     entries: BTreeMap<String, Vec<Entry<'a>>>,
     stats: IndexStats,
+    /// Lowercased key to the one key it folds from; `None` when several
+    /// keys fold to it ([`Index::resolve_case_folded`]).
+    folded: BTreeMap<String, Option<String>>,
 }
 
 /// A raw stat value read from a line.
@@ -373,7 +376,18 @@ impl<'a> Index<'a> {
             }
         }
         stats.keys = entries.len();
-        Self { entries, stats }
+        let mut folded: BTreeMap<String, Option<String>> = BTreeMap::new();
+        for key in entries.keys() {
+            folded
+                .entry(key.to_lowercase())
+                .and_modify(|k| *k = None)
+                .or_insert_with(|| Some(key.clone()));
+        }
+        Self {
+            entries,
+            stats,
+            folded,
+        }
     }
 
     /// What was indexed and left out.
@@ -441,10 +455,39 @@ impl<'a> Index<'a> {
         out
     }
 
+    /// Resolves one line whose key differs from exactly one indexed key in
+    /// letter case only (`+132 to Maximum Life` for `+{0} to maximum
+    /// Life`): an import tolerance for text written by hand (PoB's own
+    /// parser ignores case), never used by [`Index::resolve`]. `None` when
+    /// the line's key is indexed as it is, when no key folds to it, or when
+    /// several do.
+    #[must_use]
+    pub fn resolve_case_folded(&self, line: &str) -> Option<Resolution> {
+        let line = normalize(line);
+        let tokenized = tokenize(&line);
+        if self.entries.contains_key(&tokenized.key) {
+            return None;
+        }
+        let key = self.folded.get(&tokenized.key.to_lowercase())?.as_ref()?;
+        Some(self.resolve_key(line, 1, &tokenized, key))
+    }
+
     /// Resolves normalized text covering `lines` input lines.
     fn resolve_normalized(&self, line: String, lines: usize) -> Resolution {
         let tokenized = tokenize(&line);
-        let Some(entries) = self.entries.get(&tokenized.key) else {
+        let key = tokenized.key.clone();
+        self.resolve_key(line, lines, &tokenized, &key)
+    }
+
+    /// Resolves tokenized text against the entries of `key`.
+    fn resolve_key(
+        &self,
+        line: String,
+        lines: usize,
+        tokenized: &token::Tokenized,
+        key: &str,
+    ) -> Resolution {
+        let Some(entries) = self.entries.get(key) else {
             return Resolution {
                 line,
                 lines,
