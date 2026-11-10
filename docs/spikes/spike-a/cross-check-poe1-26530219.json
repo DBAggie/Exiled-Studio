@@ -2826,12 +2826,12 @@
     "not_met": []
   },
   "inputs": {
-    "extract_commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
+    "extract_commit": "674837fbf1c2db7ebe15435109a799a760a66178",
     "extract_dirty": false,
     "provenance": {
-      "extract_manifest_sha256": "f77368bbddb53c423bce78ec598e9c80a4f33d634c1db07cee06d71b669cf1ea",
+      "extract_manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63",
       "pob_commit": "1b4078dc4dcd58f7308df7e779974737badee894",
-      "tool_commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
+      "tool_commit": "674837fbf1c2db7ebe15435109a799a760a66178",
       "tool_dirty": false,
       "tool_version": "0.0.0"
     },

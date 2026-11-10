@@ -70,8 +70,17 @@ Last Updated: 2026-11-10 (PR B4c)
 - [x] Open PR (#22)
 
 ## Maintainer decision (from B4a)
-- [x] `Essences`: extractor and filter in one PR (B4y, PR #23), 2026-11-10
+- [x] `Essences` and `CraftingBenchOptions`: option (a), extractor and filter in one PR (B4y, PR #23), 2026-11-10
 - [x] Anoint source surveyed (none in the data); equivalence rule approved 2026-11-10 (step 4d)
+
+## PR B4y: `Essences` for the Mods filter
+- [x] Check PR #22 merge (`08b7d9c`, main CI run 42745121406 green); Steam build unchanged
+- [x] Measure `CraftingBenchOptions`: class lists equal `Mods.CraftingItemClassRestrictions` (791/791); not added
+- [x] `Essences` PoE1 root; Spike A report section 20; determinism (clean `674837f`), earlier outputs unchanged; manifest and cross-check summary replaced
+- [x] Essence classes in `mod_filter` (fit, spawn-tags, guard for unknown classes); tests
+- [x] Corpus run (clean `7c20caa`), two runs byte-identical; summary replaced
+- [x] Review with `code-architecture-reviewer`; apply findings
+- [x] Open PR (#23)
 
 ## PR B4c: cluster jewel small passives
 - [x] Check PR #22 merge (`08b7d9c`, main CI run 42745121406 green)

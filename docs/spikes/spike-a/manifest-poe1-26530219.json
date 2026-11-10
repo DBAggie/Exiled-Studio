@@ -37,7 +37,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
+    "commit": "674837fbf1c2db7ebe15435109a799a760a66178",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1994,6 +1994,14 @@
       "rows": 17,
       "sha256": "c5d69e79d066b9edb1fc6a3818e6962e3e2ad5e9e420bba2e6d63b3ec2079783"
     },
+    "tables/EssenceType.json": {
+      "rows": 26,
+      "sha256": "1c6d1b96238052dab1472fa33fa1928aedec6a22fb70f1b3f43865aed48e5920"
+    },
+    "tables/Essences.json": {
+      "rows": 106,
+      "sha256": "da73584bca60dc898c67ba633d73d2e00ea45b37887c93e47363bfb522bf44e9"
+    },
     "tables/FlavourText.json": {
       "rows": 2962,
       "sha256": "e922afcdbfa6afe0227d126e4cab649de4c2ee36f24044d41f8b2e76a6ac4b46"
@@ -2225,6 +2233,10 @@
     "tables/VirtualStatContextFlags.json": {
       "rows": 40,
       "sha256": "eac1dda8f5e1bd05e2e751f741a10885a15e9228f541e899d44e5cc8c051e02a"
+    },
+    "tables/Words.json": {
+      "rows": 4117,
+      "sha256": "7335f210cc518f5d65d822e85c4bce37d4916008591d9e6ca58adc09f72ee1ff"
     }
   },
   "format": 4,
@@ -9380,6 +9392,7 @@
         "BaseItemTypes",
         "BrequelPassiveSubTrees",
         "Characters",
+        "Essences",
         "PassiveTreeExpansionJewels",
         "SkillGems"
       ],
@@ -10026,6 +10039,282 @@
       "rows": 17,
       "source": "data/descendancy.datc64",
       "source_sha256": "d6c8326737a0fabe5f574205ba8f430923d482d3c6070eea82f2f309f47d5eb2",
+      "status": "ok"
+    },
+    "EssenceType": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {
+        "ChanceForAdditionalEssenceStat": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 25
+        },
+        "WordsKey": {
+          "dangling": 0,
+          "target": "Words",
+          "values": 26
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/EssenceType.json",
+      "referenced_by": [
+        "Essences"
+      ],
+      "root": false,
+      "row_len": 45,
+      "row_size_mismatch": null,
+      "rows": 26,
+      "source": "data/essencetype.datc64",
+      "source_sha256": "67c2e03dc286aa3c139d63ff8fd4f89d9c61a328147fb95340483f6d2307576d",
+      "status": "ok"
+    },
+    "Essences": {
+      "columns": 65,
+      "columns_read": 65,
+      "error": null,
+      "key_columns": {
+        "Amulet_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 106
+        },
+        "Belt_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "BodyArmour_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Boots_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Bow_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Claw_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Dagger_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Display_Amulet_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 35
+        },
+        "Display_Armour_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 100
+        },
+        "Display_Belt_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 85
+        },
+        "Display_BodyArmour_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 43
+        },
+        "Display_Boots_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 47
+        },
+        "Display_Bow_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 21
+        },
+        "Display_Gloves_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 53
+        },
+        "Display_Helmet_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 53
+        },
+        "Display_Items_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 15
+        },
+        "Display_Jewellery_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 75
+        },
+        "Display_MeleeWeapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 4
+        },
+        "Display_Monster_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 106
+        },
+        "Display_OneHandWeapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 66
+        },
+        "Display_Quiver_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Display_RangedWeapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 4
+        },
+        "Display_Ring_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 30
+        },
+        "Display_Shield_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 56
+        },
+        "Display_TwoHandMeleeWeapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 21
+        },
+        "Display_TwoHandWeapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 58
+        },
+        "Display_Wand_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 3
+        },
+        "Display_Weapon_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 40
+        },
+        "EssenceTypeKey": {
+          "dangling": 0,
+          "target": "EssenceType",
+          "values": 106
+        },
+        "Gloves_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Helmet_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "MemoryLines": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 175
+        },
+        "Monster_ModsKeys": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 280
+        },
+        "OneHandAxe_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "OneHandMace_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "OneHandSword_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "OneHandThrustingSword_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Ring_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Sceptre_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Shield_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Staff_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "TwoHandAxe_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "TwoHandMace_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "TwoHandSword_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        },
+        "Wand_ModsKey": {
+          "dangling": 0,
+          "target": "Mods",
+          "values": 105
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Essences.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 989,
+      "row_size_mismatch": null,
+      "rows": 106,
+      "source": "data/essences.datc64",
+      "source_sha256": "3fabf5bcb98f7b15abe743e5e3206800ab11dfa761aa6fb5074bb265f61b394e",
       "status": "ok"
     },
     "FlavourText": {
@@ -10894,6 +11183,7 @@
       "referenced_by": [
         "BaseItemTypes",
         "Characters",
+        "Essences",
         "GemEffects",
         "Mods",
         "MonsterVarieties"
@@ -11902,6 +12192,7 @@
         "BuffTemplates",
         "BuffVisualOrbTypes",
         "CostTypes",
+        "EssenceType",
         "GemTags",
         "GrantedEffectStatSets",
         "ItemVisualIdentity",
@@ -11933,7 +12224,8 @@
         "Mods",
         "MonsterCategories",
         "MonsterVarieties",
-        "PassiveTreeExpansionSkills"
+        "PassiveTreeExpansionSkills",
+        "Words"
       ],
       "root": false,
       "row_len": 28,
@@ -11984,6 +12276,30 @@
       "rows": 40,
       "source": "data/virtualstatcontextflags.datc64",
       "source_sha256": "17079242b5cfc3a284b2cc2ebe79b4d19a04228ac1a72ae6db53d3edd03f9107",
+      "status": "ok"
+    },
+    "Words": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "SpawnWeight_Tags": {
+          "dangling": 0,
+          "target": "Tags",
+          "values": 11795
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/Words.json",
+      "referenced_by": [
+        "EssenceType"
+      ],
+      "root": false,
+      "row_len": 64,
+      "row_size_mismatch": null,
+      "rows": 4117,
+      "source": "data/words.datc64",
+      "source_sha256": "222294fcfee03ab89a4473705f27e6511a660a5f5a1fce5c68c26de990aadd57",
       "status": "ok"
     }
   },

@@ -499,6 +499,11 @@ pub struct Summary {
     pub mods_rows: usize,
     /// `Mods` rows whose spawn tag and weight arrays differ in length.
     pub mods_bad_spawn_rows: usize,
+    /// Essence-only `Mods` rows whose item classes `Essences` gives.
+    pub essence_rows_known: usize,
+    /// Essence-only `Mods` rows with no known classes (no `Essences` table,
+    /// or no read column names them: legacy essence mods).
+    pub essence_rows_unknown: usize,
     /// Named `BaseItemTypes` rows whose tags are unknown.
     pub bases_with_unknown_tags: usize,
     /// The `Mods` filter on ambiguous lines.
@@ -940,6 +945,7 @@ pub fn run(
         .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
         .collect();
 
+    let (essence_rows_known, essence_rows_unknown) = mods.essence_rows();
     let mut s = Summary {
         lookup: lookup_report,
         scopes: indexes
@@ -948,6 +954,8 @@ pub fn run(
             .collect(),
         mods_rows: mods.row_count(),
         mods_bad_spawn_rows: mods.bad_spawn_rows,
+        essence_rows_known,
+        essence_rows_unknown,
         bases_with_unknown_tags: bases.tags_unknown,
         ..Summary::default()
     };
