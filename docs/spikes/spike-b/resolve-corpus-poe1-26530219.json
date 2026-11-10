@@ -6,7 +6,7 @@
       "manifest_sha256": "119bb8258b9fa6d61080389fa5a749f88e7618e00b43ac260ac3f6709408be9f"
     },
     "tool": {
-      "commit": "b4550c726e127628132502e81a0ddac6bc011805",
+      "commit": "8bce4ee2a02024b4f5c1ec2f93193a04ec82d229",
       "dirty": false
     },
     "builds": [
@@ -3093,6 +3093,7 @@
     1,
     18
   ],
+  "property_missing": [],
   "compositions_missing": [],
   "composition_rows": {
     "local_influence_mod_requires_celestial_boss_presence": [

@@ -238,7 +238,8 @@ Verdict: proceed with changes. All applied in this plan:
 ## PR B5d: item property lines (branch `spike-b/b5d-item-properties`, stacked on PR #30)
 - Maintainer, 2026-11-10, area 4: "We should attempt to resolve these. What do you need?" Needed: `AlternateQualityTypes` (B5x); the rest was already extracted.
 - **Decisions (assumptions for review):** properties are typed results (`item-property`, `catalyst-quality`) counted as resolved and shown apart, like B5g's granted skills (stat-only rate unchanged at 98.8%); catalyst quality carries the catalyst type's stat ID plus `quality=N`; values are not checked against the base (flask base tables not extracted); `Has {0}` (a text value) is not resolved.
-- **Evidence** (run from clean `b4550c7`, `local/b5d-rc1|rc2`, byte-identical): 3,343 / 3,366 = 99.3%, 23 unresolved; only property lines changed against B5g.
+- **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: every quality line carries `quality_type=<Id>` (a type without a catalyst stat is an `item-property`, never a bare `quality=`); `property_missing` records named ids not read and conflicting quality descriptions (dropped); tests for singular and `CurrentOfMax` templates, number edge cases, duplicates, `item_property` leaving other outcomes alone, and a corpus-level property line (the test `bases()` now loads the fixture's properties, so one older test's expectation moved from `item-property` to resolved).
+- **Evidence** (run from clean `8bce4ee`, `local/b5d-rc3|rc4`, byte-identical): 3,343 / 3,366 = 99.3%, 23 unresolved; only property lines changed against B5g.
 
 ## Open questions for the maintainer
 - Decided 2026-11-10 (maintainer): `Essences` extracted and used in one PR (B4y, PR #23, merged); `CraftingBenchOptions` measured redundant (B4y). Anoints: no data source (B4c survey); equivalence rule approved (plan step 4d).
