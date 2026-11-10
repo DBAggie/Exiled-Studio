@@ -1,6 +1,6 @@
 # Spike B: text to stat-ID resolution (report)
 
-Status: **gate met** (2026-11-10, PR #27 (B5b), once merged; PR #28 (B5c) raises the rate). 98.8% of non-unique lines resolve after B5c (98.5% with B5b) (98% asked) and every line is categorized. The maintainer decided the areas on 2026-11-10 (section 7a): B5a (PR #26) settled area 1 (local/global) from game data (section 4a); B5b excluded legacy text from the rate (section 6) and corrected ADR-007's count. The maintainer also asked for areas 3 to 5 (client-composed lines, item properties, the rest); those PRs follow and raise the rate further.
+Status: **gate met** (2026-11-10, PR #27 (B5b), once merged; PR #28 (B5c) and B5g raise the rate). 98.9% of non-unique lines resolve after B5g (98.5% with B5b) (98% asked) and every line is categorized. The maintainer decided the areas on 2026-11-10 (section 7a): B5a (PR #26) settled area 1 (local/global) from game data (section 4a); B5b excluded legacy text from the rate (section 6) and corrected ADR-007's count. The maintainer also asked for areas 3 to 5 (client-composed lines, item properties, the rest); those PRs follow and raise the rate further.
 
 Plan, decisions, and per-PR details: `dev/active/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
 
@@ -45,6 +45,11 @@ Eldritch implicits with `local_influence_mod_requires_unique_monster_presence` s
 
 **Result:** the 9 non-unique presence lines resolve, and all 9 are `mod-backed` `equal` (each by a `*EldritchImplicitUniquePresence*` row: `CurseEffectFlammability...2`, `GlobalCooldownRecovery...4`, and so on), which confirms the pairing. No other line of the corpus changed. The 6 graft `Uses level {1} {0}` lines stay `parser-gap/client-string`: which skill a graft grants is in `BrequelGrafts` / `BrequelGraftTypes`, not extracted yet (an extractor PR comes first).
 
+## 4c. Graft skill lines (B5g)
+A graft's implicit `Uses level {1} {0}` (`ClientStrings` `BrequelGraftSkillString`) names the skill the graft grants; no stat stands for it. `tools/parity-cli/src/grafts.rs` reads it from the tables B5x extracted: the graft base's metadata id ends in a `BrequelGrafts.Id` (`TulGraft4`), whose `SkillGem` row's base item names the skill (`Preserving Stillness`); `BrequelGraftGrantedSkillLevels` gives the levels (1 to 30). A line resolves when the item's base is a graft, the level is a whole number in that range, and the name equals the graft's skill. Such a line is `resolved` with kind `granted-skill` (detail `graft=`, `skill=`, `level=`): it counts as resolved in the rate, and the summary counts these lines apart (`resolved_kinds`). It has no stat ID and is not in `mod-backed`.
+
+**Result:** 4 of the 6 graft lines resolve (Aegis Tulgraft, Hardening Uulgraft, Molten and Flamecaller Xophgraft, all level 30). The other 2 read `Uses level (1-30) Hardening Uulgraft` and `... Impaling Uulgraft`: a level range and the base's own name in place of the skill, which is PoB's placeholder, not game text. They stay `parser-gap/client-string`. No other line changed.
+
 ## 5. Categories
 First match wins; each rule needs evidence named on the line (`evidence` in `report.json`, `detail` in the summary). The word key compares text with case, numbers, and punctuation removed.
 
@@ -71,13 +76,13 @@ The plan's `data-gap/no-description` (no variant covers the line's words) is the
 **Author notes, reviewed by hand** (238 non-unique lines: 105 colour code, 2 `Note:`, 131 no game text): build advice (`Use jeweler orbs at the bench ...`), wish lists (`% increased Spell Damage`, `Cast Speed`, `Double Multi`), passive and skill names (`Golem's Blood`, `Assassin's Mark`), and a lone `Abyss`. Two borderline texts: `+51 Dexterity` (2 lines, an author's edit of `+{0} to Dexterity`; PoB's lenient parser may read it) and `Graftblood: 0/18827` (2 lines, a graft property pasted from the game; no extracted table holds `Graftblood: `). Neither is game text, so the rule's evidence holds.
 
 ## 6. Results (PoE1 26530219)
-**Rate:** non-unique **3,324 / 3,366 = 98.8%** (distinct 97.7%); 42 unresolved, the gate allows 67 (2%). Excluded 572 lines (14.5% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator), B5a 97.1% (3,315 / 3,414), B5b 98.5% (legacy text out of the denominator), B5c 98.8%.
+**Rate:** non-unique **3,328 / 3,366 = 98.9%** (distinct 98.0%); 38 unresolved, the gate allows 67 (2%). Excluded 572 lines (14.5% of non-unique lines; table). `uncategorized`: **0** (unique included). Steps: B3 79.1%, B4a 85.4%, B4y 86.6%, B4c 88.0%, anoints 88.9% (3,248 / 3,652), B4b 95.1% (author notes out of the denominator), B5a 97.1% (3,315 / 3,414), B5b 98.5% (legacy text out of the denominator), B5c 98.8%, B5g 98.9% (4 granted-skill lines).
 
 | Non-unique lines | Lines |
 |---|---:|
-| resolved | 3,324 |
+| resolved | 3,328 (4 of them granted skills) |
 | `special-case/item-property` | 15 |
-| `parser-gap/client-string` | 6 |
+| `parser-gap/client-string` | 2 |
 | `parser-gap/near-miss` | 11 |
 | `parser-gap/ambiguous` | 5 |
 | `parser-gap/split-section` | 4 |
@@ -93,18 +98,19 @@ Unique lines (not in the rate): 818 resolved; ambiguous 36, legacy-text 29, near
 **Unresolved non-unique lines by area** (B4b numbering; decisions in section 7a):
 1. **Local vs global ambiguity: 72, now 5** (B5a, section 4a).
 2. **Legacy text, 48: excluded** (B5b). Pre-3.15 flask mods (`25% reduced Charges used`, `Immune to Curses during Flask effect`), 3.16-3.20 `reduced Effect of Curses on you during Flask Effect`, and single old texts; 25 distinct texts (counted from the summary's `categorized`, non-unique entries). By PoB source: `v2.4.0` and `v2.21.1` 30 lines, `v2.4.0` only 13, `v2.21.1` only 4, all six tags 1 (`85% increased Critical Strike Chance for Spells`: PoB v2.67.2 still carries the old mod; no current stat description has the text). By the rule's construction, every one has a PoB source and no current game text.
-3. **Client-composed lines: 15, now 6** (B5c, section 4b). The eldritch presence lines (9) resolve; the graft `Uses level 30 <skill>` lines (6) need the graft tables extracted first.
+3. **Client-composed lines: 15, now 2** (B5c section 4b, B5g section 4c). The eldritch presence lines (9) and 4 graft lines resolve; 2 graft lines carry PoB's placeholder text.
 4. **Item properties, 15.** `Lasts 6 Seconds`, `Currently has 40 Charges`, `Quality (Attribute Modifiers): +20%`, `Memory Strands: 63`: not modifiers.
 5. **Author edits and old wording, 11 near-miss** (`+132 to Maximum Life`, `recover 5% of energy shield when you block`), **4 split-section** (cluster jewels whose `Implicits:` count is one short), **1 only-shadowed** (`24% increased effect of Offerings`, the B2b `patch-delta` text).
 
 **Arithmetic** (allowance = 2% of the denominator, rounded down):
 - B5a: 99 unresolved of 3,414, allowance 68: not met;
 - B5b (area 2 excluded, decided 2026-11-10): 51 of 3,366, allowance 67: **met**;
-- B5c (eldritch presence lines): 42 of 3,366.
+- B5c (eldritch presence lines): 42 of 3,366;
+- B5g (graft skill lines): 38 of 3,366.
 
 **`mod-backed`** (reported, not gated): 3,138 / 3,324 = 94.4% (B5c: the 9 presence lines are backed); resolver-only lines 2,797 / 2,940 = 95.1%. Not backed: `row-value-unset` 126 (anoints 35, cluster jewel nodes 51, others 40; the value is set outside the row by design), `values-outside` 49 (one more than B4b: the Crystal Belt line of section 4a), `no-fitting-row` 6, `no-row-with-stats` 5. So 60 resolved lines outside `row-value-unset` are "stat-ID resolved, not verified correct".
 
-**Determinism and inputs:** two runs from clean commit `cb68936` (the following commit changes docs only) gave byte-identical `summary.json` and `report.json`. The summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, the six PoB sources, and the `ClientStrings` wrappers read (`compositions`).
+**Determinism and inputs:** two runs from clean commit `3e7a87b` (the following commit changes docs only) gave byte-identical `summary.json` and `report.json`. The summary records the manifest SHA-256, the Steam build, 21 build hashes, the tool commit with `dirty: false`, the six PoB sources, the `ClientStrings` wrappers read (`compositions`), and the graft bases read (`graft_bases`, 16).
 
 ## 7. Verdict
 **Gate met** (B5b): item 1 98.5% >= 98% (legacy text and author notes excluded by maintainer decision); items 2, 3, and 4 hold; `resolve-corpus` exits 0. Spike B's conclusion for ADR-015: reverse-matching the game's stat descriptions, with the `Mods` filter, resolves the corpus's current game text, local/global pairs included (B5a). No curated text-pattern fallback was needed. Text the game no longer has (legacy text) is categorized and counted apart: the exclusion is a rule of the gate's rate only. Per ADR-015 (`docs/adr/015-stat-id-modifier-model.md`: unresolved lines are quarantined and shown), when the resolver ships, these lines must still surface as quarantined items, never be dropped. Without the exclusion the rate is 97.1% (3,315 / 3,414). Client-composed lines (area 3) and item properties (area 4) are resolver work from game data, which the maintainer asked for next.
@@ -113,7 +119,7 @@ Unique lines (not in the rate): 818 resolved; ambiguous 36, legacy-text 29, near
 On B4b's areas (section 6):
 1. Local vs global: the maintainer asked what resolving it needs. B5a needed no fallback: game data settles 67 of the 72 lines (section 4a). The 5 left stay `parser-gap/ambiguous`.
 2. Legacy text: **excluded from the rate**, as author notes are. Done in B5b.
-3. Client-composed lines: write the resolver code. Eldritch lines done in B5c; grafts need an extractor PR first.
+3. Client-composed lines: write the resolver code. Eldritch lines in B5c; grafts in B5g after the B5x extractor PR.
 4. Item properties: attempt to resolve them. Later PR.
 5. The rest: resolve them as recommended. Later PR.
 6. ADR-007's corpus count: corrected to 21 in B5b.
