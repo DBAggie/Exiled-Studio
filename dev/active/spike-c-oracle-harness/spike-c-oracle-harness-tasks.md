@@ -7,7 +7,7 @@ Last Updated: 2026-11-10 (PR C0: plan)
 - [x] Create plan, context, tasks under `dev/active/spike-c-oracle-harness/`
 - [x] Review with the `plan-reviewer` agent and apply findings
 - [x] Update handoff Current state / Next action, CLAUDE.md Status, ACTION-PLAN Next action, README status
-- [ ] Open PR
+- [x] Open PR (#33)
 - [ ] Maintainer answers the open questions (context file)
 
 ## PR C1: pinned runtime and manifest
