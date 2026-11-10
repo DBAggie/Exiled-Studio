@@ -2,7 +2,7 @@
 
 Status: **gate met** (2026-11-10, PR #27 (B5b), once merged; PR #28 (B5c), PR #30 (B5g), PR #31 (B5d), and PR #32 (B5e) raise the rate). 99.7% of non-unique lines resolve after B5e (98.5% with B5b; stat-only 99.1%) (98% asked) and every line is categorized. The maintainer decided the areas on 2026-11-10 (section 7a): B5a (PR #26) settled area 1 (local/global) from game data (section 4a); B5b excluded legacy text from the rate (section 6) and corrected ADR-007's count. The maintainer also asked for areas 3 to 5 (client-composed lines, item properties, the rest); those PRs follow and raise the rate further.
 
-Plan, decisions, and per-PR details: `dev/active/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
+Plan, decisions, and per-PR details: `dev/completed/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
 
 ## 1. Question and gate
 Can item modifier text be resolved to `(stat_id, values)` by reverse-matching the game's stat-description files (ADR-015), without PoB's text patterns? Gate (ACTION-PLAN, Spike B; plan "Gate"):

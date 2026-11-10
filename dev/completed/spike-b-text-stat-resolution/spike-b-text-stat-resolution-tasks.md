@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5e)
+Last Updated: 2026-11-10 (PR C0: Spike B closed; folder moved to `dev/completed/`)
 
 # Spike B: tasks
 
@@ -108,7 +108,7 @@ Last Updated: 2026-11-10 (PR B5e)
 - [x] Decision per area, 2026-11-10 (report section 7a): (1) local/global: what is needed; (2) legacy text excluded from the rate; (3) client-composed: write the code; (4) item properties: attempt to resolve; (5) the rest as recommended
 - [x] ADR-007 corpus count 22 -> 21 (maintainer asked for it; B5b)
 
-## PR B5a: local/global pairs from game data
+## PR B5a: local/global pairs from game data (PR #26)
 - [x] Check PR #25 merge (`bc159a5`, main CI run 42754901070 green)
 - [x] Survey the 72 lines: 55 legacy essence guard, 14 crafted, 2 several-backed, 1 influence; `Stats.IsLocal` / `IsWeaponLocal` and spawn data per pair
 - [x] `local-stat`, legacy essence rows by `ModType`, `spawn-values` in `mod_filter.rs`; tests
@@ -154,6 +154,6 @@ Last Updated: 2026-11-10 (PR B5e)
 - [x] Open PR
 
 ## After the area PRs (maintainer)
-- [ ] Merge #26 .. #32 in order (retarget each to `main`)
+- [x] Merge #26 .. #32 in order (all merged 2026-11-10; squash commits in the context file)
 - [ ] Accept the ADR-015 clarification on typed resolutions, or decide otherwise
-- [ ] Move this folder to `dev/completed/`; Spike C
+- [x] Move this folder to `dev/completed/`; Spike C plan (PR #33 (C0), `dev/active/spike-c-oracle-harness/`)
