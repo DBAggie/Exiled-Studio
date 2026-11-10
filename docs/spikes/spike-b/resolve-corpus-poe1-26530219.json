@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "4031f1c8b75050c547d5084b8b23cc2de6b8613f",
+      "commit": "1b5440002bd0f6f3b7c1170e9130cac653001c3c",
       "dirty": false
     },
     "builds": [
@@ -439,24 +439,27 @@
     "outcomes": {
       "ambiguous": 5,
       "excluded/author-note": 238,
+      "excluded/legacy-text": 48,
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
       "resolved": 3315,
-      "unresolved/no-template": 93,
+      "unresolved/no-template": 45,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
       "enchant": {
+        "excluded/legacy-text": 1,
         "resolved": 259,
-        "unresolved/no-template": 3
+        "unresolved/no-template": 2
       },
       "explicit": {
         "ambiguous": 3,
         "excluded/author-note": 238,
+        "excluded/legacy-text": 47,
         "excluded/pob-custom": 54,
         "resolved": 2556,
-        "unresolved/no-template": 75,
+        "unresolved/no-template": 28,
         "unresolved/only-shadowed": 1
       },
       "implicit": {
@@ -473,10 +476,11 @@
     "outcomes": {
       "ambiguous": 36,
       "excluded/author-note": 15,
+      "excluded/legacy-text": 29,
       "excluded/not-a-modifier": 36,
       "excluded/not-selected-variant": 1415,
       "resolved": 818,
-      "unresolved/no-template": 64,
+      "unresolved/no-template": 35,
       "unresolved/no-variant-fits": 5
     },
     "by_section": {
@@ -486,9 +490,10 @@
       "explicit": {
         "ambiguous": 35,
         "excluded/author-note": 15,
+        "excluded/legacy-text": 29,
         "excluded/not-selected-variant": 1387,
         "resolved": 703,
-        "unresolved/no-template": 64,
+        "unresolved/no-template": 35,
         "unresolved/no-variant-fits": 4
       },
       "implicit": {
@@ -501,16 +506,16 @@
     "with_shadowed_matches": 0
   },
   "rate": {
-    "denominator": 3414,
+    "denominator": 3366,
     "resolved": 3315,
-    "rate": 0.9710017574692443,
-    "excluded": 524,
-    "excluded_share": 0.13306246825799897,
-    "distinct": 1360,
+    "rate": 0.9848484848484849,
+    "excluded": 572,
+    "excluded_share": 0.1452513966480447,
+    "distinct": 1335,
     "distinct_resolved": 1297,
-    "distinct_rate": 0.9536764705882353,
+    "distinct_rate": 0.9715355805243445,
     "distinct_with_mixed_outcomes": 1,
-    "meets_rate": false
+    "meets_rate": true
   },
   "ambiguous": {
     "(10-20)% increased Reservation Efficiency of Skills": {
@@ -3232,12 +3237,12 @@
   },
   "colour_code_in_game_text": false,
   "gate": {
-    "resolution": false,
-    "unresolved_allowed": 68,
-    "unresolved": 99,
+    "resolution": true,
+    "unresolved_allowed": 67,
+    "unresolved": 51,
     "uncategorized": 0,
     "inputs_recorded": true,
-    "met": false
+    "met": true
   },
   "pob_base_suffix_removed": 10,
   "duplicate_builds": 0,
