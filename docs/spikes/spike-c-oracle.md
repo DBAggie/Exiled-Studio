@@ -148,4 +148,4 @@ On Linux, run `oracle-run` inside `unshare -rn` for no network.
 ## 12. Open for the maintainer
 - Confirm the decision `FEASIBLE_WITH_ADAPTATION` (by merging this PR).
 - Post the upstream PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation).
-- From Spike B: the ADR-015 clarification on typed resolutions (`docs/spikes/spike-b-resolution.md` section 7) was accepted by the maintainer 2026-11-10; the amendment is the next PR.
+- From Spike B: the ADR-015 clarification on typed resolutions (`docs/spikes/spike-b-resolution.md` section 7) was accepted by the maintainer 2026-11-10 and written as ADR-015 Amendment 1.
