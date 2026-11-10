@@ -39,7 +39,7 @@ This plan supersedes the phase order in `IMPLEMENTATION-PLAN.md` and replaces th
 
 ### Spike B: Text to stat-ID resolution
 - Using Spike A stat descriptions, resolve every item mod line in the maintainer's 21 PoE1 builds (22 until 2026-11-09; the maintainer confirmed 21).
-- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps).
+- **Gate:** ≥ 98% of non-unique explicit and implicit lines resolve; every unresolved line is categorized (uniques, special cases, data gaps, parser gaps). Excluded from the rate, counted apart (maintainer decisions): PoB custom lines, flag and class-requirement lines, unselected variants, author notes (2026-11-10), and legacy text the game no longer has (`data-gap/legacy-text`, 2026-11-10).
 - **Fallback:** hybrid model per ADR-015, decided per area.
 
 ### Spike C: Thin oracle harness (about two weeks maximum)
