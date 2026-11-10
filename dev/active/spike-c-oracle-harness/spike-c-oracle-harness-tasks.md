@@ -48,7 +48,7 @@ Last Updated: 2026-11-10 (PR C3: fixtures, compare, register, corpus run)
 - [x] Intentional discrepancy: unexpected (exit 20), then expected with the test register (exit 19); real-runtime ignored test
 - [x] Corpus run 3 times on Windows (twice); scrubbed summary in `docs/spikes/spike-c/` with a scrub test. Result: 3 of 21 builds nondeterministic (context file)
 - [x] Review with `code-architecture-reviewer`; apply findings (1 blocker fixed; should-fix applied)
-- [ ] Open PR
+- [x] Open PR (#37)
 
 ## PR C3b: corpus nondeterminism
 - [ ] Reproduce on the 3 builds with `--runs 20`; find where PoB picks a transfigured gem variant
