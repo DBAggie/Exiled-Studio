@@ -640,11 +640,15 @@ fn filter_should_count_an_essence_row_for_the_base_class_as_spawning() {
 
 /// An `Essences` table with every column of [`ESSENCE_COLUMNS`]: one row,
 /// `Staff_ModsKey` = Mods row 0, `Display_Quiver_ModsKey` = row 1,
-/// `Helmet_ModsKey` = row 0, the rest null.
+/// `Helmet_ModsKey` = row 0, `Display_Helmet_ModsKey` = row 2 (not read),
+/// the rest null.
 fn essences_table() -> String {
+    // A summary column the map does not read, set to Mods row 2.
     let columns: Vec<String> = ESSENCE_COLUMNS
         .iter()
-        .map(|(c, _)| format!(r#"{{"name": "{c}", "references": null}}"#))
+        .map(|(c, _)| *c)
+        .chain(["Display_Helmet_ModsKey"])
+        .map(|c| format!(r#"{{"name": "{c}", "references": null}}"#))
         .collect();
     let row: Vec<&str> = ESSENCE_COLUMNS
         .iter()
@@ -653,6 +657,7 @@ fn essences_table() -> String {
             "Display_Quiver_ModsKey" => "1",
             _ => "null",
         })
+        .chain(["2"])
         .collect();
     format!(
         r#"{{"table": "Essences", "columns": [{}], "rows": [[{}]]}}"#,
@@ -691,6 +696,79 @@ fn essence_classes_should_map_columns_to_item_classes() {
         Some(&BTreeSet::from([at("Helmet"), at("Staff"), at("Warstaff")]))
     );
     assert_eq!(map.get(&1), Some(&BTreeSet::from([at("Quiver")])));
+    assert_eq!(
+        map.get(&2),
+        None,
+        "Display_* summaries other than quiver are not read"
+    );
+}
+
+fn essence_read(p: &str, ids: &[&str], mods_rows: usize) -> Result<Vec<u8>, String> {
+    Ok(match p {
+        "tables/Mods.json" => {
+            let one = mods_table();
+            let (head, row) = one.split_once("\"rows\": [").unwrap();
+            let row = row.trim_end_matches("]}");
+            format!("{head}\"rows\": [{}]}}", vec![row; mods_rows].join(", "))
+        }
+        "tables/Stats.json" => id_table("Stats", &["s0", "s1", "s2"]),
+        "tables/Tags.json" => id_table("Tags", &["default", "ring"]),
+        "tables/Essences.json" => essences_table(),
+        "tables/ItemClasses.json" => id_table("ItemClasses", ids),
+        _ => return Err(format!("{p}: not found")),
+    }
+    .into_bytes())
+}
+
+#[test]
+fn load_should_apply_essence_classes_to_the_mods_rows() {
+    let ids = class_ids();
+    let ids_ref: Vec<&str> = ids.iter().map(String::as_str).collect();
+    let mods = Mods::load(&|p: &str| essence_read(p, &ids_ref, 3)).unwrap();
+    let warstaff = i64::try_from(ids.iter().position(|c| c == "Warstaff").unwrap()).unwrap();
+    assert!(
+        mods.row(0)
+            .unwrap()
+            .essence_classes
+            .as_ref()
+            .unwrap()
+            .contains(&warstaff)
+    );
+    assert!(mods.row(2).unwrap().essence_classes.is_none());
+    // The fixture rows are essence-only: rows 0 and 1 known, row 2 not.
+    assert_eq!(mods.essence_rows(), (2, 1));
+}
+
+#[test]
+fn load_should_fail_when_essences_names_a_row_outside_mods() {
+    let ids = class_ids();
+    let ids_ref: Vec<&str> = ids.iter().map(String::as_str).collect();
+    assert!(Mods::load(&|p: &str| essence_read(p, &ids_ref, 1)).is_err());
+}
+
+#[test]
+fn fits_should_keep_an_essence_row_when_the_base_class_is_unknown() {
+    let b = BaseRow {
+        class: None,
+        ..base(None)
+    };
+    assert!(fits(&essence_row("a", Some(vec![8])), &b, false, EXPLICIT));
+}
+
+#[test]
+fn filter_should_count_an_ordinary_row_an_essence_puts_on_the_base_class_as_spawning() {
+    let mut ordinary = row(ITEM, PRE, &[("global_es", 10, 20)], &[("ring", 1)]);
+    ordinary.essence_classes = Some(vec![7]);
+    let mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("local_es", 10, 20)], &[("ring", 1)]),
+        ordinary,
+    ]);
+    let bases = [base(Some(&["helmet"]))];
+    let d = filter(&ctx(&mods, &bases), EXPLICIT, &es_candidates(15));
+    assert_eq!(
+        (d.kept.clone(), d.name()),
+        (vec![1], "resolved/spawn-tags".to_owned())
+    );
 }
 
 #[test]

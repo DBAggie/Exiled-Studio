@@ -50,7 +50,9 @@
 //!    tags need `InfluenceTags`, not extracted), and when a candidate that
 //!    does not spawn is backed by an essence-only row whose classes are
 //!    unknown. A row an essence with known classes puts on the base's class
-//!    counts as spawning. Eldritch rows do not count on implicit lines
+//!    counts as spawning, essence-only or not (`Essences` also names
+//!    ordinary affixes, such as `ColdResist7` on armour): an essence can put
+//!    it on the item, so the base can carry it whatever its tag weight. Eldritch rows do not count on implicit lines
 //!    without an eldritch flag.
 //! 4. `values` (tie-breaker, reported): candidates backed at the values
 //!    level.
@@ -175,11 +177,13 @@ impl ModRow {
     }
 
     /// Whether an essence can put this row on `base`: `true` when the
-    /// essence classes are unknown (the guard in [`filter`] handles that).
+    /// essence classes are unknown (the guard in [`filter`] handles that) or
+    /// the base's class is unknown (no named `BaseItemTypes` row has a null
+    /// `ItemClassesKey` in PoE1 26530219; a row is not excluded on a guess).
     fn essence_on(&self, base: &BaseRow) -> bool {
         self.essence_classes
             .as_ref()
-            .is_none_or(|c| base.class.is_some_and(|k| c.contains(&k)))
+            .is_none_or(|c| base.class.is_none_or(|k| c.contains(&k)))
     }
 
     /// Whether an essence with known classes puts this row on `base`.
@@ -354,9 +358,9 @@ fn essence_classes(read: Read<'_>) -> Result<Option<BTreeMap<usize, BTreeSet<i64
             .ok_or_else(|| format!("ItemClasses: no row {id}"))
     };
     let mut out: BTreeMap<usize, BTreeSet<i64>> = BTreeMap::new();
-    for (column, ids) in ESSENCE_COLUMNS {
+    for (column, class_ids) in ESSENCE_COLUMNS {
         let col = essences.column(column)?;
-        let rows: Vec<i64> = ids
+        let rows: Vec<i64> = class_ids
             .iter()
             .map(|id| class_row(id))
             .collect::<Result<_, _>>()?;
@@ -432,9 +436,10 @@ impl Mods {
         }
         if let Some(classes) = essence_classes(read)? {
             for (n, list) in classes {
-                if let Some(row) = rows.get_mut(n) {
-                    row.essence_classes = Some(list.into_iter().collect());
-                }
+                let row = rows
+                    .get_mut(n)
+                    .ok_or_else(|| format!("Essences: Mods row {n} is not in Mods"))?;
+                row.essence_classes = Some(list.into_iter().collect());
             }
         }
         let mut mods = Self::from_rows(rows);
@@ -650,8 +655,9 @@ impl Context<'_> {
     }
 
     /// Whether some fitting row is essence-only with unknown classes
-    /// (essence mods spawn through `Essences`, not the base's tags; quiver
-    /// mods and rows no `Essences` column names have no known classes).
+    /// (essence mods spawn through `Essences`, not the base's tags; the
+    /// legacy essence mods that no read `Essences` column names have no
+    /// known classes).
     fn essence_backed(&self, fits_: &[Fit]) -> bool {
         fits_.iter().any(|f| {
             self.row(*f)
