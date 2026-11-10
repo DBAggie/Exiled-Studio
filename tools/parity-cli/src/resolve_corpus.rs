@@ -1059,6 +1059,8 @@ fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, 
         let Some(this) = modifier(n) else {
             continue;
         };
+        // The line before is tried first; when both neighbours would
+        // complete a pair, the earlier one wins (no corpus line has two).
         let neighbours = [n.checked_sub(1), n.checked_add(1)];
         for other in neighbours.into_iter().flatten() {
             let Some(m) = modifier(other).filter(|m| m.section != this.section) else {
@@ -1077,10 +1079,14 @@ fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, 
             if let Some(r) = joined {
                 // The pair is one description: both lines take its reading
                 // (B5e), as the lines of any multi-line template do.
+                // `backed` stays `None`: the halves sit in two sections,
+                // so no one section's `Mods` fit applies; the line is left
+                // out of `mod-backed` on purpose.
                 record.split_with = Some(other);
                 record.outcome = "resolved".to_owned();
                 record.detail = detail(&r.outcome);
                 record.adapted = Some("split-section");
+                record.evidence = Some(format!("resolves with item line {other}"));
                 break;
             }
         }

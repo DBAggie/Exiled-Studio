@@ -75,5 +75,5 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - Still missing: LuaJIT (needed at Spike C).
 
 ## Next action
-1. **Merge check for PRs #26 (B5a), #27 (B5b), #28 (B5c), #29 (B5x), #30 (B5g), #31 (B5d), and the B5e PR** (`gh pr view <n>`; merge in order, retargeting each next PR to `main`). With B5b, Spike B's gate is met (98.5%; `docs/spikes/spike-b-resolution.md` section 7). The maintainer also asked for areas 3 to 5 (report section 7a). Work them in order, one PR each, stacked on the previous branch while it is unmerged:
+1. **Merge check for PRs #26 (B5a), #27 (B5b), #28 (B5c), #29 (B5x), #30 (B5g), #31 (B5d), and the B5e PR** (`gh pr view <n>`; merge in order, retargeting each next PR to `main`). With B5b, Spike B's gate is met (98.5%; `docs/spikes/spike-b-resolution.md` section 7). The maintainer also asked for areas 3 to 5 (report section 7a); they are in the PRs above.
    Every area the maintainer decided is now in a PR. After the merges: move `dev/active/spike-b-text-stat-resolution/` to `dev/completed/`, mark Spike B done in the ACTION-PLAN, and start Spike C (thin oracle harness; needs LuaJIT on the workstation). Open for the maintainer: the ADR-015 clarification on typed resolutions (report section 7), and the assumptions listed per PR above.

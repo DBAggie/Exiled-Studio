@@ -134,7 +134,7 @@ Spike B in `docs/plan/ACTION-PLAN.md` (Phase 1, second spike). Prove that item m
 - **B5b, legacy text:** `data-gap/legacy-text` excluded from the rate (as `author-note`); ADR-007 count 21.
 - **B5c, client-composed lines:** eldritch presence wrapper and graft skill line resolved from game data.
 - **B5d, item properties:** attempt to resolve as typed item properties from game data.
-- **B5e, the rest:** near-miss author edits, split-section, only-shadowed, as recommended.
+- **B5e, the rest (done):** case-folded lines and split-section pairs resolve (`adapted`); near-miss author edits, split-section, only-shadowed, as recommended.
 
 ### 4b. Categories, gate, report (M)
 - Fixed category list, first match wins. **Each category needs positive evidence; a line without it is `uncategorized`.**

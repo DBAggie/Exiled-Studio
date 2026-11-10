@@ -549,6 +549,14 @@ fn run_should_resolve_the_halves_of_a_description_split_across_sections() {
             .iter()
             .all(|(w, o, a)| w.is_some() && *o == "resolved" && *a == Some("split-section"))
     );
+    // Evidence names the other half; not in `mod-backed` (two sections).
+    let records: Vec<&LineRecord> = r.builds.values().flatten().flat_map(|i| &i.lines).collect();
+    assert!(records.iter().all(|l| {
+        l.evidence
+            .as_deref()
+            .is_some_and(|e| e.starts_with("resolves with item line"))
+            && l.backed.is_none()
+    }));
 }
 
 #[test]
@@ -644,6 +652,8 @@ fn run_should_read_a_line_through_a_client_wrapper() {
         line.composed.as_deref(),
         Some("InfluenceStatConditionPresenceUniqueMonster")
     );
+    // A composed line is never case-folded (B5e).
+    assert_eq!(line.adapted, None);
     assert_eq!(
         line.detail,
         [
@@ -733,4 +743,26 @@ fn run_should_resolve_a_flask_property_line_as_a_typed_property() {
     assert_eq!(s.resolved_kinds.get("non_unique/item-property"), Some(&1));
     assert_eq!(s.property_inputs.0, 1);
     assert_eq!(s.rate.stat_resolved, 0);
+}
+
+#[test]
+fn run_should_not_case_fold_a_line_that_resolves_exactly_or_matches_nothing() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 0
+        +5 to maximum Life
+        +5 to maximum Lives
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    assert_eq!(s.adapted.get("non_unique/case-folded"), None);
+    let lines: Vec<(&str, Option<&str>)> = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .map(|l| (l.outcome.as_str(), l.adapted))
+        .collect();
+    assert_eq!(lines, [("resolved", None), ("excluded/author-note", None)]);
 }

@@ -455,8 +455,9 @@ impl<'a> Index<'a> {
         out
     }
 
-    /// Resolves one line whose key differs from exactly one indexed key in
-    /// letter case only (`+132 to Maximum Life` for `+{0} to maximum
+    /// Resolves one line whose key, lowercased, equals exactly one indexed
+    /// key lowercased (`str::to_lowercase`, not full Unicode case folding),
+    /// that is, a line that differs in letter case only (`+132 to Maximum Life` for `+{0} to maximum
     /// Life`): an import tolerance for text written by hand (PoB's own
     /// parser ignores case), never used by [`Index::resolve`]. `None` when
     /// the line's key is indexed as it is, when no key folds to it, or when

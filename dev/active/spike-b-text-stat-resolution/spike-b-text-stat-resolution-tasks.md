@@ -97,7 +97,7 @@ Last Updated: 2026-11-10 (PR B5e)
 - [x] Category rules with positive evidence and tests (`categorize.rs`); `uncategorized = 0`
 - [x] Author notes excluded (maintainer approval 2026-11-10); every note line reviewed by hand (report section 5)
 - [x] Class-requirement lines under `special-case/not-a-modifier`, class kept on the item record (0 in the corpus)
-- [x] The 4 cluster lines split across sections: `parser-gap/split-section` (each half alone matches no template; the pair resolves)
+- [x] The 4 cluster lines split across sections (resolved since B5e): `parser-gap/split-section` (each half alone matches no template; the pair resolves)
 - [x] PoB legacy-text sources: six tags, `--pob <tag>=<dir>`
 - [x] Spike report `docs/spikes/spike-b-resolution.md`, summary in `docs/spikes/spike-b/`, gate verdict (not met)
 - [x] ACTION-PLAN status and corpus count 21; ADR-007's "22" left for the maintainer (ADR text)

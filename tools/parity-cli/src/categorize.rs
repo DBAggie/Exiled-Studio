@@ -32,7 +32,9 @@
 //!    text holds one (`colour_code_in_game_text`). **Excluded**
 //!    (maintainer approval 2026-11-10: author notes are left out of the
 //!    rate).
-//! 6. `parser-gap/split-section`: the line and the adjacent line of another
+//! 6. `parser-gap/split-section` (since PR B5e a safety net: `resolve-corpus`
+//!    resolves such lines first, so the corpus no longer reaches it): the
+//!    line and the adjacent line of another
 //!    section resolve as one multi-line description (PoB's `Implicits:`
 //!    count put the two lines of one description in two sections).
 //! 7. `special-case/author-note` (`pob-note-spec`): a `Note: ...` line,
