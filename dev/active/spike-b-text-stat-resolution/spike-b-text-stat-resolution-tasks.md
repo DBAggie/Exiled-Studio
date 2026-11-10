@@ -119,7 +119,7 @@ Last Updated: 2026-11-10 (PR B4b)
 
 ## PR B5b: legacy text out of the rate, ADR-007
 - [x] `data-gap/legacy-text` in `EXCLUDED`; tests; ADR-007 21 builds; ACTION-PLAN gate text records the exclusions
-- [x] Corpus run from clean `1b54400`, two runs byte-identical: 98.5%, gate met; summary replaced; report
+- [x] Corpus run from clean `fbf8379`, two runs byte-identical: 98.5%, gate met; summary replaced; report
 - [ ] Open PR
 
 ## PR B5c: client-composed lines (eldritch)
