@@ -584,13 +584,102 @@ fn backing_should_name_a_fitting_row_whose_value_is_set_outside_the_row() {
         backing(&c, enchant, std::slice::from_ref(&keys)),
         Err("row-value-unset")
     );
+    // No candidate is backed; the one with a fitting unset row is kept.
     let d = filter(
         &c,
         enchant,
         &[cand(vec![keys]), cand(vec![exact("other", 1)])],
     );
-    assert_eq!(d.name(), "ambiguous/no-backed-candidate");
+    assert_eq!(d.name(), "resolved/unset-fit");
     assert!(d.notes.contains("row-value-unset"));
+}
+
+fn lookup(stat: &str) -> ResolvedStat {
+    ResolvedStat {
+        stat: stat.to_owned(),
+        value: RawValue::Lookup(vec![1234]),
+    }
+}
+
+/// The anoint shape: five `GrantedPassive*`-like `UNIQUE` rows carry
+/// `hash`, `hash_2` .. `hash_5` at `(0, 0)`; a weapon-tree row carries
+/// `tree_hash`, which does not fit the enchant section.
+fn anoint_mods() -> Mods {
+    let mut rows: Vec<ModRow> = ["hash", "hash_2", "hash_3", "hash_4", "hash_5"]
+        .iter()
+        .map(|s| {
+            let mut r = row(ITEM, generation::UNIQUE, &[], &[]);
+            r.unset = vec![(*s).to_owned()];
+            r
+        })
+        .collect();
+    let mut tree = row(ITEM, generation::WEAPON_TREE[0], &[], &[]);
+    tree.unset = vec!["tree_hash".to_owned()];
+    rows.push(tree);
+    Mods::from_rows(rows)
+}
+
+#[test]
+fn filter_should_resolve_numbered_stat_equivalents_to_the_unnumbered_stat() {
+    let mods = anoint_mods();
+    let bases = [base(None)];
+    let c = ctx(&mods, &bases);
+    let cands: Vec<Candidate> = ["tree_hash", "hash_3", "hash", "hash_2", "hash_4", "hash_5"]
+        .iter()
+        .map(|s| cand(vec![lookup(s)]))
+        .collect();
+    let d = filter(&c, line(Section::Enchant), &cands);
+    assert_eq!(d.name(), "resolved/unset-fit+numbered-stat");
+    assert_eq!(d.kept, [2]);
+    assert!(d.notes.contains("numbered-stat-equivalents"));
+}
+
+#[test]
+fn filter_should_not_merge_candidates_that_differ_by_more_than_a_number() {
+    let mods = anoint_mods();
+    let bases = [base(None)];
+    let c = ctx(&mods, &bases);
+    // Both have a fitting unset row, but their stats differ by more than a
+    // number (`x`): they stay ambiguous.
+    let d = filter(
+        &c,
+        line(Section::Enchant),
+        &[
+            cand(vec![lookup("hash")]),
+            cand(vec![lookup("hash_2"), exact("x", 1)]),
+        ],
+    );
+    assert_eq!(d.name(), "ambiguous/no-backed-candidate");
+    assert_eq!(d.kept, [0, 1]);
+    let mut d = Decision {
+        kept: vec![0, 1],
+        ..Decision::default()
+    };
+    numbered_stat(
+        &mut d,
+        &[cand(vec![lookup("a")]), cand(vec![lookup("b_2")])],
+    );
+    assert_eq!(d.kept, [0, 1]);
+    // Same stats and same numbers (two descriptions of one stat): not
+    // numbered equivalents.
+    numbered_stat(&mut d, &[cand(vec![lookup("a")]), cand(vec![lookup("a")])]);
+    assert_eq!(d.kept, [0, 1]);
+    assert!(d.rules.is_empty());
+}
+
+#[test]
+fn unnumbered_should_strip_only_a_single_digit_suffix_from_two_to_nine() {
+    assert_eq!(
+        unnumbered("mod_granted_passive_hash_5"),
+        ("mod_granted_passive_hash", 5)
+    );
+    assert_eq!(
+        unnumbered("mod_granted_passive_hash"),
+        ("mod_granted_passive_hash", 1)
+    );
+    assert_eq!(unnumbered("x_1"), ("x_1", 1));
+    assert_eq!(unnumbered("x_10"), ("x_10", 1));
+    assert_eq!(unnumbered("x_"), ("x_", 1));
 }
 
 /// `base(..)` has item class 7.
@@ -784,4 +873,23 @@ fn essence_classes_should_be_none_without_the_table_and_fail_on_a_missing_class(
         .into_bytes())
     };
     assert!(essence_classes(&read).is_err());
+}
+
+#[test]
+fn filter_should_keep_backed_numbered_candidates_ambiguous() {
+    // Both `x` and `x_2` are backed by fitting rows: a real ambiguity, not
+    // the anoint's unknown slot, so `numbered-stat` does not run.
+    let mods = Mods::from_rows(vec![
+        row(ITEM, PRE, &[("x", 1, 5)], &[]),
+        row(ITEM, PRE, &[("x_2", 1, 5)], &[]),
+    ]);
+    let bases = [base(None)];
+    let c = ctx(&mods, &bases);
+    let d = filter(
+        &c,
+        EXPLICIT,
+        &[cand(vec![exact("x", 3)]), cand(vec![exact("x_2", 3)])],
+    );
+    assert_eq!(d.name(), "ambiguous/several-backed");
+    assert!(!d.notes.contains("numbered-stat-equivalents"));
 }

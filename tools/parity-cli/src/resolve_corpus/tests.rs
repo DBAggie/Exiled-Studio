@@ -4,7 +4,7 @@ use crate::extract::load;
 const MANIFEST: &str = r#"{"format": 3, "game": "poe1", "steam_build_id": "1",
     "stat_descriptions": {"files": {
       "metadata/statdescriptions/stat_descriptions.txt": {"kind": "descriptions",
-        "status": "ok", "output": "item.json", "descriptions": 3, "english_variants": 3},
+        "status": "ok", "output": "item.json", "descriptions": 4, "english_variants": 4},
       "metadata/statdescriptions/tincture_stat_descriptions.txt": {"kind": "descriptions",
         "status": "ok", "output": "tincture.json", "descriptions": 1, "english_variants": 1},
       "metadata/statdescriptions/graft_stat_descriptions.txt": {"kind": "descriptions",
@@ -36,6 +36,8 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
                 desc(1, "life", "+{0} to maximum Life"),
                 desc(2, "speed_a", "{0}% increased Speed"),
                 desc(3, "speed_b", "{0}% increased Speed"),
+                // The extract keeps the game's `\n` escape (backslash, `n`).
+                desc(4, "two_line", r"Line one {0}\\nLine two"),
             ],
         ),
         "tincture.json" => file(
@@ -43,6 +45,10 @@ fn read(path: &str) -> Result<Vec<u8>, String> {
             &[desc(1, "tincture_effect", "{0}% increased Tincture Effect")],
         ),
         "graft.json" => file("graft_stat_descriptions.txt", &[]),
+        "tables/ClientStrings.json" => r#"{"table": "ClientStrings", "columns": [
+            {"name": "Id", "references": null}, {"name": "Text", "references": null}],
+            "rows": [["ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"]]}"#
+            .to_owned(),
         _ => return Err(format!("{path}: not found")),
     };
     Ok(text.into_bytes())
@@ -108,12 +114,21 @@ fn run_one(builds: &[Build]) -> (Summary, Report) {
 fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
     let extract = load(&read).unwrap();
     let (lookup, lookup_report) = TableLookup::load(&read, &extract).unwrap();
+    let pob = categorize::PobText::read(
+        "test",
+        vec![(
+            "ModFlask.lua".to_owned(),
+            "\t[\"F1\"] = { \"25% reduced Charges used\", level = 1 },\n".to_owned(),
+        )],
+    );
+    let game = GameText::load(&extract.set, &read, vec![pob]).unwrap();
     run(
         &extract,
         &lookup,
         lookup_report,
         &bases(),
         mods,
+        &game,
         builds,
         Tool::default(),
     )
@@ -176,7 +191,9 @@ fn run_should_put_every_item_line_under_one_outcome() {
     let n = &s.non_unique.outcomes;
     assert_eq!(n.get("resolved"), Some(&3), "{n:?}");
     assert_eq!(n.get("ambiguous"), Some(&1));
-    assert_eq!(n.get("unresolved/no-template"), Some(&1));
+    // `No such text here` matches no game or PoB text: an author note.
+    assert_eq!(n.get("unresolved/no-template"), None);
+    assert_eq!(n.get("excluded/author-note"), Some(&1));
     assert_eq!(n.get("excluded/pob-custom"), Some(&1));
     assert_eq!(n.get("excluded/not-a-modifier"), Some(&2));
     assert_eq!(n.get("unknown-base/no-base-in-name"), Some(&1));
@@ -192,10 +209,10 @@ fn run_should_put_every_item_line_under_one_outcome() {
     );
     assert_eq!(s.items_by_scope.get("tincture_stat_descriptions"), Some(&1));
     assert_eq!(s.mod_range_elements, 1);
-    // Rate: 3 resolved of 6 (ambiguous, no-template, unknown-base count).
+    // Rate: 3 resolved of 5 (ambiguous and unknown-base count).
     assert_eq!(
         (s.rate.resolved, s.rate.denominator, s.rate.excluded),
-        (3, 6, 3)
+        (3, 5, 4)
     );
     assert!(!s.rate.meets_rate);
     let items: usize = r.builds.values().map(Vec::len).sum();
@@ -292,7 +309,7 @@ fn run_should_never_write_item_names_or_custom_text() {
     let (s, r) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
     let json = serde_json::to_string(&s).unwrap() + &serde_json::to_string(&r).unwrap();
     // A line no template matches may be the author's words: hashed in the
-    // summary (the local report keeps it for B4b).
+    // summary (the local report keeps it).
     let summary = serde_json::to_string(&s).unwrap();
     assert!(!summary.contains("No such text here"));
     assert!(
@@ -373,22 +390,6 @@ fn bases_scope_should_follow_the_mod_domain() {
     );
 }
 
-#[test]
-fn marks_should_name_shapes_without_judging_them() {
-    assert_eq!(marks("^1Note to self"), ["color-code"]);
-    assert_eq!(
-        marks("Quality (Attribute Modifiers): +20%"),
-        ["spec-shaped"]
-    );
-    assert_eq!(marks("Memory Strands: 63"), ["spec-shaped"]);
-    assert_eq!(
-        marks("Added Small Passive Skills grant: 12% increased Fire Damage"),
-        ["small-passive-grant"]
-    );
-    assert!(marks("+10 to maximum Life").is_empty());
-    assert!(marks("^Z").is_empty());
-}
-
 impl Build {
     fn clone_for_test(&self) -> Self {
         Self {
@@ -431,4 +432,149 @@ fn run_should_split_mod_backed_by_how_the_line_was_resolved() {
     // The filter resolved `12% increased Speed`; the other three are the
     // resolver's own, of which `+(20-30) to maximum Life` is backed.
     assert_eq!((m.template_resolved, m.template_backed), (3, 1));
+}
+
+#[test]
+fn run_should_categorize_every_line_that_is_not_resolved() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 0
+        ^1Buy this one
+        Lasts 3 Seconds
+        25% reduced Charges used
+        +5 to Maximum Life
+        Some words of the author
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    let c = s.categories.get("non_unique").unwrap();
+    assert_eq!(c.get("special-case/author-note"), Some(&2), "{c:?}");
+    assert_eq!(c.get("special-case/item-property"), Some(&1));
+    assert_eq!(c.get("data-gap/legacy-text"), Some(&1));
+    assert_eq!(c.get("parser-gap/near-miss"), Some(&1));
+    assert_eq!(s.gate.uncategorized, 0);
+    // Notes are excluded; the other three count as unresolved.
+    assert_eq!((s.rate.denominator, s.rate.excluded), (3, 2));
+    assert_eq!(s.gate.unresolved, 3);
+    // Note text is hashed in the summary; matched game text is written.
+    let json = serde_json::to_string(&s).unwrap();
+    assert!(!json.contains("Buy this one") && !json.contains("Some words"));
+    assert!(json.contains("25% reduced Charges used"));
+    let line = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .find(|l| l.text == "+5 to Maximum Life")
+        .unwrap();
+    assert_eq!(
+        line.evidence.as_deref(),
+        Some("metadata/statdescriptions/stat_descriptions.txt:1")
+    );
+}
+
+#[test]
+fn run_should_exclude_class_requirement_lines_and_keep_the_class() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 0
+        Requires Class Witch
+        +5 to maximum Life
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    assert_eq!(
+        s.non_unique.outcomes.get("excluded/not-a-modifier"),
+        Some(&1)
+    );
+    assert_eq!(s.class_requirement_lines, 1);
+    let item = r.builds.values().flatten().next().unwrap();
+    assert_eq!(item.class_requirement, ["Witch"]);
+}
+
+#[test]
+fn run_should_name_the_halves_of_a_description_split_across_sections() {
+    // `Implicits: 1` puts the first line in the implicit section and the
+    // second in the explicit section; each half alone matches nothing.
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 1
+        Line one 5
+        Line two
+    </Item></Items></PathOfBuilding>"#;
+    let (s, r) = run_one(&[Build::new(xml.as_bytes().to_vec())]);
+    let c = s.categories.get("non_unique").unwrap();
+    assert_eq!(c.get("parser-gap/split-section"), Some(&2), "{c:?}");
+    let lines: Vec<Option<usize>> = r
+        .builds
+        .values()
+        .flatten()
+        .flat_map(|i| &i.lines)
+        .map(|l| l.split_with)
+        .collect();
+    assert_eq!(lines.len(), 2);
+    assert!(lines.iter().all(Option::is_some));
+}
+
+#[test]
+fn run_should_not_meet_the_gate_without_recorded_inputs() {
+    let (s, _) = run_one(&[Build::new(BUILD.as_bytes().to_vec())]);
+    // `Tool::default()` records no commit.
+    assert!(!s.gate.inputs_recorded && !s.gate.met);
+    assert_eq!(s.gate.unresolved_allowed, s.rate.denominator * 2 / 100);
+}
+
+#[test]
+fn run_should_meet_the_gate_when_every_input_is_recorded_and_lines_resolve() {
+    let xml = r#"<PathOfBuilding><Items><Item id="1">
+        Rarity: RARE
+        N
+        Coral Ring
+        Implicits: 0
+        +5 to maximum Life
+        ^1A note
+    </Item></Items></PathOfBuilding>"#;
+    let extract = load(&read).unwrap();
+    let (lookup, lookup_report) = TableLookup::load(&read, &extract).unwrap();
+    let pob = categorize::PobText::read("test", Vec::new());
+    let game = GameText::load(&extract.set, &read, vec![pob]).unwrap();
+    let tool = Tool {
+        commit: Some("abc".to_owned()),
+        dirty: Some(false),
+    };
+    let (s, _) = run(
+        &extract,
+        &lookup,
+        lookup_report,
+        &bases(),
+        &Mods::default(),
+        &game,
+        &[Build::new(xml.as_bytes().to_vec())],
+        tool,
+    )
+    .unwrap();
+    assert_eq!((s.rate.resolved, s.rate.denominator), (1, 1));
+    assert!(s.gate.resolution && s.gate.inputs_recorded && s.gate.met);
+}
+
+#[test]
+fn rate_should_use_the_integer_form_of_98_percent() {
+    let mut s = Summary::default();
+    s.non_unique.outcomes.insert("resolved".to_owned(), 98);
+    s.non_unique
+        .outcomes
+        .insert("unresolved/no-template".to_owned(), 2);
+    finish_rate(&mut s, &BTreeMap::new());
+    assert!(s.rate.meets_rate);
+    assert_eq!((s.gate.unresolved, s.gate.unresolved_allowed), (2, 2));
+    s.non_unique
+        .outcomes
+        .insert("unresolved/no-template".to_owned(), 3);
+    s.rate = Rate::default();
+    finish_rate(&mut s, &BTreeMap::new());
+    assert!(!s.rate.meets_rate);
 }

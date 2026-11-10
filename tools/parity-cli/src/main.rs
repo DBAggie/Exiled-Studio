@@ -6,6 +6,7 @@
 //! The PoB oracle harness (drives legacy `HeadlessWrapper.lua` on pinned
 //! LuaJIT at a pinned public PoB tag, ADR-006) comes with Spike C.
 
+mod categorize;
 mod extract;
 mod item_tags;
 mod load_statdesc;
@@ -33,13 +34,15 @@ const USAGE: &str = "usage:
       Render every PoE1 Mods row and compare with PoB's exported mod text
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
       <dir>, which must not exist. Exit 1 if a difference is uncategorized.
-  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir>
+  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--pob <tag>=<dir>]...
       Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
       subfolders are not read; identical files count once), resolve
-      each modifier line in its item's scope (PoE1 extract); write
-      summary.json and report.json (builds by content hash, no item names)
-      to <dir>, which must not exist. Exit 1 while the resolution rate of
-      non-unique lines is below 98% or a build is unreadable.";
+      each modifier line in its item's scope (PoE1 extract), and
+      categorize every line that is not resolved; write summary.json and
+      report.json (builds by content hash, no item names) to <dir>, which
+      must not exist. Each --pob names a `git archive` of a PoB tag's
+      src/Data (<dir>/src/Data), the legacy-text evidence. Exit 1 while
+      the Spike B gate is not met or a build is unreadable.";
 
 /// Runs `git` in this crate's source tree; `None` if it fails.
 fn git(args: &[&str]) -> Option<String> {
@@ -144,12 +147,66 @@ fn render_check(extract: &Path, pob: &Path, out: &Path) -> Result<bool, String> 
     Ok(!summary.outcomes.contains_key("differs/uncategorized"))
 }
 
-fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool, String> {
+/// Every `*.lua` file under `dir`, as (path relative to `dir` with `/`,
+/// text), sorted.
+fn lua_tree(dir: &Path) -> Result<Vec<(String, String)>, String> {
+    let mut out = Vec::new();
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(d) = stack.pop() {
+        for entry in std::fs::read_dir(&d).map_err(|e| format!("{}: {e}", d.display()))? {
+            let path = entry.map_err(|e| e.to_string())?.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.extension().is_some_and(|e| e == "lua") {
+                let relative = path
+                    .strip_prefix(dir)
+                    .map_err(|e| e.to_string())?
+                    .components()
+                    .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                    .collect::<Vec<_>>()
+                    .join("/");
+                out.push((relative, read_text(&path)?));
+            }
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
+/// `<tag>=<dir>` arguments to PoB text sources.
+fn pob_sources(args: &[String]) -> Result<Vec<categorize::PobText>, String> {
+    let mut out = Vec::new();
+    let mut rest = args;
+    while let [flag, value, tail @ ..] = rest {
+        if flag != "--pob" {
+            return Err(format!("unknown argument {flag}"));
+        }
+        let (tag, dir) = value
+            .split_once('=')
+            .ok_or_else(|| format!("--pob {value}: expected <tag>=<dir>"))?;
+        let data = Path::new(dir).join("src").join("Data");
+        out.push(categorize::PobText::read(tag, lua_tree(&data)?));
+        rest = tail;
+    }
+    if !rest.is_empty() {
+        return Err(format!("unexpected argument {}", rest.join(" ")));
+    }
+    Ok(out)
+}
+
+fn resolve_corpus(
+    builds_dir: &Path,
+    extract: &Path,
+    out: &Path,
+    pob: &[String],
+) -> Result<bool, String> {
+    let pob = pob_sources(pob)?;
     let read = reader(extract);
     let loaded = extract::load(&read)?;
     let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
     let bases = resolve_corpus::Bases::load(&read)?;
     let mods = mod_filter::Mods::load(&read)?;
+    let game = categorize::GameText::load(&loaded.set, &read, pob)?;
     let mut builds = Vec::new();
     for entry in
         std::fs::read_dir(builds_dir).map_err(|e| format!("{}: {e}", builds_dir.display()))?
@@ -173,13 +230,15 @@ fn resolve_corpus(builds_dir: &Path, extract: &Path, out: &Path) -> Result<bool,
         lookup_report,
         &bases,
         &mods,
+        &game,
         &builds,
         tool,
     )?;
     write_out(out, &summary, &report)?;
-    let json = serde_json::to_string_pretty(&summary.rate).map_err(|e| e.to_string())?;
+    let json =
+        serde_json::to_string_pretty(&(&summary.rate, &summary.gate)).map_err(|e| e.to_string())?;
     println!("{json}");
-    Ok(summary.rate.meets_rate && summary.unreadable_builds.is_empty())
+    Ok(summary.gate.met && summary.unreadable_builds.is_empty())
 }
 
 fn main() -> ExitCode {
@@ -192,8 +251,10 @@ fn main() -> ExitCode {
         [cmd, extract, pob, flag, out] if cmd == "render-check" && flag == "--out" => {
             render_check(Path::new(extract), Path::new(pob), Path::new(out))
         }
-        [cmd, builds, extract, flag, out] if cmd == "resolve-corpus" && flag == "--out" => {
-            resolve_corpus(Path::new(builds), Path::new(extract), Path::new(out))
+        [cmd, builds, extract, flag, out, pob @ ..]
+            if cmd == "resolve-corpus" && flag == "--out" =>
+        {
+            resolve_corpus(Path::new(builds), Path::new(extract), Path::new(out), pob)
         }
         _ => {
             eprintln!("{USAGE}");

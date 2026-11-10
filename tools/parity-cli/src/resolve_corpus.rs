@@ -31,7 +31,11 @@
 //!   filter's steps in `filter`; otherwise `ambiguous`, with the reason.
 //! - **`mod-backed` (B4a, reported, not gated):** every resolved non-unique
 //!   line is backed or not by a fitting `Mods` row (`mod_filter::backing`).
-//! - Categories are provisional (B4b).
+//! - **Categories (B4b):** every line that is not resolved gets one
+//!   category with its evidence (`categorize`); `special-case/author-note`
+//!   lines are excluded (maintainer approval 2026-11-10), and class
+//!   requirement lines are excluded as `not-a-modifier`. The gate is
+//!   computed in [`Gate`].
 //!
 //! **Scrubbing (ADR-007):** builds are named by the SHA-256 of their
 //! content; item names, `{custom}` text, and unrecognized lines are never
@@ -51,20 +55,18 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Hand, Scope};
-use loom_parser::pob_item::{self, BaseMatch, Item, LineKind, Modifier, Rarity};
+use loom_parser::pob_item::{self, BaseMatch, Item, LineKind, Modifier, Rarity, Section};
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use crate::categorize::{self, GameText, LineFacts};
 use crate::extract::{Extract, Inputs, Read, Table};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
-
-/// The resolution rate the Spike B gate asks for.
-pub const GATE_RATE: f64 = 0.98;
 
 /// Scope root files by name, in the order domains are tested.
 const SCOPES: [&str; 3] = [
@@ -323,6 +325,8 @@ pub struct RunInputs {
     pub tool: Tool,
     /// Content hash of every build, sorted.
     pub builds: Vec<String>,
+    /// PoB text sources for `data-gap/legacy-text` (B4b).
+    pub pob: Vec<categorize::PobSource>,
 }
 
 /// Counts of one group of lines.
@@ -477,10 +481,21 @@ pub struct Summary {
     pub rate: Rate,
     /// Ambiguous texts: candidates as `stat,stat` lists.
     pub ambiguous: BTreeMap<String, Distinct>,
-    /// Unresolved texts by outcome. Text is written only for outcomes where
-    /// a template matched (`no-variant-fits`, `only-shadowed`), so it is
-    /// game text; other text is a hash (it may be the author's own words).
-    pub unresolved: BTreeMap<String, BTreeMap<String, Distinct>>,
+    /// Group (`non_unique`, `unique`) to category to lines, over every line
+    /// that is not resolved (B4b; `categorize`). Excluded lines carry their
+    /// rule as the category.
+    pub categories: BTreeMap<&'static str, BTreeMap<String, usize>>,
+    /// Category to text to counts, with the evidence in `detail`. Text is
+    /// written only when game or PoB text matched it (every category but
+    /// `special-case/author-note`, `special-case/pob-custom`,
+    /// `special-case/unknown-base`, and `uncategorized`, whose text is a
+    /// hash: it may be the author's own words).
+    pub categorized: BTreeMap<String, BTreeMap<String, Distinct>>,
+    /// Whether any stat description or `ClientStrings` text holds a PoB
+    /// colour escape (the `color-code` rule needs `false`).
+    pub colour_code_in_game_text: bool,
+    /// The gate (plan, "Gate").
+    pub gate: Gate,
     /// Items whose base was found only after removing the suffix of one of
     /// `POB_SUFFIXED_BASES`.
     pub pob_base_suffix_removed: usize,
@@ -492,9 +507,9 @@ pub struct Summary {
     /// them (`pob_item::unsupported_features`); must be empty for the
     /// reader's rules to cover the corpus.
     pub unsupported_features: BTreeMap<&'static str, usize>,
-    /// Measurements for B4b's categories, not categories: mark to
-    /// `<group>/<outcome>` to lines not resolved (see [`marks`]).
-    pub marks: BTreeMap<&'static str, BTreeMap<String, usize>>,
+    /// Class-requirement lines (`Requires Class ...`; excluded as
+    /// `not-a-modifier`, the class kept on the item record).
+    pub class_requirement_lines: usize,
     /// `Mods` rows read.
     pub mods_rows: usize,
     /// `Mods` rows whose spawn tag and weight arrays differ in length.
@@ -512,35 +527,34 @@ pub struct Summary {
     pub mod_backed: ModBacked,
 }
 
-/// Outcomes whose text a template matched.
-const TEMPLATE_MATCHED: [&str; 2] = ["unresolved/no-variant-fits", "unresolved/only-shadowed"];
+/// Categories whose text is not written to the summary (it may be the
+/// author's own words); see [`Summary::categorized`].
+const HASHED_CATEGORIES: [&str; 4] = [
+    "special-case/author-note",
+    "special-case/pob-custom",
+    "special-case/unknown-base",
+    "uncategorized",
+];
 
-/// Shapes of a line's text that B4b's categories will need evidence for:
-/// - `color-code`: starts with a PoB colour escape (`^1`..`^9`, `^x`),
-///   text the build's author wrote;
-/// - `spec-shaped`: a spec line `ParseRaw` knows (`Quality (... Modifiers):
-///   +20%`, `Memory Strands: 63`) in the modifier section, pasted from the
-///   game's item text (`ParseRaw` also reads it as a modifier there);
-/// - `small-passive-grant`: `Added Small Passive Skills grant: ...`, a
-///   cluster jewel's `local_jewel_expansion_passive_node_index` line, whose
-///   only variant is `{0}` through `tree_expansion_jewel_passive` (not
-///   supported, see `lookup.rs`).
-fn marks(text: &str) -> Vec<&'static str> {
-    let mut out = Vec::new();
-    let mut chars = text.chars();
-    if chars.next() == Some('^') && chars.next().is_some_and(|c| c.is_ascii_digit() || c == 'x') {
-        out.push("color-code");
-    }
-    if pob_item::spec_key(text).is_some_and(|k| {
-        pob_item::KNOWN_SPECS.contains(&k)
-            || (k.starts_with("Quality (") && k.ends_with(" Modifiers)"))
-    }) {
-        out.push("spec-shaped");
-    }
-    if text.starts_with("Added Small Passive Skills grant: ") {
-        out.push("small-passive-grant");
-    }
-    out
+/// The Spike B gate (plan, "Gate"), computed from this run. Determinism
+/// (item 3) is checked by comparing two runs' files, outside the run.
+#[derive(Debug, Default, Serialize)]
+pub struct Gate {
+    /// Item 1: `rate.rate >= 0.98`.
+    pub resolution: bool,
+    /// Unresolved non-unique lines the rate allows: `floor(0.02 *
+    /// denominator)`.
+    pub unresolved_allowed: usize,
+    /// Unresolved non-unique lines.
+    pub unresolved: usize,
+    /// Item 2: lines (unique included) whose category is `uncategorized`.
+    pub uncategorized: usize,
+    /// Item 4: the extract manifest hash, the Steam build, a hash per
+    /// build, the tool commit, a clean tool tree, and a PoB source are
+    /// recorded.
+    pub inputs_recorded: bool,
+    /// Items 1, 2, and 4 hold.
+    pub met: bool,
 }
 
 /// [`IndexStats`] as JSON.
@@ -609,6 +623,16 @@ pub struct LineRecord {
     /// The backing row's `Mods.Id`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backed_by: Option<String>,
+    /// An unresolved line that resolves together with this adjacent line of
+    /// another section (index among the item's lines).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub split_with: Option<usize>,
+    /// Category of a line that is not resolved (B4b).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
+    /// The category's evidence.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evidence: Option<String>,
 }
 
 /// One item in `report.json`.
@@ -620,6 +644,11 @@ pub struct ItemRecord {
     pub rarity: &'static str,
     /// Scope or `unknown-base/<reason>`.
     pub scope: String,
+    /// Classes of `Requires Class <class>` lines, kept on the item (the
+    /// lines are excluded as `not-a-modifier`; maintainer decision
+    /// 2026-11-09).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub class_requirement: Vec<String>,
     /// Item lines (structure lines are not listed).
     pub lines: Vec<LineRecord>,
 }
@@ -856,7 +885,7 @@ fn item_lines(
     };
     for (n, line) in item.lines.iter().enumerate() {
         match &line.kind {
-            LineKind::Modifier(m) if m.selected && !m.has("custom") => {
+            LineKind::Modifier(m) if resolvable(m) => {
                 if lines
                     .run
                     .last()
@@ -876,8 +905,15 @@ fn item_lines(
                 "not-selected-variant",
                 m.text.clone(),
             ),
-            LineKind::Modifier(m) => {
+            LineKind::Modifier(m) if m.has("custom") => {
                 excluded(n, Some(m.section.name()), "pob-custom", scrub(&m.text))
+            }
+            // Class requirement (plan step 4b, maintainer decision
+            // 2026-11-09): `v2.67.2:src/Classes/Item.lua` keeps these lines
+            // in `classRequirementModLines` and sets `classRestriction`;
+            // they are not modifiers. The class is kept on the item record.
+            LineKind::Modifier(m) => {
+                excluded(n, Some(m.section.name()), "not-a-modifier", m.text.clone())
             }
             LineKind::Flag | LineKind::Influence => {
                 excluded(n, None, "not-a-modifier", line.raw.clone())
@@ -900,19 +936,73 @@ fn item_lines(
     }
     lines.flush(index, scope_err);
     lines.records.sort_by_key(|(r, _)| r.line);
+    if let Some(index) = index {
+        mark_split_lines(item, index, &mut lines.records);
+    }
     lines.records
+}
+
+/// A modifier line the harness resolves: selected, not `{custom}`, not a
+/// class requirement.
+fn resolvable(m: &Modifier) -> bool {
+    m.selected && !m.has("custom") && m.section != Section::ClassRequirement
+}
+
+/// Sets `split_with` on a `no-template` line when it and the adjacent
+/// resolvable line of another section resolve as one multi-line
+/// description (`parser-gap/split-section`): PoB's `Implicits:` count can
+/// put the two lines of one description in two sections, and the harness
+/// resolves sections apart.
+fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, bool)]) {
+    let modifier = |n: usize| match item.lines.get(n).map(|l| &l.kind) {
+        Some(LineKind::Modifier(m)) if resolvable(m) => Some(m),
+        _ => None,
+    };
+    for (record, _) in records.iter_mut() {
+        if record.outcome != "unresolved/no-template" {
+            continue;
+        }
+        let n = record.line;
+        let Some(this) = modifier(n) else {
+            continue;
+        };
+        let neighbours = [n.checked_sub(1), n.checked_add(1)];
+        for other in neighbours.into_iter().flatten() {
+            let Some(m) = modifier(other).filter(|m| m.section != this.section) else {
+                continue;
+            };
+            let pair = if other < n {
+                [m.text.as_str(), this.text.as_str()]
+            } else {
+                [this.text.as_str(), m.text.as_str()]
+            };
+            let joined = index
+                .resolve_lines(&pair)
+                .first()
+                .is_some_and(|r| r.lines == 2 && matches!(r.outcome, Outcome::Resolved(_)));
+            if joined {
+                record.split_with = Some(other);
+                break;
+            }
+        }
+    }
 }
 
 /// Runs the corpus over a loaded extract.
 ///
 /// # Errors
 /// A message when the extract is not PoE1 or a scope does not build.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the harness's loaded inputs, each built by main; a struct would only rename them"
+)]
 pub fn run(
     extract: &Extract,
     lookup: &TableLookup,
     lookup_report: LookupReport,
     bases: &Bases,
     mods: &Mods,
+    game: &GameText,
     builds: &[Build],
     tool: Tool,
 ) -> Result<(Summary, Report), String> {
@@ -944,6 +1034,22 @@ pub fn run(
         .iter()
         .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
         .collect();
+    let chains: BTreeMap<&'static str, BTreeSet<String>> = scopes
+        .iter()
+        .map(|(name, scope)| {
+            (
+                *name,
+                scope.chain().iter().map(|f| f.source.clone()).collect(),
+            )
+        })
+        .collect();
+    let corpus = Corpus {
+        bases,
+        mods,
+        indexes: &indexes,
+        chains: &chains,
+        game,
+    };
 
     let (essence_rows_known, essence_rows_unknown) = mods.essence_rows();
     let mut s = Summary {
@@ -957,6 +1063,7 @@ pub fn run(
         essence_rows_known,
         essence_rows_unknown,
         bases_with_unknown_tags: bases.tags_unknown,
+        colour_code_in_game_text: game.colour_code_in_game_text,
         ..Summary::default()
     };
     let mut report = Report::default();
@@ -1005,32 +1112,72 @@ pub fn run(
                 .filter(|c| c.has_tag_name("ModRange"))
                 .count();
             let item = pob_item::read(text);
-            let record = count_item(
-                &mut s,
-                &mut distinct,
-                (n, &item, ranges),
-                bases,
-                mods,
-                &indexes,
-            );
+            let record = count_item(&mut s, &mut distinct, (n, &item, ranges), &corpus);
             items.push(record);
         }
         report.builds.insert(build.hash.clone(), items);
     }
     s.inputs.tool = tool;
     s.inputs.extract = extract.inputs.clone();
+    s.inputs.pob = game.pob_sources();
     finish_rate(&mut s, &distinct);
     Ok((s, report))
+}
+
+/// What every item of the run is resolved and categorized with.
+struct Corpus<'c, 'i> {
+    bases: &'c Bases,
+    mods: &'c Mods,
+    indexes: &'c BTreeMap<&'static str, Index<'i>>,
+    /// Scope name to the sources of its chain's files.
+    chains: &'c BTreeMap<&'static str, BTreeSet<String>>,
+    game: &'c GameText,
+}
+
+/// The category of a line that is not resolved, from its outcome; excluded
+/// categories turn the outcome into `excluded/<rule>`.
+fn categorize_line(record: &mut LineRecord, scope: &BTreeSet<String>, game: &GameText) {
+    let base_rule = match record.outcome.as_str() {
+        "resolved" => return,
+        "excluded/pob-custom" => Some("special-case/pob-custom"),
+        "excluded/not-a-modifier" => Some("special-case/not-a-modifier"),
+        "excluded/not-selected-variant" => Some("excluded/not-selected-variant"),
+        _ => None,
+    };
+    if let Some(rule) = base_rule {
+        record.category = Some(rule.to_owned());
+        return;
+    }
+    let mut detail = record.detail.clone();
+    if record.outcome == "ambiguous" {
+        detail = record.filter.iter().cloned().collect();
+        detail.extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
+    }
+    let c = categorize::categorize(
+        game,
+        LineFacts {
+            outcome: &record.outcome,
+            text: &record.text,
+            detail: &detail,
+            scope,
+            split_with: record.split_with,
+        },
+    );
+    if c.excluded() {
+        let rule = c.name.rsplit('/').next().unwrap_or(c.name);
+        record.outcome = format!("excluded/{rule}");
+    }
+    record.category = Some(c.name.to_owned());
+    record.evidence = Some(c.evidence);
 }
 
 fn count_item(
     s: &mut Summary,
     distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
     (n, item, ranges): (usize, &Item, usize),
-    bases: &Bases,
-    mods: &Mods,
-    indexes: &BTreeMap<&'static str, Index<'_>>,
+    corpus: &Corpus<'_, '_>,
 ) -> ItemRecord {
+    let (bases, mods, indexes) = (corpus.bases, corpus.mods, corpus.indexes);
     s.items += 1;
     let rarity = item.rarity.map_or("none", Rarity::name);
     *s.items_by_rarity.entry(rarity).or_default() += 1;
@@ -1089,12 +1236,33 @@ fn count_item(
             .filter_map(|l| mod_filter::influence_type(&l.raw))
             .collect(),
     });
-    let records = item_lines(
+    let mut records = item_lines(
         item,
         index,
         found.as_ref().err().map(String::as_str),
         ctx.as_ref(),
     );
+    let empty = BTreeSet::new();
+    let chain = found
+        .as_ref()
+        .ok()
+        .and_then(|f| corpus.chains.get(f.scope))
+        .unwrap_or(&empty);
+    for (record, _) in &mut records {
+        categorize_line(record, chain, corpus.game);
+    }
+    let class_requirement: Vec<String> = item
+        .modifiers()
+        .filter(|m| m.section == Section::ClassRequirement)
+        .map(|m| {
+            m.text
+                .split_once("Requires Class ")
+                .map_or(m.text.as_str(), |(_, c)| c)
+                .trim()
+                .to_owned()
+        })
+        .collect();
+    s.class_requirement_lines += class_requirement.len();
     let group = if unique { "unique" } else { "non_unique" };
     for (record, shadowed) in &records {
         let counts = if unique {
@@ -1111,57 +1279,61 @@ fn count_item(
                 .insert(record.outcome.clone());
         }
         count_b4a(s, record, unique);
-        if !excluded && record.outcome != "resolved" {
-            for mark in marks(&record.text) {
-                *s.marks
-                    .entry(mark)
-                    .or_default()
-                    .entry(format!("{group}/{}", record.outcome))
-                    .or_default() += 1;
-            }
-        }
-        let entry = match record.outcome.as_str() {
-            "resolved" => None,
-            "ambiguous" => Some(s.ambiguous.entry(record.text.clone()).or_default()),
-            o if o.starts_with("excluded/") => None,
-            o => {
-                // Only text a template matched is known to be game text;
-                // other text may be written by the build's author.
-                let text = if TEMPLATE_MATCHED.contains(&o) {
-                    record.text.clone()
-                } else {
-                    scrub(&record.text)
-                };
-                Some(
-                    s.unresolved
-                        .entry(o.to_owned())
-                        .or_default()
-                        .entry(text)
-                        .or_default(),
-                )
-            }
-        };
-        if let Some(entry) = entry {
+        if record.outcome == "ambiguous" {
+            let entry = s.ambiguous.entry(record.text.clone()).or_default();
             if unique {
                 entry.unique += 1;
             } else {
                 entry.non_unique += 1;
             }
             entry.detail.extend(record.detail.iter().cloned());
-            if record.outcome == "ambiguous" {
-                entry.reasons.extend(record.filter.iter().cloned());
-                entry
-                    .reasons
-                    .extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
-            }
+            entry.reasons.extend(record.filter.iter().cloned());
+            entry
+                .reasons
+                .extend(record.filter_notes.iter().map(|n| (*n).to_owned()));
         }
+        count_category(s, record, group);
     }
     ItemRecord {
         item: n,
         rarity,
         scope: scope_name,
+        class_requirement,
         lines: records.into_iter().map(|(r, _)| r).collect(),
     }
+}
+
+/// Counts the category of a line that is not resolved (B4b).
+fn count_category(s: &mut Summary, record: &LineRecord, group: &'static str) {
+    let Some(category) = &record.category else {
+        return;
+    };
+    *s.categories
+        .entry(group)
+        .or_default()
+        .entry(category.clone())
+        .or_default() += 1;
+    if category == "excluded/not-selected-variant" || category == "special-case/not-a-modifier" {
+        // Counted only: these lines are many and are listed in the report.
+        return;
+    }
+    let text = if HASHED_CATEGORIES.contains(&category.as_str()) {
+        scrub(&record.text)
+    } else {
+        record.text.clone()
+    };
+    let entry = s
+        .categorized
+        .entry(category.clone())
+        .or_default()
+        .entry(text)
+        .or_default();
+    if group == "unique" {
+        entry.unique += 1;
+    } else {
+        entry.non_unique += 1;
+    }
+    entry.detail.extend(record.evidence.iter().cloned());
 }
 
 /// Counts the filter's decision and `mod-backed` of one line (B4a).
@@ -1243,10 +1415,30 @@ fn finish_rate(s: &mut Summary, distinct: &BTreeMap<(String, String), BTreeSet<S
         .count();
     r.distinct_with_mixed_outcomes = distinct.values().filter(|o| o.len() > 1).count();
     r.distinct_rate = ratio(r.distinct_resolved, r.distinct);
-    r.meets_rate = r.denominator > 0 && r.rate >= GATE_RATE;
+    // Integer form of `rate >= 0.98`, the same test as the gate's
+    // allowance: unresolved * 100 <= 2 * denominator.
+    r.meets_rate = r.denominator > 0 && (r.denominator - r.resolved) * 100 <= 2 * r.denominator;
     let m = &mut s.mod_backed;
     m.share = ratio(m.backed, m.resolved);
     m.template_share = ratio(m.template_backed, m.template_resolved);
+    let i = &s.inputs;
+    let g = &mut s.gate;
+    g.resolution = s.rate.meets_rate;
+    g.unresolved = s.rate.denominator - s.rate.resolved;
+    // 2% of the denominator, rounded down: the integer form of the rate.
+    g.unresolved_allowed = s.rate.denominator * 2 / 100;
+    g.uncategorized = s
+        .categories
+        .values()
+        .filter_map(|c| c.get("uncategorized"))
+        .sum();
+    g.inputs_recorded = !i.extract.manifest_sha256.is_empty()
+        && i.extract.steam_build_id.is_some()
+        && !i.builds.is_empty()
+        && i.tool.commit.is_some()
+        && i.tool.dirty == Some(false)
+        && !i.pob.is_empty();
+    g.met = g.resolution && g.uncategorized == 0 && g.inputs_recorded;
 }
 
 #[cfg(test)]
