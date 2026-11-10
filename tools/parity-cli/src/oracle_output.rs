@@ -446,7 +446,7 @@ mod tests {
     fn shims() -> Value {
         json!([
             {"name": "inflate", "replaces": "Inflate", "installed": true, "detail": "zlib 1.3.1"},
-            {"name": "variant_order", "replaces": "pairs", "installed": true, "detail": "52 ambiguous gem variant tables"},
+            {"name": "variant_order", "replaces": "pairs", "installed": true, "detail": "37 ambiguous gem variant tables"},
             {"name": "write_guard", "replaces": "io.open", "installed": true, "detail": null}
         ])
     }
