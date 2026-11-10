@@ -10,10 +10,14 @@
 //! [`Index::resolve_lines_composed`] resolves the wrapped remainder and adds
 //! the stat to every reading.
 //!
-//! A line is read as composed only when its whole text has no indexed key
-//! (so a description whose own text starts like a wrapper always wins) and
-//! its remainder resolves (resolved or ambiguous); otherwise it keeps its
-//! plain outcome. Nothing is dropped.
+//! A line is read as composed only when [`Index::resolve_lines`] left it as
+//! one line with no indexed key (`NoTemplate`): a description whose own
+//! text starts like a wrapper always wins, a whole line that has a key but
+//! fails verification is not composed, and a line of a multi-line template
+//! is never taken out of it. The remainder must resolve (resolved or
+//! ambiguous); otherwise the line keeps its plain outcome. Nothing is
+//! dropped. Wrappers are tried in slice order; callers keep their texts
+//! disjoint (no wrapper's line also matches another).
 
 use loom_data::stat_desc::StatValue;
 
@@ -73,10 +77,17 @@ impl Composition {
         }
     }
 
+    /// Adds the wrapper's stat to a reading, unless the reading already has
+    /// it.
     fn add_to(&self, c: &mut Candidate) {
-        c.stats.push(self.stat());
+        let add = |stats: &mut Vec<ResolvedStat>| {
+            if stats.iter().all(|s| s.stat != self.stat) {
+                stats.push(self.stat());
+            }
+        };
+        add(&mut c.stats);
         for a in &mut c.alternatives {
-            a.stats.push(self.stat());
+            add(&mut a.stats);
         }
     }
 }
@@ -86,55 +97,45 @@ impl Composition {
 pub struct Composed {
     /// The resolution (its `line` is the whole input line).
     pub resolution: Resolution,
-    /// The composition, if the line was read through one.
+    /// Index into the `compositions` slice passed in, if the line was read
+    /// through one.
     pub composition: Option<usize>,
 }
 
 impl Index<'_> {
-    /// [`Index::resolve_lines`], with lines that match a wrapper of
-    /// `compositions` read through it (module docs). Every input line is
-    /// covered by exactly one resolution; a composed line covers one line.
+    /// [`Index::resolve_lines`], then every single-line `NoTemplate`
+    /// resolution that matches a wrapper of `compositions` is read through
+    /// it (module docs). Runs are resolved as they are, so a multi-line
+    /// template is never split; each input line is still covered by exactly
+    /// one resolution.
     #[must_use]
     pub fn resolve_lines_composed(
         &self,
         lines: &[&str],
         compositions: &[Composition],
     ) -> Vec<Composed> {
-        let mut out = Vec::new();
-        let mut run: Vec<&str> = Vec::new();
-        let flush = |run: &mut Vec<&str>, out: &mut Vec<Composed>| {
-            if !run.is_empty() {
-                out.extend(
-                    self.resolve_lines(run)
-                        .into_iter()
-                        .map(|resolution| Composed {
-                            resolution,
-                            composition: None,
-                        }),
-                );
-                run.clear();
-            }
-        };
-        for line in lines {
-            match self.composed(line, compositions) {
-                Some(c) => {
-                    flush(&mut run, &mut out);
-                    out.push(c);
-                }
-                None => run.push(line),
-            }
-        }
-        flush(&mut run, &mut out);
-        out
+        self.resolve_lines(lines)
+            .into_iter()
+            .map(|resolution| {
+                let plain = resolution.lines == 1
+                    && matches!(
+                        resolution.outcome,
+                        Outcome::Unresolved(Unresolved::NoTemplate)
+                    );
+                plain
+                    .then(|| self.composed(&resolution, compositions))
+                    .flatten()
+                    .unwrap_or(Composed {
+                        resolution,
+                        composition: None,
+                    })
+            })
+            .collect()
     }
 
     /// The line read through the first composition whose remainder
-    /// resolves, when the whole line has no indexed key.
-    fn composed(&self, line: &str, compositions: &[Composition]) -> Option<Composed> {
-        let whole = self.resolve(line);
-        if !matches!(whole.outcome, Outcome::Unresolved(Unresolved::NoTemplate)) {
-            return None;
-        }
+    /// resolves (resolved or ambiguous).
+    fn composed(&self, whole: &Resolution, compositions: &[Composition]) -> Option<Composed> {
         compositions.iter().enumerate().find_map(|(n, comp)| {
             let rest = comp.strip(&whole.line)?;
             let mut inner = self.resolve(rest);

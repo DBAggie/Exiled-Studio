@@ -1225,3 +1225,70 @@ fn resolve_lines_composed_should_prefer_a_description_with_the_whole_text() {
     assert_eq!(out[0].composition, None);
     assert_eq!(resolved(&out[0].resolution).stats[0].stat, "own");
 }
+
+#[test]
+fn resolve_lines_composed_should_add_the_stat_to_every_ambiguous_reading() {
+    let set = one_file(vec![simple("a", "Gain {0} Y"), simple("b", "Gain {0} Y")]);
+    let scope = set.scope("a.txt").unwrap();
+    let out = Index::build(&scope).resolve_lines_composed(
+        &["While a Unique Enemy is in your Presence, Gain 3 Y"],
+        &[presence()],
+    );
+    let Outcome::Ambiguous(cs) = &out[0].resolution.outcome else {
+        panic!("not ambiguous: {:?}", out[0].resolution.outcome);
+    };
+    assert_eq!(cs.len(), 2);
+    for c in cs {
+        assert_eq!(c.stats.last().unwrap().stat, "requires_presence");
+    }
+}
+
+#[test]
+fn resolve_lines_composed_should_read_a_suffix_wrapper_and_not_add_a_stat_twice() {
+    let set = one_file(vec![
+        simple("y", "Gain {0} Y"),
+        desc(
+            &["z", "requires_presence"],
+            vec![variant(&[ANY, ANY], "Gain {0} Z", &[])],
+        ),
+    ]);
+    let scope = set.scope("a.txt").unwrap();
+    let index = Index::build(&scope);
+    let suffix =
+        compose::Composition::new("S", "{0} while moving", "requires_presence", 1).unwrap();
+    let out = index.resolve_lines_composed(
+        &["Gain 3 Y while moving", "Gain 2 Z while moving"],
+        &[suffix],
+    );
+    let y: Vec<&str> = resolved(&out[0].resolution)
+        .stats
+        .iter()
+        .map(|s| s.stat.as_str())
+        .collect();
+    assert_eq!(y, ["y", "requires_presence"]);
+    let z = &resolved(&out[1].resolution).stats;
+    assert_eq!(
+        z.iter().filter(|s| s.stat == "requires_presence").count(),
+        1
+    );
+}
+
+#[test]
+fn resolve_lines_composed_should_not_take_a_line_out_of_a_multi_line_template() {
+    let two_line = simple(
+        "two",
+        "{0} first\nWhile a Unique Enemy is in your Presence, Gain 1 Y",
+    );
+    let set = one_file(vec![two_line, simple("y", "Gain {0} Y")]);
+    let scope = set.scope("a.txt").unwrap();
+    let out = Index::build(&scope).resolve_lines_composed(
+        &[
+            "5 first",
+            "While a Unique Enemy is in your Presence, Gain 1 Y",
+        ],
+        &[presence()],
+    );
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].composition, None);
+    assert_eq!(resolved(&out[0].resolution).stats[0].stat, "two");
+}

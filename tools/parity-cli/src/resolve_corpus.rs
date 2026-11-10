@@ -501,6 +501,11 @@ pub struct Summary {
     /// `ClientStrings` ids of the wrappers the resolver read through, with
     /// their stats (B5c; `categorize::COMPOSITIONS`).
     pub compositions: Vec<(String, String)>,
+    /// `categorize::COMPOSITIONS` ids not read from `ClientStrings`.
+    pub compositions_missing: Vec<String>,
+    /// Per wrapper stat, `(Mods rows with it, of them eldritch implicits)`:
+    /// the pairing holds when the two are equal and not zero.
+    pub composition_rows: BTreeMap<String, (usize, usize)>,
     /// The gate (plan, "Gate").
     pub gate: Gate,
     /// Items whose base was found only after removing the suffix of one of
@@ -1088,6 +1093,12 @@ pub fn run(
             .compositions
             .iter()
             .map(|c| (c.id.clone(), c.stat.clone()))
+            .collect(),
+        compositions_missing: game.compositions_missing.clone(),
+        composition_rows: game
+            .compositions
+            .iter()
+            .map(|c| (c.stat.clone(), mods.eldritch_share(&c.stat)))
             .collect(),
         ..Summary::default()
     };

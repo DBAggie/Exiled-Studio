@@ -398,6 +398,9 @@ pub struct GameText {
     /// The [`COMPOSITIONS`] whose `ClientStrings` text was found and has
     /// one `{0}`, in that order.
     pub compositions: Vec<Composition>,
+    /// [`COMPOSITIONS`] ids not read (no `ClientStrings` row, or a text
+    /// without exactly one `{0}`), recorded rather than skipped silently.
+    pub compositions_missing: Vec<String>,
 }
 
 impl GameText {
@@ -479,6 +482,25 @@ impl GameText {
         }
         out.compositions
             .sort_by_key(|c| COMPOSITIONS.iter().position(|(id, _)| *id == c.id));
+        out.compositions_missing = COMPOSITIONS
+            .iter()
+            .filter(|(id, _)| out.compositions.iter().all(|c| c.id != *id))
+            .map(|(id, _)| (*id).to_owned())
+            .collect();
+        // A stale pairing (a stat renamed by a patch) fails the run instead
+        // of writing a stat ID the game no longer has.
+        if let Some(stats) = Table::read(read, "Stats")? {
+            let id = stats.column("Id")?;
+            for c in &out.compositions {
+                if !stats
+                    .rows
+                    .iter()
+                    .any(|r| Table::text(r, id) == Some(&c.stat))
+                {
+                    return Err(format!("{}: stat {} is not in Stats", c.id, c.stat));
+                }
+            }
+        }
         Ok(out)
     }
 

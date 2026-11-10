@@ -665,6 +665,26 @@ impl Mods {
         self.rows.len()
     }
 
+    /// `(rows, eldritch)`: rows carrying `stat` (at a value other than
+    /// `(0, 0)`), and how many of them are eldritch implicits
+    /// (`EXARCH_IMPLICIT`, `EATER_IMPLICIT`). Evidence for a wrapper's
+    /// pairing (B5c).
+    #[must_use]
+    pub fn eldritch_share(&self, stat: &str) -> (usize, usize) {
+        let rows: Vec<&ModRow> = self
+            .by_stat
+            .get(stat)
+            .into_iter()
+            .flatten()
+            .filter_map(|n| self.rows.get(*n))
+            .collect();
+        let eldritch = rows
+            .iter()
+            .filter(|r| [generation::EXARCH, generation::EATER].contains(&r.generation))
+            .count();
+        (rows.len(), eldritch)
+    }
+
     /// Rows with at least one of `stats`, in row order.
     fn rows_for(&self, stats: &[ResolvedStat]) -> BTreeSet<usize> {
         stats

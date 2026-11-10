@@ -311,6 +311,7 @@ fn run_should_never_write_item_names_or_custom_text() {
     let json = serde_json::to_string(&s).unwrap() + &serde_json::to_string(&r).unwrap();
     // Game ids recorded as inputs (the wrapper `...PresenceUniqueMonster`)
     // are not item text; the probes below look for item text only.
+    assert!(json.contains("InfluenceStatConditionPresenceUniqueMonster"));
     let json = json.replace("InfluenceStatConditionPresenceUniqueMonster", "");
     // A line no template matches may be the author's words: hashed in the
     // summary (the local report keeps it).
@@ -600,6 +601,11 @@ fn run_should_read_a_line_through_a_client_wrapper() {
             "InfluenceStatConditionPresenceUniqueMonster".to_owned(),
             "local_influence_mod_requires_unique_monster_presence".to_owned()
         )]
+    );
+    // The fixture has no Pinnacle wrapper row: recorded, not skipped.
+    assert_eq!(
+        s.compositions_missing,
+        ["InfluenceStatConditionPresenceCelestialBoss"]
     );
     let line = r
         .builds
