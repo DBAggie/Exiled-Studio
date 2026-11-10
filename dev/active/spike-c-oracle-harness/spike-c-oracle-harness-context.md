@@ -98,7 +98,7 @@ No blockers. Applied: the manifest must list exactly the four `jit.security` fla
 Also found while re-testing: Windows PowerShell 5.1 run with `-File` leaves `$PSScriptRoot` empty in `param()` defaults, so `acquire.ps1` computes its defaults in the body.
 
 ## Next steps (C2b)
-1. Session start: `gh pr view <C2a number>`; record the merge (squash commit, main CI run).
+1. Session start: `gh pr view 35`; record the merge (squash commit, main CI run).
 2. Run `oracle-verify`, then the C2a evidence command (Facts measured in C2a); the six output hashes must stay the same after the shims (no fixture has a timeless jewel).
 3. Add the shims to the adapter as named functions installed after `dofile("HeadlessWrapper.lua")`: `Inflate` through LuaJIT FFI with a pinned zlib (Windows: `pob/runtime/zlib1.dll` loaded in place; Linux: record `libz` version and hash, or build one in `acquire.sh`), the `io.open` write guard for paths inside the checkout, a jewel probe, and `partial` reasons when a shim cannot run. Record the shims in the manifest (`shims[]`) and in each document; protocol stays 1 only if the document shape is unchanged (adding a field means protocol 2 and a schema update).
 4. A synthetic timeless-jewel fixture; the 9 corpus builds with timeless jewels (local only, scrubbed summary).

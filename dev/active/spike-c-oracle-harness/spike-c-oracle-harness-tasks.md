@@ -31,7 +31,7 @@ Last Updated: 2026-11-10 (PR C2a: adapter protocol 1, `oracle-run`)
 - [x] Breakdown selection measured (182 names over 6 fixtures) and recorded in the manifest (10 names)
 - [x] Tests: scripted classification per class, fake Lua adapters and the real adapter on the real runtime (ignored test), writer Lua tests; real runs of the public fixtures on Windows (3/3, stable over 5 invocations)
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; S1-S6 applied, nits recorded in the context file)
-- [ ] Open PR
+- [x] Open PR (#35)
 
 ## PR C2b: shims
 - [ ] `Inflate` through LuaJIT FFI, pinned zlib recorded; `io.open` write guard; jewel probe; `partial` reasons (spec case 8 on the real runtime)
