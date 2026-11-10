@@ -57,7 +57,7 @@ Last Updated: 2026-11-10 (PR C3b+C4: determinism shim, community builds, CI job)
 - [x] C4: `oracle` job (Linux, Windows), cached runtime build, offline run on Linux; first full run of `acquire.sh`; `divergence-check` step
 - [x] C4: injected wrong-hash run; cross-platform comparison (run 42889081685: exit 11 on both runners)
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#38, stacked on #37)
 
 ## PR C5: report and gate
 - [ ] `docs/spikes/spike-c-oracle.md` (completion report, gate verdict, feasibility decision)
