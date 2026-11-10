@@ -9,7 +9,7 @@ Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 - [x] Update handoff Current state / Next action, CLAUDE.md Status, ACTION-PLAN Next action, README status
 - [x] Open PR (#33; merged 2026-11-10 as `cb1ec21`)
 - [x] Maintainer answers open questions 1, 3, 5 (2026-11-10, recommendations accepted)
-- [ ] Maintainer answers open questions 2 (CI fixtures, before C3) and 4 (CI gating, before C4)
+- [x] Maintainer answers open questions 2 (PoB's 5 test builds + synthetic in CI) and 4 (`oracle` job informational until C5) (2026-11-10)
 
 ## PR C1: pinned runtime and manifest
 - [x] `tools/oracle/manifest.json`, `acquire.ps1`, `acquire.sh`; AGENTS.md layout and commands
