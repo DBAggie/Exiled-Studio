@@ -1,6 +1,6 @@
 # Spike B: text to stat-ID resolution (report)
 
-Status: **gate not met** (2026-11-10, B5a). Every line is categorized; 97.1% of non-unique lines resolve, against 98% asked. The maintainer decided the areas on 2026-11-10 (section 7a); B5a settled area 1 (local/global) from game data (section 4a). The next PRs are area 2 (legacy text out of the rate), area 3 (client-composed lines), area 4 (item properties), and area 5.
+Status: **gate not met** (2026-11-10, PR #26 (B5a)). Every line is categorized; 97.1% of non-unique lines resolve, against 98% asked. The maintainer decided the areas on 2026-11-10 (section 7a); B5a settled area 1 (local/global) from game data (section 4a). The next PRs are area 2 (legacy text out of the rate), area 3 (client-composed lines), area 4 (item properties), and area 5.
 
 Plan, decisions, and per-PR details: `dev/active/spike-b-text-stat-resolution/` (plan, context, tasks). Committed summary: `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json`.
 

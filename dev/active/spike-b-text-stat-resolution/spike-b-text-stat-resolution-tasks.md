@@ -115,7 +115,7 @@ Last Updated: 2026-11-10 (PR B4b)
 - [x] Check against earlier steps: 106 / 107 same stat, 1 correction (Crystal Belt ES); no unique line changed
 - [x] Corpus run from clean `4031f1c`, two runs byte-identical (97.1%, ambiguous 5); summary replaced; report sections 4a, 6, 7, 7a
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; re-run from clean `4031f1c`)
-- [x] Open PR
+- [x] Open PR (#26)
 
 ## PR B5b: legacy text out of the rate, ADR-007
 - [ ] `data-gap/legacy-text` in `EXCLUDED`; test; corpus run; ADR-007 21 builds; ACTION-PLAN gate text records the exclusion
