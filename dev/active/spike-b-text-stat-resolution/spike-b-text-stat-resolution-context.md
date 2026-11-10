@@ -149,7 +149,7 @@ Verdict: proceed with changes. All applied in this plan:
 - **Verify:** `cargo test -p loom-parity-cli`; `cargo run --release -p loom-parity-cli -- resolve-corpus "<builds>" local/determinism/poe1/run1 --out <dir>` (exit 1 while below 98%).
 - **For the next PR:** tables that would settle more lines need an extractor PR first (plan): `Essences` (93 lines), `CraftingBenchOptions` (14), an anoint source (35; `BlightCraftingRecipes`/`BlightCraftingResults` not surveyed). Maintainer decision pending (handoff, Next action).
 
-## PR B4c: cluster jewel small passives (open, in review, branch `spike-b/b4c-cluster-small-passives`)
+## PR B4c: cluster jewel small passives (PR #24, open, branch `spike-b/b4c-cluster-small-passives`)
 - Maintainer request 2026-11-10: resolve every lookup line that a survey or code support can settle. PR #22 (B4a) merged 2026-11-10 as `08b7d9c` (main CI run 42745121406 green); PR #23 (B4y) open in parallel.
 - **Survey (throwaway scripts):**
   - The 12 variants hidden by unsupported lookups in `stat_descriptions.txt`: 9 Delirium reward types (`affliction_reward_type`), unique map boss drops (`mod_value_to_item_class`), weapon-tree sell price (`weapon_tree_unique_base_type_name`), and `local_jewel_expansion_passive_node_index` (`{0}`, `tree_expansion_jewel_passive`, reminder `ReminderTextSmallPassives`). Only the last appears on items.

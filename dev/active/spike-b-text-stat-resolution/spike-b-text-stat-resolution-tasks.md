@@ -79,7 +79,7 @@ Last Updated: 2026-11-10 (PR B4c)
 - [x] `tree_expansion_jewel_passive` from game data; multi-line names in `loom-parser` and the renderer; tests
 - [x] Corpus, round-trip (both games), render-check from clean `1cf7c3d`; summaries replaced
 - [x] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Open PR (#24)
 
 ## PR B4d: anoint equivalence (after B4y)
 - [ ] Rule in the filter; tests; corpus run; plan "Ambiguity" text
