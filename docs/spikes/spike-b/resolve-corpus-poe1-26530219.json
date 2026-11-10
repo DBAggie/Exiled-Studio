@@ -6,7 +6,7 @@
       "manifest_sha256": "9d410b8c51040f81f2404fd0ffc4bd63ef3fa3fda55d4581302431e7fb1dfb63"
     },
     "tool": {
-      "commit": "d9148501c8d51887b58fc20fcddf81ed17acfa64",
+      "commit": "cb689368db16532d882a64d47891162ed571e0e1",
       "dirty": false
     },
     "builds": [
@@ -3197,6 +3197,17 @@
       "local_influence_mod_requires_celestial_boss_presence"
     ]
   ],
+  "compositions_missing": [],
+  "composition_rows": {
+    "local_influence_mod_requires_celestial_boss_presence": [
+      1362,
+      1362
+    ],
+    "local_influence_mod_requires_unique_monster_presence": [
+      1362,
+      1362
+    ]
+  },
   "gate": {
     "resolution": true,
     "unresolved_allowed": 67,

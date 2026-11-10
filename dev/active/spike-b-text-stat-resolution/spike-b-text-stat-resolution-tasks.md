@@ -125,9 +125,9 @@ Last Updated: 2026-11-10 (PR B4b)
 
 ## PR B5c: client-composed lines (eldritch)
 - [x] `loom-parser::resolve::compose` and `COMPOSITIONS`; tests (parser and corpus); wasm32 check
-- [x] Corpus run from clean `d914850`, two runs byte-identical: 98.8%, 9 / 9 presence lines resolved and backed
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] Corpus run from clean `cb68936`, two runs byte-identical: 98.8%, 9 / 9 presence lines resolved and backed
+- [x] Review with `code-architecture-reviewer`; apply findings (re-run from clean `cb68936`)
+- [x] Open PR
 
 ## PR B5x / B5g: graft skill lines
 - [ ] Extractor: `BrequelGrafts`, `BrequelGraftTypes`, `BrequelGraftGrantedSkillLevels`
