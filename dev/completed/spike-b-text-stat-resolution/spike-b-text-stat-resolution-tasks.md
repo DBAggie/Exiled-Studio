@@ -155,5 +155,5 @@ Last Updated: 2026-11-10 (PR C0: Spike B closed; folder moved to `dev/completed/
 
 ## After the area PRs (maintainer)
 - [x] Merge #26 .. #32 in order (all merged 2026-11-10; squash commits in the context file)
-- [x] Accept the ADR-015 clarification on typed resolutions, or decide otherwise (accepted by the maintainer 2026-11-10, in the Spike C C5 session; written as ADR-015 Amendment 1, approved when its PR merges)
+- [x] Accept the ADR-015 clarification on typed resolutions, or decide otherwise (accepted by the maintainer 2026-11-10, in the Spike C C5 session; written as ADR-015 Amendment 1, PR #40, approved when it merges)
 - [x] Move this folder to `dev/completed/`; Spike C plan (PR #33 (C0), `dev/active/spike-c-oracle-harness/`)
