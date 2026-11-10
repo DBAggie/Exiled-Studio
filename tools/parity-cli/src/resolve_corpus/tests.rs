@@ -312,7 +312,7 @@ fn bases_scope_should_follow_the_mod_domain() {
         b.scope(&item("Rarity: RARE\nN\nNope (X)\nImplicits: 0\n")),
         Err("not-in-base-item-types".to_owned())
     );
-    // Only PoB's Two-Toned Boots names lose their suffix.
+    // Only PoB's listed suffixed base names lose their suffix.
     assert_eq!(
         b.scope(&item("Rarity: RARE\nN\nCoral Ring (X)\nImplicits: 0\n")),
         Err("not-in-base-item-types".to_owned())

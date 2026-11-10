@@ -77,6 +77,26 @@ fn scope_of_domain(domain: Option<i64>) -> &'static str {
         .map_or("stat_descriptions", |(_, s)| s)
 }
 
+/// Every PoB base name with a ` (...)` suffix (`itemBases["... (...)"]` in
+/// `v2.67.2:src/Data/Bases/*.lua`, listed 2026-11-09): PoB splits one game
+/// base name over several rows (`BaseItemTypes` has three `Two-Stone Ring`
+/// rows, for example) and tells them apart by the suffix.
+const POB_SUFFIXED_BASES: [&str; 13] = [
+    "Avian Twins Talisman (Cold-To-Fire)",
+    "Avian Twins Talisman (Cold-To-Lightning)",
+    "Avian Twins Talisman (Fire-To-Cold)",
+    "Avian Twins Talisman (Fire-To-Lightning)",
+    "Avian Twins Talisman (Lightning-To-Cold)",
+    "Monkey Paw Talisman (Frenzy)",
+    "Monkey Paw Talisman (Power)",
+    "Two-Stone Ring (Cold/Lightning)",
+    "Two-Stone Ring (Fire/Cold)",
+    "Two-Stone Ring (Fire/Lightning)",
+    "Two-Toned Boots (Armour/Energy Shield)",
+    "Two-Toned Boots (Armour/Evasion)",
+    "Two-Toned Boots (Evasion/Energy Shield)",
+];
+
 /// `BaseItemTypes` names and the scopes their rows give.
 #[derive(Debug, Default)]
 pub struct Bases {
@@ -117,12 +137,9 @@ impl Bases {
         bases
     }
 
-    /// The item's scope, or why there is none; `true` when the base was
-    /// found only after removing PoB's ` (...)` suffix from
-    /// `Two-Toned Boots (...)` (PoB names the three `Two-Toned Boots` rows
-    /// `Two-Toned Boots (Armour/Energy Shield)` and so on;
-    /// `v2.67.2:src/Classes/Item.lua` `ParseRaw` has a "Hack for Two-Toned
-    /// Boots"). Only that base: any other name is looked up as written.
+    /// The item's scope, or why there is none; `true` when the base is one
+    /// of [`POB_SUFFIXED_BASES`] and was found after removing its ` (...)`
+    /// suffix. Any other name is looked up as written.
     fn scope(&self, item: &Item) -> Result<(&'static str, bool), String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
@@ -136,10 +153,10 @@ impl Bases {
             }
             _ => return Err("no-name".to_owned()),
         };
-        let stripped = name
-            .starts_with("Two-Toned Boots (")
-            .then_some("Two-Toned Boots")
-            .filter(|_| name.ends_with(')'));
+        let stripped = POB_SUFFIXED_BASES
+            .contains(&name.as_str())
+            .then(|| name.rsplit_once(" (").map(|(n, _)| n))
+            .flatten();
         let (scopes, suffix) = match (self.scopes.get(&name), stripped) {
             (Some(s), _) => (s, false),
             (None, Some(n)) => (
@@ -333,8 +350,8 @@ pub struct Summary {
     /// a template matched (`no-variant-fits`, `only-shadowed`), so it is
     /// game text; other text is a hash (it may be the author's own words).
     pub unresolved: BTreeMap<String, BTreeMap<String, Distinct>>,
-    /// Items whose base was found only after removing PoB's
-    /// `Two-Toned Boots (...)` suffix.
+    /// Items whose base was found only after removing the suffix of one of
+    /// `POB_SUFFIXED_BASES`.
     pub pob_base_suffix_removed: usize,
     /// Build files whose content equals an earlier file's (counted once).
     pub duplicate_builds: usize,
