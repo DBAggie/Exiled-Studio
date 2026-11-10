@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5e: letter case and split sections)
+Last Updated: 2026-11-10 (PR C0: Spike B closed; folder moved to `dev/completed/`)
 
 # Spike B: context
 
@@ -196,7 +196,7 @@ Verdict: proceed with changes. All applied in this plan:
 - **Evidence** (code `cc98f59`, docs `39bd52d`; run from clean `39bd52d`, `local/b4b-rc1|rc2`, two runs byte-identical; summary copied to `docs/spikes/spike-b/`): non-unique 3,248 / 3,414 = 95.1%, 166 unresolved (68 allowed), excluded 524, `uncategorized` 0, `inputs_recorded` true, gate not met. Scrub check: no item name, `{custom}` text, or author-note text occurs whole in the summary (the one hit, `Onslaught`, is a matched game template, as in B3). Dev runs: `local/b4b-dev1` (two tags), `local/b4b-dev2` (six tags), `local/b4b-dev3` (after the review).
 - **Verify:** `cargo test -p loom-parity-cli`; the `resolve-corpus` command in the report, section 8.
 
-## PR B5a: local/global pairs from game data (PR #26, open, branch `spike-b/b5a-local-global`)
+## PR B5a: local/global pairs from game data (PR #26, merged 2026-11-10 as `7d08138`; main CI run 42826121727 green)
 - Maintainer, 2026-11-10, on B4b's areas: "1. What do you need to resolve this? 2. exclude legacy text from the gate 3. write the code to solve this 4. We should attempt to resolve these. What do you need? 5. Resolve as you see fit. I agree to recommendations. Update ADR-007 to resolve the issue." Also: work autonomously through the tasks in order; make assumptions that fit the agreed framework and record them for review.
 - **Survey** (scratchpad scripts joining `report.json` with the build XML by hash): the 72 lines were 55 `essence-tags-unknown` (legacy essence-only rows no `Essences` column names), 14 `crafted-no-spawn-tags`, 2 several-backed with no note, 1 `influence-tags-unknown`. 43 are local/global pairs; 24 are `+N% chance to Suppress Spell Damage` (`base_spell_suppression_chance_%` vs the old `_150%_of_value`); 5 others.
 - **Game data used:** `Stats.IsLocal`, `Stats.IsWeaponLocal` (new columns read; `Mods.ModTypeKey` too). Spawn data per pair: the global stat's prefix/suffix rows never spawn on the tags where the local stat applies (only eldritch implicits put global `% increased Armour` on `body_armour`).
@@ -208,14 +208,14 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no blockers; ADR-015 position judged defensible (disambiguation between matcher candidates from game tables, no text patterns). Applied: `local-stat` skips with a note when base rows disagree or some have unknown tags (`local-stat-bases-differ`) and when a candidate mixes localities (`local-stat-mixed`); `type_spawn` restricted to the same `ModType`, domain, and generation type (100 rows, was 111; the pierce line's note goes back to `influence-tags-unknown`, totals unchanged); `LocalKind` enum; a test pins the Crystal Belt case; doc list renumbered (steps 1-7). Noted for the maintainer: the weapon/armour carrier tags are a hand-written mapping validated on this build's spawn data, and the gate counted with legacy text excluded is a gate redefinition by maintainer decision (record it in ACTION-PLAN with B5b).
 - **Verify:** `cargo test -p loom-parity-cli`; the `resolve-corpus` command in the report, section 8.
 
-## PR B5b: legacy text out of the rate, ADR-007 (PR #27, open, branch `spike-b/b5b-legacy-text`, stacked on PR #26)
+## PR B5b: legacy text out of the rate, ADR-007 (PR #27, merged 2026-11-10 as `670b429`; main CI run 42826597402 green)
 - Maintainer decision 2026-11-10: "exclude legacy text from the gate"; "Update ADR-007 to resolve the issue" (the 22 vs 21 count).
 - `categorize::EXCLUDED` gains `data-gap/legacy-text`; no rule changed, so the 48 lines are the same as B5a's. ADR-007 text and status line edited (an ADR edit asked for by the maintainer, not an amendment of the decision). The ACTION-PLAN gate text lists every exclusion.
 - **Evidence** (run from clean `fbf8379`, `local/b5b-rc3|rc4`, byte-identical): 3,315 / 3,366 = 98.5%, 51 unresolved (67 allowed), excluded 572, `gate.met` true, exit 0.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: ADR-015 wording (the exclusion is a rate rule; legacy lines stay quarantined in the product), the ACTION-PLAN gate bullet names the redefinition, the unadjusted rate, and the 572 excluded lines; ADR-007's history moved to its status line with the confirmation date 2026-11-09; a test that only the named categories are excluded; doc reflow.
 - **Assumption for review:** the area-3 graft lines need tables that are not extracted, so they split into an extractor PR and a resolver PR (the plan's "extractor PR first" rule).
 
-## PR B5c: eldritch presence lines (PR #28, open, branch `spike-b/b5c-eldritch-presence`, stacked on PR #27)
+## PR B5c: eldritch presence lines (PR #28, merged 2026-11-10 as `4a67df1`; main CI run 42828075593 green)
 - Maintainer, 2026-11-10, area 3: "write the code to solve this".
 - **Design:** the wrapper is client logic, so it lives in `loom-parser::resolve::compose` (core, wasm-safe): `Composition::new(id, ClientStrings text, stat, value)`; `Index::resolve_lines_composed` splits runs at composed lines, so multi-line matching is unchanged elsewhere. A composed reading needs the whole line to have no key and the remainder to resolve; otherwise the plain outcome stays (nothing dropped). The categorizer's `client-string` rule stays for what is left.
 - **Survey:** graft lines need `BrequelGrafts` (`SkillGem`), `BrequelGraftTypes` (`BaseItemType`), `BrequelGraftGrantedSkillLevels`: not extracted; split to an extractor PR (plan rule).
@@ -223,25 +223,25 @@ Verdict: proceed with changes. All applied in this plan:
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: compose only lines `resolve_lines` left as single `NoTemplate` (no split of multi-line templates, no double resolve); no duplicate wrapper stat; tests for an ambiguous remainder, a suffix wrapper, the multi-line case, the missing Pinnacle row; the run fails on a paired stat missing from `Stats`; `compositions_missing` and `composition_rows` (1,362 / 1,362 eldritch for both stats) in the summary; the scrub test asserts the exempted id is really written.
 - **Evidence** (run from clean `cb68936`, `local/b5c-rc3|rc4`, byte-identical): 3,324 / 3,366 = 98.8%, 42 unresolved; the 9 presence lines `equal`-backed; no other line changed against B5b.
 
-## PR B5x: catalyst quality and graft tables (PR #29, open, branch `spike-b/b5x-extract-quality-graft`, stacked on PR #28)
+## PR B5x: catalyst quality and graft tables (PR #29, merged 2026-11-10 as `9910675`; main CI run 42828463386 green)
 - One extractor PR for areas 3 and 4 (plan rule: an extra table comes through an extractor PR first). Survey: `Quality (Attribute Modifiers): +20%` matches `AlternateQualityTypes.Description`; its `CatalystMod` row carries `jewellery_attribute_quality` = 1 (the type), the 20% is the item's quality. `Memory Strands` has no stat (`ClientStrings` `ZanaInfluencedItem`). Graft bases link to `BrequelGrafts` by id segment.
 - `BrequelGraftTypes` (in the schema) has no file in PoE1 26530219; first run failed `NoFile`, so it was dropped.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers; confirmed the manifest SHA-256 matches both summaries, the evidence came from the code under review (`69f8357`; later commits are docs), and the manifest diff is additive (4 tables, 0 dangling). Applied: doc headers, this record, a clause that the extractor did not change between B4y and B5x.
 - **Evidence:** section 21 of the Spike A report.
 
-## PR B5g: graft skill lines (PR #30, open, branch `spike-b/b5g-graft-skills`, stacked on PR #29)
+## PR B5g: graft skill lines (PR #30, merged 2026-11-10 as `36b834c`; main CI run 42829376451 green)
 - Survey (B5x tables): 16 grafts; every corpus graft line's skill matches its base's `BrequelGrafts` -> `SkillGem` (Aegis Tulgraft: Preserving Stillness; Hardening Uulgraft: Tender Embrace; Molten Xophgraft: Heart of Flame; Flamecaller Xophgraft: Call the Pyre).
 - **Decisions (assumptions for review):** the result is a typed `granted-skill` (no stat stands for it), counted as resolved in the rate and shown apart in `resolved_kinds`; the graft table loads inside `Bases` (optional tables, so older extracts and test fixtures give no grafts); the 2 PoB placeholder lines keep `parser-gap/client-string`.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers; counting `granted-skill` as resolved judged acceptable with the stat-only figure shown and an ADR-015 clarification proposed. Applied: `rate.stat_resolved` / `stat_rate` (98.8%), `graft_inputs` (wrapper, levels, conflicting names dropped), digit-only levels, tests for `Grafts::load` (joins, conflict, missing table) and `granted_skill`, report 4b/6/7 wording.
 - **Evidence** (run from clean `c437709`, `local/b5g-rc3|rc4`, byte-identical): 3,328 / 3,366 = 98.9%, 38 unresolved; no other line changed against B5c.
 
-## PR B5d: item property lines (PR #31, open, branch `spike-b/b5d-item-properties`, stacked on PR #30)
+## PR B5d: item property lines (PR #31, merged 2026-11-10 as `08130c3`; main CI run 42831339630 green)
 - Maintainer, 2026-11-10, area 4: "We should attempt to resolve these. What do you need?" Needed: `AlternateQualityTypes` (B5x); the rest was already extracted.
 - **Decisions (assumptions for review):** properties are typed results (`item-property`, `catalyst-quality`) counted as resolved and shown apart, like B5g's granted skills (stat-only rate unchanged at 98.8%); catalyst quality carries the catalyst type's stat ID plus `quality=N`; values are not checked against the base (flask base tables not extracted); `Has {0}` (a text value) is not resolved.
 - **`code-architecture-reviewer` (2026-11-10):** no blockers. Applied: every quality line carries `quality_type=<Id>` (a type without a catalyst stat is an `item-property`, never a bare `quality=`); `property_missing` records named ids not read and conflicting quality descriptions (dropped); tests for singular and `CurrentOfMax` templates, number edge cases, duplicates, `item_property` leaving other outcomes alone, and a corpus-level property line (the test `bases()` now loads the fixture's properties, so one older test's expectation moved from `item-property` to resolved).
 - **Evidence** (run from clean `8bce4ee`, `local/b5d-rc3|rc4`, byte-identical): 3,343 / 3,366 = 99.3%, 23 unresolved; only property lines changed against B5g.
 
-## PR B5e: letter case and split sections (PR #32, open, branch `spike-b/b5e-case-split`, stacked on PR #31)
+## PR B5e: letter case and split sections (PR #32, merged 2026-11-10 as `e05aabb`; main CI run 42832300795 green)
 - Maintainer, 2026-11-10, area 5: "Resolve as you see fit. I agree to recommendations."
 - **Decisions (assumptions for review):** case folding as a separate, flagged API (`resolve_case_folded`; exact resolution unchanged; refused when several keys fold together); split-section pairs take the pair's reading (the B4b categorizer already proved the pair); left unresolved: the two-line `Trigger a Socketed Spell` text with one line (resolving a partial multi-line text would guess), the only-shadowed line (kept as include-precedence evidence), the graft placeholders, and the 5 real ambiguities.
 - Two older corpus tests changed expectations: the categorizer fixture's `+5 to Maximum Life` now case-folds (a `Line one 5` near-miss replaces it), and the split-section test now expects resolution.

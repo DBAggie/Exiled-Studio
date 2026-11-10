@@ -1,7 +1,7 @@
 //! Oracle and corpus harnesses, maintainer-run. The only workspace code
 //! besides the extractor that reads disk: core crates take bytes
 //! (ADR-016), and every extract- or corpus-backed check is a subcommand
-//! here (Spike B plan, `dev/active/spike-b-text-stat-resolution/`).
+//! here (Spike B plan, `dev/completed/spike-b-text-stat-resolution/`).
 //!
 //! The PoB oracle harness (drives legacy `HeadlessWrapper.lua` on pinned
 //! LuaJIT at a pinned public PoB tag, ADR-006) comes with Spike C.
