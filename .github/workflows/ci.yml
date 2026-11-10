@@ -150,6 +150,17 @@ jobs:
           path: out
       # ADR-006: an unregistered difference (exit 20) fails; only registered
       # differences (exit 19) pass, and are listed in the step summary.
+      # ONE-OFF (never merged): inject a cross-platform difference to show
+      # that exit 20 fails this job.
+      - name: Inject a difference into the Linux output
+        run: |
+          python3 -I - <<'PY'
+          import json
+          p = "out/oracle-Linux/outputs/minimal-level1.xml.json"
+          d = json.load(open(p))
+          d["main_output"]["Life"] = d["main_output"]["Life"] + 1
+          json.dump(d, open(p, "w"))
+          PY
       - name: Compare Windows with Linux
         run: |
           [ -f out/oracle-Windows/report.json ] && [ -f out/oracle-Linux/report.json ] || { echo "an oracle run is missing" >&2; exit 1; }
