@@ -43,7 +43,7 @@ fn document(movement_speed: f64) -> Value {
         "modules": ["lua-utf8"],
         "settings": {"path": "/Settings.xml", "found": false},
         "shims": [],
-        "probe": {"inflate": [], "writes_refused": []},
+        "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": {"Life": ["60 (base)"], "TotalDPS": null},
         "main_output": {
@@ -518,8 +518,8 @@ fn compare_should_refuse_truncated_outputs() {
     let temp = Temp::new("truncated");
     let request = files_request(
         &temp,
-        &json!({"protocol": 2}),
-        &json!({"protocol": 2}),
+        &json!({"protocol": 3}),
+        &json!({"protocol": 3}),
         None,
     );
     assert!(

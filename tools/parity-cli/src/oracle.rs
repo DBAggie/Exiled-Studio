@@ -209,7 +209,7 @@ pub struct Adapter {
 }
 
 /// The adapter protocol this reader knows.
-pub const PROTOCOL: u32 = 2;
+pub const PROTOCOL: u32 = 3;
 
 impl Manifest {
     /// Parses and checks a manifest.
@@ -384,7 +384,10 @@ mod tests {
         assert_eq!(manifest.pob.tag, "v2.67.2");
         assert_eq!(manifest.adapter.protocol, PROTOCOL);
         assert_eq!(manifest.luajit.security.get("prng"), Some(&0));
-        assert_eq!(manifest.adapter.shims, ["inflate", "write_guard"]);
+        assert_eq!(
+            manifest.adapter.shims,
+            ["inflate", "variant_order", "write_guard"]
+        );
         // Every supported platform has a zlib library.
         for platform in ["windows-x86_64", "linux-x86_64"] {
             assert!(manifest.adapter.zlib.contains_key(platform), "{platform}");
