@@ -1,0 +1,277 @@
+{
+  "format": 1,
+  "status": "identical",
+  "class": null,
+  "mode": "runs",
+  "left": {
+    "sha256": "6ee429b26b79cfc6da168e47f0cbb6d50b86c322d519d3ab5f2a44d3b459bc3e",
+    "platform": "windows-x86_64",
+    "tool_commit": "aa940fda8c171d3d3947f8df5222a932419f01a6"
+  },
+  "right": {
+    "sha256": "a127885a36d647e4b71bd6d08f69cb594d2010592e19d011e9741a6e161c9f73",
+    "platform": "linux-x86_64",
+    "tool_commit": "aa940fda8c171d3d3947f8df5222a932419f01a6"
+  },
+  "register": null,
+  "compared": [
+    "stage",
+    "partial",
+    "main_output",
+    "breakdowns"
+  ],
+  "not_compared": [
+    {
+      "field": "protocol",
+      "reason": "must be equal on both sides (checked before comparing)"
+    },
+    {
+      "field": "error",
+      "reason": "null in every output document (only ok and partial runs have one)"
+    },
+    {
+      "field": "modules",
+      "reason": "the run's environment, checked by oracle-run"
+    },
+    {
+      "field": "settings",
+      "reason": "the run's environment, checked by oracle-run"
+    },
+    {
+      "field": "shims",
+      "reason": "the run's environment (the zlib version differs per platform)"
+    },
+    {
+      "field": "probe",
+      "reason": "the shims' record; a missing jewel load shows as partial"
+    },
+    {
+      "field": "breakdown_source",
+      "reason": "a constant of the protocol"
+    }
+  ],
+  "counts": {
+    "fixtures": 21,
+    "identical": 21,
+    "expected": 0,
+    "unexpected": 0,
+    "expected_failures": 0,
+    "not_compared": 0,
+    "expected_differences": 0,
+    "unexpected_differences": 0
+  },
+  "fixtures": [
+    {
+      "id": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "left_sha256": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "right_sha256": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "left_output_sha256": "2c9d5de82708cb0f5fe885bf1301aad4efcabf93ac132ae849d548a94086e4d1",
+      "right_output_sha256": "360cb7e3756fa53e4bbbcf8fb3a8bdfb71d75ff98458b111ef1f2a34f0d6d624",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "left_sha256": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "right_sha256": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "left_output_sha256": "46ffd2a02e399e313e42b0fe6251fcd0d9f5631dee61d49e00fbcf7f01aaf314",
+      "right_output_sha256": "ba0fb0182e97b7b6f9d1162c60be43867535562fabd611878b94c30bbc8ae755",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "left_sha256": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "right_sha256": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "left_output_sha256": "5280119db67d8b2b77273f4e18dd78d17a9d1e7e84174a20345aa2108e507c3d",
+      "right_output_sha256": "ac0e7d0234b99f4933b46408192680e9ee654254c4fe484733fef24fe4670063",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "left_sha256": "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "right_sha256": "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "left_output_sha256": "9761ebe4f419e7d76072979cfd660a37d96ade55fd41ae04025f05418b9cdb63",
+      "right_output_sha256": "dda5d785a2e463ed9ff2bf6366665708ac3b5bdbaeaddc82a1d008c5d4527e92",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "left_sha256": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "right_sha256": "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "left_output_sha256": "ea9f37d1491d4077e9f04c16983731d9ff87096c27fbebc9cef3e0a559596d4c",
+      "right_output_sha256": "488ea1a71986f5d871d7af88a7ad410e08a8c603236433bf8692d1e3cbb45c6f",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "left_sha256": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "right_sha256": "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "left_output_sha256": "dfa8398bcce5fdd74464c28a26252bdca9704f2bed8d8e010491b3c42928b48d",
+      "right_output_sha256": "ead0032dd3916093f7c308298acbdc04da9a0cca9a4f4aaf4508d7dcf26f85aa",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "left_sha256": "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "right_sha256": "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "left_output_sha256": "25887b42ed279294314171a9c2c003a201e8ad7d6ef8b0dc94968871e3dbae8a",
+      "right_output_sha256": "67bac23a7babb6de06ca928152a0a1d85564ca1972a18f63b0f562271c7d0f57",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "left_sha256": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "right_sha256": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "left_output_sha256": "ae5464fcf330551fab26cb1f7b8f62091457fc78f1fb855ae1b0fe0d936ab27a",
+      "right_output_sha256": "4bbe69374e02e8955dcf0f73fb989cfbbe750bcf1271a7fb102d52701fe75e57",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "left_sha256": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "right_sha256": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "left_output_sha256": "479edfe99efa1a9ef6d4e89343ee7f6aec26cf153d2f5c1165adb6c4dcb3e353",
+      "right_output_sha256": "c74229524209ef2900c36e06c893f8937a43c85734a352bcacabdc522fb40694",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "left_sha256": "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "right_sha256": "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "left_output_sha256": "d285546e39902c1c1817bfcc96e60f1b4d8c48ce432b861d3374b9eb76e77957",
+      "right_output_sha256": "c9e0347360c163aa58b83724d281f06fe88672e98bdce6e587253992db6b07c1",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "left_sha256": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "right_sha256": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "left_output_sha256": "4916c3a399bb202638c0f9c44d0151eb020c6740787c1601bc0084f37d9d347d",
+      "right_output_sha256": "0320714afe1da6835477c64c9418b6d2c6af979ce6ced1daf33207b5a8808a2f",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "left_sha256": "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "right_sha256": "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "left_output_sha256": "2dcc8b4ee5bfab30bf57bc9a03d00754638c156b1185b021f32eaee56efc592c",
+      "right_output_sha256": "a9d98e3216c0981d8deead7a103f2ee0eef68470f9c83cc6f7b30aad8e0b0759",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "left_sha256": "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "right_sha256": "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "left_output_sha256": "696a1a371cc9c737c9d2ed2a1746aa8e5fc82ddc77d44fea46bfd5dc30cb45a1",
+      "right_output_sha256": "0784b6f24ae87efca40826b12a4f8ba70f2ea372c7a16953ec3c5902803a9253",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "left_sha256": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "right_sha256": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "left_output_sha256": "0b0eaac47a3fa8b2bebcfddae328be4c405af12d44333442191f9c9969411838",
+      "right_output_sha256": "3e02ecbaa17a2d2a4d24e0ff4895b2812888653eb3211937a04d92729463d7dc",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "left_sha256": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "right_sha256": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "left_output_sha256": "3bafb1e666ceb6ec991eab38ccc3b1e6826525dcd41bdf549569dd82c6b083ff",
+      "right_output_sha256": "9f5089ac8f118b5102017b8337f23ded2efe24692191a0890ef2439227827295",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "left_sha256": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "right_sha256": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "left_output_sha256": "4c93b21eb81ccbdd8a1304d267ac749a38de59fb82bca5a0cc81098030bf573f",
+      "right_output_sha256": "5e5276b3389f3a0c14089c70d6866c512191bb476b0d766660345d073f1e255e",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "left_sha256": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "right_sha256": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "left_output_sha256": "f4da042a6a2f745acb44bd1d490c20c464f95dbfb9cfc0a3c2038d915de453df",
+      "right_output_sha256": "f039cb1c095fc2c69e37b11ccedb2b6fae692cefceae881cd9a69319057cfdb3",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "left_sha256": "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "right_sha256": "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "left_output_sha256": "515c55585f77145c5897ed78ff8c8b8550c558cbe07fe48ab65c09c8139f4660",
+      "right_output_sha256": "0e4bb2aac94eb5a1b5ca24e033ff065414e20ca88fdf9b7398ded126de5c41c9",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "left_sha256": "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "right_sha256": "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "left_output_sha256": "fadf1e0fec51888728e05dfdc42fe72ba2c406104f6e7dcafce7fe2dedd3cb47",
+      "right_output_sha256": "73566e29900bd180a6941891b95bdd57bb7fc5b22e47af460480294ceee2abb7",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "left_sha256": "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "right_sha256": "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "left_output_sha256": "29afae06e327b22eebea03c8a9846cdabdb165f3fa5522dc36c01b626dbb6766",
+      "right_output_sha256": "f3c7752920c1f5eb955fa5cab1671100b5b6a9e2c6745ad0858e12f04deb5e17",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    },
+    {
+      "id": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "left_sha256": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "right_sha256": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "left_output_sha256": "cf5c41e441faf8caeda60b8f92ebdb518f90b57633e8a7fc556770ddd0a503e4",
+      "right_output_sha256": "97b2ae4d22730e410d970cf84c55b1d7af82d4ee9fbdb1830ba3e857059c553e",
+      "status": "identical",
+      "class": null,
+      "differences": []
+    }
+  ],
+  "unpaired": [],
+  "unused_entries": []
+}

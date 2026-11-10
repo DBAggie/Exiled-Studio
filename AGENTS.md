@@ -102,8 +102,9 @@ cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.js
 # did not have the outcome its fixture manifest names, else 3 if a fixture is partial. The public
 # fixtures from their manifest (PoB's 3.13 builds pinned by git blob, ours and the credited community
 # builds in tools/oracle/fixtures/community/ (SOURCES.md, ADR-007 Amendment 1) by SHA-256, each with
-# its expected outcome; exit 0 when all are met). CI runs the same in the informational `oracle` job
-# (Linux under `unshare -rn`, Windows) and compares the two platforms with oracle-compare:
+# its expected outcome; exit 0 when all are met). CI runs the same in the required `oracle` job
+# (Linux under `unshare -rn`, Windows) and compares the two platforms with oracle-compare, which
+# fails on an unregistered difference (exit 20); both jobs are in ci-ok since Spike C's C5:
 cargo run --release -p loom-parity-cli -- oracle-run tools/oracle/manifest.json local/oracle --out <dir> tools/oracle/fixtures/fixtures.json
 # The maintainer's corpus (local only, ADR-007): --anonymous names builds by SHA-256, so the report
 # holds no file names; commit only scrubbed summaries (docs/spikes/spike-c/):
