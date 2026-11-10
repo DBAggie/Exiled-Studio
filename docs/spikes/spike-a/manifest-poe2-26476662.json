@@ -66,6 +66,7 @@
     "Tiny.V6.2": "cafc0458de69ebdae1ded8c965ab86fbc0f92f9aef78c337e48e69f14f654a85",
     "Tiny.V7.1": "ccd8695ea6bf96b93db5b349634ff68be6725c7f1bf8f63b04ed10d406bd2603",
     "Tiny.V8.1": "1652797d5ae2ade363309ce8f4e2667b778575b7620e110cb414edd5004e89b4",
+    "Tiny.V9.1": "9d435f75ac94b8a799d938fc5eb09a0331dd925b34af4a10284433dd8d9c1f62",
     "Tiny.VA.1": "b34b9df8265a90ca79499417004e6c82c8921a161341c63da7fdf7891db84c6e",
     "Tiny.VB.1": "edd2485163f0043668f1fb626924de7e58544427026ceba661244a0903487df2",
     "Tiny.VC.1": "ab2c113fd07d4eaaa2f800d76a8ebf768f89d2db14b2dd91af84196cbabfe76e",
@@ -78,11 +79,1119 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "4c70f6a9a5ad2a649cdcd85b86846d5cec8ca7c5",
+    "commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
     "dirty": false,
     "version": "0.0.0"
   },
   "files": {
+    "item_types/metadata/items/amulets/abstractamulet.it.json": {
+      "rows": 3,
+      "sha256": "191fa3fe2396b8262808dda131c4a4cf791c59dfffd9ff17462069515b6e501a"
+    },
+    "item_types/metadata/items/archnemesis/archnemesismod.it.json": {
+      "rows": 2,
+      "sha256": "2fd730a84a74675388d41c30f4fbeae62f381656a16b443d70b4e5b626e8efbb"
+    },
+    "item_types/metadata/items/armours/abstractarmour.it.json": {
+      "rows": 5,
+      "sha256": "14d0f35d9f2025b4bb1fffff3818a122422b135d9541f16e58a019257342b421"
+    },
+    "item_types/metadata/items/armours/bodyarmours/abstractbodyarmour.it.json": {
+      "rows": 3,
+      "sha256": "94713102d343a96caa1950b3e0fb0730ceed2dc535e6deaccd5019ec8f65d49d"
+    },
+    "item_types/metadata/items/armours/boots/abstractboots.it.json": {
+      "rows": 2,
+      "sha256": "bc3939053a348020836574398895afdc4f4178c4175d98e421eae3e3e5a2af53"
+    },
+    "item_types/metadata/items/armours/focus/abstractfocus.it.json": {
+      "rows": 3,
+      "sha256": "0c01985539cdbde0710e75ce1e9265d7bc255881eace5fb8a1ba02bc572a5191"
+    },
+    "item_types/metadata/items/armours/gloves/abstractgloves.it.json": {
+      "rows": 2,
+      "sha256": "c8ce5f6b2fe327bfcb54811cfce926af970e3970ae7c93c242b0d6622bf67571"
+    },
+    "item_types/metadata/items/armours/gloves/fourglovesdexintascendancy.it.json": {
+      "rows": 1,
+      "sha256": "6a61707045db1ebd067211493ad666b9cda802c0709142098425558c33bad6c1"
+    },
+    "item_types/metadata/items/armours/gloves/fourglovesdexintascendancyverisium.it.json": {
+      "rows": 0,
+      "sha256": "40d42c371749b3626b96c387ea5d88fb93c8a8ec121b7b42abbf117cca659e8f"
+    },
+    "item_types/metadata/items/armours/helmets/abstracthelmet.it.json": {
+      "rows": 2,
+      "sha256": "ef2eb7c3dd3a5f766b7337c0cf955e5cde4f8f98116daa6dba06a84f1d17041a"
+    },
+    "item_types/metadata/items/armours/shields/abstractbuckler.it.json": {
+      "rows": 6,
+      "sha256": "388e8fc7a555c2f8353d3da1e52798e9375f8898c4bdcd87423ca37b80b4f53d"
+    },
+    "item_types/metadata/items/armours/shields/abstractshield.it.json": {
+      "rows": 6,
+      "sha256": "00cbd35fea6c8a1172641e35c53f95da2b3a611f4fefde750a4634082dd81a8e"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade.it.json": {
+      "rows": 4,
+      "sha256": "53ed423faa75f76d1fc570ae226136eb6eed2329a963694b1bf508a7659b1b07"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_1.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_6.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_7.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_8.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_1.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_6.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_7.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_8.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_1.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_6.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_7.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_8.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_1.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_6.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_7.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_8.it.json": {
+      "rows": 1,
+      "sha256": "c711f4d5f93a7eba86dd4d10ae421559febf1907103b3c248830d5072331a7ee"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgradefinal.it.json": {
+      "rows": 4,
+      "sha256": "2ffb01c87fe5600227d37668e1901dc68e076edc1c9dfe5d288ec52339845183"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasregionupgradequestbase.it.json": {
+      "rows": 2,
+      "sha256": "617264b6f79024fbae5254d57a6fd9842d17d460da159771d116e6dcedeccedd"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial1.it.json": {
+      "rows": 2,
+      "sha256": "d92afa90ca6997be555195212a2a0a5d34d32df7ce17384cb926a63594836792"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial2.it.json": {
+      "rows": 2,
+      "sha256": "525125648b43e003ec851334b411b22944347025a4137baa203d64e4252f88ff"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial3.it.json": {
+      "rows": 2,
+      "sha256": "8b468cde816f890d8cb0795c14d634a23361a2b805f49ddb685f8d6b98078982"
+    },
+    "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial4.it.json": {
+      "rows": 2,
+      "sha256": "491054f807ce1b059bf0eca21d3cdd420baf7fcc2f0b543d84cd20565a12acce"
+    },
+    "item_types/metadata/items/belts/abstractbelt.it.json": {
+      "rows": 4,
+      "sha256": "f25ce17601104b153eaade89a562d4f52b5d122c8e701594b8824219888ef35d"
+    },
+    "item_types/metadata/items/brequel/abstractbrequelfruit.it.json": {
+      "rows": 2,
+      "sha256": "3bd4127d6c2090967e98416a8ca4dc7408aacb3db3ebc93e0236eb565b1e1a67"
+    },
+    "item_types/metadata/items/classic/mysteryleaguestone.it.json": {
+      "rows": 1,
+      "sha256": "b6bb33428e03f9fbfc99290809d94e1fd3daabf3da8d0192ef45598b93470802"
+    },
+    "item_types/metadata/items/currency/abstractcurrency.it.json": {
+      "rows": 2,
+      "sha256": "46f04dc398e676f04622780f252b97a7c89d2b607ff75fad8b8cc916d55c4455"
+    },
+    "item_types/metadata/items/currency/abstractmicrotransaction.it.json": {
+      "rows": 1,
+      "sha256": "dcb479b16c00aec50e1a388e8a893c8412fcde671a8d3c036e539951576b6d22"
+    },
+    "item_types/metadata/items/currency/castawayexplosive.it.json": {
+      "rows": 2,
+      "sha256": "4ea28a92bf572c253e6b9a348511345c6e8c24ae175dde9ac4648fc4f0892697"
+    },
+    "item_types/metadata/items/currency/currencyaddgemexperience.it.json": {
+      "rows": 2,
+      "sha256": "35a944efcdc3619b6c81702998f74ded08f841fe09098c1bc48613d40cc97c6f"
+    },
+    "item_types/metadata/items/currency/currencyimprint.it.json": {
+      "rows": 1,
+      "sha256": "b6bb33428e03f9fbfc99290809d94e1fd3daabf3da8d0192ef45598b93470802"
+    },
+    "item_types/metadata/items/currency/currencyitemisedcapturedmonster.it.json": {
+      "rows": 4,
+      "sha256": "ebdc213c561cd9901f470b9ee834f0f6d6fff6982dad4d93b90d18555d8f49dc"
+    },
+    "item_types/metadata/items/currency/currencyitemisedsextantmodifier.it.json": {
+      "rows": 3,
+      "sha256": "0015e35c3e79b31ba783dd11b1c979f9c64b458a17d2ede0311d997db2e8a4d1"
+    },
+    "item_types/metadata/items/currency/skillgemtoken.it.json": {
+      "rows": 1,
+      "sha256": "1c133287aa31df42be6a30385d8186e8735f5985fbc60520267a7c5a94881e30"
+    },
+    "item_types/metadata/items/currency/stackablecurrency.it.json": {
+      "rows": 2,
+      "sha256": "df073c3eba37b539858034e6b658ebe68c88e6e0d6987036871a7a36e92180af"
+    },
+    "item_types/metadata/items/delve/delvesocketablecurrency.it.json": {
+      "rows": 4,
+      "sha256": "751290caf4354b037c514772e3afbbe37cd3631cf09b2d55056610e61253462b"
+    },
+    "item_types/metadata/items/delve/delvestackablesocketablecurrency.it.json": {
+      "rows": 5,
+      "sha256": "11633d93d15cf94b8ac61dcd446def35ed284a19b9c81a71fe6e5f76a3abed24"
+    },
+    "item_types/metadata/items/divinationcards/abstractdivinationcard.it.json": {
+      "rows": 3,
+      "sha256": "2b60ff8c11d4d48c71add0122c63d80e4512b07c22115c413d64bd0050a6703e"
+    },
+    "item_types/metadata/items/equipment.it.json": {
+      "rows": 3,
+      "sha256": "d21070c39d28e5e5e9f605deb699573b2354986be6fb486fe4ff6cfb8be599f8"
+    },
+    "item_types/metadata/items/expedition/expedition2logbooks.it.json": {
+      "rows": 3,
+      "sha256": "e13ca659cb4212c4bd0c0815a9c737e390610adb3709bf11d32baf473b32abbd"
+    },
+    "item_types/metadata/items/expedition/expeditionsaga.it.json": {
+      "rows": 4,
+      "sha256": "d304bb22802d69bbd0069a6350de51416331637ae529bd03584439cec6bb1755"
+    },
+    "item_types/metadata/items/flasks/abstractflask.it.json": {
+      "rows": 7,
+      "sha256": "e4546e370c13250a649d99d9d3a14e002a0d4e436e140e0af593831c9748ae05"
+    },
+    "item_types/metadata/items/flasks/abstractlifeflask.it.json": {
+      "rows": 2,
+      "sha256": "a7db65caafdb6e9ca5629a66e4908d76aa217c656dc61af8346533063b2b6c38"
+    },
+    "item_types/metadata/items/flasks/abstractmanaflask.it.json": {
+      "rows": 2,
+      "sha256": "cb95728d84d9caa0d66aece6321a8f43f49ad6fb4ccdbadab3f9d2922cce38fa"
+    },
+    "item_types/metadata/items/flasks/abstractutilityflask.it.json": {
+      "rows": 2,
+      "sha256": "4f0b0c540d6d21888b5d090ece82cb30e79a17fabbb1cf08c63ebe7374ccddbe"
+    },
+    "item_types/metadata/items/gems/abstractskillgem.it.json": {
+      "rows": 4,
+      "sha256": "c93ea7a88189088c2489aa536639413bff5c7ece1086177a3a3e115b40a55779"
+    },
+    "item_types/metadata/items/gems/abstractuncutgem.it.json": {
+      "rows": 2,
+      "sha256": "1cf637f79e9ddf6abd75dd1f31ec38d5a8cdedf7692cbe0319885efd69553a7b"
+    },
+    "item_types/metadata/items/gems/activeskillgem.it.json": {
+      "rows": 4,
+      "sha256": "704efc38343726f2edf149719135432c56eec0428a1c95d8ad092d168fec10b3"
+    },
+    "item_types/metadata/items/gems/metaskillgem.it.json": {
+      "rows": 4,
+      "sha256": "ffeb1ae85b29d63e2f610d245ab9075dcdc9aa39013ff5fe47aca2427c55c7c3"
+    },
+    "item_types/metadata/items/gems/skillgemsoulcrystal.it.json": {
+      "rows": 2,
+      "sha256": "d3057e7831382c1bc08114799c9f2093291e402e3db18ac70a8f00ea07206734"
+    },
+    "item_types/metadata/items/gems/skillgemsummonbeast.it.json": {
+      "rows": 2,
+      "sha256": "d3057e7831382c1bc08114799c9f2093291e402e3db18ac70a8f00ea07206734"
+    },
+    "item_types/metadata/items/gems/skillgemsummonspectre.it.json": {
+      "rows": 1,
+      "sha256": "52545dfb48510b969039649a551bd0d1e1dd1dc24169c687ce935d00ba7d77f2"
+    },
+    "item_types/metadata/items/gems/skillgemuncutquest.it.json": {
+      "rows": 2,
+      "sha256": "1ecf44b70669c41e7d4276d4f416775cb49e68f2eb7f0fd9d04106f76cf5ed50"
+    },
+    "item_types/metadata/items/gems/skillgemuncutquest1.it.json": {
+      "rows": 1,
+      "sha256": "f44846a8e8e69ceb6529ba2d1c3e3f7fa3910d99247854c79fdfbff5754686ba"
+    },
+    "item_types/metadata/items/gems/supportskillgem.it.json": {
+      "rows": 3,
+      "sha256": "d1866c7beb0df5c4007dc4c2a09ce2fec5da1c6f4bef712b4bcdec2d877410e2"
+    },
+    "item_types/metadata/items/gems/uncutreservationgem.it.json": {
+      "rows": 2,
+      "sha256": "adf046f15b35c7d1926f4451b6310ab66eabc5b9041d35c23c1fdf333390180b"
+    },
+    "item_types/metadata/items/gems/uncutskillgem.it.json": {
+      "rows": 2,
+      "sha256": "bdc2c640ee129d49b4e0dc412556c6d11b555cef5510ba8bea2e0d13c210d3dd"
+    },
+    "item_types/metadata/items/gems/uncutsupportgem.it.json": {
+      "rows": 2,
+      "sha256": "2e525ac664f2dab07589e210895844d77b78e044375e764b8d6c35e0771b3f90"
+    },
+    "item_types/metadata/items/heist/abstractheistequipment.it.json": {
+      "rows": 4,
+      "sha256": "9b46728f3bd86de1918e739b3aaae4b111103fae87b705b95995a0ed8dac318d"
+    },
+    "item_types/metadata/items/heist/heistblueprint.it.json": {
+      "rows": 4,
+      "sha256": "96ad0105a3b087a45408a3493537c25c47ae31541aedf35f4e5dc107bbb2f5e2"
+    },
+    "item_types/metadata/items/heist/heistcoin.it.json": {
+      "rows": 0,
+      "sha256": "6ff6121cbbc5e1bbc1420f80e515dd263002c4c87a89527b213784519da30a22"
+    },
+    "item_types/metadata/items/heist/heistcontract.it.json": {
+      "rows": 4,
+      "sha256": "b1d31d07e13d0ee5e776f7de4c8e09fad5ebc7ec8fdf2ad4f7894a63640a19d1"
+    },
+    "item_types/metadata/items/heist/heistobjective.it.json": {
+      "rows": 2,
+      "sha256": "1f8e5998d560e031ed4f1fbc4f3653c093d76ca74e60c28678e42cf32472e4db"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyah1.it.json": {
+      "rows": 2,
+      "sha256": "d630db7daff0ef1733757b07262aba1d0643181374dee4b955fc032c17b1c9db"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyah2.it.json": {
+      "rows": 2,
+      "sha256": "12780c291d4f67cda0046ea16c7b3ae40fd7d003a24e43630968210318118890"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyahrepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustus1.it.json": {
+      "rows": 2,
+      "sha256": "3c4f1e3f137dc85a7124f71a38844bb94d3e8a2b7fdd747640bd9c5c9d0c07a0"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustus2.it.json": {
+      "rows": 2,
+      "sha256": "fef60bbb6bf51d73ab78ea9eb18ea4c2076401d00cca2c33802f2a95bb1d8267"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustusrepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestgianna1.it.json": {
+      "rows": 2,
+      "sha256": "09a8eb07b5c3222dfa6c9c119da709c990ca10b532e75c0ef1a8be32383ca5d2"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestgianna2.it.json": {
+      "rows": 2,
+      "sha256": "297117352d3d06f94b85361faf81a4d7077882a3c623ddd8e963068b25adb9ba"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesthuck1.it.json": {
+      "rows": 2,
+      "sha256": "96912eb83925f23e791bc0182a6c1c7b4c0b66fb3d6121b5d23795d5a9274385"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesthuck2.it.json": {
+      "rows": 2,
+      "sha256": "606809b562972fb99bd9ae131089607165d932a67051890f785cbb8002aba0bc"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestisla1.it.json": {
+      "rows": 2,
+      "sha256": "3dd0b9f3af13f65c52fe7deaaba4b8cfc51600a15330a1e1672f4afda94a88c8"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestisla2.it.json": {
+      "rows": 2,
+      "sha256": "36de3cd2891cc50977553af3424ca77125aaeea40702db1edf9bdadd1cb65f05"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestislarepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst1.it.json": {
+      "rows": 2,
+      "sha256": "08c454ce0c1450cdbeb1dad6a75c3a1be1921b5d1ad989349dbd5caa2c3fb525"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst2.it.json": {
+      "rows": 2,
+      "sha256": "894adb7552f78a7e5a2112a322e9fb108969f6c5bbff816326dcffaeba7ec301"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst3.it.json": {
+      "rows": 2,
+      "sha256": "e54ff937989688ad2587ebf23137b9158f53f6e0e37e9c0dc88f7fef64a41ad8"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai1.it.json": {
+      "rows": 2,
+      "sha256": "a30606815f32a43a14cd6247f4fc87d0dd59cb09e06340b5717a1f2513de9adb"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai2.it.json": {
+      "rows": 2,
+      "sha256": "36b2af7ac9b4f17527c230cfd30d8c9fca3e6a2c1584d1101e16770081b71473"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai3.it.json": {
+      "rows": 2,
+      "sha256": "6ba461dde9bd14ae53f02e61073a7e1f6e00a374b79db23595ca1b779350f37f"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestkurairepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestnenet1.it.json": {
+      "rows": 2,
+      "sha256": "7785520f6399a13b13700f51b3ae5f87f631a89a2037405ef0ab765c16f9319d"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestnenetrepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestniles1.it.json": {
+      "rows": 2,
+      "sha256": "d29a48b46f34a2dbc504b4150963b9d17c591cf03727fec2f817df7177a6afbd"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestniles2.it.json": {
+      "rows": 2,
+      "sha256": "6f1cbdbc6d719fb0a73013bda92a1f9148e25208d8ee7e2092944d5fbe243fe7"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesttibbs1.it.json": {
+      "rows": 2,
+      "sha256": "69bbda2d5e5f6258872dc04e225eb0fd295ac3f261ede07d4c922cb0273fa6ef"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesttibbs2.it.json": {
+      "rows": 2,
+      "sha256": "36a2e02d32f831fadb2ac79ef6cde064a620ad51b1cffec5a9bea2d4b6a088a1"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesttullina1.it.json": {
+      "rows": 2,
+      "sha256": "e8b773bbc30b89cbb78139f1da5ea05dc076881bf98a0dfd6bc1433ef1f84fdb"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquesttullina2.it.json": {
+      "rows": 2,
+      "sha256": "21955ec7f8be5e5e699ac06731763229b084eda5d240c889b0abf481f7b67e5f"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestvinderi1.it.json": {
+      "rows": 2,
+      "sha256": "f799e1683f9be09aa6435bc66b424bd8350fcc098c00bb63678544bfd5f5a0bf"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestvinderi2.it.json": {
+      "rows": 2,
+      "sha256": "d9ed958b4d4176f17f0efc12910631e2d569a94aea3529dc3c1a1ef889a3b32c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakano1.it.json": {
+      "rows": 2,
+      "sha256": "9f88091c8ff5cd315f9c9136afecb829892d6bcad5888f518d820276ee823c01"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakano2.it.json": {
+      "rows": 2,
+      "sha256": "169410c2c01c06626700c29f7fe4962c285e30af4f7b06cfd1926134519e5e19"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakanorepeatable.it.json": {
+      "rows": 0,
+      "sha256": "f08df20444d5fe6e20c1eedcebd77cefe91a58590f4cb2efa9b6a0bd7d7f681c"
+    },
+    "item_types/metadata/items/heist/questcontracts/heistcontracttutorial.it.json": {
+      "rows": 2,
+      "sha256": "e4e42ed966dd03b86b73b03f430116ac6e32ced4d056eccf0f156296b1ed67ef"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestadiyah1.it.json": {
+      "rows": 1,
+      "sha256": "63b7e2dc390fbf73f67b8dadce6538769e7911a6035f7edd2d954038692dc3a9"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestadiyah2.it.json": {
+      "rows": 1,
+      "sha256": "5ebaf8f67491c2bd5930466d975f92a62e545e2fcc96b50b063b4fb0fa643598"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus1.it.json": {
+      "rows": 1,
+      "sha256": "4c9f26b8975225eb85b7ff1d88138c4e1cf6bb08b126235292caadef1a39dbc9"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus1b.it.json": {
+      "rows": 1,
+      "sha256": "21146a20d089970c1dbb63bcada880e8f8c4eadb87be110ab9d9eda253cc1403"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus2.it.json": {
+      "rows": 1,
+      "sha256": "b3662706643762fc87275fa60bf4370975c1fe0d84ae644b94d0bd6110cbbf8b"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestgianna1.it.json": {
+      "rows": 1,
+      "sha256": "4f9160bbc34d21219a29ee08f9c5d9b92d97f63fee108877c649866ad973719d"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestgianna2.it.json": {
+      "rows": 1,
+      "sha256": "65375b858693cde0a0fb33100b4181118664a15791b239f0fe63ee14a6516233"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesthuck1.it.json": {
+      "rows": 1,
+      "sha256": "cef79f1a88f18006b3d98eb419794664917e944d49f38c7ee7a38739b2b9f06e"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesthuck2.it.json": {
+      "rows": 1,
+      "sha256": "93e8f8a089489e8a6174908c2895acbe670be998a7fc38664a1df138eecc7d82"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestisla1.it.json": {
+      "rows": 1,
+      "sha256": "1e8a95a32a80b2c7f776b1ce724520340ddf73796ce6e7f113562e8fb332a1a5"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestisla2.it.json": {
+      "rows": 1,
+      "sha256": "08d028c72c3c647efb670c74fb908ef692f6ac1e56045d25a0fcc3971d3f3146"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst1.it.json": {
+      "rows": 1,
+      "sha256": "5a216650fde3836ce3bead0ed07ad19f7d1c6ad65c35e2238b2f36f5d842c193"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst2.it.json": {
+      "rows": 1,
+      "sha256": "47147d021a16cd69157441382f6207f9e89854076834cad46914fa0a8e96a7b1"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst3.it.json": {
+      "rows": 1,
+      "sha256": "c1be660b9faefa1dd5efdbf7dc4fad7331ba00d00920727360fa2d29c8f4b4b9"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkurai1.it.json": {
+      "rows": 1,
+      "sha256": "d03b6adfb8ab5546478be334398ad0f5939b8763567e6d0201f675a7e2bf65a5"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestnenet1.it.json": {
+      "rows": 1,
+      "sha256": "9f993bfd20670e21c4f543e56af53ebda928020383564ae570d7621692312ee0"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestniles1.it.json": {
+      "rows": 1,
+      "sha256": "0bc8a5e40f5be9012d4d99c5470e31de6cd8e481f6007e68e1a525c63382d98b"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestniles2.it.json": {
+      "rows": 1,
+      "sha256": "f2955645a0f01fda3f6de479c613c5fd66b9a87bc1e3a165ad8602772882c6f7"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttibbs1.it.json": {
+      "rows": 1,
+      "sha256": "170835b1138cb2bc3b39bdcf3fd873fe4dfaf35984b8e22fd1f0497308d9c73d"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttibbs2.it.json": {
+      "rows": 1,
+      "sha256": "dd994942f40083497a4bf588a591d4fade5d6b85ba0c69b629826b0aff30904d"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttullina1.it.json": {
+      "rows": 1,
+      "sha256": "734cbb6fe5bb06101f023bc659e7476930ebde497a2ae35ea44f59f8248a6459"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttullina2.it.json": {
+      "rows": 1,
+      "sha256": "8eeb179ce4d223f6e934aa54674ed8a8b9e95d3e80176257cecba5ed72c4b93b"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestvinderi1.it.json": {
+      "rows": 1,
+      "sha256": "1547433dacfae0a3a9e679fd7ea16b9e8babc218653e94cec6476d0e4066a0ea"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestvinderi2.it.json": {
+      "rows": 1,
+      "sha256": "26f8d12179158cfc77b46cde26c877db3036a36fab1a3e343e26ca1e34123a94"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestwhakano1.it.json": {
+      "rows": 1,
+      "sha256": "bd80f1ccc6ebb7ef32bebc17831b8440e557e5c356761bb536ce47f8c9a1dfb1"
+    },
+    "item_types/metadata/items/heist/questitems/heistfinalobjectivequestwhakano2.it.json": {
+      "rows": 1,
+      "sha256": "d3685c7d0c376b7c8039a7078e2cf443834d0a695b6d5f2b605d00a9869f77bb"
+    },
+    "item_types/metadata/items/incursion/incursionbomb.it.json": {
+      "rows": 1,
+      "sha256": "5999ffc0386d409ae866d30cdcf15eb96802db931dae82085739cc1c15cecc56"
+    },
+    "item_types/metadata/items/incursion/incursionkey.it.json": {
+      "rows": 1,
+      "sha256": "d74172cb418423b087be4f50fbda7ea910114eb633206ddfeb694e7d70912389"
+    },
+    "item_types/metadata/items/incursion/itemisedtemple.it.json": {
+      "rows": 2,
+      "sha256": "42967793131c8cbd7ab39da8ac6e8e15d4d3f9d9bb580baa953384fc762407f6"
+    },
+    "item_types/metadata/items/incursion2/arm.it.json": {
+      "rows": 2,
+      "sha256": "bc9796be0c9eca5d77c3342a7ee5ac8291554a6952aeaeb23ed2df1ca43c393e"
+    },
+    "item_types/metadata/items/incursion2/leg.it.json": {
+      "rows": 2,
+      "sha256": "17cf00cbb44d73f2383e1fa8a5249a885ccc877031493045e2917156a4b2fa05"
+    },
+    "item_types/metadata/items/item.it.json": {
+      "rows": 2,
+      "sha256": "e73620b6edd3e8aacdd7166029f7c18876893e0c1c7bf299b5f2a6498708f502"
+    },
+    "item_types/metadata/items/jewels/abstractjewel.it.json": {
+      "rows": 4,
+      "sha256": "a853d835c9d6056625b3f39d803ec70b1da6409dd7429b689c191500fa6955ff"
+    },
+    "item_types/metadata/items/labyrinth/abstractlabyrinthitem.it.json": {
+      "rows": 1,
+      "sha256": "d9d16793008b439839bbaf4fcc7e4228856ce526422d7ea2ffd62f24924e94c3"
+    },
+    "item_types/metadata/items/legion/incubator.it.json": {
+      "rows": 4,
+      "sha256": "386767bb1209213d5c2e3d5de2c0cc0b0bdecdaf13da10444d20306516ef7190"
+    },
+    "item_types/metadata/items/legion/incubatorstackable.it.json": {
+      "rows": 3,
+      "sha256": "a1da6b1202148f1eb36fc5a2a01f887d1e8e951b9ded1bc5a91bfdfa4fbc8076"
+    },
+    "item_types/metadata/items/mapfragments/340vaultkey.it.json": {
+      "rows": 3,
+      "sha256": "cee5be3b63d7188a47d4c19e66c39621d81ee303bd4d9c6d8a91e658b187e84a"
+    },
+    "item_types/metadata/items/mapfragments/abstractmapfragment.it.json": {
+      "rows": 3,
+      "sha256": "b4394a6e3abfbfcb7b63f4c9703c566a4280e6e984baca2d8bc7d4e751b0ae81"
+    },
+    "item_types/metadata/items/mapfragments/abstractmiscmapitem.it.json": {
+      "rows": 0,
+      "sha256": "2bf9e44538326e0675718e88b4115c1fa62cfb3269f5c26d4a9dc5af2dc829ac"
+    },
+    "item_types/metadata/items/mapfragments/abstractvaultkey.it.json": {
+      "rows": 1,
+      "sha256": "feafedf1d39b978aa84dd1ac0eba3545ecb4ba32f372fb435258c30e55a0ab25"
+    },
+    "item_types/metadata/items/mapfragments/classicvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "62e27b99433df7c76199491f746453b85b05232f814f20112bfcad8f5faa37aa"
+    },
+    "item_types/metadata/items/mapfragments/fragmentpantheonflask.it.json": {
+      "rows": 1,
+      "sha256": "b8492398b93b8f2225e3f4ea38d516c75ceba47ac3c31b0f4efa222dc59112a6"
+    },
+    "item_types/metadata/items/mapfragments/maven/abstractmavenmap.it.json": {
+      "rows": 3,
+      "sha256": "adb6344343c76138608e515fb025a21026467dedde58c832149705304866e99e"
+    },
+    "item_types/metadata/items/mapfragments/maven/abstractmavenmapcraftable.it.json": {
+      "rows": 1,
+      "sha256": "9bdfe3d7be54d00db40718566eff124a765678488839ff062b689ff4bf90a868"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapatlas5.it.json": {
+      "rows": 1,
+      "sha256": "46085d6e26dab750f134fb14f566bb9589a0a436feb14dbc37d5afb46232b250"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapinsidebottomleft5.it.json": {
+      "rows": 1,
+      "sha256": "814fee3ac58c827c6dd40fad3f93d2e0056e089a7530b145ce6cc1392a77d981"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapinsidebottomright5.it.json": {
+      "rows": 1,
+      "sha256": "814fee3ac58c827c6dd40fad3f93d2e0056e089a7530b145ce6cc1392a77d981"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapinsidetopleft5.it.json": {
+      "rows": 0,
+      "sha256": "498318649769357840f49dd180f9284849a16326fe06214cb765ca916f23ec5e"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapinsidetopright5.it.json": {
+      "rows": 0,
+      "sha256": "498318649769357840f49dd180f9284849a16326fe06214cb765ca916f23ec5e"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapoutsidebottomleft5.it.json": {
+      "rows": 0,
+      "sha256": "498318649769357840f49dd180f9284849a16326fe06214cb765ca916f23ec5e"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapoutsidebottomright5.it.json": {
+      "rows": 1,
+      "sha256": "814fee3ac58c827c6dd40fad3f93d2e0056e089a7530b145ce6cc1392a77d981"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapoutsidetopleft5.it.json": {
+      "rows": 1,
+      "sha256": "814fee3ac58c827c6dd40fad3f93d2e0056e089a7530b145ce6cc1392a77d981"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapoutsidetopright5.it.json": {
+      "rows": 0,
+      "sha256": "498318649769357840f49dd180f9284849a16326fe06214cb765ca916f23ec5e"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid1.it.json": {
+      "rows": 1,
+      "sha256": "df68cd90f7f0c60105bf2736b740fba49a9d6836b788130531f2a8b36b601377"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid2.it.json": {
+      "rows": 1,
+      "sha256": "20474687235592916820a5e7ebe5e2cbfbbf2374236491690dd87cc9ff587cf3"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid3.it.json": {
+      "rows": 1,
+      "sha256": "3b58c2348e66298b59aad7b042f558b0920aa7a413df1b4c543f608fff06f077"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid4.it.json": {
+      "rows": 1,
+      "sha256": "e3fac45ee9b49c5335f84657178eaec5257bf2ff1051b7af5f5351e2f710f348"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid5.it.json": {
+      "rows": 1,
+      "sha256": "46085d6e26dab750f134fb14f566bb9589a0a436feb14dbc37d5afb46232b250"
+    },
+    "item_types/metadata/items/mapfragments/maven/mavenmapvoid6.it.json": {
+      "rows": 1,
+      "sha256": "0f92ef5bf9ad6b878819626c3545f543cfca9adca6aad84ff9aabc0205bb2cda"
+    },
+    "item_types/metadata/items/mapfragments/pinnaclekey.it.json": {
+      "rows": 1,
+      "sha256": "2fe3e136f93751869aa2e9d464a37c5dedfc51376baff4cd61db0fb601fbfb67"
+    },
+    "item_types/metadata/items/mapfragments/pinnaclekeystackable.it.json": {
+      "rows": 2,
+      "sha256": "3dd2a1545ad5764e2a53baf7b5bda87c4295801ec8e4eb4d57ce5f304eb9b8f0"
+    },
+    "item_types/metadata/items/mapfragments/primordial/abstractprimordialmap.it.json": {
+      "rows": 2,
+      "sha256": "a2aad823af147a85d4f0002c6ad6394f90deb24fd50dd079c96096b170c53367"
+    },
+    "item_types/metadata/items/mapfragments/primordial/currencycleansingfirebosskey.it.json": {
+      "rows": 1,
+      "sha256": "a34b1adc407fe09e1657feffc8d84707b1ff8e1c949bf3d59e09357bf88745df"
+    },
+    "item_types/metadata/items/mapfragments/primordial/currencycleansingfirekey.it.json": {
+      "rows": 1,
+      "sha256": "61823984904b6f77d37b29ac57b3f694d9460643a1bc4512d96f21ef504b754e"
+    },
+    "item_types/metadata/items/mapfragments/primordial/currencytanglebosskey.it.json": {
+      "rows": 1,
+      "sha256": "d289b4ca95ae8c745ae74756b20409a1099a24140a210451551c66c7314f1fec"
+    },
+    "item_types/metadata/items/mapfragments/primordial/currencytanglekey.it.json": {
+      "rows": 1,
+      "sha256": "7ac6c41686c5331db81a3d75a25691181583929ad9623cab43492ca6e9b4e2cc"
+    },
+    "item_types/metadata/items/mapfragments/riteofthenamelessfragment.it.json": {
+      "rows": 1,
+      "sha256": "f37698b7e295294e0b529f47aa4a0c3898d9b12bde7abb25bb8f8d00d946ce2b"
+    },
+    "item_types/metadata/items/mapfragments/ritualfragment.it.json": {
+      "rows": 1,
+      "sha256": "feaaf40c1128c983a454a97b3e65cd9acaff13aa8af825c3a7f7217adb8568f7"
+    },
+    "item_types/metadata/items/mapfragments/ubereaterofworldsvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "3df445b0e3a673ba3d9e702b6efc0703ed076ab3bd90590b813260e23c1563d3"
+    },
+    "item_types/metadata/items/mapfragments/ubermavenvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "e7e2fc5e980961dab1dab410884f36a43a7b9148bf09d17be035ba4ee798306f"
+    },
+    "item_types/metadata/items/mapfragments/ubersearingexarchvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "ab33deb9db3080b6998f0fb7e7e4b182d19ae7c12ef0f88eba22528d23daba2b"
+    },
+    "item_types/metadata/items/mapfragments/ubershapervaultkey.it.json": {
+      "rows": 3,
+      "sha256": "8bc35329228b9fc15f73b8fc07de970aab7c921e6dd85c9ca8304c17b57ee864"
+    },
+    "item_types/metadata/items/mapfragments/ubersirusvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "c906a4e8996ec33500af82b1d7e58b5fac0a7bbfdbb1e5721478806caac710b2"
+    },
+    "item_types/metadata/items/mapfragments/uberubereldervaultkey.it.json": {
+      "rows": 3,
+      "sha256": "904cd50888d21d4440f172f2c372ac48730e7cccc12c88c45470d838d78b7019"
+    },
+    "item_types/metadata/items/mapfragments/ubervenariusvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "a77ebb956d9c0c15e8f631561052b1c33f74b84fc435ef38744a72dc2ece77c0"
+    },
+    "item_types/metadata/items/mapfragments/vaalvaultkey.it.json": {
+      "rows": 3,
+      "sha256": "1ccc370afa1b81a37fcc7f817c570e8ae63c301a6181574c2d4570ce8b3502a9"
+    },
+    "item_types/metadata/items/maps/abstractmap.it.json": {
+      "rows": 5,
+      "sha256": "98291e764767110701e5669e103fc49457acd8e7ade55cf8aef20eb5b1a4b70d"
+    },
+    "item_types/metadata/items/memorylines/memorylinebase.it.json": {
+      "rows": 4,
+      "sha256": "4b3a1a6d70804cdd062f297975982b882bac4aefe267b3d8800863306cbc6ab2"
+    },
+    "item_types/metadata/items/microtransactioncurrency/abstractgiftbox.it.json": {
+      "rows": 1,
+      "sha256": "47c5cd3a755e232723f703749390d3772f417075a6760a15c35cb48888b681c3"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x1.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x1ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x2.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x2ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x3.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x3ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x4.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem1x4ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x1.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x1ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x2.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x2ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x3.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x3ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x4.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem2x4ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem3x1.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem3x1ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem3x2.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem3x2ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem4x1.it.json": {
+      "rows": 1,
+      "sha256": "7e38dd46f529d39eb1fa599a00435a28f57645bdb792d4ecdc96ab115e92e70f"
+    },
+    "item_types/metadata/items/microtransactioncurrency/hiddenitem4x1ritual.it.json": {
+      "rows": 2,
+      "sha256": "7638a58fe5541ce93f077d3bbdfe250de98ee6a7d441837a231a5cae0d39df34"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionmysteryboxwrapper.it.json": {
+      "rows": 2,
+      "sha256": "f3dfa5f43bb715c894a5a2e6c2dc7eec0cbef6a9ad886d2b1b3b2a6fbba9c5d1"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper1x1.it.json": {
+      "rows": 1,
+      "sha256": "f3a08f9737817acc424a3db910f434069481f66ccd141e9bbe280a3ff32446ca"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper1x2.it.json": {
+      "rows": 1,
+      "sha256": "f3a08f9737817acc424a3db910f434069481f66ccd141e9bbe280a3ff32446ca"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x1.it.json": {
+      "rows": 1,
+      "sha256": "f3a08f9737817acc424a3db910f434069481f66ccd141e9bbe280a3ff32446ca"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x2.it.json": {
+      "rows": 1,
+      "sha256": "f3a08f9737817acc424a3db910f434069481f66ccd141e9bbe280a3ff32446ca"
+    },
+    "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x3.it.json": {
+      "rows": 1,
+      "sha256": "f3a08f9737817acc424a3db910f434069481f66ccd141e9bbe280a3ff32446ca"
+    },
+    "item_types/metadata/items/omens/abstractomen.it.json": {
+      "rows": 5,
+      "sha256": "44b3e274b5a9c0789b069cb24888f6599221a1cd18efaffb706a580a4e03979b"
+    },
+    "item_types/metadata/items/pantheonsouls/abstactpantheonsoul.it.json": {
+      "rows": 2,
+      "sha256": "d0fc7891750bb38c6505621af3b1dfdb4080af9646c3f1fbd1594526bd119639"
+    },
+    "item_types/metadata/items/questitems/abstractquestitem.it.json": {
+      "rows": 3,
+      "sha256": "122604f0831fdb99bcf22dc8967849abf3c5cc945003b4748c7c2d2a9caceeea"
+    },
+    "item_types/metadata/items/questitems/abstractusablequestitem.it.json": {
+      "rows": 3,
+      "sha256": "9d4dfdcc082591673769c1d5d87151100fdd054230e38a000f1a4f4c535ea705"
+    },
+    "item_types/metadata/items/questitems/act11/cleansingfiremapdevicealteration.it.json": {
+      "rows": 3,
+      "sha256": "c33fe755eac5bd6143f7aa078d74503ee134622b259ae793f09da990fbf263a3"
+    },
+    "item_types/metadata/items/questitems/act11/mavenmapdevicealteration.it.json": {
+      "rows": 3,
+      "sha256": "dfa1c180fe8604133b7e0245d55c873239412df73896178b47afda69842982d1"
+    },
+    "item_types/metadata/items/questitems/act11/tanglemapdevicealteration.it.json": {
+      "rows": 3,
+      "sha256": "a3f4ab9c246a3638594d22ef4d72f1edca8f440583b4624e4318840e3ba72fb0"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/frostcore1.it.json": {
+      "rows": 2,
+      "sha256": "5d2cc71c1e2023d7e554a0960032339e19624e6dc924b2b8cd1942eb309f80cd"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/frostcore2.it.json": {
+      "rows": 2,
+      "sha256": "7b187f633cea90bb99b3a3eae99fe953854fe28ea257f8bdda7d9aeedf0a4af5"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygem.it.json": {
+      "rows": 2,
+      "sha256": "56bc0f8bc9d5368354874f6a6179956b8fadc0b7d0408a638d8069d5a1996c65"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygem2.it.json": {
+      "rows": 2,
+      "sha256": "62a96ed21156f197f12e79c1082e7c7f3d97e77a93f8314576905f1ed6e28a4e"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygem3.it.json": {
+      "rows": 2,
+      "sha256": "581286470658bd0f7daad429c37a9aeb4d9847aff6f374b6bae6402f19c166b9"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygem4.it.json": {
+      "rows": 2,
+      "sha256": "81a9fc45b51b0e1865f97469dcd1bc430a5083f57904a4d5230a8fe0f20bb161"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygem5.it.json": {
+      "rows": 2,
+      "sha256": "2dc8e95539970c50b9b2e66f9460704a202b4bcf5c418e8f94f0627960943fed"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium.it.json": {
+      "rows": 2,
+      "sha256": "1ba00cb84518ae59b1c0dca2407e91dc3a219e7f98176b6f4371f8692efc6918"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium2.it.json": {
+      "rows": 2,
+      "sha256": "9ee8494548e4518c4ef9b3712e3aac154bc12666fae6abe32d8d535d6ed8bfab"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium3.it.json": {
+      "rows": 2,
+      "sha256": "fb06d70886565b71b0a517a99539ac3357dc1c4da5c8f7dd60ea1bb7e4235bd8"
+    },
+    "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium4.it.json": {
+      "rows": 2,
+      "sha256": "272fe310a151e434b600760af5a65b1a5e84da94fee4ef04b34804d8edd179a5"
+    },
+    "item_types/metadata/items/questitems/gallows/act4/prisonkey.it.json": {
+      "rows": 2,
+      "sha256": "76eea53a0d18b09c75ee6b328d38016cf809968d72115495aece61fc45de6af0"
+    },
+    "item_types/metadata/items/questitems/gallows/act4/shovel.it.json": {
+      "rows": 2,
+      "sha256": "c8d1deeb2fb6717aadc0540ad336d26fe6e9c34e93df7d864993b8eb42c6f383"
+    },
+    "item_types/metadata/items/questitems/gallows/incursion/atziribossvaultkey.it.json": {
+      "rows": 2,
+      "sha256": "1ac7762027eb56b81fb7bdf1adb611b79bee6d97b948a0859431d3f1c09fe407"
+    },
+    "item_types/metadata/items/quivers/abstractquiver.it.json": {
+      "rows": 5,
+      "sha256": "af61c1dffd832c6a7b9b08cf36de27d0df02b95ba4b7f165e6a255f38b971d9b"
+    },
+    "item_types/metadata/items/relics/abstractrelic.it.json": {
+      "rows": 3,
+      "sha256": "56d44ffa30b68371c3f42f0c8017ef19defde9c0a3e3ef35f076e0d9242691d0"
+    },
+    "item_types/metadata/items/relics/abstractspecialrelic.it.json": {
+      "rows": 3,
+      "sha256": "76e8c067c824e2158c33dee411ff948689c2b5d2b26086f27dcc87b8745f5a3b"
+    },
+    "item_types/metadata/items/rings/abstractring.it.json": {
+      "rows": 3,
+      "sha256": "e14f945e4eb2a19c293bca39f656f27b89556c16c26dc2682345601833c9c8df"
+    },
+    "item_types/metadata/items/sanctum/sanctumfloorbase.it.json": {
+      "rows": 4,
+      "sha256": "a87414f4442a706f77bebbcc9b95546b723dcb2ab705dcbe08f3a45360c11cbf"
+    },
+    "item_types/metadata/items/sanctum/sanctumkey.it.json": {
+      "rows": 1,
+      "sha256": "14809b6df9d21bf4568e8a52e1989ff3e214288f1b93ab1c7b97dc04e8f9dd62"
+    },
+    "item_types/metadata/items/sceptres/abstractsceptre.it.json": {
+      "rows": 8,
+      "sha256": "c6c8ea9bfb026a665742b54a7eded51b5abd1765629f636485044c4c7bf7371f"
+    },
+    "item_types/metadata/items/sentinel/sentineldronebase.it.json": {
+      "rows": 3,
+      "sha256": "d056d7730d3785933abf64057de9c9b1ee713085353f19bfc71bec122add281b"
+    },
+    "item_types/metadata/items/soulcores/abstractsoulcore.it.json": {
+      "rows": 4,
+      "sha256": "6b1e1a31de9722aa305582bfe50bc9909f7bc89bec2cd06bf58b3e72a259e48b"
+    },
+    "item_types/metadata/items/staves/abstractstaff.it.json": {
+      "rows": 7,
+      "sha256": "c1a3e3a2caf8e51eab0e5a173c08378196e2a43e26d5d1414e66a8c63e857f8b"
+    },
+    "item_types/metadata/items/toweraugments/toweraugment.it.json": {
+      "rows": 3,
+      "sha256": "1307d04b39e01eb67741769a9f308aed400c48e2301f2780eb38992176e488df"
+    },
+    "item_types/metadata/items/traptools/abstracttraptool.it.json": {
+      "rows": 8,
+      "sha256": "94668e4d5fbae444f4d807eb30562e54c745642f8dbfb982b979e3fbffc41d79"
+    },
+    "item_types/metadata/items/ultimatum/itemisedtrial.it.json": {
+      "rows": 1,
+      "sha256": "77efcd15d03c381133606af6bc4454b15bb6a2f2c62a24b8e00482c20a9c3943"
+    },
+    "item_types/metadata/items/ultimatum/ultimatumkey.it.json": {
+      "rows": 1,
+      "sha256": "073d680cedcacd568221a2ab59241f01286ffa2a7c134921ebd4c61aa2058199"
+    },
+    "item_types/metadata/items/ultimatum/ultimatumkeyinprogress.it.json": {
+      "rows": 2,
+      "sha256": "d35a4cdcf06dfb90cf500f5e2c36423293a6a3130cabb9e9188892ab73850f51"
+    },
+    "item_types/metadata/items/ultimatum/ultimatumkeynew.it.json": {
+      "rows": 2,
+      "sha256": "c0369dc1f2c3a6d707aa4af5bb1e896d4cb0a0cbc02cbfe83632fbbbdd75f920"
+    },
+    "item_types/metadata/items/ultimatum/ultimatumkeyspecial.it.json": {
+      "rows": 3,
+      "sha256": "36e487be8f0e76ebb2bfc78c9614d241707cc008e7adba40c4d8201602e2c2cb"
+    },
+    "item_types/metadata/items/ultimatum/ultimatumkeyspecialnew.it.json": {
+      "rows": 3,
+      "sha256": "568cd8433270268580adee75ac72ea3d286fbe66319a8777e1b9b0106bf1da16"
+    },
+    "item_types/metadata/items/uniquefragments/abstractuniquefragment.it.json": {
+      "rows": 4,
+      "sha256": "ff3165cede3560edcbb57abc3de28906b173038d200ac2552b6417152d000900"
+    },
+    "item_types/metadata/items/wands/abstractwand.it.json": {
+      "rows": 7,
+      "sha256": "aefbcd5721a0feebcc59d4b5f03cab8d200a69a5da2c4d7cb78c9010c896684f"
+    },
+    "item_types/metadata/items/weapons/abstractweapon.it.json": {
+      "rows": 7,
+      "sha256": "3cde21d683d0bde37dc14e128c89b0280331441f33ca0f5e2ab86a64a1e91a71"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/abstractonehandweapon.it.json": {
+      "rows": 2,
+      "sha256": "235acddb6b206e52c37c5d2903c8a3f4e5d1508ce3c5e58224c80d36a2356f57"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/claws/abstractclaw.it.json": {
+      "rows": 1,
+      "sha256": "60b3189f98edd600195ad3952465fc1535c2d37187bce8b05d66c2ec687a025c"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/daggers/abstractdagger.it.json": {
+      "rows": 1,
+      "sha256": "fa1127449a15b1847282d9646fef24f67590912f0d54df11b4e90367c4a65165"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/flail/abstractflail.it.json": {
+      "rows": 2,
+      "sha256": "b32975643d8dec8c3aa58ba98a645a9423f271b1ab73ca5abfe8a3b3208e69a8"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/onehandaxes/abstractonehandaxe.it.json": {
+      "rows": 2,
+      "sha256": "e3174119d0d9fab83637144f96021abdeaa98965aa843b870a40060d41f64046"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/onehandmaces/abstractonehandmace.it.json": {
+      "rows": 2,
+      "sha256": "02aed72e02fe4dc23bfcdec3957dd1bc8c76420a1f3ae71c09e9b69de4a268a1"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/onehandswords/abstractonehandsword.it.json": {
+      "rows": 2,
+      "sha256": "9e08bfcc23a342a56d4370db0db0c21080c2b0993bcb31056712e84ada21c4be"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/onehandswords/stormbladeonehand.it.json": {
+      "rows": 1,
+      "sha256": "7c8296e91e54b131d1015c1fb37353ff40f516e45438f039fbb8fb293ec8f450"
+    },
+    "item_types/metadata/items/weapons/onehandweapons/spears/abstractspear.it.json": {
+      "rows": 1,
+      "sha256": "4eaadf833219aaae7d4d8aee4bd57d533cd6ef87e63cd2b55b4c43e7ad4df446"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/abstracttwohandweapon.it.json": {
+      "rows": 2,
+      "sha256": "cf363e6013493b64041d5cb756ad4032afc25799642a05a2280002739a16e619"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/bows/abstractbow.it.json": {
+      "rows": 1,
+      "sha256": "336dc9d48d85cb3a4e60f69cefe12362ec995283ef95665766ca45fc3033092e"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/crossbows/abstractcrossbow.it.json": {
+      "rows": 1,
+      "sha256": "46001c52081eb23bd6068c6c651157f215cdfd79afe6ebf5fc3bed8d84e10132"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/fishingrods/abstractfishingrod.it.json": {
+      "rows": 3,
+      "sha256": "977f2ffe7e3bfbf0d65128ecfe2382303ef961c827753f6ce65ea6c29431dfc9"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/staves/abstractwarstaff.it.json": {
+      "rows": 2,
+      "sha256": "ade9ecdee9d2a32c52b25380bf7cca126d8fa6116f1c65a6fa211bbc297c2e31"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/twohandaxes/abstracttwohandaxe.it.json": {
+      "rows": 2,
+      "sha256": "92b62d5cd8fd6f7f123203fb972a952e155535ae40a32155ff370659330b2dfa"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/twohandmaces/abstracttwohandmace.it.json": {
+      "rows": 2,
+      "sha256": "518d842747e1313b0bd9cf92d478699bfe99b34a4a41f40ecb6eb08dc8d7e1cb"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/twohandswords/abstracttwohandsword.it.json": {
+      "rows": 2,
+      "sha256": "ad64ba27d90436ba5015a7106dbbf2543b876114bcc72e16ad60638f4aed101a"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/twohandswords/stormbladetwohand.it.json": {
+      "rows": 1,
+      "sha256": "936b611838254a50826723e3070c3f8a33905b76f4db055a20c526725d6a24d6"
+    },
+    "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json": {
+      "rows": 2,
+      "sha256": "2032842b4c6d79dd6d3eda130b1185e2d165f297c3ae5e214acb0d6e03dc2e34"
+    },
     "passive_skill_graphs/metadata/alternateskillgraphs/royalepassiveskillgraph.psg.json": {
       "rows": 6,
       "sha256": "af7fb28da424e0fd2c5da45403ea5fde0b2fd0f984b62a237b320b88bdeecc39"
@@ -2820,11 +3929,2788 @@
       "sha256": "36071ad34e857e80e07ddc3d94feb470509837f6962dec9d1cd88d1eb4254bc0"
     }
   },
-  "format": 3,
+  "format": 4,
   "game": "poe2",
   "index": {
     "path": "Bundles2/_.index.bin",
     "sha256": "9342956efd2ac4cb7864b46c3f7cb889fa3e1b49b3ca05cca7efddc9cdad7ed9"
+  },
+  "item_types": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "item_types",
+    "files": {
+      "metadata/items/amulets/abstractamulet.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/amulets/abstractamulet.it.json",
+        "source": "metadata/items/amulets/abstractamulet.it",
+        "source_sha256": "796faec83c87565206425214bf751c5d2b9f5c5a818c66fb989e06c47826529c",
+        "status": "ok"
+      },
+      "metadata/items/archnemesis/archnemesismod.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/archnemesis/archnemesismod.it.json",
+        "source": "metadata/items/archnemesis/archnemesismod.it",
+        "source_sha256": "2e64929855d8bd982e8d5da85b242d6447fa832fa3023d38abab5254342e08f5",
+        "status": "ok"
+      },
+      "metadata/items/armours/abstractarmour.it": {
+        "abstract": true,
+        "blocks": 5,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/armours/abstractarmour.it.json",
+        "source": "metadata/items/armours/abstractarmour.it",
+        "source_sha256": "cd0990e44e1a7ec0c227c7b6d6926776944e43b3ec98384d9854b14f11ca2ec3",
+        "status": "ok"
+      },
+      "metadata/items/armours/bodyarmours/abstractbodyarmour.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/bodyarmours/abstractbodyarmour.it.json",
+        "source": "metadata/items/armours/bodyarmours/abstractbodyarmour.it",
+        "source_sha256": "676e3996d3afe8b9754661e07e0589dd6c4e2fa8719f8abc6f7cc468be491b7a",
+        "status": "ok"
+      },
+      "metadata/items/armours/boots/abstractboots.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/boots/abstractboots.it.json",
+        "source": "metadata/items/armours/boots/abstractboots.it",
+        "source_sha256": "b9b2aa0b7916b6616b515097e20a3eb63e8b409fc037eadf396e415331377658",
+        "status": "ok"
+      },
+      "metadata/items/armours/focus/abstractfocus.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/focus/abstractfocus.it.json",
+        "source": "metadata/items/armours/focus/abstractfocus.it",
+        "source_sha256": "88086d19d5a6a7fd4fc06eb0b87ef56dcfc0106f46f7efb2c6abfa7aa8f17519",
+        "status": "ok"
+      },
+      "metadata/items/armours/gloves/abstractgloves.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/gloves/abstractgloves.it.json",
+        "source": "metadata/items/armours/gloves/abstractgloves.it",
+        "source_sha256": "fc6656b9024d5fc34073f1fa034179528ba357b1f9827f4337c9706e426f0ec2",
+        "status": "ok"
+      },
+      "metadata/items/armours/gloves/fourglovesdexintascendancy.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Armours/Gloves/AbstractGloves",
+        "output": "item_types/metadata/items/armours/gloves/fourglovesdexintascendancy.it.json",
+        "source": "metadata/items/armours/gloves/fourglovesdexintascendancy.it",
+        "source_sha256": "4e9e6be5fa1e3fbce296b5082fda1c42fbe20d38e8b489bfc6be9a957af53cf0",
+        "status": "ok"
+      },
+      "metadata/items/armours/gloves/fourglovesdexintascendancyverisium.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Armours/Gloves/FourGlovesDexIntAscendancy",
+        "output": "item_types/metadata/items/armours/gloves/fourglovesdexintascendancyverisium.it.json",
+        "source": "metadata/items/armours/gloves/fourglovesdexintascendancyverisium.it",
+        "source_sha256": "565f71d124ffb8633306020dc6448d8d9677b0dd19aacc2a2c0e8bfa71d9b0eb",
+        "status": "ok"
+      },
+      "metadata/items/armours/helmets/abstracthelmet.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/helmets/abstracthelmet.it.json",
+        "source": "metadata/items/armours/helmets/abstracthelmet.it",
+        "source_sha256": "3cd111833eef34eeddfa0a6f7c64f3c8719ca8eb8e8c47c924bc3a2071fa2f4e",
+        "status": "ok"
+      },
+      "metadata/items/armours/shields/abstractbuckler.it": {
+        "abstract": true,
+        "blocks": 6,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/shields/abstractbuckler.it.json",
+        "source": "metadata/items/armours/shields/abstractbuckler.it",
+        "source_sha256": "28cc8beac5f95ceae3e9abe6a69540d2a6795429a22907bd64d4184f1fc332d4",
+        "status": "ok"
+      },
+      "metadata/items/armours/shields/abstractshield.it": {
+        "abstract": true,
+        "blocks": 6,
+        "error": null,
+        "extends": "Metadata/Items/Armours/AbstractArmour",
+        "output": "item_types/metadata/items/armours/shields/abstractshield.it.json",
+        "source": "metadata/items/armours/shields/abstractshield.it",
+        "source_sha256": "7dc56313a71602ff8c34b67e223226cc58b68fc22052500ebd5148209f255399",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade.it",
+        "source_sha256": "61d79bd5b50a556a233478ec0cd734131f5d9ecc2b4e1eaf6033f62f296c90b8",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade1_1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_1.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade1_1.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade1_6.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_6.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade1_6.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade1_7.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_7.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade1_7.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade1_8.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade1_8.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade1_8.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade2_1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_1.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade2_1.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade2_6.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_6.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade2_6.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade2_7.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_7.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade2_7.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade2_8.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade2_8.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade2_8.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade3_1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_1.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade3_1.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade3_6.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_6.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade3_6.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade3_7.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_7.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade3_7.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade3_8.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade3_8.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade3_8.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade4_1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_1.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade4_1.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade4_6.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_6.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade4_6.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade4_7.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_7.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade4_7.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgrade4_8.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgrade4_8.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgrade4_8.it",
+        "source_sha256": "202883bdb2a955c55cd64ea16aa6ce558c7cbbdbe241978705ddddb19117c11c",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgradefinal.it": {
+        "abstract": false,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgradefinal.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgradefinal.it",
+        "source_sha256": "8646cf7b8d7996a71a611b753d72af7ae5344c71df4dfb9b7fbff5a3431cdfc4",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasregionupgradequestbase.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgrade",
+        "output": "item_types/metadata/items/atlasupgrades/atlasregionupgradequestbase.it.json",
+        "source": "metadata/items/atlasupgrades/atlasregionupgradequestbase.it",
+        "source_sha256": "b26f756cdfee8a008fae8285e40ff93c33b1080299532340057c41e78ca832d6",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasupgradeprimordial1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial1.it.json",
+        "source": "metadata/items/atlasupgrades/atlasupgradeprimordial1.it",
+        "source_sha256": "0a8674a6d8fa05f34c67a44ffeabbc0c07d3b914670b06ae0be7b2b11eacf7f7",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasupgradeprimordial2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial2.it.json",
+        "source": "metadata/items/atlasupgrades/atlasupgradeprimordial2.it",
+        "source_sha256": "84f3b1d59207a786ff98c3714c78b5f3a368ed812b8177d9dd0f74825406aecd",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasupgradeprimordial3.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial3.it.json",
+        "source": "metadata/items/atlasupgrades/atlasupgradeprimordial3.it",
+        "source_sha256": "adda1f92a9b58d252becfa9d29abce5e9d8204deea80c9225a56d156fc817677",
+        "status": "ok"
+      },
+      "metadata/items/atlasupgrades/atlasupgradeprimordial4.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/AtlasUpgrades/AtlasRegionUpgradeQuestBase",
+        "output": "item_types/metadata/items/atlasupgrades/atlasupgradeprimordial4.it.json",
+        "source": "metadata/items/atlasupgrades/atlasupgradeprimordial4.it",
+        "source_sha256": "7cbcc520f5138143853e13e5197cc26350da3f093977032b0932b77a978146aa",
+        "status": "ok"
+      },
+      "metadata/items/belts/abstractbelt.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/belts/abstractbelt.it.json",
+        "source": "metadata/items/belts/abstractbelt.it",
+        "source_sha256": "4a3096238a66b4579f9929fe83a32cef6ee5befe3d2bba4c8e3af87460367000",
+        "status": "ok"
+      },
+      "metadata/items/brequel/abstractbrequelfruit.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/brequel/abstractbrequelfruit.it.json",
+        "source": "metadata/items/brequel/abstractbrequelfruit.it",
+        "source_sha256": "d833bb42c0dc12ea592a938f7ef0c553bca613a52147b1e322b1b090d56ff501",
+        "status": "ok"
+      },
+      "metadata/items/classic/mysteryleaguestone.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/classic/mysteryleaguestone.it.json",
+        "source": "metadata/items/classic/mysteryleaguestone.it",
+        "source_sha256": "d86f77eeb22064b4b84a33a0c1535b5a05413cdefc722402c5cf9db8473fb067",
+        "status": "ok"
+      },
+      "metadata/items/currency/abstractcurrency.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/currency/abstractcurrency.it.json",
+        "source": "metadata/items/currency/abstractcurrency.it",
+        "source_sha256": "4d8a57720f7987684805d0e490dd564fb2162497ca8a52ce0af0a6ee95010757",
+        "status": "ok"
+      },
+      "metadata/items/currency/abstractmicrotransaction.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractCurrency",
+        "output": "item_types/metadata/items/currency/abstractmicrotransaction.it.json",
+        "source": "metadata/items/currency/abstractmicrotransaction.it",
+        "source_sha256": "f748ac22eef763896ae974739c574a2595aada39a2bcb36c0799a67de7e34b38",
+        "status": "ok"
+      },
+      "metadata/items/currency/castawayexplosive.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractCurrency",
+        "output": "item_types/metadata/items/currency/castawayexplosive.it.json",
+        "source": "metadata/items/currency/castawayexplosive.it",
+        "source_sha256": "45c5a64ed2fe8d9f2ca0e9dbb04ffe1e5d3bcb45721fa546c74fb687153fc219",
+        "status": "ok"
+      },
+      "metadata/items/currency/currencyaddgemexperience.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/currency/currencyaddgemexperience.it.json",
+        "source": "metadata/items/currency/currencyaddgemexperience.it",
+        "source_sha256": "8ee695e93edd9755971d74d2beb7227ec9855c42306866e8eaca3cc73bc2325b",
+        "status": "ok"
+      },
+      "metadata/items/currency/currencyimprint.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/currency/currencyimprint.it.json",
+        "source": "metadata/items/currency/currencyimprint.it",
+        "source_sha256": "57451244a630f79983e5953ff7ca21a727b4af6ea4eeb0116c26a0a87cfefdf9",
+        "status": "ok"
+      },
+      "metadata/items/currency/currencyitemisedcapturedmonster.it": {
+        "abstract": false,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/currency/currencyitemisedcapturedmonster.it.json",
+        "source": "metadata/items/currency/currencyitemisedcapturedmonster.it",
+        "source_sha256": "d846630f8e039f9b232ede895ec31ab651ebe0c957c3bcb2e7c384f5074e0edb",
+        "status": "ok"
+      },
+      "metadata/items/currency/currencyitemisedsextantmodifier.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/currency/currencyitemisedsextantmodifier.it.json",
+        "source": "metadata/items/currency/currencyitemisedsextantmodifier.it",
+        "source_sha256": "7542ed0d517767107233763bd80d157b7b5f0a7d23d3da450ee1cbfc5ae4eb6f",
+        "status": "ok"
+      },
+      "metadata/items/currency/skillgemtoken.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractCurrency",
+        "output": "item_types/metadata/items/currency/skillgemtoken.it.json",
+        "source": "metadata/items/currency/skillgemtoken.it",
+        "source_sha256": "5b601ce942e66624211e282ff5d052a4f59d3263e36bd653936538c49df3249b",
+        "status": "ok"
+      },
+      "metadata/items/currency/stackablecurrency.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractCurrency",
+        "output": "item_types/metadata/items/currency/stackablecurrency.it.json",
+        "source": "metadata/items/currency/stackablecurrency.it",
+        "source_sha256": "8f26654ef126ce97d208fcff3d7f15f434f9dac16d97b258bdf5a6e0a20c737e",
+        "status": "ok"
+      },
+      "metadata/items/delve/delvesocketablecurrency.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/delve/delvesocketablecurrency.it.json",
+        "source": "metadata/items/delve/delvesocketablecurrency.it",
+        "source_sha256": "3ec7eaa6d5f5abeeadb5504bd8a177b0e175c9c21c251791a752d07f39551ac1",
+        "status": "ok"
+      },
+      "metadata/items/delve/delvestackablesocketablecurrency.it": {
+        "abstract": true,
+        "blocks": 5,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/delve/delvestackablesocketablecurrency.it.json",
+        "source": "metadata/items/delve/delvestackablesocketablecurrency.it",
+        "source_sha256": "1fbf763b11a6b2f1beaa5cc983d1bcc37f288dd6d83219e5de8a895a757bf12f",
+        "status": "ok"
+      },
+      "metadata/items/divinationcards/abstractdivinationcard.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/divinationcards/abstractdivinationcard.it.json",
+        "source": "metadata/items/divinationcards/abstractdivinationcard.it",
+        "source_sha256": "8b045bd3488dcfaeb970cc22df2dc6360454dd6d09d46789550b055ef37d51ed",
+        "status": "ok"
+      },
+      "metadata/items/equipment.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/equipment.it.json",
+        "source": "metadata/items/equipment.it",
+        "source_sha256": "429492142e5d0fc3b3fcceff5f9b0dd7cc9339aed5fa49948a8e5ed2405d7c3b",
+        "status": "ok"
+      },
+      "metadata/items/expedition/expedition2logbooks.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/expedition/expedition2logbooks.it.json",
+        "source": "metadata/items/expedition/expedition2logbooks.it",
+        "source_sha256": "24d37d65201494467cda38aa5fef2527811a9d0109623dd9e08950ac72b43eac",
+        "status": "ok"
+      },
+      "metadata/items/expedition/expeditionsaga.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/expedition/expeditionsaga.it.json",
+        "source": "metadata/items/expedition/expeditionsaga.it",
+        "source_sha256": "b6c02529d874137c5b564eb673274372f2c2f6e626692342ddba6586f11bc8f1",
+        "status": "ok"
+      },
+      "metadata/items/flasks/abstractflask.it": {
+        "abstract": true,
+        "blocks": 7,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/flasks/abstractflask.it.json",
+        "source": "metadata/items/flasks/abstractflask.it",
+        "source_sha256": "92bda7abce2a79f0ae65e405d448cbe5362076caf8655540df1236bb0a6a8f87",
+        "status": "ok"
+      },
+      "metadata/items/flasks/abstractlifeflask.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Flasks/AbstractFlask",
+        "output": "item_types/metadata/items/flasks/abstractlifeflask.it.json",
+        "source": "metadata/items/flasks/abstractlifeflask.it",
+        "source_sha256": "f30ddfc0c36ad42042670126cca8c2a46ea687050150fc4fdfd118f38106be6a",
+        "status": "ok"
+      },
+      "metadata/items/flasks/abstractmanaflask.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Flasks/AbstractFlask",
+        "output": "item_types/metadata/items/flasks/abstractmanaflask.it.json",
+        "source": "metadata/items/flasks/abstractmanaflask.it",
+        "source_sha256": "d32e936ea1660804aa7bf0ba94743401e514a513dfc09a15658f2a3cbbd71782",
+        "status": "ok"
+      },
+      "metadata/items/flasks/abstractutilityflask.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Flasks/AbstractFlask",
+        "output": "item_types/metadata/items/flasks/abstractutilityflask.it.json",
+        "source": "metadata/items/flasks/abstractutilityflask.it",
+        "source_sha256": "3c111ca49cabb7edd3c1254c1ff34988f7d96801f7644228649cbcadeb696ae2",
+        "status": "ok"
+      },
+      "metadata/items/gems/abstractskillgem.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/gems/abstractskillgem.it.json",
+        "source": "metadata/items/gems/abstractskillgem.it",
+        "source_sha256": "f0c39fa5733d682e198f56aa6d7e0b56398b73ff66fd358efa41c46a721cbcd8",
+        "status": "ok"
+      },
+      "metadata/items/gems/abstractuncutgem.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/gems/abstractuncutgem.it.json",
+        "source": "metadata/items/gems/abstractuncutgem.it",
+        "source_sha256": "672f049455fb68d2a021f5a6f1398e72b3afd1a29a427bd99b128f92b02abb28",
+        "status": "ok"
+      },
+      "metadata/items/gems/activeskillgem.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Gems/AbstractSkillGem",
+        "output": "item_types/metadata/items/gems/activeskillgem.it.json",
+        "source": "metadata/items/gems/activeskillgem.it",
+        "source_sha256": "f3ec62993a3588fe60aad35e19035d4f62037e2a66ee3c18c6864bee490df0f2",
+        "status": "ok"
+      },
+      "metadata/items/gems/metaskillgem.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Gems/AbstractSkillGem",
+        "output": "item_types/metadata/items/gems/metaskillgem.it.json",
+        "source": "metadata/items/gems/metaskillgem.it",
+        "source_sha256": "65db895928c942888624451cf03744e8ef86f4a391be0ebbcc42c1713aaac4e3",
+        "status": "ok"
+      },
+      "metadata/items/gems/skillgemsoulcrystal.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Gems/ActiveSkillGem",
+        "output": "item_types/metadata/items/gems/skillgemsoulcrystal.it.json",
+        "source": "metadata/items/gems/skillgemsoulcrystal.it",
+        "source_sha256": "099f0f3c7d84c1da0a41c648d08f30c17abb27391fafaacdc200887cb1149f91",
+        "status": "ok"
+      },
+      "metadata/items/gems/skillgemsummonbeast.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Gems/ActiveSkillGem",
+        "output": "item_types/metadata/items/gems/skillgemsummonbeast.it.json",
+        "source": "metadata/items/gems/skillgemsummonbeast.it",
+        "source_sha256": "099f0f3c7d84c1da0a41c648d08f30c17abb27391fafaacdc200887cb1149f91",
+        "status": "ok"
+      },
+      "metadata/items/gems/skillgemsummonspectre.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Gems/ActiveSkillGem",
+        "output": "item_types/metadata/items/gems/skillgemsummonspectre.it.json",
+        "source": "metadata/items/gems/skillgemsummonspectre.it",
+        "source_sha256": "7845d4c9f5d882516c4c69bfdddcedb246ad9297b9e8a39f76afdc3c983959f2",
+        "status": "ok"
+      },
+      "metadata/items/gems/skillgemuncutquest.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/gems/skillgemuncutquest.it.json",
+        "source": "metadata/items/gems/skillgemuncutquest.it",
+        "source_sha256": "da596367be3a552b851163b5d5ca38bb35eff543c76ddd6f4071367fbc87b3fd",
+        "status": "ok"
+      },
+      "metadata/items/gems/skillgemuncutquest1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/gems/skillgemuncutquest1.it.json",
+        "source": "metadata/items/gems/skillgemuncutquest1.it",
+        "source_sha256": "e6b2685ad24bac277c931ea77545f95045cc32c9c1e79afc083c4dbf23d19dda",
+        "status": "ok"
+      },
+      "metadata/items/gems/supportskillgem.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Gems/AbstractSkillGem",
+        "output": "item_types/metadata/items/gems/supportskillgem.it.json",
+        "source": "metadata/items/gems/supportskillgem.it",
+        "source_sha256": "d648e74c5af91790f8983f5a848e1bc0dfe4a16430723be4c2fa7368eebe26cd",
+        "status": "ok"
+      },
+      "metadata/items/gems/uncutreservationgem.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/gems/uncutreservationgem.it.json",
+        "source": "metadata/items/gems/uncutreservationgem.it",
+        "source_sha256": "e5759e25daf5273a0c42190423f45a307c5539b5688454cf6e69a0feac1787ff",
+        "status": "ok"
+      },
+      "metadata/items/gems/uncutskillgem.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/gems/uncutskillgem.it.json",
+        "source": "metadata/items/gems/uncutskillgem.it",
+        "source_sha256": "2c355a7e167cf06ee4316d8a8eb13be1d16f4320605c37208816879bd98fa065",
+        "status": "ok"
+      },
+      "metadata/items/gems/uncutsupportgem.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/gems/uncutsupportgem.it.json",
+        "source": "metadata/items/gems/uncutsupportgem.it",
+        "source_sha256": "c6c17cefbea9e5cef0036fc29aeccff900282b0a010698fcf96abfef4b07dd52",
+        "status": "ok"
+      },
+      "metadata/items/heist/abstractheistequipment.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/heist/abstractheistequipment.it.json",
+        "source": "metadata/items/heist/abstractheistequipment.it",
+        "source_sha256": "2e44905f09e159cf53c75091684adc81af4912b37b8a98e168a182446e7769fc",
+        "status": "ok"
+      },
+      "metadata/items/heist/heistblueprint.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/heist/heistblueprint.it.json",
+        "source": "metadata/items/heist/heistblueprint.it",
+        "source_sha256": "21760504abcdd23135aa820b816dd738014ce812bf3be19782cd9389b78bbffd",
+        "status": "ok"
+      },
+      "metadata/items/heist/heistcoin.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/heist/heistcoin.it.json",
+        "source": "metadata/items/heist/heistcoin.it",
+        "source_sha256": "b0e2808648309963bc4ca0c4d5acb21dce2970fa4f903ab025f3551df2cbe659",
+        "status": "ok"
+      },
+      "metadata/items/heist/heistcontract.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/heist/heistcontract.it.json",
+        "source": "metadata/items/heist/heistcontract.it",
+        "source_sha256": "f75acea2dfe48cd825b2e0f2e192e1e1e269a6e103e73184ee689f86831c0918",
+        "status": "ok"
+      },
+      "metadata/items/heist/heistobjective.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/heist/heistobjective.it.json",
+        "source": "metadata/items/heist/heistobjective.it",
+        "source_sha256": "c32388236e3852c50961d22f89b1b5af13f6ea373ef63a3d2c1a0452dba5d8f9",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestadiyah1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyah1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestadiyah1.it",
+        "source_sha256": "a528af387e449086dc34421fe75efa18dda7239d12688564446780933065eba9",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestadiyah2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyah2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestadiyah2.it",
+        "source_sha256": "87f8f5b808ec19022b4ff8be1f785fe078582d45243744de39d1f836b540ef46",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestadiyahrepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestadiyahrepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestadiyahrepeatable.it",
+        "source_sha256": "a722d9edd74f592389603664e553c6f82c1c020e22c0843a3698d6f7cf270dae",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestfaustus1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustus1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestfaustus1.it",
+        "source_sha256": "16e96366a3929bd29959d2cf2a42270b348c72f5ee38dbcfb5efe5d23d9f1c5e",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestfaustus2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustus2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestfaustus2.it",
+        "source_sha256": "4aeb023c92427eb06ad1eb650896df182f9320076f9945c5c7a446d4f1d3aca8",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestfaustusrepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestfaustusrepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestfaustusrepeatable.it",
+        "source_sha256": "a722d9edd74f592389603664e553c6f82c1c020e22c0843a3698d6f7cf270dae",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestgianna1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestgianna1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestgianna1.it",
+        "source_sha256": "ec9523e7cfcf4d35c6649506bb953c12df51a9ff94f84acff757c11fdd0bc78b",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestgianna2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestgianna2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestgianna2.it",
+        "source_sha256": "ac8f292ef88bfc4e9835d4e8e30959f32d05acb1e19bb44295566e6fd901e462",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesthuck1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesthuck1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesthuck1.it",
+        "source_sha256": "335dda09c1bda4c17884b3f9a3eeae4c0e2d5ad4812e59134da953c6720f4fc8",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesthuck2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesthuck2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesthuck2.it",
+        "source_sha256": "26abc4fe2b6ef804fced599b3aaefc5db640bb56af3ee3b5b3e7ca58ae24c996",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestisla1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestisla1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestisla1.it",
+        "source_sha256": "1815b19a70033ad500002b2541441cbc84af670e1fa852a1c104d4a5ad537ac2",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestisla2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestisla2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestisla2.it",
+        "source_sha256": "91ca66a70b22850695de53dcd85f3b34948cdc8f5e9a838a399d8bddeee89330",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestislarepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestislarepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestislarepeatable.it",
+        "source_sha256": "a722d9edd74f592389603664e553c6f82c1c020e22c0843a3698d6f7cf270dae",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkarst1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkarst1.it",
+        "source_sha256": "d8010c15af0a67283d3b3a1e811295917ca6fa3d4dd9436a219e15406d1d9af1",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkarst2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkarst2.it",
+        "source_sha256": "5409a83a306cb6e9ee95aa3122a34daf076ff6c98ef5d5dc9cf012dcfd8bf289",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkarst3.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkarst3.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkarst3.it",
+        "source_sha256": "3f992be1a48768ebfe253c4ea2b468e9a5a123fab5d24cacbeff432f48ea3591",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkurai1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkurai1.it",
+        "source_sha256": "63842cbb59baadc423f82b5c4b240c24dad2d28eebe32a69620598e3960c08d1",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkurai2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkurai2.it",
+        "source_sha256": "ebce2abe26480f9bbf6aff757763fbec7d0e1e6ee1e9eaa43a45a1912cd91275",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkurai3.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkurai3.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkurai3.it",
+        "source_sha256": "9c6f24e97c6efc22e70ab267004f4fe78a8487131b90ddccdd4efa6c62b6265c",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestkurairepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestkurairepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestkurairepeatable.it",
+        "source_sha256": "a722d9edd74f592389603664e553c6f82c1c020e22c0843a3698d6f7cf270dae",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestnenet1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestnenet1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestnenet1.it",
+        "source_sha256": "a80deb77104b0abdca222a4c304fda4a2337c19c7f34ea736f2080df1b6a64c9",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestnenetrepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestnenetrepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestnenetrepeatable.it",
+        "source_sha256": "a722d9edd74f592389603664e553c6f82c1c020e22c0843a3698d6f7cf270dae",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestniles1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestniles1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestniles1.it",
+        "source_sha256": "cabf55b6d164dbf01d150a8caf63159d2bf040e6b0a713ce5a97a39efaa822aa",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestniles2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestniles2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestniles2.it",
+        "source_sha256": "8b9e8f7dfb3b69de42f2d964cd6b8e304fef5bd93ee59cc974f025bb587f8e10",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesttibbs1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesttibbs1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesttibbs1.it",
+        "source_sha256": "71b6a62c84c993da19ee1643942d0cb15611df6058e27054633d0ec88a6ae862",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesttibbs2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesttibbs2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesttibbs2.it",
+        "source_sha256": "bd642c296fb7e9cb483b88baca9fee09b2d68aa6316316ca4974f475c181d188",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesttullina1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesttullina1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesttullina1.it",
+        "source_sha256": "eec9b372385fce0871c6669cd9411909452baf8b826ec54d025323cc65fa9529",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquesttullina2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquesttullina2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquesttullina2.it",
+        "source_sha256": "d4de56f66c44ea732f66fbc0bc7bb8fd549bebf4917aa9f3fb13cf123c4e3882",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestvinderi1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestvinderi1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestvinderi1.it",
+        "source_sha256": "63d27405e89dc76cd1f780464c5134526e49dea5c0e3d6c349c62385df385c9a",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestvinderi2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestvinderi2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestvinderi2.it",
+        "source_sha256": "234ee33ab0769351bc49d46c0ec6368e65a3a33fa6864bcd10a4bb5a25fb7149",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestwhakano1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakano1.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestwhakano1.it",
+        "source_sha256": "d80b459f82acb7267691812fbb22a4ef853afd33426d8cfb98a165d2b61e88d5",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestwhakano2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakano2.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestwhakano2.it",
+        "source_sha256": "9bc728ee15990e33e15d158a895e39b5954fa12692abda2255ca6818ba6e3c63",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontractquestwhakanorepeatable.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Heist/HeistContract",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontractquestwhakanorepeatable.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontractquestwhakanorepeatable.it",
+        "source_sha256": "8a2a5bf2d337a17902a9baa1b538221894427f8bfc0e5c42c35ba1c9c70d2e46",
+        "status": "ok"
+      },
+      "metadata/items/heist/questcontracts/heistcontracttutorial.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questcontracts/heistcontracttutorial.it.json",
+        "source": "metadata/items/heist/questcontracts/heistcontracttutorial.it",
+        "source_sha256": "2c107a39bbb9171dd24145e461541ca6234b8a3ae71f9ba19358ca83ff0cbe9a",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestadiyah1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestadiyah1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestadiyah1.it",
+        "source_sha256": "24c4e18a2c536858b72540cef6e9af0d7242f0bd11aebeafd4d2f25bed891a91",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestadiyah2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestadiyah2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestadiyah2.it",
+        "source_sha256": "3e727ef0f3f9f96c665ae484d9a6f7315296d6d9f664866ac6ca8e27ce613bbd",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestfaustus1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestfaustus1.it",
+        "source_sha256": "f481ccb4f936f2e781424a66c64932dd249008e03aca0ba84f8f88f30e05148b",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestfaustus1b.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus1b.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestfaustus1b.it",
+        "source_sha256": "d3687df2fd660f98ed01d9041e4c9636d4ee9781dabc563dbbb0dcbadda870ab",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestfaustus2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestfaustus2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestfaustus2.it",
+        "source_sha256": "658bb02843e063580b3e43793dd79ea90574b6eebc4a9225b3999f1a5bdf71f8",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestgianna1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestgianna1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestgianna1.it",
+        "source_sha256": "53c2cd842a2bef2eb1444f809223348a2058e0afbe9c82f9af740dccc37c5261",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestgianna2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestgianna2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestgianna2.it",
+        "source_sha256": "568d59cd7f69a5fff60ee5717759e8a1b7efa7afba35aade45c662ef33530aa1",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesthuck1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesthuck1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesthuck1.it",
+        "source_sha256": "dc06be50e3a1784b0a32fa79c5e7fa2359a4d75e8bbce8036ba90ea1c41d07ff",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesthuck2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesthuck2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesthuck2.it",
+        "source_sha256": "63e73a776c432a2c4cd5b1ec72ca1eda1cd0486596a6021e43c0351c83587745",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestisla1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestisla1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestisla1.it",
+        "source_sha256": "4aa01cb6080c3704f17229b47b7f83e634ed22bae82cca21c30515f81f1ac6f7",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestisla2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestisla2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestisla2.it",
+        "source_sha256": "be9257dbfe852ba28f24c602ca5cf25b1aa3b330ba2b2682810c489556f96ea4",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestkarst1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestkarst1.it",
+        "source_sha256": "44a285b0e94eb591c354ffeeb8f197d909257ee8ce8c76111bb9379e1c61ca46",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestkarst2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestkarst2.it",
+        "source_sha256": "1052fb563bd3da2f152f66178add77f32be82256024c5b166506c4a76e376df8",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestkarst3.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkarst3.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestkarst3.it",
+        "source_sha256": "22394899273b80e7243f1cee1437ca6b4390f4285f5c725be674eda7861e6489",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestkurai1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestkurai1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestkurai1.it",
+        "source_sha256": "69dccd2a4e2dd0d56ca78310220b8965a1384b49124c002f9073be54476b73be",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestnenet1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestnenet1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestnenet1.it",
+        "source_sha256": "4ecb8db4951764afa9cdb66c22d784f41e4c8d44269656f90693073385924591",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestniles1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestniles1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestniles1.it",
+        "source_sha256": "cdc15f3f0ffa859d099f538780cd4440224531d60ed3535252cf5afae8fc58e2",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestniles2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestniles2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestniles2.it",
+        "source_sha256": "8752ab8a3e9a3afa9fd90f550ac0c9aca227b7115ce80a0cad92ddd34518118d",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesttibbs1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttibbs1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesttibbs1.it",
+        "source_sha256": "ef230729d143f4849fc4ae797c6f37fb3d1766c5165e5d5c72c799b7b4af3299",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesttibbs2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttibbs2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesttibbs2.it",
+        "source_sha256": "60c291ae607a36aaab8d0e3fd2c52ecd969332cb34c4c39b1d8d17b370e8aba9",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesttullina1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttullina1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesttullina1.it",
+        "source_sha256": "88b957ca2c8c925df9460979ab6d76cffd0f231414ad36aa834efc9bf4f9bd86",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequesttullina2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequesttullina2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequesttullina2.it",
+        "source_sha256": "9e4626fc58dc79b24a3bb1d7e89943cdb66d7485ffa895bc43708e2fd09f85cf",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestvinderi1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestvinderi1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestvinderi1.it",
+        "source_sha256": "076e08e9e7b3ffae3648e1ed6d6aa039c72f57da35b8bd0e3f1a184f9a6ddd60",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestvinderi2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestvinderi2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestvinderi2.it",
+        "source_sha256": "2a486f33b1b63cd1ea11de2a963fb527cbc7eeba8833b5ac35f49c6c7e82065d",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestwhakano1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestwhakano1.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestwhakano1.it",
+        "source_sha256": "c513a417e4d3371c8a8667999d1613256d1bd1b67c6ac7af0910968526b779fc",
+        "status": "ok"
+      },
+      "metadata/items/heist/questitems/heistfinalobjectivequestwhakano2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/heist/questitems/heistfinalobjectivequestwhakano2.it.json",
+        "source": "metadata/items/heist/questitems/heistfinalobjectivequestwhakano2.it",
+        "source_sha256": "db68d11ad1dc90aca7ffae6f45c670f817ebf3cf8867e4744cb20a704ba6143a",
+        "status": "ok"
+      },
+      "metadata/items/incursion/incursionbomb.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Labyrinth/AbstractLabyrinthItem",
+        "output": "item_types/metadata/items/incursion/incursionbomb.it.json",
+        "source": "metadata/items/incursion/incursionbomb.it",
+        "source_sha256": "9f60e1f3075d8f25c0ceb29dfcc53817e18f68c062a06b40fe51cbf9b64539d7",
+        "status": "ok"
+      },
+      "metadata/items/incursion/incursionkey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Labyrinth/AbstractLabyrinthItem",
+        "output": "item_types/metadata/items/incursion/incursionkey.it.json",
+        "source": "metadata/items/incursion/incursionkey.it",
+        "source_sha256": "d88e961e649534a76fd3e54f3c695b22da8092626ced7f957b60511b678bff26",
+        "status": "ok"
+      },
+      "metadata/items/incursion/itemisedtemple.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/incursion/itemisedtemple.it.json",
+        "source": "metadata/items/incursion/itemisedtemple.it",
+        "source_sha256": "936ac36114a1a2ea3a9b0306361c0757b2a7f77cc3e16b03d89795c6af5151ae",
+        "status": "ok"
+      },
+      "metadata/items/incursion2/arm.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/incursion2/arm.it.json",
+        "source": "metadata/items/incursion2/arm.it",
+        "source_sha256": "d6d2e756e27ebb712e8fcd6cfcb0b37e3b9a6761b7ac0d0892005a4101d3d29e",
+        "status": "ok"
+      },
+      "metadata/items/incursion2/leg.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/incursion2/leg.it.json",
+        "source": "metadata/items/incursion2/leg.it",
+        "source_sha256": "c32738a5133ee54caae538714cf942ba9adffe02e28961fb6da8d1a3d51f5a09",
+        "status": "ok"
+      },
+      "metadata/items/item.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "nothing",
+        "output": "item_types/metadata/items/item.it.json",
+        "source": "metadata/items/item.it",
+        "source_sha256": "c59380e15eb5d7a113f3f1677207dad41b7b810d9d71407416621ae1847cad97",
+        "status": "ok"
+      },
+      "metadata/items/jewels/abstractjewel.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/jewels/abstractjewel.it.json",
+        "source": "metadata/items/jewels/abstractjewel.it",
+        "source_sha256": "e51f6b195e1ffb6228c3887f0a79c1f6b6ae7d230a6fd819f2d4c04e63c15d82",
+        "status": "ok"
+      },
+      "metadata/items/labyrinth/abstractlabyrinthitem.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/labyrinth/abstractlabyrinthitem.it.json",
+        "source": "metadata/items/labyrinth/abstractlabyrinthitem.it",
+        "source_sha256": "9d2ebf26657218316d13188ee49e6fe51f5ad80d97a22b5955f378ecc32d1a83",
+        "status": "ok"
+      },
+      "metadata/items/legion/incubator.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/legion/incubator.it.json",
+        "source": "metadata/items/legion/incubator.it",
+        "source_sha256": "f6f3673a854d00c70241fe22359f6410b48a57e53ffbc3b62b731062e72303c0",
+        "status": "ok"
+      },
+      "metadata/items/legion/incubatorstackable.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/legion/incubatorstackable.it.json",
+        "source": "metadata/items/legion/incubatorstackable.it",
+        "source_sha256": "dc84bfbfd567f25a54e27e2bb21d57422ff663231b4f81edcf6ecf26e2b8e84e",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/340vaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/340vaultkey.it.json",
+        "source": "metadata/items/mapfragments/340vaultkey.it",
+        "source_sha256": "d8290e32dfecb189f1bc7d697313251c920f18343c3307e6fd50f71cd1dad251",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/abstractmapfragment.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/abstractmapfragment.it.json",
+        "source": "metadata/items/mapfragments/abstractmapfragment.it",
+        "source_sha256": "f8768d7678c4d82cbeb2f9f06513a255929d4f7df90488fea64f6016bb1b5a3e",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/abstractmiscmapitem.it": {
+        "abstract": true,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/mapfragments/abstractmiscmapitem.it.json",
+        "source": "metadata/items/mapfragments/abstractmiscmapitem.it",
+        "source_sha256": "e4edd1f971ae47bee09bbe86fe09d52c32fa481140154601e4704edda0860a2b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/abstractvaultkey.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/mapfragments/abstractvaultkey.it.json",
+        "source": "metadata/items/mapfragments/abstractvaultkey.it",
+        "source_sha256": "07de298177506e9f02acb3df9d3b829c0f8614f6684dcafa863ae79b7b5a20de",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/classicvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/classicvaultkey.it.json",
+        "source": "metadata/items/mapfragments/classicvaultkey.it",
+        "source_sha256": "47c8492ab443565e80c9500773c7d9693b0a282d0bacffda507ff2c1dbc31567",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/fragmentpantheonflask.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/fragmentpantheonflask.it.json",
+        "source": "metadata/items/mapfragments/fragmentpantheonflask.it",
+        "source_sha256": "c5ca120376fcd75c54c363784cb06c59eea7eccf3337d173447927b43d3863c9",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/abstractmavenmap.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/maven/abstractmavenmap.it.json",
+        "source": "metadata/items/mapfragments/maven/abstractmavenmap.it",
+        "source_sha256": "33b0f1692b3a53e288c0376a41b008e3995525c3ed2a52998a1675b0b3c81b39",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/abstractmavenmapcraftable.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMap",
+        "output": "item_types/metadata/items/mapfragments/maven/abstractmavenmapcraftable.it.json",
+        "source": "metadata/items/mapfragments/maven/abstractmavenmapcraftable.it",
+        "source_sha256": "baacfd452e716e039c88b04d8a0ae57aaf9b5dde159e85d436cfb2b186ed761a",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapatlas5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapatlas5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapatlas5.it",
+        "source_sha256": "a16735604fb4959fc75315fe80e51332bde02d9347d77e8a87e7e4bde0d2d0c7",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapinsidebottomleft5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapinsidebottomleft5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapinsidebottomleft5.it",
+        "source_sha256": "1f11c68ad63a9f3533b198c41ad458f6d446a6321c088284b2f8f252a1187c2b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapinsidebottomright5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapinsidebottomright5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapinsidebottomright5.it",
+        "source_sha256": "1f11c68ad63a9f3533b198c41ad458f6d446a6321c088284b2f8f252a1187c2b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapinsidetopleft5.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapinsidetopleft5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapinsidetopleft5.it",
+        "source_sha256": "390aa0300c7d670ffaf5c55e0512ff78b2cdf9affaab2b12e8a61beaff3b066b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapinsidetopright5.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapinsidetopright5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapinsidetopright5.it",
+        "source_sha256": "390aa0300c7d670ffaf5c55e0512ff78b2cdf9affaab2b12e8a61beaff3b066b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapoutsidebottomleft5.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapoutsidebottomleft5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapoutsidebottomleft5.it",
+        "source_sha256": "390aa0300c7d670ffaf5c55e0512ff78b2cdf9affaab2b12e8a61beaff3b066b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapoutsidebottomright5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapoutsidebottomright5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapoutsidebottomright5.it",
+        "source_sha256": "1f11c68ad63a9f3533b198c41ad458f6d446a6321c088284b2f8f252a1187c2b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapoutsidetopleft5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapoutsidetopleft5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapoutsidetopleft5.it",
+        "source_sha256": "1f11c68ad63a9f3533b198c41ad458f6d446a6321c088284b2f8f252a1187c2b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapoutsidetopright5.it": {
+        "abstract": false,
+        "blocks": 0,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapoutsidetopright5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapoutsidetopright5.it",
+        "source_sha256": "390aa0300c7d670ffaf5c55e0512ff78b2cdf9affaab2b12e8a61beaff3b066b",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid1.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid1.it",
+        "source_sha256": "0cbc53905afec8032eb64bbd3b376b1a15d902e92b1ffbcb0bac04781c1ac185",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid2.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid2.it",
+        "source_sha256": "bd2df7f1e9d0ae1dfbae4e5efe841af376514af4a6046c888aaa72a8b761c114",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid3.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid3.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid3.it",
+        "source_sha256": "b2a7891a00d14e2a70e3fc4997a3d626d0fe745e647d3c15daa6b4f3bbadd620",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid4.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid4.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid4.it",
+        "source_sha256": "4d604581f5f2386a9d7a579eb18d9fadafd28172b6307c090dd47148ddfbc757",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid5.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid5.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid5.it",
+        "source_sha256": "a16735604fb4959fc75315fe80e51332bde02d9347d77e8a87e7e4bde0d2d0c7",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/maven/mavenmapvoid6.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Maven/AbstractMavenMapCraftable",
+        "output": "item_types/metadata/items/mapfragments/maven/mavenmapvoid6.it.json",
+        "source": "metadata/items/mapfragments/maven/mavenmapvoid6.it",
+        "source_sha256": "74cb9cdaa3f6531709fb89ab0bed2593491bb61f981bbad60511e4ece9159d21",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/pinnaclekey.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/mapfragments/pinnaclekey.it.json",
+        "source": "metadata/items/mapfragments/pinnaclekey.it",
+        "source_sha256": "819fd631a7f8d026f99469a97f5477c5e80094b5caf1f1524b10cbcfff379645",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/pinnaclekeystackable.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/PinnacleKey",
+        "output": "item_types/metadata/items/mapfragments/pinnaclekeystackable.it.json",
+        "source": "metadata/items/mapfragments/pinnaclekeystackable.it",
+        "source_sha256": "a1acf9d81ecf9315221afb0276ce8592ea0fd17c2102df8b86da1519ea161fcc",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/primordial/abstractprimordialmap.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/primordial/abstractprimordialmap.it.json",
+        "source": "metadata/items/mapfragments/primordial/abstractprimordialmap.it",
+        "source_sha256": "7588b60772483dcecaf971aadb410c31e51b7adfaba074c8ad7133fd70d8d4f0",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/primordial/currencycleansingfirebosskey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Primordial/AbstractPrimordialMap",
+        "output": "item_types/metadata/items/mapfragments/primordial/currencycleansingfirebosskey.it.json",
+        "source": "metadata/items/mapfragments/primordial/currencycleansingfirebosskey.it",
+        "source_sha256": "5a827c797d926af2f858c47d170901590d42ec4c4734f4b864127ed1c06ae5c5",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/primordial/currencycleansingfirekey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Primordial/AbstractPrimordialMap",
+        "output": "item_types/metadata/items/mapfragments/primordial/currencycleansingfirekey.it.json",
+        "source": "metadata/items/mapfragments/primordial/currencycleansingfirekey.it",
+        "source_sha256": "34e360a29045b260d493e7976f81e708a529fb624e6499c05d73f37c9746d590",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/primordial/currencytanglebosskey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Primordial/AbstractPrimordialMap",
+        "output": "item_types/metadata/items/mapfragments/primordial/currencytanglebosskey.it.json",
+        "source": "metadata/items/mapfragments/primordial/currencytanglebosskey.it",
+        "source_sha256": "081eea2856d545a777e113174b34ccff528fa35d7a45caa9cd0ec18efdf8ef21",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/primordial/currencytanglekey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/Primordial/AbstractPrimordialMap",
+        "output": "item_types/metadata/items/mapfragments/primordial/currencytanglekey.it.json",
+        "source": "metadata/items/mapfragments/primordial/currencytanglekey.it",
+        "source_sha256": "b562d90125bd2757c678d14fe37d8fa99b83c0408d02955789e8b61b0a39c1d8",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/riteofthenamelessfragment.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/mapfragments/riteofthenamelessfragment.it.json",
+        "source": "metadata/items/mapfragments/riteofthenamelessfragment.it",
+        "source_sha256": "846fe5b49d47b5ea3a00159fe745c1fac13f19b0adde0fa79555b760e0d29efc",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ritualfragment.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/StackableCurrency",
+        "output": "item_types/metadata/items/mapfragments/ritualfragment.it.json",
+        "source": "metadata/items/mapfragments/ritualfragment.it",
+        "source_sha256": "3de6d5920ca0514c6590d43ab8a62eea0575358b933c0fa48b3b0018689012d8",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubereaterofworldsvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubereaterofworldsvaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubereaterofworldsvaultkey.it",
+        "source_sha256": "f6b1daef5db3a9f4799be6044f4d07d31ed5e966d439f3389887860561d55ca5",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubermavenvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubermavenvaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubermavenvaultkey.it",
+        "source_sha256": "61e75489fa746cabeb075fa5eaf3e3948792bb0e7511ebfef0b8ab1afb2d9043",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubersearingexarchvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubersearingexarchvaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubersearingexarchvaultkey.it",
+        "source_sha256": "e4dde637139e1bd887706b6e4e4528b76c47c12e03dd6438c3b0dbc483d2c3d4",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubershapervaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubershapervaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubershapervaultkey.it",
+        "source_sha256": "f4b5e311af6a4ddf4a0b6edcc3285484db51a94a5d816f4c5d44f93a71e6dabf",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubersirusvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubersirusvaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubersirusvaultkey.it",
+        "source_sha256": "462aa6a7f9815c5eacdbe8d4903c3c8753e45e4f25b3c3c3f1c0ffd362e3f17f",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/uberubereldervaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/uberubereldervaultkey.it.json",
+        "source": "metadata/items/mapfragments/uberubereldervaultkey.it",
+        "source_sha256": "6178f139fc3b0565238e05a9a0182712ff48a3174601c1f587c4267b354019da",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/ubervenariusvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/ubervenariusvaultkey.it.json",
+        "source": "metadata/items/mapfragments/ubervenariusvaultkey.it",
+        "source_sha256": "710c7007dd3eafde482e5af66e639dc80859528e56b265dc46f9fb965082adca",
+        "status": "ok"
+      },
+      "metadata/items/mapfragments/vaalvaultkey.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/mapfragments/vaalvaultkey.it.json",
+        "source": "metadata/items/mapfragments/vaalvaultkey.it",
+        "source_sha256": "e2a0186fa99b21ff06693d5d3d5f874ee63adf20213bb45380bd781d87808402",
+        "status": "ok"
+      },
+      "metadata/items/maps/abstractmap.it": {
+        "abstract": true,
+        "blocks": 5,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/maps/abstractmap.it.json",
+        "source": "metadata/items/maps/abstractmap.it",
+        "source_sha256": "50649936481374b24e3c605cb30daff6502c7d6c0c2a3476ec0d03714a1392e5",
+        "status": "ok"
+      },
+      "metadata/items/memorylines/memorylinebase.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/memorylines/memorylinebase.it.json",
+        "source": "metadata/items/memorylines/memorylinebase.it",
+        "source_sha256": "7b1dcef26e5096ed7b8ed75f359da2285e4d124d84ae004b6a5cfd8d7f19ac19",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/abstractgiftbox.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractCurrency",
+        "output": "item_types/metadata/items/microtransactioncurrency/abstractgiftbox.it.json",
+        "source": "metadata/items/microtransactioncurrency/abstractgiftbox.it",
+        "source_sha256": "bf575a267819a1507758271b6dbb196a808036c9b6e3c2b246ffbdba66d0e280",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x1.it",
+        "source_sha256": "a664875b70e7a23ad703f7ea24066751991496c508d361271e36d23c179217ae",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x1ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x1ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x1ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x2.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x2.it",
+        "source_sha256": "a664875b70e7a23ad703f7ea24066751991496c508d361271e36d23c179217ae",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x2ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x2ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x2ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x3.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x3.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x3.it",
+        "source_sha256": "a664875b70e7a23ad703f7ea24066751991496c508d361271e36d23c179217ae",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x3ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x3ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x3ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x4.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x4.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x4.it",
+        "source_sha256": "a664875b70e7a23ad703f7ea24066751991496c508d361271e36d23c179217ae",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem1x4ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem1x4ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem1x4ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x1.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x1ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x1ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x1ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x2.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x2.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x2ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x2ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x2ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x3.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x3.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x3.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x3ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x3ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x3ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x4.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x4.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x4.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem2x4ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem2x4ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem2x4ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem3x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem3x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem3x1.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem3x1ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem3x1ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem3x1ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem3x2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem3x2.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem3x2.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem3x2ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem3x2ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem3x2ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem4x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem4x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem4x1.it",
+        "source_sha256": "910ee32978a4be1ef90fc2b333b7c2f9d0e8911923546e511d1150767f2b20ee",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/hiddenitem4x1ritual.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/microtransactioncurrency/hiddenitem4x1ritual.it.json",
+        "source": "metadata/items/microtransactioncurrency/hiddenitem4x1ritual.it",
+        "source_sha256": "44e3c4d8d2cb435f4cff4fdbbd2145b5656aba392a04b7ddced96faaf1a8c6bc",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionmysteryboxwrapper.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionmysteryboxwrapper.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionmysteryboxwrapper.it",
+        "source_sha256": "1d0628b24c83998cacfd75de260c475d301d0ffbf03830f56f44f3ad15adbbc9",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionwrapper1x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper1x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionwrapper1x1.it",
+        "source_sha256": "a8a75c62c6303a0cc70b301cda570cbaf738b4f134606c37045598b4f569ee71",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionwrapper1x2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper1x2.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionwrapper1x2.it",
+        "source_sha256": "a8a75c62c6303a0cc70b301cda570cbaf738b4f134606c37045598b4f569ee71",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionwrapper2x1.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x1.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionwrapper2x1.it",
+        "source_sha256": "a8a75c62c6303a0cc70b301cda570cbaf738b4f134606c37045598b4f569ee71",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionwrapper2x2.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x2.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionwrapper2x2.it",
+        "source_sha256": "a8a75c62c6303a0cc70b301cda570cbaf738b4f134606c37045598b4f569ee71",
+        "status": "ok"
+      },
+      "metadata/items/microtransactioncurrency/microtransactionwrapper2x3.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Currency/AbstractMicrotransaction",
+        "output": "item_types/metadata/items/microtransactioncurrency/microtransactionwrapper2x3.it.json",
+        "source": "metadata/items/microtransactioncurrency/microtransactionwrapper2x3.it",
+        "source_sha256": "a8a75c62c6303a0cc70b301cda570cbaf738b4f134606c37045598b4f569ee71",
+        "status": "ok"
+      },
+      "metadata/items/omens/abstractomen.it": {
+        "abstract": true,
+        "blocks": 5,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/omens/abstractomen.it.json",
+        "source": "metadata/items/omens/abstractomen.it",
+        "source_sha256": "04a75a06e2b1447d83bd63eab174632070c25b39b3f669aed54fe6e5ea3fdbd0",
+        "status": "ok"
+      },
+      "metadata/items/pantheonsouls/abstactpantheonsoul.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/pantheonsouls/abstactpantheonsoul.it.json",
+        "source": "metadata/items/pantheonsouls/abstactpantheonsoul.it",
+        "source_sha256": "434a9979f68680bc2dda0c7248dc636562bd7fcc40557b8ea9f29ebfcb1c11c8",
+        "status": "ok"
+      },
+      "metadata/items/questitems/abstractquestitem.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/questitems/abstractquestitem.it.json",
+        "source": "metadata/items/questitems/abstractquestitem.it",
+        "source_sha256": "d2b85b9aa705ef99a6969bbf4593045abe3000289cdd5a2a9dc25f1148888a23",
+        "status": "ok"
+      },
+      "metadata/items/questitems/abstractusablequestitem.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/abstractusablequestitem.it.json",
+        "source": "metadata/items/questitems/abstractusablequestitem.it",
+        "source_sha256": "faf3aa8710424a51fd800bbe7e966a06e68110d5ec7b87a36e8f2268247bdbdc",
+        "status": "ok"
+      },
+      "metadata/items/questitems/act11/cleansingfiremapdevicealteration.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractUsableQuestItem",
+        "output": "item_types/metadata/items/questitems/act11/cleansingfiremapdevicealteration.it.json",
+        "source": "metadata/items/questitems/act11/cleansingfiremapdevicealteration.it",
+        "source_sha256": "b390168685f5e4d8c2a3545b62628d481940c6b91e6928cd196d559b00a59abc",
+        "status": "ok"
+      },
+      "metadata/items/questitems/act11/mavenmapdevicealteration.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractUsableQuestItem",
+        "output": "item_types/metadata/items/questitems/act11/mavenmapdevicealteration.it.json",
+        "source": "metadata/items/questitems/act11/mavenmapdevicealteration.it",
+        "source_sha256": "08beb581ff92c8a8935a4795709f5694b3487e8a854e18750d937ace76e97970",
+        "status": "ok"
+      },
+      "metadata/items/questitems/act11/tanglemapdevicealteration.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractUsableQuestItem",
+        "output": "item_types/metadata/items/questitems/act11/tanglemapdevicealteration.it.json",
+        "source": "metadata/items/questitems/act11/tanglemapdevicealteration.it",
+        "source_sha256": "ea06de892959bdfbda73492693ca8bcd85b533b8237f74d5331be05e2dfff47c",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/frostcore1.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/frostcore1.it.json",
+        "source": "metadata/items/questitems/gallows/act3/frostcore1.it",
+        "source_sha256": "b9dc09f1c0fab530cbe11ebe8a7acd8111e949c02ac6e545fee7e6034e6056bb",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/frostcore2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/frostcore2.it.json",
+        "source": "metadata/items/questitems/gallows/act3/frostcore2.it",
+        "source_sha256": "66c02cbba06c051207060c34ff9af07a6a0b0d444ce90a090a778c52d51bb773",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygem.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygem.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygem.it",
+        "source_sha256": "e64146cd2d1633add8951a065c074c6cdcb6d7454a1cb8a86d894cc60a8b84c9",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygem2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygem2.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygem2.it",
+        "source_sha256": "def013f952d136c0732ea57ff80cba05f613c298d2f62236e1d3aa4f5c640434",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygem3.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygem3.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygem3.it",
+        "source_sha256": "7439fe78b9c37bd36d94a113161c4d096bb92f1a3c0f0b1bece57d70838a1164",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygem4.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygem4.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygem4.it",
+        "source_sha256": "bfe3731a097931885a24ab42cb26670c5967f24a4c1b7377d8029133490f76e6",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygem5.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygem5.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygem5.it",
+        "source_sha256": "52daa5610252bd2898b457aadd126e2911d09a292b81b7f1b33fce9d9663275c",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygemmedium.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygemmedium.it",
+        "source_sha256": "1156e25d7c8952aaa8b1131ffc487c2c941bbc75cc672bdae1b9e724c7b4483d",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygemmedium2.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium2.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygemmedium2.it",
+        "source_sha256": "2251d2d1cdcda33670ede8f21287b1262bc79a8d211f10da53fa81d6ae735105",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygemmedium3.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium3.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygemmedium3.it",
+        "source_sha256": "14cd2eac5034607408eefc21b500c3d36d531e361db4ca4a3b5199090edc649e",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act3/vaalkeygemmedium4.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act3/vaalkeygemmedium4.it.json",
+        "source": "metadata/items/questitems/gallows/act3/vaalkeygemmedium4.it",
+        "source_sha256": "956eefea369a838a75a3f4a4b1cadd85eff653daf42b5a294f52958368949498",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act4/prisonkey.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act4/prisonkey.it.json",
+        "source": "metadata/items/questitems/gallows/act4/prisonkey.it",
+        "source_sha256": "ab4df2360f9aab728159e131db13afb4a316ed7ff52c3214bd9edf12dca3c20d",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/act4/shovel.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/act4/shovel.it.json",
+        "source": "metadata/items/questitems/gallows/act4/shovel.it",
+        "source_sha256": "a4f46961648e76d0651dd73e12b7fdc14559d37aaf5b3acb53a1666b93972d4e",
+        "status": "ok"
+      },
+      "metadata/items/questitems/gallows/incursion/atziribossvaultkey.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/QuestItems/AbstractQuestItem",
+        "output": "item_types/metadata/items/questitems/gallows/incursion/atziribossvaultkey.it.json",
+        "source": "metadata/items/questitems/gallows/incursion/atziribossvaultkey.it",
+        "source_sha256": "b337f5f6f56603f7b7d1159723edad1230d63b327ff7bfe08e23075093abbb87",
+        "status": "ok"
+      },
+      "metadata/items/quivers/abstractquiver.it": {
+        "abstract": true,
+        "blocks": 5,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/quivers/abstractquiver.it.json",
+        "source": "metadata/items/quivers/abstractquiver.it",
+        "source_sha256": "043a00e1f64f430077ed228ec8572f874b8b4c13d7576b8b4fcbe457428cf9a4",
+        "status": "ok"
+      },
+      "metadata/items/relics/abstractrelic.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/relics/abstractrelic.it.json",
+        "source": "metadata/items/relics/abstractrelic.it",
+        "source_sha256": "6dc00fc9efae036267347d0050197c4fb5f126649ff6b1fd1ea3bad0fab33701",
+        "status": "ok"
+      },
+      "metadata/items/relics/abstractspecialrelic.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/relics/abstractspecialrelic.it.json",
+        "source": "metadata/items/relics/abstractspecialrelic.it",
+        "source_sha256": "7d106caf011a8f9152fceb4179a469839c2520e3f9d5fa9390fca2683a97fb37",
+        "status": "ok"
+      },
+      "metadata/items/rings/abstractring.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/rings/abstractring.it.json",
+        "source": "metadata/items/rings/abstractring.it",
+        "source_sha256": "99a016c40ae15e68285dd62067c0fec091941d28341dfa4bbe7f787578ffde05",
+        "status": "ok"
+      },
+      "metadata/items/sanctum/sanctumfloorbase.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/sanctum/sanctumfloorbase.it.json",
+        "source": "metadata/items/sanctum/sanctumfloorbase.it",
+        "source_sha256": "aee47eeadab233d0ff6da96127c206c392231834301cec33e6b595e4610035cf",
+        "status": "ok"
+      },
+      "metadata/items/sanctum/sanctumkey.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/sanctum/sanctumkey.it.json",
+        "source": "metadata/items/sanctum/sanctumkey.it",
+        "source_sha256": "b9f2a69860bd29f1b72b78ef257fe44fd4c13fd8bce180a5fa472019104085a8",
+        "status": "ok"
+      },
+      "metadata/items/sceptres/abstractsceptre.it": {
+        "abstract": true,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/sceptres/abstractsceptre.it.json",
+        "source": "metadata/items/sceptres/abstractsceptre.it",
+        "source_sha256": "38f9c0cd83925a97aa521ade6d61e7a23d4082a28c1d71c6fad1177afa1af029",
+        "status": "ok"
+      },
+      "metadata/items/sentinel/sentineldronebase.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/sentinel/sentineldronebase.it.json",
+        "source": "metadata/items/sentinel/sentineldronebase.it",
+        "source_sha256": "90644255ace57cea5b83cab701e3a1c28c8f98b0fc1f77f425733fd08cba208d",
+        "status": "ok"
+      },
+      "metadata/items/soulcores/abstractsoulcore.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/soulcores/abstractsoulcore.it.json",
+        "source": "metadata/items/soulcores/abstractsoulcore.it",
+        "source_sha256": "6a92c04fe693c8730ea0dc31bce01238c6674d3a124398182cec010c3cba3761",
+        "status": "ok"
+      },
+      "metadata/items/staves/abstractstaff.it": {
+        "abstract": true,
+        "blocks": 7,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/staves/abstractstaff.it.json",
+        "source": "metadata/items/staves/abstractstaff.it",
+        "source_sha256": "a2caf0229b31b9dc36030c3aed860adeb3a6ba613f3bd3642b6d2f34cfcd4e0f",
+        "status": "ok"
+      },
+      "metadata/items/toweraugments/toweraugment.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/toweraugments/toweraugment.it.json",
+        "source": "metadata/items/toweraugments/toweraugment.it",
+        "source_sha256": "66dcf180cc0bebe3c3fbd141fa2e9c21ac6b50199cb87decf505bc573fcb65a3",
+        "status": "ok"
+      },
+      "metadata/items/traptools/abstracttraptool.it": {
+        "abstract": true,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/traptools/abstracttraptool.it.json",
+        "source": "metadata/items/traptools/abstracttraptool.it",
+        "source_sha256": "80f1e5affb20d32df4420ebf24eb78d97590e7986b54c99db0b65c1d70f256a7",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/itemisedtrial.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/ultimatum/itemisedtrial.it.json",
+        "source": "metadata/items/ultimatum/itemisedtrial.it",
+        "source_sha256": "94558991dafbc602efb60f8315bef6031b8ebcc8506ee1f03eda6fa6db19819d",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/ultimatumkey.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/ultimatum/ultimatumkey.it.json",
+        "source": "metadata/items/ultimatum/ultimatumkey.it",
+        "source_sha256": "c3e57a42bca3758560ac83cfc1ca132ca82c74981e17fcaf10681a45a54b694d",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/ultimatumkeyinprogress.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/ultimatum/ultimatumkeyinprogress.it.json",
+        "source": "metadata/items/ultimatum/ultimatumkeyinprogress.it",
+        "source_sha256": "aa112788cf88e5af05fdddabb13bfa30e3f7e7b60812d4b479e9471718377c89",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/ultimatumkeynew.it": {
+        "abstract": false,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/MapFragments/AbstractMiscMapItem",
+        "output": "item_types/metadata/items/ultimatum/ultimatumkeynew.it.json",
+        "source": "metadata/items/ultimatum/ultimatumkeynew.it",
+        "source_sha256": "4fb7c55a021d6e432e39955063632b2d211076e4b5f97c70f52fadd6b77985c2",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/ultimatumkeyspecial.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Ultimatum/UltimatumKey",
+        "output": "item_types/metadata/items/ultimatum/ultimatumkeyspecial.it.json",
+        "source": "metadata/items/ultimatum/ultimatumkeyspecial.it",
+        "source_sha256": "357d681610be091fdf989189f4ff0836839313cf0d550fc3ccaf62976464ef50",
+        "status": "ok"
+      },
+      "metadata/items/ultimatum/ultimatumkeyspecialnew.it": {
+        "abstract": false,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Ultimatum/UltimatumKeyNew",
+        "output": "item_types/metadata/items/ultimatum/ultimatumkeyspecialnew.it.json",
+        "source": "metadata/items/ultimatum/ultimatumkeyspecialnew.it",
+        "source_sha256": "f15a75529647a88a245fcd38551d4a8a0ac6e63123bff25650f9814f998462eb",
+        "status": "ok"
+      },
+      "metadata/items/uniquefragments/abstractuniquefragment.it": {
+        "abstract": true,
+        "blocks": 4,
+        "error": null,
+        "extends": "Metadata/Items/Item",
+        "output": "item_types/metadata/items/uniquefragments/abstractuniquefragment.it.json",
+        "source": "metadata/items/uniquefragments/abstractuniquefragment.it",
+        "source_sha256": "b2ce499209fefeb81ffc94118b6fa0d9695f51f68e7e0135358bedd6b7f4f4fd",
+        "status": "ok"
+      },
+      "metadata/items/wands/abstractwand.it": {
+        "abstract": true,
+        "blocks": 7,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/wands/abstractwand.it.json",
+        "source": "metadata/items/wands/abstractwand.it",
+        "source_sha256": "5fe519afb224a3bd84e6ae78e3b80331a7c64d4e56bb3c61563e805365ef5b63",
+        "status": "ok"
+      },
+      "metadata/items/weapons/abstractweapon.it": {
+        "abstract": true,
+        "blocks": 7,
+        "error": null,
+        "extends": "Metadata/Items/Equipment",
+        "output": "item_types/metadata/items/weapons/abstractweapon.it.json",
+        "source": "metadata/items/weapons/abstractweapon.it",
+        "source_sha256": "6ee0498aecfc417020aa845afcf4b988adff0345ed33e3fed5134be61e37a44a",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/abstractonehandweapon.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/AbstractWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/abstractonehandweapon.it.json",
+        "source": "metadata/items/weapons/onehandweapons/abstractonehandweapon.it",
+        "source_sha256": "81c540461512ea4d516a4bbdefa23b1c6153b66fd0a12112d282182a474ab09a",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/claws/abstractclaw.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/claws/abstractclaw.it.json",
+        "source": "metadata/items/weapons/onehandweapons/claws/abstractclaw.it",
+        "source_sha256": "635a2ae6063991d5cd353b430dc8006f95938855b0e4cd5d3bff9869d85997c7",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/daggers/abstractdagger.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/daggers/abstractdagger.it.json",
+        "source": "metadata/items/weapons/onehandweapons/daggers/abstractdagger.it",
+        "source_sha256": "3a1c832752f750cac1582d110bc9db6d6377c2311e4bec3b202b9026bb84d566",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/flail/abstractflail.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/flail/abstractflail.it.json",
+        "source": "metadata/items/weapons/onehandweapons/flail/abstractflail.it",
+        "source_sha256": "2c0b0e1768adf21c25c8b887ee9e6abf78fc75873fc7e49c5716fa49a937cd51",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/onehandaxes/abstractonehandaxe.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/onehandaxes/abstractonehandaxe.it.json",
+        "source": "metadata/items/weapons/onehandweapons/onehandaxes/abstractonehandaxe.it",
+        "source_sha256": "1155bfcae37b85b147d3d1dc6a398c37bd275a046cf8257d9481aea60f28c7e6",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/onehandmaces/abstractonehandmace.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/onehandmaces/abstractonehandmace.it.json",
+        "source": "metadata/items/weapons/onehandweapons/onehandmaces/abstractonehandmace.it",
+        "source_sha256": "f8faed563dd6dbf5acdab675b4ac934c5fe7c98cbb181cb42fc73aaaab5fad68",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/onehandswords/abstractonehandsword.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/onehandswords/abstractonehandsword.it.json",
+        "source": "metadata/items/weapons/onehandweapons/onehandswords/abstractonehandsword.it",
+        "source_sha256": "ae6f4fff82aaa914a4e8680f500fc6a518b97136b9a9d2f244ab3f492910b5f9",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/onehandswords/stormbladeonehand.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/OneHandSwords/AbstractOneHandSword",
+        "output": "item_types/metadata/items/weapons/onehandweapons/onehandswords/stormbladeonehand.it.json",
+        "source": "metadata/items/weapons/onehandweapons/onehandswords/stormbladeonehand.it",
+        "source_sha256": "8e77acfd41cdaba60034b533d331d5be597360c3aaee614b0a85bde6d27f8757",
+        "status": "ok"
+      },
+      "metadata/items/weapons/onehandweapons/spears/abstractspear.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/OneHandWeapons/AbstractOneHandWeapon",
+        "output": "item_types/metadata/items/weapons/onehandweapons/spears/abstractspear.it.json",
+        "source": "metadata/items/weapons/onehandweapons/spears/abstractspear.it",
+        "source_sha256": "19a63aacfde057392ec54e0fdca9002c383f0b0d109078951f3c82b69b57a8a6",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/abstracttwohandweapon.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/AbstractWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/abstracttwohandweapon.it.json",
+        "source": "metadata/items/weapons/twohandweapons/abstracttwohandweapon.it",
+        "source_sha256": "08f9af2683899c75290a5aec9e069e21fbaf025ee256fb3e06d496a28349a504",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/bows/abstractbow.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/bows/abstractbow.it.json",
+        "source": "metadata/items/weapons/twohandweapons/bows/abstractbow.it",
+        "source_sha256": "4b74f72e77b557042297aafff4a00196422ccaf6137180b5a6aa05c1b57ebd25",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/crossbows/abstractcrossbow.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/crossbows/abstractcrossbow.it.json",
+        "source": "metadata/items/weapons/twohandweapons/crossbows/abstractcrossbow.it",
+        "source_sha256": "b0a2e400b6bbf544d86ccbccde752bf93e20bda5e411c989a7be29430dae283b",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/fishingrods/abstractfishingrod.it": {
+        "abstract": true,
+        "blocks": 3,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/fishingrods/abstractfishingrod.it.json",
+        "source": "metadata/items/weapons/twohandweapons/fishingrods/abstractfishingrod.it",
+        "source_sha256": "d64480f33254173aaa8c7c8b8b032a3cf374ef60cab1966595123d0ca789626c",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/staves/abstractwarstaff.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/staves/abstractwarstaff.it.json",
+        "source": "metadata/items/weapons/twohandweapons/staves/abstractwarstaff.it",
+        "source_sha256": "f29a86e93b6be956428e7565db0b91e86207946a4e08c89f71dfd490f2696af8",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/twohandaxes/abstracttwohandaxe.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/twohandaxes/abstracttwohandaxe.it.json",
+        "source": "metadata/items/weapons/twohandweapons/twohandaxes/abstracttwohandaxe.it",
+        "source_sha256": "9bcfa44880b0232a6ac45bf1f6af3024476fef941ed5a4085d959358050df79a",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/twohandmaces/abstracttwohandmace.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/twohandmaces/abstracttwohandmace.it.json",
+        "source": "metadata/items/weapons/twohandweapons/twohandmaces/abstracttwohandmace.it",
+        "source_sha256": "7c808dc0a392a05ba4b0bee919b92ce43bbf0b0f43b50983823d4dd295860237",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/twohandswords/abstracttwohandsword.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/twohandswords/abstracttwohandsword.it.json",
+        "source": "metadata/items/weapons/twohandweapons/twohandswords/abstracttwohandsword.it",
+        "source_sha256": "ef5c8b260c1ee3a397be093d06859fb9ef191d54efa8ef874a87a079e4bd9ed1",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/twohandswords/stormbladetwohand.it": {
+        "abstract": false,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/TwoHandSwords/AbstractTwoHandSword",
+        "output": "item_types/metadata/items/weapons/twohandweapons/twohandswords/stormbladetwohand.it.json",
+        "source": "metadata/items/weapons/twohandweapons/twohandswords/stormbladetwohand.it",
+        "source_sha256": "115cde1a7668d7b2869a254f17e310d0c08e01f7dfe2ba3d5008214ac52315f9",
+        "status": "ok"
+      },
+      "metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "Metadata/Items/Weapons/TwoHandWeapons/AbstractTwoHandWeapon",
+        "output": "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json",
+        "source": "metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it",
+        "source_sha256": "4f87d87c78f5050d06561489b46d66a3c019d4606555b535a0f2864241fb6c32",
+        "status": "ok"
+      }
+    }
   },
   "passive_skill_graphs": {
     "dir": "passive_skill_graphs",

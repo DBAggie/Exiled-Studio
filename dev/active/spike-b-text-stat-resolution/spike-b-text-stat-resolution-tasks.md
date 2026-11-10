@@ -1,4 +1,4 @@
-Last Updated: 2026-11-09 (PR B3)
+Last Updated: 2026-11-09 (PR B4x)
 
 # Spike B: tasks
 
@@ -51,7 +51,17 @@ Last Updated: 2026-11-09 (PR B3)
 - [x] Review with `code-architecture-reviewer`; apply findings
 - [x] Open PR (#19)
 
+## PR B4x: item type files (inserted by the maintainer, 2026-11-09)
+- [x] Measure: domain and generation type alone resolve at most 87 of 380 ambiguous lines; the rest need inherited spawn tags (`.it` files)
+- [x] Survey `.it` grammar on both installs (PoE1 413, PoE2 277 files)
+- [x] `tools/extractor/src/itemtype.rs`: parser, `item_types/**/*.json`, manifest section with chain checks; manifest format 4; `loom-data` reads 3 and 4
+- [x] Cross-check derived tags with PoB's exported base tags (PoE1 1,090/1,090 equal; PoE2 differences all PoB's `genesis_tree_*` injection)
+- [x] Determinism on both games (clean `c3c7e15`); earlier outputs unchanged; manifests and cross-check summaries replaced in `docs/spikes/spike-a/`
+- [x] Review with `code-architecture-reviewer`; apply findings (no blockers)
+- [ ] Open PR
+
 ## PR B4a: disambiguation and `mod-backed`
+- [ ] Base tags: `InheritsFrom` chain (`tag`, `remove_tag`) plus `BaseItemTypes.TagsKeys`, from B4x's `item_types/`
 - [ ] Mods filter (domain, generation type, stat set; spawn tags tie-break only)
 - [ ] `mod-backed` with listed exceptions
 
