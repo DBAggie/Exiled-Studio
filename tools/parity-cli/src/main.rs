@@ -15,6 +15,9 @@ mod load_statdesc;
 mod lookup;
 mod mod_filter;
 mod oracle;
+mod oracle_output;
+mod oracle_process;
+mod oracle_run;
 mod oracle_verify;
 mod properties;
 mod render_check;
@@ -54,7 +57,18 @@ const USAGE: &str = "usage:
       checkout commit, tree, and no untracked, ignored, or modified file;
       runtime source commits; built files against build.json; the
       runtime's version and build flags. Offline. Print a JSON report.
-      Exit 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure.";
+      Exit 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure.
+  loom-parity-cli oracle-run <manifest> <oracle-dir> --out <dir> [--runs <n>] [--timeout <s>]
+                  [--adapter <file>] <fixture>...
+      Verify the oracle directory as oracle-verify does, then run each
+      fixture (a PoB build XML file, or every *.xml directly in a
+      directory) <n> times (default 3) through the adapter (default
+      <manifest dir>/adapter/oracle.lua) with a time limit of <s> seconds
+      per run (default 120). Offline. Write report.json, summary.md, the
+      canonical output per fixture (outputs/), and each run's raw document
+      (runs/) to <dir>, which must not exist. Exit 0 when every fixture is
+      ok or partial with identical runs and the checkout is still clean;
+      else the exit code of the smallest failing class (10 to 18).";
 
 /// Runs `git` in this crate's source tree; `None` if it fails.
 fn git(args: &[&str]) -> Option<String> {
@@ -282,12 +296,108 @@ fn oracle_verify(manifest: &Path, oracle_dir: &Path) -> ExitCode {
     }
 }
 
+/// Parses the arguments after `oracle-run <manifest> <oracle-dir>`.
+fn oracle_run_request(
+    manifest: &Path,
+    oracle_dir: &Path,
+    rest: &[String],
+) -> Result<oracle_run::Request, String> {
+    let mut options = oracle_run::Options {
+        runs: 3,
+        timeout: std::time::Duration::from_secs(120),
+    };
+    let mut adapter = manifest
+        .parent()
+        .unwrap_or(Path::new("."))
+        .join("adapter")
+        .join("oracle.lua");
+    let mut out = None;
+    let mut fixtures = Vec::new();
+    let mut rest = rest;
+    while let [first, tail @ ..] = rest {
+        match (first.as_str(), tail) {
+            ("--out", [value, tail @ ..]) => {
+                out = Some(value.into());
+                rest = tail;
+            }
+            ("--runs", [value, tail @ ..]) => {
+                options.runs = value
+                    .parse()
+                    .map_err(|_| format!("--runs {value}: not a count"))?;
+                rest = tail;
+            }
+            ("--timeout", [value, tail @ ..]) => {
+                let seconds: u64 = value
+                    .parse()
+                    .map_err(|_| format!("--timeout {value}: not a number of seconds"))?;
+                options.timeout = std::time::Duration::from_secs(seconds);
+                rest = tail;
+            }
+            ("--adapter", [value, tail @ ..]) => {
+                adapter = value.into();
+                rest = tail;
+            }
+            (flag, _) if flag.starts_with("--") => {
+                return Err(format!("{flag}: unknown option or missing value"));
+            }
+            (fixture, tail) => {
+                fixtures.push(fixture.into());
+                rest = tail;
+            }
+        }
+    }
+    let out = out.ok_or_else(|| "--out <dir> is required".to_owned())?;
+    if fixtures.is_empty() {
+        return Err("at least one fixture is required".to_owned());
+    }
+    Ok(oracle_run::Request {
+        manifest: manifest.to_path_buf(),
+        oracle_dir: oracle_dir.to_path_buf(),
+        adapter,
+        fixtures,
+        out,
+        options,
+        tool: oracle_run::Tool {
+            commit: git(&["rev-parse", "HEAD"]),
+            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+        },
+    })
+}
+
+fn oracle_run(manifest: &Path, oracle_dir: &Path, rest: &[String]) -> ExitCode {
+    let request = match oracle_run_request(manifest, oracle_dir, rest) {
+        Ok(request) => request,
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            eprintln!("{USAGE}");
+            return ExitCode::from(2);
+        }
+    };
+    let report = match oracle_run::run(&request) {
+        Ok(report) => report,
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            return ExitCode::FAILURE;
+        }
+    };
+    print!("{}", report.summary_markdown());
+    match report.class {
+        None => ExitCode::SUCCESS,
+        Some(class) => ExitCode::from(class.exit_code()),
+    }
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if let [cmd, manifest, oracle_dir] = args.as_slice()
         && cmd == "oracle-verify"
     {
         return oracle_verify(Path::new(manifest), Path::new(oracle_dir));
+    }
+    if let [cmd, manifest, oracle_dir, rest @ ..] = args.as_slice()
+        && cmd == "oracle-run"
+    {
+        return oracle_run(Path::new(manifest), Path::new(oracle_dir), rest);
     }
     let result = match args.as_slice() {
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),

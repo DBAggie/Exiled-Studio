@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "loom oracle adapter output, protocol 1",
+  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol",
+    "stage",
+    "error",
+    "partial",
+    "modules",
+    "settings",
+    "breakdown_source",
+    "breakdowns",
+    "main_output"
+  ],
+  "properties": {
+    "protocol": { "const": 1 },
+    "stage": {
+      "description": "The stage reached: done, or the stage that failed.",
+      "enum": ["startup", "import", "calculate", "normalize", "done"]
+    },
+    "error": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "message"],
+          "properties": {
+            "source": {
+              "description": "lua: a Lua error (with traceback); prompt: PoB's error prompt (launch.promptMsg); pob: PoB's XML parser or root check; adapter: the adapter's own check.",
+              "enum": ["lua", "prompt", "pob", "adapter"]
+            },
+            "message": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "partial": {
+      "description": "Reasons the result is incomplete (named shims that did not run; first filled in C2b, always empty in C2a). Empty: complete.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "modules": {
+      "description": "Every module PoB loaded through require, sorted.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "settings": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "found"],
+          "properties": {
+            "path": { "type": "string" },
+            "found": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "breakdown_source": { "const": "calcsTab.calcsEnv.player.breakdown" },
+    "breakdowns": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/value" }]
+          }
+        }
+      ]
+    },
+    "main_output": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/table" }]
+    }
+  },
+  "$defs": {
+    "value": {
+      "description": "A Lua value written as data. Numbers are written with %.17g (exact for a double); null never occurs.",
+      "oneOf": [
+        { "type": "boolean" },
+        { "type": "number" },
+        { "type": "string" },
+        { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/value" } },
+        { "$ref": "#/$defs/table" },
+        { "$ref": "#/$defs/placeholder" }
+      ]
+    },
+    "table": {
+      "description": "A Lua table that is not a sequence 1..n (an empty table is {}, so an empty list and an empty map read alike). Number keys are written as # followed by the number (#inf and #-inf for infinities). String keys never start with $ or #.",
+      "type": "object",
+      "propertyNames": { "pattern": "^([^$#].*|#.+|)$" },
+      "additionalProperties": { "$ref": "#/$defs/value" }
+    },
+    "placeholder": {
+      "description": "A value that is not data, written as a one-key object instead of being dropped.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$number"],
+          "properties": { "$number": { "enum": ["inf", "-inf", "nan"] } }
+        },
+        {
+          "description": "A PoB class instance (a table with a metatable), by class name.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$object"],
+          "properties": { "$object": { "type": "string" } }
+        },
+        {
+          "description": "A table under a key listed in the manifest's adapter.opaque_keys.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$opaque"],
+          "properties": { "$opaque": { "type": "string" } }
+        },
+        {
+          "description": "A table already open on the current path, by that path.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$cycle"],
+          "properties": { "$cycle": { "type": "string" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$function"],
+          "properties": { "$function": { "const": true } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["$userdata"],
+          "properties": { "$userdata": { "type": "string" } }
+        }
+      ]
+    }
+  }
+}

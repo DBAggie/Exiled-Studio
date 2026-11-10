@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
+Last Updated: 2026-11-10 (PR C2a: adapter protocol 1, `oracle-run`)
 
 # Spike C: tasks
 
@@ -21,20 +21,21 @@ Last Updated: 2026-11-10 (PR C1: pinned runtime, manifest, `oracle-verify`)
 - [x] Injected-failure runs with the real runtime (wrong runtime -> 11, ignored file in checkout -> 10)
 - [x] `acquire.sh` full run on Linux (WSL 2, Ubuntu 24.04, gcc 13.3; also 18.04 with gcc 7.5; 2026-11-10): `oracle-verify` ok, rebuild identical, wrapper smoke ok also under `unshare -rn`
 - [x] Review with `code-architecture-reviewer`; apply findings (no blockers; 4 should-fix and most nits applied, context file)
-- [x] Open PR (#34)
+- [x] Open PR (#34; merged 2026-11-10 as `fffc476`, main CI run 42847724319 green)
 
 ## PR C2a: adapter and `oracle-run` (no shims)
-- [ ] `tools/oracle/adapter/oracle.lua` (protocol v1), output schema, hand-written schema check
-- [ ] Startup-error handling (`build` nil; `mainObject` is local to the wrapper, so `promptMsg` is not readable after `dofile`, context file), settings probe
-- [ ] `oracle-run` launch: reuse or generalize C1's `run_probe` (cleared environment, pipes drained on threads, polling timeout)
-- [ ] `parity-cli oracle-run` (env allow-list, timeout, normalization, 3 repeats)
-- [ ] Breakdown selection measured and recorded in the manifest
-- [ ] Tests with fake adapter scripts for each failure class; real runs of the public fixtures on Windows
-- [ ] Review with `code-architecture-reviewer`; apply findings
-- [ ] Open PR
+- [x] `tools/oracle/adapter/oracle.lua` + `json.lua` (protocol 1), output schema, hand-written schema check (`oracle_output.rs`)
+- [x] Startup-error handling (global `launch.promptMsg`), settings probe (`/Settings.xml`, not found)
+- [x] `oracle_process.rs`: launcher shared with `oracle-verify`'s probe (cleared environment, closed stdin, pipes drained on threads, time limit)
+- [x] `parity-cli oracle-run` (verify first, env allow-list, timeout, normalization, 3 repeats, clean check after, report and summary)
+- [x] Breakdown selection measured (182 names over 6 fixtures) and recorded in the manifest (10 names)
+- [x] Tests: scripted classification per class, fake Lua adapters and the real adapter on the real runtime (ignored test), writer Lua tests; real runs of the public fixtures on Windows (3/3, stable over 5 invocations)
+- [x] Review with `code-architecture-reviewer`; apply findings (no blockers; S1-S6 applied, nits recorded in the context file)
+- [x] Open PR (#35)
 
 ## PR C2b: shims
-- [ ] `Inflate` through LuaJIT FFI, pinned zlib recorded; `io.open` write guard; jewel probe
+- [ ] `Inflate` through LuaJIT FFI, pinned zlib recorded; `io.open` write guard; jewel probe; `partial` reasons (spec case 8 on the real runtime)
+- [ ] A real PoB startup error through the adapter (spec case 7; only a fake adapter so far), if a broken checkout copy is cheap
 - [ ] Ignored-files tree check after runs; synthetic timeless-jewel fixture
 - [ ] Corpus timeless-jewel builds show jewel data loaded; non-jewel outcomes unchanged
 - [ ] Review with `code-architecture-reviewer`; apply findings

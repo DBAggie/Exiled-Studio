@@ -290,7 +290,7 @@ fn run_probe_should_report_missing_runtime() {
         std::process::id()
     ));
     let err = run_probe(&missing, "print(1)").unwrap_err();
-    assert!(err.starts_with("cannot start luajit"), "{err}");
+    assert!(err.starts_with("cannot start "), "{err}");
 }
 
 #[test]

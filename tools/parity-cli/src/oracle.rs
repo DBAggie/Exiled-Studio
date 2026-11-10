@@ -17,12 +17,11 @@ use sha2::{Digest, Sha256};
 /// Failure classes of the spec's taxonomy
 /// (`docs/spikes/spike-c-legacy-oracle.md`, "Failure taxonomy"). Only the
 /// CLI assigns a class. Variants are ordered upstream first, so the
-/// smallest failing class is the one a report names. Exit codes are fixed per class and never reused:
-/// 10 `ORACLE_ACQUISITION`, 11 `ORACLE_ENVIRONMENT`, and, as later
-/// subcommands add them, 12 `ORACLE_LAUNCH`, 13 `ORACLE_TIMEOUT`,
-/// 14 `ORACLE_PROTOCOL`, 15 `ORACLE_IMPORT`, 16 `ORACLE_CALCULATION`,
-/// 17 `ORACLE_NORMALIZATION`, 18 `ORACLE_NONDETERMINISM`,
-/// 19 `ORACLE_EXPECTED_DIFFERENCE`, 20 `ORACLE_UNEXPECTED_DIFFERENCE`.
+/// smallest failing class is the one a report names. Exit codes are fixed
+/// per class and never reused: 10 `ORACLE_ACQUISITION` to 18
+/// `ORACLE_NONDETERMINISM`, in taxonomy order; 19
+/// `ORACLE_EXPECTED_DIFFERENCE` and 20 `ORACLE_UNEXPECTED_DIFFERENCE` are
+/// reserved for `oracle-compare` (C3), which adds those variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 pub enum FailureClass {
     /// The pinned source is unavailable or differs from the manifest
@@ -30,17 +29,67 @@ pub enum FailureClass {
     #[serde(rename = "ORACLE_ACQUISITION")]
     Acquisition,
     /// The runtime is missing, differs from its build record, or does not
-    /// report the pinned version and build flags.
+    /// report the pinned version and build flags; or a run depended on
+    /// something outside the pinned inputs (a user settings file, a
+    /// network module).
     #[serde(rename = "ORACLE_ENVIRONMENT")]
     Environment,
+    /// The adapter process or PoB's startup failed before a fixture was
+    /// read.
+    #[serde(rename = "ORACLE_LAUNCH")]
+    Launch,
+    /// A run exceeded the time limit.
+    #[serde(rename = "ORACLE_TIMEOUT")]
+    Timeout,
+    /// The adapter's output document is missing, malformed, violates the
+    /// schema, or disagrees with the exit code.
+    #[serde(rename = "ORACLE_PROTOCOL")]
+    Protocol,
+    /// The fixture could not be loaded (unreadable, not well-formed, not a
+    /// PoB build).
+    #[serde(rename = "ORACLE_IMPORT")]
+    Import,
+    /// A well-formed PoB build made PoB raise an error while loading or
+    /// calculating.
+    #[serde(rename = "ORACLE_CALCULATION")]
+    Calculation,
+    /// PoB's output could not be written as data (a key that collides with
+    /// a placeholder, a table key, a string that is not UTF-8).
+    #[serde(rename = "ORACLE_NORMALIZATION")]
+    Normalization,
+    /// Repeated runs of one fixture had different outcomes.
+    #[serde(rename = "ORACLE_NONDETERMINISM")]
+    Nondeterminism,
 }
 
 impl FailureClass {
+    /// The taxonomy name, as reports write it.
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Acquisition => "ORACLE_ACQUISITION",
+            Self::Environment => "ORACLE_ENVIRONMENT",
+            Self::Launch => "ORACLE_LAUNCH",
+            Self::Timeout => "ORACLE_TIMEOUT",
+            Self::Protocol => "ORACLE_PROTOCOL",
+            Self::Import => "ORACLE_IMPORT",
+            Self::Calculation => "ORACLE_CALCULATION",
+            Self::Normalization => "ORACLE_NORMALIZATION",
+            Self::Nondeterminism => "ORACLE_NONDETERMINISM",
+        }
+    }
+
     /// The process exit code for this class.
     pub fn exit_code(self) -> u8 {
         match self {
             Self::Acquisition => 10,
             Self::Environment => 11,
+            Self::Launch => 12,
+            Self::Timeout => 13,
+            Self::Protocol => 14,
+            Self::Import => 15,
+            Self::Calculation => 16,
+            Self::Normalization => 17,
+            Self::Nondeterminism => 18,
         }
     }
 }
@@ -107,12 +156,22 @@ pub struct LuaUtf8 {
     pub module: String,
 }
 
-/// The adapter.
+/// The adapter (`tools/oracle/adapter/oracle.lua`) and what it is asked
+/// to write. Versioned here, so a change to the selection is a manifest
+/// change.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Adapter {
     /// Adapter protocol version.
     pub protocol: u32,
+    /// Names in PoB's breakdown table (`calcsTab.calcsEnv.player.breakdown`)
+    /// the adapter writes; a name a build has no breakdown for is written
+    /// as `null`.
+    pub breakdowns: Vec<String>,
+    /// Keys whose table values the adapter writes as `{"$opaque": key}`:
+    /// input objects (gem instances) whose game data is not calculation
+    /// output.
+    pub opaque_keys: Vec<String>,
 }
 
 impl Manifest {
@@ -130,6 +189,25 @@ impl Manifest {
         ] {
             if !is_object_id(hash) {
                 return Err(format!("{name}: not a 40-digit lowercase hex hash"));
+            }
+        }
+        if manifest.adapter.protocol != 1 {
+            return Err(format!(
+                "adapter.protocol: this reader knows 1, found {}",
+                manifest.adapter.protocol
+            ));
+        }
+        for (name, list) in [
+            ("adapter.breakdowns", &manifest.adapter.breakdowns),
+            ("adapter.opaque_keys", &manifest.adapter.opaque_keys),
+        ] {
+            // Passed to the adapter as `<kind>=<name>` arguments and used
+            // as JSON keys: plain identifiers only, sorted, no duplicates.
+            if let Some(bad) = list.iter().find(|n| !is_identifier(n)) {
+                return Err(format!("{name}: {bad:?} is not a plain identifier"));
+            }
+            if !list.windows(2).all(|w| w[0] < w[1]) {
+                return Err(format!("{name}: must be sorted, without duplicates"));
             }
         }
         let module = &manifest.luautf8.module;
@@ -219,6 +297,14 @@ pub fn sha256_hex(bytes: &[u8]) -> String {
         .collect()
 }
 
+fn is_identifier(text: &str) -> bool {
+    let mut chars = text.chars();
+    chars
+        .next()
+        .is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+        && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
 fn is_object_id(text: &str) -> bool {
     text.len() == 40 && text.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
@@ -289,8 +375,49 @@ mod tests {
     }
 
     #[test]
-    fn exit_codes_should_be_distinct_from_generic_failure() {
-        assert_eq!(FailureClass::Acquisition.exit_code(), 10);
-        assert_eq!(FailureClass::Environment.exit_code(), 11);
+    fn parse_should_reject_unsorted_breakdowns() {
+        let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
+        value["adapter"]["breakdowns"] = serde_json::json!(["Life", "Armour"]);
+        let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
+        assert!(err.starts_with("adapter.breakdowns"), "{err}");
+    }
+
+    #[test]
+    fn parse_should_reject_opaque_key_with_equals_sign() {
+        let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
+        value["adapter"]["opaque_keys"] = serde_json::json!(["a=b"]);
+        let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
+        assert!(err.starts_with("adapter.opaque_keys"), "{err}");
+    }
+
+    #[test]
+    fn parse_should_reject_other_protocol() {
+        let mut value: serde_json::Value = serde_json::from_slice(COMMITTED).unwrap();
+        value["adapter"]["protocol"] = 2.into();
+        let err = Manifest::parse(value.to_string().as_bytes()).unwrap_err();
+        assert!(err.starts_with("adapter.protocol"), "{err}");
+    }
+
+    #[test]
+    fn exit_codes_should_follow_taxonomy_order_from_10() {
+        let classes = [
+            FailureClass::Acquisition,
+            FailureClass::Environment,
+            FailureClass::Launch,
+            FailureClass::Timeout,
+            FailureClass::Protocol,
+            FailureClass::Import,
+            FailureClass::Calculation,
+            FailureClass::Normalization,
+            FailureClass::Nondeterminism,
+        ];
+        for (i, class) in classes.iter().enumerate() {
+            assert_eq!(usize::from(class.exit_code()), 10 + i, "{class:?}");
+            assert_eq!(
+                serde_json::to_value(class).unwrap(),
+                serde_json::Value::from(class.name())
+            );
+        }
+        assert!(classes.windows(2).all(|w| w[0] < w[1]));
     }
 }
