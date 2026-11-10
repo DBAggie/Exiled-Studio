@@ -18,6 +18,10 @@ end
 
 local SOURCE = '"breakdown_source":"calcsTab.calcsEnv.player.breakdown"'
 local SETTINGS = '"settings":{"path":"/Settings.xml","found":false}'
+-- The shim records and an empty probe (protocol 2).
+local SHIMS = '"shims":[{"name":"inflate","replaces":"Inflate","installed":true,"detail":"zlib (fake)"},'
+	.. '{"name":"write_guard","replaces":"io.open","installed":true,"detail":null}],'
+	.. '"probe":{"inflate":[],"writes_refused":[]}'
 
 -- A complete document; `mainOutput` is JSON text.
 function M.done(names, mainOutput, protocol)
@@ -25,15 +29,15 @@ function M.done(names, mainOutput, protocol)
 	for _, name in ipairs(names) do
 		parts[#parts + 1] = '"' .. name .. '":null'
 	end
-	return '{"protocol":' .. (protocol or 1) .. ',"stage":"done","error":null,"partial":[],"modules":[],'
-		.. SETTINGS .. "," .. SOURCE .. ',"breakdowns":{' .. table.concat(parts, ",") .. '},"main_output":' .. mainOutput .. "}"
+	return '{"protocol":' .. (protocol or 2) .. ',"stage":"done","error":null,"partial":[],"modules":[],'
+		.. SETTINGS .. "," .. SHIMS .. "," .. SOURCE .. ',"breakdowns":{' .. table.concat(parts, ",") .. '},"main_output":' .. mainOutput .. "}"
 end
 
 -- A failed stage; `message` must not need JSON escaping.
 function M.failed(stage, source, message)
 	local settings = stage == "startup" and '"settings":null' or SETTINGS
-	return '{"protocol":1,"stage":"' .. stage .. '","error":{"source":"' .. source .. '","message":"' .. message
-		.. '"},"partial":[],"modules":[],' .. settings .. "," .. SOURCE .. ',"breakdowns":null,"main_output":null}'
+	return '{"protocol":2,"stage":"' .. stage .. '","error":{"source":"' .. source .. '","message":"' .. message
+		.. '"},"partial":[],"modules":[],' .. settings .. "," .. SHIMS .. "," .. SOURCE .. ',"breakdowns":null,"main_output":null}'
 end
 
 function M.write(path, text)

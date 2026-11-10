@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic oracle fixture (loom, Spike C, PR C2b): a level 1 Scion
+     with a jewel socket (61419) and a notable in its large radius (10115)
+     allocated, with the path from the class start that PoB's own
+     PassiveSpec:AllocNode chose (unconnected nodes are dropped on load),
+     and a Militant Faith in the socket. PoB reads the
+     Militant Faith look-up table (Data/TimelessJewelData/MilitantFaith.zip,
+     the smallest timeless jewel file) for the conquered notable, so this
+     build exercises the adapter's Inflate shim and the write guard (the
+     loader tries to cache the inflated data as a .bin in the checkout).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="0" ascendClassId="0" nodes="8948,10115,11551,11688,18033,19635,27659,33545,37671,38176,43000,45456,46092,47062,48778,51923,53279,56153,58833,61419">
+			<Sockets>
+				<Socket nodeId="61419" itemId="1"/>
+			</Sockets>
+		</Spec>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: UNIQUE
+Militant Faith
+Timeless Jewel
+Limited to: 1 Historic
+Radius: Large
+Carved to glorify 5000 new faithful converted by High Templar Avarius
+Passives in radius are Conquered by the Templars
+Historic
+		</Item>
+		<ItemSet id="1"/>
+	</Items>
+	<Config/>
+</PathOfBuilding>
