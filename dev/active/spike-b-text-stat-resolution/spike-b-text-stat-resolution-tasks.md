@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR B5d)
+Last Updated: 2026-11-10 (PR B5e)
 
 # Spike B: tasks
 
@@ -148,4 +148,12 @@ Last Updated: 2026-11-10 (PR B5d)
 - [x] Open PR
 
 ## PR B5e: the rest (near-miss, split-section, only-shadowed)
-- [ ] As recommended
+- [x] `Index::resolve_case_folded`; split-section pairs resolve; `adapted` on lines and in the summary; tests
+- [x] Corpus run from clean `cb30e5c`, two runs byte-identical: 99.7%, 10 unresolved
+- [ ] Review with `code-architecture-reviewer`; apply findings
+- [ ] Open PR
+
+## After the area PRs (maintainer)
+- [ ] Merge #26 .. B5e in order (retarget each to `main`)
+- [ ] Accept the ADR-015 clarification on typed resolutions, or decide otherwise
+- [ ] Move this folder to `dev/completed/`; Spike C

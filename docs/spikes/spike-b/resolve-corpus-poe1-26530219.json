@@ -6,7 +6,7 @@
       "manifest_sha256": "119bb8258b9fa6d61080389fa5a749f88e7618e00b43ac260ac3f6709408be9f"
     },
     "tool": {
-      "commit": "8bce4ee2a02024b4f5c1ec2f93193a04ec82d229",
+      "commit": "cb30e5c262ba3b7abc7872d3c0034c34765dd78c",
       "dirty": false
     },
     "builds": [
@@ -443,23 +443,22 @@
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3343,
-      "unresolved/no-template": 17,
+      "resolved": 3356,
+      "unresolved/no-template": 4,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
       "enchant": {
         "excluded/legacy-text": 1,
-        "resolved": 259,
-        "unresolved/no-template": 2
+        "resolved": 261
       },
       "explicit": {
         "ambiguous": 3,
         "excluded/author-note": 238,
         "excluded/legacy-text": 47,
         "excluded/pob-custom": 54,
-        "resolved": 2571,
-        "unresolved/no-template": 13,
+        "resolved": 2582,
+        "unresolved/no-template": 2,
         "unresolved/only-shadowed": 1
       },
       "implicit": {
@@ -479,8 +478,8 @@
       "excluded/legacy-text": 29,
       "excluded/not-a-modifier": 36,
       "excluded/not-selected-variant": 1415,
-      "resolved": 825,
-      "unresolved/no-template": 28,
+      "resolved": 837,
+      "unresolved/no-template": 16,
       "unresolved/no-variant-fits": 5
     },
     "by_section": {
@@ -492,8 +491,8 @@
         "excluded/author-note": 15,
         "excluded/legacy-text": 29,
         "excluded/not-selected-variant": 1387,
-        "resolved": 710,
-        "unresolved/no-template": 28,
+        "resolved": 722,
+        "unresolved/no-template": 16,
         "unresolved/no-variant-fits": 4
       },
       "implicit": {
@@ -507,17 +506,17 @@
   },
   "rate": {
     "denominator": 3366,
-    "resolved": 3343,
-    "rate": 0.9931669637551991,
+    "resolved": 3356,
+    "rate": 0.9970291146761735,
     "excluded": 572,
     "excluded_share": 0.1452513966480447,
     "distinct": 1335,
-    "distinct_resolved": 1318,
-    "distinct_rate": 0.9872659176029962,
+    "distinct_resolved": 1327,
+    "distinct_rate": 0.9940074906367041,
     "distinct_with_mixed_outcomes": 1,
     "meets_rate": true,
-    "stat_resolved": 3324,
-    "stat_rate": 0.9875222816399287
+    "stat_resolved": 3337,
+    "stat_rate": 0.9913844325609031
   },
   "ambiguous": {
     "(10-20)% increased Reservation Efficiency of Skills": {
@@ -903,9 +902,8 @@
       "excluded/not-selected-variant": 2,
       "parser-gap/ambiguous": 5,
       "parser-gap/client-string": 2,
-      "parser-gap/near-miss": 11,
+      "parser-gap/near-miss": 2,
       "parser-gap/only-shadowed": 1,
-      "parser-gap/split-section": 4,
       "special-case/author-note": 238,
       "special-case/not-a-modifier": 230,
       "special-case/pob-custom": 54
@@ -914,7 +912,7 @@
       "data-gap/legacy-text": 29,
       "excluded/not-selected-variant": 1415,
       "parser-gap/ambiguous": 36,
-      "parser-gap/near-miss": 32,
+      "parser-gap/near-miss": 20,
       "special-case/author-note": 15,
       "special-case/item-property": 1,
       "special-case/not-a-modifier": 36
@@ -1509,13 +1507,6 @@
       }
     },
     "parser-gap/near-miss": {
-      "(300-350)% Increased Physical Damage": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:47973"
-        ]
-      },
       "(4-6)% Chance to Block Spell Damage during Effect": {
         "non_unique": 0,
         "unique": 2,
@@ -1528,13 +1519,6 @@
         "unique": 2,
         "detail": [
           "sign-mismatch"
-        ]
-      },
-      "+(10-20) to maximum Charges": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:32150"
         ]
       },
       "+1 to Maximum number of Sacred Wisps": {
@@ -1551,60 +1535,11 @@
           "metadata/statdescriptions/stat_descriptions.txt:203049"
         ]
       },
-      "+100% Chance to Block Spell Damage if you have Blocked Attack Damage Recently": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:407656"
-        ]
-      },
-      "+132 to Maximum Life": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:61930"
-        ]
-      },
-      "+30 to maximum energy shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:61479"
-        ]
-      },
-      "+40 to maximum energy shield": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:61479"
-        ]
-      },
-      "-(80-70)% to All Elemental Resistances": {
-        "non_unique": 0,
-        "unique": 1,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:64012"
-        ]
-      },
       "18% Chance to Block Attack Damage while wielding a Staff": {
         "non_unique": 0,
         "unique": 1,
         "detail": [
           "sign-mismatch"
-        ]
-      },
-      "40% increased Damage with hits against Chilled Enemies": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:244898"
-        ]
-      },
-      "40% reduced Effect of Curses on You": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:85597"
         ]
       },
       "Bathed in the blood of (100-8000) sacrificed in the name of Doryani": {
@@ -1626,20 +1561,6 @@
         "unique": 1,
         "detail": [
           "metadata/statdescriptions/stat_descriptions.txt:361"
-        ]
-      },
-      "Gain Adrenaline for 3 seconds on kill": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:271188"
-        ]
-      },
-      "Passive Skills in Radius also grant 5% Increased Global Critical Strike Chance": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:325572"
         ]
       },
       "Passive Skills in Radius can be Allocated without being connected to your tree": {
@@ -1684,13 +1605,6 @@
           "metadata/statdescriptions/stat_descriptions.txt:19461"
         ]
       },
-      "Socketed Gems are Supported by level 20 Spell Totem": {
-        "non_unique": 0,
-        "unique": 2,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:17864"
-        ]
-      },
       "Summoned Skeleton Warriors are Permanent and Follow you": {
         "non_unique": 0,
         "unique": 1,
@@ -1704,13 +1618,6 @@
         "detail": [
           "metadata/statdescriptions/stat_descriptions.txt:31989"
         ]
-      },
-      "recover 5% of energy shield when you block": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": [
-          "metadata/statdescriptions/stat_descriptions.txt:97130"
-        ]
       }
     },
     "parser-gap/only-shadowed": {
@@ -1719,36 +1626,6 @@
         "unique": 0,
         "detail": [
           "every match is shadowed"
-        ]
-      }
-    },
-    "parser-gap/split-section": {
-      "Added Small Passive Skills grant: 10% increased Life Recovery from Flasks": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "resolves with item line 15"
-        ]
-      },
-      "Added Small Passive Skills grant: 10% increased Mana Recovery from Flasks": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "resolves with item line 14"
-        ]
-      },
-      "Added Small Passive Skills grant: 12% increased Mine Damage": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "resolves with item line 14"
-        ]
-      },
-      "Added Small Passive Skills grant: 12% increased Trap Damage": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": [
-          "resolves with item line 15"
         ]
       }
     },
@@ -3088,6 +2965,11 @@
     "unique/catalyst-quality": 1,
     "unique/item-property": 6
   },
+  "adapted": {
+    "non_unique/case-folded": 9,
+    "non_unique/split-section": 4,
+    "unique/case-folded": 12
+  },
   "property_inputs": [
     8,
     1,
@@ -3108,7 +2990,7 @@
   "gate": {
     "resolution": true,
     "unresolved_allowed": 67,
-    "unresolved": 23,
+    "unresolved": 10,
     "uncategorized": 0,
     "inputs_recorded": true,
     "met": true
@@ -3127,8 +3009,8 @@
     "non_unique": {
       "ambiguous/several-backed": 5,
       "resolved/base-implicit": 18,
-      "resolved/local-stat": 153,
-      "resolved/mods": 131,
+      "resolved/local-stat": 154,
+      "resolved/mods": 132,
       "resolved/spawn-tags": 20,
       "resolved/spawn-values": 5,
       "resolved/unset-fit+numbered-stat": 35,
@@ -3137,10 +3019,10 @@
     "unique": {
       "ambiguous/several-backed": 36,
       "resolved/base-implicit": 4,
-      "resolved/mods": 22,
+      "resolved/mods": 23,
       "resolved/spawn-tags": 2,
       "resolved/unset-fit+numbered-stat": 7,
-      "resolved/values": 37
+      "resolved/values": 39
     },
     "notes": {
       "non_unique/crafted-no-spawn-tags": 2,
@@ -3754,6 +3636,13 @@
           "mods: additional_strength_and_intelligence=30"
         ]
       },
+      "+30 to maximum energy shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "mods: base_maximum_energy_shield=30"
+        ]
+      },
       "+33 to maximum Energy Shield": {
         "non_unique": 1,
         "unique": 0,
@@ -3831,6 +3720,13 @@
         "unique": 0,
         "detail": [
           "local-stat: base_physical_damage_reduction_rating=40"
+        ]
+      },
+      "+40 to maximum energy shield": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local-stat: base_maximum_energy_shield=40"
         ]
       },
       "+400 to Armour": {
@@ -4055,6 +3951,13 @@
         "unique": 3,
         "detail": [
           "mods: base_resist_all_elements_%=(-20..-10)"
+        ]
+      },
+      "-(80-70)% to All Elemental Resistances": {
+        "non_unique": 0,
+        "unique": 1,
+        "detail": [
+          "mods: base_resist_all_elements_%=(-80..-70)"
         ]
       },
       "-21% to all Elemental Resistances": {
@@ -5001,6 +4904,13 @@
           "mods: local_display_socketed_gems_supported_by_level_x_increased_burning_damage=25"
         ]
       },
+      "Socketed Gems are Supported by level 20 Spell Totem": {
+        "non_unique": 0,
+        "unique": 2,
+        "detail": [
+          "values: local_display_socketed_gems_get_spell_totem_level=20"
+        ]
+      },
       "While a Unique Enemy is in your Presence, Drops Scorched Ground while moving, lasting 5 seconds": {
         "non_unique": 1,
         "unique": 0,
@@ -5012,13 +4922,13 @@
     }
   },
   "mod_backed": {
-    "resolved": 3324,
-    "backed": 3138,
-    "share": 0.944043321299639,
-    "template_resolved": 2948,
-    "template_backed": 2805,
-    "template_share": 0.9514925373134329,
-    "equal": 2805,
+    "resolved": 3333,
+    "backed": 3147,
+    "share": 0.9441944194419442,
+    "template_resolved": 2955,
+    "template_backed": 2812,
+    "template_share": 0.9516074450084603,
+    "equal": 2814,
     "hybrid": 333,
     "not_backed": {
       "no-fitting-row": 6,
