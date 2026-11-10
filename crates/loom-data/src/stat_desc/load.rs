@@ -17,8 +17,9 @@ use serde::Deserialize;
 use super::template::{Template, TemplateError};
 use super::{Condition, Description, Handler, StatDescFile, Variant};
 
-/// Manifest formats this loader reads.
-pub const SUPPORTED_MANIFEST_FORMATS: [u64; 1] = [3];
+/// Manifest formats this loader reads. Format 4 (Spike B PR B4x) adds the
+/// `item_types` section; its stat-description section is the same as 3.
+pub const SUPPORTED_MANIFEST_FORMATS: [u64; 2] = [3, 4];
 
 /// Why a manifest or file did not load.
 #[derive(Debug, thiserror::Error)]

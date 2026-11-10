@@ -15,6 +15,7 @@ pub mod extract;
 pub mod hash;
 pub mod index;
 pub mod install;
+pub mod itemtype;
 pub mod psg;
 mod reader;
 pub mod schema;

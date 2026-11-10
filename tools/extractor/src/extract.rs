@@ -2,7 +2,8 @@
 //! them, writes each as canonical JSON, and builds the manifest that ties the
 //! output to its inputs (ADR-005). Stat-description files (PR A5) go through
 //! the same [`Extraction`] and are parsed by [`crate::statdesc`], and so do
-//! passive skill graphs (PR A6b, [`crate::psg`]). Pure: the
+//! passive skill graphs (PR A6b, [`crate::psg`]), and item type files
+//! (Spike B PR B4x, [`crate::itemtype`]). Pure: the
 //! filesystem stays in `main.rs` and [`crate::install`].
 //!
 //! Output is deterministic by construction: tables and findings are kept in
@@ -38,6 +39,7 @@ use sha2::{Digest, Sha256};
 
 use crate::dat::{RowSizeMismatch, Value, read_table};
 use crate::install::{BundleHashes, INDEX_PATH, hex};
+use crate::itemtype::{self, ItemTypeManifest};
 use crate::psg::{self, GraphManifest};
 use crate::schema::{
     Column, ColumnKind, Game, ScalarType, Schema, TableSchema, VENDORED_COMMIT, VENDORED_SHA256,
@@ -90,7 +92,8 @@ pub fn roots(game: Game) -> Vec<&'static str> {
 /// Version of the manifest layout. Bump it when a field changes meaning.
 /// 2: `stat_descriptions` added (PR A5).
 /// 3: `passive_skill_graphs` added (PR A6b).
-pub const MANIFEST_FORMAT: u32 = 3;
+/// 4: `item_types` added (Spike B PR B4x).
+pub const MANIFEST_FORMAT: u32 = 4;
 
 /// Manifest file name inside the output directory.
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -324,6 +327,7 @@ pub struct Extraction<'s> {
     added: BTreeMap<String, Added>,
     stat_descriptions: statdesc::Collection,
     graphs: psg::Collection,
+    item_types: itemtype::Collection,
 }
 
 impl<'s> Extraction<'s> {
@@ -337,6 +341,7 @@ impl<'s> Extraction<'s> {
             added: BTreeMap::new(),
             stat_descriptions: statdesc::Collection::new(game),
             graphs: psg::Collection::new(game),
+            item_types: itemtype::Collection::new(),
         }
     }
 
@@ -354,6 +359,9 @@ impl<'s> Extraction<'s> {
         }
         if psg::is_graph(path) {
             return self.graphs.add(path, bytes);
+        }
+        if itemtype::is_item_type(path) {
+            return self.item_types.add(path, bytes);
         }
         let unplanned = || ExtractError::Unplanned {
             path: path.to_owned(),
@@ -406,6 +414,7 @@ impl<'s> Extraction<'s> {
             mut added,
             stat_descriptions,
             graphs,
+            item_types,
         } = self;
         let rows_of: BTreeMap<String, usize> = added
             .iter()
@@ -536,6 +545,23 @@ impl<'s> Extraction<'s> {
         }
         files.extend(graph_files);
 
+        let (item_type_files, item_types) = item_types.finish();
+        for entry in item_types.files.values() {
+            if let Some(path) = &entry.output
+                && let Some(bytes) = item_type_files.get(path)
+            {
+                // An item type file's "rows" are its top-level blocks.
+                file_entries.insert(
+                    path.clone(),
+                    OutputFile {
+                        rows: entry.blocks.unwrap_or_default(),
+                        sha256: hex(&Sha256::digest(bytes)),
+                    },
+                );
+            }
+        }
+        files.extend(item_type_files);
+
         let manifest = Manifest {
             bundles: inputs
                 .bundles
@@ -551,6 +577,7 @@ impl<'s> Extraction<'s> {
                 path: INDEX_PATH,
                 sha256: hex(&inputs.index_sha256),
             },
+            item_types,
             passive_skill_graphs,
             schema: SchemaInput {
                 commit: VENDORED_COMMIT,
@@ -844,6 +871,8 @@ pub struct Manifest {
     pub game: &'static str,
     /// The index read.
     pub index: IndexInput,
+    /// Item type files (`*.it`) and the `extends` chain checks.
+    pub item_types: ItemTypeManifest,
     /// Passive skill graph files and their counts.
     pub passive_skill_graphs: GraphManifest,
     /// The vendored schema.
@@ -882,6 +911,7 @@ impl Manifest {
     pub fn problems(&self) -> Vec<String> {
         let mut problems = self.stat_descriptions.problems();
         problems.extend(self.passive_skill_graphs.problems());
+        problems.extend(self.item_types.problems());
         for (name, table) in &self.tables {
             if table.status == Status::Failed || (table.root && table.status != Status::Ok) {
                 problems.push(format!("{name}: {:?}", table.status));
@@ -1116,8 +1146,18 @@ mod tests {
     /// roots, no groups.
     const GRAPH_FILE: [u8; 11] = [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-    /// Extracts `tables` plus [`stat_file`] and [`GRAPH_FILE`], so the run
-    /// has the stat descriptions and the graph it needs.
+    const ITEM_PATH: &str = "metadata/items/item.it";
+
+    /// The root item type file (UTF-16LE with BOM): one `Base` block.
+    fn item_file() -> Vec<u8> {
+        let text = "\u{feff}version 3\r\nabstract\r\nextends \"nothing\"\r\n\r\n\
+                    Base\r\n{\r\n\ttag = \"default\"\r\n}\r\n";
+        text.encode_utf16().flat_map(u16::to_le_bytes).collect()
+    }
+
+    /// Extracts `tables` plus [`stat_file`], [`GRAPH_FILE`], and
+    /// [`item_file`], so the run has the stat descriptions, the graph, and
+    /// the item type it needs.
     fn extract(schema: &Schema, tables: &[(&str, &[u8])]) -> Output {
         let mut extraction = Extraction::new(Plan::new(schema, Game::Poe1, &["root"]));
         for (path, bytes) in tables {
@@ -1125,6 +1165,7 @@ mod tests {
         }
         extraction.add(STAT_PATH, &stat_file()).unwrap();
         extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
+        extraction.add(ITEM_PATH, &item_file()).unwrap();
         extraction.finish(inputs())
     }
 
@@ -1254,7 +1295,7 @@ mod tests {
                 (out.files, out.manifest.to_json().unwrap())
             })
             .collect();
-        assert_eq!(outputs[0].0.len(), 6);
+        assert_eq!(outputs[0].0.len(), 7);
         let manifest = String::from_utf8(outputs[0].1.clone()).unwrap();
         assert!(manifest.contains("\"stat_descriptions/b/other.txt.json\""));
         assert!(!manifest.contains("missing-include"));
@@ -1375,6 +1416,20 @@ mod tests {
         let sd_sha = hex(&Sha256::digest(
             &out.files["stat_descriptions/stat_descriptions.txt.json"],
         ));
+        let item_json = &out.files["item_types/metadata/items/item.it.json"];
+        assert_eq!(
+            item_json.as_slice(),
+            b"{
+\"abstract\": true,
+\"blocks\": [
+{\"blocks\":[],\"entries\":[{\"key\":\"tag\",\"quoted\":true,\"value\":\"default\"}],\"name\":\"Base\"}
+],
+\"comments\": 0,
+\"extends\": \"nothing\",
+\"version\": 3
+}
+"
+        );
         let graph_json = &out.files["passive_skill_graphs/metadata/passiveskillgraph.psg.json"];
         assert_eq!(
             graph_json.as_slice(),
@@ -1388,6 +1443,8 @@ mod tests {
 "
         );
         let expected = GOLDEN
+            .replace("{item_sha}", &hex(&Sha256::digest(item_json)))
+            .replace("{item_src}", &hex(&Sha256::digest(item_file())))
             .replace("{graph_sha}", &hex(&Sha256::digest(graph_json)))
             .replace("{graph_src}", &hex(&Sha256::digest(GRAPH_FILE)))
             .replace("{root_sha}", &root_sha)
@@ -1419,6 +1476,10 @@ mod tests {
     "version": "0.0.0"
   },
   "files": {
+    "item_types/metadata/items/item.it.json": {
+      "rows": 1,
+      "sha256": "{item_sha}"
+    },
     "passive_skill_graphs/metadata/passiveskillgraph.psg.json": {
       "rows": 0,
       "sha256": "{graph_sha}"
@@ -1436,11 +1497,28 @@ mod tests {
       "sha256": "{root_sha}"
     }
   },
-  "format": 3,
+  "format": 4,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
     "sha256": "abababababababababababababababababababababababababababababababab"
+  },
+  "item_types": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "item_types",
+    "files": {
+      "metadata/items/item.it": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "nothing",
+        "output": "item_types/metadata/items/item.it.json",
+        "source": "metadata/items/item.it",
+        "source_sha256": "{item_src}",
+        "status": "ok"
+      }
+    }
   },
   "passive_skill_graphs": {
     "dir": "passive_skill_graphs",
@@ -1642,6 +1720,7 @@ mod tests {
         assert_eq!(
             out.files.keys().collect::<Vec<_>>(),
             [
+                "item_types/metadata/items/item.it.json",
                 "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
                 "stat_descriptions/stat_descriptions.txt.json",
                 "tables/Child.json"
@@ -1657,12 +1736,52 @@ mod tests {
         extraction.add("data/child.datc64", &child_dat()).unwrap();
         extraction.add(STAT_PATH, &stat_file()).unwrap();
         extraction.add(GRAPH_PATH, &GRAPH_FILE[..10]).unwrap();
+        extraction.add(ITEM_PATH, &item_file()).unwrap();
         let out = extraction.finish(inputs());
         assert_eq!(out.manifest.problems(), [format!("{GRAPH_PATH}: Failed")]);
         assert!(
             !out.files
                 .keys()
                 .any(|k| k.starts_with("passive_skill_graphs/"))
+        );
+    }
+
+    #[test]
+    fn problems_should_flag_item_types_that_fail_or_dangle() {
+        let schema = schema();
+        let run = |extra: &[(&str, &[u8])]| {
+            let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
+            extraction.add("data/child.datc64", &child_dat()).unwrap();
+            extraction.add(STAT_PATH, &stat_file()).unwrap();
+            extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
+            for (path, bytes) in extra {
+                extraction.add(path, bytes).unwrap();
+            }
+            extraction.finish(inputs())
+        };
+        assert_eq!(run(&[]).manifest.problems(), ["no .it files in the index"]);
+        let out = run(&[(ITEM_PATH, &item_file())]);
+        assert_eq!(out.manifest.problems(), Vec::<String>::new());
+        assert_eq!(
+            out.manifest.files["item_types/metadata/items/item.it.json"].rows,
+            1
+        );
+        let out = run(&[(ITEM_PATH, &item_file()[..9])]);
+        assert_eq!(out.manifest.problems(), [format!("{ITEM_PATH}: Failed")]);
+        assert!(!out.files.keys().any(|k| k.starts_with("item_types/")));
+        let orphan: Vec<u8> = "version 3\nextends \"Metadata/Items/Gone\"\n"
+            .encode_utf16()
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        let out = run(&[
+            (ITEM_PATH, &item_file()),
+            ("metadata/items/orphan.it", &orphan),
+        ]);
+        assert_eq!(
+            out.manifest.problems(),
+            [
+                "metadata/items/orphan.it: extends \"Metadata/Items/Gone\", which is not in the index"
+            ]
         );
     }
 
@@ -1718,6 +1837,7 @@ mod tests {
             extraction.add("data/child.datc64", &bytes).unwrap();
             extraction.add(STAT_PATH, &stat_file()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
+            extraction.add(ITEM_PATH, &item_file()).unwrap();
             let problems = extraction.finish(inputs()).manifest.problems();
             // Child's keys point into Missing, which has no schema: unchecked.
             assert_eq!(problems, expected);
@@ -1731,6 +1851,7 @@ mod tests {
             let mut extraction = Extraction::new(Plan::new(&schema, Game::Poe1, &["Child"]));
             extraction.add("data/child.datc64", &child_dat()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
+            extraction.add(ITEM_PATH, &item_file()).unwrap();
             for (path, bytes) in files {
                 extraction.add(path, bytes).unwrap();
             }
