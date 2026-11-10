@@ -2,7 +2,7 @@
   "inputs": {
     "game": "poe1",
     "steam_build_id": "26530219",
-    "manifest_sha256": "c23d4c0ffbbfd59e2a04703130dac84e1010164f0026efe734e33a00753aac0f"
+    "manifest_sha256": "f77368bbddb53c423bce78ec598e9c80a4f33d634c1db07cee06d71b669cf1ea"
   },
   "pob_files": {
     "ModCorrupted.lua": 371,

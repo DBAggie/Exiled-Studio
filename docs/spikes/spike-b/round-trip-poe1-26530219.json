@@ -2,14 +2,15 @@
   "inputs": {
     "game": "poe1",
     "steam_build_id": "26530219",
-    "manifest_sha256": "c23d4c0ffbbfd59e2a04703130dac84e1010164f0026efe734e33a00753aac0f"
+    "manifest_sha256": "f77368bbddb53c423bce78ec598e9c80a4f33d634c1db07cee06d71b669cf1ea"
   },
   "lookup": {
     "keys": {
       "display_indexable_non_active_support": 164,
       "display_indexable_skill": 287,
       "display_indexable_support": 172,
-      "passive_hash": 5706
+      "passive_hash": 5706,
+      "tree_expansion_jewel_passive": 55
     },
     "duplicate_keys": {},
     "skipped_rows": {},
@@ -20,7 +21,6 @@
       "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
       "specific_skill": "no supported key form (see parity-cli lookup.rs)",
       "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
-      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
       "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
       "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
     }
@@ -29,16 +29,16 @@
   "item_index": {
     "bad_template": 0,
     "empty_text": 1,
-    "entries": 45022,
+    "entries": 45076,
     "gem_quality": 0,
-    "indexed": 15760,
-    "keys": 28090,
-    "lookup": 21,
+    "indexed": 15761,
+    "keys": 28144,
+    "lookup": 22,
     "lookup_blank_names": 6,
     "lookup_multi": 0,
-    "lookup_unavailable": 12,
+    "lookup_unavailable": 11,
     "max_lines": 8,
-    "multi_line": 463,
+    "multi_line": 464,
     "table_only": 0
   },
   "item_scope_shadowed_descriptions": 10,
@@ -51,18 +51,18 @@
     "ambiguous-handed": 8,
     "ambiguous-template": 7298,
     "not-rendered/empty-line": 4,
-    "not-rendered/missing-lookup": 40,
+    "not-rendered/missing-lookup": 37,
     "not-rendered/unknown-handler": 100,
-    "ok": 93645,
+    "ok": 93648,
     "rendered-double-sign": 3,
     "shadowed-description": 109
   },
   "item_scope_outcomes": {
     "ambiguous-template": 3269,
     "not-rendered/empty-line": 4,
-    "not-rendered/missing-lookup": 37,
+    "not-rendered/missing-lookup": 34,
     "not-rendered/unknown-handler": 100,
-    "ok": 57122,
+    "ok": 57125,
     "rendered-double-sign": 3,
     "shadowed-description": 52
   },

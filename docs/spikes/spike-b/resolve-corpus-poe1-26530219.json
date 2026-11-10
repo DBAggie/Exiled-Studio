@@ -6,7 +6,7 @@
       "manifest_sha256": "f77368bbddb53c423bce78ec598e9c80a4f33d634c1db07cee06d71b669cf1ea"
     },
     "tool": {
-      "commit": "b02003d6794e71f92ae943a11412ac240007698a",
+      "commit": "1cf7c3dc9147b11a79ecb80f379bae010516c96b",
       "dirty": false
     },
     "builds": [
@@ -38,7 +38,8 @@
       "display_indexable_non_active_support": 164,
       "display_indexable_skill": 287,
       "display_indexable_support": 172,
-      "passive_hash": 5706
+      "passive_hash": 5706,
+      "tree_expansion_jewel_passive": 55
     },
     "duplicate_keys": {},
     "skipped_rows": {},
@@ -49,49 +50,48 @@
       "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
       "specific_skill": "no supported key form (see parity-cli lookup.rs)",
       "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
-      "tree_expansion_jewel_passive": "no supported key form (see parity-cli lookup.rs)",
       "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
       "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
     }
   },
   "scopes": {
     "graft_stat_descriptions": {
-      "indexed": 15927,
-      "multi_line": 463,
-      "lookup": 21,
-      "keys": 28255,
+      "indexed": 15928,
+      "multi_line": 464,
+      "lookup": 22,
+      "keys": 28309,
       "max_lines": 8,
       "gem_quality": 0,
       "table_only": 0,
       "bad_template": 0,
       "empty_text": 1,
-      "lookup_unavailable": 12,
+      "lookup_unavailable": 11,
       "lookup_multi": 0
     },
     "stat_descriptions": {
-      "indexed": 15760,
-      "multi_line": 463,
-      "lookup": 21,
-      "keys": 28090,
+      "indexed": 15761,
+      "multi_line": 464,
+      "lookup": 22,
+      "keys": 28144,
       "max_lines": 8,
       "gem_quality": 0,
       "table_only": 0,
       "bad_template": 0,
       "empty_text": 1,
-      "lookup_unavailable": 12,
+      "lookup_unavailable": 11,
       "lookup_multi": 0
     },
     "tincture_stat_descriptions": {
-      "indexed": 15888,
-      "multi_line": 468,
-      "lookup": 21,
-      "keys": 28212,
+      "indexed": 15889,
+      "multi_line": 469,
+      "lookup": 22,
+      "keys": 28266,
       "max_lines": 8,
       "gem_quality": 0,
       "table_only": 0,
       "bad_template": 0,
       "empty_text": 1,
-      "lookup_unavailable": 12,
+      "lookup_unavailable": 11,
       "lookup_multi": 0
     }
   },
@@ -141,15 +141,15 @@
       "excluded/not-a-modifier": 230,
       "excluded/not-selected-variant": 2,
       "excluded/pob-custom": 54,
-      "resolved": 3119,
-      "unresolved/no-template": 382,
+      "resolved": 3170,
+      "unresolved/no-template": 331,
       "unresolved/only-shadowed": 1
     },
     "by_section": {
       "enchant": {
         "ambiguous": 35,
-        "resolved": 173,
-        "unresolved/no-template": 54
+        "resolved": 224,
+        "unresolved/no-template": 3
       },
       "explicit": {
         "ambiguous": 113,
@@ -200,13 +200,13 @@
   },
   "rate": {
     "denominator": 3652,
-    "resolved": 3119,
-    "rate": 0.854052573932092,
+    "resolved": 3170,
+    "rate": 0.8680175246440307,
     "excluded": 286,
     "excluded_share": 0.07262569832402235,
     "distinct": 1507,
-    "distinct_resolved": 1195,
-    "distinct_rate": 0.7929661579296616,
+    "distinct_resolved": 1212,
+    "distinct_rate": 0.8042468480424685,
     "distinct_with_mixed_outcomes": 4,
     "meets_rate": false
   },
@@ -1738,11 +1738,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:04ded839fd078b6d": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:07427b322af662d4": {
         "non_unique": 1,
         "unique": 0,
@@ -1785,11 +1780,6 @@
       },
       "sha256:0e6263df5b4b2087": {
         "non_unique": 4,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:10332af0793efcbc": {
-        "non_unique": 9,
         "unique": 0,
         "detail": []
       },
@@ -1861,11 +1851,6 @@
       "sha256:1be374a9c625e944": {
         "non_unique": 0,
         "unique": 1,
-        "detail": []
-      },
-      "sha256:1c77dcf27715f46a": {
-        "non_unique": 1,
-        "unique": 0,
         "detail": []
       },
       "sha256:1cf63c2d67893b89": {
@@ -1943,11 +1928,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:29ea32cda849076b": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:2ab97d1921073f3a": {
         "non_unique": 0,
         "unique": 1,
@@ -2008,11 +1988,6 @@
         "unique": 1,
         "detail": []
       },
-      "sha256:34b6fc650182debb": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:353ff3d0eea2470f": {
         "non_unique": 2,
         "unique": 0,
@@ -2034,11 +2009,6 @@
         "detail": []
       },
       "sha256:3b59923f52e53b08": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3ba6601c28a549ee": {
         "non_unique": 1,
         "unique": 0,
         "detail": []
@@ -2075,11 +2045,6 @@
       },
       "sha256:3e78ab78282cbfea": {
         "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:3e7cf2f2b6dfa7af": {
-        "non_unique": 3,
         "unique": 0,
         "detail": []
       },
@@ -2168,16 +2133,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:4f947b326f9b99b1": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:50a90fd137e9c9be": {
-        "non_unique": 3,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:51273e6b276a5fbb": {
         "non_unique": 2,
         "unique": 0,
@@ -2185,11 +2140,6 @@
       },
       "sha256:525bf575f6cfc420": {
         "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:528eb4004a8e5f00": {
-        "non_unique": 3,
         "unique": 0,
         "detail": []
       },
@@ -2206,11 +2156,6 @@
       "sha256:568c8708d7a9088a": {
         "non_unique": 0,
         "unique": 2,
-        "detail": []
-      },
-      "sha256:571d29f629aa3375": {
-        "non_unique": 1,
-        "unique": 0,
         "detail": []
       },
       "sha256:582325f40087503f": {
@@ -2410,11 +2355,6 @@
       },
       "sha256:7a666771f64a0a0b": {
         "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:7bbe5df56f7c4c78": {
-        "non_unique": 10,
         "unique": 0,
         "detail": []
       },
@@ -2673,11 +2613,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:b32f0b91ace38dac": {
-        "non_unique": 2,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:b45493719b63c60a": {
         "non_unique": 2,
         "unique": 0,
@@ -2858,11 +2793,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:d366b332810334f7": {
-        "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:d3896c9efb93ea4e": {
         "non_unique": 1,
         "unique": 0,
@@ -2876,11 +2806,6 @@
       "sha256:d49ba0174bd1d2e1": {
         "non_unique": 0,
         "unique": 2,
-        "detail": []
-      },
-      "sha256:d597bbb55a106669": {
-        "non_unique": 1,
-        "unique": 0,
         "detail": []
       },
       "sha256:d5ca7b9ae10c2f02": {
@@ -2983,11 +2908,6 @@
         "unique": 0,
         "detail": []
       },
-      "sha256:e7a90cf122334512": {
-        "non_unique": 5,
-        "unique": 0,
-        "detail": []
-      },
       "sha256:eb01b40a53b9f42e": {
         "non_unique": 1,
         "unique": 0,
@@ -3065,11 +2985,6 @@
       },
       "sha256:f59880926df2f3fa": {
         "non_unique": 1,
-        "unique": 0,
-        "detail": []
-      },
-      "sha256:f618e6b9f0add60c": {
-        "non_unique": 4,
         "unique": 0,
         "detail": []
       },
@@ -3155,7 +3070,7 @@
       "unique/unresolved/no-template": 6
     },
     "small-passive-grant": {
-      "non_unique/unresolved/no-template": 56
+      "non_unique/unresolved/no-template": 5
     },
     "spec-shaped": {
       "non_unique/unresolved/no-template": 8,
@@ -4449,18 +4364,18 @@
     }
   },
   "mod_backed": {
-    "resolved": 3119,
+    "resolved": 3170,
     "backed": 3024,
-    "share": 0.9695415197178583,
-    "template_resolved": 2889,
+    "share": 0.9539432176656152,
+    "template_resolved": 2940,
     "template_backed": 2797,
-    "template_share": 0.9681550709588093,
+    "template_share": 0.9513605442176871,
     "equal": 2693,
     "hybrid": 331,
     "not_backed": {
       "no-fitting-row": 6,
       "no-row-with-stats": 5,
-      "row-value-unset": 40,
+      "row-value-unset": 91,
       "values-outside": 44
     },
     "not_backed_texts": {
@@ -4792,6 +4707,176 @@
         ],
         "reasons": [
           "no-row-with-stats"
+        ]
+      },
+      "Added Small Passive Skills grant: 10% increased Damage over Time": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:21"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 10% increased Spell Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:9"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Attack Damage while holding a Shield": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:7"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Burning Damage": {
+        "non_unique": 4,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:17"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Chaos Damage": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:15"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Cold Damage": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:14"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Fire Damage": {
+        "non_unique": 5,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:12"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Physical Damage": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:11"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 12% increased Totem Damage": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:33"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 15% increased Armour": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:41"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 15% increased Critical Strike Chance": {
+        "non_unique": 3,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:28"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 2% Chance to Block Spell Damage": {
+        "non_unique": 2,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:44"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 4% increased maximum Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:38"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 6% increased Flask Effect Duration": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:36"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: 6% increased Mana Reservation Efficiency of Skills": {
+        "non_unique": 10,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:53"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: Minions deal 10% increased Damage": {
+        "non_unique": 9,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:16"
+        ],
+        "reasons": [
+          "row-value-unset"
+        ]
+      },
+      "Added Small Passive Skills grant: Minions have 12% increased maximum Life": {
+        "non_unique": 1,
+        "unique": 0,
+        "detail": [
+          "local_jewel_expansion_passive_node_index=keys:29"
+        ],
+        "reasons": [
+          "row-value-unset"
         ]
       },
       "Adds 2 Passive Skills": {
