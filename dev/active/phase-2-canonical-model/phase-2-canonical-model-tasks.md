@@ -39,7 +39,7 @@ Last Updated: 2026-11-10 (PR P2-2c: Mods filter)
 - [x] Decided: `item_tags` and the essence-column map stay in the tool (extract loading; no `serde_json` in `loom-parser`; the step 3 converter precomputes base tags and essence classes)
 - [x] Spike B field list equal (run in the session; `docs/phase-2/lift-evidence.md`)
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-2b-scope-bases`); write the PR number into the docs right after
+- [x] Open PR (#45, base `feat/p2-2b-scope-bases`); write the PR number into the docs right after
 
 ## PR P2-2d: compositions, grafts, properties, tolerances (step 2d)
 - [ ] Move grafts, properties, case-fold, split-section; `COMPOSITIONS` as per-game data
