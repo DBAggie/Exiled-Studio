@@ -24,8 +24,35 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-4 bundle validator PR #49 open, in review, branch `feat/p2-4-bundle-validator`, stacked on P2-3b)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`) <- #49 P2-4 (base `feat/p2-3b-bundle-converter`).
+## Current state (updated 2026-11-10, P2-5a PoB XML structure open, in review, branch `feat/p2-5a-pob-xml-structure`, stacked on P2-4)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`) <- #49 P2-4 (base `feat/p2-3b-bundle-converter`) <- P2-5a (base `feat/p2-4-bundle-validator`).
+- **PR P2-5a: PoB XML import and semantic export, structure (open, in review, branch `feat/p2-5a-pob-xml-structure`, base `feat/p2-4-bundle-validator`).** Plan step 5a.
+  - **What:** `loom_serialization::legacy::pob_xml` (`import`, `export`, `xml_equal`, `NORMALIZATIONS`; `roxmltree` added to `loom-serialization`).
+    - Typed, with source text kept:
+      - `<Build>` (class, ascendancy, level, main socket group; bandit and pantheon as PoE1 choices);
+      - `<Tree>` specs (tree version, nodes, mastery effects, jewel sockets);
+      - skill sets, socket groups, and gems;
+      - config sets and inputs.
+    - Everything else stays opaque and in place. An element whose typed fields do not read is kept whole (the plan's fallback). `<Items>` stays whole until P2-5b.
+    - The export comes from the model, written by our own writer.
+    - `xml_equal` compares parsed trees, with two normalizations, each with a reason and a test: attribute order, and whitespace between elements. Whitespace is not normalized in mixed content: an element with text keeps every text child, is written without layout, and is compared exactly.
+    - `kept_whole(&Build)` lists the typed elements kept whole: the import's quarantine for typed content (`IMPORT_KEPT_WHOLE`).
+  - **Domain:** `Character.level` is optional. `Build` keeps its container's `attributes`, plus a `prolog` and an `epilog` (content outside the root element).
+  - **Evidence:**
+    - all 24 public fixtures round-trip in CI (`xml_equal`, and re-import gives an equal Build, with the sections typed);
+    - `malformed.xml` gives an `IMPORT_*` code;
+    - 15 unit tests: mutations, fallback, source text, codes, normalizations;
+    - in-session, with the ignored `LOOM_XML_DIR` test: the maintainer's 21-build corpus and PoB's 5 3.13 test builds, 26 of 26.
+
+    wasm32 and `cargo deny` pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. Applied:
+    - exact mixed content (it would have hidden item-text changes in P2-5b);
+    - `kept_whole`, so a fallback is visible;
+    - canonical numbers (`+5` and `007` keep their element whole);
+    - `itemId="0"` means no item;
+    - the redundant line-endings normalization removed.
+    
+    Kept by decision: a missing `enabled` or `quality` keeps the gem or group whole and listed. PoB reads a missing `enabled` as false and a missing `quality` as nil, but a missing attribute and `"false"` would not round-trip the same.
 - **PR P2-4: bundle validator (PR #49, open, in review, branch `feat/p2-4-bundle-validator`, base `feat/p2-3b-bundle-converter`).** Plan step 4; gate items 3d and 4.
   - **What:** `loom_data::bundle::validate` (`crates/loom-data/src/bundle/validate.rs`) runs five kinds of check, each finding with a `BUNDLE_*` code:
     - structural: SHA-256 (`sha2` now in `loom-data`) and size of every listed file, unlisted files, an empty `signatures`;
@@ -232,15 +259,16 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 11`): if the maintainer merged or asked for changes on #42 to #49, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-2. **P2-5a: PoB XML import and semantic export, structure** (plan step 5, split as the plan allows: 5a covers Build, Tree, Skills, Config, and the opaque sections; 5b covers Items, item sets, and slots). Branch from `feat/p2-4-bundle-validator` and target it as base:
-   - `loom-serialization::legacy::pob_xml`: read with `roxmltree` (a new dependency of `loom-serialization`; MIT or Apache-2.0, pure Rust; run `cargo deny` and wasm32) into `loom_domain::Build`;
-     - typed: `<Build>` attributes (class, ascendancy, level, main socket group; bandit and pantheon into `GameSpecific::Poe1`), `<Tree>`/`<Spec>` (tree version, nodes, mastery effects, jewel sockets), `<Skills>`/`<SkillSet>`/`<Skill>`/`<Gem>`, and `<Config>`/`<ConfigSet>`/`<Input>`;
-     - everything else is opaque and kept in place (`Ordered`, layout markers), including attributes in order, comments, and processing instructions;
-     - typed values keep their source text (`Sourced`);
-   - our own XML writer for the export;
-   - `xml_equal(a, b)` over parsed trees, plus a closed list of extra normalizations, each with a reason and a test;
-   - tests on the public fixtures (`tools/oracle/fixtures/fixtures.json`): `import(export(import(x))) == import(x)` and `xml_equal(export(import(x)), x)`, with items kept opaque until 5b; unknown-content mutations; malformed XML gives `IMPORT_*` codes and never panics.
+1. **Stack check** (`gh pr list --state all --limit 12`): if the maintainer merged or asked for changes on #42 to #49 or P2-5a, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+2. **P2-5b: PoB XML items, item sets, slots** (plan step 5b). Branch from `feat/p2-5a-pob-xml-structure` and target it as base:
+   - type `<Items>` into `loom_domain::Items`:
+     - each `<Item>` gets its id and `ItemBody` from the last non-blank text child, through `pob_item::read` and `to_domain`;
+     - every other text child, `<ModRange>`, and anything else stays opaque around `ItemPart::Body`;
+     - `<ItemSet>` and `<Slot>` (name, `itemId`) are typed;
+     - the rest stays opaque;
+   - export each item's text from the model (decision 6): every line's source in order, with the original text's surrounding whitespace kept so `xml_equal` holds. Record the rule;
+   - the `BuildPart::Items` marker replaces the whole-`<Items>` fallback;
+   - tests: items round-trip on the public fixtures and in-session on the corpus; mutations (several item texts, comments between items, an unknown slot attribute).
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

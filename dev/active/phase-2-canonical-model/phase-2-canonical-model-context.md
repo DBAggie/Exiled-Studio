@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-4: bundle validator; stack #42 <- ... <- #48 <- P2-4)
+Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure; stack #42 <- ... <- #49 <- P2-5a)
 
 # Phase 2: context
 
@@ -288,3 +288,38 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - a changed file size gives two codes (hash and size);
   - the hash comparison is case-sensitive, and the converter writes lowercase;
   - `list()` failures have an empty `at`.
+
+## Decisions in P2-5a (PoB XML structure, 2026-11-10)
+- **`loom_serialization::legacy::pob_xml`** has `import`, `export`, `xml_equal`, `NORMALIZATIONS`, and `kept_whole`. `roxmltree` 0.21 was added to `loom-serialization` (`cargo deny` and wasm32 pass).
+- **Typed:**
+  - `<Build>`: class, ascendancy, level, main socket group; bandit and pantheon into `GameSpecific::Poe1`;
+  - `<Tree>`: `activeSpec`;
+  - `<Spec>`: title, tree version, nodes, mastery effects as `Sourced` lists, and `<Sockets>`/`<Socket>`, where `itemId="0"` means no item;
+  - `<Skills>`: `activeSkillSet`, with `<SkillSet>`, `<Skill>`, and `<Gem>`;
+  - `<Config>`: `activeConfigSet`, with `<ConfigSet>` and `<Input>` (exactly one of `boolean`, `number`, `string`).
+  
+  Specs get `SpecId` by order.
+- **Kept whole (the fallback):** an element whose typed fields do not read is kept whole and listed by `kept_whole`, the import's visible quarantine for typed content (`IMPORT_KEPT_WHOLE`). That covers a number that is not canonical, a boolean that is not `true` or `false`, a missing required attribute, or children where none are expected.
+  - Required: a gem's `level`, `quality`, and `enabled`, and a group's `enabled`. PoB reads a missing `enabled` as false and a missing `quality` as nil, but typing them would not round-trip a missing attribute.
+  - A second typed section (two `<Tree>`) is kept whole.
+- **Opaque content:** every other element, attribute, comment, and processing instruction stays in place. Content before and after the root goes into `Build.prolog` and `Build.epilog`, and the root's attributes into `Build.attributes`.
+- **Whitespace:** whitespace-only text between elements is layout and is dropped. In mixed content (an element with text), every text child is kept, the export writes no layout there, and `xml_equal` compares it exactly. This matters for P2-5b's item text around `<ModRange>`.
+- **`xml_equal`:** compares parsed trees with two normalizations, attribute order and whitespace between elements (not in mixed content). The parser already reads CRLF as LF and resolves entities, so no line-ending rule is needed.
+- **Writer:** writes typed attributes first, then the kept ones in order. An empty list attribute without source text is omitted (a source `nodes=""` is written back). Escaping: `& < > "`, and `
+ 	 ` in attributes; `` in text.
+- **Domain:** `Character.level` is optional (PoB may omit it; a consumer defaults it to 1). `Build` gained `attributes`, `prolog`, and `epilog`.
+- **Known non-goals:** namespaces, DOCTYPE, and the declaration's encoding and standalone attributes are not kept. PoB writes none.
+
+## code-architecture-reviewer (P2-5a, 2026-11-10) summary
+- **No blockers.**
+- **Should-fix, applied:**
+  - exact mixed content (otherwise item-text changes would pass in P2-5b);
+  - `kept_whole`, so a fallback is visible;
+  - canonical numbers;
+  - `itemId="0"` is no item;
+  - the line-endings normalization removed.
+- **Kept by decision:** required `enabled` and `quality`, as above.
+- **Nits, not done:**
+  - `children()` clones nodes just to test them;
+  - `set_game_specific(..).ok()`: it is always PoE1, so it cannot fail;
+  - for duplicate sections, the first typed one wins, and an earlier one that does not read is kept whole.

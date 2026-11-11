@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-4: bundle validator)
+Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure)
 
 # Phase 2: tasks
 
@@ -73,11 +73,17 @@ Last Updated: 2026-11-10 (PR P2-4: bundle validator)
 - [x] `code-architecture-reviewer`; findings in the context file
 - [x] Open PR (#49, base `feat/p2-3b-bundle-converter`); write the PR number into the docs right after
 
-## PR P2-5: PoB XML import and semantic export (step 5; may split 5a/5b)
-- [ ] Typed sections, opaque rest, item lines as source text
-- [ ] Export from the model; own XML writer
-- [ ] `xml_equal` (parsed trees) and the closed normalization list
-- [ ] Round-trip and mutation tests on public fixtures (in-between content, several item texts, comments); malformed-input tests
+## PR P2-5a: PoB XML import and semantic export, structure (step 5a)
+- [x] Typed Build, Tree, Skills, Config; opaque rest in place; fallback to opaque for elements whose typed fields do not read; Items whole until 5b
+- [x] Export from the model; own XML writer
+- [x] `xml_equal` (parsed trees) and the closed normalization list (attribute order, whitespace between elements, line endings)
+- [x] Round-trip on the 24 public fixtures (CI) and, in-session, the 21-build corpus and PoB's 5 3.13 builds; mutation tests (unknown attribute, element between gems, section, comment, instruction, prolog); malformed-input codes
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-4-bundle-validator`); write the PR number into the docs right after
+
+## PR P2-5b: PoB XML items, item sets, slots (step 5b)
+- [ ] `<Items>`: items (every `<Item>` text child kept; the last non-blank one read with `pob_item::to_domain`; `ModRange` and other children opaque in place), item sets, slots; export generated from the item model (decision 6)
+- [ ] Item round-trip and mutation tests (several item texts, comments); corpus in-session
 
 ## PR P2-6: `resolve_build` (step 6)
 - [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness

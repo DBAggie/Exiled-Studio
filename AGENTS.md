@@ -127,6 +127,9 @@ cargo run --release -p loom-parity-cli -- divergence-check docs/parity/divergenc
 # paths handed to LuaJIT must be ASCII). LOOM_ORACLE_DIR must be absolute (cargo test runs in the crate):
 LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 
+# PoB XML round-trip on a local folder of builds (P2-5; the corpus stays local, ADR-007; LOOM_XML_DIR absolute):
+LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixtures -- --ignored --nocapture
+
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
 pnpm format:check && pnpm lint && pnpm build
