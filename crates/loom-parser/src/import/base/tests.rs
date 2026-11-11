@@ -37,6 +37,7 @@ fn data(rows: &[(&str, i64)]) -> Data {
         rules: ItemRules {
             default_scope: "main".to_owned(),
             domain_scopes: vec![(7, "special".to_owned()), (9, "special".to_owned())],
+            mods: crate::import::mods::ModRules::default(),
         },
         bases,
     }

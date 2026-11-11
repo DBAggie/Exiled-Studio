@@ -9,6 +9,8 @@
 
 use std::collections::BTreeSet;
 
+use super::mods::ModRules;
+
 /// Per-game item rules, read from the game's data bundle (Phase 2 plan,
 /// decision 5); until step 3 a tool supplies them.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,6 +21,8 @@ pub struct ItemRules {
     /// Mod domains with their own scope root; the first entry of a domain
     /// wins.
     pub domain_scopes: Vec<(i64, String)>,
+    /// The mod-row filter's rules.
+    pub mods: ModRules,
 }
 
 impl ItemRules {

@@ -10,7 +10,10 @@
 //! stay in that format's adapter, which hands this module a [`BaseQuery`].
 //!
 //! - [`base`]: an item's base rows and stat-description scope (P2-2b).
+//! - [`mods`]: the mod-row filter for ambiguous lines and the
+//!   `mod-backed` measure (P2-2c).
 
 pub mod base;
+pub mod mods;
 
 pub use base::{BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, find_base};

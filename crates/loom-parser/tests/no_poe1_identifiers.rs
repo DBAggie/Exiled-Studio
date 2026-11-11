@@ -32,7 +32,7 @@ const CORE_CRATES: [&str; 5] = [
     "loom-serialization",
 ];
 
-const POE1_ONLY: [&str; 15] = [
+const POE1_ONLY: [&str; 23] = [
     "Bandit",
     "bandit",
     "Pantheon",
@@ -48,6 +48,15 @@ const POE1_ONLY: [&str; 15] = [
     "INFLUENCE_TYPES",
     "tincture_stat_descriptions",
     "graft_stat_descriptions",
+    // P2-2c: the mod filter's PoE1 constants (now `poe1` data in the tool).
+    "NO_INFLUENCE",
+    "FLASK_ENCHANTMENT",
+    "WEAPON_TREE",
+    "SCOURGE",
+    "EXARCH",
+    "UNVEILED",
+    "DELVE",
+    "ABYSS_JEWEL",
 ];
 
 fn allowed(path: &Path) -> bool {

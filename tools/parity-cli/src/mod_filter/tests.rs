@@ -1,6 +1,17 @@
-use loom_data::stat_desc::{DescRef, Hand, StatValue};
+use loom_data::stat_desc::{Condition, DescRef, Hand, StatValue};
+
+use std::sync::LazyLock;
+
+use loom_parser::import::BaseRow;
+use loom_parser::import::mods::{self, Decision, ModRules, numbered_stat, unnumbered};
+use loom_parser::resolve::{Candidate, RawValue, ResolvedStat};
+use loom_serialization::legacy::pob_item::domain_section;
 
 use super::*;
+use crate::poe1::domain;
+
+/// The PoE1 rules the harness runs with.
+static RULES: LazyLock<ModRules> = LazyLock::new(|| poe1::item_rules().mods);
 
 const ITEM: i64 = domain::ITEM;
 const PRE: i64 = generation::PREFIX;
@@ -58,6 +69,49 @@ fn base(tags: Option<&[&str]>) -> BaseRow {
     }
 }
 
+/// A line as Spike B's filter took it; mapped onto the core context.
+#[derive(Debug, Clone, Copy)]
+struct LineContext {
+    section: Section,
+    crafted: bool,
+    exarch: bool,
+    eater: bool,
+}
+
+impl LineContext {
+    fn core(self) -> mods::LineContext {
+        let flags = [
+            (self.crafted, "crafted"),
+            (self.exarch, "exarch"),
+            (self.eater, "eater"),
+        ];
+        mods::LineContext {
+            section: domain_section(self.section),
+            flags: flags
+                .iter()
+                .filter(|(on, _)| *on)
+                .map(|(_, f)| (*f).to_owned())
+                .collect(),
+        }
+    }
+}
+
+fn fits(row: &ModRow, base: &BaseRow, unique: bool, line: LineContext) -> bool {
+    mods::fits(&RULES, row, base, unique, &line.core())
+}
+
+fn filter(ctx: &Context<'_>, line: LineContext, candidates: &[Candidate]) -> Decision {
+    mods::filter(ctx, &line.core(), candidates)
+}
+
+fn backing<'m>(
+    ctx: &Context<'m>,
+    line: LineContext,
+    stats: &[ResolvedStat],
+) -> Result<(bool, &'m str), &'static str> {
+    mods::backing(ctx, &line.core(), stats)
+}
+
 fn line(section: Section) -> LineContext {
     LineContext {
         section,
@@ -76,6 +130,7 @@ const EXPLICIT: LineContext = LineContext {
 
 fn ctx<'a>(mods: &'a Mods, bases: &'a [BaseRow]) -> Context<'a> {
     Context {
+        rules: &RULES,
         mods,
         bases,
         unique: false,
@@ -415,7 +470,7 @@ fn influence_types_should_match_the_vendored_schema_enum() {
     assert_eq!(e["indexing"], 0);
     let names = e["enumerators"].as_array().unwrap();
     let at = |n: i64| names[usize::try_from(n).unwrap()].as_str().unwrap();
-    assert_eq!(at(NO_INFLUENCE), "NONE");
+    assert_eq!(at(poe1::NO_INFLUENCE), "NONE");
     let expected = [
         ("Shaper", "SHAPER"),
         ("Elder", "ELDER"),
@@ -560,7 +615,7 @@ fn load_should_read_eight_stat_slots_and_drop_zero_stats() {
         }
         .into_bytes())
     };
-    let mods = Mods::load(&read).unwrap();
+    let mods = load(&read).unwrap();
     let r = mods.row(0).unwrap();
     assert_eq!(r.stats, [("s0".to_owned(), 3, 5), ("s2".to_owned(), 7, 9)]);
     assert_eq!(r.unset, ["s1".to_owned()]);
@@ -572,7 +627,7 @@ fn load_should_read_eight_stat_slots_and_drop_zero_stats() {
         (r.influence, r.essence_only, r.domain, r.generation),
         (None, true, 1, 2)
     );
-    assert_eq!(mods.rows_for(&[exact("s2", 8)]).len(), 1);
+    assert_eq!(mods.rows_with_stat("s2").count(), 1);
     assert_eq!(r.mod_type, Some(0));
     assert_eq!(
         mods.locality
@@ -828,7 +883,7 @@ fn essence_read(p: &str, ids: &[&str], mods_rows: usize) -> Result<Vec<u8>, Stri
 fn load_should_apply_essence_classes_to_the_mods_rows() {
     let ids = class_ids();
     let ids_ref: Vec<&str> = ids.iter().map(String::as_str).collect();
-    let mods = Mods::load(&|p: &str| essence_read(p, &ids_ref, 3)).unwrap();
+    let mods = load(&|p: &str| essence_read(p, &ids_ref, 3)).unwrap();
     let warstaff = i64::try_from(ids.iter().position(|c| c == "Warstaff").unwrap()).unwrap();
     assert!(
         mods.row(0)
@@ -847,7 +902,7 @@ fn load_should_apply_essence_classes_to_the_mods_rows() {
 fn load_should_fail_when_essences_names_a_row_outside_mods() {
     let ids = class_ids();
     let ids_ref: Vec<&str> = ids.iter().map(String::as_str).collect();
-    assert!(Mods::load(&|p: &str| essence_read(p, &ids_ref, 1)).is_err());
+    assert!(load(&|p: &str| essence_read(p, &ids_ref, 1)).is_err());
 }
 
 #[test]

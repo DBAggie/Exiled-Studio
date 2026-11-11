@@ -848,13 +848,13 @@ impl<'i> Lines<'i, '_> {
             detail: detail(&resolution.outcome),
             ..LineRecord::default()
         };
-        let line = run.get(at).and_then(|(_, m)| LineContext::of(m));
+        let line = run.get(at).map(|(_, m)| LineContext::of(m));
         let mut resolved = match &resolution.outcome {
             Outcome::Resolved(c) => Some(c),
             _ => None,
         };
         if let (Some(ctx), Some(line), Outcome::Ambiguous(cs)) =
-            (self.ctx, line, &resolution.outcome)
+            (self.ctx, line.as_ref(), &resolution.outcome)
         {
             let d = mod_filter::filter(ctx, line, cs);
             record.filter = Some(d.name());
@@ -880,7 +880,7 @@ impl<'i> Lines<'i, '_> {
                     .collect();
             }
         }
-        if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line, resolved)
+        if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line.as_ref(), resolved)
             && !ctx.unique
         {
             match mod_filter::backing(ctx, line, &c.stats) {
@@ -1156,7 +1156,7 @@ pub fn run(
         composition_rows: game
             .compositions
             .iter()
-            .map(|c| (c.stat.clone(), mods.eldritch_share(&c.stat)))
+            .map(|c| (c.stat.clone(), mod_filter::eldritch_share(mods, &c.stat)))
             .collect(),
         ..Summary::default()
     };
@@ -1356,14 +1356,17 @@ fn count_item(
     let unique = item.rarity.is_none_or(Rarity::is_unique);
     let index = found.as_ref().ok().and_then(|f| indexes.get(f.scope));
     let ctx = found.as_ref().ok().map(|f| Context {
+        rules: &bases.item_rules().mods,
         mods,
         bases: f.rows,
         unique,
         influences: item
             .lines
             .iter()
-            .filter(|l| matches!(l.kind, LineKind::Influence(_)))
-            .filter_map(|l| mod_filter::influence_type(&l.source))
+            .filter_map(|l| match &l.kind {
+                LineKind::Influence(id) => bases.item_rules().mods.influence_value(id),
+                _ => None,
+            })
             .collect(),
     });
     let mut records = item_lines(

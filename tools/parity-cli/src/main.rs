@@ -260,7 +260,7 @@ fn resolve_corpus(
     let loaded = extract::load(&read)?;
     let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
     let bases = resolve_corpus::Bases::load(&read)?;
-    let mods = mod_filter::Mods::load(&read)?;
+    let mods = mod_filter::load(&read)?;
     let game = categorize::GameText::load(&loaded.set, &read, pob)?;
     let mut builds = Vec::new();
     for entry in
