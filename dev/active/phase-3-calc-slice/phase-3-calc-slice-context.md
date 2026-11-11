@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (PR #59, P3-0: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-11 (P3-1a: bundle format 2 with the skill tables)
 
 # Phase 3: calc slice (context)
 
@@ -84,3 +84,16 @@ Verdict: proceed, with changes. No ADR contradicted; decision 12 (WP1, WP2, WP6 
 - The bundle has no calc tables; the extract has most of them (Current state in the plan). Per-level stat sets (`GrantedEffectStatSetsPerLevel`), `WeaponTypes`, `ArmourTypes`, `ShieldTypes`, and default monster stats are not in `local/determinism/poe1/run1/tables`.
 - `oracle-compare` treats a field absent on one side as a difference, so comparing a slice needs a completeness-aware mode (`calc-parity`), not the current tool as is.
 - The PR stack: PR #42 (`feat/p2-1-domain-model`) holds all of Phase 2 (#43 to #58 squash-merged into it 2026-11-11); its merge to `main` is blocked by an external DNS problem (maintainer, 2026-11-11). P3-0 branches from it and targets it; CI is not checked until the maintainer says so.
+
+## Decisions in P3-1a (bundle format 2, skill tables; evidence `docs/phase-3/bundle-v2-skills.md`)
+- **Format 2 = format 1 + whole sections.** `loom_data::bundle::skills`: `data/skill_types.json`, `cost_types.json`, `active_skills.json`, `granted_effects.json` (per-level rows and quality stats inside), `stat_sets.json` (per-level values inside), `gems.json` (keyed by base item), `gem_effects.json`, `gem_tags.json`. All required in format 2; one in a format-1 bundle is `BUNDLE_FORMAT_FILE`. Format 1 still loads (`skills` is `None`). `data_schema` is 2 (each build's data version records it). P3-1b and P3-1c add required files to format 2, so local format-2 bundles are remade after each.
+- **One set of types for both games.** Game differences stay in the converter (column names per game; PoE1 cost types per level, PoE2 per effect; PoE1 mana and life reservations, PoE2 `Reservation` as spirit, per PoB's PoE2 exporter) and in optional fields (`damage_effectiveness` PoE1, `damage_incremental_effectiveness` PoE2, `weapon_classes` PoE1).
+- **Values as stored.** No PoB scaling in the bundle; the interpolation number is kept raw (1, 2, 3) until P3-9a gives it a meaning with evidence. `f32` fields are written as their shortest text and read back to the same bits (bit-pattern sweep test).
+- **Validator:** every skill reference (`BUNDLE_DANGLING_REF`), unique and non-empty IDs per skill file (`BUNDLE_DUPLICATE_ID`, `BUNDLE_EMPTY_ID`), strictly ascending levels (`BUNDLE_SKILL_LEVELS`); a mutation case each.
+- **Converter:** columns both games have are required, and one of each game's alternative sets must be complete, so a renamed column fails the run; the summary counts sorted level lists, unequal parallel lists, owner-less rows, dropped stats and gems. Real data: 0 except one sorted level list (PoE1 `IncaBossSummonAtziri`) and 4 PoE1 stat sets without levels.
+- **Extractor:** `SKILL_TABLES` roots in both games (new tables `GrantedEffectStatSetsPerLevel`, `GrantedEffectQualityStats`, `EffectivenessCostConstants`); every earlier extract file byte-identical.
+- **Not carried:** PoE1 Ruthless gem effects, level requirements, Vaal soul costs, PoE2 quality `AltStats`/`ApplyToStatSets`, PoE2 skill weapon requirements.
+- **Open:** `cargo deny check` fails on RUSTSEC-2024-0370 (`proc-macro-error`, via Tauri/GTK) on the base branch too; not this PR's change, for the maintainer.
+
+## code-architecture-reviewer (P3-1a, 2026-11-11) summary
+No code blockers; no ADR or crate-boundary issue. Applied: required columns per game instead of silent zeros; dropped stats and gems counted, NaN sentinel removed; `cost_types.json` with a referential check; `ConstantStat` named rows; `BUNDLE_EMPTY_ID`; mutation cases for each support-type list and the cost type; every converter summary counter asserted; missing-column tests. Not applied: an interpolation enum (kept raw until P3-9a decides with evidence); `serde_json`'s `float_roundtrip` (the bit-pattern sweep passes; revisit if a value fails); the commit trailer remark (the trailer is the one the session was given). Format 2 changing in 1b/1c is stated above and in the handoff.

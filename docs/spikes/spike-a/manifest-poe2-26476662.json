@@ -10,6 +10,7 @@
     "Folders/data/12/balance.datc64": "87deca04c9cdc9c91c9fea45eacf245a9e1c6d75a75f095bdf131115ff7d4d83",
     "Folders/data/13/balance.datc64": "4ef4c2b6e55e7cc383e034869a9ea84cd6dc6077200c2fcf8084a0e8efccfbbf",
     "Folders/data/15/balance.datc64": "b3f407ca6b500bf645501d39b1a4ae7c483949bc39ad67472d0ee5795f4ab6e7",
+    "Folders/data/1C/balance.datc64": "af3ed121c08de945fffc03276ca4f5a446defea703d1b57cfe6c609e644dd31e",
     "Folders/data/1E/balance.datc64": "bf2631189ac897e5e8c77ba0c8b4d2f9a23a8a89571d23c9c3d2f682fc2c1cb4",
     "Folders/data/1F/balance.datc64": "5f7c54155f1da6166711dd6b6fc8d7a714b6d0a2ffa9bdc09b6ab4c5b95ce611",
     "Folders/data/22/balance.datc64": "95a4f44b75f6cd5ff0009197aacfc4ca02478bdb1dfcd37bb4ee4a82afeaaf5a",
@@ -33,6 +34,7 @@
     "Folders/data/51/balance.datc64": "3540b9f663e4eab83a54aaa976f19e01a3d26077166dcfbf76772a7b17ce4e94",
     "Folders/data/55/balance.datc64": "01933e2e86c369394f77dc74a3228dc27f9278b6b514fbf6c14a8d4defc9de1c",
     "Folders/data/60/balance.datc64": "46e6534985e914ca666773de7290cb69f72c54d14c51d75663fb632baf38afde",
+    "Folders/data/61/balance.datc64": "fac993f684425941f6c5f017cd85b17c40e0d98ab8891707660d48e8ac492105",
     "Folders/data/66/balance.datc64": "8a07754e9a37bd380e21226b1179f89e50840ccfff95dacfd01cb80acbca5732",
     "Folders/data/67/balance.datc64.1": "144525f092228e0d210dcc5ed8e67ab195e655a60c591bb8652ad324c5ea50c0",
     "Folders/data/6D/balance.datc64": "464edec44cd307dfcd3299814b0ac1fe1bce57be781271fae94bd752f7cdbc99",
@@ -79,7 +81,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
+    "commit": "c9b58aae11f8860f25ef26778ba81847aede504b",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -3684,6 +3686,10 @@
       "rows": 18,
       "sha256": "805f5d566719e262b997be84e820bdd4af9f24041d7a56d1ae9e73335c1e4de0"
     },
+    "tables/EffectivenessCostConstants.json": {
+      "rows": 3,
+      "sha256": "0f858721b16c34900b6437f26e1565ceb96e195adb6d55aacf26109cceb4f09b"
+    },
     "tables/FlavourText.json": {
       "rows": 3591,
       "sha256": "a85d3d0502e1b74830f2f85f48a86566c1a28490eee98c8286c465bec97c7559"
@@ -3700,9 +3706,17 @@
       "rows": 202,
       "sha256": "8105f7c9bf37b762b84239c7e4fd93f538c319602e7884c8a9639fba3917e373"
     },
+    "tables/GrantedEffectQualityStats.json": {
+      "rows": 429,
+      "sha256": "7d193880967af56a80ff3349485cc82ac8dd394395157b5dfe60d940b85c7023"
+    },
     "tables/GrantedEffectStatSets.json": {
       "rows": 8284,
       "sha256": "62202ca1b05d819461a0b25faa606646af511137a5f80720e6bf8b2a1f866e1d"
+    },
+    "tables/GrantedEffectStatSetsPerLevel.json": {
+      "rows": 41558,
+      "sha256": "61cd4c17b1e49b22a4417164564f2d4203cf36e2f5a963e3d2cc1573be1c0e5e"
     },
     "tables/GrantedEffects.json": {
       "rows": 8350,
@@ -39308,9 +39322,10 @@
       "output": "tables/ActiveSkillType.json",
       "referenced_by": [
         "ActiveSkills",
+        "GrantedEffectQualityStats",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 24,
       "row_size_mismatch": null,
       "rows": 290,
@@ -40385,6 +40400,24 @@
       "source_sha256": "13b7f7b5ae99fcce6489e4bf66331c39daedd3f9c3dfd5c26751472d3e240745",
       "status": "ok"
     },
+    "EffectivenessCostConstants": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/EffectivenessCostConstants.json",
+      "referenced_by": [
+        "GrantedEffectStatSetsPerLevel"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 3,
+      "source": "data/balance/effectivenesscostconstants.datc64",
+      "source_sha256": "768f19841d61f0d9429a4fda34e2ef5812285acb8d2026960049c87aabb96acd",
+      "status": "ok"
+    },
     "FlavourText": {
       "columns": 3,
       "columns_read": 3,
@@ -40434,7 +40467,7 @@
       "referenced_by": [
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 142,
       "row_size_mismatch": null,
       "rows": 1194,
@@ -40468,7 +40501,7 @@
       "referenced_by": [
         "GemEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 64,
       "row_size_mismatch": null,
       "rows": 67,
@@ -40492,6 +40525,48 @@
       "rows": 202,
       "source": "data/balance/grantedeffectlabels.datc64",
       "source_sha256": "fb15d2f4a437a6739b27525670da1475d46408031e64e25eb8b2a25ae182bad8",
+      "status": "ok"
+    },
+    "GrantedEffectQualityStats": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "AddMinionTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 0
+        },
+        "AddTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 0
+        },
+        "AltStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 273
+        },
+        "GrantedEffect": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 429
+        },
+        "Stats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 442
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectQualityStats.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 144,
+      "row_size_mismatch": null,
+      "rows": 429,
+      "source": "data/balance/grantedeffectqualitystats.datc64",
+      "source_sha256": "c1d6d517bdd38abfb01dd7e9847c377c49e6a46d7ae45f11154628ae6f3921f5",
       "status": "ok"
     },
     "GrantedEffectStatSets": {
@@ -40523,14 +40598,62 @@
       "non_finite_floats": 0,
       "output": "tables/GrantedEffectStatSets.json",
       "referenced_by": [
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 101,
       "row_size_mismatch": null,
       "rows": 8284,
       "source": "data/balance/grantedeffectstatsets.datc64",
       "source_sha256": "1b01d58841c9550316628198d1a0c4d0900337724517c3823021ba5a64859d55",
+      "status": "ok"
+    },
+    "GrantedEffectStatSetsPerLevel": {
+      "columns": 17,
+      "columns_read": 17,
+      "error": null,
+      "key_columns": {
+        "AdditionalFlags": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 2
+        },
+        "AdditionalStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 17162
+        },
+        "FloatStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 20175
+        },
+        "GrantedEffects": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 42032
+        },
+        "InterpolationBases": {
+          "dangling": 0,
+          "target": "EffectivenessCostConstants",
+          "values": 20175
+        },
+        "StatSet": {
+          "dangling": 0,
+          "target": "GrantedEffectStatSets",
+          "values": 41558
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectStatSetsPerLevel.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 185,
+      "row_size_mismatch": null,
+      "rows": 41558,
+      "source": "data/balance/grantedeffectstatsetsperlevel.datc64",
+      "source_sha256": "35ba3efcef0de264c9110e077736716b6d6e3730f228f53a23f290600188f769",
       "status": "ok"
     },
     "GrantedEffects": {
@@ -40608,6 +40731,8 @@
       "output": "tables/GrantedEffects.json",
       "referenced_by": [
         "GemEffects",
+        "GrantedEffectQualityStats",
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects",
         "GrantedEffectsPerLevel",
         "MonsterVarieties"
@@ -40637,7 +40762,7 @@
         "Characters",
         "Mods"
       ],
-      "root": false,
+      "root": true,
       "row_len": 116,
       "row_size_mismatch": null,
       "rows": 34301,
@@ -42277,7 +42402,7 @@
         "PassiveSkills",
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 250,
       "row_size_mismatch": null,
       "rows": 1191,
@@ -42398,7 +42523,9 @@
         "BuffVisualOrbTypes",
         "CostTypes",
         "GemTags",
+        "GrantedEffectQualityStats",
         "GrantedEffectStatSets",
+        "GrantedEffectStatSetsPerLevel",
         "ItemVisualIdentity",
         "MinionType",
         "ModType",

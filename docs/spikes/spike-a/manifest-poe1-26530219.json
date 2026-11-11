@@ -37,7 +37,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "69f8357e9c387045c5237fc29c7c18f94601da46",
+    "commit": "c9b58aae11f8860f25ef26778ba81847aede504b",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -2006,6 +2006,10 @@
       "rows": 17,
       "sha256": "c5d69e79d066b9edb1fc6a3818e6962e3e2ad5e9e420bba2e6d63b3ec2079783"
     },
+    "tables/EffectivenessCostConstants.json": {
+      "rows": 3,
+      "sha256": "0f858721b16c34900b6437f26e1565ceb96e195adb6d55aacf26109cceb4f09b"
+    },
     "tables/EssenceType.json": {
       "rows": 26,
       "sha256": "1c6d1b96238052dab1472fa33fa1928aedec6a22fb70f1b3f43865aed48e5920"
@@ -2026,9 +2030,17 @@
       "rows": 54,
       "sha256": "092c3fddb438be2c79f4d7bca689f74cc48ab7018fc6630c85828d7e4ba1380c"
     },
+    "tables/GrantedEffectQualityStats.json": {
+      "rows": 1014,
+      "sha256": "d8a215ee04241046ceb86705f4269d3a49f87381e54cf3f98ed0a6baa3bf1c4c"
+    },
     "tables/GrantedEffectStatSets.json": {
       "rows": 12763,
       "sha256": "18f80c5a6286560dae8e03fad16c0a22d9489bfc82a030107930ca0fa75f662a"
+    },
+    "tables/GrantedEffectStatSetsPerLevel.json": {
+      "rows": 79927,
+      "sha256": "bdf3aea248759874365e974ef0aa05f007716a31bfa92195ea4b4789669a01c9"
     },
     "tables/GrantedEffects.json": {
       "rows": 12829,
@@ -9121,7 +9133,7 @@
         "ActiveSkills",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 24,
       "row_size_mismatch": null,
       "rows": 135,
@@ -10133,6 +10145,24 @@
       "source_sha256": "d6c8326737a0fabe5f574205ba8f430923d482d3c6070eea82f2f309f47d5eb2",
       "status": "ok"
     },
+    "EffectivenessCostConstants": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/EffectivenessCostConstants.json",
+      "referenced_by": [
+        "GrantedEffectStatSetsPerLevel"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 3,
+      "source": "data/effectivenesscostconstants.datc64",
+      "source_sha256": "768f19841d61f0d9429a4fda34e2ef5812285acb8d2026960049c87aabb96acd",
+      "status": "ok"
+    },
     "EssenceType": {
       "columns": 5,
       "columns_read": 5,
@@ -10468,7 +10498,7 @@
       "referenced_by": [
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 132,
       "row_size_mismatch": null,
       "rows": 1292,
@@ -10507,12 +10537,39 @@
       "referenced_by": [
         "GemEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 80,
       "row_size_mismatch": null,
       "rows": 54,
       "source": "data/gemtags.datc64",
       "source_sha256": "fe67a51f409fca3e53daf3f4f7a50a93b2c876f0d90a138c3020a7be4854e08f",
+      "status": "ok"
+    },
+    "GrantedEffectQualityStats": {
+      "columns": 5,
+      "columns_read": 5,
+      "error": null,
+      "key_columns": {
+        "GrantedEffectsKey": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 1014
+        },
+        "StatsKeys": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 1029
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectQualityStats.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 80,
+      "row_size_mismatch": null,
+      "rows": 1014,
+      "source": "data/grantedeffectqualitystats.datc64",
+      "source_sha256": "54e97f940dc45fc8979fb1109b72e1f0e10e39b3386de02de0f6a9e8a255ad3e",
       "status": "ok"
     },
     "GrantedEffectStatSets": {
@@ -10534,14 +10591,62 @@
       "non_finite_floats": 0,
       "output": "tables/GrantedEffectStatSets.json",
       "referenced_by": [
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 68,
       "row_size_mismatch": null,
       "rows": 12763,
       "source": "data/grantedeffectstatsets.datc64",
       "source_sha256": "4b337e9f36a390c96dda0d1f72f1ba9d93337b033440a308d38eeb34bc4d8d24",
+      "status": "ok"
+    },
+    "GrantedEffectStatSetsPerLevel": {
+      "columns": 16,
+      "columns_read": 16,
+      "error": null,
+      "key_columns": {
+        "AdditionalFlags": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 275
+        },
+        "AdditionalStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 92704
+        },
+        "FloatStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 69231
+        },
+        "GrantedEffects": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 80208
+        },
+        "InterpolationBases": {
+          "dangling": 0,
+          "target": "EffectivenessCostConstants",
+          "values": 69231
+        },
+        "StatSet": {
+          "dangling": 0,
+          "target": "GrantedEffectStatSets",
+          "values": 79927
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectStatSetsPerLevel.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 184,
+      "row_size_mismatch": null,
+      "rows": 79927,
+      "source": "data/grantedeffectstatsetsperlevel.datc64",
+      "source_sha256": "e196943ba7d0262ce4a144d102fa3102bbbabccb7f36a88bbf3cb2602f6d867e",
       "status": "ok"
     },
     "GrantedEffects": {
@@ -10609,6 +10714,8 @@
       "output": "tables/GrantedEffects.json",
       "referenced_by": [
         "GemEffects",
+        "GrantedEffectQualityStats",
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects",
         "GrantedEffectsPerLevel",
         "MonsterVarieties"
@@ -10645,7 +10752,7 @@
         "PassiveSkillMasteryEffects",
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 120,
       "row_size_mismatch": null,
       "rows": 80600,
@@ -12219,7 +12326,7 @@
         "IndexableSupportGems",
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 135,
       "row_size_mismatch": null,
       "rows": 847,
@@ -12318,7 +12425,9 @@
         "CostTypes",
         "EssenceType",
         "GemTags",
+        "GrantedEffectQualityStats",
         "GrantedEffectStatSets",
+        "GrantedEffectStatSetsPerLevel",
         "ItemVisualIdentity",
         "ModEffectStats",
         "ModType",

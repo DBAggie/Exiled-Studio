@@ -1,0 +1,3065 @@
+{
+  "game": "poe2",
+  "steam_build": 26476662,
+  "manifest_sha256": "97913df41b97e1a24ed9e3b341eaae39885dfef9fda7b627bbd97155a4267fa7",
+  "files": {
+    "data/active_skills.json": {
+      "rows": 1148,
+      "sha256": "17f25cdcc66872d7aa53dfd05d48112396a3a400d9e295a374ea02ba8869109d",
+      "size": 384926
+    },
+    "data/base_items.json": {
+      "rows": 5075,
+      "sha256": "48eef5899ed22ec0ab26e7f93ced6bc845bb8f307802d6bd8766f9b40e67d410",
+      "size": 1351174
+    },
+    "data/client_texts.json": {
+      "rows": 0,
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "size": 3
+    },
+    "data/cost_types.json": {
+      "rows": 18,
+      "sha256": "b7283a6ccad7cb35c7f6c8f4cb32f80cab3d39f9cfc273d12cfbada7ad01f06c",
+      "size": 313
+    },
+    "data/gem_effects.json": {
+      "rows": 1194,
+      "sha256": "ceb0dee44305ccc1eccaccd0e8e414455864fdb4ed3dcb04245cef7ce9c7635e",
+      "size": 298744
+    },
+    "data/gem_tags.json": {
+      "rows": 67,
+      "sha256": "b8ed2f280f41e53bd31802fb6e6de280fd6a84a5d91c341bb369f5a4a5b49ab8",
+      "size": 3576
+    },
+    "data/gems.json": {
+      "rows": 1191,
+      "sha256": "f0b651094f1480835fd2106e878b173f88db308b840cca5e1aa56f906c17a926",
+      "size": 241757
+    },
+    "data/granted_effects.json": {
+      "rows": 8350,
+      "sha256": "72259f25b152ba3411fb07e9c69e6890d49303314ea597b69d9900d7237cbc2d",
+      "size": 13328544
+    },
+    "data/item_classes.json": {
+      "rows": 118,
+      "sha256": "a3ec5516f08be858a2d0d300a5f1892b8a0c3fc7a20f0585a8eb26f937076b12",
+      "size": 2118
+    },
+    "data/item_rules.json": {
+      "rows": null,
+      "sha256": "bc27c05c4584aa36557a3bedb6b1c7d7a395a7703ec6ebc86264ee845998f378",
+      "size": 2247
+    },
+    "data/lookups.json": {
+      "rows": 1,
+      "sha256": "d48017fde41aaa0d8fa80ea99c14f8c144c92ae23e240ad3d9f134dca6b94bb3",
+      "size": 586601
+    },
+    "data/mods.json": {
+      "rows": 16911,
+      "sha256": "bb11fb0c647b1e6d38e5ebae882300b924fab982b84b988da329ddab68e9ad0d",
+      "size": 8643337
+    },
+    "data/skill_types.json": {
+      "rows": 290,
+      "sha256": "af2342cd38e1a479fbdbfeabb2b929b1326b6cd0c5b8ff9d925d8ee2f1f36ef2",
+      "size": 19334
+    },
+    "data/stat_sets.json": {
+      "rows": 8284,
+      "sha256": "ebc9d00c12ea539964e1a9a18edee1ecd5ff26312ba137c120262ba0b8b4048c",
+      "size": 24053696
+    },
+    "data/stats.json": {
+      "rows": 27299,
+      "sha256": "8d7e6fb574213ebfcaf3393903a862f4c2974d61b3c625473a9c58ef6d1e1f2c",
+      "size": 2995301
+    },
+    "stat_descriptions/active_skill_gem_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "fe7204b05ea89f22dfad718305b6757f04a94f5f86b0908947e00ab7590b6b33",
+      "size": 153109
+    },
+    "stat_descriptions/advanced_mod_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "c3fc629b4bf23478207bf461d6c68905eb72228c09612a3c730607dbb29a1464",
+      "size": 21493
+    },
+    "stat_descriptions/atlas_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "b0f8d5bd85ec167fb1a77a0733bd2e1234160aff5c8424255c7b5d6ebdac9bb3",
+      "size": 664451
+    },
+    "stat_descriptions/atlas_variant_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "1d5106e633d38b61a768a292327a354a9a11daf4f2400b773d9ba461e22f222e",
+      "size": 32471
+    },
+    "stat_descriptions/character_panel_gamepad_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "d5bc6b79916d2d40e9ba45da74d3c20f5b1de903185acb1c150584e6295d081a",
+      "size": 2950
+    },
+    "stat_descriptions/character_panel_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "beadd06575f7e8a07ededad8e3d625ead773289dc1dcd37e5d7f57f1ea6bcbd9",
+      "size": 10669
+    },
+    "stat_descriptions/chest_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "e7d8fa3e04feb030f24726af22624d5ccae16486144d33ccda0273efffbc4136",
+      "size": 64714
+    },
+    "stat_descriptions/endgame_map_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "a3752c81dee17306bfe3827d3eea7f1e0e4702cada4f729fb0ee4377be05a814",
+      "size": 58036
+    },
+    "stat_descriptions/expedition_relic_special_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "9751bfac3b7f0ea16264a36077cdba4309fbf7437ad876d89afab66b0e4347c5",
+      "size": 240
+    },
+    "stat_descriptions/expedition_relic_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "2c996f4ddeec6578855bef7c13f0de635bb3b018165ebbf8b023394c9ab0a1ad",
+      "size": 72999
+    },
+    "stat_descriptions/gem_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "44432f09315570d8c59e3580263b7ce06548cef0e0bceb82234578819f5aa418",
+      "size": 687133
+    },
+    "stat_descriptions/heist_equipment_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "a22f94396b065a66225face57085bd4fa36e71a4b0b8fcf63ce65d48dc161783",
+      "size": 55608
+    },
+    "stat_descriptions/leaguestone_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "652ed9cad3d6eab17a1c1627015eac4c231a90f72ddf8763bd11ad6ac6fa64c2",
+      "size": 77126
+    },
+    "stat_descriptions/map_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "7a6c9a66c255d99ba647fd8cb57809459a6eebbd379581e68f42a44061d8b32a",
+      "size": 23350
+    },
+    "stat_descriptions/map_temple_room_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "838f18e6a760c1aeabddcb475cb8dfe96019119199767ab8d987939a24a3b655",
+      "size": 2442
+    },
+    "stat_descriptions/meta_gem_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "a502f30318ed9e64d8f63696578d1d08a912e6e3ad1ab240f9a187bf093aa318",
+      "size": 14824
+    },
+    "stat_descriptions/monster_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "e0630cb5013e859211eac83694cb2f72b292a734050887986297218e11a95dd7",
+      "size": 10537
+    },
+    "stat_descriptions/passive_skill_aura_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "4d7d631b9d02a1e2f0d7f6232445f3c10a1b9521c76676c2353db5d029b8814f",
+      "size": 10806
+    },
+    "stat_descriptions/passive_skill_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "da3e894a2da03f01b225d8b0a0f2b130aefc301401c97190fc4390c636ead2c0",
+      "size": 84642
+    },
+    "stat_descriptions/passive_skill_variant_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "bfd4e7b073b8b40566fb4a531426e13e6d41646be67f4b4ce216f70149487977",
+      "size": 27470
+    },
+    "stat_descriptions/primordial_altar_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "ecb4cabe5333a3cadb10c3dd85ad88d522068d2c2458c8431a1a311a78f5a12f",
+      "size": 59673
+    },
+    "stat_descriptions/sanctum_relic_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "dc351c8d148921f9200b17bff379c297147086ce16c0bc0679cbe508611c43af",
+      "size": 30832
+    },
+    "stat_descriptions/sentinel_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "24095d40f591cd46c90dad73bbbdb3dd47fe1a0eb1c894a35e4a54ce0dcb80ba",
+      "size": 60759
+    },
+    "stat_descriptions/skill_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "ef06ce39f5954cfc4ea9129193e8b35bcec825130d0c504003736dc977566004",
+      "size": 904156
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/abyssal_living_bomb.csd.json": {
+      "rows": null,
+      "sha256": "514b6531ff70d020028c923ac1edda8fc06ed723152e14f64b014209253e1249",
+      "size": 3860
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/abyssal_pact.csd.json": {
+      "rows": null,
+      "sha256": "1d3c989df30ecddb8909298cb254252fab39248b4c0c2361efba3d943ab408fa",
+      "size": 2110
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/acidic_concoction.csd.json": {
+      "rows": null,
+      "sha256": "fbfaf4fedb775d7d28b8dcfbf06b18a243a2fe90d08c31ad86b8cb6c94e4a532",
+      "size": 3614
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/add_buff_to_target.csd.json": {
+      "rows": null,
+      "sha256": "303fc6a22292571e8a7d09df9457b16673774a8b89790fe7a9842420c9150858",
+      "size": 1404
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/alchemists_boon.csd.json": {
+      "rows": null,
+      "sha256": "14c5fd2f62fea8dd7226da6846094a1e4bc8d2a263a139ab30f54330dc0cf9c4",
+      "size": 1879
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/align_fate.csd.json": {
+      "rows": null,
+      "sha256": "efee334f45c075b193de3739083267e5c60f11e5a557aef28d5f3cb8cf20db30",
+      "size": 3063
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancestral_cry/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "0521f78f314bd3e2275f1b832fb3989758fc04f4d745462a5e1f3cccc23d9265",
+      "size": 5068
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancestral_cry/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "8caac696382b859187493e2cec4844476459f929feb32cb864b1fc095ba44c63",
+      "size": 1448
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancestral_cry_projectile.csd.json": {
+      "rows": null,
+      "sha256": "7b5475c88b1b80a87766d13039911548a7da2e8c7c7da780ed9db4e72aa74ff5",
+      "size": 3373
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancestral_cry_shockwave.csd.json": {
+      "rows": null,
+      "sha256": "b0cf1bf950e357f9a96ca4e54919456578b5e009e2bbc0613855570116c67092",
+      "size": 2271
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancestral_warrior_totem.csd.json": {
+      "rows": null,
+      "sha256": "2b6079a57c136a0ef793f04ef953bd657f4b98caf64f1f6a1455760d7e4d4ca4",
+      "size": 1197
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ancient_gifts.csd.json": {
+      "rows": null,
+      "sha256": "49c88103919dc13d1899de953b16540a2b7b21eae908073b9a445704a0326240",
+      "size": 3377
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/animus_exchange.csd.json": {
+      "rows": null,
+      "sha256": "76e15ce1ba3b7ead6c1b52844acde48848991c71dadcfe091113b06fd13b061d",
+      "size": 4119
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/annihilation.csd.json": {
+      "rows": null,
+      "sha256": "a745977a47eec4575daba22d665c8e1ffa2063b4d6eaf63ef23a97e9b4a2d7de",
+      "size": 2438
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apocalypse.csd.json": {
+      "rows": null,
+      "sha256": "e1054cb6e488c73017b8cc1c806635b78f4acb4e76ad36ca9b0f0e76f9c1e471",
+      "size": 3764
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apocalypse_cold.csd.json": {
+      "rows": null,
+      "sha256": "4338036059193ddbffb1cfa7a2a05bada8c84fbf8e63162e9a06043da261cb64",
+      "size": 3328
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apocalypse_fire.csd.json": {
+      "rows": null,
+      "sha256": "806ee16f664c69bdc1f878ea0d2328003afa6828bec8dd0544cdf07b8951ab50",
+      "size": 2768
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apocalypse_lightning.csd.json": {
+      "rows": null,
+      "sha256": "1f2062e978ad228cc2b8d8e2f4a971c0d1b8ff923ad163ab310ce48f2cd76283",
+      "size": 3288
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apply_rimeshield.csd.json": {
+      "rows": null,
+      "sha256": "e1dc30b170241864955b33313c53c89ee410750701a5afc5eb860c770b7eebfe",
+      "size": 3472
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/apply_tangmazu_swarm_aura.csd.json": {
+      "rows": null,
+      "sha256": "42864ff64d2dbe02f23710179365eddd310e492d4130b94204c2c5b7898e2a21",
+      "size": 2643
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/archmage.csd.json": {
+      "rows": null,
+      "sha256": "fb6c2e0634ee94ff6b6556d306c9d09b2e41a248a715a03fc31461a7203c7e16",
+      "size": 2251
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/archon_of_chayula_tornado.csd.json": {
+      "rows": null,
+      "sha256": "6c500f2de9ccf2fd735f75c0bb35635d7a12680c1c25d3b26f978319fc9c3eda",
+      "size": 3008
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/arctic_howl.csd.json": {
+      "rows": null,
+      "sha256": "882c32678fd7c41b940ec3c8c89efaf8fcb64c7d7a9cd672d33bd5ce2f4bf482",
+      "size": 5619
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/armour_breaker.csd.json": {
+      "rows": null,
+      "sha256": "f9c6d1ea6c24d8b073b481860f2a59eaa1bcfc14784a559da30724dafe2f0b92",
+      "size": 1226
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/armour_explosion.csd.json": {
+      "rows": null,
+      "sha256": "c7e7e80eec08ea8f0c62590fee4f0b729c2b1ec990d8949934273d005eeefe69",
+      "size": 1584
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/armour_piercing_rounds.csd.json": {
+      "rows": null,
+      "sha256": "b4b56fd78c08ca83005531c5765a805fe3b2134f62b5f95bc4ebb0d5ec5c0d3c",
+      "size": 1186
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/artillery_ballista_projectile.csd.json": {
+      "rows": null,
+      "sha256": "66299dc8f1cda757576c804bbc10f500bdbadbda89931a2e535d546a56501232",
+      "size": 1631
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/attrition.csd.json": {
+      "rows": null,
+      "sha256": "afe0673c1c9007afea072c9c037fe2c9187e1bd583b2b0d5386d4db34b10c142",
+      "size": 2535
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/atziri_herald.csd.json": {
+      "rows": null,
+      "sha256": "88a6557216120ef485dd698a061fc618eefb2fa34296a2cf0b5bd9bc61a95961",
+      "size": 2659
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/azmerian_swarm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "977fcf02716a0e37788d32a9b98819e12ce150c77eb87321c9481dad986eae89",
+      "size": 4662
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ball_lightning/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "9ad9240e43c98cbd74f2b83606c43514a46c61305d42276b67b1de15e71604f0",
+      "size": 2252
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ball_lightning/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "5962aab6b7ee1eb3b1f0724d94fba8dbf680cbefd89cc3d99dba834b5b07ccd3",
+      "size": 2400
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ball_lightning/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "15e1afbd6b68822df541dd0d038ca7ebbc6fcd6e6bc9e1e2fb8375c3f5dce38e",
+      "size": 3584
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/barkskin.csd.json": {
+      "rows": null,
+      "sha256": "3587dca21ca13184f1fc9660e4e930adb67c13fce8a194985f24e2d463cfc96e",
+      "size": 2175
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bear_fury_of_the_mountain.csd.json": {
+      "rows": null,
+      "sha256": "e574a9a7f8d81d47b9add6887fabef76f63fe9911f6fbae801b4f66c4c3f4ed1",
+      "size": 2938
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bear_rampage.csd.json": {
+      "rows": null,
+      "sha256": "b7f526c57b78eb6310f15b6c1d3a3df8b30638d59192959bc5f5d29494116c72",
+      "size": 1571
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/berserk.csd.json": {
+      "rows": null,
+      "sha256": "0dc3b96b384bf5fca0a822e726cbe3046353efdfd71bc86740c30f0afb4ed1c1",
+      "size": 2774
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bind_spectre.csd.json": {
+      "rows": null,
+      "sha256": "5db047ef8e202c20a66d929e114f5695a16a06e629aa392d5b13dcd848377389",
+      "size": 1177
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bitter_dead/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "4a5e27fcb0c8f4517f815f8a7b6d89e269b340778874c482dc665aeb83ad49c7",
+      "size": 3424
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bitter_dead/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "c3da2bd2c90dce5900f79ef0a846e870e22e32e8e05d530503e5e1af8442781f",
+      "size": 2024
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bitter_dead/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "b76759104e989bdc5d904e3420d40506ce56a17377393069a889dc2fae468554",
+      "size": 1857
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bitter_dead/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "a768805d251c79248f3ba63c9505c74823679806807a742b720f006780761892",
+      "size": 2878
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/black_powder_blitz.csd.json": {
+      "rows": null,
+      "sha256": "132ad0b2011e03461bcdbd9e6a50c436177d6cdc6e727eac6443735373ad8384",
+      "size": 308
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bleeding_concoction.csd.json": {
+      "rows": null,
+      "sha256": "b29f0deaf7b7fd807347d11c861fee6b75fa4524fe46692724d66b29b687012b",
+      "size": 2053
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/blood_boil.csd.json": {
+      "rows": null,
+      "sha256": "7144f52a63a058a8badc077644fefe418d4d9b4ea14c7edd36fdcebea231f3db",
+      "size": 3481
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/blood_hunt.csd.json": {
+      "rows": null,
+      "sha256": "18c80eaccfb07d9703859067f60a3d7022a4edc428bbc8f8fee24bd958131705",
+      "size": 3889
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bloodhounds_mark.csd.json": {
+      "rows": null,
+      "sha256": "3cec6152e4e71dd20fb735d132e83baad96ba0abec98c0282e728d3e73fddf88",
+      "size": 3016
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bloodhounds_mark_explosion.csd.json": {
+      "rows": null,
+      "sha256": "d1175afd4cbb4095d72751d3dbb862d1bdfd7a2f4b16d457e8440491baa6c154",
+      "size": 2539
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bombadier_destructive_link.csd.json": {
+      "rows": null,
+      "sha256": "8bc027a0d379981b79b62ae95e20b8b0b20c073cd7d45235ba0713c12a54908b",
+      "size": 1582
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bone_blast.csd.json": {
+      "rows": null,
+      "sha256": "ee7556ba3650ef8c42a540b5a9ab1af3898cd7f869a188ca8a5acbdc008655f9",
+      "size": 2476
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bone_cage.csd.json": {
+      "rows": null,
+      "sha256": "eee3a93b0e036fec8336e18bbd630eec772b4eb9caa738773ce64eaa05a4bfb5",
+      "size": 3410
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bone_offering.csd.json": {
+      "rows": null,
+      "sha256": "75f3c3239f837ad8de2e021af3181511d30496e93f8059af9fccc74779c8782f",
+      "size": 2956
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/boneshatter.csd.json": {
+      "rows": null,
+      "sha256": "63c5451852981e173681807b925feb2575d923fe2d1d7b76189a018a75d6e20c",
+      "size": 2190
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bonestorm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "ee80d1b6e0caaf28eba96141dcfa8ec1bbd4d9d19592751c35db83bece212bc5",
+      "size": 2479
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/bonestorm/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "acdcae462debcf2f91d732787f287608db81de1ea0bbdc2ab6d863619e23764f",
+      "size": 3433
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/briarpatch.csd.json": {
+      "rows": null,
+      "sha256": "bafed91551d05cebb2823089b99fe30a2e82149ee8f02117080806f3136cc8ea",
+      "size": 5339
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/brute_warcry.csd.json": {
+      "rows": null,
+      "sha256": "ba006e08651743ff8c7ccd1c6aaa0b1e2ad100c71fb390f495e7c9b422958e98",
+      "size": 3053
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/burning_runes.csd.json": {
+      "rows": null,
+      "sha256": "90a0387c0adf9c322c072f46b12c091c95ffc7876ba79f123f75c0374d64609d",
+      "size": 2635
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/cast_fire_spell_on_hit.csd.json": {
+      "rows": null,
+      "sha256": "beef4692af51a2945801fb7932a683caeaa80b1ddf22ed9b9f8239e85ad2c51f",
+      "size": 1224
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/cast_lightning_spell_on_hit.csd.json": {
+      "rows": null,
+      "sha256": "dc86f9bc5a7fdaa2b42432642dceaa0d9ca0eda9875db2112317f29682bb0647",
+      "size": 1234
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/channel_shield_charge.csd.json": {
+      "rows": null,
+      "sha256": "fd11c37d6c765e3851137a5026068615615bb1f605d107bdf92ef681bb7913b8",
+      "size": 1917
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/chaos_surge.csd.json": {
+      "rows": null,
+      "sha256": "0f1b726a30c745f124e65ab61d5495a86a0637e387a081326a9c2af7e2f91e01",
+      "size": 1579
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/charge_regulation.csd.json": {
+      "rows": null,
+      "sha256": "0542a3d9765184b4e2a97796ff295baf89ba29f43a8fc8f4d3350268dc264c89",
+      "size": 4915
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/charged_staff.csd.json": {
+      "rows": null,
+      "sha256": "0974a92ede7540d2c4ea21f7b290f27a522285a4a4aee6726c09dfdfd71f3711",
+      "size": 2202
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/charged_staff_shockwave.csd.json": {
+      "rows": null,
+      "sha256": "5d1c002a0aab8526c0e91e2a031dbcc4cce6ad690f54f4b707caabd7379d2889",
+      "size": 1576
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/cluster_grenade.csd.json": {
+      "rows": null,
+      "sha256": "6dd3f2f5a2e9308b02686dc0290252e762f7f451b7a1bd46444a087217f997fc",
+      "size": 3513
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/combat_frenzy.csd.json": {
+      "rows": null,
+      "sha256": "95427859a7bfb7358f114179bb535de84711f4a45ba1f378823bc70275460358",
+      "size": 1886
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/comet.csd.json": {
+      "rows": null,
+      "sha256": "da52cc52652072771036e57fda0624eb50ede1e9834d3e36e7ce5eecb2d6d8a9",
+      "size": 1564
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/concussive_runes.csd.json": {
+      "rows": null,
+      "sha256": "3a3a4955a6bf58afa6b3e59dcaf8df113914352471e71c44a534302947361254",
+      "size": 1572
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/conductive_runes/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "72b6c044919b83be3fb62b077db8244616a9656c070c39ae16a8a7186b12742b",
+      "size": 5675
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/conductive_runes/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "66665a2b030c8acae2bf70da6917a58251c18599d898f824a59a32709adea42e",
+      "size": 2267
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/conductivity.csd.json": {
+      "rows": null,
+      "sha256": "9dc6bd9017e356a1cf22f356cbf418df42da7073648f037a8ad0f790a1fa00bc",
+      "size": 2865
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/consecrate.csd.json": {
+      "rows": null,
+      "sha256": "746cc14de9e54434d397c01bbc96caf70cdf8137d639d2fd1b9fd382ca41db0a",
+      "size": 2687
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/contagion.csd.json": {
+      "rows": null,
+      "sha256": "ed0b67d6451afea7e816d8bc2ca9cd9a673db353bcddae3c243ceb0648f3c171",
+      "size": 2493
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/convalescence_active.csd.json": {
+      "rows": null,
+      "sha256": "90ea134f59e0208e3a6124b05f0ffec19b692eb32b0626aa1df6f6fe779128ac",
+      "size": 2551
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/corpse_beetle_explode.csd.json": {
+      "rows": null,
+      "sha256": "0e00abbea29d97dbac9e383a0f3e9901130d585eaced19b358b5e81e547dfe85",
+      "size": 2062
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/corpse_beetles.csd.json": {
+      "rows": null,
+      "sha256": "406ec4615cc5a0e49afbeae6d54b4a36c3e78d99cf2b597e2bd2f4c4f364c086",
+      "size": 2885
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/corpse_cloud/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "3683974601fd74537175fb43c27ba43295578eeb45c106cd59984fce7336e6d9",
+      "size": 3335
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/corpse_cloud/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "7fe39c68073ededdf812f84360d0219729300d3e867ef5a6ee57e3adcc02f984",
+      "size": 349
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/crackling_palm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "ef0df4730cb8d0a37384f68a9c47aae3b37f3ac8ac73d8089f1be77fb1513558",
+      "size": 315
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/crackling_palm/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "29d25ce21e29e347d685bb589b99e37497fe91180c8ba1c4ca25f0fa857c2250",
+      "size": 3531
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/create_illusion.csd.json": {
+      "rows": null,
+      "sha256": "f3a0440d6aa3d571db29e46e45fef31e11796100352081755e47ea87ad1e43a0",
+      "size": 3279
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/create_mirage.csd.json": {
+      "rows": null,
+      "sha256": "17fcc9b20a463d0bdd12620f0773fa2c0be3246cc2d8627c96e902435e39686e",
+      "size": 1835
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/create_mirage_deadeye.csd.json": {
+      "rows": null,
+      "sha256": "dcb20ae955f28ccd96bde4d60947f009d4324f1eca0101cc73b2d81d39966049",
+      "size": 1843
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/create_void_illusion.csd.json": {
+      "rows": null,
+      "sha256": "abdaedc2d64bbabca24bfb92be3db374198b5e7cfcee02024d5d0084ce909f31",
+      "size": 3171
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/crushing_earth.csd.json": {
+      "rows": null,
+      "sha256": "9add5a11a6dc27143fabd32a0079b3fceea270981e2a87061c603cf4d6bc27a1",
+      "size": 1573
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/crushing_fear/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "c6c08faf6ec82f1294aa8d75c77f441383f5a205669bddf2c7bf689c4a907927",
+      "size": 281
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/crushing_fear/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "62d8dd8c3dd176779c1139e728a3248e183d8446cf82119abb4d83a778643147",
+      "size": 2308
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dangerous_resolve.csd.json": {
+      "rows": null,
+      "sha256": "4fc173e06033a9e298e18ed944b6550bbdc0a4350775057e9e19c2ccf1d673f3",
+      "size": 1573
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dark_effigy_projectile.csd.json": {
+      "rows": null,
+      "sha256": "dc9dd909d0c45b07ceb57f62999adf35daa40c32de46f38caeccf71a0dc5157c",
+      "size": 2101
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dark_tempest/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "5d4ac46a31627cef6d7743d5ad434145eb694e132cd99dce0302cb51846fd161",
+      "size": 1419
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dark_tempest/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "0708db8b7ef2aa8247e72df9c2faab1f61a4e2e1d00626eb3278d486fcbe7183",
+      "size": 1497
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dark_tempest/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "054e2c8668c5d398ef593db5a9ef08508355a8e3a48d6fb5a2731235f8368d82",
+      "size": 483
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/death_from_above.csd.json": {
+      "rows": null,
+      "sha256": "8eb7ee35ea93565215d984e7b1832da56566a6e66627e93c7425332035fd3b19",
+      "size": 3589
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/death_storm.csd.json": {
+      "rows": null,
+      "sha256": "df5064b3c1d289a09e429799afb7c13970daa67c0297b8d0590e6134b372c5e0",
+      "size": 3215
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/defiance_banner.csd.json": {
+      "rows": null,
+      "sha256": "d2b70e2bb604a527d825e2afe6c2cd6ad390c6724ac24c923dbe788dbc6fda0a",
+      "size": 4674
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/demon_form.csd.json": {
+      "rows": null,
+      "sha256": "989f6cab79c9722324496649a06e751d38791d2b1574f279a0263c2bca354fcd",
+      "size": 3880
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/despair.csd.json": {
+      "rows": null,
+      "sha256": "856ef8b241a29c136733e0bd36187273049be3e0e0da5835617446df15b63597",
+      "size": 2841
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/detonate_dead.csd.json": {
+      "rows": null,
+      "sha256": "cc59aa4794452f9d2d32a60f1f55809655107d414f632fb8302c593088357f1e",
+      "size": 2275
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/detonate_living/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "bb696c4a5285d76820730aa60a6ac435d829bb45909cce5723c5f59091a209ea",
+      "size": 946
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/detonate_living/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "b905eefa852d8c706e5f4d96dd4369d758ce8d5dbe9d50c47b971a350206b619",
+      "size": 2066
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/detonating_arrow.csd.json": {
+      "rows": null,
+      "sha256": "f8e51c70ed51b8981e8784504791291c07959345d99c2f897d06d84397723f3a",
+      "size": 1905
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/discipline.csd.json": {
+      "rows": null,
+      "sha256": "e54bdcf5f8dc38dea56463f0bf2767c4b87306c5888c86c4f7f9ac4984980db3",
+      "size": 2371
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/disengage.csd.json": {
+      "rows": null,
+      "sha256": "35aa73292523cd45167a6813ac685287a95681c755dbd001c9aacd9ff2bd9cda",
+      "size": 2191
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_bubble.csd.json": {
+      "rows": null,
+      "sha256": "965c98c1cf7d974fe8cb0f8fe6b8220bd934e9e76979fdf7c2e1aea7e4ca91ee",
+      "size": 4828
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_explosive_teleport.csd.json": {
+      "rows": null,
+      "sha256": "fbb9ff62403ac57e99955301b98007b23e1efa32f69886f8840f28f29762f883",
+      "size": 2768
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_fire_rune/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "6328145e16d845bbe4b3948082ec731f38b8cf1f899c54931839e81060db44a1",
+      "size": 2725
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_fire_rune/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "38b1acb52cdf983c785363152a361c7f614c4dfcbfb6364bc056a88ba6dd988a",
+      "size": 2747
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_fire_rune/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "a9acf441c5a60d005612afc1dd0c1cebdf2f9f775242d2c7069a2bd3ba768d77",
+      "size": 3572
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_force_recharge.csd.json": {
+      "rows": null,
+      "sha256": "6b8533cf4c7adf117faea329304951e0a56cc2e0020d36ffaa0b4cfaa334f228",
+      "size": 2146
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_ground_burst.csd.json": {
+      "rows": null,
+      "sha256": "352f2001e2580af66bd2cfcc2a0f25bc3a0686467636bfbd16e71800575543dc",
+      "size": 1669
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_hand_slam.csd.json": {
+      "rows": null,
+      "sha256": "43c2131bf276f234e5209f7de5f97f93158296a902fda7da1bfba8b278414540",
+      "size": 3656
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_knife_throw/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "f7573a1773f034e215c525246c798c1645b0691d7cbabd6e4333461d108f8f2a",
+      "size": 2043
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_knife_throw/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "9297cac74caf8a7b67b57d1c813e87090e8b9c6ff66efb4f976c9a8eb84d2a3a",
+      "size": 1611
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_living_bomb.csd.json": {
+      "rows": null,
+      "sha256": "acab9df0cda9c319bfb06c729605edc0e13817521ce17d4b554a11155428b635",
+      "size": 2341
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_mass_fusillade.csd.json": {
+      "rows": null,
+      "sha256": "6f4ff3eb082c577547b7b925d95e2ed673b984c188fd1fccc19dea95723f0116",
+      "size": 1594
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_meteor/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "63915a601bd770813a75e7606a5fcf439bb6fd2846b463ca5b94b65d86345fb5",
+      "size": 1814
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_meteor/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "52aeb642a00ae1280b078bfea491f7e1703617fd7421709c4734985a16823414",
+      "size": 1806
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_oasis.csd.json": {
+      "rows": null,
+      "sha256": "0db72318fc133e354e8af719b5e84f830e45db33acbfcc9b0fad987bdf88bef4",
+      "size": 4231
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/djinn_triggered_wave.csd.json": {
+      "rows": null,
+      "sha256": "1422fc44d94da57c350e2f55c4ae0b59c7d0f92389c01ad1c3dfac04f8bfc6d1",
+      "size": 2818
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/doom_blast.csd.json": {
+      "rows": null,
+      "sha256": "aa540f42219214233bb224cb8451616a54763ffdaf151c4489538f660b578b66",
+      "size": 1566
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/dread_banner.csd.json": {
+      "rows": null,
+      "sha256": "2826f3baa50fcb9d10609c055e749c464b74f69a9b9ec80dd0b519980976d2e7",
+      "size": 6070
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/earthquake/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "23c9e9b358591c788c8186785c905f8f1cdffa603e44ac860cf091f41eddcb77",
+      "size": 4719
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/earthquake/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "fb1183f171745f35a44d27549ddaa83d966eabcd001d9eebe0e6a3a65ace5ba7",
+      "size": 1591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/earthshatter/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "1de5c2bfbef0b73efe153b06a544bb2e03f0178d359b9c8a1d60ae1fbbb3e106",
+      "size": 3588
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/earthshatter/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "d83d888e28b258ffaa591f7e1c7bdede78b4add87a74c8fcc6c68c4b02d6ee0f",
+      "size": 1590
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/electrocuting_arrow.csd.json": {
+      "rows": null,
+      "sha256": "61e0297a5b34d4566e1c318bc133766a6a89d54c85615e2d59028f2aaad09f5f",
+      "size": 4160
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_conflux.csd.json": {
+      "rows": null,
+      "sha256": "89997bf1a108a47ecb7080ad82a46a78cc58fd0c5bc1dd779a9e1143ac65d5d4",
+      "size": 2189
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_expression/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "fe6700531d16fc3e5950ed26860ff49c77871e2586a8713fd08ab8a722040165",
+      "size": 2349
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_expression/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "5fd226a5733cbfb5cc76817bbbaaa4af38bbb38c6851942f804db698f3352b1d",
+      "size": 1828
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_expression/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "993bbc8d6477116134e60bb2235a58392fbd688181225c365079d7aae45406e9",
+      "size": 1186
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_expression/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "1bd5570f18f0e80d6e0f6da139ee1f466e13da199f25ac0fb604ef076a94c158",
+      "size": 1116
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_siphon.csd.json": {
+      "rows": null,
+      "sha256": "c4094983dd03df7880dc8a9dc4c1dfff7b002b3ce87d2f29803ca4d11d4f2913",
+      "size": 1689
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_storm.csd.json": {
+      "rows": null,
+      "sha256": "e8ab5f49dd9230e03a582f44dbc3851660aadf4d4aebc63cc5a7eb5d7f7e5cb3",
+      "size": 2756
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_sundering/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "74b95e635fd2af40e4161dace2a17ea078c5183a70fc943adcbe0c86fbc30a5e",
+      "size": 2947
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_sundering/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "e903dca0d11ece1ecb27e171323744790935b447f312ce7b4c55cf2819a0ef49",
+      "size": 2879
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_sundering/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "7c22fb0b7c5a532f504811c29ffd58e33876835bb50677f8241466f2ce6977c3",
+      "size": 2253
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_sundering/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "c4f8ffd54c627ced77e274f4b5c0af687612cce1d6cf57fe5db8c85e59707821",
+      "size": 2253
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_surge.csd.json": {
+      "rows": null,
+      "sha256": "4bbf764f0ae7751d9356ce73efc30971808f9d07bcba3ced998caf07f427c520",
+      "size": 2129
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/elemental_weakness.csd.json": {
+      "rows": null,
+      "sha256": "c125b04b8d274030ed8e512329818f8c7044d6aa8b85024dde3311104cabed44",
+      "size": 2891
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ember_fusillade/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "c659c04c4c23e6f64bfea0c7ec2032792dac12b6f19d11c85b52e5266ce01a00",
+      "size": 2619
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ember_fusillade/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "438e5c7de62111b471ab33a5141eb59f6adb37887143901fbf3eff853541bef4",
+      "size": 1685
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ember_fusillade/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "c7650678aa6784f17fc0686078914cd336104778813ea639295ab55e0e9b7aa2",
+      "size": 293
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/emergency_reload.csd.json": {
+      "rows": null,
+      "sha256": "d9aa78a0051340de12a70f57b9a77a5b99fabc4069f1836212d31b25e88acba5",
+      "size": 2755
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/empower_barrage.csd.json": {
+      "rows": null,
+      "sha256": "cc79d8bbc16553bc3b258634415a07a54111661b038243f908775ec3c52424c4",
+      "size": 1613
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/encase_in_jade.csd.json": {
+      "rows": null,
+      "sha256": "a60acbe6982555d2bb23b25e044a2f99319cfcd97d180e3f2a511ff1a807cc24",
+      "size": 1591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/enervating_nova.csd.json": {
+      "rows": null,
+      "sha256": "b9cd49606b944f2bdb67a6de85aa8b3a0e1546d47a4855ba2eb82258f8930c32",
+      "size": 3850
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/enfeeble.csd.json": {
+      "rows": null,
+      "sha256": "76a4a5f305bf62ce0b46e00aa35166b72888982d0a80a6a93a03f9247764449a",
+      "size": 3983
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/entangle/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "f61617159759363e2462181888c2e6fc0d42787b4afb40b9189d3a450193b6e3",
+      "size": 5730
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/entangle/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "5be725d3520c294e6b0c491ed2d06fd520e71b5c38b85ebd0731b9ec5aa4b025",
+      "size": 4239
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/escape_shot.csd.json": {
+      "rows": null,
+      "sha256": "2ea030f62f870f9afa58df809a82ddda5d9abff76ae619fe2295e214774f4f00",
+      "size": 1570
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/essence_drain.csd.json": {
+      "rows": null,
+      "sha256": "f86c107a657eb043ed8fbfa50353ca90d027aa53e1ba090e1dffd3b05fe96edc",
+      "size": 2248
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/eternal_rage.csd.json": {
+      "rows": null,
+      "sha256": "25b60513cee222b008a7aa7facfeca5f0e93aaa784f8398890ad12d52f4d401a",
+      "size": 1286
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/exploding_poison_toad.csd.json": {
+      "rows": null,
+      "sha256": "427588646ed84a6cf078864c27a98fe3541269054fe97499cedf41a4b4e116b1",
+      "size": 2605
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_concoction.csd.json": {
+      "rows": null,
+      "sha256": "0f4bee44b9e1a460bc2ea356f3b4d25ef24ab2a2ec1934dbcad9f29bc71cc500",
+      "size": 2179
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_grenade.csd.json": {
+      "rows": null,
+      "sha256": "9b11a7d255f0daabcbafa8e180a21c8d49f5697ce14aafb89e7e980367d45bde",
+      "size": 2498
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_shot.csd.json": {
+      "rows": null,
+      "sha256": "a64d95028a1f5a1a69c637cba9afe2315bb6814db32dcaba21faab6d7ed319f9",
+      "size": 1607
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_spear/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "59b13d6fe4cbbea91f43c1ecad53fa57c970b0d42d1a3ab9eb9036cb113bec92",
+      "size": 3197
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_spear/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "9e1c104815b15191a36d126900003565e915c718a8b297f8cca14674cb694f38",
+      "size": 2066
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_spear/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "3f485e95ea9dc7718070a8b5bc108a6d819de19ba9356e19524cdefc8c9ad74d",
+      "size": 5868
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_transmutation/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "eb193d8cd01d1d5140384d69a614c10983e862b315ffa5465f82bd56093ed222",
+      "size": 2074
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_transmutation/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "50ed7b57372b4697284bf7c248e630f3568525984e3f3d8e8292a45d8af2a549",
+      "size": 2074
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_transmutation/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "2dc575f10b917d3315bcfacea0de6ab828204be2570212f145d1b2e8746ff0b6",
+      "size": 2074
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_transmutation/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "088434259895e54a80e406ca26fd6173ccfe01a655ba4eacffea75b1b54d454b",
+      "size": 2074
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/explosive_transmutation/statset_4.csd.json": {
+      "rows": null,
+      "sha256": "d21b8b08ac992f529c76e2960ce669f45a50990b071fa4e47565ab017acaf396",
+      "size": 2074
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/exsanguinate.csd.json": {
+      "rows": null,
+      "sha256": "6942dae7d3086f0bdac493e969291ace34d49ef7b4200b132a649abeefb5643b",
+      "size": 1592
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/eye_of_winter_new.csd.json": {
+      "rows": null,
+      "sha256": "9ddbdb2a6e3d38fd11ae4155a3beec359bdac897173501fefefb08bd8063aff2",
+      "size": 3233
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/falling_thunder.csd.json": {
+      "rows": null,
+      "sha256": "7d97ec36691a0ab8644837d19da4e025d5465d3edb81c338403c676a857ba237",
+      "size": 3875
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fangs_of_frost.csd.json": {
+      "rows": null,
+      "sha256": "791c6bc1e6d925717830680f585c3425f4cc07b0736b4767f33ffaf5467103a4",
+      "size": 1689
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/feast_of_flesh.csd.json": {
+      "rows": null,
+      "sha256": "f59f63e55d88ef64a04b1de54736204e1fcf603b1006695dbe2d4221e4c96c5f",
+      "size": 3965
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ferocious_roar.csd.json": {
+      "rows": null,
+      "sha256": "986413d2f357655bcf9bde13c41298b8b86a9c8c231598ac10a933447a6d70e2",
+      "size": 2757
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fireball.csd.json": {
+      "rows": null,
+      "sha256": "00cfebe199e9159fc56806fc4a44ba684eab3897ed2610240d80aeb185e63a7f",
+      "size": 1576
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/firebolt.csd.json": {
+      "rows": null,
+      "sha256": "c2102121c4fdcc72e74a034eab3160ddeb4ac2159731142c05ad42d734f0e061",
+      "size": 1576
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/firestorm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "ec5a8057d4886d13221fe8b4fd1c5c074ec5f7fdc374ac2b4f845f8e879640fd",
+      "size": 8185
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/firestorm/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "74bae1e53a55fa08f3133df70c3fabed83ee63fe496f00d93fccf0522c4cb994",
+      "size": 3071
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/firestorm/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "ed2b1c4d66fa4846f4997e208b50c3e658629ded067d83ef61eb83adbf52fb2e",
+      "size": 3071
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/flame_wall.csd.json": {
+      "rows": null,
+      "sha256": "2e4412bb34ce539e2883ae9f1c7e27a1a0b776d722512a4d539cd4f4ed31f79e",
+      "size": 6762
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/flammability.csd.json": {
+      "rows": null,
+      "sha256": "a835a52004882e3194694266c6223db48d6add075a23dc155c051def7a4b1786",
+      "size": 2840
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/flash_grenade.csd.json": {
+      "rows": null,
+      "sha256": "a6f444520708f22527c51eb15d3992851ad992434c4808f7d61013559cca5f40",
+      "size": 2494
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/forge_hammer/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "6c6e5f4cbe357fb1bb2e3b53ef6e94c64ed348fbeeb5f751e0479d0b5f6cb3b3",
+      "size": 2817
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/forge_hammer/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "ed78c78fbb44d3ca99848b8b6e693a7993887eab9f777d25684c72207145db4d",
+      "size": 2347
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/forge_hammer/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "90db7dd311cf17954d08975e62ce6a2d7d6aefae68daecfd77b6823e9908988f",
+      "size": 242
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fortifying_cry.csd.json": {
+      "rows": null,
+      "sha256": "6cd7f0a341e35c813fd6788cd5532ab55f6e18aba6a0e21d0e1c6f0f4e42ffc4",
+      "size": 4305
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fortifying_cry_shockwave.csd.json": {
+      "rows": null,
+      "sha256": "173c75b29b0e2af2c5f603d17d82b451e4ae5b79cd11bfec8b57fa6b76b786d7",
+      "size": 2264
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fragmentation_rounds/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "9bae689d63ed885eae55e770edc32999781b62d972c48840a4f47e770163562e",
+      "size": 1971
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fragmentation_rounds/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "489afa5f64d51f1c09693763846367fc3f9adba43ef4eabdbb50cecf6b532d51",
+      "size": 2704
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fragments_of_the_past/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "b67db206f060e69862e5a26f6f757cb4665917cdfd1b781f6df10aaa184abd35",
+      "size": 5221
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fragments_of_the_past/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "7a5aba8511f98c9a2fa27883ec937c70c2ab5712b34c0e4cdbdf69af940466a9",
+      "size": 2057
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/freezing_mark.csd.json": {
+      "rows": null,
+      "sha256": "1436f429c0d798480c52b1e796ab1b15c9d0cc15b7848ab1f2cd211b14041c53",
+      "size": 4453
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/freezing_salvo.csd.json": {
+      "rows": null,
+      "sha256": "315ad6d00ab979ae9d8def5838a7f6b2c1d42a7c97bdfbf5a7bbee93f8564273",
+      "size": 1573
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/freezing_word.csd.json": {
+      "rows": null,
+      "sha256": "87a9d528d157e699776c042113bfcaba2e73bee296b2f5b69acadf7cec1d60ef",
+      "size": 1432
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_bolt.csd.json": {
+      "rows": null,
+      "sha256": "9d649af37f28614b2307e5c09e9a6d5e515e46f1d49d74d08eecab0534ef940c",
+      "size": 2573
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_bomb.csd.json": {
+      "rows": null,
+      "sha256": "e9f3269976da2fb6f25e835be31d17a31e171a7d53f0dd5c4e2ad37dbd3a8b73",
+      "size": 5949
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_darts/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "81b41182bd1cf0002dc9783282e721b6831db6b971ef39e7f6ec5bdbdba018a1",
+      "size": 1431
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_darts/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "5f653d4e73bd86dccc4dec33e8cccd8719595b8b55fe34f4a2a7915973446558",
+      "size": 2214
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_darts/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "6db1fc6d9b498ca11adcc140a47b0057a91e59b715ed55af083f6e225d60e7c0",
+      "size": 1968
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_wall_new/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "b37a7fdb717b847c6644061819f2586a8854b454864d64289cc8923314702457",
+      "size": 4155
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frost_wall_new/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "966d4ee07364db16627dcafe0601b4620d03ea19e5c87e2c9eaf9577391569ae",
+      "size": 1809
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frostflame_nova.csd.json": {
+      "rows": null,
+      "sha256": "c8c17aa932e35b3aa7af506555ca976dcd7b796db281f9a853167d80cb260fec",
+      "size": 2891
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frozen_locus/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "e0cae8f5ec0a05eb7adc75edc75700c42ef95e962773cc57fe2b5cd0ccfaa580",
+      "size": 3273
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/frozen_locus/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "c2807f6da3cd1f554b3b3df6775682e123c20bf7a9a5b6f9f4d9b7ee164e2b9c",
+      "size": 1746
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fulminating_concoction.csd.json": {
+      "rows": null,
+      "sha256": "50b2cbe47827db6da7e0b4f65cba1da12ed3635dc919abbf9299519d43dcdfcb",
+      "size": 1590
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fulmination.csd.json": {
+      "rows": null,
+      "sha256": "f9f98e32f63a8fdc03b1c2b851a1d31b3e9cacedca32bddb56cdf28e2da6d073",
+      "size": 2087
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fungal_terrain/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "c29dc7cc77ca2ec9c7854087d5a5d800a2ee788f2d7130b813340f6d2893b53f",
+      "size": 1619
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/fungal_terrain/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "2258c9bd31fab5962811623259b6461af60e2b2eb8d283c6ba0062b8e41d705a",
+      "size": 1211
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/furious_slam.csd.json": {
+      "rows": null,
+      "sha256": "3fa705282cfd137994739d017ada6debaa2814ecbad5cffb4f34570a27516bfd",
+      "size": 3057
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/future_past.csd.json": {
+      "rows": null,
+      "sha256": "04aeaac507b88d5af8afa83d6222178edd6e7ecd8a0dbd33eb50c73aeea9a95c",
+      "size": 2651
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/galvanic_field.csd.json": {
+      "rows": null,
+      "sha256": "f229d1a24ba611623634536bd6361f82f06f9bf429dc3c434a4be91ec415f1af",
+      "size": 4897
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/galvanic_shards.csd.json": {
+      "rows": null,
+      "sha256": "e2e822d670ff22d41ac95baa683db053899cb0940e4d99c69b9d80b3b29e82c1",
+      "size": 1598
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gas_arrow/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "d8ed0cbe213c8e46c307641158e492b95fa36fa99103e1dde82e8aa0e9783732",
+      "size": 2228
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gas_arrow/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "3307f7514cd0730e3d3e933f6a43dc3037bce8da003966be6f58fd4c3690b4cf",
+      "size": 3223
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gas_arrow/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "7f3e092f46e3a542292886fa324f511fc950c2a5dbb82e31f453e4bd869d4750",
+      "size": 442
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gathering_storm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "e910908b894b75e6edbec02cf1adc2893223bb2dfb5e8bf020c345a098897741",
+      "size": 245
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gathering_storm/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "09c068f467b4f04099b600021f32b8b7d7b83bb884ab5ce2c13c140cb060175e",
+      "size": 269
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gathering_storm/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "88608a923bb58ce0a2029820eed1d4833bc8121a4aa91542173e86be35b8ef42",
+      "size": 1617
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gathering_storm/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "840b58870a77c5a842370c764f89ef4297eb342da6893e60996550daab0a676a",
+      "size": 1772
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gelid_palm/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "0f3d5deb64d93f6c46893ad63d8d92295146ac381e66d8bf4b18a4766c4b6c82",
+      "size": 311
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/gelid_palm/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "a64507470aa9959979387c415e0913032e131091e98b5ae6338d454e7b2d2add",
+      "size": 3148
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/geometry_spell.csd.json": {
+      "rows": null,
+      "sha256": "05d7dfdda51384b69e32b626ac79583962edead3fd57fb6ebde8660b32f5c797",
+      "size": 1582
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ghost_dance.csd.json": {
+      "rows": null,
+      "sha256": "5c5d705291d880a26036847df460a88e4a88778d3bb3abc3acbccbf835b6176b",
+      "size": 3127
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/glacial_bolt.csd.json": {
+      "rows": null,
+      "sha256": "82cbebe425034c1a1bd965ee16d78f9b5ac63ff4c32eefaf6b174fd20623538d",
+      "size": 2970
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/glacial_cascade_attack.csd.json": {
+      "rows": null,
+      "sha256": "30052c3020b19a135fb56b02af9fc36e7367dc0df19ed746121839e88c4ce2b0",
+      "size": 2957
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/glacial_lance/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "c458dcd68cfd0bd36705dafd58aa497775d292aac6ca8ed81d8c56275910bdb1",
+      "size": 4304
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/glacial_lance/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "5f808e3f2b1319c9947b777bdd41acb8d3b19ddd930169b5bcf8055f4a53cf3d",
+      "size": 2247
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/grave_command.csd.json": {
+      "rows": null,
+      "sha256": "9a3e44b6e007046e67defb62b122535966dff8261b21701927b47203a392063f",
+      "size": 2552
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/grim_feast.csd.json": {
+      "rows": null,
+      "sha256": "4433ab32132cb5df1e89cbcb5e285ac598997458125112728387d00beca3373d",
+      "size": 1682
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/grim_pillars/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "826b7e81cd7244b92de7c2f133b39122da32fcdb3e9d84340075efbb27e5e2ad",
+      "size": 6951
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/grim_pillars/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "45a78c2d40b541e06339ebc3c7327758a01bd2ef26f856e6e25c01f17eda469d",
+      "size": 1789
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hailstorm_rounds.csd.json": {
+      "rows": null,
+      "sha256": "9466659ecdbabcf70bd169b3c842373f00bb1e4d76a1192fcef4fcfdab914530",
+      "size": 2492
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hailstorm_rounds_ammo.csd.json": {
+      "rows": null,
+      "sha256": "90f717be2ca04f2b1d702b71c30b6fc29ff7173b6595177bfab697292c941cc9",
+      "size": 1539
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hammer_of_ngamahu/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "2bf099057fa50d84ccfcc90fc50570c53f2806039cf4717edfac5d53045c4615",
+      "size": 2312
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hammer_of_ngamahu/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "7f6eff97466ec82958777be1b4cbb1fec7707d57abe6fb4fdc84b844ca266cd6",
+      "size": 1081
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hammer_of_ngamahu/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "762ae30074a6ba0e1c85541bc984c4602da039e6eb66dc98759742952813480d",
+      "size": 3170
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hammer_of_the_gods.csd.json": {
+      "rows": null,
+      "sha256": "01226226d438242c1c96c1477ce873bf98081dc71496338ee9d0781b1bb68b32",
+      "size": 3161
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hand_of_chayula.csd.json": {
+      "rows": null,
+      "sha256": "ee42a322d8e2513dfd9e9175c1036ba8ef0889645c1ecb69d4b60344ab01e84d",
+      "size": 2830
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/harbinger_of_madness.csd.json": {
+      "rows": null,
+      "sha256": "d3bbfb29c4ec59e228a93d5f5c3c597a9d3357d2df36cadd1f27f9e8720cd6a0",
+      "size": 4393
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/heart_of_ice.csd.json": {
+      "rows": null,
+      "sha256": "9c314558bb219699622f2e91ab6934e7e779ccd63bc83b167671b1d590e21e1c",
+      "size": 1110
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_ash.csd.json": {
+      "rows": null,
+      "sha256": "39dc3e636250aa6b6cd73c28a7ff1f27a539b8a26bb85798964885466fb148fa",
+      "size": 4146
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_blood.csd.json": {
+      "rows": null,
+      "sha256": "37b156fa8920e500cd86104e4a17b60512af8ba3e2e523a217e9cdc090cbcb3b",
+      "size": 2995
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_ice.csd.json": {
+      "rows": null,
+      "sha256": "06fcc754386757568f8fbfbcbdaf7fd28b1d24156462f718cb4b9b1997fd4a7c",
+      "size": 2336
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_plague.csd.json": {
+      "rows": null,
+      "sha256": "fef2ca5887bc9ffeed4a6497c3c35c94542e97c98fdcfe5a3cd8f141f588e393",
+      "size": 1892
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_thunder/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "31310cc45ae42542348dc0e3fe88151d36743ef3e405ae54f0b814d1299b8a05",
+      "size": 1271
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/herald_of_thunder/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "2532aba4e9b2e2377b5243a51edfb0181bf6e7e279f85a673ecdfeee6593c51a",
+      "size": 2049
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hexblast.csd.json": {
+      "rows": null,
+      "sha256": "20ce309137f312ab701b321d392689b77e591e3d21515eeddf05f93647787509",
+      "size": 2798
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/high_velocity_rounds.csd.json": {
+      "rows": null,
+      "sha256": "8d0bdfb786682df61680f7c3ca7abe721aa3abae67ab9305eab74d38b30dd9d2",
+      "size": 2819
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/his_foul_emergence.csd.json": {
+      "rows": null,
+      "sha256": "2ca82ce6dd94fdbd46a6b80664ea99612dfa3aaac1136bab5c65bb7d72bf0dbd",
+      "size": 3142
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/his_winnowing_flame.csd.json": {
+      "rows": null,
+      "sha256": "3d4a4a9dbab51f89b7294688604db4bd37034b4e26f588627a6c30dfae59b9db",
+      "size": 253
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hollow_focus.csd.json": {
+      "rows": null,
+      "sha256": "744aab343dd2124395cb34dc4b6755354e5817dc719b5765776126469fd0ec58",
+      "size": 5493
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hollow_form.csd.json": {
+      "rows": null,
+      "sha256": "a3f1e0901410bf09da5b5c9b077dcf658915c2029a47baf6c4abcbeb55e66bc0",
+      "size": 2854
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hollow_resonance.csd.json": {
+      "rows": null,
+      "sha256": "ada7b37a633b3c0ea46910971f4510130cdc0d6a94d597540341cd021817fa19",
+      "size": 1584
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hollow_shell.csd.json": {
+      "rows": null,
+      "sha256": "7bb924acf1a5109f1f6c6b0caba85377131571f0c42579b1d86a28c701ac5923",
+      "size": 4417
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/hypothermia.csd.json": {
+      "rows": null,
+      "sha256": "93af7db65d6b1c4335c14d82ef5f9b974bdf95a4857bf4c5fffe4e778aec67ea",
+      "size": 2844
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_bomb.csd.json": {
+      "rows": null,
+      "sha256": "41740221f464a18dcf4821a02173b3379d8b7778029c82e6fbc0172c01df0e02",
+      "size": 1576
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_fragments.csd.json": {
+      "rows": null,
+      "sha256": "0b8a07edb84d05caee37f5bbce5d31c64fa5582a95069934c5f76f754fa64708",
+      "size": 1581
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_nova/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "2230f7af261c9ba175eea3f8cedbf710077d25f3dd66896054a108d78b713a86",
+      "size": 1571
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_nova/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "ba9b4093462d95cf625512e79eb7ba1668d81e3b5375c8223d3feda98bd95e12",
+      "size": 238
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_nova/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "4fa14f749b9dc16791c967bbb088410ca9069031b5139113a588fec679d3098d",
+      "size": 3045
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_shards.csd.json": {
+      "rows": null,
+      "sha256": "5ece193e6104e95ad52e6168fe1b21f1be2522aadd77204405c21d939a9f7a73",
+      "size": 4809
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_shot.csd.json": {
+      "rows": null,
+      "sha256": "e9c3178dac9764407c40f5165a71c7a4e9b4f159a951ee1512f41c371622bc9e",
+      "size": 228
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ice_tipped_arrows.csd.json": {
+      "rows": null,
+      "sha256": "9d6d2917a578f18f8a18dce9ef3377e1173a0024266379b4409bc5c59fcbf21c",
+      "size": 2639
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/icestorm.csd.json": {
+      "rows": null,
+      "sha256": "9d81a718a6f8bf40e67782e299e98c60dbb802156deee829ff22fec513b1f472",
+      "size": 6788
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/impurity.csd.json": {
+      "rows": null,
+      "sha256": "72551582100e1e652a81e84d2ac32661070b3f272ae75696e9e92849eae17bc3",
+      "size": 1324
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/incendiary_shot.csd.json": {
+      "rows": null,
+      "sha256": "2a9ee99b86da09b27b7fa8cfd5f9cd0dae47e2d3312b693687c638cadb03caee",
+      "size": 2631
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/incinerate_player/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "4fde8219b3825d88b95c35ec7e0575d26cef87d54d1033eb3386373fa32f1f17",
+      "size": 6363
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/incinerate_player/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "24fb988bc97c184a734281dbaff8ccfcbe49b7430dd9244ecd5e5a6ba8a4ed8d",
+      "size": 2106
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/inevitable_agony.csd.json": {
+      "rows": null,
+      "sha256": "0d4def2f473cbe2f4357c18c22609ad1a4ea5216c6ba8c1cf005ade70c57f1c9",
+      "size": 3256
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/infernal_cry.csd.json": {
+      "rows": null,
+      "sha256": "289737355fa3e251769ee113f2b934baead798c70407756d35648f0c13490519",
+      "size": 3008
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/infernal_cry_corpse_explosion.csd.json": {
+      "rows": null,
+      "sha256": "65010a47c379ae26688a6eef6aa4238faf136a895710b76645e91816416bf0d9",
+      "size": 1625
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/into_the_breach.csd.json": {
+      "rows": null,
+      "sha256": "3667894259959b73341ed9e9260ea203511e32c024a446b1ea0bf392f8d2b67c",
+      "size": 2542
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/killing_palm.csd.json": {
+      "rows": null,
+      "sha256": "a281293eb80092213e512b940dd2504492b67903d7ba08f54d593b44f6e46c0b",
+      "size": 4304
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/knockback_wave.csd.json": {
+      "rows": null,
+      "sha256": "ff121c1a41a5ada7d789abbd5ef8cc24acaa0a1db165ae1f7d3f4cba28e3bac6",
+      "size": 1567
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/leap_slam.csd.json": {
+      "rows": null,
+      "sha256": "acb59e57e0c7b3761ed2e4a232035f8b52821e518fd9edbed8d5cb34c94b5de0",
+      "size": 2454
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/leylines.csd.json": {
+      "rows": null,
+      "sha256": "9a71786d8af7bcb2e36a60e1c771cfb3dc0b9be3fc3910bad31973533de437ca",
+      "size": 3599
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/life_remnants.csd.json": {
+      "rows": null,
+      "sha256": "f7ac51ae7883aa1da43d8622f61c0ad8507ab2f8ef2a2e318b9b7b8778f67b32",
+      "size": 3724
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_arrow/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "5a45aade01e9d72e6b17f53c7aefcd8434f350ab795e68b2ef2d37c9f7ecbcd8",
+      "size": 2934
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_arrow/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "6075120d55662217ae72e1a115cb676892a681d2b1c963281d1fab2f1ac27a43",
+      "size": 286
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_bolt.csd.json": {
+      "rows": null,
+      "sha256": "3572156ec6ad6229458e73ef6c7af6f36984ee389ab054c0d5950c7f29c55d9e",
+      "size": 1573
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_conduit.csd.json": {
+      "rows": null,
+      "sha256": "9abc9afb60cdde88bee132acea33844ac066cd37c073139bcce273dbaccbf1ee",
+      "size": 2342
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_rod.csd.json": {
+      "rows": null,
+      "sha256": "c1ec838032c3f0ca3d244987661d62f997f7b3265d52a79e39b3b2574d9485d8",
+      "size": 5528
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_spear/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "1985e2dfc4f3cd102fb28e42e9efca4386b9adc3d8c9b8d4fce0fa8d9fcd6a6a",
+      "size": 2339
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_spear/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "abc744974dfa8abb6a84fa17d3982baaadfada35b5921b2660fcf82b129626fa",
+      "size": 2432
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/lightning_warp.csd.json": {
+      "rows": null,
+      "sha256": "038c48d05c863b134f97107187dee2ce56c780534970f5d35c3c21c97ad67cb6",
+      "size": 3297
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/living_bomb_player.csd.json": {
+      "rows": null,
+      "sha256": "8ccdc422ce5b47fb13c8d6a67d562aa71595b3e150f976c4e25aa8fa848950c5",
+      "size": 3859
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/magma_barrier.csd.json": {
+      "rows": null,
+      "sha256": "c75b001eabcefb64a4ffe4dcc86250bd6923516927dc378458a543147eb6076a",
+      "size": 3235
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/magma_barrier_explosion.csd.json": {
+      "rows": null,
+      "sha256": "ab9582f198459c1a899760ce133e6b8c9df1e723147468a4220c390d7c56e678",
+      "size": 1597
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/magnetic_salvo/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "309adae321b07611fba34374534e80d220141e20aa0de0f2b6fd25d291bb1f2b",
+      "size": 2859
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/magnetic_salvo/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "b0e6d4b58539de862f511b54ada007363466ea053f256a1f0c42658764fb00fe",
+      "size": 1669
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/malice.csd.json": {
+      "rows": null,
+      "sha256": "60a1ba9342e1f814f88f4cbf69e5b4e0af70d6648313519ac2479d09b83b8d6c",
+      "size": 2624
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mana_drain.csd.json": {
+      "rows": null,
+      "sha256": "913aea18aaabfb04e2e59dcd92a93d6c33065796a9f5876df54bfbe5975eb8db",
+      "size": 1260
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mana_remnants.csd.json": {
+      "rows": null,
+      "sha256": "1f14d14de393b956f5e67a94016188bdc50e4f94e2945dffbb46b7e055c56ce1",
+      "size": 3108
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mana_tempest.csd.json": {
+      "rows": null,
+      "sha256": "abd103d98c8e4e6d127dec058baa2888f5566865283d670e0656abbd309744b5",
+      "size": 4285
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/manifest_rune.csd.json": {
+      "rows": null,
+      "sha256": "aa58e0db91be4fcf0f1d06ba1cd0a8728cb626952be158be0b9c1da7b28a7ceb",
+      "size": 2539
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mantra_of_destruction.csd.json": {
+      "rows": null,
+      "sha256": "df5f39705e581754ac9843d45e6b7dcd098337b5824d0ae7aeeca83f3fac0a47",
+      "size": 2776
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/meta_arcane_archery.csd.json": {
+      "rows": null,
+      "sha256": "0d779527e9c10c986f6f27901d9a7391b7aea7fb6c2b5952f0e3bd92711fa7fb",
+      "size": 1227
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/meta_deadeye_marks.csd.json": {
+      "rows": null,
+      "sha256": "f4e163e7029f684913dcad4e0e44b5eb3b5385d6454beb8aacac9393e30c150b",
+      "size": 2169
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/meta_ranged_attack_on_freeze.csd.json": {
+      "rows": null,
+      "sha256": "d23ae07e62d5d49e936941e6781898dd69f45ffbff8f86a1cc5ace857838257e",
+      "size": 248
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/meta_ranged_attack_on_ignite.csd.json": {
+      "rows": null,
+      "sha256": "e200f741fc30f5acf5875988a7ac060e93da351aff5a74919c0dc61f2aff54f8",
+      "size": 248
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/meta_ranged_attack_on_shock.csd.json": {
+      "rows": null,
+      "sha256": "3aacf64cd5a92f32c71406fc61406d7e0d48eefc8ec08b22d9df0d78f0274e6e",
+      "size": 247
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/midnight_star/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "efbe84031f7ab8e58910d985addf2d0e5895a9a550f1e855b0db6330d2c2d6e7",
+      "size": 3230
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/midnight_star/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "ee3dc7cc503460f72efa3aaf41a629ff05e0711f1fd9abc000962a147540f0a8",
+      "size": 4229
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mirage_archer.csd.json": {
+      "rows": null,
+      "sha256": "b8353d89cd1b4286dba04045956300c2f7a3ff72cbe4cdf71e78a52279912c6b",
+      "size": 233
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mirage_deadeye.csd.json": {
+      "rows": null,
+      "sha256": "9224abdf99488b2ae32418598062b795b807048c9553aec82e2979ace7adcb2f",
+      "size": 234
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mirror_of_refraction.csd.json": {
+      "rows": null,
+      "sha256": "12083dfa586f1f68dd35b5e2d7a75e260fc0533f906d5b786b75eaef689a54e1",
+      "size": 4781
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/mist_raven_dive_bomb.csd.json": {
+      "rows": null,
+      "sha256": "9ac27d6f7a95f1d0a1ea5c1914a358d394808e0631c85b537a28f10c12bdcbb7",
+      "size": 1959
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/molten_blast/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "170ae567e3c248e338b676ca69d82207bfa9259c2e1061a96d233edd96531e64",
+      "size": 2275
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/molten_blast/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "da9a0f7e4ab876d9156b69cdfa6f11ad3051f531bacc5eff2e0f2ddfa3f2152a",
+      "size": 1044
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/molten_crash/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "58c00715eb1162a489943d82639dc821bbab21737c9d8b52a2f4e40fdb8c857a",
+      "size": 2776
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/molten_crash/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "cd7e56cd2ade8a472716630ec3351072121a896e4c1aef47212ad574bdf057d5",
+      "size": 2550
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/moment_of_vulnerability.csd.json": {
+      "rows": null,
+      "sha256": "73656552b92698dd0412fbc13385de1b09de70c81d0f1bb5c94dcb91bb7a6a4c",
+      "size": 3068
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/new_new_arctic_armour.csd.json": {
+      "rows": null,
+      "sha256": "016906e54e8dae4d9b641a61ba0ca3fee567b7fcc9e6ad118f92c5aa9e2359d5",
+      "size": 2171
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/new_sunder/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "0935880b0043f44d8c48ba347b6a8d5020ab55aabd1f475a02eac5efd40699f5",
+      "size": 3361
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/new_sunder/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "be9d12ae4417337fa2eb42117c6dd2197c21f8a11c91459d445b5e259ffb9a0d",
+      "size": 1628
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/nightfall_embrace_the_fall.csd.json": {
+      "rows": null,
+      "sha256": "034882288c34ecf407ab9aecd9630d5bede41f9ce632418891aa89477c47a056",
+      "size": 1870
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/nightfall_soaring_midnight.csd.json": {
+      "rows": null,
+      "sha256": "4e26e66c99d5e4e605deccdb6af18c8a37c7dc7fba8a4fb3dd0dc1dea4b4076e",
+      "size": 1048
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/oil_barrage/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "3af2acf3b3667c571c1bc6e48cfda732ba0cf58a9acd299232303598ac00e701",
+      "size": 3076
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/oil_barrage/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "855dd2f35604724dbc2d9c6b15098194af8f18c43663a028deef4de370b0326f",
+      "size": 2602
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/oil_barrage/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "cf3d6bccbd7d174e1bb657565b7d55e9ef4b70421de7b56ee24595c9aff442db",
+      "size": 3354
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/oil_grenade/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "d44d920777bc96a2472fe8715281ad3de5e3435ef1f3e311c7cbf44043217ffd",
+      "size": 3498
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/oil_grenade/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "859f566c293c54da69413a172f0f7fb0b2785c723f87cfd06290e71065bd99c4",
+      "size": 2601
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/orb_of_storms.csd.json": {
+      "rows": null,
+      "sha256": "49fe6b6a4c6500a48019c27471dcf230f279dcc4406904ac1e8e23eddef2aaa0",
+      "size": 3155
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/overwhelming_presence.csd.json": {
+      "rows": null,
+      "sha256": "02c403f8f79b5b467dceacb2c6ec56c80700a88932f7b892423ac17a487d8fab",
+      "size": 2708
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/packleader_great_hunt.csd.json": {
+      "rows": null,
+      "sha256": "6575e6141d8f5287dba652754fa0441ed0b27d5c61dc33fb55dc7ca7d65e3d28",
+      "size": 1057
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/pain_offering.csd.json": {
+      "rows": null,
+      "sha256": "193e320d5c6f1a0795ae5d29d24b2f4f819aaa2b92f722af9484a2590a3d553a",
+      "size": 4722
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/parry.csd.json": {
+      "rows": null,
+      "sha256": "ccfd14872a8e3a75bf78d7bc5f4adc164d8d4e91fff2706adde7539d8f63e370",
+      "size": 5767
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/permafrost_bolts.csd.json": {
+      "rows": null,
+      "sha256": "fd1722f3692d0982b88bacb82ae3f5de8a6c717f3add13eb05f415bfe166d76f",
+      "size": 2141
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/phantasmal_arrow.csd.json": {
+      "rows": null,
+      "sha256": "afe3d5b621f73e511829eeec76034b0858d411111e33f5ebb45ee1c627e12221",
+      "size": 2500
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/pinnacle_of_power.csd.json": {
+      "rows": null,
+      "sha256": "72f1c0ffa9706bb2bb13adde4f969bf5865f9f18165cb7c0e767f030ec0d80b3",
+      "size": 2528
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/plague_bearer_nova.csd.json": {
+      "rows": null,
+      "sha256": "dff33510e0e3a7be6b9731dc6ef377a0a5f35ab59a2d75964d58a9737aceb84f",
+      "size": 2210
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/plague_burst.csd.json": {
+      "rows": null,
+      "sha256": "dfd0af356ea2301da42f90e6bb42fc98de99ddd2f3cb8db22ca47e38acb4ffde",
+      "size": 1568
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/plasma_blast.csd.json": {
+      "rows": null,
+      "sha256": "08ea652a2a6ed6058a60a1bea87e6391611cff836806e2a736b8187bac80ff16",
+      "size": 1605
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/player_melee_grenade_launcher.csd.json": {
+      "rows": null,
+      "sha256": "d40153fc59e4aa560ab744dc868cf51587d82c3b495828dedb1df15742599f76",
+      "size": 2509
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/player_ranged_spear.csd.json": {
+      "rows": null,
+      "sha256": "f862cbe48aff625ac0e9df36456daf0a631140035504244d3feb482bb9f2baf1",
+      "size": 1587
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/poison_burst_arrow.csd.json": {
+      "rows": null,
+      "sha256": "0029907e70e098cfb59d993f80aff2f3c846ddc27fea7b86bafd37cd0c4eee7d",
+      "size": 2176
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/poison_spore_support/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "51405a1c2d42551a56d72fc6be7599f4c9ccab9f9bec3c2df771dec15c03f5af",
+      "size": 1694
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/poison_spore_support/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "1cf2421548d4a002946ef3b9609eae9ef9770cc1b44a80bbd683614e646d81c3",
+      "size": 3053
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/power_siphon.csd.json": {
+      "rows": null,
+      "sha256": "ec862aae3a64648975dd56f954343b60b66e2ec30cfbbc2e6e6ea46842ad5551",
+      "size": 1416
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/primal_strikes.csd.json": {
+      "rows": null,
+      "sha256": "d7011e6a775b359217db9452878c67eb8c27f6930921a807e4891155d6e72882",
+      "size": 2506
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/profane_ritual.csd.json": {
+      "rows": null,
+      "sha256": "04d1ca2d6c15460c3ac7cee69b39e47b4afb8017f05713a941ad558fb50d3d54",
+      "size": 2492
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/purity_of_fire.csd.json": {
+      "rows": null,
+      "sha256": "8bbe243837b8810d1df0a506d9d87eca1f9e505f74d3b291660230fce77f6ac5",
+      "size": 1328
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/purity_of_ice.csd.json": {
+      "rows": null,
+      "sha256": "a1f023e0279311fc177d5e814602484539d9948b7e2f074d377b26a866bada15",
+      "size": 1329
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/purity_of_lightning.csd.json": {
+      "rows": null,
+      "sha256": "336f34e905a613c7bb3c20738ccad177c5b4e953c3566aa288d4f5b6fe725525",
+      "size": 1355
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/queens_procession_reservation.csd.json": {
+      "rows": null,
+      "sha256": "db62ee2ec05dca12e8c2329ab9f55c7f82f8d8534b9b9d4414210546558823fc",
+      "size": 5228
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/raging_spirits.csd.json": {
+      "rows": null,
+      "sha256": "00dc3a8ce9db4553018b236dc636504051679cb190f0f215716983cf52505f7b",
+      "size": 1582
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rain_of_arrows_new.csd.json": {
+      "rows": null,
+      "sha256": "29a87db0e32dd1e206ec76df7e1f6e2c9cd4fe22df7894391cde790996511422",
+      "size": 6309
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rain_of_blades.csd.json": {
+      "rows": null,
+      "sha256": "2f1a268cfc2a82182febbd970b23973360fb420f7c94e9f2b679598a717ab75e",
+      "size": 1588
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rain_of_blades_triggered_blade.csd.json": {
+      "rows": null,
+      "sha256": "f41d64ba25a65602e1e1cdb2d215ad4f112f0ab330d64a6e215f9ec2874e4070",
+      "size": 1589
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/raise_zombie.csd.json": {
+      "rows": null,
+      "sha256": "33aecc683693786d3a949000b9e362d35f56485d369846f1cf239a5311202ccb",
+      "size": 4172
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rake.csd.json": {
+      "rows": null,
+      "sha256": "65d3448127aefd8e20ef084d8f5be0991a3c31bb7d94852a95267a3a01785d62",
+      "size": 224
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rapid_assault.csd.json": {
+      "rows": null,
+      "sha256": "0dcfc2e22b56687e250b5d320b1647636713cc77c398717f19d6501ab6258e19",
+      "size": 3192
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rapid_shot.csd.json": {
+      "rows": null,
+      "sha256": "9601b4fe5697f8c1788b9f257ecae94b1a1f6c607eb7a5a655ee18bbdfaa7d7a",
+      "size": 1364
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ravenous_swarm.csd.json": {
+      "rows": null,
+      "sha256": "709b5aec5feb6ecc1084fed57948a766115ca8919459a522cde241e9c2eca5d4",
+      "size": 4494
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/reap.csd.json": {
+      "rows": null,
+      "sha256": "9a12466d84b4d90c57b351adaf6f69986eba1808705d2ef5a7c69f89de42c3b6",
+      "size": 2223
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/refutation.csd.json": {
+      "rows": null,
+      "sha256": "87659f7bd2a6813a551f109ab5ce1096d3d9d3beee8d0fae22dfe66ebd7f9edd",
+      "size": 7124
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/remnants_of_kalguur.csd.json": {
+      "rows": null,
+      "sha256": "486ffe0c695467645b1f489bd2bccd8cd9814001e6c8bc38b760bb4658a61f4a",
+      "size": 4157
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rend.csd.json": {
+      "rows": null,
+      "sha256": "9693dd0ce2f6459047db915e76d5612d056fc64a796212036892dfc36ef713ac",
+      "size": 2942
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/repulsion.csd.json": {
+      "rows": null,
+      "sha256": "7e798aadd02068c11a5f37fcc732c2eeaec65243d1a7513a51c362bdc8ef3eb9",
+      "size": 2380
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/repulsion_shockwave.csd.json": {
+      "rows": null,
+      "sha256": "4e32ecf1521d78e85a763ae9db386a2995316921edcfdcd3eb7334cb90c0e798",
+      "size": 2210
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/requiem.csd.json": {
+      "rows": null,
+      "sha256": "d937063039696e3809bdd8c6487276c72440c0a38cd82624f853d3150be7797e",
+      "size": 3016
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/requiem_ammo.csd.json": {
+      "rows": null,
+      "sha256": "c812c48bf8c55ff4f22b34764e86c2609aca45799a1549042a0e376e4b0e94e8",
+      "size": 2637
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/resonating_shield.csd.json": {
+      "rows": null,
+      "sha256": "d90c84615b74434ad36e21269311cb9ae34ae502172564608c902b5518bb0e65",
+      "size": 1613
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/righteous_descent/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "2092202b8b8657a45d0f9646fbc37b7261207ed8cdc610ba59f25664ef22507e",
+      "size": 1963
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/righteous_descent/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "6325d823d5305488ad20ceccac0a03e19d62d4239deb152f497619d27b8e2a35",
+      "size": 2930
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ripwire_arrow.csd.json": {
+      "rows": null,
+      "sha256": "4ec61e7467cffa186c976f69666b292fb4dcec962aea9ebcf6c692c372685487",
+      "size": 2565
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/ritual_sacrifice.csd.json": {
+      "rows": null,
+      "sha256": "a43d9310133d3214baba61583a386f202af5a0b11e8993a875262bf6822b13a9",
+      "size": 2813
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rolling_magma.csd.json": {
+      "rows": null,
+      "sha256": "646688334f338b5f4c718dbc52902cc85ce546f5a8ef62fd341c1291ea7811fd",
+      "size": 1572
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/rolling_slam.csd.json": {
+      "rows": null,
+      "sha256": "e9a0a1abaaacb51780884d16b47ca0e0983b967c9b4bf7bdbddbf14a46890fb8",
+      "size": 2494
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/runic_reprieve.csd.json": {
+      "rows": null,
+      "sha256": "c2a7ff5ade3fac0c8d45e5afdef46bd6b32e29269bd771868d8db25647b365b1",
+      "size": 2509
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/runic_tempering.csd.json": {
+      "rows": null,
+      "sha256": "c45b5ca09e0dd3ab0283d449f1a5f20f8a4e723f1724db89da3a485c1fbee0e5",
+      "size": 4922
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sacrifice.csd.json": {
+      "rows": null,
+      "sha256": "2df69d83c12badcf213ef3a4f9744a0107ea522b2a719b3fefc14b6d49094d34",
+      "size": 1517
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sanguine_revelry.csd.json": {
+      "rows": null,
+      "sha256": "7ba38bbda41a89e173ea6666fe6d595dac1dcb43f00382a8addcfcdfd2959c62",
+      "size": 3341
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/savage_fury.csd.json": {
+      "rows": null,
+      "sha256": "4410230333955cc551ae7d064c7fe918ec4dfdc545c90d29bd6c062cd837c49e",
+      "size": 4803
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/scattering_calamity/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "9fd138c1d70d3f736295ea918a24570e943c93faed3c8927b36b15f024fcecc2",
+      "size": 4703
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/scattering_calamity/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "f64c63d80200ffd6532e2a468b559a6ab389f09745f83c74ca93755596d166b0",
+      "size": 1724
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/scavenged_plating.csd.json": {
+      "rows": null,
+      "sha256": "45ba40c3f99063f31b46095a00194bab9adfe87cc21b309e688fdd0264b6fa50",
+      "size": 4080
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/seismic_cry.csd.json": {
+      "rows": null,
+      "sha256": "2f34ee6fd46b97ce6063cb84743122217866fab4c7debb91259817e1018434d2",
+      "size": 3385
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shard_scavenger.csd.json": {
+      "rows": null,
+      "sha256": "bb415edfb34fdc4d6e3b149a920c5764492a62b71fcc43eddaa2d7bfabc8ce2e",
+      "size": 2909
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shattering_concoction.csd.json": {
+      "rows": null,
+      "sha256": "1ab5f48f0b658c01cde9c041fceeabf8184d2fb4e83f38979cef9dbc8abd72c6",
+      "size": 1589
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shattering_palm.csd.json": {
+      "rows": null,
+      "sha256": "5ac261dbf5799da2b65002a8a30adc3f38ce8402cf058daecbddce9bdf7cd6a2",
+      "size": 1396
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shattering_spite.csd.json": {
+      "rows": null,
+      "sha256": "079bc6e3c55d57238e39ff9ba02ec966ab99d03bf78d208fce2699bb6dca4a42",
+      "size": 3005
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shield_block.csd.json": {
+      "rows": null,
+      "sha256": "fe477111c0696a254502911f03e2ccd2fa1d739e8af022b8e99a846ee5821c8f",
+      "size": 4286
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shield_wall.csd.json": {
+      "rows": null,
+      "sha256": "40c401c8ffb183d3ae8205da88c281d843fe492238d55aeb04a70e2d38f16ded",
+      "size": 4749
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shock_grenade.csd.json": {
+      "rows": null,
+      "sha256": "624b3f3f1053e932d4a053ee545536db990872f63508eb7ac6209399338fe9d2",
+      "size": 4683
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shockburst_rounds.csd.json": {
+      "rows": null,
+      "sha256": "11f787f88e5e6293404c0f71ac21e2998a51260852070c79a8d9d858752a8041",
+      "size": 1646
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shockchain_arrow/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "33ef71b1bf207f5471e5ad8b3b016d41265452440e750f311ff6efe951757514",
+      "size": 3801
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shockchain_arrow/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "9b86806f470a2d54d2a352d69d66733bdb845e4ff78e2c7f74b7412171910065",
+      "size": 1594
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/shred.csd.json": {
+      "rows": null,
+      "sha256": "38ea4b53ab716566dbdaf4b08326088a9a0bc95e57476f0fdfde45f1fd8d99e7",
+      "size": 1047
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/siege_cascade.csd.json": {
+      "rows": null,
+      "sha256": "f43a1b21e154eb1d44c67af4fe4074670a2bbb2400f30c2ba345d71607e090c5",
+      "size": 2457
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sigil_of_life.csd.json": {
+      "rows": null,
+      "sha256": "afef818f151420b1e6c5abac2eccc83e07696fe4ab58ce8a40131ba7016c0230",
+      "size": 5552
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sigil_of_power.csd.json": {
+      "rows": null,
+      "sha256": "956f4db4585dcf048907490a7d4a287eba523977b7d41bd1f52ad6ae2eb914e9",
+      "size": 4532
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/siphoning_strike.csd.json": {
+      "rows": null,
+      "sha256": "ffb79f25a127a1b1933d7ffa10b2e7e458f01a2d6ed8644b5a40db7f05469918",
+      "size": 1670
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/skyfall.csd.json": {
+      "rows": null,
+      "sha256": "1d66d3357d17de6631e2c12c00fcb37045dd9bdb0833004e6ee4fd19874859e7",
+      "size": 2916
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/smash_to_smithereens.csd.json": {
+      "rows": null,
+      "sha256": "3ffecef1cdb0771fc0db24b7e7d34bd1dc825c9bf04427925cc30b62766a839f",
+      "size": 1579
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snap.csd.json": {
+      "rows": null,
+      "sha256": "20f39b4e41cf87bf57498a2fa2626ca07d05eee7bb707683faa79c6109e483ea",
+      "size": 4216
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snipe/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "0d2c53ead1f0a509ffc2396ff2ab7510e240504c8df3e81eafabc4151903600e",
+      "size": 1906
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snipe/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "9190fb79a46259b08092dad123846f29a545a6b1d2e87d2b6e6a6ab306ccf03b",
+      "size": 1646
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snipe/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "45d28b8d7f096e4adc9537066e27fe94aa44326eb95ebbf2efa810f759b0ee39",
+      "size": 1646
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snipe/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "f3457f44491c6d5db15ab390f4681111aac4263f359290da3d8cc48d1123d761",
+      "size": 2263
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sniper_gas_shot/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "ebcc39c4538b2c2a7b05b353c56930fae3245aa23bc3f71abcfb4a4a9b2c8195",
+      "size": 1627
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sniper_gas_shot/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "a1e7aa0a2d4f205ad20f23083ea4889a10b30613655b29c1ee8fb7ad06f8cdeb",
+      "size": 2608
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sniper_gas_shot/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "3dd314484334273f0d89e5d02b084b0b3ff361c0e4d31cb37454f0c21619a073",
+      "size": 358
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/snipers_mark.csd.json": {
+      "rows": null,
+      "sha256": "bc38149abf30cbdeefdc2d8d80649a08a77d87936bf250555d9f859954d2d7fc",
+      "size": 2280
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/solar_orb/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "847ef5ccc4f88375acc618fcdf486b0a023f3725f613215ce895a8dbf835d592",
+      "size": 3226
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/solar_orb/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "cb4537a66f670cdbe2c4329ab6beb78f4657483f6f3fb1fe296a3c84725b2afc",
+      "size": 1999
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/sorcery_ward.csd.json": {
+      "rows": null,
+      "sha256": "1a679975aad73ece453cf4fca003741cfa5ee3b0895934cf174323f0a34e20fd",
+      "size": 2111
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/soul_offering.csd.json": {
+      "rows": null,
+      "sha256": "c979a50916b53c8be7e68ca8ad45293014fcebdb60841f566bf83a28975486d7",
+      "size": 2816
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/soulrend.csd.json": {
+      "rows": null,
+      "sha256": "4a3699ca74cdbdc20a4724833caf9d9f8a55cfbba571bc19c9f199d02c64fbf6",
+      "size": 1588
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spark/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "b82727edd3d16c45398568f885536b34f16d3b669f980fa5cc563e8227a3aa6a",
+      "size": 2547
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spark/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "d69d8b85264f63cbd04793504e69ac30efa6d8e1f7882b007f08a3f668fa4a4d",
+      "size": 3360
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spear_discharge.csd.json": {
+      "rows": null,
+      "sha256": "00fab8da600dd6c7660ae2e0cdaf50e3fa28656337b2bf1eea4b0801a7253108",
+      "size": 2824
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spear_of_solaris/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "1e3ce196e741df8dfa5b4c08a9e6aa490255e8f2c19dd75c9e0f30405ef3148a",
+      "size": 1585
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spear_of_solaris/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "061e8cf00856eff58d0885aa4dc1c71a26c326f96371d12422af0d29f52a3729",
+      "size": 1632
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spear_of_solaris/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "4d8118c58e88e4ec9c1885852a342a329711ac3a72d05ff9c7fd561a96d26502",
+      "size": 2347
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spear_wind_vortex.csd.json": {
+      "rows": null,
+      "sha256": "a32af30656126203a23d569733ec8d7768909b65af8dd5c895bb5fcd5db45b8c",
+      "size": 1631
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spearfield/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "2c654e7158773bd875314bd7be1bd900b37986b6977943351c452077c3273ea7",
+      "size": 2831
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spearfield/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "0dc51688d4cae3e7cdc2d96cab47b7c3b1ae02abcefd0c2ffc2b2dfcccb64589",
+      "size": 2385
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/spiral_volley.csd.json": {
+      "rows": null,
+      "sha256": "55d219ba5cff2d75b9d9fcafc3cd873c1292fb38d6b2b56ff956711e47ce0c20",
+      "size": 2923
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/staggering_palm.csd.json": {
+      "rows": null,
+      "sha256": "a57753d1e38b116b6ad6b29e29d9b2ad20813133cb01d2ff166d3ebe2d1c2f4b",
+      "size": 2431
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stampede/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "97374e18b21bab6ba7544a518abe7453a4a98d239cb1d47f01ca20764d78e477",
+      "size": 1678
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stampede/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "8df54f1c9e695c909c1d93f755f6ed70add696caf412984cb5f1f7367704d7ea",
+      "size": 1577
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stampede/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "9468a061d03f5731e5640cf171d89c306cd2dcf54f9814a7a9763d04b3f0538a",
+      "size": 1514
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/starborn_onslaught/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "16943b60f7b3122fe5befbcd0b69f17a6e70c748128ac49c876458653402402f",
+      "size": 4370
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/starborn_onslaught/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "faf172fc1d8d0ff1c524ba5cbae3cd17e30b41196124149f2c219a328654e699",
+      "size": 1774
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stomping_ground_shockwave.csd.json": {
+      "rows": null,
+      "sha256": "68ada0dcc61c7861070a7c81744bdff759f621572c0682305a2751ec53d13b50",
+      "size": 1593
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/storm_lance/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "3c8e16dd30c105b53c911c738d30302366b182d1a072e05464be8291da0840d9",
+      "size": 1498
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/storm_lance/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "128698ea008598134df73df3873c344c3653ae48bf5d4c5af91d63f17751f463",
+      "size": 4125
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/storm_lance/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "3d92339a060cacf1764d9bf360d4c02c811bed327754f45f47d17c3f26013e82",
+      "size": 4255
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/storm_lance/statset_3.csd.json": {
+      "rows": null,
+      "sha256": "37c9f3c0026b3c1bedd1a328684535256df4b4221ff30f97a218d4ffcd1c5f55",
+      "size": 2026
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/storm_wave.csd.json": {
+      "rows": null,
+      "sha256": "5c64677450b180ccf77cd87db2247ae273baf1fc0575a64758843d6985dae3a5",
+      "size": 3363
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stormblast_bolts/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "4c938436bbe02fe632a847e878e39a5d018c90673bfa5f0e10be7e30367e7c60",
+      "size": 2959
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stormblast_bolts/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "f39ec24976b1ccc9aadc82ea977ab04403acb5bbd74945c0cd475c2b693f735c",
+      "size": 1645
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/stormcaller_arrow.csd.json": {
+      "rows": null,
+      "sha256": "9778e6ff26806322973a64e53fdd499ff2dcbe886744395aebdf61d01e8868eb",
+      "size": 2979
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_fire_djinn.csd.json": {
+      "rows": null,
+      "sha256": "07d013386f1db4f07545307b0936301d76c8072ed09f07087897f94b9584256e",
+      "size": 1658
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_infernal_hound.csd.json": {
+      "rows": null,
+      "sha256": "6eb339de70cea19ea4fabdfcab32dbb205dab5314c19b3cf9ce34c59bdc1dee8",
+      "size": 1623
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_meta_totem_spell.csd.json": {
+      "rows": null,
+      "sha256": "9549cecba0f7ea91ec18d38492b357a0de971fbcc00c22ccbbbb8d0819ba881e",
+      "size": 2362
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_mist_raven.csd.json": {
+      "rows": null,
+      "sha256": "57598b937421bd0ee6099f036ef94ed6bd418cef30686ae44a9ec47cf574330d",
+      "size": 1072
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_rhoa_mount.csd.json": {
+      "rows": null,
+      "sha256": "664c81dcc235f502e77f21da6200a12cb9d6ad7471aede3844b3433f0c48cc1f",
+      "size": 264
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_spiraling_conspiracy.csd.json": {
+      "rows": null,
+      "sha256": "b965e2fe0f95f41372bce6238878d27fa8d64de652eec21f1414cf8f60d66d9b",
+      "size": 3105
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/summon_water_djinn.csd.json": {
+      "rows": null,
+      "sha256": "f38e4ac4c0016569702a86826a2820afca99754f78ed17d1872f5bc2baa4762d",
+      "size": 1456
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/supercharged_slam/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "c888700636095fecdb24e4df98c656da595ab3b1856de2a2b323495f0c708a45",
+      "size": 3488
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/supercharged_slam/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "af22a4139a45588acc3ac0ed53600b4124a0e41b3c233ddd930506b7aa1d7047",
+      "size": 3244
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tame_beast.csd.json": {
+      "rows": null,
+      "sha256": "ac352f705f380a9ef1a9d4c499588469b6f89f35b3785e3993779afb76b180eb",
+      "size": 2538
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tangmazu_mad_flight.csd.json": {
+      "rows": null,
+      "sha256": "0fd8ffd4fcb3e5b71ff3c4729adf5a46c0fcd56fcce1d7060658fcfca06721a0",
+      "size": 4916
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/temper_weapon_combustion.csd.json": {
+      "rows": null,
+      "sha256": "2238cdcbce0e2ffd3569576b80e8e78f5898c05a44caa0902d82fab7cc1e3146",
+      "size": 1592
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tempest_bell/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "38acd993dee133df115736e563dd208fbdb0eddacbee32e9be119dd07f607e49",
+      "size": 2705
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tempest_bell/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "eee3184fa97e2c08ecd12480f538d9901bf0eca8430074b2aee2aee4c6852bda",
+      "size": 1629
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tempest_bell/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "dffbe0451fd7449d70d966552e76700869a421a78d860e528b5240b0b08af63b",
+      "size": 2165
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/temporal_chains.csd.json": {
+      "rows": null,
+      "sha256": "91c94883b6b4b5d48314d1ab9472a2bc9579953297da7b533dc6b76dd168bbf2",
+      "size": 3789
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/temporal_rift.csd.json": {
+      "rows": null,
+      "sha256": "a05f5eefadc651677a6e1681f9d63b5f08a3024a564283c07b200228364a1f6d",
+      "size": 2030
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/the_flawed_edict.csd.json": {
+      "rows": null,
+      "sha256": "d85b18ef6102c21e594ab180cfa444f00979b4d2a7de4bbf3e4156bb519cc04d",
+      "size": 2841
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/the_stars_answer.csd.json": {
+      "rows": null,
+      "sha256": "e6c60b8f3061f4c30f36834eef10405a4e2e7d4d6be4057bfb896a08ee15a40f",
+      "size": 5290
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/the_stars_answer_comet.csd.json": {
+      "rows": null,
+      "sha256": "47d8ca176f34544ce7cc4373b7bc7910ed05c69bb961b5ece533806b7c1527fe",
+      "size": 2590
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/thrashing_vines.csd.json": {
+      "rows": null,
+      "sha256": "932a1c5281d3ca8077237c50d944681d59adcea8d6a4b3ff5e160d8a882a2a9e",
+      "size": 6927
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/thunderous_leap.csd.json": {
+      "rows": null,
+      "sha256": "fb870fbc4f6af5109358c63df1cdd057e918d01fe130e351509eff16a606c58b",
+      "size": 2227
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/thunderstorm.csd.json": {
+      "rows": null,
+      "sha256": "6435262ae0136285419696bf0e1306c428afd8a67728d5efe839f76cc6dc901e",
+      "size": 8618
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/time_freeze.csd.json": {
+      "rows": null,
+      "sha256": "26f5f8614c51c7005227deda1e1437f8d78daf8c85c05143c6ab347f69daac45",
+      "size": 2935
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/time_of_need.csd.json": {
+      "rows": null,
+      "sha256": "cfb0ae789246a60c5c912ecf51fdd8605a313aa955f0932a627729b099896713",
+      "size": 2281
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tornado.csd.json": {
+      "rows": null,
+      "sha256": "d9bebff05fa1932766bed738382ca34c4b05b9576d4a21d941995b894a7f19f1",
+      "size": 5587
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tornado_shot/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "6f8345e10fcd4073643a47f120d59bb07db41967e7348d4fc11b71cc5e57e8c4",
+      "size": 1632
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/tornado_shot/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "eb846c078761eb85ddd749fc319def70602dac53ac84a2ccd2471447b8533fd9",
+      "size": 6243
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/totem_shockwave_quake.csd.json": {
+      "rows": null,
+      "sha256": "dd35c509f7e605591188592d66044d8d434f9e99f809572e2de6aa4bc7ffcae0",
+      "size": 1617
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_domain/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "8488059905540099aa2a489ecea1c4f6a667f6ff6cc86501c0bc25eed51e081e",
+      "size": 6366
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_domain/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "87a58405a0ac51542c8145398ad8f3b1e9529cf82bf5200255118e0fc5ba4645",
+      "size": 5963
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_grenade/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "6a153fc939d49f5bbc2155d4fa8784e58a8a7a8f97a092bae72b1da975e1ddfe",
+      "size": 2495
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_grenade/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "b42d21fe8fdca4f3e081a1a8c4ec0af7730847fbdd3f2ec4fff0fce3e27c84f8",
+      "size": 2609
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_grenade/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "35759bbc32451bce9fc588ec08ba9a07a279aa0c2ec391ef81add9047860f3af",
+      "size": 456
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_growth/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "6992a971baaabac390b8bdff5054bce1aaa0b2c6eef934b5276560229f334e82",
+      "size": 3072
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/toxic_growth/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "29c34237e6dff2be4087b18c22ff15b949562b3b4d1a30c3280f6768a24183ac",
+      "size": 2005
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/transmutation_reservation.csd.json": {
+      "rows": null,
+      "sha256": "d144f40ab383b3b9d67319c6127725d81d210343df991a8b355b810b450fa008",
+      "size": 985
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_battershout_explosion.csd.json": {
+      "rows": null,
+      "sha256": "285b41456563adc0a1d915c656d4318cc903fdf08b5cd38fdeaff1f6159b1c63",
+      "size": 2562
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_bone_shrapnel.csd.json": {
+      "rows": null,
+      "sha256": "452262037ee58a0860a3a5d990f56a6ba3c0a81b75f685635ed076f15625ec97",
+      "size": 1591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_briar_patch.csd.json": {
+      "rows": null,
+      "sha256": "707eebc030b61a4e5469f9162c2ef166ba6b2d842f0323053157616e7932d0be",
+      "size": 3234
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_caltrops.csd.json": {
+      "rows": null,
+      "sha256": "5b409e2ec67532a61be01ac4997edf43ebc38b37116bbf202cdaa7bdd55cba45",
+      "size": 4562
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_caltrops_on_dodge.csd.json": {
+      "rows": null,
+      "sha256": "de727adb1d357a46900b6bb4f47c739cfdee2e941c6f5f63ef2bf45ef02f16ce",
+      "size": 1190
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_chaos_frog_explosion.csd.json": {
+      "rows": null,
+      "sha256": "4a17eb188b0d5f6bb42435dd99f9e1a9ae07111090834a8619861e5f6769eec3",
+      "size": 1912
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_charged_mark.csd.json": {
+      "rows": null,
+      "sha256": "54b3a5252740b93bd8f86654db5721da540e46755ee287bf8e64dd5bca918338",
+      "size": 3120
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_corrupting_cry.csd.json": {
+      "rows": null,
+      "sha256": "cce0b0eb7ca4e0729c444c80a16ff78969a9e46b135483df2c21669a4585f09b",
+      "size": 2525
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_creeping_chill.csd.json": {
+      "rows": null,
+      "sha256": "47c5495937d6626b99ed2fce6a8d92558c3a8ec39c7bd01fadee13134ee127a4",
+      "size": 2095
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_curse_zone_hazard_explosion.csd.json": {
+      "rows": null,
+      "sha256": "f8077e9035a50dccc02a5b0d6f1d37b45b9e6c903d5445be7cd77838a954b3cc",
+      "size": 2016
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_deadly_current.csd.json": {
+      "rows": null,
+      "sha256": "c417157f5987a4130f25dc8434f5b138574356bbb15bdf0f636fd239f6f5c501",
+      "size": 244
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_decaying_hex.csd.json": {
+      "rows": null,
+      "sha256": "fd2efd2587261ead97f099c8d26b68dae7b1f8e45e55b4fe64a9ca66da27d616",
+      "size": 2055
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_detonate_dead_on_landing.csd.json": {
+      "rows": null,
+      "sha256": "d25f3ceb5a78d58dfc921ecdca1e304e935d15cd2242ffc889070480c6a67904",
+      "size": 2220
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_elemental_discharge.csd.json": {
+      "rows": null,
+      "sha256": "fb9bf5d4533ffcb56e51b972e1c19fffe884ca0b882320bb284597243c772316",
+      "size": 1597
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_empowered_spark/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "470d91f26f57f76b8de6ac0d501b5f66152e3cec284a519f90d42fb49950eff3",
+      "size": 2567
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_empowered_spark/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "f9c65ba5a99bd635d3d72743ea458382e89ae7575ba95b118d2b04f2628ed38f",
+      "size": 3380
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_explosive_growth.csd.json": {
+      "rows": null,
+      "sha256": "cea8995897ded7c10e306c6c61b0404155fb07feead6b3b531d1c9e2c88c50b2",
+      "size": 2164
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_fan_the_flames.csd.json": {
+      "rows": null,
+      "sha256": "d994ccdd7720c4509113ccbda044f0eaedbe75489a65e289810f7ccc04d9fadd",
+      "size": 1823
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_fiery_death.csd.json": {
+      "rows": null,
+      "sha256": "51b3bbed7347d99666079eade0d6eb18570e53a02c6bd97a8a6ab3555639bedb",
+      "size": 1589
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_fissure_on_landing.csd.json": {
+      "rows": null,
+      "sha256": "93194f17cb120324a1d59882ff04601646a92b19dce2451b90d8c47a2ffdef35",
+      "size": 3152
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_fist_of_kalguur.csd.json": {
+      "rows": null,
+      "sha256": "1f4a0b7b79c881e60ed0a7215a916ab0f88650fc66376db70db94d38c5c0e152",
+      "size": 2428
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_fractured_self.csd.json": {
+      "rows": null,
+      "sha256": "6a48c63da3000554dc9d75ce4b01377db57f24e391b18911b552180b9213dbab",
+      "size": 3362
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_freezing_word_explosion.csd.json": {
+      "rows": null,
+      "sha256": "e97218994683fafb39af9012db31d18c4dd44ac88805a09de9badc1b14e0f677",
+      "size": 1639
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_frozen_vortex.csd.json": {
+      "rows": null,
+      "sha256": "f7a373c914fb76bdaaea084eb2e0f7d8405a506f3692556ea910f0565a2e314a",
+      "size": 2546
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_grounding_shocks.csd.json": {
+      "rows": null,
+      "sha256": "89a3744cdb6b2159d3a51b324035457247a22880230fd89d9e395ede344defd3",
+      "size": 4128
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_haemocrystals.csd.json": {
+      "rows": null,
+      "sha256": "3c105f063c398972c788ad39aefced7fa6195ebb292cb264c0b69613bcf56d31",
+      "size": 3534
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_hatching_elementals.csd.json": {
+      "rows": null,
+      "sha256": "5306ea513573b5a3794c11b602d63c0de578afcc29da6b8862f86fa1f515042c",
+      "size": 2857
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_lightning_detonate_dead.csd.json": {
+      "rows": null,
+      "sha256": "1d078cd442f1609f7654c220cbce6369877e82c8c7ffe5ff949c9d258044f5bf",
+      "size": 1939
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_living_lightning.csd.json": {
+      "rows": null,
+      "sha256": "819e87d558fac00b4a1c7e478ea04fc7aee5fba80dd4f3164b8f46b70c3dee48",
+      "size": 4417
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_mana_flare.csd.json": {
+      "rows": null,
+      "sha256": "6d7792163d3c822033242ccd3430f3289a96c6aae7f8780bccb45d640b55ac62",
+      "size": 1912
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_miniature_bell.csd.json": {
+      "rows": null,
+      "sha256": "7b313e0ddb08969d8c6094eace4fd09569fce7114dbd580033795126d1ce2107",
+      "size": 2970
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_molten_shower.csd.json": {
+      "rows": null,
+      "sha256": "1c9975150b9d17d8cee671c65641cfaaf1946d38969a712ffb80fd8afc884554",
+      "size": 1894
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_morrigans_insight.csd.json": {
+      "rows": null,
+      "sha256": "f4f4a7e2f7cb0b03fe34fe389e668b762d765069ee09bde71dcea7e74087d27b",
+      "size": 2313
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_paquates_pact.csd.json": {
+      "rows": null,
+      "sha256": "a8f1e1f0417c7710b3c9fd7a2ddaee6d1b5c18770ff19ed85a0b56d28a0824db",
+      "size": 2711
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_pillar_of_flame.csd.json": {
+      "rows": null,
+      "sha256": "e8d3284917815189a98505a2ddd8f9ad9e7e316447d513609de0baedbb16f972",
+      "size": 2473
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_shocking_rift.csd.json": {
+      "rows": null,
+      "sha256": "e68de27559d9f085adb4e9aaf429f7cbfccae26f7bb76b27b3505109b755ff7f",
+      "size": 4890
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_spiked_gauntlets.csd.json": {
+      "rows": null,
+      "sha256": "82add6c6b7eb02b9c4b870a7ad3eef89b5a992337977e09ffacb59c17330aa92",
+      "size": 1912
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_splinter_explosion.csd.json": {
+      "rows": null,
+      "sha256": "1203e308e7a53c0463f926d8dfe5a5d2692ac1697ae228a3f21483671cdf6f86",
+      "size": 1952
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_support_from_the_grave_ice_fragment.csd.json": {
+      "rows": null,
+      "sha256": "41f8f0cfd891a7a9c48766e2be00bc763570fc895210c475b42ae0abe87cd151",
+      "size": 1613
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_support_frozen_spite_ice_fragment.csd.json": {
+      "rows": null,
+      "sha256": "f5f151a9d9178ccf7d6c3d9af10c99510b7ff530cd6350c9ca1e97ce518ab18d",
+      "size": 1611
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_titanic_arrows.csd.json": {
+      "rows": null,
+      "sha256": "39fa3bb6c59b761b7ac2b7dce774eff002efb0d0700f1bf8d4d43f9468131b8c",
+      "size": 1583
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_volcanic_eruption.csd.json": {
+      "rows": null,
+      "sha256": "877abca500556f1abc84c2232b59aba7ce494f42fa8c8727c9e2560b034fc38f",
+      "size": 2280
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_wind_dancer.csd.json": {
+      "rows": null,
+      "sha256": "4212f4e89d3295409080629c67b97bd03ae137a41936278a6978da3883c655b3",
+      "size": 3977
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triggered_winnowing_flame_pillars.csd.json": {
+      "rows": null,
+      "sha256": "de745f9fd707b86652e7bc27345fa1c0ce959282ca17fc469ef7392dba74cb37",
+      "size": 2258
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/triskelion_cascade.csd.json": {
+      "rows": null,
+      "sha256": "f88ff82a564ebd573e550ea36520bb4a24f559ed01262b6057385ee6c8692b2f",
+      "size": 3845
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/twister.csd.json": {
+      "rows": null,
+      "sha256": "33fe2ec993cea0829238ad929fc4bcb2440f99fbf350353246cc9fbd65a1ca15",
+      "size": 5798
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/unbound_avatar.csd.json": {
+      "rows": null,
+      "sha256": "46cdbea03bacd695a43521bfce516835927454d0bf1f6b675411957b4e8d22e0",
+      "size": 1591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/unearth.csd.json": {
+      "rows": null,
+      "sha256": "68c1dbcfd3df70954f1ab9ce19340ec3cc875ee3b5cb1d09ee78b461268421d0",
+      "size": 4225
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/unleash.csd.json": {
+      "rows": null,
+      "sha256": "7a84010e33222fbb689e122f645c8fb4ea5cf9f3ba07f6763a76013ae1a33462",
+      "size": 2455
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/valakos_charge.csd.json": {
+      "rows": null,
+      "sha256": "3fe02f169d38473573d4493f8aaaba16e35bc4ea525d45c289e6514a41f2c859",
+      "size": 2031
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vaulting_impact/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "61cfdea59dfef806cfbd5cd110856a2083894f435411ad2c0948982ac31d7ba0",
+      "size": 2330
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vaulting_impact/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "47f02e3b4277d3bb4e5bb4d50a0de292dae904cd30404b855b02423ca5f96da4",
+      "size": 2483
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/verisium_manifestation.csd.json": {
+      "rows": null,
+      "sha256": "1f7e912ac049e9fbd826d1fa9d4437e242f5334a7d44dd5bffff0001e7fd7de1",
+      "size": 980
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vile_disruption.csd.json": {
+      "rows": null,
+      "sha256": "f8034ce4ba1303f4d5f734b79a38feb9d8fb33e48372a71091c0abeb17357b35",
+      "size": 2190
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vine_arrow/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "bd8c7879d6989b49f35eb9dcb1615615927f5f834d2eb909a332722e6760fb39",
+      "size": 1892
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vine_arrow/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "af557176ab812f408e013c7b9f96351ffe73586b01d95fcd50ada85757563855",
+      "size": 4816
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/virtuous_barrier.csd.json": {
+      "rows": null,
+      "sha256": "6fdcedb0196f09700baf279baa444313667205a6f77ac7e87fd38d70aa77edc8",
+      "size": 5235
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vivid_stampede.csd.json": {
+      "rows": null,
+      "sha256": "0dd169be71abd2e039509fb596b926d9ddd607c1ab87bd083a8f8ef325ad680a",
+      "size": 3843
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volatile_dead/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "3889c83f18a9b8a58260ce9fa35550d8b3b50f54eb55167bbcca8cb4795c33b8",
+      "size": 2417
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volatile_dead/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "73cafb49a9c2ebf2b13f3fece8046154575849812063ee0e80e590eee625fe43",
+      "size": 1591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volatile_dead/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "9291b42d98abfff866b124150903e1d948a49f04f2c49864fbccaf080d7c06b2",
+      "size": 1807
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volcanic_fissure.csd.json": {
+      "rows": null,
+      "sha256": "6ddd100b99549f93f040aa1e08a05b27cd0fb5d47f5f14a99c0444bb2a9575f6",
+      "size": 3050
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volcano/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "d2f1632867f76565072e3bf34f6eb07529aa8a5efa2e9e9bcd1e4fe8496a82d5",
+      "size": 4479
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volcano/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "f9e61d9365721917c7c90573969d1532c2c6abcc8ec6abc8ee1a9deee46333bc",
+      "size": 4211
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/volcano/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "d7f050a71a62b862ab81f08556ebdc5e921871a2c0a830eea89d882f01354214",
+      "size": 237
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/voltaic_barrier.csd.json": {
+      "rows": null,
+      "sha256": "3839edd68cdf46f0b50e9e0de7e40be84e717d4ae678f764b2882d9230695d01",
+      "size": 3241
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/voltaic_barrier_triggered_chain_lightning.csd.json": {
+      "rows": null,
+      "sha256": "3ea260087ede814e792d1e304737a96b327a896ff5ff2a137296eb6029c5bd07",
+      "size": 2760
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/voltaic_mark.csd.json": {
+      "rows": null,
+      "sha256": "d063e8f95dd4fff5ac73e343ecfeeff91d594b9cb8061048e62e826b086099bf",
+      "size": 6159
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/vulnerability.csd.json": {
+      "rows": null,
+      "sha256": "5d45f8b23206ef27d1cc561ddf9a6b4129a3d4f785d575ab946d6b75991744ad",
+      "size": 2794
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/walking_calamity.csd.json": {
+      "rows": null,
+      "sha256": "794e073aee919b83957deb5ad805758a919f99b9bfbbfb91cf59a2b5f55267d4",
+      "size": 6886
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/walking_calamity_meteor.csd.json": {
+      "rows": null,
+      "sha256": "8d6bad73ccf7734b7df197b647ec30fd01e8266f75cf2a607584cb341d8e2bf5",
+      "size": 2591
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/war_banner.csd.json": {
+      "rows": null,
+      "sha256": "dea4e8233e7bb64b75ca160381d3e95ba50c57e25ef77d9d08b6737782e8e7b8",
+      "size": 5114
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wardbound_minions.csd.json": {
+      "rows": null,
+      "sha256": "7f52c5177d548f065b48a9c095a17abeb857970b49b517ad10a84c631d406d8d",
+      "size": 3674
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/warding_steel_nova.csd.json": {
+      "rows": null,
+      "sha256": "7c861d5ba17154feb95ffc3c7c091cfcc66de44c5c76ca361bbfd793045aa3d7",
+      "size": 2187
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wave_of_frost.csd.json": {
+      "rows": null,
+      "sha256": "f34496a0009e1ad6e22a8419955fc1510289a827fb96973a90c5d341e7857af1",
+      "size": 1583
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/whirling_slash.csd.json": {
+      "rows": null,
+      "sha256": "37e0ac71600401dbe404ca579b8c307db2f563169e51728f13fd8d951f3d3af4",
+      "size": 2592
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/whirlwind_lance.csd.json": {
+      "rows": null,
+      "sha256": "a202b3ad790388dd8ef60fdb96fe2d1ebb9cf30b9dd52280409b71d489209c62",
+      "size": 4834
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wind_blast.csd.json": {
+      "rows": null,
+      "sha256": "b4e19717a5c5bad00080b616f62ed2b2431c0e9c892d8a43b7b56e45ee29239c",
+      "size": 1982
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wind_dancer.csd.json": {
+      "rows": null,
+      "sha256": "89b6ae47a22402b6a1512a7ed916f4500c60b4ebf44cb96357247c64ef250697",
+      "size": 2687
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wind_serpents_fury/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "28ac01ff2535c09e92317ec2675bc5c47c5d8d90cc89c2bc17ddd32026d0e2fd",
+      "size": 2998
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wind_serpents_fury/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "08dacc75c4293150288f4d03cdbeaf11ae56c6b7a7e300fe67f4639669ecc0b9",
+      "size": 2513
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wind_serpents_fury/statset_2.csd.json": {
+      "rows": null,
+      "sha256": "43f59fa633f854c788a9b8a5cf616090ec77d88cac07ce0153f3513b787bdeb6",
+      "size": 1584
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wing_blast/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "b85193b0de72c2f3a64efce1f12b25dc2ae1c32fafddcd114fe3238612b368cc",
+      "size": 2284
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wing_blast/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "1f4fb3cc10a180d448d49b7cfb16b77c70ad4488594addf725f33ccba4ac79af",
+      "size": 2208
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/witch_hunter_mark.csd.json": {
+      "rows": null,
+      "sha256": "3ede501d2148bdeaf61c7f152ca972c7d00c27b4804f1172e329aed5c33a8bde",
+      "size": 4394
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/withering_presence.csd.json": {
+      "rows": null,
+      "sha256": "72d5947ad6202fd8caf90b36ed58aca667aa20eca7e01707847a8bb53f848d1a",
+      "size": 2466
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_cross_slash.csd.json": {
+      "rows": null,
+      "sha256": "f78adab911b62a8265873b58edd6f9d48633362a4f599fda43ea1c05c0907540",
+      "size": 3315
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_cross_slash_mark.csd.json": {
+      "rows": null,
+      "sha256": "66d19579aa5560b8a4edc906c9b3ab0cc4d2ef23759772a2e4d015f4c0cc2abb",
+      "size": 2370
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_lunar_blessing.csd.json": {
+      "rows": null,
+      "sha256": "db907e1620059c97be45485ed0d9aed55e1e9039b6e816b426f20fb495aa4b28",
+      "size": 4778
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_lunar_blessing_beam_attack.csd.json": {
+      "rows": null,
+      "sha256": "45725d50cda91811f954a28dd04570a8a6e7dd342e6d80abcff947091e3385b4",
+      "size": 3726
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_pounce/statset_0.csd.json": {
+      "rows": null,
+      "sha256": "3387939f4626aa5e84bb3f383b6121060adbe1e537535635a9fa2a923e1658d4",
+      "size": 1580
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wolf_pounce/statset_1.csd.json": {
+      "rows": null,
+      "sha256": "a42cba120cc71cfe32d0880e27a11a1837c313edc2d3b86c2e2b63170f053322",
+      "size": 1577
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wyvern_devour.csd.json": {
+      "rows": null,
+      "sha256": "25356f228b18a159cbac4be82075a8cbf62eb00915079a90a55c9d7583090755",
+      "size": 3172
+    },
+    "stat_descriptions/specific_skill_stat_descriptions/wyvern_flame_breath.csd.json": {
+      "rows": null,
+      "sha256": "029b33bb7e346c16d5bdcea7e039b392f35660f7f71c5041cf2e3155f21bc454",
+      "size": 2783
+    },
+    "stat_descriptions/stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "5c86ea9265911dfe1caa0d4e35ee79e277d678e2a5ea6c8d363232104a8a0b23",
+      "size": 4717788
+    },
+    "stat_descriptions/tablet_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "1203ba72af5851d5ca26677cffa44bc79aae35d62dd643b51b2b5e057cef1729",
+      "size": 59068
+    },
+    "stat_descriptions/utility_flask_buff_stat_descriptions.csd.json": {
+      "rows": null,
+      "sha256": "3a8859ec444ead1926e74a17a6a811168907e138b11a25a6198a4d0af979d2fe",
+      "size": 2805
+    }
+  },
+  "mods_bad_spawn_rows": 0,
+  "bases_tags_unknown": 0,
+  "dangling_references": 0,
+  "nameless_bases_skipped": 421,
+  "stat_slots_without_range": 0,
+  "client_texts_missing": [],
+  "mod_type_duplicate_names": 0,
+  "lookup": {
+    "keys": {
+      "display_indexable_support": 0,
+      "passive_hash": 9731
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "display_indexable_non_active_support": "IndexableNonActiveSupportGems is not in the extract",
+      "display_indexable_skill": "IndexableSkillGems is not in the extract",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "passive_skill_stat_descriptions.txt is not in the extract",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  },
+  "skills": {
+    "effect_levels_sorted": 0,
+    "stat_set_levels_sorted": 0,
+    "stat_sets_without_levels": 0,
+    "parallel_lists_unequal": 0,
+    "effects_with_several_quality_rows": 0,
+    "rows_without_owner": 0,
+    "dropped_stats": 0,
+    "dropped_gems": 0
+  }
+}
