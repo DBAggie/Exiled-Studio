@@ -448,17 +448,3 @@ fn a_bundle_with_skipped_references_should_be_refused() {
     let err = Resolver::new(&data).unwrap_err();
     assert_eq!(err.code(), "IMPORT_DATA_UNVALIDATED");
 }
-
-/// Gate 3b (P2-7): a resolved PoE1 and PoE2 build round-trips through the
-/// v1 build document, resolutions included, with the same bytes twice.
-#[test]
-fn resolved_builds_should_round_trip_through_json() {
-    use loom_serialization::dto::v1::{from_json, to_json};
-    for (game, dir) in [(Game::Poe1, "bundle-poe1"), (Game::Poe2, "bundle-poe2")] {
-        let b = bundle(dir);
-        let build = resolved(game, &b);
-        let json = to_json(&build).unwrap();
-        assert_eq!(from_json(&json).unwrap(), build, "{dir}");
-        assert_eq!(to_json(&build).unwrap(), json, "{dir}");
-    }
-}

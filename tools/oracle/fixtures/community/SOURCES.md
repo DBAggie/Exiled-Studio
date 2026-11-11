@@ -4,6 +4,8 @@ These builds are credited to their creators and included as test cases. If you c
 
 Removing a build also removes its entry in `../fixtures.json` and any divergence-register entry or test that names it (ADR-007 Amendment 1).
 
+`../share-codes/boneshatter-juggernaut.code` and `.pob.xml` are PoB's own re-export of `boneshatter-juggernaut.xml` (a share code and the XML it was made from, P2-10); removing that build removes them too.
+
 ## What these files are
 Path of Building (PoB) build files published by the creators below, used only as test fixtures for the PoB oracle (`tools/oracle/`, Spike C) and later for the successor's calculations. They are not shown, sold, or distributed as content in the application. The basis for keeping them in this repository is ADR-007 Amendment 1 (`docs/adr/007-corpus-and-coverage.md`).
 

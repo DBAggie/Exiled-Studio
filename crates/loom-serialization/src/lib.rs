@@ -8,9 +8,11 @@
 //! - [`dto`]: the successor JSON build document, by version (ADR-005;
 //!   Phase 2 plan, step 7).
 //! - [`legacy`]: Path of Building's formats (ADR-005). Today the item-text
-//!   reader [`legacy::pob_item`] with its mapping onto the domain item, and
-//!   the build XML adapter [`legacy::pob_xml`]; share codes follow (Phase 2
-//!   plan, step 10).
+//!   reader [`legacy::pob_item`] with its mapping onto the domain item,
+//!   the build XML adapter [`legacy::pob_xml`], and share codes
+//!   [`legacy::share_code`] (Phase 2 plan, step 10).
+//! - [`migrate`]: sequential migrations of the build document, run by
+//!   [`dto::read`] before it is parsed (Phase 2 plan, step 9).
 //!
 //! Legacy input is untrusted: indexing that can panic is linted.
 
@@ -18,3 +20,4 @@
 
 pub mod dto;
 pub mod legacy;
+pub mod migrate;

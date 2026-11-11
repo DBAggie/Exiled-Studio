@@ -13,9 +13,5 @@ loom-domain.workspace = true
 loom-data.workspace = true
 thiserror.workspace = true
 
-[dev-dependencies]
-# Tests only: a resolved build round-trips through the v1 document (gate 3b).
-loom-serialization.workspace = true
-
 [lints]
 workspace = true

@@ -1821,7 +1821,6 @@ version = "0.0.0"
 dependencies = [
  "loom-data",
  "loom-domain",
- "loom-serialization",
  "thiserror 2.0.21",
 ]
 
@@ -1829,7 +1828,10 @@ dependencies = [
 name = "loom-persistence"
 version = "0.0.0"
 dependencies = [
+ "loom-domain",
  "loom-serialization",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1848,6 +1850,7 @@ name = "loom-serialization"
 version = "0.0.0"
 dependencies = [
  "loom-domain",
+ "miniz_oxide 0.9.1",
  "roxmltree",
  "schemars 1.2.3",
  "serde",
