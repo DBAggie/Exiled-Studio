@@ -123,7 +123,7 @@ Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
 - [x] Migration framework and report; `MIGRATE_*` (`loom_serialization::migrate`, `dto::read`; test-only v0 to v1)
 - [x] Atomic save, load with migration; `PERSIST_*` (`loom_persistence::Store`; injected `FileOps` failures; WSL Linux in-session)
 - [x] `code-architecture-reviewer`: no blockers; atomic `Never`, full read before replacing, docs and tests applied (context file)
-- [ ] Open PR (base `feat/p2-8-build-round-trip`); write the PR number into the docs right after
+- [x] Open PR (#56, base `feat/p2-8-build-round-trip`); write the PR number into the docs right after
 
 ## PR P2-10: share codes (step 10, gated)
 - [ ] Import and export through the XML adapter
