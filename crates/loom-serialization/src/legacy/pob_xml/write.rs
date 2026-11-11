@@ -2,8 +2,9 @@
 //! the attributes kept as read, in order; untyped content where it was.
 
 use loom_domain::{
-    Attributes, Build, BuildPart, Character, Config, ConfigValue, Entry, GameSpecific, Gem,
-    OpaqueNode, Ordered, PassiveSpec, Passives, Skills, Sourced, SpecPart,
+    Attributes, Build, BuildPart, Character, Config, ConfigValue, Entry, GameSpecific, Gem, Item,
+    ItemPart, Items, ItemsEntry, OpaqueNode, Ordered, PassiveSpec, Passives, Skills, Sourced,
+    SpecPart,
 };
 
 /// An XML writer that indents with tabs, as PoB does.
@@ -170,11 +171,7 @@ pub(super) fn build(b: &Build) -> String {
             BuildPart::Character => character(w, b),
             BuildPart::Passives => passives(w, &b.passives),
             BuildPart::Skills => skills(w, &b.skills),
-            BuildPart::Items => {
-                let mut a = Attrs::new();
-                kept(&mut a, &b.items.attributes);
-                w.element(1, "Items", &a, |_| {});
-            }
+            BuildPart::Items => items(w, &b.items),
             BuildPart::Config => config(w, &b.config),
         });
     });
@@ -344,4 +341,81 @@ fn config(w: &mut Writer, c: &Config) {
             });
         });
     });
+}
+
+fn items(w: &mut Writer, items: &Items) {
+    let mut a = Attrs::new();
+    put(
+        &mut a,
+        "activeItemSet",
+        items.active_set.map(|s| s.0.to_string()).as_deref(),
+    );
+    kept(&mut a, &items.attributes);
+    w.element(1, "Items", &a, |w| {
+        w.ordered(2, &items.entries, |w, e| match e {
+            ItemsEntry::Item(i) => item(w, i),
+            ItemsEntry::Set(set) => {
+                let mut a = vec![("id".to_owned(), set.id.0.to_string())];
+                put(&mut a, "title", set.title.as_deref());
+                kept(&mut a, &set.attributes);
+                w.element(2, "ItemSet", &a, |w| {
+                    w.ordered(3, &set.slots, |w, s| {
+                        let mut a = vec![("name".to_owned(), s.slot.as_str().to_owned())];
+                        let id = s.item.map_or_else(|| "0".to_owned(), |i| i.0.to_string());
+                        put(&mut a, "itemId", Some(&id));
+                        kept(&mut a, &s.attributes);
+                        w.element(3, "Slot", &a, |_| {});
+                    });
+                });
+            }
+        });
+    });
+}
+
+/// An item's text from its lines' sources and the whitespace as read
+/// (decision 6).
+///
+/// Without that whitespace (`text_spacing` empty, or not `lines + 1`
+/// entries), the lines are joined with `\n`: blank lines and indentation
+/// are not written. PoB reads such a text the same way (it trims each line
+/// and skips blank ones), so only the layout of the text changes.
+fn item_text(item: &Item) -> String {
+    let lines = &item.body.lines;
+    let spacing = &item.text_spacing;
+    if spacing.len() != lines.len() + 1 {
+        return lines
+            .iter()
+            .map(|l| l.source.as_str())
+            .collect::<Vec<_>>()
+            .join("\n");
+    }
+    let mut out = String::new();
+    for (gap, line) in spacing.iter().zip(lines) {
+        out.push_str(gap);
+        out.push_str(&line.source);
+    }
+    if let Some(tail) = spacing.last() {
+        out.push_str(tail);
+    }
+    out
+}
+
+fn item(w: &mut Writer, item: &Item) {
+    let mut a = vec![("id".to_owned(), item.id.0.to_string())];
+    kept(&mut a, &item.attributes);
+    // An item is mixed content: no layout inside it.
+    w.open(2, "Item", &a);
+    w.out.push('>');
+    w.inline += 1;
+    let start = w.out.len();
+    w.ordered(3, &item.layout, |w, part| match part {
+        ItemPart::Body => w.out.push_str(&escape(&item_text(item), false)),
+    });
+    if w.out.len() == start {
+        w.out.pop();
+        w.out.push_str("/>");
+    } else {
+        w.out.push_str("</Item>");
+    }
+    w.inline -= 1;
 }

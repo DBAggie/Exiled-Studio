@@ -6,7 +6,8 @@
 //! PoE1 choices), `<Tree>` with its `<Spec>`s (tree version, nodes,
 //! mastery effects, jewel sockets), `<Skills>` with skill sets, socket
 //! groups (`<Skill>`), and gems, and `<Config>` with config sets and
-//! inputs. `<Items>` is typed in P2-5b; until then it is kept whole.
+//! inputs; `<Items>` with items, item sets, and slots (P2-5b; module
+//! `items`).
 //!
 //! **Untyped, kept in place:** every other element, attribute, comment,
 //! and processing instruction, including content before and after the
@@ -23,6 +24,7 @@
 //! backlog (ADR-005).
 
 mod equal;
+mod items;
 mod read;
 mod write;
 
@@ -97,7 +99,7 @@ pub fn kept_whole(build: &Build) -> Vec<String> {
     for e in build.layout.entries() {
         match e {
             Entry::Opaque(OpaqueNode::Element { name, .. })
-                if ["Build", "Tree", "Skills", "Config"].contains(&name.as_str()) =>
+                if ["Build", "Tree", "Skills", "Items", "Config"].contains(&name.as_str()) =>
             {
                 out.push(name.clone());
             }
@@ -124,6 +126,18 @@ pub fn kept_whole(build: &Build) -> Vec<String> {
                                 .map(|()| "Skills/SkillSet/Skill/Gem".to_owned()),
                         );
                     }
+                }
+            }
+            Entry::Typed(BuildPart::Items) => {
+                for o in build.items.entries.opaque() {
+                    if let OpaqueNode::Element { name, .. } = o
+                        && (name == "Item" || name == "ItemSet")
+                    {
+                        out.push(format!("Items/{name}"));
+                    }
+                }
+                for set in build.items.sets() {
+                    out.extend(named(&set.slots, "Slot").map(|()| "Items/ItemSet/Slot".to_owned()));
                 }
             }
             Entry::Typed(BuildPart::Config) => {

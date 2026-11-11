@@ -34,5 +34,23 @@
     "stat": "test_local_armour"
    }
   ]
+ },
+ {
+  "domain": 1,
+  "generation": 1,
+  "id": "TestAccuracy1",
+  "spawn": [
+   {
+    "tag": "default",
+    "weight": 1000
+   }
+  ],
+  "stats": [
+   {
+    "max": 20,
+    "min": 10,
+    "stat": "test_accuracy_a"
+   }
+  ]
  }
 ]

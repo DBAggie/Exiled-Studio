@@ -8,8 +8,8 @@
   },
   {
    "path": "data/client_texts.json",
-   "sha256": "da373a1f3b0015ca9b6f6eb536590623bd611f500d4aaceb88dd19fd3f7e6027",
-   "size": 71
+   "sha256": "b6d01b6162e9962074bc7371d61341c938c62787eb034ff91ebf652464b15a59",
+   "size": 275
   },
   {
    "path": "data/item_classes.json",
@@ -18,8 +18,8 @@
   },
   {
    "path": "data/item_rules.json",
-   "sha256": "5afc1f2218029c57d3a4bb12c21777ac265d072a3293eea596891d2971b08041",
-   "size": 1525
+   "sha256": "a160745d90412ceba235d97be7915cb91b4e9e872df55e01f0dbca47e2ab9cb8",
+   "size": 1612
   },
   {
    "path": "data/lookups.json",
@@ -28,13 +28,13 @@
   },
   {
    "path": "data/mods.json",
-   "sha256": "99dbe98e710f8a019da3783f27a11b5f66c47582f831b01b2a0a55ca61e5b065",
-   "size": 441
+   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
+   "size": 663
   },
   {
    "path": "data/stats.json",
-   "sha256": "3d7ed70278632fe603645af4c0ca1d7cebb0597238e140c63cfcf82036d20b5e",
-   "size": 90
+   "sha256": "39ae37f644c9fbe9a01587a26467a41310f0364551a12b8348c6c4e53ed3e1bb",
+   "size": 378
   },
   {
    "path": "stat_descriptions/charm_stat_descriptions.json",
@@ -43,8 +43,8 @@
   },
   {
    "path": "stat_descriptions/stat_descriptions.json",
-   "sha256": "5ca0d0c925cf6e27790e939e01553c988b25ebeccd4038a47c23b4326d7b5af0",
-   "size": 618
+   "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
+   "size": 4380
   }
  ],
  "format": 1,

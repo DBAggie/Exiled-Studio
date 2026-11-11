@@ -25,7 +25,9 @@ crates/
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
+  schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
+schemas/              generated JSON Schemas of the successor documents (do not edit; CI checks freshness)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -36,6 +38,7 @@ Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
+- Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
 **Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization) must:
 - build for `wasm32-unknown-unknown` (CI checks every PR; ADR-016);
@@ -56,6 +59,19 @@ cargo test --workspace --all-features --locked
 cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
+# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto, regenerate both;
+# CI (schema freshness) fails on any difference:
+cargo run -p loom-schema-gen            # writes schemas/*.schema.json (--check: exit 1 if stale)
+(cd ui && pnpm generate:schema)       # writes ui/src/generated/*.ts from the schema
+# The v1 build document of every PoB build in some folders: SHA-256 per document, checks a second run
+# and the read-back; CI compares Windows with Linux (dto cross-platform):
+cargo run -p loom-parity-cli -- dto-hashes tools/oracle/fixtures tools/oracle/fixtures/community
+# Phase 2 round-trip gate (plan step 8): import, resolve, JSON, export, re-import, checks (a) to (d), and the
+# unknown-content mutation set; writes summary.json (scrubbed) and report.json; exit 0 pass, 1 a build failed,
+# 2 usage, 3 the run cannot start. Release: the mutation set is slow in debug. CI (build round-trip) runs:
+cargo run --release -p loom-parity-cli -- build-round-trip tools/oracle/fixtures tools/oracle/fixtures/community --expect-import-error malformed.xml --out <dir>
+cargo run --release -p loom-parity-cli -- build-round-trip tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out <dir>
+cargo run --release -p loom-parity-cli -- build-round-trip tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out <dir>
 
 # Maintainer only: extractor tests against a local game install (not in CI).
 # Needs the Oodle decoder installed separately (never a dependency; docs/spikes/spike-a-extraction.md):
@@ -91,6 +107,10 @@ cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build
 # while the Spike B gate is not met. Each --pob is a `git archive <tag> src/Data` of the legacy repo
 # (read-only), the legacy-text evidence; Spike B used the six tags listed in docs/spikes/spike-b-resolution.md:
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/extract/poe1/<build> --out <dir> --pob <tag>=local/pob-<tag> [--pob ...]
+cargo run --release -p loom-parity-cli -- resolve-corpus ... --bundle <bundle-dir>   # pipeline data from a bundle (plan step 6)
+cargo run --release -p loom-parity-cli -- bundle-equal <extract-dir> <bundle-dir>
+# The round-trip gate on the corpus with the PoE1 bundle (gate 1b; builds named by SHA-256):
+cargo run --release -p loom-parity-cli -- build-round-trip "<builds-dir>" --bundle <bundle-dir> --anonymous --out <dir>
 
 # PoB oracle (Spike C). Acquire: fetch PoB, LuaJIT and luautf8 at the commits in tools/oracle/manifest.json
 # into local/oracle/ and build the runtime there (network: git fetch only; nothing installed elsewhere).
@@ -129,6 +149,8 @@ LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 
 # PoB XML round-trip on a local folder of builds (P2-5; the corpus stays local, ADR-007; LOOM_XML_DIR absolute):
 LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixtures -- --ignored --nocapture
+# Make a share code with PoB itself on the oracle runtime (P2-10; maintainer-run, not in CI): the command and why runs differ
+# are in tools/oracle/fixtures/share-codes/README.md; the committed codes are checked by the share_code_fixtures test.
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

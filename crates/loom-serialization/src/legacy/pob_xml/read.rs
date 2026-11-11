@@ -52,14 +52,14 @@ pub(super) fn opaque(node: Node<'_, '_>) -> Option<OpaqueNode> {
 }
 
 /// The attributes of `node` not in `typed`, in order.
-fn rest(node: Node<'_, '_>, typed: &[&str]) -> Attributes {
+pub(super) fn rest(node: Node<'_, '_>, typed: &[&str]) -> Attributes {
     node.attributes()
         .filter(|a| !typed.contains(&a.name()))
         .map(|a| Attribute::new(a.name(), a.value()))
         .collect()
 }
 
-fn text(node: Node<'_, '_>, name: &str) -> Option<String> {
+pub(super) fn text(node: Node<'_, '_>, name: &str) -> Option<String> {
     node.attribute(name).map(str::to_owned)
 }
 
@@ -79,14 +79,14 @@ fn canonical<T: std::str::FromStr + ToString>(s: &str) -> Option<T> {
 
 /// `Some(None)` when absent, `Some(Some(v))` when it reads, `None` when
 /// present and not a canonical number (the element is then kept whole).
-fn number_u32(node: Node<'_, '_>, name: &str) -> Option<Option<Sourced<u32>>> {
+pub(super) fn number_u32(node: Node<'_, '_>, name: &str) -> Option<Option<Sourced<u32>>> {
     match node.attribute(name) {
         None => Some(None),
         Some(s) => canonical(s).map(|v| Some(Sourced::read(v, s))),
     }
 }
 
-fn required_u32(node: Node<'_, '_>, name: &str) -> Option<Sourced<u32>> {
+pub(super) fn required_u32(node: Node<'_, '_>, name: &str) -> Option<Sourced<u32>> {
     number_u32(node, name).flatten()
 }
 
@@ -103,7 +103,7 @@ fn boolean(s: &str) -> Option<bool> {
     }
 }
 
-fn children<'a, 'i>(node: Node<'a, 'i>) -> impl Iterator<Item = Node<'a, 'i>> {
+pub(super) fn children<'a, 'i>(node: Node<'a, 'i>) -> impl Iterator<Item = Node<'a, 'i>> {
     node.children().filter(|c| opaque(*c).is_some())
 }
 
@@ -128,7 +128,8 @@ pub(super) fn build(doc: &roxmltree::Document<'_>) -> Result<Build, ImportError>
         }
     }
     let mut layout = Ordered::new();
-    let (mut character, mut tree, mut skills, mut config) = (false, false, false, false);
+    let (mut character, mut tree, mut skills, mut items, mut config) =
+        (false, false, false, false, false);
     for n in children(root) {
         let typed = match n.tag_name().name() {
             "Build" if n.is_element() && !character => character_of(n).map(|(c, choices)| {
@@ -148,6 +149,11 @@ pub(super) fn build(doc: &roxmltree::Document<'_>) -> Result<Build, ImportError>
                 b.skills = s;
                 skills = true;
                 BuildPart::Skills
+            }),
+            "Items" if n.is_element() && !items => super::items::items_of(n).map(|i| {
+                b.items = i;
+                items = true;
+                BuildPart::Items
             }),
             "Config" if n.is_element() && !config => config_of(n).map(|c| {
                 b.config = c;
@@ -357,13 +363,23 @@ fn group(n: Node<'_, '_>) -> Option<SocketGroup> {
             _ => gems.push_opaque(opaque(c)?),
         }
     }
+    let main = n
+        .attribute("mainActiveSkill")
+        .and_then(|v| canonical::<u32>(v).map(|x| Sourced::read(x, v)));
+    let attributes = if main.is_some() {
+        rest(n, &GROUP)
+    } else {
+        rest(n, &["label", "enabled", "slot"])
+    };
     Some(SocketGroup {
         label: text(n, "label"),
         enabled: boolean(n.attribute("enabled")?)?,
         slot: text(n, "slot").map(SlotId::new),
-        main_active_skill: number_u32(n, "mainActiveSkill")?,
+        // PoB writes `mainActiveSkill="nil"` when it is unset (and reads it
+        // as 1); a value that is not a number stays an untyped attribute.
+        main_active_skill: main,
         gems,
-        attributes: rest(n, &GROUP),
+        attributes,
     })
 }
 

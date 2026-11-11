@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 2, 2, 3, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 11, 3, 3, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
@@ -84,7 +84,7 @@ fn poe2_bundle_should_load_into_the_same_types_without_a_poe1_section() {
     let b = load(&source("bundle-poe2").unwrap()).unwrap();
     assert_eq!(
         (b.game, b.poe1.is_none(), b.mods.len()),
-        (Game::Poe2, true, 2)
+        (Game::Poe2, true, 3)
     );
 }
 
@@ -200,4 +200,27 @@ fn load_should_refuse_a_broken_stat_description_file() {
     let mut src = source("bundle-poe2").unwrap();
     src.insert("stat_descriptions/stat_descriptions.json", "{}");
     assert_eq!(load(&src).err(), Some("BUNDLE_STAT_DESCRIPTION"));
+}
+
+#[test]
+fn scope_root_should_find_one_file_by_name_in_any_case() {
+    let mut b = load(&source("bundle-poe1").unwrap()).unwrap();
+    assert_eq!(
+        (b.scope_root("STAT_DESCRIPTIONS"), b.scope_root("absent"),),
+        (
+            Ok("Metadata/StatDescriptions/stat_descriptions.txt"),
+            Err(bundle::ScopeRootError::None),
+        )
+    );
+    let mut twin = b
+        .stat_descriptions
+        .get("Metadata/StatDescriptions/stat_descriptions.txt")
+        .unwrap()
+        .clone();
+    twin.source = "Metadata/Other/stat_descriptions.csd".to_owned();
+    b.stat_descriptions.insert(twin);
+    assert_eq!(
+        b.scope_root("stat_descriptions"),
+        Err(bundle::ScopeRootError::Several(2))
+    );
 }

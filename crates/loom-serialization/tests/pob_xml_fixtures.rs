@@ -15,7 +15,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use loom_domain::{BuildPart, Entry};
-use loom_serialization::legacy::pob_xml::{export, import, xml_equal};
+use loom_serialization::legacy::pob_xml::{export, import, kept_whole, xml_equal};
 
 fn fixtures() -> Vec<PathBuf> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/oracle/fixtures");
@@ -64,6 +64,7 @@ fn public_fixtures_should_round_trip() {
             BuildPart::Character,
             BuildPart::Passives,
             BuildPart::Skills,
+            BuildPart::Items,
             BuildPart::Config,
         ];
         if !want.iter().all(|p| typed.contains(p)) {
@@ -72,8 +73,12 @@ fn public_fixtures_should_round_trip() {
         // Every community build has skills and items (our synthetic
         // fixtures may have none).
         let community = path.parent().is_some_and(|d| d.ends_with("community"));
-        if community && a.skills.sets.typed().count() == 0 {
-            failed.push(format!("{name}: no typed skill set"));
+        if community && (a.skills.sets.typed().count() == 0 || a.items.items().count() == 0) {
+            failed.push(format!("{name}: no typed skill set or item"));
+        }
+        let whole = kept_whole(&a);
+        if !whole.is_empty() {
+            failed.push(format!("{name}: kept whole {whole:?}"));
         }
         checked += 1;
     }
@@ -105,7 +110,7 @@ fn malformed_fixture_should_give_an_import_code() {
 )]
 fn folder_should_round_trip() {
     let dir = std::env::var("LOOM_XML_DIR").unwrap();
-    let (mut ok, mut failed) = (0, 0);
+    let (mut ok, mut failed, mut whole, mut items) = (0, 0, 0, 0);
     for e in fs::read_dir(dir).unwrap() {
         let p = e.unwrap().path();
         if !p.extension().is_some_and(|x| x.eq_ignore_ascii_case("xml")) {
@@ -121,10 +126,12 @@ fn folder_should_round_trip() {
         let out = export(&a);
         if xml_equal(&out, &xml).unwrap() && import(&out).unwrap() == a {
             ok += 1;
+            whole += kept_whole(&a).len();
+            items += a.items.items().count();
         } else {
             failed += 1;
         }
     }
-    println!("round-trip: {ok} ok, {failed} failed");
+    println!("round-trip: {ok} ok, {failed} failed; {items} items; {whole} elements kept whole");
     assert_eq!(failed, 0);
 }

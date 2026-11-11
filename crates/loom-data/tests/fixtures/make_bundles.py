@@ -31,24 +31,49 @@ def stat_file(source, descriptions):
     }
 
 
-def description(line, stat, text):
+def description(line, stats, text, minimum=None, maximum=None):
+    """A description of `stats` (a name or a list) with one variant; every
+    stat shown as `+d`, the first one's condition `[minimum, maximum]`."""
+    stats = [stats] if isinstance(stats, str) else stats
+    conditions = [{"kind": "range", "max": None, "min": None} for _ in stats]
+    conditions[0] = {"kind": "range", "max": maximum, "min": minimum}
     return {
         "handed": False,
         "line": line,
         "name": None,
         "off_hand_stats": None,
-        "stats": [stat],
+        "stats": stats,
         "variants": [
             {
-                "conditions": [{"kind": "range", "max": None, "min": None}],
+                "conditions": conditions,
                 "flags": [],
                 "handlers": [],
                 "line": line + 1,
-                "placeholders": [{"format": "+d", "index": 0}],
+                "placeholders": [{"format": "+d", "index": i} for i in range(len(stats))],
                 "text": text,
             }
         ],
     }
+
+
+# The default scope's descriptions: one line per outcome of the item
+# pipeline (`loom-parser/tests/resolve_build.rs`).
+DEFAULT_DESCRIPTIONS = [
+    description(1, "test_maximum_life", "{0:+d} to maximum Life"),
+    # Ambiguous; a mod row backs the first (the filter keeps it).
+    description(3, "test_accuracy_a", "{0:+d} to Accuracy"),
+    description(5, "test_accuracy_b", "{0:+d} to Accuracy"),
+    # Ambiguous; no row backs either.
+    description(7, "test_evasion_a", "{0:+d} to Evasion"),
+    description(9, "test_evasion_b", "{0:+d} to Evasion"),
+    # No variant fits a value outside 1 to 5.
+    description(11, "test_strength", "{0:+d} to Strength", minimum=1, maximum=5),
+    # The second is shadowed by the first (same stat, earlier).
+    description(13, "test_shadow", "{0:+d} to Shadow Test"),
+    description(15, "test_shadow", "{0:+d} to Shadowed Text"),
+    # A two-line description.
+    description(17, ["test_first_half", "test_second_half"], "{0:+d} first half\n{1:+d} second half"),
+]
 
 
 def fit(section, generations, own=True, fixed=(), flag=None, unique=None):
@@ -86,10 +111,10 @@ def item_rules(special_domain, special_scope):
             "influences": [],
         },
         "text": {
-            "compositions": [],
+            "compositions": [["TestPresence", "test_presence"]],
             "property_ids": ["DisplayLastsSeconds"],
-            "label_ids": [],
-            "granted_skill_wrapper": None,
+            "label_ids": ["TestStrands"],
+            "granted_skill_wrapper": "TestGrantedSkill",
         },
     }
 
@@ -99,6 +124,20 @@ def common(game, special_domain, special_scope):
         "data/stats.json": [
             {"id": "test_maximum_life"},
             {"id": "test_local_armour", "local": True},
+        ]
+        + [
+            {"id": s}
+            for s in [
+                "test_accuracy_a",
+                "test_accuracy_b",
+                "test_evasion_a",
+                "test_evasion_b",
+                "test_strength",
+                "test_shadow",
+                "test_first_half",
+                "test_second_half",
+                "test_presence",
+            ]
         ],
         "data/mods.json": [
             {
@@ -114,6 +153,13 @@ def common(game, special_domain, special_scope):
                 "generation": 2,
                 "stats": [{"stat": "test_local_armour", "min": 5, "max": 9}],
                 "spawn": [{"tag": "armour", "weight": 500}],
+            },
+            {
+                "id": "TestAccuracy1",
+                "domain": 1,
+                "generation": 1,
+                "stats": [{"stat": "test_accuracy_a", "min": 10, "max": 20}],
+                "spawn": [{"tag": "default", "weight": 1000}],
             },
         ],
         "data/base_items.json": [
@@ -135,12 +181,17 @@ def common(game, special_domain, special_scope):
             },
         ],
         "data/item_classes.json": ["TestCharm", "TestRing"],
-        "data/client_texts.json": [{"id": "DisplayLastsSeconds", "text": "Lasts {0} Seconds"}],
+        "data/client_texts.json": [
+            {"id": "DisplayLastsSeconds", "text": "Lasts {0} Seconds"},
+            {"id": "TestGrantedSkill", "text": "Grants Level {1} {0} Skill"},
+            {"id": "TestPresence", "text": "While a Test Enemy is near, {0}"},
+            {"id": "TestStrands", "text": "Test Strands"},
+        ],
         "data/lookups.json": [{"handler": "passive_hash", "entries": [[1, "Test Node"]]}],
         "data/item_rules.json": item_rules(special_domain, special_scope),
         "stat_descriptions/stat_descriptions.json": stat_file(
             "Metadata/StatDescriptions/stat_descriptions.txt",
-            [description(1, "test_maximum_life", "{0:+d} to maximum Life")],
+            DEFAULT_DESCRIPTIONS,
         ),
         "stat_descriptions/" + special_scope + ".json": stat_file(
             "Metadata/StatDescriptions/" + special_scope + ".txt",

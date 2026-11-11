@@ -237,3 +237,199 @@ fn mixed_text_and_elements_should_keep_their_text() {
     );
     round_trip(&xml);
 }
+
+const ITEMS: &str = r#"<Items activeItemSet="1">
+		<Item id="1" variant="2">
+			Rarity: RARE
+			Doom Loop
+			Two-Stone Ring
+			Implicits: 0
+			+20 to maximum Life
+			<ModRange id="1" range="0.5"/>
+		</Item>
+		<!-- between items -->
+		<Item id="2">old text<ModRange id="1" range="1"/>
+			Rarity: MAGIC
+			Plain Ring
+		</Item>
+		<ItemSet id="1" useSecondWeaponSet="false">
+			<Slot name="Ring 1" itemId="1" future="x"/>
+			<Slot name="Ring 2" itemId="0"/>
+			<SocketIdURL nodeId="1" name="J" itemPbURL=""/>
+		</ItemSet>
+	</Items>"#;
+
+fn with_items() -> String {
+    BASE.replace("<Items/>", ITEMS)
+}
+
+#[test]
+fn items_should_be_typed_and_round_trip() {
+    let b = round_trip(&with_items());
+    let first = b.items.items().next().unwrap();
+    assert_eq!(
+        (
+            b.items.items().count(),
+            b.items.sets().count(),
+            first.body.lines.len(),
+            first.body.name.as_deref(),
+            kept_whole(&b).len(),
+        ),
+        (2, 1, 5, Some("Doom Loop"), 0)
+    );
+}
+
+#[test]
+fn item_body_should_be_the_last_non_blank_text() {
+    let b = import(&with_items()).unwrap();
+    let second = b.items.items().nth(1).unwrap();
+    // "old text" stays in place; the item reads the later text.
+    assert_eq!(
+        (second.body.name.as_deref(), &second.layout.entries()[0]),
+        (
+            Some("Plain Ring"),
+            &Entry::Opaque(OpaqueNode::Text("old text".to_owned()))
+        )
+    );
+}
+
+#[test]
+fn empty_slot_should_have_no_item() {
+    let b = import(&with_items()).unwrap();
+    let set = b.items.sets().next().unwrap();
+    let items: Vec<Option<u32>> = set.slots.typed().map(|s| s.item.map(|i| i.0)).collect();
+    assert_eq!(items, [Some(1), None]);
+}
+
+#[test]
+fn item_export_should_come_from_the_lines() {
+    let mut b = import(&with_items()).unwrap();
+    let mut entries: Vec<loom_domain::Entry<loom_domain::ItemsEntry>> =
+        b.items.entries.entries().to_vec();
+    if let Entry::Typed(loom_domain::ItemsEntry::Item(item)) = &mut entries[0] {
+        item.body.lines[4].source = "+21 to maximum Life".to_owned();
+    }
+    b.items.entries = entries.into_iter().collect();
+    let out = export(&b);
+    assert!(out.contains("+21 to maximum Life") && !out.contains("+20 to maximum Life"));
+}
+
+#[test]
+fn nil_main_active_skill_should_stay_an_untyped_attribute() {
+    let xml = BASE.replace(r#"mainActiveSkill="1""#, r#"mainActiveSkill="nil""#);
+    let b = round_trip(&xml);
+    let group = b
+        .skills
+        .sets
+        .typed()
+        .next()
+        .unwrap()
+        .groups
+        .typed()
+        .next()
+        .unwrap();
+    assert_eq!(
+        (group.main_active_skill.is_none(), kept_whole(&b).len()),
+        (true, 0)
+    );
+}
+
+/// Applies `f` to the build's first item.
+fn edit_first_item(b: &mut Build, f: impl FnOnce(&mut loom_domain::Item)) {
+    let mut entries: Vec<Entry<loom_domain::ItemsEntry>> = b.items.entries.entries().to_vec();
+    if let Some(Entry::Typed(loom_domain::ItemsEntry::Item(item))) = entries.first_mut() {
+        f(item);
+    }
+    b.items.entries = entries.into_iter().collect();
+}
+
+#[test]
+fn non_breaking_space_gap_should_survive_the_round_trip() {
+    let xml = with_items().replace("\t\t\tDoom Loop\n", "\t\t\t\u{a0}Doom Loop\u{a0}\n");
+    let b = round_trip(&xml);
+    let first = b.items.items().next().unwrap();
+    assert_eq!(
+        (first.body.lines[1].source.as_str(), kept_whole(&b).len()),
+        ("Doom Loop", 0)
+    );
+}
+
+#[test]
+fn crlf_body_should_keep_its_carriage_returns() {
+    let xml = with_items().replace("Two-Stone Ring\n", "Two-Stone Ring&#13;\n");
+    let b = round_trip(&xml);
+    let first = b.items.items().next().unwrap();
+    assert_eq!(
+        (
+            first.body.lines[2].source.as_str(),
+            first.text_spacing[3].starts_with("\r\n"),
+        ),
+        ("Two-Stone Ring", true)
+    );
+}
+
+#[test]
+fn cleared_text_spacing_should_write_one_line_per_line() {
+    let mut b = import(&with_items()).unwrap();
+    edit_first_item(&mut b, |item| {
+        item.body.lines.remove(4);
+        item.text_spacing.clear();
+    });
+    let out = export(&b);
+    assert!(
+        out.contains("Two-Stone Ring\nImplicits: 0<ModRange"),
+        "{out}"
+    );
+    let again = import(&out).unwrap();
+    let first = again.items.items().next().unwrap();
+    let sources: Vec<&str> = first.body.lines.iter().map(|l| l.source.as_str()).collect();
+    assert_eq!(
+        sources,
+        [
+            "Rarity: RARE",
+            "Doom Loop",
+            "Two-Stone Ring",
+            "Implicits: 0"
+        ]
+    );
+}
+
+#[test]
+fn item_without_body_text_should_be_typed_with_its_ranges() {
+    let xml = with_items().replace(
+        "<!-- between items -->",
+        r#"<Item id="3"><ModRange id="1" range="1"/></Item>"#,
+    );
+    let b = round_trip(&xml);
+    let third = b.items.items().nth(1).unwrap();
+    assert_eq!(
+        (
+            third.id.0,
+            third.body.lines.len(),
+            third.layout.typed().count(),
+            third.layout.entries().len(),
+        ),
+        (3, 0, 0, 1)
+    );
+}
+
+#[test]
+fn non_numeric_item_id_should_keep_the_item_whole() {
+    let xml = with_items().replace(r#"<Item id="2">"#, r#"<Item id="two">"#);
+    let b = round_trip(&xml);
+    assert_eq!((b.items.items().count(), kept_whole(&b).len()), (1, 1));
+}
+
+#[test]
+fn slot_with_children_should_stay_opaque() {
+    let xml = with_items().replace(
+        r#"<Slot name="Ring 2" itemId="0"/>"#,
+        r#"<Slot name="Ring 2" itemId="0"><Future/></Slot>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.items.sets().next().unwrap();
+    assert_eq!(
+        (set.slots.typed().count(), set.slots.entries().len()),
+        (1, 3)
+    );
+}

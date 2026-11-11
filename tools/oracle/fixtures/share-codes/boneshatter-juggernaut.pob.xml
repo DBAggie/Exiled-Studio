@@ -1,0 +1,2085 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PathOfBuilding>
+	<Build targetVersion="3_0" pantheonMajorGod="Lunaris" pantheonMinorGod="Garukhan" className="Marauder" mainSocketGroup="1" ascendClassName="Juggernaut" characterLevelAutoMode="true" bandit="None" viewMode="IMPORT" level="99">
+		<PlayerStat stat="AverageDamage" value="582276.90999165"/>
+		<PlayerStat stat="AverageBurstDamage" value="582276.90999165"/>
+		<PlayerStat stat="Speed" value="1.8153824"/>
+		<PlayerStat stat="PreEffectiveCritChance" value="0"/>
+		<PlayerStat stat="CritChance" value="0"/>
+		<PlayerStat stat="CritMultiplier" value="0"/>
+		<PlayerStat stat="HitChance" value="100"/>
+		<PlayerStat stat="TotalDPS" value="1057055.2543252"/>
+		<PlayerStat stat="TotalDot" value="0"/>
+		<PlayerStat stat="BleedDPS" value="9491730.230479"/>
+		<PlayerStat stat="WithBleedDPS" value="10548785.484804"/>
+		<PlayerStat stat="WithIgniteDPS" value="1057055.2543252"/>
+		<PlayerStat stat="WithPoisonDPS" value="1057055.2543252"/>
+		<PlayerStat stat="TotalDotDPS" value="9491730.230479"/>
+		<PlayerStat stat="CullingDPS" value="0"/>
+		<PlayerStat stat="ReservationDPS" value="0"/>
+		<PlayerStat stat="CombinedDPS" value="10548785.484804"/>
+		<PlayerStat stat="ManaCost" value="6"/>
+		<PlayerStat stat="ManaPercentCost" value="0"/>
+		<PlayerStat stat="ManaPerSecondCost" value="10.8922944"/>
+		<PlayerStat stat="ManaPercentPerSecondCost" value="0"/>
+		<PlayerStat stat="LifeCost" value="4"/>
+		<PlayerStat stat="LifePercentCost" value="0"/>
+		<PlayerStat stat="LifePerSecondCost" value="7.2615296"/>
+		<PlayerStat stat="LifePercentPerSecondCost" value="0"/>
+		<PlayerStat stat="ESCost" value="0"/>
+		<PlayerStat stat="ESPerSecondCost" value="0"/>
+		<PlayerStat stat="ESPercentPerSecondCost" value="0"/>
+		<PlayerStat stat="RageCost" value="0"/>
+		<PlayerStat stat="SoulCost" value="0"/>
+		<PlayerStat stat="Str" value="387"/>
+		<PlayerStat stat="ReqStr" value="293"/>
+		<PlayerStat stat="Dex" value="110"/>
+		<PlayerStat stat="ReqDex" value="106"/>
+		<PlayerStat stat="Int" value="70"/>
+		<PlayerStat stat="ReqInt" value="68"/>
+		<PlayerStat stat="Devotion" value="0"/>
+		<PlayerStat stat="TotalEHP" value="71294.300100198"/>
+		<PlayerStat stat="PhysicalMaximumHitTaken" value="34420"/>
+		<PlayerStat stat="LightningMaximumHitTaken" value="79316"/>
+		<PlayerStat stat="FireMaximumHitTaken" value="83490"/>
+		<PlayerStat stat="ColdMaximumHitTaken" value="75539"/>
+		<PlayerStat stat="ChaosMaximumHitTaken" value="31065"/>
+		<PlayerStat stat="MainHandAccuracy" value="576"/>
+		<PlayerStat stat="Life" value="5890"/>
+		<PlayerStat stat="Spec:LifeInc" value="166"/>
+		<PlayerStat stat="LifeUnreserved" value="5890"/>
+		<PlayerStat stat="LifeRecoverable" value="5890"/>
+		<PlayerStat stat="LifeUnreservedPercent" value="100"/>
+		<PlayerStat stat="LifeRegenRecovery" value="1146.2"/>
+		<PlayerStat stat="LifeLeechGainRate" value="1069.2602336"/>
+		<PlayerStat stat="Mana" value="663"/>
+		<PlayerStat stat="Spec:ManaInc" value="0"/>
+		<PlayerStat stat="ManaUnreserved" value="66"/>
+		<PlayerStat stat="ManaUnreservedPercent" value="9.9547511312217"/>
+		<PlayerStat stat="ManaRegenRecovery" value="11.6"/>
+		<PlayerStat stat="ManaLeechGainRate" value="120.35985312"/>
+		<PlayerStat stat="EnergyShield" value="0"/>
+		<PlayerStat stat="EnergyShieldRecoveryCap" value="0"/>
+		<PlayerStat stat="Spec:EnergyShieldInc" value="0"/>
+		<PlayerStat stat="EnergyShieldRegenRecovery" value="0"/>
+		<PlayerStat stat="EnergyShieldLeechGainRate" value="0"/>
+		<PlayerStat stat="Ward" value="0"/>
+		<PlayerStat stat="Rage" value="0"/>
+		<PlayerStat stat="RageRegenRecovery" value="0"/>
+		<PlayerStat stat="TotalBuildDegen" value="101.308"/>
+		<PlayerStat stat="TotalNetRegen" value="1056.492"/>
+		<PlayerStat stat="NetLifeRegen" value="1044.892"/>
+		<PlayerStat stat="NetManaRegen" value="11.6"/>
+		<PlayerStat stat="NetEnergyShieldRegen" value="0"/>
+		<PlayerStat stat="Evasion" value="27"/>
+		<PlayerStat stat="Spec:EvasionInc" value="60"/>
+		<PlayerStat stat="MeleeEvadeChance" value="0"/>
+		<PlayerStat stat="ProjectileEvadeChance" value="0"/>
+		<PlayerStat stat="Armour" value="33724"/>
+		<PlayerStat stat="Spec:ArmourInc" value="364"/>
+		<PlayerStat stat="PhysicalDamageReduction" value="90"/>
+		<PlayerStat stat="EffectiveBlockChance" value="0"/>
+		<PlayerStat stat="EffectiveSpellBlockChance" value="0"/>
+		<PlayerStat stat="AttackDodgeChance" value="0"/>
+		<PlayerStat stat="SpellDodgeChance" value="0"/>
+		<PlayerStat stat="EffectiveSpellSuppressionChance" value="0"/>
+		<PlayerStat stat="FireResist" value="84"/>
+		<PlayerStat stat="FireResistOverCap" value="36"/>
+		<PlayerStat stat="ColdResist" value="82"/>
+		<PlayerStat stat="ColdResistOverCap" value="27"/>
+		<PlayerStat stat="LightningResist" value="83"/>
+		<PlayerStat stat="LightningResistOverCap" value="14"/>
+		<PlayerStat stat="ChaosResist" value="76"/>
+		<PlayerStat stat="ChaosResistOverCap" value="1"/>
+		<PlayerStat stat="EffectiveMovementSpeedMod" value="1.4976"/>
+		<PlayerStat stat="FullDPS" value="0"/>
+		<PlayerStat stat="FullDotDPS" value="0"/>
+		<PlayerStat stat="PowerCharges" value="0"/>
+		<PlayerStat stat="PowerChargesMax" value="3"/>
+		<PlayerStat stat="FrenzyCharges" value="0"/>
+		<PlayerStat stat="FrenzyChargesMax" value="3"/>
+		<PlayerStat stat="EnduranceCharges" value="10"/>
+		<PlayerStat stat="EnduranceChargesMax" value="10"/>
+		<TimelessData jewelTypeId="1" conquerorTypeId="1" jewelSocketId="54127" devotionVariant1="1" devotionVariant2="1" socketFilterDistance="0" searchList="" searchListFallback=""/>
+	</Build>
+	<Notes>
+		^x70FF70^x70FF70&gt; 3.29 CHANGES &lt;^7
+- Reduced mana cost got changed into increased mana cost efficiency, which might make our early mana sustain harder, see &quot;Dealing with mana&quot; for tips on how to deal with potential issues
+- We can now corrupt +1 maximum endurance charge on rings, meaning you can corrupt Kaom&apos;s Signs for +2 endurance charges, or get random rings with +1 endurance charge(depending on how rare it is)
+- Socket color changes mean we can get +10% quality on various gems, prioritize Boneshatter and Pride here
+- Phys reflect is gone and replaced with thorns, we can easily deal with thorns, so that&apos;s 1 more map mod we can run now!
+
+^x70FF70&gt; Can I use this really good Talisman I found? &lt;^7
+Talismans have good implicits, at the cost of not being anointable.
+While the anoint on this build is REALLY good, it&apos;s not required, and it requires a prismatic oil which you might not have yet.
+So for early/mid game I&apos;d say: go for it!
+
+^x70FF70&gt; What Bloodlines ascendancy? &lt;^7
+Dropping Unrelenting for &quot;That didn&apos;t happen!&quot; from the Delirious Bloodline is great to get VERY tanky, at the cost of some damage you&apos;d get from your jewels otherwise.
+With the amount of recovery we have you&apos;ll almost always recover back the 40% of your hit before it actually applies.
+
+^x70FF70&gt; Leveling &lt;^7
+We level with the tried-and-tested Sunder all the way to Merciless lab.
+For weapon upgrades you can vendor a Rare Rustic Sash with a Blacksmith&apos;s Whetstone and a 2H Axe of any rarity to get a Magic Axe back with 50-64% increased Physical Damage.
+If you&apos;re someone who wants to swap to their endgame skill early, don&apos;t do so before picking up either &quot;Unflinching&quot; on your ascendancy or &quot;Inexorable&quot; on the tree. You likely want to run Determination as well to mitigate the self-damage.
+
+^x70FF70&gt; Corrupted Rings &lt;^7
+You always want at least +1 endurance charges on your ring.
+In 3.29 new corruptions got introduced that include +1 to Maximum Endurance Charges, this will likely have a high itemlevel requirement.
+Generally, the order of ring power is like this, from weakest to strongest:
+- Regular Kaom&apos;s Sign
+- Kaom&apos;s Sign with non-endurance charge corruption
+- Rare ring with bad mods and an endurance charge corruption
+- Rare ring with good mods and an endurance charge corruption
+- Kaom&apos;s Sign with endurance charge corruption(+2 maximum endurance charges)
+- GG Ring with an endurance charge corruption(think T1 life, DoT Multiplier, good resists), might be most useful when combined with a +2 Endurance Kaom&apos;s Sign
+Look up what the minimum item level is to get +1 Maximum Endurance Charge, and corrupt every half-decent ring you find with that itemlevel.
+Also corrupt every Kaom&apos;s Sign you find, but especially those with the item level to get +1 endurance charge.
+Don&apos;t forget that Kalandra&apos;s Touch exists, if this is relatively available you might only need to get 1 GG ring.
+
+^x70FF70&gt; What map mods should I avoid? &lt;^7
+- Avoid bleed
+- Monsters cannot be stunned(EASY TO MISS, DESTROYS YOUR CLEAR)
+- Monsters steal charges on hit
+
+There are some other mods that are annoying, but you can deal with them. Above mods will completely brick your build.
+Make sure that on eater altars you don&apos;t click &quot;players have -% physical damage reduction&quot; either, since the self-damage from Boneshatter will kill you if you do that.
+
+^x7070FFRegex:^7 &quot;!er,|tun|f ph|on,&quot;
+
+^x70FF70&gt; Tincture stuff &lt;^7
+Your Tincture is very important for your damage.
+By not rolling increased effect and by taking the &quot;10% of damage taken recouped as mana&quot; mastery we can sustain this for a long time compared to some other builds.
+If you don&apos;t mind pressing it more often you can roll increased effect on it for even more damage.
+
+^x70FF70&gt; Getting 100% chance to bleed &lt;^7
+The tree in this build is very lenient on getting you chance to bleed, so getting to 100% shouldn&apos;t be a problem.
+That being said: if you get some other sources of chance to bleed you can replace nodes on the tree for more damage(usually by just pathing around the other side of a wheel).
+Other sources of bleed chance:
+- Veiled prefix on axes for %phys and 25% chance to bleed
+- Jewel suffix for 5% chance to bleed
+- Eater of Worlds glove implicit for bleed chance(likely not really worth it over the consistency of getting more aggravate chance)
+
+^x70FF70&gt; What&apos;s Forbidden Rite doing in the links? &lt;^7
+Casting Forbidden Rite means you hit yourself, which triggers the &quot;Unflinching&quot; Ascendancy to give you Endurance Charges.
+You can use this before fighting something like Shaper to make sure you start the fight on full Endurance Charges.
+
+^x70FF70&gt; Divine Shield &lt;^7
+Basically: if you have ANY energy shield: take Divine Shield. If you have none: don&apos;t take it. Easiest place to get some ES is by using a Crystal Belt before you use Ryslatha&apos;s Coil.
+
+^x70FF70&gt; Dealing with mana &lt;^7
+- The 10% damage taken recouped as mana mastery will give you a lot of mana regeneration because we constantly hit ourselves
+- If you get a 6-link early on, you can link Lifetap as your 6th link to prevent having to rush mana nodes or crafting -mana cost on jewellery
+- Having a source of physical damage leeched as mana is great, on the tree we take Spirit of War, but you could drop that and get it on gear or a jewel instead
+- -mana cost on rings and amulet helps a lot, but later on we want to ideally replace our rings with ^xAF6025Kaom&apos;s Sign^7(or a corrupted +1 endurance charge ring if you&apos;re rich), so don&apos;t come to rely on this too much.
+- Picking up the increased mana cost efficiency of skills mastery at the Spirit of War notable on the tree will help with mana issues too
+^7
+^x70FF70&gt; Pride or Determination? &lt;^7
+If you have half-decent gear you don&apos;t really need the armor Determination provides, so you might as well use Pride.
+If you ever feel like your mitigation is lacking somewhat, feel free to swap in Determination instead of Pride though, since Pride doesn&apos;t add enough damage to justify potentially dying for.
+
+^x70FF70&gt; Can I add explosions? &lt;^7
+While you can technically add ^xAF6025Haemophilia^7, this likely doesn&apos;t add as much clear as you might think, especially since it means you miss out on 1 (or potentially 2) additional strikes.
+If you want more clearspeed I&apos;d recommend getting +2 strike gloves, onslaught on boots and then anointing Sione&apos;s Ambition.
+
+^x70FF70&gt; Spell suppress? &lt;^7
+Technically you could fit Spell Suppress in builds like this by picking up Entrench(with Iron Reflexes along the way), using hybrid armour/evasion gear with suppress on it and a small suppress cluster jewel.
+With the changes to suppress in 3.27 I wouldn&apos;t really recommend this though, since it&apos;s a lot of investment and this build is already plenty tanky without it.
+	</Notes>
+	<Tree activeSpec="10">
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="" nodes="24383,47175,15868,36047,2454,61198,5152,50904,58449,63048,22627,38777,17765,20551,14606" ascendClassId="1" treeVersion="3_28" title="^2Level 12">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBDV8_PfyMzwmW7w4UIMbY5FH2SFhjl3lQRzkOAAA=
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="" nodes="55649,32739,34130,58449,2454,22627,15868,17765,30380,36047,24383,5152,47175,60169,53118,61198,44429,50904,14606,12795,63048,38777,31961,59928,20551,63282" ascendClassId="1" treeVersion="3_28" title="^2Level 22">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBGNlhf-OFUuRRCZZYYz38dqyMz18_FCDrCc9-7w6tjcbYOQ4x-_ZIl3l82eoYUEf3MgAA
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="" nodes="30380,32739,5233,34130,22627,14606,63282,5819,47175,63723,53118,57953,25682,49571,63417,15868,12407,4940,58449,33287,5152,20551,17765,2454,36047,24383,55649,31961,60169,50904,61198,44429,55676,9976,12795,63048,59928,23038,38777,6113,20018" ascendClassId="1" treeVersion="3_28" title="^2Level 32 - Normal Lab">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBJ3asf-MUcYVSWGM5DvcyFrv4689-4mFkUsGj97k9_DB3E0zkUYIHFCBQRwmWjM9fP9lhfNnrCcbY7w6tjdl8Jvgx-_ZI6hhZ_pd5F-FOMgAA
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{59335,28469}" nodes="30380,3644,32739,5233,13922,1909,22627,6289,63282,5819,47175,63723,53118,57953,55649,25682,59335,6113,34400,49571,14767,63417,20018,49318,38777,15868,8533,24914,25781,14930,12795,4940,33287,58449,62530,55676,23038,17765,2454,36047,24383,50904,60169,56381,14606,61198,44429,5152,9976,48287,63048,31961,34130,59928,20551,12407" ascendClassId="1" treeVersion="3_28" title="^2Level 44">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBNnasDjx_4xRxNmIHdVhjGJH3Mha7-OvPfuJh2WFkUufHF-GGYMGjOa_3uU4ywKaXeT38IVVhUmS1OlIx-xNMggfkUfRC2XxZ_gmWjM9fP8bY6wncPTkO7w6tjRQgJvi8n_ZIfNmFUuoYUEcwdwABbzXnxw==
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{59335,28469},{35118,27095},{24224,50175}" nodes="55649,24083,34130,1909,26096,31961,63282,47175,57953,25682,1325,38777,14767,49318,8533,15868,34400,12407,35118,4940,62530,6363,36047,24383,56381,23038,5152,9976,48287,63048,20551,30380,3644,32739,29543,30030,22627,29937,5819,59928,53118,59335,49571,1734,63417,42637,16544,14606,50904,58449,13922,14930,33287,17765,20018,49153,61262,6113,5233,60169,24224,12795,44429,55676,2454,6289,61198,8544,24914,25781,63723,31471" ascendClassId="1" treeVersion="3_28" title="^2Level 54 - Cruel Lab">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBRtlhXhOFUgd1ZfB82fcy4mFkUgUtl3k5r8CmIVU9_IZgMHeJLhNM9EIY24zPXz_cPVn-FCAm-Lyf9khQR3asDjx_43NndU5YY3TxFrvqGM9-58fBowbG97mmjUCgOQ7G2ORRNmI6UoIHTjLAAe9OF-EUcesJXqAx-62N2XwJlhiR7w4hYGFSZLX463rvAANp14kubzXnx8P_XqA=
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{59335,28469},{2841,64875},{35118,27095},{24224,50175}" nodes="55649,24083,34130,56359,1909,26096,6289,63282,47175,57953,25682,1325,38777,14767,49318,8533,24914,25781,12407,35118,4940,33287,6363,36047,24383,39768,56381,61198,5152,9976,48287,63048,20551,30380,3644,20018,29543,48807,30030,18302,22627,29937,5819,59928,53118,59335,34031,49571,1734,63417,24865,13922,34400,62530,48438,31961,42637,61262,16544,29933,50904,58449,476,12795,24224,17765,14930,5233,6113,23038,15868,60169,63723,25933,44429,55676,2454,14606,34009,8544,49153,7285,2841,31471" ascendClassId="1" treeVersion="3_28" title="^2Level 60">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBUtlhXhOFUtwnB3Vl8BiR9zLiYWRSBS2XeTmvwKYhVWFSZLUwd4kuE0yCBxjbjM9fP5tY3D3vDhQgJvi8n_ZIUEd2rA48TjJzZ76ndU5HflhjdPEWu-oYz37nx4TvwaMGxve5YSE2YoZg9EK9NnzZpo3vTkCgdO3G2ORRAdwx-16gOlIUcRfhWf49_OsJ-OtlTa2N2XwJljkOhNkhYMABHHULGXrvAARp14kubzXnx8P_XqD9awsZ
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{59335,28469},{65395,64875},{28039,11049},{8556,39154},{24224,50175}" nodes="27422,24083,13922,28039,26096,6289,63282,47175,49153,25682,1325,14767,30691,15868,34400,14930,4940,6741,33287,6363,36047,26294,24544,5152,9976,12795,24224,25933,12033,31961,6113,59928,28498,30380,3644,32739,29543,48807,23199,20551,30030,18302,48438,22627,476,60887,29937,21435,55676,5819,48287,34009,53118,50969,20018,29933,59335,42086,34031,8556,49412,17988,24865,11700,62530,25796,65395,23038,42637,12407,16544,25781,26023,58449,61198,31471,63417,17765,1734,49571,16093,18025,13273,5233,14056,44624,20835,50904,63048,24383,57953,8544,49109,63723,31080,43374" ascendClassId="1" treeVersion="3_28" title="^2Level 67 - Merc Lab &amp; Respec">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBXmseXhM2Ym2HZfAYkfcywAFkUgUtOa934z38hmA6UhNMGlWCBxjbjM9mtl_gFCAm-DH7XqBlTS8BfNkX4eoYb1J2rA48f-NzZ76nWp9QR3VOR369NlhjAdzt13TxU7vZfBa7vJ-E2c9-xxlOMnTt58ekZoTvIWzBBEZEYSEttPRCZMT_c1n-po0wd0CgZLVlp-RR7w567_e5BsbBoz7dRmkz2RRxNuiuUFFjxtj2SF8_4mEhYL_V-Ot5aKluAAUrKW2Hw_9eoG8158eY8iFs_Wv_cw==
+			</URL>
+			<Sockets/>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{43601,59281},{4707,29652},{19750,62285},{59335,28469},{52220,32255},{24224,11049},{8556,39154},{28039,50175},{63710,38703}" nodes="47421,27422,43601,60887,5197,13922,487,28039,64587,26096,6289,63282,54127,47175,49153,1572,13273,14767,34031,29543,57011,15868,25781,14930,4707,30691,6741,12407,48438,6363,1325,7399,32690,36047,26294,50904,20835,33287,23038,61198,37326,5152,24383,48287,24224,64882,12033,14056,20551,16093,28498,30380,3644,25682,5233,29353,23199,4833,30030,18302,23972,22627,31961,57953,29937,63417,42086,5819,52220,59928,53118,1734,11859,17988,59335,15522,56789,48109,49412,31080,24865,11700,25989,55854,25796,50570,42637,26564,16544,49571,26023,58449,34009,8556,63723,17765,43374,29933,65485,18025,63048,44624,62530,24544,18103,55676,56001,63710,50969,8544,49109,21435,19750,476" ascendClassId="1" treeVersion="3_28" title="^4Early Game {1}">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBcLk9ax6qUe3XFE02YgHnbYf8S2XwGJH3MtNvwAEGJDPZOa-E73Nn3rM9_GS1OlISY3fjGlUwd702GNsFLRznf7KMz2a2xthRY4IHWf7vDpHOFCBfP7yfXqD9ci8BNuhQRz7db1J2rA48ZFIUcXKpWp8S4XVOR35dpFhjfNniYXTx97mkZha7y_zqGM9-BsYuU0ZE58c8ot3Vu-3BBHloYSEttGWF2i5kxMWKpo1nxECgwaNlp-RRhNkhbPjrqW507f_NRmn2SK5Q9EJf4Ea32XzawfjexxkhYL_VU7tNJgHcAAnnkapRw_9th3PUEmMrKV6gff_L_G8158eY8iFsly_43vNNTSY=
+			</URL>
+			<Sockets>
+				<Socket nodeId="26725" itemId="10"/>
+				<Socket nodeId="54127" itemId="14"/>
+				<Socket nodeId="33631" itemId="6"/>
+				<Socket nodeId="28475" itemId="14"/>
+				<Socket nodeId="26196" itemId="14"/>
+			</Sockets>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{41415,34242},{43601,59281},{4707,29652},{19750,62285},{59335,28469},{52220,32255},{24224,11049},{8556,39154},{63710,38703},{64406,7137}" nodes="32690,27422,43601,60887,5197,13922,19750,23027,34031,64587,1325,7162,31961,37326,54127,47175,50340,14056,57953,43374,1572,13273,58556,18103,9695,14767,50904,24383,21435,23038,33287,30691,49109,16093,12407,24544,26196,6741,6289,48438,25781,31604,7399,487,36047,26294,4833,62530,50969,60472,61198,29933,5152,25933,48287,24224,476,12033,23199,23972,60031,28498,30380,3644,63417,5233,48807,56001,6712,63723,18302,55854,22627,25989,11700,8556,31080,1734,5819,11730,59928,53118,49571,11859,15522,59335,42086,52220,48109,49412,17988,24865,6043,56789,50570,41415,36949,34009,26564,16544,29353,26023,58449,65485,64882,63048,17765,44624,64406,4707,18025,44202,14930,57011,20835,15868,55676,49153,63710,34171,47421,63282,20551,25682,42009" ascendClassId="1" treeVersion="3_28" title="^4Midgame {2}">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBe3-yax6qUe3XFE02Yk0mWfOE7_xLBS0b-nzZkc7Tb8SkNujiYaluBiQz2eS8Rrcl3zmvxthfP1O7Wf6CB3fjv9U-3TB3X-BmVBpVGJG9NmS1e3Qc5wHnjM9mthLh9ELHGew47w507RQgZU28n16gAdwvAVqfXaTqf29SdqwOPPe5FHG-p9rBGjj460d-2i5YY2WFLbQhbHloBsYWuy3S6hjPfsGjLlM8oufHpGbL_LvtwQRGRGEhF5vd1cWKoceQVYTZZ8RAoHKpZafkUf_N_XL2SK5Q-5YSY0ZprKo6Ut6zUWM9_Nl8wAH43oV7uT33MlBHZFKkGQAK55GqUfNNTSYrKV6gmPIhbG8158d9_8v8hcKhxxvh-5Zz1BJjly_43g==
+			</URL>
+			<Sockets>
+				<Socket nodeId="26725" itemId="10"/>
+				<Socket nodeId="54127" itemId="14"/>
+				<Socket nodeId="33631" itemId="6"/>
+				<Socket nodeId="28475" itemId="14"/>
+				<Socket nodeId="26196" itemId="14"/>
+			</Sockets>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{33657,4319},{41415,34242},{43601,59281},{4707,29652},{42792,9074},{59335,28469},{52220,32255},{24224,11049},{19750,62285},{2841,59064},{63710,38703},{64406,7137}" nodes="32690,43601,60887,13922,19750,23027,64587,31961,63282,50340,49153,25682,34171,57011,15868,25781,26196,6741,62530,24383,24544,44624,14056,29933,28498,29353,18302,5819,6712,63723,53118,11859,15522,48109,1734,17988,6043,25989,60031,41415,28475,58449,17765,44202,50904,63710,25933,27422,4707,7285,49178,7162,33657,54127,47175,57953,13273,64882,12407,48438,7399,36047,26294,23038,5152,63048,12033,476,487,30380,3644,1325,5233,2841,56001,14930,31471,65485,33287,22627,43412,37326,60472,9695,4833,61198,34666,34031,20551,5197,23199,42792,59335,52220,30691,49571,49412,31080,24865,42009,56789,25796,49109,63417,36949,26564,16544,47421,26023,34009,11730,48807,21435,42086,10031,64406,23972,55854,24224,48287,50570,56359,62429,55676,59928,18103,1572,6289,16093,14767,26725,43374" ascendClassId="1" treeVersion="3_28" title="^4Endgame {3}">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBgn-yqlHt1zZiTSZZ8_xLfNn3MsSkwAFkUoV73rM9_GS1ZlQaVfRCXz9f4K5QNuh07W9ScqlHfha7Gjj4689-LlM8orvtBsZGRBebZYXqf6HHbzvkUayqxtj43mVNax4SYxx1wBob-oN502_iYTPZ_XIwd702HOeMz2a2Wf4UIPZILwEB3AHndqwOPAUtFHELGdrBOlJ67__NggdYY6mUkc7sOCXfEuHvDodqhO9QRxRNWp-nKOfHy_x348GjwQR5aGEhpBnd1WTEv9X3uZBVZ8RAoLk9ZaeE2S3SvqdTu6RmJy_7ll2k2i5eoLyfxYrcJ_Pd2XzqGEa3BiQYkT7dOa9oZaluAAznkapR801NJoXCoceXL_jec9QSYxDfg3nmuAsZI3KnKG8158d9_8v8G-H7lispXqA=
+			</URL>
+			<Sockets>
+				<Socket nodeId="26725" itemId="10"/>
+				<Socket nodeId="54127" itemId="14"/>
+				<Socket nodeId="33631" itemId="6"/>
+				<Socket nodeId="28475" itemId="14"/>
+				<Socket nodeId="26196" itemId="14"/>
+			</Sockets>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{33657,4319},{41415,34242},{43601,59281},{4707,29652},{42792,9074},{59335,28469},{52220,32255},{24224,11049},{19750,62285},{2841,59064},{63710,38703},{64406,7137}" nodes="32690,43601,60887,13922,19750,23027,64587,6289,63282,50340,49153,25682,34171,30691,15868,25781,26196,6741,33287,24383,24544,50422,44624,14056,23972,28498,48807,18302,5819,6712,63723,53118,11859,15522,48109,1734,17988,6043,25989,36949,41415,58449,17765,44202,50904,63710,25933,58556,27422,4707,7285,60472,7162,33657,54127,47175,57953,13273,14767,50862,14930,18103,7399,36047,26294,61198,5152,63048,12033,30380,3644,34031,5233,2841,56001,487,1572,21435,42009,22627,65485,49109,37326,62530,9695,4833,23038,16093,43374,56359,1325,21650,59335,52220,34009,49571,49412,31080,24865,42792,56789,55854,23199,50570,63417,26564,16544,57011,26023,11730,31961,26725,42086,33631,29353,64406,20551,25796,24224,48287,60031,59928,29933,55676,62429,12407,15405,48438,5197,64882,47421,476" ascendClassId="1" treeVersion="3_28" title="^4Endgame - Corrupted Soul {4}">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBgn-yqlHt1zZiTSZZ8_xLGJH3MsSkwAFkUoV7d-M9_GS1ZlQaVYIHXz9f4MT2rlA26F2kb1K-p0d-FrsaOPjrz34uUzyiu-0GxkZEF5tlhZBVocfkUayqxtj43mVN5LxrHhJjHHXsOBv6g3nTb-JhM9k5r8auOlJGtxznjM9mtu8OFCD2SC8BdqwOPITvFHELGdrBAecGJFO7pBlYY__Nv9WRzvRCJd8S4Vn-Pt2pbtwnBS1UkufHy_yE2cGjwQR5aGEhpyjd1douWp_Five5Z8RAoN6zZact0nzZaGWkZoNfcqn7llBHZMReoLyf6n_qGHTt2Xzz3TB3PC29NhRN_XK5PQHcAAznkapR801NJoXCoceXL_jec9QSYxDfg3nmuAsZbzXnx33_y_wjcqcoG-H7lispXqA=
+			</URL>
+			<Sockets>
+				<Socket nodeId="26725" itemId="10"/>
+				<Socket nodeId="54127" itemId="14"/>
+				<Socket nodeId="33631" itemId="6"/>
+				<Socket nodeId="26196" itemId="14"/>
+			</Sockets>
+			<Overrides/>
+		</Spec>
+		<Spec clusterHashFormatVersion="2" secondaryAscendClassId="nil" classId="1" masteryEffects="{33657,4319},{41415,34242},{43601,59281},{4707,29652},{19750,62285},{59335,28469},{52220,32255},{24224,11049},{42792,9074},{2841,59064},{57949,34420},{63710,38703},{64406,7137}" nodes="32690,43601,60887,13922,56359,23027,64587,21435,63282,9939,37584,50340,49153,25682,1325,30691,15868,25781,6741,33287,24383,24544,48287,24224,29933,28498,48807,18302,52408,5819,6712,59928,53118,15522,48109,1734,63417,6043,25989,50570,41415,58449,17765,44202,50904,9695,8544,39486,27422,24083,5197,7285,60472,59766,57949,7162,37326,47175,65485,13273,64882,12407,18103,7399,36047,26294,23038,5152,34666,12033,30380,3644,5233,2841,23199,34031,4707,42009,14767,22627,43412,25933,34171,57953,33657,63710,62530,4833,29353,52220,476,42792,59335,42086,11730,49571,49412,31080,24865,47421,16093,25796,61198,17988,60031,26564,16544,31961,26023,34009,43684,63048,55854,11364,10031,64406,63723,20551,14056,44624,36949,31471,19750,55676,49109,1572,48438,6289,14930,57011,487,43374" ascendClassId="1" treeVersion="3_28" title="^4Endgame - Delirious Bloodline {5}">
+			<URL>
+				https://www.pathofexile.com/passive-skill-tree/AAAABgEBgX-yqlHt1zZi3CdZ8_xLU7v3MpLQxKTAAWRSBS134z38ZLUaVYIHXz9f4LyfXqB07W9SvqdHfsy4FrsaOOoYz348orvtBsb3uRebZYXFiqHH5FGsqsbYJd8hYJo-ax5eExRNHHXsOOl24l0b-pHO_80z2f1yMHdGtxznjM9mtln-FCCHai8BdqwOPBRxCxlan4TvEmOkGTmvWGOplGVNhXviYYN5-N70QhLhcqnL_AHcpyjnx6RmLdLBo8EEeWhhIbk9Pt1kxO8ORkTqf2fEQKB82WWnhNmqpPZI2i4sZCcv-5b461BHNuiuUJBVeu9NJtl8v9UGJL02GJE6Ut6zAeepbgAN55GqUSspXqCFwqHHhnTiXea4Cxlz1BJjEN-DeZcv-N59_8v8I3KnKG8158cb4fuW801NJg==
+			</URL>
+			<Sockets>
+				<Socket nodeId="26725" itemId="10"/>
+				<Socket nodeId="54127" itemId="14"/>
+				<Socket nodeId="33631" itemId="6"/>
+				<Socket nodeId="28475" itemId="14"/>
+				<Socket nodeId="26196" itemId="14"/>
+			</Sockets>
+			<Overrides/>
+		</Spec>
+	</Tree>
+	<Skills showLegacyGems="false" defaultGemLevel="normalMaximum" defaultGemQuality="20" activeSkillSet="1" sortGemsByDPS="true" sortGemsByDPSField="CombinedDPS" showSupportGemTypes="ALL">
+		<SkillSet title="^2Level 1 - 4" id="3">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Ground Slam" enableGlobal1="true" enableGlobal2="true" skillId="GroundSlam" gemId="Metadata/Items/Gems/SkillGemGroundSlam" enabled="true" variantId="GroundSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 1" source="Item:12:Corrupted Kaom&apos;s Sign #1, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 2" source="Item:13:Corrupted Kaom&apos;s Sign #2, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^2Level 4 - 12" id="4">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Spectral Throw(or ground slam if you like it more)" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Spectral Throw" enableGlobal1="true" enableGlobal2="true" skillId="SpectralThrow" gemId="Metadata/Items/Gems/SkillGemThrownWeapon" enabled="true" variantId="SpectralThrow" level="20"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Volley" enableGlobal1="true" enableGlobal2="true" skillId="SupportVolley" gemId="Metadata/Items/Gems/SupportGemParallelProjectiles" enabled="true" variantId="SupportVolley" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Chance to Bleed" enableGlobal1="true" enableGlobal2="true" skillId="SupportChanceToBleed" gemId="Metadata/Items/Gems/SupportGemChanceToBleed" enabled="true" variantId="SupportChancetoBleed" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Frostblink (Don&apos;t level much if no int on gear)" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Decoy Totem" enableGlobal1="true" enableGlobal2="true" skillId="DecoyTotem" gemId="Metadata/Items/Gems/SkillGemDecoyTotem" enabled="true" variantId="DecoyTotem" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Leap Slam @ lvl 10" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Steelskin" enableGlobal1="true" enableGlobal2="true" skillId="QuickGuard" gemId="Metadata/Items/Gems/SkillGemSteelskin" enabled="true" variantId="QuickGuard" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Blood and Sand (if Ground Slam)" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood and Sand" enableGlobal1="true" enableGlobal2="true" skillId="BloodAndSand" gemId="Metadata/Items/Gems/SkillGemBloodAndSand" enabled="true" variantId="BloodAndSand" level="6"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 1" source="Item:12:Corrupted Kaom&apos;s Sign #1, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 2" source="Item:13:Corrupted Kaom&apos;s Sign #2, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^2Level 12 - 16" id="5">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Sunder" enableGlobal1="true" enableGlobal2="true" skillId="Sunder" gemId="Metadata/Items/Gems/SkillGemSunder" enabled="true" variantId="Sunder" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="Chance to Bleed" enableGlobal1="true" enableGlobal2="true" skillId="SupportChanceToBleed" gemId="Metadata/Items/Gems/SupportGemChanceToBleed" enabled="true" variantId="SupportChancetoBleed" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Decoy Totem" enableGlobal1="true" enableGlobal2="true" skillId="DecoyTotem" gemId="Metadata/Items/Gems/SkillGemDecoyTotem" enabled="true" variantId="DecoyTotem" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood and Sand" enableGlobal1="true" enableGlobal2="true" skillId="BloodAndSand" gemId="Metadata/Items/Gems/SkillGemBloodAndSand" enabled="true" variantId="BloodAndSand" level="6"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Intimidating Cry" enableGlobal1="true" enableGlobal2="true" skillId="IntimidatingCry" gemId="Metadata/Items/Gems/SkillGemIntimidatingCry" enabled="true" variantId="IntimidatingCry" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Vitality" enableGlobal1="true" enableGlobal2="true" skillId="Vitality" gemId="Metadata/Items/Gems/SkillGemVitality" enabled="true" variantId="Vitality" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 1" source="Item:12:Corrupted Kaom&apos;s Sign #1, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 2" source="Item:13:Corrupted Kaom&apos;s Sign #2, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^2Level 16 - 24" id="6">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Sunder" enableGlobal1="true" enableGlobal2="true" skillId="Sunder" gemId="Metadata/Items/Gems/SkillGemSunder" enabled="true" variantId="Sunder" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="Chance to Bleed" enableGlobal1="true" enableGlobal2="true" skillId="SupportChanceToBleed" gemId="Metadata/Items/Gems/SupportGemChanceToBleed" enabled="true" variantId="SupportChancetoBleed" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Decoy Totem" enableGlobal1="true" enableGlobal2="true" skillId="DecoyTotem" gemId="Metadata/Items/Gems/SkillGemDecoyTotem" enabled="true" variantId="DecoyTotem" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood and Sand" enableGlobal1="true" enableGlobal2="true" skillId="BloodAndSand" gemId="Metadata/Items/Gems/SkillGemBloodAndSand" enabled="true" variantId="BloodAndSand" level="6"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Intimidating Cry" enableGlobal1="true" enableGlobal2="true" skillId="IntimidatingCry" gemId="Metadata/Items/Gems/SkillGemIntimidatingCry" enabled="true" variantId="IntimidatingCry" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Herald of Ash" enableGlobal1="true" enableGlobal2="true" skillId="HeraldOfAsh" gemId="Metadata/Items/Gems/SkillGemHeraldOfAsh" enabled="true" variantId="HeraldOfAsh" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Vitality" enableGlobal1="true" enableGlobal2="true" skillId="Vitality" gemId="Metadata/Items/Gems/SkillGemVitality" enabled="true" variantId="Vitality" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood Rage" enableGlobal1="true" enableGlobal2="true" skillId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" enabled="true" variantId="BloodRage" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 1" source="Item:12:Corrupted Kaom&apos;s Sign #1, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="false" mainActiveSkill="1" slot="Ring 2" source="Item:13:Corrupted Kaom&apos;s Sign #2, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^2Level 24 - 38" id="7">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" skillPartCalcs="1" nameSpec="Sunder" enableGlobal1="true" enableGlobal2="true" skillId="Sunder" gemId="Metadata/Items/Gems/SkillGemSunder" enabled="true" variantId="Sunder" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="Chance to Bleed" enableGlobal1="true" enableGlobal2="true" skillId="SupportChanceToBleed" gemId="Metadata/Items/Gems/SupportGemChanceToBleed" enabled="true" variantId="SupportChancetoBleed" level="20"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Melee Physical Damage" enableGlobal1="true" enableGlobal2="true" skillId="SupportMeleePhysicalDamage" gemId="Metadata/Items/Gems/SupportGemMeleePhysicalDamage" enabled="true" variantId="SupportMeleePhysicalDamage" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Decoy Totem" enableGlobal1="true" enableGlobal2="true" skillId="DecoyTotem" gemId="Metadata/Items/Gems/SkillGemDecoyTotem" enabled="true" variantId="DecoyTotem" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood and Sand" enableGlobal1="true" enableGlobal2="true" skillId="BloodAndSand" gemId="Metadata/Items/Gems/SkillGemBloodAndSand" enabled="true" variantId="BloodAndSand" level="6"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Intimidating Cry" enableGlobal1="true" enableGlobal2="true" skillId="IntimidatingCry" gemId="Metadata/Items/Gems/SkillGemIntimidatingCry" enabled="true" variantId="IntimidatingCry" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Autoexertion" enableGlobal1="true" enableGlobal2="true" skillId="Autoexertion" gemId="Metadata/Items/Gems/SkillGemCallToArms" enabled="true" variantId="Autoexertion" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Herald of Ash" enableGlobal1="true" enableGlobal2="true" skillId="HeraldOfAsh" gemId="Metadata/Items/Gems/SkillGemHeraldOfAsh" enabled="true" variantId="HeraldOfAsh" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Vitality" enableGlobal1="true" enableGlobal2="true" skillId="Vitality" gemId="Metadata/Items/Gems/SkillGemVitality" enabled="true" variantId="Vitality" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood Rage" enableGlobal1="true" enableGlobal2="true" skillId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" enabled="true" variantId="BloodRage" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Vulnerability" enableGlobal1="true" enableGlobal2="true" skillId="Vulnerability" gemId="Metadata/Items/Gems/SkillGemNewVulnerability" enabled="true" variantId="Vulnerability" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Ring 1" source="Item:43:+2 Endurance Kaom&apos;s Sign, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^2Level 38 - Maps" id="8">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" skillPartCalcs="1" nameSpec="Sunder" enableGlobal1="true" enableGlobal2="true" skillId="Sunder" gemId="Metadata/Items/Gems/SkillGemSunder" enabled="true" variantId="Sunder" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Fist of War" enableGlobal1="true" enableGlobal2="true" skillId="SupportFistofWar" gemId="Metadata/Items/Gems/SupportGemFistOfWar" enabled="true" variantId="SupportFistofWar" level="20"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Melee Physical Damage" enableGlobal1="true" enableGlobal2="true" skillId="SupportMeleePhysicalDamage" gemId="Metadata/Items/Gems/SupportGemMeleePhysicalDamage" enabled="true" variantId="SupportMeleePhysicalDamage" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Endurance Charge on Melee Stun" enableGlobal1="true" enableGlobal2="true" skillId="SupportEnduranceChargeOnMeleeStun" gemId="Metadata/Items/Gems/SupportGemEnduranceChargeOnMeleeStun" enabled="true" variantId="SupportEnduranceChargeOnMeleeStun" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Decoy Totem" enableGlobal1="true" enableGlobal2="true" skillId="DecoyTotem" gemId="Metadata/Items/Gems/SkillGemDecoyTotem" enabled="true" variantId="DecoyTotem" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood and Sand" enableGlobal1="true" enableGlobal2="true" skillId="BloodAndSand" gemId="Metadata/Items/Gems/SkillGemBloodAndSand" enabled="true" variantId="BloodAndSand" level="6"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Intimidating Cry" enableGlobal1="true" enableGlobal2="true" skillId="IntimidatingCry" gemId="Metadata/Items/Gems/SkillGemIntimidatingCry" enabled="true" variantId="IntimidatingCry" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Autoexertion" enableGlobal1="true" enableGlobal2="true" skillId="Autoexertion" gemId="Metadata/Items/Gems/SkillGemCallToArms" enabled="true" variantId="Autoexertion" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Seismic Cry" enableGlobal1="true" enableGlobal2="true" skillId="SeismicCry" gemId="Metadata/Items/Gems/SkillGemSeismicCry" enabled="true" variantId="SeismicCry" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Herald of Ash" enableGlobal1="true" enableGlobal2="true" skillId="HeraldOfAsh" gemId="Metadata/Items/Gems/SkillGemHeraldOfAsh" enabled="true" variantId="HeraldOfAsh" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Blood Rage" enableGlobal1="true" enableGlobal2="true" skillId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" enabled="true" variantId="BloodRage" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Vulnerability" enableGlobal1="true" enableGlobal2="true" skillId="Vulnerability" gemId="Metadata/Items/Gems/SkillGemNewVulnerability" enabled="true" variantId="Vulnerability" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Ring 1" source="Item:43:+2 Endurance Kaom&apos;s Sign, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^4Early Game {1}" id="2">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Body Armour">
+				<Gem quality="20" count="1" skillPartCalcs="2" nameSpec="Boneshatter of Complex Trauma" enableGlobal1="true" enableGlobal2="true" skillId="BoneshatterAltX" gemId="Metadata/Items/Gems/SkillGemBoneshatter" enabled="true" variantId="BoneshatterAltX" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Volatility" enableGlobal1="true" enableGlobal2="true" skillId="SupportVolatility" gemId="Metadata/Items/Gems/SupportGemVolatility" enabled="true" variantId="SupportVolatility" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Melee Physical Damage" enableGlobal1="true" enableGlobal2="true" skillId="SupportMeleePhysicalDamage" gemId="Metadata/Items/Gems/SupportGemMeleePhysicalDamage" enabled="true" variantId="SupportMeleePhysicalDamage" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Brutality" enableGlobal1="true" enableGlobal2="true" skillId="SupportBrutality" gemId="Metadata/Items/Gems/SupportGemBrutality" enabled="true" variantId="SupportBrutality" level="20"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Lifetap" enableGlobal1="true" enableGlobal2="true" skillId="SupportLifetap" gemId="Metadata/Items/Gems/SupportGemLifetap" enabled="true" variantId="SupportLifetap" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Autoexertion setup" enabled="true" mainActiveSkill="3" slot="Weapon 1">
+				<Gem quality="20" count="1" nameSpec="Autoexertion" enableGlobal1="true" enableGlobal2="true" skillId="Autoexertion" gemId="Metadata/Items/Gems/SkillGemCallToArms" enabled="false" variantId="Autoexertion" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Battlemage&apos;s Cry" enableGlobal1="true" enableGlobal2="true" skillId="BattlemagesCry" gemId="Metadata/Items/Gems/SkillGemBattlemagesCry" enabled="true" variantId="BattlemagesCry" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Vulnerability" enableGlobal1="true" enableGlobal2="true" skillId="Vulnerability" gemId="Metadata/Items/Gems/SkillGemNewVulnerability" enabled="true" variantId="Vulnerability" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ancestral Cry" enableGlobal1="true" enableGlobal2="true" skillId="AncestralCry" gemId="Metadata/Items/Gems/SkillGemAncestralCry" enabled="true" variantId="AncestralCry" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Weapon 1">
+				<Gem quality="20" count="1" nameSpec="Pride" enableGlobal1="true" enableGlobal2="true" skillId="Pride" gemId="Metadata/Items/Gems/SkillGemPride" enabled="true" variantId="Pride" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Boots">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="19"/>
+				<Gem quality="20" count="1" nameSpec="Momentum" enableGlobal1="true" enableGlobal2="true" skillId="SupportMomentum" gemId="Metadata/Items/Gems/SupportGemOnslaught" enabled="true" variantId="SupportMomentum" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Blood Rage" enableGlobal1="true" enableGlobal2="true" skillId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" enabled="true" variantId="BloodRage" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Helmet">
+				<Gem quality="20" count="1" nameSpec="Cast when Damage Taken" enableGlobal1="true" enableGlobal2="true" skillId="SupportCastWhenDamageTaken" gemId="Metadata/Items/Gems/SupportGemCastOnDamageTaken" enabled="true" variantId="SupportCastWhenDamageTaken" level="1"/>
+				<Gem quality="20" count="1" nameSpec="Vaal Molten Shell" enableGlobal1="false" enableGlobal2="false" skillId="VaalMoltenShell" gemId="Metadata/Items/Gems/SkillGemVaalMoltenShell" enabled="true" variantId="VaalMoltenShell" level="7"/>
+				<Gem quality="20" count="1" nameSpec="Lifetap" enableGlobal1="true" enableGlobal2="true" skillId="SupportLifetap" gemId="Metadata/Items/Gems/SupportGemLifetap" enabled="true" variantId="SupportLifetap" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="More Duration" enableGlobal1="true" enableGlobal2="true" skillId="SupportMoreDuration" gemId="Metadata/Items/Gems/SupportGemIncreasedDuration" enabled="true" variantId="SupportMoreDuration" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Gloves">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="8"/>
+				<Gem quality="20" count="1" nameSpec="Forbidden Rite" enableGlobal1="true" enableGlobal2="true" skillId="ForbiddenRite" gemId="Metadata/Items/Gems/SkillGemForbiddenRite" enabled="true" variantId="ForbiddenRite" level="1" skillPart="1"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Simulating autoexertion reservation, ignore this" enabled="true" mainActiveSkill="1">
+				<Gem quality="20" count="1" nameSpec="Spellslinger" enableGlobal1="true" enableGlobal2="true" skillId="Spellslinger" gemId="Metadata/Items/Gems/SkillGemSpellslinger" enabled="true" variantId="Spellslinger" level="1"/>
+				<Gem quality="20" count="1" nameSpec="Fireball" enableGlobal1="true" enableGlobal2="true" skillId="Fireball" gemId="Metadata/Items/Gems/SkillGemFireball" enabled="true" variantId="Fireball" level="1" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="Firestorm" enableGlobal1="true" enableGlobal2="true" skillId="Firestorm" gemId="Metadata/Items/Gems/SkillGemFirestorm" enabled="true" variantId="Firestorm" level="1" skillPart="1"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Ring 1" source="Item:34:Kaom&apos;s Sign, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" gemId="Metadata/Items/Gems/SkillGemEnduringCry" enabled="true" variantId="EnduringCry" level="10"/>
+			</Skill>
+		</SkillSet>
+		<SkillSet title="^4Endgame {2,3,4,5,6}" id="1">
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Body Armour">
+				<Gem quality="30" count="1" skillPartCalcs="1" nameSpec="Boneshatter of Complex Trauma" enableGlobal1="true" enableGlobal2="true" skillId="BoneshatterAltX" gemId="Metadata/Items/Gems/SkillGemBoneshatter" enabled="true" variantId="BoneshatterAltX" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Volatility" enableGlobal1="true" enableGlobal2="true" skillId="SupportVolatility" gemId="Metadata/Items/Gems/SupportGemVolatility" enabled="true" variantId="SupportVolatility" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Melee Physical Damage" enableGlobal1="true" enableGlobal2="true" skillId="SupportMeleePhysicalDamage" gemId="Metadata/Items/Gems/SupportGemMeleePhysicalDamage" enabled="true" variantId="SupportMeleePhysicalDamage" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Brutality" enableGlobal1="true" enableGlobal2="true" skillId="SupportBrutality" gemId="Metadata/Items/Gems/SupportGemBrutality" enabled="true" variantId="SupportBrutality" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ruthless" enableGlobal1="true" enableGlobal2="true" skillId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" enabled="true" variantId="SupportRuthless" level="20"/>
+				<Gem quality="20" count="1" skillMinion="AxisEliteSoldierHeraldOfLight" nameSpec="Endurance Charge on Melee Stun" enableGlobal1="true" enableGlobal2="true" skillId="SupportEnduranceChargeOnMeleeStun" gemId="Metadata/Items/Gems/SupportGemEnduranceChargeOnMeleeStun" enabled="true" variantId="SupportEnduranceChargeOnMeleeStun" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="Autoexertion setup" enabled="true" mainActiveSkill="3" slot="Weapon 1">
+				<Gem quality="20" count="1" nameSpec="Autoexertion" enableGlobal1="true" enableGlobal2="true" skillId="Autoexertion" gemId="Metadata/Items/Gems/SkillGemCallToArms" enabled="true" variantId="Autoexertion" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Battlemage&apos;s Cry" enableGlobal1="true" enableGlobal2="true" skillId="BattlemagesCry" gemId="Metadata/Items/Gems/SkillGemBattlemagesCry" enabled="true" variantId="BattlemagesCry" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Vulnerability" enableGlobal1="true" enableGlobal2="true" skillId="Vulnerability" gemId="Metadata/Items/Gems/SkillGemNewVulnerability" enabled="true" variantId="Vulnerability" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Ancestral Cry" enableGlobal1="true" enableGlobal2="true" skillId="AncestralCry" gemId="Metadata/Items/Gems/SkillGemAncestralCry" enabled="true" variantId="AncestralCry" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Weapon 1">
+				<Gem quality="20" count="1" nameSpec="Pride" enableGlobal1="true" enableGlobal2="true" skillId="Pride" gemId="Metadata/Items/Gems/SkillGemPride" enabled="true" variantId="Pride" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Boots">
+				<Gem quality="20" count="1" nameSpec="Leap Slam" enableGlobal1="true" enableGlobal2="true" skillId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" enabled="true" variantId="LeapSlam" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Faster Attacks" enableGlobal1="true" enableGlobal2="true" skillId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" enabled="true" variantId="SupportFasterAttacks" level="19"/>
+				<Gem quality="20" count="1" nameSpec="Momentum" enableGlobal1="true" enableGlobal2="true" skillId="SupportMomentum" gemId="Metadata/Items/Gems/SupportGemOnslaught" enabled="true" variantId="SupportMomentum" level="20"/>
+				<Gem quality="20" count="1" nameSpec="Blood Rage" enableGlobal1="true" enableGlobal2="true" skillId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" enabled="true" variantId="BloodRage" level="10"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Helmet">
+				<Gem quality="20" count="1" nameSpec="Cast when Damage Taken" enableGlobal1="true" enableGlobal2="true" skillId="SupportCastWhenDamageTaken" gemId="Metadata/Items/Gems/SupportGemCastOnDamageTaken" enabled="true" variantId="SupportCastWhenDamageTaken" level="1"/>
+				<Gem quality="20" count="1" nameSpec="Vaal Molten Shell" enableGlobal1="false" enableGlobal2="false" skillId="VaalMoltenShell" gemId="Metadata/Items/Gems/SkillGemVaalMoltenShell" enabled="true" variantId="VaalMoltenShell" level="7"/>
+				<Gem quality="20" count="1" nameSpec="Lifetap" enableGlobal1="true" enableGlobal2="true" skillId="SupportLifetap" gemId="Metadata/Items/Gems/SupportGemLifetap" enabled="true" variantId="SupportLifetap" level="20" skillPart="1"/>
+				<Gem quality="20" count="1" nameSpec="More Duration" enableGlobal1="true" enableGlobal2="true" skillId="SupportMoreDuration" gemId="Metadata/Items/Gems/SupportGemIncreasedDuration" enabled="true" variantId="SupportMoreDuration" level="20"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Gloves">
+				<Gem quality="20" count="1" nameSpec="Frostblink" enableGlobal1="true" enableGlobal2="true" skillId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" enabled="true" variantId="Frostblink" level="8"/>
+				<Gem quality="20" count="1" nameSpec="Forbidden Rite" enableGlobal1="true" enableGlobal2="true" skillId="ForbiddenRite" gemId="Metadata/Items/Gems/SkillGemForbiddenRite" enabled="true" variantId="ForbiddenRite" level="1" skillPart="1"/>
+			</Skill>
+			<Skill includeInFullDPS="false" mainActiveSkillCalcs="1" label="" enabled="true" mainActiveSkill="1" slot="Ring 1" source="Item:43:+2 Endurance Kaom&apos;s Sign, Coral Ring">
+				<Gem quality="0" count="1" nameSpec="Enduring Cry" enableGlobal1="true" enableGlobal2="false" skillId="EnduringCry" enabled="true" level="10"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items showStatDifferences="true" activeItemSet="1" useSecondWeaponSet="false">
+		<Item id="1">
+			Rarity: RARE
+Endgame Axe
+Sundering Axe
+Crafted: true
+Prefix: {range:0.588}LocalAddedPhysicalDamageTwoHand9
+Prefix: {range:0.394}LocalIncreasedPhysicalDamagePercentAndAccuracyRating5
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 61
+Implicits: 1
+{tags:physical_damage,bleed,damage,physical,attack,ailment}+20% to Damage over Time Multiplier for Bleeding
+49% increased Physical Damage
+Adds 42 to 79 Physical Damage
++108 to Accuracy Rating
+{tags:physical_damage,unveiled_mod,damage,physical,attack}{custom}{range:0.72}(120-139)% increased Physical Damage
+{tags:physical_damage,unveiled_mod,damage,physical,attack}{custom}{range:0.5}(21-25)% chance to Blind Enemies on hit
+{crafted}Can have up to 3 Crafted Modifiers
+{tags:dot_multi,physical_damage,unveiled_mod,damage,physical}{crafted}{range:1}+(31-35)% to Physical Damage over Time Multiplier
+{tags:attack,speed,attribute}{crafted}{range:0.5}+(20-24) to Dexterity and Intelligence
+{tags:attack,speed,attribute}{crafted}{range:1}(13-16)% increased Attack Speed
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.72" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="1" id="8"/>
+			<ModRange range="0.5" id="9"/>
+			<ModRange range="1" id="10"/>
+		</Item>
+		<Item id="2">
+			Rarity: RARE
+Endgame Helmet
+Giantslayer Helmet
+Armour: 1397
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.5}LocalIncreasedPhysicalDamageReductionRatingPercent5
+Prefix: {range:0.521}IncreasedLife8
+Suffix: {range:0.711}ChaosResist5
+Suffix: {range:0.732}FireResist7
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{exarch}{range:1}(38-40)% increased Mana Cost Efficiency of Attacks
+{tags:physical,elemental,fire}{eater}6% of Physical Damage from Hits taken as Fire Damage
+74% increased Armour
++122 to maximum Life
++44% to Fire Resistance
++29% to Chaos Resistance
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="1" id="7"/>
+		</Item>
+		<Item id="3">
+			Rarity: RARE
+Endgame Chest
+Royal Plate
+Armour: 4313
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: {range:0.458}LocalIncreasedPhysicalDamageReductionRating11
+Prefix: {range:0.873}LocalIncreasedPhysicalDamageReductionRatingPercent7
+Prefix: None
+Suffix: {range:0.926}AdditionalPhysicalDamageReduction4
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 84
+Implicits: 2
+{tags:resistance}{exarch}+1% to all maximum Resistances
+{tags:physical,elemental,fire}{eater}10% of Physical Damage from Hits taken as Fire Damage
++446 to Armour
+99% increased Armour
+7% additional Physical Damage Reduction
+{tags:critical}{custom}You take 10% reduced Extra Damage from Critical Strikes per Endurance Charge
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="1" id="7"/>
+		</Item>
+		<Item id="4">
+			Rarity: RARE
+Endgame Gloves
+Leviathan Gauntlets
+Armour: 862
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.5}LocalIncreasedPhysicalDamageReductionRatingPercent5
+Prefix: {range:0.32}IncreasedLife7
+Suffix: {range:0.923}ChaosResist5
+Suffix: {range:0.732}ColdResist7
+Suffix: {range:0.451}FireResist7
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{tags:attack}{exarch}Non-Vaal Strike Skills target 2 additional nearby Enemy
+{tags:bleed,physical,attack,ailment}{eater}10% chance to Aggravate Bleeding on targets you Hit with Attacks
+74% increased Armour
++104 to maximum Life
++43% to Fire Resistance
++44% to Cold Resistance
++30% to Chaos Resistance
+{tags:unveiled_mod,damage,attack}{crafted}{range:0.5}(9-10)% increased Melee Damage
+{tags:unveiled_mod,damage,attack}{crafted}+0.1 metres to Melee Strike Range
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+			<ModRange range="0.5" id="9"/>
+		</Item>
+		<Item id="5">
+			Rarity: RARE
+Endgame Boots
+Leviathan Greaves
+Armour: 496
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.732}IncreasedLife7
+Prefix: None
+Suffix: {range:0.796}ChaosResist5
+Suffix: {range:0.704}LightningResist7
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{exarch}4% increased Action Speed
+{tags:resource,life}{eater}Regenerate 0.2% of Life per second per Endurance Charge
++110 to maximum Life
++44% to Lightning Resistance
++29% to Chaos Resistance
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(17-20)% to Fire and Cold Resistances
+{tags:unveiled_mod,speed}{custom}{range:1}(25-30)% increased Movement Speed
+{tags:unveiled_mod,speed}{custom}{range:0.5}(13-16)% chance to gain Onslaught for 4 seconds on Kill
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="1" id="6"/>
+			<ModRange range="1" id="7"/>
+			<ModRange range="0.5" id="8"/>
+		</Item>
+		<Item id="6" variant="1">
+			Rarity: UNIQUE
+Glorious Vanity
+Timeless Jewel
+League: Legion
+Variant: Doryani (Corrupted Soul)
+Variant: Xibaqua (Divine Flesh)
+Variant: Zerphi (Eternal Youth) (Pre 3.11.0)
+Variant: Ahuana (Immortal Ambition)
+Selected Variant: 1
+LevelReq: 20
+Radius: Large
+Limited to: 1
+Implicits: 0
+{variant:2}{range:0.561}Bathed in the blood of (100-8000) sacrificed in the name of Xibaqua
+Passives in radius are Conquered by the Vaal
+Historic
+{variant:1}{range:0.5}Bathed in the blood of (100-8000) sacrificed in the name of Doryani
+{variant:3}{range:0.5}Bathed in the blood of (100-8000) sacrificed in the name of Zerphi
+{variant:4}{range:0.5}Bathed in the blood of (100-8000) sacrificed in the name of Ahuana
+			<ModRange range="0.561" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="7">
+			Rarity: RARE
+Endgame Amulet
+Turquoise Amulet
+Crafted: true
+Prefix: {range:0.764}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: {range:0.595}GlobalDamageOverTimeMultiplier1h5
+Suffix: {range:0.669}ChaosResist5
+Suffix: {range:0.838}AllResistances5
+LevelReq: 65
+Implicits: 2
+{crafted}Allocates Sione&apos;s Ambition
+{tags:attribute}{range:1}+(16-24) to Dexterity and Intelligence
++25% to Damage over Time Multiplier
++111 to maximum Life
++16% to all Elemental Resistances
++29% to Chaos Resistance
+{tags:resource,unveiled_mod,mana}{crafted}{range:0.5}Non-Channelling Skills have -(7-6) to Total Mana Cost
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="1" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+		</Item>
+		<Item id="8" variant="2">
+			Rarity: UNIQUE
+Ryslatha&apos;s Coil
+Studded Belt
+Catalyst: Abrasive
+CatalystQuality: 20
+Variant: Pre 3.5.0
+Variant: Current
+Selected Variant: 2
+LevelReq: 20
+Implicits: 1
+{range:0.5}(20-30)% increased Stun Duration on Enemies
+{tags:jewellery_attribute}{range:0.5}+(20-40) to Strength
+{tags:attack,physical}{variant:1}20% more Maximum Physical Attack Damage
+{tags:attack,physical}{variant:2}{range:0.317}(30-40)% more Maximum Physical Attack Damage
+{tags:attack,physical}{variant:1}20% less Minimum Physical Attack Damage
+{tags:attack,physical}{variant:2}{range:0.744}(30-40)% less Minimum Physical Attack Damage
+{tags:attack,physical_damage}{range:0.5}Adds 1 to (15-20) Physical Damage to Attacks
+{tags:life}{variant:2}{range:0.5}+(80-100) to maximum Life
+{tags:life}Gain 50 Life when you Stun an Enemy
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.317" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.744" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+			<ModRange range="0.5" id="9"/>
+		</Item>
+		<Item id="9">
+			Rarity: RARE
+Endgame Ring
+Amethyst Ring
+Crafted: true
+Prefix: {range:0.352}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+CatalystQuality: 20
+LevelReq: 35
+Implicits: 1
+{tags:chaos,resistance}{range:1}+(17-23)% to Chaos Resistance
++105 to maximum Life
+{tags:resource,unveiled_mod,mana}{crafted}{range:0.5}Non-Channelling Skills have -(7-6) to Total Mana Cost
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+		</Item>
+		<Item id="10" variant="8">
+			Rarity: UNIQUE
+The Light of Meaning
+Prismatic Jewel
+Variant: Life
+Variant: Energy Shield
+Variant: Mana
+Variant: Armour
+Variant: Evasion Rating
+Variant: Attributes
+Variant: Global Crit Chance
+Variant: Physical Damage
+Variant: Lightning Damage
+Variant: Cold Damage
+Variant: Fire Damage
+Variant: Chaos Damage
+Variant: Chaos Resistance
+Selected Variant: 8
+Radius: Large
+Limited to: 1
+Implicits: 0
+{variant:1}Passive Skills in Radius also grant +5 to Maximum Life
+{variant:2}Passive Skills in Radius also grant 3% increased Energy Shield
+{variant:3}Passive Skills in Radius also grant +5 to Maximum Mana
+{variant:4}Passive Skills in Radius also grant 7% increased Armour
+{variant:5}Passive Skills in Radius also grant 7% increased Evasion Rating
+{variant:6}Passive Skills in Radius also grant +2 to all Attributes
+{variant:7}Passive Skills in Radius also grant 5% Increased Global Critical Strike Chance
+{variant:8}Passive Skills in Radius also grant 6% increased Physical Damage
+{variant:9}Passive Skills in Radius also grant 6% increased Lightning Damage
+{variant:10}Passive Skills in Radius also grant 6% increased Cold Damage
+{variant:11}Passive Skills in Radius also grant 6% increased Fire Damage
+{variant:12}Passive Skills in Radius also grant 6% increased Chaos Damage
+{variant:13}Passive Skills in Radius also grant +4% to Chaos Resistance
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+			<ModRange range="0.5" id="9"/>
+			<ModRange range="0.5" id="10"/>
+			<ModRange range="0.5" id="11"/>
+			<ModRange range="0.5" id="12"/>
+			<ModRange range="0.5" id="13"/>
+		</Item>
+		<Item id="11">
+			Rarity: MAGIC
+Persevering Blood Sap Tincture of Dissolution
+Crafted: true
+Prefix: {range:1}TinctureToxicityRate4
+Suffix: {range:0.331}TinctureDamageOverTimeMultiplier5
+Quality: 20
+LevelReq: 67
+Implicits: 2
+{tags:physical_damage,bleed,damage,physical,attack,ailment}20% chance to cause Bleeding with Melee Weapons
+{tags:physical_damage,bleed,damage,physical,attack,ailment}{range:0.988}(60-90)% increased Damage with Bleeding from Melee Weapons
+26% reduced Mana Burn rate
++30% to Damage over Time Multiplier with Melee Weapon Attacks
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.988" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<Item id="12" variant="3">
+			Rarity: UNIQUE
+Corrupted Kaom&apos;s Sign #1
+Coral Ring
+Variant: Pre 2.0.0
+Variant: Pre 3.19.0
+Variant: Current
+Selected Variant: 3
+Implicits: 1
+{tags:physical_damage,damage,physical}{range:0.878}(15-25)% increased Global Physical Damage
+{variant:3}Grants Level 10 Enduring Cry Skill
+{tags:jewellery_attribute}{range:0.5}+(10-20) to Strength
+{tags:attack,life}{variant:1}0.4% of Physical Attack Damage Leeched as Life
+{tags:attack,life}{variant:2}{range:0.5}Gain (2-4) Life per Enemy Hit with Attacks
++1 to Maximum Endurance Charge
+Corrupted
+			<ModRange range="0.878" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="13" variant="3">
+			Rarity: UNIQUE
+Corrupted Kaom&apos;s Sign #2
+Coral Ring
+Variant: Pre 2.0.0
+Variant: Pre 3.19.0
+Variant: Current
+Selected Variant: 3
+Implicits: 1
+{tags:elemental,resistance}{range:0.451}+(14-16)% to all Elemental Resistances
+{variant:3}Grants Level 10 Enduring Cry Skill
+{tags:jewellery_attribute}{range:0.5}+(10-20) to Strength
+{tags:attack,life}{variant:1}0.4% of Physical Attack Damage Leeched as Life
+{tags:attack,life}{variant:2}{range:0.5}Gain (2-4) Life per Enemy Hit with Attacks
++1 to Maximum Endurance Charge
+Corrupted
+			<ModRange range="0.451" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="14">
+			Rarity: RARE
+Jewel
+Crimson Jewel
+Crafted: true
+Prefix: {range:0.524}PercentIncreasedLifeJewel
+Prefix: {range:0.929}FasterAilmentDamageJewel
+Suffix: {range:0.5}DamageOverTimeJewel
+Suffix: None
+LevelReq: 0
+Implicits: 0
+11% increased Damage over Time
+6% increased maximum Life
+Damaging Ailments deal damage 6% faster
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+		</Item>
+		<Item id="15">
+			Rarity: MAGIC
+Seething Divine Life Flask of Alleviation
+Crafted: true
+Prefix: {range:0.5}FlaskFullInstantRecovery1
+Suffix: {range:1}FlaskBleedCorruptingBloodImmunity2
+Quality: 20
+LevelReq: 60
+Implicits: 0
+66% reduced Amount Recovered
+Instant Recovery
+Grants Immunity to Bleeding for 11 seconds if used while Bleeding
+Grants Immunity to Corrupted Blood for 11 seconds if used while affected by Corrupted Blood
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<Item id="16">
+			Rarity: MAGIC
+Flagellant&apos;s Quicksilver Flask of the Owl
+Crafted: true
+Prefix: {range:0.662}FlaskFullRechargeOnHit5___
+Suffix: {range:0.225}FlaskBuffCurseEffect5
+Quality: 20
+LevelReq: 67
+Implicits: 0
+Gain 3 Charges when you are Hit by an Enemy
+61% reduced Effect of Curses on you during Effect
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+		</Item>
+		<Item id="17">
+			Rarity: MAGIC
+Flagellant&apos;s Granite Flask of the Armadillo
+Crafted: true
+Prefix: {range:1}FlaskFullRechargeOnHit5___
+Suffix: {range:0.62}FlaskBuffArmourWhileHealing4
+Quality: 20
+LevelReq: 67
+Implicits: 0
+Gain 3 Charges when you are Hit by an Enemy
+58% increased Armour during Effect
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+		</Item>
+		<Item id="18">
+			Rarity: MAGIC
+Flagellant&apos;s Quartz Flask of the Heron
+Crafted: true
+Prefix: {range:0.768}FlaskFullRechargeOnHit5___
+Suffix: {range:0.313}FlaskBuffShockEffect5
+Quality: 20
+LevelReq: 65
+Implicits: 0
+Gain 3 Charges when you are Hit by an Enemy
+62% reduced Effect of Shock on you during Effect
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<Item id="19">
+			Rarity: RARE
+Midgame Axe
+Sundering Axe
+Crafted: true
+Prefix: {range:0.366}LocalAddedPhysicalDamageTwoHand9
+Prefix: None
+Prefix: None
+Suffix: {range:0.986}LocalIncreasedAttackSpeed5
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 61
+Implicits: 1
+{tags:physical_damage,bleed,damage,physical,attack,ailment}+20% to Damage over Time Multiplier for Bleeding
+Adds 39 to 76 Physical Damage
+19% increased Attack Speed
+{tags:physical_damage,bleed,unveiled_mod,damage,physical,attack,ailment}{crafted}{range:1}(95-105)% increased Physical Damage
+{tags:physical_damage,bleed,unveiled_mod,damage,physical,attack,ailment}{crafted}{range:1}(18-20)% chance to cause Bleeding on Hit
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="1" id="4"/>
+			<ModRange range="1" id="5"/>
+		</Item>
+		<Item id="20">
+			Rarity: RARE
+Midgame Helmet
+Conqueror&apos;s Helmet
+Armour: 1306
+ArmourBasePercentile: 1
+Searing Exarch Item
+Crafted: true
+Prefix: {range:0.451}IncreasedLife8
+Prefix: {range:0.842}LocalIncreasedPhysicalDamageReductionRatingPercent6
+Prefix: None
+Suffix: {range:0.803}FireResist6
+Suffix: {range:1}ChaosResist3
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 78
+Implicits: 1
+{exarch}{range:0.5}(19-20)% reduced Mana Cost of Attacks
+89% increased Armour
++121 to maximum Life
++40% to Fire Resistance
++20% to Chaos Resistance
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="1" id="6"/>
+		</Item>
+		<Item id="21">
+			Rarity: RARE
+Midgame Chest
+Legion Plate
+Armour: 3648
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.458}LocalIncreasedPhysicalDamageReductionRating11
+Prefix: {range:0.746}LocalIncreasedPhysicalDamageReductionRatingPercent6
+Prefix: None
+Suffix: {range:0.437}ColdResist6
+Suffix: {range:0.887}ChaosResist4
+Suffix: {range:1}FireResist4
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 78
+Implicits: 0
++446 to Armour
+88% increased Armour
++29% to Fire Resistance
++38% to Cold Resistance
++25% to Chaos Resistance
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+		</Item>
+		<Item id="22">
+			Rarity: RARE
+MIdgame Gloves
+Leviathan Gauntlets
+Armour: 496
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.606}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: {range:0.69}LightningResist6
+Suffix: {range:0.655}ChaosResist4
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 0
++108 to maximum Life
++39% to Lightning Resistance
++24% to Chaos Resistance
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(17-20)% to Fire and Cold Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="1" id="4"/>
+		</Item>
+		<Item id="23">
+			Rarity: RARE
+Midgame Belt
+Crystal Belt
+Crafted: true
+Prefix: {range:0.304}IncreasedLife8
+Prefix: None
+Prefix: None
+Suffix: {range:0.887}LightningResist6
+Suffix: {range:0.831}ColdResist6
+Suffix: None
+LevelReq: 79
+Implicits: 1
+{tags:defences,energy_shield}{range:1}+(60-80) to maximum Energy Shield
++119 to maximum Life
++40% to Cold Resistance
++40% to Lightning Resistance
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<Item id="24">
+			Rarity: RARE
+Midgame Ring
+Amethyst Ring
+Crafted: true
+Prefix: {range:0.873}IncreasedLife6
+Prefix: None
+Prefix: None
+Suffix: {range:0.877}AllResistances5
+Suffix: {range:1}ChaosResist3
+Suffix: None
+LevelReq: 48
+Implicits: 1
+{tags:chaos,resistance}{range:1}+(17-23)% to Chaos Resistance
++97 to maximum Life
++16% to all Elemental Resistances
++20% to Chaos Resistance
+{tags:resource,unveiled_mod,mana}{crafted}{range:0.5}Non-Channelling Skills have -(7-6) to Total Mana Cost
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+		</Item>
+		<Item id="25" variant="3">
+			Rarity: UNIQUE
+Kaom&apos;s Sign
+Coral Ring
+Variant: Pre 2.0.0
+Variant: Pre 3.19.0
+Variant: Current
+Selected Variant: 3
+Implicits: 1
+{tags:life}{range:0.5}+(20-30) to maximum Life
+{variant:3}Grants Level 10 Enduring Cry Skill
+{tags:jewellery_attribute}{range:0.5}+(10-20) to Strength
+{tags:attack,life}{variant:1}0.4% of Physical Attack Damage Leeched as Life
+{tags:attack,life}{variant:2}{range:0.5}Gain (2-4) Life per Enemy Hit with Attacks
++1 to Maximum Endurance Charge
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="26">
+			Rarity: RARE
+Midgame Amulet
+Turquoise Amulet
+Crafted: true
+Prefix: {range:0.796}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: {range:0.701}AllAttributes8
+Suffix: None
+Suffix: None
+LevelReq: 61
+Implicits: 2
+{crafted}Allocates Hatchet Master
+{tags:attribute}{range:1}+(16-24) to Dexterity and Intelligence
++31 to all Attributes
++111 to maximum Life
+{tags:resource,unveiled_mod,mana}{crafted}{range:0.5}Non-Channelling Skills have -(7-6) to Total Mana Cost
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="1" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+		</Item>
+		<Item id="27">
+			Rarity: RARE
+Midgame Boots
+Leviathan Greaves
+Armour: 496
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.669}IncreasedLife7
+Prefix: {range:0.88}MovementVelocity5
+Prefix: None
+Suffix: {range:1}ChaosResist3
+Suffix: {range:0.085}FireResist7
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 0
++109 to maximum Life
++42% to Fire Resistance
++20% to Chaos Resistance
+30% increased Movement Speed
+{tags:ailment}{crafted}{range:1}(31-40)% reduced Effect of Chill and Shock on you
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="1" id="5"/>
+		</Item>
+		<Item id="28">
+			Rarity: RARE
+Early Game Axe
+Sundering Axe
+Crafted: true
+Prefix: {range:0.099}LocalAddedPhysicalDamageTwoHand8
+Prefix: None
+Prefix: None
+Suffix: {range:0.577}LocalIncreasedAttackSpeed4
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 60
+Implicits: 1
+{tags:physical_damage,bleed,damage,physical,attack,ailment}+20% to Damage over Time Multiplier for Bleeding
+Adds 31 to 64 Physical Damage
+15% increased Attack Speed
+{tags:physical_damage,damage,physical,attack}{crafted}{range:0.5}(80-99)% increased Physical Damage
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<Item id="29">
+			Rarity: RARE
+Early Game Helmet
+Eternal Burgonet
+Armour: 515
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.5}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 69
+Implicits: 0
++107 to maximum Life
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="1" id="2"/>
+		</Item>
+		<Item id="30">
+			Rarity: RARE
+Early Game Chest
+Astral Plate
+Armour: 938
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.75}IncreasedLife9
+Prefix: None
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 62
+Implicits: 1
+{tags:elemental,resistance}{range:1}+(8-12)% to all Elemental Resistances
++141 to maximum Life
+{tags:elemental,fire,lightning,resistance}{crafted}{range:1}+(17-20)% to Fire and Lightning Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="1" id="3"/>
+		</Item>
+		<Item id="31">
+			Rarity: RARE
+Early Game Gloves
+Titan Gauntlets
+Armour: 334
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.035}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 69
+Implicits: 0
++100 to maximum Life
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(17-20)% to Fire and Cold Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="1" id="2"/>
+		</Item>
+		<Item id="32">
+			Rarity: RARE
+Early Game Boots
+Titan Greaves
+Armour: 334
+ArmourBasePercentile: 1
+Crafted: true
+Prefix: {range:0.225}IncreasedLife7
+Prefix: {range:0.162}MovementVelocity5
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 68
+Implicits: 0
++103 to maximum Life
+30% increased Movement Speed
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="1" id="3"/>
+		</Item>
+		<Item id="33">
+			Rarity: RARE
+Early Game Amulet
+Turquoise Amulet
+Crafted: true
+Prefix: {range:0.32}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: {range:0.5}Dexterity5
+Suffix: None
+Suffix: None
+LevelReq: 35
+Implicits: 1
+{tags:attribute}{range:1}+(16-24) to Dexterity and Intelligence
++30 to Dexterity
++104 to maximum Life
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(13-16)% to Fire and Cold Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="1" id="4"/>
+		</Item>
+		<Item id="34" variant="3">
+			Rarity: UNIQUE
+Kaom&apos;s Sign
+Coral Ring
+Variant: Pre 2.0.0
+Variant: Pre 3.19.0
+Variant: Current
+Selected Variant: 3
+Implicits: 1
+{tags:life}{range:1}+(20-30) to maximum Life
+{variant:3}Grants Level 10 Enduring Cry Skill
+{tags:jewellery_attribute}{range:0.5}+(10-20) to Strength
+{tags:attack,life}{variant:1}0.4% of Physical Attack Damage Leeched as Life
+{tags:attack,life}{variant:2}{range:0.5}Gain (2-4) Life per Enemy Hit with Attacks
++1 to Maximum Endurance Charge
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="35">
+			Rarity: RARE
+Early Game Ring
+Amethyst Ring
+Crafted: true
+Prefix: {range:0.704}IncreasedLife6
+Prefix: None
+Prefix: None
+Suffix: {range:1}LightningResist4
+Suffix: None
+Suffix: None
+LevelReq: 30
+Implicits: 1
+{tags:chaos,resistance}{range:1}+(17-23)% to Chaos Resistance
++95 to maximum Life
++29% to Lightning Resistance
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(13-16)% to Fire and Cold Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="1" id="4"/>
+		</Item>
+		<Item id="36">
+			Rarity: RARE
+Early Game Belt
+Leather Belt
+Crafted: true
+Prefix: {range:0.5}IncreasedLife7
+Prefix: None
+Prefix: None
+Suffix: {range:1}FireResist4
+Suffix: None
+Suffix: None
+LevelReq: 35
+Implicits: 1
+{tags:resource,life}{range:1}+(25-40) to maximum Life
++107 to maximum Life
++29% to Fire Resistance
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="1" id="4"/>
+		</Item>
+		<Item id="37">
+			Rarity: RARE
+Corrupted Endgame Amulet
+Turquoise Amulet
+Crafted: true
+Prefix: {range:0.764}IncreasedLife7
+Prefix: {range:1}IncreasedEnergyShield6
+Prefix: None
+Suffix: {range:0.595}GlobalDamageOverTimeMultiplier1h5
+Suffix: {range:0.669}ChaosResist5
+Suffix: {range:0.838}AllResistances5
+LevelReq: 65
+Implicits: 2
+{crafted}Allocates Sione&apos;s Ambition
+{tags:attribute}{range:1}+(16-24) to Dexterity and Intelligence
++25% to Damage over Time Multiplier
++22 to maximum Energy Shield
++111 to maximum Life
++16% to all Elemental Resistances
++29% to Chaos Resistance
+{tags:resource,unveiled_mod,mana}{crafted}{range:0.5}Non-Channelling Skills have -(7-6) to Total Mana Cost
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="1" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+		</Item>
+		<Item id="38" variant="2">
+			Rarity: UNIQUE
+Corrupted Ryslatha&apos;s Coil
+Studded Belt
+Catalyst: Abrasive
+CatalystQuality: 20
+Variant: Pre 3.5.0
+Variant: Current
+Selected Variant: 2
+LevelReq: 20
+Implicits: 1
+{tags:resource,life}{range:0.5}(6-8)% increased maximum Life
+{tags:jewellery_attribute}{range:0.5}+(20-40) to Strength
+{tags:attack,physical}{variant:1}20% more Maximum Physical Attack Damage
+{tags:attack,physical}{variant:2}{range:0.317}(30-40)% more Maximum Physical Attack Damage
+{tags:attack,physical}{variant:1}20% less Minimum Physical Attack Damage
+{tags:attack,physical}{variant:2}{range:0.744}(30-40)% less Minimum Physical Attack Damage
+{tags:attack,physical_damage}{range:0.5}Adds 1 to (15-20) Physical Damage to Attacks
+{tags:life}{variant:2}{range:0.5}+(80-100) to maximum Life
+{tags:life}Gain 50 Life when you Stun an Enemy
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.317" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.744" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+			<ModRange range="0.5" id="9"/>
+		</Item>
+		<Item id="39">
+			Rarity: RARE
+Corrupted Endgame Boots
+Leviathan Greaves
+Armour: 496
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.732}IncreasedLife7
+Prefix: None
+Suffix: {range:0.796}ChaosResist5
+Suffix: {range:0.704}LightningResist7
+Suffix: None
+CatalystQuality: 20
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{exarch}4% increased Action Speed
+{tags:resource,life}{eater}Regenerate 0.2% of Life per second per Endurance Charge
++110 to maximum Life
++44% to Lightning Resistance
++29% to Chaos Resistance
+{tags:elemental,fire,cold,resistance}{crafted}{range:1}+(17-20)% to Fire and Cold Resistances
+{tags:unveiled_mod,speed}{custom}{range:1}(25-30)% increased Movement Speed
+{tags:unveiled_mod,speed}{custom}{range:0.5}(13-16)% chance to gain Onslaught for 4 seconds on Kill
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="1" id="6"/>
+			<ModRange range="1" id="7"/>
+			<ModRange range="0.5" id="8"/>
+		</Item>
+		<Item id="40">
+			Rarity: RARE
+Corrupted Endgame Gloves
+Leviathan Gauntlets
+Armour: 862
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.5}LocalIncreasedPhysicalDamageReductionRatingPercent5
+Prefix: {range:0.32}IncreasedLife7
+Suffix: {range:0.923}ChaosResist5
+Suffix: {range:0.732}ColdResist7
+Suffix: {range:0.451}FireResist7
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{tags:attack}{exarch}Non-Vaal Strike Skills target 2 additional nearby Enemy
+{tags:bleed,physical,attack,ailment}{eater}10% chance to Aggravate Bleeding on targets you Hit with Attacks
+74% increased Armour
++104 to maximum Life
++43% to Fire Resistance
++44% to Cold Resistance
++30% to Chaos Resistance
+{tags:unveiled_mod,damage,attack}{crafted}{range:0.5}(9-10)% increased Melee Damage
+{tags:unveiled_mod,damage,attack}{crafted}+0.1 metres to Melee Strike Range
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="0.5" id="8"/>
+			<ModRange range="0.5" id="9"/>
+		</Item>
+		<Item id="41">
+			Rarity: RARE
+Corrupted Endgame Axe
+Sundering Axe
+Crafted: true
+Prefix: {range:0.588}LocalAddedPhysicalDamageTwoHand9
+Prefix: {range:0.394}LocalIncreasedPhysicalDamagePercentAndAccuracyRating5
+Prefix: None
+Suffix: None
+Suffix: None
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R-R-R
+LevelReq: 61
+Implicits: 1
+{tags:physical_damage,bleed,damage,physical,attack,ailment}+20% to Damage over Time Multiplier for Bleeding
+49% increased Physical Damage
+Adds 42 to 79 Physical Damage
++108 to Accuracy Rating
+{tags:physical_damage,unveiled_mod,damage,physical,attack}{custom}{range:0.72}(120-139)% increased Physical Damage
+{tags:physical_damage,unveiled_mod,damage,physical,attack}{custom}{range:0.5}(21-25)% chance to Blind Enemies on hit
+{crafted}Can have up to 3 Crafted Modifiers
+{tags:dot_multi,physical_damage,unveiled_mod,damage,physical}{crafted}{range:1}+(31-35)% to Physical Damage over Time Multiplier
+{tags:attack,speed,attribute}{crafted}{range:0.5}+(20-24) to Dexterity and Intelligence
+{tags:attack,speed,attribute}{crafted}{range:1}(13-16)% increased Attack Speed
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.72" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="0.5" id="7"/>
+			<ModRange range="1" id="8"/>
+			<ModRange range="0.5" id="9"/>
+			<ModRange range="1" id="10"/>
+		</Item>
+		<Item id="42">
+			Rarity: RARE
+Corrupted Endgame Helmet
+Giantslayer Helmet
+Armour: 1397
+ArmourBasePercentile: 1
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: None
+Prefix: {range:0.5}LocalIncreasedPhysicalDamageReductionRatingPercent5
+Prefix: {range:0.521}IncreasedLife8
+Suffix: {range:0.711}ChaosResist5
+Suffix: {range:0.732}FireResist7
+Suffix: None
+Quality: 20
+Sockets: R-R-R-R
+LevelReq: 84
+Implicits: 2
+{exarch}{range:1}(19-20)% reduced Mana Cost of Attacks
+{tags:physical,elemental,fire}{eater}6% of Physical Damage from Hits taken as Fire Damage
+74% increased Armour
++122 to maximum Life
++44% to Fire Resistance
++29% to Chaos Resistance
+{tags:elemental,cold,lightning,resistance}{crafted}{range:1}+(17-20)% to Cold and Lightning Resistances
+			<ModRange range="1" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+			<ModRange range="1" id="7"/>
+		</Item>
+		<Item id="43" variant="3">
+			Rarity: UNIQUE
++2 Endurance Kaom&apos;s Sign
+Coral Ring
+Variant: Pre 2.0.0
+Variant: Pre 3.19.0
+Variant: Current
+Selected Variant: 3
+Implicits: 1
+{tags:elemental,resistance}+1 to Maximum Endurance Charge
+{variant:3}Grants Level 10 Enduring Cry Skill
+{tags:jewellery_attribute}{range:0.5}+(10-20) to Strength
+{tags:attack,life}{variant:1}0.4% of Physical Attack Damage Leeched as Life
+{tags:attack,life}{variant:2}{range:0.5}Gain (2-4) Life per Enemy Hit with Attacks
++1 to Maximum Endurance Charge
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+			<ModRange range="0.5" id="5"/>
+			<ModRange range="0.5" id="6"/>
+		</Item>
+		<Item id="44">
+			Rarity: RARE
+Random Corrupted +1 Endurance Ring
+Ruby Ring
+Crafted: true
+Prefix: {range:0.859}IncreasedLife5
+Prefix: None
+Prefix: None
+Suffix: {range:0.472}AllResistances5
+Suffix: {range:1}ChaosResist3
+Suffix: None
+LevelReq: 48
+Implicits: 1
+{tags:attack,speed}+1 to Maximum Endurance Charges
++82 to maximum Life
++15% to all Elemental Resistances
++20% to Chaos Resistance
+Corrupted
+			<ModRange range="0.5" id="1"/>
+			<ModRange range="0.5" id="2"/>
+			<ModRange range="0.5" id="3"/>
+			<ModRange range="0.5" id="4"/>
+		</Item>
+		<ItemSet id="3" useSecondWeaponSet="false" title="^4Early Game {1}">
+			<SocketIdURL itemPbURL="" name="Jewel 26196" nodeId="26196"/>
+			<SocketIdURL itemPbURL="" name="Jewel 26725" nodeId="26725"/>
+			<SocketIdURL itemPbURL="" name="Jewel 28475" nodeId="28475"/>
+			<SocketIdURL itemPbURL="" name="Jewel 54127" nodeId="54127"/>
+			<Slot itemPbURL="" itemId="28" name="Weapon 1"/>
+			<Slot itemPbURL="" itemId="33" name="Amulet"/>
+			<Slot itemPbURL="" itemId="29" name="Helmet"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2"/>
+			<Slot itemPbURL="" itemId="30" name="Body Armour"/>
+			<Slot itemPbURL="" itemId="31" name="Gloves"/>
+			<Slot itemPbURL="" itemId="32" name="Boots"/>
+			<Slot itemPbURL="" itemId="34" name="Ring 1"/>
+			<Slot itemPbURL="" itemId="35" name="Ring 2"/>
+			<Slot itemPbURL="" itemId="0" name="Ring 3"/>
+			<Slot itemPbURL="" itemId="15" name="Flask 1"/>
+			<Slot itemPbURL="" itemId="11" name="Flask 2" active="true"/>
+			<Slot itemPbURL="" itemId="16" name="Flask 3"/>
+			<Slot itemPbURL="" itemId="17" name="Flask 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="18" name="Flask 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="36" name="Belt"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 6"/>
+		</ItemSet>
+		<ItemSet id="2" useSecondWeaponSet="false" title="^4Midgame {2}">
+			<SocketIdURL itemPbURL="" name="Jewel 26196" nodeId="26196"/>
+			<SocketIdURL itemPbURL="" name="Jewel 26725" nodeId="26725"/>
+			<SocketIdURL itemPbURL="" name="Jewel 28475" nodeId="28475"/>
+			<SocketIdURL itemPbURL="" name="Jewel 54127" nodeId="54127"/>
+			<Slot itemPbURL="" itemId="19" name="Weapon 1"/>
+			<Slot itemPbURL="" itemId="26" name="Amulet"/>
+			<Slot itemPbURL="" itemId="20" name="Helmet"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2"/>
+			<Slot itemPbURL="" itemId="21" name="Body Armour"/>
+			<Slot itemPbURL="" itemId="22" name="Gloves"/>
+			<Slot itemPbURL="" itemId="27" name="Boots"/>
+			<Slot itemPbURL="" itemId="24" name="Ring 1"/>
+			<Slot itemPbURL="" itemId="25" name="Ring 2"/>
+			<Slot itemPbURL="" itemId="0" name="Ring 3"/>
+			<Slot itemPbURL="" itemId="15" name="Flask 1"/>
+			<Slot itemPbURL="" itemId="11" name="Flask 2" active="true"/>
+			<Slot itemPbURL="" itemId="16" name="Flask 3"/>
+			<Slot itemPbURL="" itemId="17" name="Flask 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="18" name="Flask 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="23" name="Belt"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 6"/>
+		</ItemSet>
+		<ItemSet id="1" useSecondWeaponSet="false" title="^4Endgame {3,4,5}">
+			<SocketIdURL itemPbURL="" name="Jewel 26196" nodeId="26196"/>
+			<SocketIdURL itemPbURL="" name="Jewel 26725" nodeId="26725"/>
+			<SocketIdURL itemPbURL="" name="Jewel 28475" nodeId="28475"/>
+			<SocketIdURL itemPbURL="" name="Jewel 54127" nodeId="54127"/>
+			<Slot itemPbURL="" itemId="1" name="Weapon 1"/>
+			<Slot itemPbURL="" itemId="7" name="Amulet"/>
+			<Slot itemPbURL="" itemId="2" name="Helmet"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2"/>
+			<Slot itemPbURL="" itemId="3" name="Body Armour"/>
+			<Slot itemPbURL="" itemId="4" name="Gloves"/>
+			<Slot itemPbURL="" itemId="5" name="Boots"/>
+			<Slot itemPbURL="" itemId="43" name="Ring 1"/>
+			<Slot itemPbURL="" itemId="44" name="Ring 2"/>
+			<Slot itemPbURL="" itemId="0" name="Ring 3"/>
+			<Slot itemPbURL="" itemId="15" name="Flask 1"/>
+			<Slot itemPbURL="" itemId="11" name="Flask 2" active="true"/>
+			<Slot itemPbURL="" itemId="16" name="Flask 3"/>
+			<Slot itemPbURL="" itemId="17" name="Flask 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="18" name="Flask 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Graft 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 1 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Swap Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Weapon 2 Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Helmet Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="8" name="Belt"/>
+			<Slot itemPbURL="" itemId="0" name="Body Armour Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Gloves Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Boots Abyssal Socket 6"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 1"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 2"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 3"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 4"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 5"/>
+			<Slot itemPbURL="" itemId="0" name="Belt Abyssal Socket 6"/>
+		</ItemSet>
+		<TradeSearchWeights/>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet title="Default {1,2,3,4,5}" id="1">
+			<Input name="multiplierBeenHitRecently" number="8"/>
+			<Input name="buffLifetap" boolean="true"/>
+			<Input name="conditionEnemyMoving" boolean="true"/>
+			<Input name="useEnduranceCharges" boolean="true"/>
+			<Input name="pantheonMajorGod" string="Lunaris"/>
+			<Input name="pantheonMinorGod" string="Garukhan"/>
+			<Input name="conditionEnemyMaimed" boolean="true"/>
+			<Input name="buffFortification" boolean="true"/>
+			<Placeholder name="enemySpeed" number="700"/>
+			<Placeholder name="projectileDistance" number="40"/>
+			<Placeholder name="multiplierHallowingFlameStacksRemovedByAlly" number="1"/>
+			<Placeholder name="enemyPhysicalDamage" number="2241"/>
+			<Placeholder name="enemyLightningDamage" number="2241"/>
+			<Placeholder name="ScorchStacks" number="1"/>
+			<Placeholder name="enemyFireDamage" number="2241"/>
+			<Placeholder name="enemyChaosDamage" number="896"/>
+			<Placeholder name="enemyLevel" number="84"/>
+			<Placeholder name="multiplierWitheredStackCountSelf" number="15"/>
+			<Placeholder name="enemyColdPen" number="3"/>
+			<Placeholder name="enemyFirePen" number="3"/>
+			<Placeholder name="sigilOfPowerStages" number="1"/>
+			<Placeholder name="enemyEvasion" number="10143"/>
+			<Placeholder name="enemyLightningPen" number="3"/>
+			<Placeholder name="enemyFireResist" number="50"/>
+			<Placeholder name="enemyDamageRollRange" number="70"/>
+			<Placeholder name="enemyColdResist" number="50"/>
+			<Placeholder name="enemyColdDamage" number="2241"/>
+			<Placeholder name="enemyLightningResist" number="50"/>
+			<Placeholder name="enemyArmour" number="61989"/>
+			<Placeholder name="enemyChaosResist" number="30"/>
+			<Placeholder name="meleeDistance" number="15"/>
+			<Placeholder name="enemyCritDamage" number="30"/>
+			<Placeholder name="multiplierEnemyHallowingFlame" number="1"/>
+			<Placeholder name="ShockStacks" number="1"/>
+			<Placeholder name="configSpectralTigerCount" number="5"/>
+			<Placeholder name="enemyCritChance" number="5"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				===3.29 MANA COST CHANGES===
+46% increased mana cost of attacks
+=We&apos;re assuming the nodes on the tree + helmet mod
+=will be around 100% increased mana cost efficiency:
+50% less mana cost of attacks
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+	<TreeView zoomY="-689.66684784362" zoomLevel="6" showStatDifferences="true" searchStr="" zoomX="607.20161889299"/>
+	<Party destination="All" append="false" ShowAdvanceTools="false"/>
+	<Import exportParty="false"/>
+	<Calcs>
+		<Input name="misc_buffMode" string="EFFECTIVE"/>
+		<Input name="skill_number" number="1"/>
+		<Section subsection="ViewSkillDetails" id="SkillSelect" collapsed="false"/>
+		<Section subsection="SkillHitDamage" id="HitDamage" collapsed="false"/>
+		<Section subsection="ExertingWarcries" id="Warcries" collapsed="false"/>
+		<Section subsection="EmpoweredSpells" id="Pacts" collapsed="false"/>
+		<Section subsection="SkillDamageoverTime" id="Dot" collapsed="false"/>
+		<Section subsection="AttackCastRate" id="Speed" collapsed="false"/>
+		<Section subsection="Crits" id="Crit" collapsed="false"/>
+		<Section subsection="Impale" id="Impale" collapsed="false"/>
+		<Section subsection="SkilltypespecificStats" id="SkillTypeStats" collapsed="false"/>
+		<Section subsection="Accuracy" id="HitChance" collapsed="false"/>
+		<Section subsection="Bleed" id="Bleed" collapsed="false"/>
+		<Section subsection="Poison" id="Poison" collapsed="false"/>
+		<Section subsection="Ignite" id="Ignite" collapsed="false"/>
+		<Section subsection="Decay" id="Decay" collapsed="false"/>
+		<Section subsection="LeechGainonHit" id="LeechGain" collapsed="false"/>
+		<Section subsection="NonDamagingAilments" id="EleAilments" collapsed="false"/>
+		<Section subsection="OtherEffects" id="MiscEffects" collapsed="false"/>
+		<Section subsection="Attributes" id="Attributes" collapsed="false"/>
+		<Section subsection="Life" id="Life" collapsed="false"/>
+		<Section subsection="Mana" id="Mana" collapsed="false"/>
+		<Section subsection="EnergyShield" id="EnergyShield" collapsed="false"/>
+		<Section subsection="Ward" id="Ward" collapsed="false"/>
+		<Section subsection="Resists" id="Resist" collapsed="false"/>
+		<Section subsection="Armour" id="Armour" collapsed="false"/>
+		<Section subsection="Evasion" id="Evasion" collapsed="false"/>
+		<Section subsection="DamageAvoidance" id="DamageAvoidance" collapsed="false"/>
+		<Section subsection="Block" id="DamageAvoidance" collapsed="false"/>
+		<Section subsection="Dodge" id="DamageAvoidance" collapsed="false"/>
+		<Section subsection="SpellSuppression" id="DamageAvoidance" collapsed="false"/>
+		<Section subsection="Flasks" id="Flasks" collapsed="false"/>
+		<Section subsection="UtilityFlasks" id="Flasks" collapsed="true"/>
+		<Section subsection="LifeFlasks" id="Flasks" collapsed="true"/>
+		<Section subsection="ManaFlasks" id="Flasks" collapsed="true"/>
+		<Section subsection="Tinctures" id="Flasks" collapsed="true"/>
+		<Section subsection="Rage" id="Rage" collapsed="true"/>
+		<Section subsection="Charges" id="Charges" collapsed="false"/>
+		<Section subsection="Endurance" id="Charges" collapsed="true"/>
+		<Section subsection="Frenzy" id="Charges" collapsed="true"/>
+		<Section subsection="Power" id="Charges" collapsed="true"/>
+		<Section subsection="OtherDefences" id="MiscDefences" collapsed="false"/>
+		<Section subsection="Fortification" id="MiscDefences" collapsed="false"/>
+		<Section subsection="StunDuration" id="MiscDefences" collapsed="false"/>
+		<Section subsection="OtherAvoidance" id="MiscDefences" collapsed="true"/>
+		<Section subsection="OtherAilmentDefences" id="MiscDefences" collapsed="true"/>
+		<Section subsection="DamageTaken" id="DamageTaken" collapsed="false"/>
+		<Section subsection="DamagingHits" id="DamageTaken" collapsed="false"/>
+		<Section subsection="EffectiveHealthPool" id="DamageTaken" collapsed="false"/>
+		<Section subsection="MaximumHitTaken" id="DamageTaken" collapsed="false"/>
+		<Section subsection="RecoupandHitTakenOverTime" id="DamageTaken" collapsed="true"/>
+		<Section subsection="DotsandBuildDegens" id="DamageTaken" collapsed="false"/>
+		<Section subsection="EnemyDegens" id="DamageTaken" collapsed="true"/>
+	</Calcs>
+</PathOfBuilding>

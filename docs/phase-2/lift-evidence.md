@@ -1,6 +1,6 @@
 # Phase 2, step 2: lift evidence
 
-The four lift PRs (P2-2a to P2-2d) move the item import pipeline from `tools/parity-cli` into the core crates without changing behaviour (`dev/active/phase-2-canonical-model/phase-2-canonical-model-plan.md`, step 2). Each PR runs `resolve-corpus` on Spike B's inputs (the maintainer's 21 builds, the PoE1 extract `local/determinism/poe1/run1` of Steam build 26530219, the six PoB tags) before and after its change, from a clean tree, and compares the step 2 field list:
+The four lift PRs (P2-2a to P2-2d) move the item import pipeline from `tools/parity-cli` into the core crates without changing behaviour (`dev/completed/phase-2-canonical-model/phase-2-canonical-model-plan.md`, step 2). Each PR runs `resolve-corpus` on Spike B's inputs (the maintainer's 21 builds, the PoE1 extract `local/determinism/poe1/run1` of Steam build 26530219, the six PoB tags) before and after its change, from a clean tree, and compares the step 2 field list:
 
 ```
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/determinism/poe1/run1 --out <dir> \
@@ -35,3 +35,24 @@ The script compares `non_unique`, `unique`, `rate`, `resolved_kinds`, `adapted`,
 
 ## Step 2 result
 After the four lift PRs, the whole item pipeline below the categories runs from `loom-parser::import` over the domain item, with its per-game rules as `ItemRules` data. On Spike B's inputs it gives exactly Spike B's result: the 12 fields are equal and `report.json` is byte-identical. The categories, the PoB legacy-text evidence, and table loading stay in the tool, as planned.
+
+## P2-6a: the corpus through the bundle (`resolve-corpus --bundle`), 2026-11-10
+Plan step 6 and gate 2 ask that the corpus resolution through the data bundle, not the extract, give Spike B's field list. Same inputs as above, plus the PoE1 bundle that `loom-parity-cli bundle` made from that extract (`bundle.json` SHA-256 `6c628cd6…`, `docs/phase-2/bundle-poe1-26530219.json`):
+
+```
+cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/determinism/poe1/run1 --out <dir> \
+  --bundle <bundle-dir> --pob ...   # the six --pob tags above
+```
+
+- Run at `0e10753`, clean, exit 0, in both modes (extract and `--bundle`); `--bundle` again at `8dca976` (review fixes), same result.
+- **`--bundle` against Spike B** (`local/p2/spikeb`, the committed summary's run): all 12 fields are equal. No other summary key differs except `inputs` (which records the bundle). `report.json` is byte-identical: SHA-256 `eda17243a5af1a7f…`.
+- Extract mode at the same commit against the P2-2d final run: all 12 fields equal, `report.json` byte-identical (the tool change left extract mode unchanged).
+- **`bundle-equal`** on the same extract and bundle, at `8dca976`: 40,355 mod rows and 4,309 base names; mod rows, local stats, essence rows, base rows, granted skills, properties, and compositions equal; no reference skipped; 0 mismatches (`docs/phase-2/bundle-equal-poe1-26530219.json`).
+
+## P2-6b: `resolve_build` against the harness, per line, 2026-11-10
+With `--bundle`, `resolve-corpus` also resolves every item with the core's `loom_parser::import::Resolver` (what `resolve_build` runs per item), with the base named by `pob_item::item_base`. It compares each modifier line's domain resolution with the harness's outcome before the categories, which are tool-only evidence. The key is the outcome, plus the stats and values of a stat resolution, the `kind` of a typed one, the kept candidates of an ambiguous one, and the tolerance. A continuation takes its first line's key. The result goes to `resolve-build-check.json`, and any difference makes the run exit 1. Same inputs and command as P2-6a, with the same bundle (`bundle.json` SHA-256 `6c628cd6…`).
+
+- Run at `b4c8af0`, clean, exit 0, and again at `cfa90cc` after the review fixes (the cross-check now compares the no-base reason), with the same result.
+- **`resolve_build` against the harness:** 6,061 of 6,061 modifier lines are equal, with 0 differences. The domain outcomes are resolved 4,193 (continuations counted with their first line), excluded 1,471, no-template 350, ambiguous 41, no-variant-fits 5, and only-shadowed 1. The corpus has no item without a base.
+- **Against Spike B:** all 12 fields are equal. No other summary key differs except `inputs`. `report.json` is byte-identical: SHA-256 `eda17243a5af1a7f…`.
+- Extract mode at the same commit: all 12 fields are equal, `report.json` is byte-identical, and no check file is written. `Bases::find` now calls `pob_item::item_base`, the same rules moved.

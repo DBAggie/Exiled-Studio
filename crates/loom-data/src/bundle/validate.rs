@@ -274,28 +274,12 @@ fn domain(b: &Bundle, report: &mut Report) {
 
 fn smoke(b: &Bundle, report: &mut Report) {
     for scope in b.item_rules.scopes() {
-        // The file whose name, without folder or extension, is the scope
-        // (PoE1 writes `.txt` sources, PoE2 `.csd`).
-        let stem = |source: &str| -> String {
-            let name = source.rsplit('/').next().unwrap_or(source);
-            name.split_once('.')
-                .map_or(name, |(s, _)| s)
-                .to_ascii_lowercase()
-        };
-        let roots: Vec<&str> = b
-            .stat_descriptions
-            .files()
-            .map(|(_, f)| f.source.as_str())
-            .filter(|s| stem(s) == scope.to_ascii_lowercase())
-            .collect();
-        let [root] = roots.as_slice() else {
-            let detail = if roots.is_empty() {
-                "no stat-description file".to_owned()
-            } else {
-                format!("{} files have the name", roots.len())
-            };
-            report.add("BUNDLE_SCOPE", scope, detail);
-            continue;
+        let root = match b.scope_root(scope) {
+            Ok(root) => root,
+            Err(e) => {
+                report.add("BUNDLE_SCOPE", scope, e.to_string());
+                continue;
+            }
         };
         match b.stat_descriptions.scope(root) {
             Ok(s) => {
