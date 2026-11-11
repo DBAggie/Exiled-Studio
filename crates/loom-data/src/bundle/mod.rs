@@ -281,6 +281,16 @@ pub enum BundleError {
     /// A file the format requires is not in the manifest.
     #[error("{0}: required, not in the manifest")]
     MissingFile(String),
+    /// A manifest path that is not a plain relative path (`..`, a leading
+    /// `/`, a `\\`, a drive, an empty segment): a source never reads it.
+    #[error("{0}: not a plain relative bundle path")]
+    BadPath(String),
+    /// A path listed twice in the manifest.
+    #[error("{0}: listed twice")]
+    DuplicatePath(String),
+    /// A section of another game (a `poe1/` file in a PoE2 bundle).
+    #[error("{0}: a {1} bundle has no such section")]
+    GameSection(String, &'static str),
     /// A stat-description file does not load.
     #[error("{path}: {error}")]
     StatDescription {
@@ -301,6 +311,9 @@ impl BundleError {
             Self::UnsupportedFormat(_) => "BUNDLE_FORMAT",
             Self::UnknownGame(_) => "BUNDLE_GAME",
             Self::MissingFile(_) => "BUNDLE_MISSING_FILE",
+            Self::BadPath(_) => "BUNDLE_BAD_PATH",
+            Self::DuplicatePath(_) => "BUNDLE_DUPLICATE_PATH",
+            Self::GameSection(..) => "BUNDLE_GAME_SECTION",
             Self::StatDescription { .. } => "BUNDLE_STAT_DESCRIPTION",
         }
     }
@@ -314,9 +327,25 @@ fn json<T: DeserializeOwned>(source: &dyn BundleSource, path: &str) -> Result<T,
     })
 }
 
+/// Whether `path` is a plain relative bundle path: `/`-separated segments,
+/// none empty, `.` or `..`, and no `\\` or `:` anywhere.
+fn plain_path(path: &str) -> bool {
+    !path.is_empty()
+        && !path.contains(['\\', ':'])
+        && path
+            .split('/')
+            .all(|seg| !seg.is_empty() && seg != "." && seg != "..")
+}
+
 impl Bundle {
-    /// Loads a bundle: the manifest first (format, then game), then every
-    /// file it lists. Files the manifest does not list are not read.
+    /// Loads a bundle: the manifest first (format, then game, then its
+    /// paths), then every file it lists. Files the manifest does not list
+    /// are not read.
+    ///
+    /// **Unverified:** this parses; it does not check hashes, sizes,
+    /// references, or unlisted files. The app loads a bundle only after
+    /// the validator accepts it (plan step 4; required before step 6 uses
+    /// bundles).
     ///
     /// # Errors
     /// [`BundleError`], with the first problem found.
@@ -333,6 +362,18 @@ impl Bundle {
         let game = manifest
             .game()
             .ok_or_else(|| BundleError::UnknownGame(manifest.game.clone()))?;
+        let mut seen = std::collections::BTreeSet::new();
+        for f in &manifest.files {
+            if !plain_path(&f.path) {
+                return Err(BundleError::BadPath(f.path.clone()));
+            }
+            if !seen.insert(f.path.as_str()) {
+                return Err(BundleError::DuplicatePath(f.path.clone()));
+            }
+            if game != Game::Poe1 && f.path.starts_with(poe1::DIR) {
+                return Err(BundleError::GameSection(f.path.clone(), game.name()));
+            }
+        }
         let listed = |path: &str| manifest.files.iter().any(|f| f.path == path);
         if let Some(missing) = REQUIRED_FILES.iter().find(|p| !listed(p)) {
             return Err(BundleError::MissingFile((*missing).to_owned()));

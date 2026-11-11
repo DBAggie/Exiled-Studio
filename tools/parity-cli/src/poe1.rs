@@ -290,6 +290,9 @@ fn mod_rules() -> ModRules {
             flags: eldritch_flags,
         },
         no_spawn_flags: vec!["crafted".to_owned()],
+        sections: ["scourge", "crucible", "class-requirement"]
+            .map(str::to_owned)
+            .to_vec(),
         local_carriers: LocalCarriers {
             weapon: "weapon".to_owned(),
             item: "armour".to_owned(),

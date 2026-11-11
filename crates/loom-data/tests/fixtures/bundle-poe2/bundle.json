@@ -18,8 +18,8 @@
   },
   {
    "path": "data/item_rules.json",
-   "sha256": "b06a2ec04c54401970d692fab1e2c887b205ae395271dac43d2229671412786c",
-   "size": 1507
+   "sha256": "5afc1f2218029c57d3a4bb12c21777ac265d072a3293eea596891d2971b08041",
+   "size": 1525
   },
   {
    "path": "data/lookups.json",

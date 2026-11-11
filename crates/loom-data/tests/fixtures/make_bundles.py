@@ -81,6 +81,7 @@ def item_rules(special_domain, special_scope):
             "spawn_excluded_generations": [],
             "base_implicit": {"section": "implicit", "flags": []},
             "no_spawn_flags": ["crafted"],
+            "sections": [],
             "local_carriers": {"weapon": "weapon", "item": "armour"},
             "influences": [],
         },

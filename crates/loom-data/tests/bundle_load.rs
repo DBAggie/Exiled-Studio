@@ -142,6 +142,45 @@ fn load_should_refuse_a_manifest_without_a_required_file() {
     assert_eq!(load(&src).err(), Some("BUNDLE_MISSING_FILE"));
 }
 
+fn add_listed(src: &mut MemorySource, path: &str) {
+    let p = path.to_owned();
+    edit_manifest(src, move |m| {
+        m["files"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"path": p, "sha256": "0", "size": 0}));
+    });
+}
+
+#[test]
+fn load_should_refuse_a_path_that_leaves_the_bundle() {
+    for bad in [
+        "../secret.json",
+        "/abs.json",
+        "data\\x.json",
+        "c:/x.json",
+        "data//x.json",
+    ] {
+        let mut src = source("bundle-poe2").unwrap();
+        add_listed(&mut src, bad);
+        assert_eq!(load(&src).err(), Some("BUNDLE_BAD_PATH"), "{bad}");
+    }
+}
+
+#[test]
+fn load_should_refuse_a_path_listed_twice() {
+    let mut src = source("bundle-poe2").unwrap();
+    add_listed(&mut src, "data/stats.json");
+    assert_eq!(load(&src).err(), Some("BUNDLE_DUPLICATE_PATH"));
+}
+
+#[test]
+fn load_should_refuse_a_poe1_section_in_a_poe2_bundle() {
+    let mut src = source("bundle-poe2").unwrap();
+    add_listed(&mut src, "poe1/grafts.json");
+    assert_eq!(load(&src).err(), Some("BUNDLE_GAME_SECTION"));
+}
+
 #[test]
 fn load_should_refuse_a_listed_file_the_source_lacks() {
     let mut src = source("bundle-poe2").unwrap();

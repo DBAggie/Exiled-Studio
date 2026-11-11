@@ -190,6 +190,11 @@ pub struct ModRules {
     pub no_spawn_flags: Vec<String>,
     /// Carrier tags for `local-stat`.
     pub local_carriers: LocalCarriers,
+    /// The names of the sections this game's import adapter writes besides
+    /// the shared ones ([`ModSection::Other`]); a rule may name only these
+    /// ([`ModRules::validate`]), so a typo cannot make a section fit
+    /// nothing.
+    pub sections: Vec<String>,
     /// Influence names (the domain's [`InfluenceId`]) to the rows'
     /// influence values.
     pub influences: Vec<(String, i64)>,
@@ -205,6 +210,9 @@ pub enum ModRulesError {
     /// A rule (by index) can never apply: an earlier rule of the same
     /// section has no flag and covers the same rarity.
     Shadowed(usize),
+    /// A rule or gate names a section that is not shared and not in
+    /// [`ModRules::sections`].
+    UnknownSection(String),
 }
 
 impl ModRulesError {
@@ -215,6 +223,7 @@ impl ModRulesError {
             Self::NoFitRules => "IMPORT_MOD_RULES_EMPTY",
             Self::EmptyRule(_) => "IMPORT_MOD_RULES_EMPTY_RULE",
             Self::Shadowed(_) => "IMPORT_MOD_RULES_SHADOWED",
+            Self::UnknownSection(_) => "IMPORT_MOD_RULES_UNKNOWN_SECTION",
         }
     }
 }
@@ -227,6 +236,18 @@ impl ModRules {
     pub fn validate(&self) -> Result<(), ModRulesError> {
         if self.fits.is_empty() {
             return Err(ModRulesError::NoFitRules);
+        }
+        let named = self
+            .fits
+            .iter()
+            .map(|r| &r.section)
+            .chain([&self.spawn_exclusion.section, &self.base_implicit.section]);
+        for section in named {
+            if let ModSection::Other(name) = section
+                && !self.sections.contains(name)
+            {
+                return Err(ModRulesError::UnknownSection(name.clone()));
+            }
         }
         for (n, rule) in self.fits.iter().enumerate() {
             if rule.clauses.is_empty() {
