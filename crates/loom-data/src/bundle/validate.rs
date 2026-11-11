@@ -11,8 +11,9 @@
 //!   classes; base implicits are mods; graft gems are base items; client
 //!   texts the rules name exist; in the skill tables (format 2), every
 //!   stat, skill type, item class, active skill, granted effect, stat set,
-//!   base item, gem effect, and gem tag a row names exists;
-//! - **domain:** IDs are unique per kind; the item rules validate; the
+//!   base item, gem effect, gem tag, and cost type a row names exists;
+//! - **domain:** IDs are unique per kind, and in the skill tables not empty
+//!   (`BUNDLE_EMPTY_ID`); the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
 //!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
@@ -267,6 +268,7 @@ fn skill_refs(
     let sets = ids(sk.stat_sets.iter().map(|s| s.id.as_str()));
     let gem_effects = ids(sk.gem_effects.iter().map(|e| e.id.as_str()));
     let tags = ids(sk.gem_tags.iter().map(|t| t.id.as_str()));
+    let costs = ids(sk.cost_types.iter().map(String::as_str));
     let mut check = |known: &BTreeSet<&str>, at: &dyn Fn() -> String, what: &str, id: &str| {
         if !known.contains(id) {
             report.add(
@@ -311,13 +313,16 @@ fn skill_refs(
         for q in &e.quality {
             check(stats, &at, "stat", &q.stat);
         }
+        for c in e.levels.iter().flat_map(|l| &l.costs) {
+            check(&costs, &at, "cost type", &c.resource);
+        }
     }
     for set in &sk.stat_sets {
         let at = || format!("stat_sets:{}", set.id);
         let set_stats = set
             .implicit_stats
             .iter()
-            .chain(set.constant_stats.iter().map(|(s, _)| s));
+            .chain(set.constant_stats.iter().map(|c| &c.stat));
         let level_stats = set.levels.iter().flat_map(|l| {
             l.float_stats
                 .iter()
@@ -350,43 +355,50 @@ fn skill_refs(
     }
 }
 
-/// The skill tables' domain checks: unique IDs, ascending levels.
+/// The skill tables' domain checks: IDs not empty and unique per file,
+/// ascending levels.
 fn skill_domain(sk: &SkillTables, report: &mut Report) {
-    duplicates(
-        report,
-        skills::SKILL_TYPES,
-        sk.skill_types.iter().map(|t| t.id.as_str()),
-    );
-    duplicates(
-        report,
-        skills::ACTIVE_SKILLS,
-        sk.active_skills.iter().map(|a| a.id.as_str()),
-    );
-    duplicates(
-        report,
-        skills::GRANTED_EFFECTS,
-        sk.granted_effects.iter().map(|e| e.id.as_str()),
-    );
-    duplicates(
-        report,
-        skills::STAT_SETS,
-        sk.stat_sets.iter().map(|s| s.id.as_str()),
-    );
-    duplicates(
-        report,
-        skills::GEMS,
-        sk.gems.iter().map(|g| g.base_item.as_str()),
-    );
-    duplicates(
-        report,
-        skills::GEM_EFFECTS,
-        sk.gem_effects.iter().map(|e| e.id.as_str()),
-    );
-    duplicates(
-        report,
-        skills::GEM_TAGS,
-        sk.gem_tags.iter().map(|t| t.id.as_str()),
-    );
+    let files: [(&str, Vec<&str>); 8] = [
+        (
+            skills::SKILL_TYPES,
+            sk.skill_types.iter().map(|t| t.id.as_str()).collect(),
+        ),
+        (
+            skills::COST_TYPES,
+            sk.cost_types.iter().map(String::as_str).collect(),
+        ),
+        (
+            skills::ACTIVE_SKILLS,
+            sk.active_skills.iter().map(|a| a.id.as_str()).collect(),
+        ),
+        (
+            skills::GRANTED_EFFECTS,
+            sk.granted_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+        (
+            skills::STAT_SETS,
+            sk.stat_sets.iter().map(|s| s.id.as_str()).collect(),
+        ),
+        (
+            skills::GEMS,
+            sk.gems.iter().map(|g| g.base_item.as_str()).collect(),
+        ),
+        (
+            skills::GEM_EFFECTS,
+            sk.gem_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+        (
+            skills::GEM_TAGS,
+            sk.gem_tags.iter().map(|t| t.id.as_str()).collect(),
+        ),
+    ];
+    for (file, ids) in files {
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+    }
     let ascending = |levels: Vec<i64>| levels.iter().zip(levels.iter().skip(1)).all(|(a, b)| a < b);
     for e in &sk.granted_effects {
         if !ascending(e.levels.iter().map(|l| l.level).collect()) {

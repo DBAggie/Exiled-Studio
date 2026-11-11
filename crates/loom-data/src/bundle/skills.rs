@@ -6,6 +6,7 @@
 //! | Path | Content |
 //! |---|---|
 //! | `data/skill_types.json` | [`SkillType`]s |
+//! | `data/cost_types.json` | cost type IDs (`Mana`, `Life`, `ManaPercent`, ...) that [`Cost`] names |
 //! | `data/active_skills.json` | [`ActiveSkill`]s |
 //! | `data/granted_effects.json` | [`GrantedEffect`]s, with their per-level rows and quality stats |
 //! | `data/stat_sets.json` | [`StatSet`]s, with their per-level stat values |
@@ -51,6 +52,8 @@ fn short_f32_opt<S: Serializer>(v: &Option<f32>, s: S) -> Result<S::Ok, S::Error
 
 /// Skill types.
 pub const SKILL_TYPES: &str = "data/skill_types.json";
+/// Cost types.
+pub const COST_TYPES: &str = "data/cost_types.json";
 /// Active skills.
 pub const ACTIVE_SKILLS: &str = "data/active_skills.json";
 /// Granted effects.
@@ -65,8 +68,9 @@ pub const GEM_EFFECTS: &str = "data/gem_effects.json";
 pub const GEM_TAGS: &str = "data/gem_tags.json";
 
 /// The section's files, each required in format 2.
-pub const FILES: [&str; 7] = [
+pub const FILES: [&str; 8] = [
     SKILL_TYPES,
+    COST_TYPES,
     ACTIVE_SKILLS,
     GRANTED_EFFECTS,
     STAT_SETS,
@@ -113,7 +117,9 @@ pub struct ActiveSkill {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Cost {
-    /// Cost type ID (`Mana`, `Life`, `ManaPercent`, ...).
+    /// Cost type ID (`Mana`, `Life`, `ManaPercent`, ...; one of the
+    /// bundle's cost types). The calc handles a closed set of them and
+    /// reports any other as unsupported.
     pub resource: String,
     /// Amount, in the cost type's unit.
     pub amount: i64,
@@ -292,6 +298,16 @@ pub struct StatSetLevel {
     pub granted_effects: Vec<String>,
 }
 
+/// A stat with one value at every level of a stat set.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConstantStat {
+    /// Stat ID.
+    pub stat: String,
+    /// Value.
+    pub value: i64,
+}
+
 /// A stat set (`GrantedEffectStatSets`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -301,9 +317,9 @@ pub struct StatSet {
     /// Stats every level has, valued elsewhere.
     #[serde(default)]
     pub implicit_stats: Vec<String>,
-    /// Stats with one value at every level (`(stat, value)`).
+    /// Stats with one value at every level.
     #[serde(default)]
-    pub constant_stats: Vec<(String, i64)>,
+    pub constant_stats: Vec<ConstantStat>,
     /// Base effectiveness.
     #[serde(serialize_with = "short_f32")]
     pub base_effectiveness: f32,
@@ -376,6 +392,8 @@ pub struct GemTag {
 pub struct SkillTables {
     /// Skill types.
     pub skill_types: Vec<SkillType>,
+    /// Cost type IDs.
+    pub cost_types: Vec<String>,
     /// Active skills.
     pub active_skills: Vec<ActiveSkill>,
     /// Granted effects.
@@ -398,6 +416,7 @@ impl SkillTables {
     pub(super) fn load(source: &dyn BundleSource) -> Result<Self, BundleError> {
         Ok(Self {
             skill_types: json(source, SKILL_TYPES)?,
+            cost_types: json(source, COST_TYPES)?,
             active_skills: json(source, ACTIVE_SKILLS)?,
             granted_effects: json(source, GRANTED_EFFECTS)?,
             stat_sets: json(source, STAT_SETS)?,

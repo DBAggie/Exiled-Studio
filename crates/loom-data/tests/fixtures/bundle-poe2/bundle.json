@@ -17,6 +17,11 @@
    "size": 275
   },
   {
+   "path": "data/cost_types.json",
+   "sha256": "7b1a14ac75827d33687605a1d8598a93992aaf68047363973112869ae3231d02",
+   "size": 21
+  },
+  {
    "path": "data/gem_effects.json",
    "sha256": "bb146b4f6af0c171f28e7fcd6d31bac5110bf9a96d2e15ceda4014f14105cf56",
    "size": 261
@@ -63,8 +68,8 @@
   },
   {
    "path": "data/stat_sets.json",
-   "sha256": "13539b1bf0041a914d2ccf2d27db94672244eb0c80fab753a6d6277a87906529",
-   "size": 1918
+   "sha256": "cf4ef7cd6dda1f1f7b252350b3d8874a751c166e4c46795b40079d24d5a00b14",
+   "size": 1935
   },
   {
    "path": "data/stats.json",

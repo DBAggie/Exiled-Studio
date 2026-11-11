@@ -2,10 +2,10 @@
  {
   "base_effectiveness": 1.5,
   "constant_stats": [
-   [
-    "test_damage_per_level",
-    5
-   ]
+   {
+    "stat": "test_damage_per_level",
+    "value": 5
+   }
   ],
   "damage_incremental_effectiveness": 0.01,
   "id": "TestBolt",

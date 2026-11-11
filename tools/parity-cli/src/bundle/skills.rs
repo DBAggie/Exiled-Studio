@@ -19,13 +19,20 @@
 //!
 //! Every value is copied as stored; the summary counts what was not
 //! (references past a table's end, parallel lists of different lengths,
-//! level lists put in order).
+//! level lists put in order, stats and gems dropped for a missing
+//! reference). Columns are required unless a game lacks them: PoE1
+//! weapon classes and mana and life reservations, PoE2 `Reservation`, cost
+//! types per level (PoE1) or per effect (PoE2), damage effectiveness
+//! (PoE1), damage incremental effectiveness (PoE2); one of each game's
+//! alternatives must be there, so a renamed column fails the run instead of
+//! reading as 0.
 
 use std::collections::BTreeMap;
 
 use loom_data::bundle::skills::{
-    ActiveSkill, Cost, EffectLevel, FloatStat, GemEffect, GemTag, GrantedEffect, LevelStat,
-    QualityStat, Reservation, Resource, SkillGem, SkillTables, SkillType, StatSet, StatSetLevel,
+    ActiveSkill, ConstantStat, Cost, EffectLevel, FloatStat, GemEffect, GemTag, GrantedEffect,
+    LevelStat, QualityStat, Reservation, Resource, SkillGem, SkillTables, SkillType, StatSet,
+    StatSetLevel,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -35,7 +42,7 @@ use crate::extract::{Read, Table};
 use crate::mod_filter::ints;
 
 /// What the skill conversion did not copy one to one.
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize)]
 pub struct SkillSummary {
     /// Granted effects whose level rows were not in ascending order
     /// (sorted; equal levels keep table order and fail the validator).
@@ -53,6 +60,11 @@ pub struct SkillSummary {
     /// Level or quality rows whose owner row is past the table's end
     /// (dropped).
     pub rows_without_owner: usize,
+    /// Stats of a level, a quality row, or a stat set dropped because the
+    /// stat, its value, or its interpolation base is missing.
+    pub dropped_stats: usize,
+    /// Gems dropped because their base item is missing.
+    pub dropped_gems: usize,
 }
 
 fn bump(cell: &mut usize) {
@@ -98,6 +110,21 @@ fn flag(row: &[Value], col: Option<usize>) -> bool {
 
 fn int_or_0(row: &[Value], col: Option<usize>) -> i64 {
     col.and_then(|c| Table::int(row, c)).unwrap_or(0)
+}
+
+/// Each column of one of `alternatives` (a game's set), the first set the
+/// table has in full.
+///
+/// # Errors
+/// A message when no set is complete.
+fn one_of<const N: usize>(t: &Table, alternatives: &[[&str; N]]) -> Result<[usize; N], String> {
+    alternatives
+        .iter()
+        .find_map(|set| {
+            let cols: Vec<usize> = set.iter().filter_map(|n| t.column(n).ok()).collect();
+            <[usize; N]>::try_from(cols).ok()
+        })
+        .ok_or_else(|| format!("{}: none of the column sets {alternatives:?}", t.table))
 }
 
 /// IDs of the rows a list cell names.
@@ -185,10 +212,11 @@ pub fn convert(
     let mut summary = SkillSummary::default();
     let tables = SkillTables {
         skill_types: skill_types(read, &lists, counts)?,
+        cost_types: lists.cost_types.clone(),
         active_skills: active_skills(read, &lists, counts)?,
         granted_effects: granted_effects(read, &lists, counts, &mut summary)?,
         stat_sets: stat_sets(read, &lists, counts, &mut summary)?,
-        gems: gems(read, &lists, counts)?,
+        gems: gems(read, &lists, counts, &mut summary)?,
         gem_effects: gem_effects(read, &lists, counts)?,
         gem_tags: gem_tags(read)?,
     };
@@ -215,9 +243,10 @@ fn active_skills(read: Read<'_>, l: &Lists, counts: &Counts) -> Result<Vec<Activ
         t.column("ActiveSkillTypes")?,
         t.column("MinionActiveSkillTypes")?,
     );
+    // PoE2 names a skill's weapons elsewhere (not carried, module docs).
     let (weapons, manual) = (
         t.column("WeaponRestriction_ItemClassesKeys").ok(),
-        t.column("IsManuallyCasted").ok(),
+        Some(t.column("IsManuallyCasted")?),
     );
     Ok(t.rows
         .iter()
@@ -236,30 +265,54 @@ fn active_skills(read: Read<'_>, l: &Lists, counts: &Counts) -> Result<Vec<Activ
 fn effect_levels(
     read: Read<'_>,
     l: &Lists,
-    effect_costs: &[Vec<String>],
+    effect_costs: Option<&[Vec<String>]>,
     counts: &Counts,
     summary: &mut SkillSummary,
 ) -> Result<BTreeMap<usize, Vec<EffectLevel>>, String> {
     let t = Table::require(read, "GrantedEffectsPerLevel")?;
     let owner = t.column("GrantedEffect")?;
     let level = t.column("Level")?;
-    let c = |n: &str| t.column(n).ok();
-    let (cost_types, amounts) = (c("CostTypes"), t.column("CostAmounts")?);
-    let reservation_columns = [
-        (c("ManaReservationFlat"), Resource::Mana, false),
-        (c("ManaReservationPercent"), Resource::Mana, true),
-        (c("LifeReservationFlat"), Resource::Life, false),
-        (c("LifeReservationPercent"), Resource::Life, true),
-        (c("Reservation"), Resource::Spirit, false),
-    ];
+    let c = |n: &str| t.column(n).map(Some);
+    let amounts = t.column("CostAmounts")?;
+    // PoE1 names the cost types per level, PoE2 per effect.
+    let cost_types = t.column("CostTypes").ok();
+    if cost_types.is_none() && effect_costs.is_none() {
+        return Err("GrantedEffectsPerLevel: no CostTypes here or in GrantedEffects".to_owned());
+    }
+    let (cost_multiplier, cooldown, stored_uses, attack_speed, attack_time) = (
+        c("CostMultiplier")?,
+        c("Cooldown")?,
+        c("StoredUses")?,
+        c("AttackSpeedMultiplier")?,
+        c("AttackTime")?,
+    );
+    let reservation_columns: Vec<(usize, Resource, bool)> = match one_of(
+        &t,
+        &[[
+            "ManaReservationFlat",
+            "ManaReservationPercent",
+            "LifeReservationFlat",
+            "LifeReservationPercent",
+        ]],
+    ) {
+        Ok([mana_flat, mana_percent, life_flat, life_percent]) => vec![
+            (mana_flat, Resource::Mana, false),
+            (mana_percent, Resource::Mana, true),
+            (life_flat, Resource::Life, false),
+            (life_percent, Resource::Life, true),
+        ],
+        Err(_) => vec![(t.column("Reservation")?, Resource::Spirit, false)],
+    };
     let mut out = BTreeMap::new();
     for (n, rows) in by_owner(&t, owner, l.effects.len(), summary) {
         let mut levels = Vec::with_capacity(rows.len());
         for r in rows {
-            // PoE1 names the cost types per level, PoE2 per effect.
             let types = match cost_types {
                 Some(col) => ids(&l.cost_types, r, Some(col), counts),
-                None => effect_costs.get(n).cloned().unwrap_or_default(),
+                None => effect_costs
+                    .and_then(|e| e.get(n))
+                    .cloned()
+                    .unwrap_or_default(),
             };
             let costs = pair(types, ints(r, amounts), summary)
                 .into_iter()
@@ -268,7 +321,7 @@ fn effect_levels(
             let reservations = reservation_columns
                 .iter()
                 .filter_map(|(col, resource, percent)| {
-                    let amount = int_or_0(r, *col);
+                    let amount = int_or_0(r, Some(*col));
                     (amount != 0).then_some(Reservation {
                         resource: *resource,
                         percent: *percent,
@@ -279,11 +332,11 @@ fn effect_levels(
             levels.push(EffectLevel {
                 level: Table::int(r, level).unwrap_or(0),
                 costs,
-                cost_multiplier: int_or_0(r, c("CostMultiplier")),
-                cooldown: int_or_0(r, c("Cooldown")),
-                stored_uses: int_or_0(r, c("StoredUses")),
-                attack_speed_multiplier: int_or_0(r, c("AttackSpeedMultiplier")),
-                attack_time: int_or_0(r, c("AttackTime")),
+                cost_multiplier: int_or_0(r, cost_multiplier),
+                cooldown: int_or_0(r, cooldown),
+                stored_uses: int_or_0(r, stored_uses),
+                attack_speed_multiplier: int_or_0(r, attack_speed),
+                attack_time: int_or_0(r, attack_time),
                 reservations,
             });
         }
@@ -318,8 +371,9 @@ fn quality(
                 .map(|k| at(&l.stats, Some(k), counts))
                 .collect();
             for (stat, per_mille) in pair(ids, ints(r, values), summary) {
-                if let Some(stat) = stat {
-                    list.push(QualityStat { stat, per_mille });
+                match stat {
+                    Some(stat) => list.push(QualityStat { stat, per_mille }),
+                    None => bump(&mut summary.dropped_stats),
                 }
             }
         }
@@ -352,15 +406,13 @@ fn granted_effects(
     );
     let main_set = column(&t, &["StatSet1", "StatSet"])?;
     let more_sets = column(&t, &["StatSet2", "AdditionalStatSets"])?;
-    let effect_costs: Vec<Vec<String>> = match t.column("CostTypes").ok() {
-        Some(c) => t
-            .rows
+    let effect_costs: Option<Vec<Vec<String>>> = t.column("CostTypes").ok().map(|c| {
+        t.rows
             .iter()
             .map(|r| ids(&l.cost_types, r, Some(c), counts))
-            .collect(),
-        None => Vec::new(),
-    };
-    let mut levels = effect_levels(read, l, &effect_costs, counts, summary)?;
+            .collect()
+    });
+    let mut levels = effect_levels(read, l, effect_costs.as_deref(), counts, summary)?;
     let mut quality = quality(read, l, counts, summary)?;
     Ok(t.rows
         .iter()
@@ -405,17 +457,17 @@ fn stat_set_level(
         .collect();
     let values = floats(t, r, c("FloatStatsValues")?)?;
     let resolved = ints(r, c("BaseResolvedValues")?);
-    let bases: Vec<f32> = ints(r, c("InterpolationBases")?)
+    let bases: Vec<Option<f32>> = ints(r, c("InterpolationBases")?)
         .into_iter()
         .map(|k| {
-            usize::try_from(k)
+            let base = usize::try_from(k)
                 .ok()
                 .and_then(|k| interpolation_bases.get(k))
-                .copied()
-                .unwrap_or_else(|| {
-                    counts.dangling.set(counts.dangling.get() + 1);
-                    f32::NAN
-                })
+                .copied();
+            if base.is_none() {
+                counts.dangling.set(counts.dangling.get() + 1);
+            }
+            base
         })
         .collect();
     let interpolations = ints(r, c("StatInterpolations")?);
@@ -429,18 +481,16 @@ fn stat_set_level(
     }
     let mut float_stats = Vec::new();
     for (i, stat) in float_ids.into_iter().enumerate() {
-        let (Some(stat), Some(value), Some(resolved), Some(base), Some(interp)) = (
+        let (Some(stat), Some(value), Some(resolved), Some(Some(base)), Some(interp)) = (
             stat,
             values.get(i),
             resolved.get(i),
             bases.get(i),
             interpolations.get(i),
         ) else {
+            bump(&mut summary.dropped_stats);
             continue;
         };
-        if base.is_nan() {
-            continue;
-        }
         float_stats.push(FloatStat {
             stat,
             value: *value,
@@ -458,17 +508,17 @@ fn stat_set_level(
     if !extra_interpolations.is_empty() && extra_interpolations.len() != stat_ids.len() {
         bump(&mut summary.parallel_lists_unequal);
     }
-    let stats = pair(stat_ids, stat_values, summary)
-        .into_iter()
-        .enumerate()
-        .filter_map(|(i, (stat, value))| {
-            Some(LevelStat {
-                stat: stat?,
+    let mut stats = Vec::new();
+    for (i, (stat, value)) in pair(stat_ids, stat_values, summary).into_iter().enumerate() {
+        match stat {
+            Some(stat) => stats.push(LevelStat {
+                stat,
                 value,
                 interpolation: extra_interpolations.get(i).copied(),
-            })
-        })
-        .collect();
+            }),
+            None => bump(&mut summary.dropped_stats),
+        }
+    }
     Ok(StatSetLevel {
         level: Table::int(r, c("GemLevel")?).unwrap_or(0),
         spell_crit_chance: Table::int(r, c("SpellCritChance")?).unwrap_or(0),
@@ -533,10 +583,13 @@ fn stat_sets(
             .into_iter()
             .map(|k| at(&l.stats, Some(k), counts))
             .collect();
-        let constant_stats = pair(constant_ids, ints(r, constant_values), summary)
-            .into_iter()
-            .filter_map(|(s, v)| Some((s?, v)))
-            .collect();
+        let mut constant_stats = Vec::new();
+        for (stat, value) in pair(constant_ids, ints(r, constant_values), summary) {
+            match stat {
+                Some(stat) => constant_stats.push(ConstantStat { stat, value }),
+                None => bump(&mut summary.dropped_stats),
+            }
+        }
         let levels = levels.remove(&n).unwrap_or_default();
         if levels.is_empty() {
             bump(&mut summary.stat_sets_without_levels);
@@ -556,24 +609,38 @@ fn stat_sets(
     Ok(out)
 }
 
-fn gems(read: Read<'_>, l: &Lists, counts: &Counts) -> Result<Vec<SkillGem>, String> {
+fn gems(
+    read: Read<'_>,
+    l: &Lists,
+    counts: &Counts,
+    summary: &mut SkillSummary,
+) -> Result<Vec<SkillGem>, String> {
     let t = Table::require(read, "SkillGems")?;
     let base = column(&t, &["BaseItemTypesKey", "BaseItemType"])?;
     let effects = column(&t, &["GemVariants", "GemEffects"])?;
-    let c = |n: &str| t.column(n).ok();
-    Ok(t.rows
-        .iter()
-        .filter_map(|r| {
-            Some(SkillGem {
-                base_item: at(&l.bases, Table::int(r, base), counts)?,
-                strength: int_or_0(r, c("StrengthRequirementPercent")),
-                dexterity: int_or_0(r, c("DexterityRequirementPercent")),
-                intelligence: int_or_0(r, c("IntelligenceRequirementPercent")),
-                vaal: flag(r, c("IsVaalVariant")),
-                effects: ids(&l.gem_effects, r, Some(effects), counts),
-            })
-        })
-        .collect())
+    let c = |n: &str| t.column(n).map(Some);
+    let (strength, dexterity, intelligence, vaal) = (
+        c("StrengthRequirementPercent")?,
+        c("DexterityRequirementPercent")?,
+        c("IntelligenceRequirementPercent")?,
+        c("IsVaalVariant")?,
+    );
+    let mut out = Vec::with_capacity(t.rows.len());
+    for r in &t.rows {
+        let Some(base_item) = at(&l.bases, Table::int(r, base), counts) else {
+            bump(&mut summary.dropped_gems);
+            continue;
+        };
+        out.push(SkillGem {
+            base_item,
+            strength: int_or_0(r, strength),
+            dexterity: int_or_0(r, dexterity),
+            intelligence: int_or_0(r, intelligence),
+            vaal: flag(r, vaal),
+            effects: ids(&l.gem_effects, r, Some(effects), counts),
+        });
+    }
+    Ok(out)
 }
 
 fn gem_effects(read: Read<'_>, l: &Lists, counts: &Counts) -> Result<Vec<GemEffect>, String> {
@@ -584,18 +651,16 @@ fn gem_effects(read: Read<'_>, l: &Lists, counts: &Counts) -> Result<Vec<GemEffe
         t.column("GrantedEffect")?,
         t.column("GemTags")?,
     );
-    let (second, more) = (
-        t.column("GrantedEffect2").ok(),
-        t.column("AdditionalGrantedEffects").ok(),
-    );
+    // PoE1 one more effect (`GrantedEffect2`), PoE2 a list.
+    let more = column(&t, &["GrantedEffect2", "AdditionalGrantedEffects"])?;
     Ok(t.rows
         .iter()
         .map(|r| {
-            let mut additional: Vec<String> = second
-                .and_then(|c| at(&l.effects, Table::int(r, c), counts))
+            // A single key (PoE1) or a list of keys (PoE2).
+            let mut additional: Vec<String> = at(&l.effects, Table::int(r, more), counts)
                 .into_iter()
                 .collect();
-            additional.extend(ids(&l.effects, r, more, counts));
+            additional.extend(ids(&l.effects, r, Some(more), counts));
             GemEffect {
                 id: Table::text(r, id).unwrap_or("").to_owned(),
                 name: Table::text(r, name).unwrap_or("").to_owned(),

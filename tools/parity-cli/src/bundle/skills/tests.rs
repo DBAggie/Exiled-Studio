@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 
-use loom_data::bundle::skills::{Cost, Reservation, Resource};
+use loom_data::bundle::skills::{ConstantStat, Cost, Reservation, Resource};
 use serde_json::{Value, json};
 
 use super::{SkillSummary, convert};
@@ -105,8 +105,9 @@ fn poe1() -> BTreeMap<String, Vec<u8>> {
         ),
         table(
             "GrantedEffectQualityStats",
-            &["GrantedEffectsKey", "StatsKeys", "StatsValuesPermille", ""],
-            &json!([[0, [1], [500], []]]),
+            &["GrantedEffectsKey", "StatsKeys", "StatsValuesPermille"],
+            // A second row for one effect, with a stat past the table's end.
+            &json!([[0, [1], [500]], [0, [9], [100]]]),
         ),
         table(
             "GrantedEffectStatSets",
@@ -118,7 +119,11 @@ fn poe1() -> BTreeMap<String, Vec<u8>> {
                 "BaseEffectiveness",
                 "IncrementalEffectiveness",
             ],
-            &json!([["Bolt", [3], [2], [25], 2.921, 0.0495]]),
+            // A second set without level rows.
+            &json!([
+                ["Bolt", [3], [2], [25], 2.921, 0.0495],
+                ["Empty", [], [], [], 1.0, 0.0]
+            ]),
         ),
         table(
             "GrantedEffectStatSetsPerLevel",
@@ -139,23 +144,44 @@ fn poe1() -> BTreeMap<String, Vec<u8>> {
                 "StatInterpolations",
                 "FloatStatsValues",
             ],
-            &json!([[
-                0,
-                1,
-                500,
-                0,
-                0,
-                20000,
-                [1],
-                [10],
-                [],
-                [3],
-                [0],
-                [0],
-                [2],
-                [3, 1],
-                [0.8]
-            ]]),
+            // Level 2 first, with one interpolation for two float stats
+            // (the second float stat is dropped).
+            &json!([
+                [
+                    0,
+                    2,
+                    500,
+                    0,
+                    0,
+                    21000,
+                    [1, 2],
+                    [],
+                    [],
+                    [],
+                    [0, 1],
+                    [0, 0],
+                    [],
+                    [3],
+                    [0.9, 1.4]
+                ],
+                [
+                    0,
+                    1,
+                    500,
+                    0,
+                    0,
+                    20000,
+                    [1],
+                    [10],
+                    [],
+                    [3],
+                    [0],
+                    [0],
+                    [2],
+                    [3, 1],
+                    [0.8]
+                ]
+            ]),
         ),
         table(
             "SkillGems",
@@ -292,10 +318,13 @@ fn poe2() -> BTreeMap<String, Vec<u8>> {
             "SkillGems",
             &[
                 "BaseItemType",
+                "StrengthRequirementPercent",
+                "DexterityRequirementPercent",
                 "IntelligenceRequirementPercent",
+                "IsVaalVariant",
                 "GemEffects",
             ],
-            &json!([[0, 100, [0]]]),
+            &json!([[0, 0, 0, 100, false, [0]]]),
         ),
         table(
             "GemEffects",
@@ -378,7 +407,10 @@ fn poe1_shape_should_convert_with_its_columns() {
         (
             2.921,
             None,
-            vec![("s_c".to_owned(), 25)],
+            vec![ConstantStat {
+                stat: "s_c".to_owned(),
+                value: 25
+            }],
             Some(20000),
             ("s_a", 0.8, 1, 3, 1.0),
             ("s_c", 10, Some(1)),
@@ -395,13 +427,37 @@ fn poe1_shape_should_convert_with_its_columns() {
     );
     assert_eq!(
         (
-            s.effect_levels_sorted,
-            s.parallel_lists_unequal,
-            s.rows_without_owner,
-            dangling
+            set.levels.iter().map(|l| l.level).collect::<Vec<_>>(),
+            set.levels[1].float_stats.len(),
+            effect.quality.len(),
+            t.stat_sets[1].levels.len(),
+            t.cost_types.clone(),
         ),
-        (1, 1, 1, 1),
-        "{s:?}"
+        (
+            vec![1, 2],
+            1,
+            1,
+            0,
+            vec!["Mana".to_owned(), "Life".to_owned()]
+        )
+    );
+    // Every counter is reached once or twice: two dangling references
+    // (the gem's base, the second quality row's stat).
+    assert_eq!(
+        (s, dangling),
+        (
+            SkillSummary {
+                effect_levels_sorted: 1,
+                stat_set_levels_sorted: 1,
+                stat_sets_without_levels: 1,
+                parallel_lists_unequal: 2,
+                effects_with_several_quality_rows: 1,
+                rows_without_owner: 1,
+                dropped_stats: 2,
+                dropped_gems: 1,
+            },
+            2
+        )
     );
 }
 
@@ -452,16 +508,42 @@ fn poe2_shape_should_convert_with_its_columns() {
             "Spell"
         )
     );
-    assert_eq!(
-        (
-            s.effect_levels_sorted,
-            s.parallel_lists_unequal,
-            s.rows_without_owner,
-            dangling
-        ),
-        (0, 0, 0, 0),
-        "{s:?}"
-    );
+    assert_eq!((s, dangling), (SkillSummary::default(), 0));
+}
+
+/// `table`'s file without `column` (each row loses that cell).
+fn without(files: &mut BTreeMap<String, Vec<u8>>, name: &str, column: &str) {
+    let path = format!("tables/{name}.json");
+    let mut v: Value = serde_json::from_slice(&files[&path]).unwrap();
+    let at = v["columns"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|c| c["name"] == column)
+        .unwrap();
+    v["columns"].as_array_mut().unwrap().remove(at);
+    for row in v["rows"].as_array_mut().unwrap() {
+        row.as_array_mut().unwrap().remove(at);
+    }
+    files.insert(path, v.to_string().into_bytes());
+}
+
+/// A column both games have, or one of a game's alternatives, missing
+/// fails the run instead of reading as 0.
+#[test]
+fn missing_required_column_should_fail_the_conversion() {
+    for (name, column) in [
+        ("GrantedEffectsPerLevel", "Cooldown"),
+        ("GrantedEffectsPerLevel", "LifeReservationPercent"),
+        ("GrantedEffectsPerLevel", "CostTypes"),
+        ("ActiveSkills", "IsManuallyCasted"),
+        ("SkillGems", "IsVaalVariant"),
+        ("GemEffects", "GrantedEffect2"),
+    ] {
+        let mut files = poe1();
+        without(&mut files, name, column);
+        assert!(run(&files).is_err(), "{name}.{column}");
+    }
 }
 
 #[test]

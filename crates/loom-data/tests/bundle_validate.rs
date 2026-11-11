@@ -223,7 +223,7 @@ fn edited(name: &str, path: &str, edit: impl FnOnce(&mut Value)) -> MemorySource
 #[test]
 fn dangling_skill_references_should_each_give_their_code() {
     type Edit = fn(&mut Value);
-    let cases: [(&str, &str, Edit); 17] = [
+    let cases: [(&str, &str, Edit); 22] = [
         ("flag stat", "data/skill_types.json", |v| {
             v[0]["flag_stat"] = "nope".into();
         }),
@@ -239,8 +239,23 @@ fn dangling_skill_references_should_each_give_their_code() {
         ("active skill", "data/granted_effects.json", |v| {
             v[0]["active_skill"] = "nope".into();
         }),
-        ("support type", "data/granted_effects.json", |v| {
+        ("allowed type", "data/granted_effects.json", |v| {
             v[2]["allowed_types"] = json!(["Nope"]);
+        }),
+        ("added type", "data/granted_effects.json", |v| {
+            v[2]["added_types"] = json!(["Nope"]);
+        }),
+        ("excluded type", "data/granted_effects.json", |v| {
+            v[2]["excluded_types"] = json!(["Nope"]);
+        }),
+        ("added minion type", "data/granted_effects.json", |v| {
+            v[2]["added_minion_types"] = json!(["Nope"]);
+        }),
+        ("cost type", "data/granted_effects.json", |v| {
+            v[0]["levels"][0]["costs"][0]["resource"] = "Nope".into();
+        }),
+        ("additional effect", "data/gem_effects.json", |v| {
+            v[0]["additional_granted_effects"] = json!(["Nope"]);
         }),
         ("stat set", "data/granted_effects.json", |v| {
             v[0]["stat_sets"] = json!(["Nope"]);
@@ -252,7 +267,7 @@ fn dangling_skill_references_should_each_give_their_code() {
             v[0]["implicit_stats"] = json!(["nope"]);
         }),
         ("constant stat", "data/stat_sets.json", |v| {
-            v[0]["constant_stats"][0][0] = "nope".into();
+            v[0]["constant_stats"][0]["stat"] = "nope".into();
         }),
         ("float stat", "data/stat_sets.json", |v| {
             v[0]["levels"][0]["float_stats"][0]["stat"] = "nope".into();
@@ -280,16 +295,23 @@ fn dangling_skill_references_should_each_give_their_code() {
         let src = edited("bundle-poe1", path, edit);
         assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "{what}");
     }
-    let src = edited("bundle-poe1", "data/gem_effects.json", |v| {
-        v[0]["additional_granted_effects"] = json!(["Nope"]);
+}
+
+#[test]
+fn empty_skill_id_should_give_its_code() {
+    let src = edited("bundle-poe2", "data/gem_tags.json", |v| {
+        v.as_array_mut()
+            .unwrap()
+            .push(json!({"id": "", "name": "Nameless"}));
     });
-    assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "additional effect");
+    assert_eq!(codes(&src), ["BUNDLE_EMPTY_ID"]);
 }
 
 #[test]
 fn duplicate_skill_ids_should_give_their_code() {
     for path in [
         "data/skill_types.json",
+        "data/cost_types.json",
         "data/active_skills.json",
         "data/granted_effects.json",
         "data/stat_sets.json",

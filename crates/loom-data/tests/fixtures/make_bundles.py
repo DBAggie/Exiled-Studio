@@ -257,7 +257,7 @@ def skills(game):
     spell_set = {
         "id": "TestBolt",
         "implicit_stats": ["test_spell_flag"],
-        "constant_stats": [["test_damage_per_level", 5]],
+        "constant_stats": [{"stat": "test_damage_per_level", "value": 5}],
         "base_effectiveness": 1.5,
         "incremental_effectiveness": 0.03,
         "levels": [set_level(1, 4.5), set_level(2, 6.25)],
@@ -270,6 +270,7 @@ def skills(game):
             {"id": "TestAttack", "flag_stat": "test_attack_flag"},
             {"id": "TestTotem"},
         ],
+        "data/cost_types.json": ["Mana", "Life"],
         "data/active_skills.json": [
             {
                 "id": "test_bolt",
