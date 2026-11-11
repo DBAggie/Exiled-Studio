@@ -40,6 +40,15 @@ Rules beyond the schema: ids are unique; at most one `accepted` entry per fixtur
 
 Exit codes: a failure class of a run (10 to 18) when a fixture has no output on a side; else 20 when any difference is unregistered or a fixture is on one side only; else 19 when every difference is registered; else 0. One unregistered difference makes the whole comparison 20, whatever else is expected. A gate passes on 0 and 19.
 
+### The successor against the oracle (`calc-parity`, Phase 3)
+
+`loom-parity-cli calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json --out <dir> [--register <file>] [--overlay-run <dir>] [--manifest <file>]` compares the successor's calc result documents (`calc-run`) with the oracle's outputs, per slice field. It uses this register with the same classes and exit codes, and the same `field` pointers into the oracle's output document:
+
+- a field: `/main_output/<key>` (the oracle's value against ours, as numbers);
+- a breakdown line: `/breakdowns/<key>/<line index>`, a slot row's part `/breakdowns/<key>/slots/<row index>/<base|inc|more|total>` (the oracle's printed text against ours printed the same way, as strings); a term only our graph has: `/breakdowns/<key>/<term>` (oracle value `null`).
+
+Only fields our result marks `complete` are compared; `partial`, `indeterminate`, and not-computed fields are listed, never passed. A `data-version` entry covers a difference only when the `--overlay-run` (`calc-run --data-overlay`, PoB's data values for the rows `data-parity` found different) matches the oracle at that pointer (Phase 3 plan, decision 5); without it, the difference stays unexpected. Details: `docs/phase-3/calc-parity.md`.
+
 ## Adding an entry
 
 1. Reproduce the difference with `oracle-compare`, and find out which side is right: game evidence for `game-truth` (ADR-001), a PoB issue or code citation for `pob-bug`. GGG's official patch notes are a primary source for `game-truth` and `data-version` entries (a mechanic or value changed in a patch after the oracle's tag): PoE1 [Patch Notes forum](https://www.pathofexile.com/forum/view-forum/patch-notes), PoE2 [Early Access Patch Notes forum](https://www.pathofexile.com/forum/view-forum/2212); cite the thread URL in `evidence`.

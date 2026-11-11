@@ -57,7 +57,7 @@ impl Poe1Field {
 }
 
 /// The Path of Exile slice: the 24 fields of
-/// `docs/phase-3/slice-fields.json` (revision 1), in its order, in our
+/// `docs/phase-3/slice-fields.json` (revisions 1 and 2), in its order, in our
 /// names (`TotalDPS` is [`Field::HitDps`]).
 pub const SLICE: [Field; 24] = [
     Field::Strength,
