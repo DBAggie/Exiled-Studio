@@ -86,7 +86,7 @@ Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 - [x] Item round-trip and mutation tests (several item texts, comment between items, unknown slot attribute, empty slot, export from the lines); all 24 fixtures with every section typed and nothing kept whole; corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items) in-session
 - [x] `code-architecture-reviewer`: no blockers; findings recorded in the context file ("P2-5b review findings, to apply")
 - [ ] Apply the P2-5b should-fix findings on this branch (next session)
-- [ ] Open PR (base `feat/p2-5a-pob-xml-structure`); write the PR number into the docs right after
+- [x] Open PR (#51, base `feat/p2-5a-pob-xml-structure`); write the PR number into the docs right after
 
 ## PR P2-6: `resolve_build` (step 6)
 - [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness
