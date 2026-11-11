@@ -44,7 +44,7 @@ fn unflagged(u: &Unflagged, line: &LineContext) -> bool {
 }
 
 /// One mod row, as the filter needs it.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ModRow {
     /// Row ID.
     pub id: String,

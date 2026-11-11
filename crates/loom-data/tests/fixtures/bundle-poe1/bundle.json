@@ -3,13 +3,13 @@
  "files": [
   {
    "path": "data/base_items.json",
-   "sha256": "3608d45d78f93430c55d21b79d103d88993afe36aea4b40ca34aad6b67d534e2",
-   "size": 358
+   "sha256": "96ec1e2c021128cafded82f65af51e292e05bd708a1841b68e07cf2f0137765e",
+   "size": 501
   },
   {
    "path": "data/client_texts.json",
-   "sha256": "da373a1f3b0015ca9b6f6eb536590623bd611f500d4aaceb88dd19fd3f7e6027",
-   "size": 71
+   "sha256": "b6d01b6162e9962074bc7371d61341c938c62787eb034ff91ebf652464b15a59",
+   "size": 275
   },
   {
    "path": "data/item_classes.json",
@@ -18,8 +18,8 @@
   },
   {
    "path": "data/item_rules.json",
-   "sha256": "c9250bc31e885ca564ebc2e52591448a1d138c11b64f72335b8ba13a1ecd5e62",
-   "size": 1526
+   "sha256": "73832fdfb6c522ff7d93d3a42958f2a6050f7eb4573cf0f4588662530fbff699",
+   "size": 1613
   },
   {
    "path": "data/lookups.json",
@@ -28,13 +28,13 @@
   },
   {
    "path": "data/mods.json",
-   "sha256": "99dbe98e710f8a019da3783f27a11b5f66c47582f831b01b2a0a55ca61e5b065",
-   "size": 441
+   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
+   "size": 663
   },
   {
    "path": "data/stats.json",
-   "sha256": "3d7ed70278632fe603645af4c0ca1d7cebb0597238e140c63cfcf82036d20b5e",
-   "size": 90
+   "sha256": "39ae37f644c9fbe9a01587a26467a41310f0364551a12b8348c6c4e53ed3e1bb",
+   "size": 378
   },
   {
    "path": "poe1/grafts.json",
@@ -53,8 +53,8 @@
   },
   {
    "path": "stat_descriptions/stat_descriptions.json",
-   "sha256": "5ca0d0c925cf6e27790e939e01553c988b25ebeccd4038a47c23b4326d7b5af0",
-   "size": 618
+   "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
+   "size": 4380
   }
  ],
  "format": 1,

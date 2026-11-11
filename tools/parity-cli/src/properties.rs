@@ -103,8 +103,17 @@ pub fn load(read: Read<'_>) -> Result<Properties, String> {
         }
     }
     let pairs = texts.iter().map(|(i, t)| (i.as_str(), t.as_str()));
+    Ok(Properties::new(&rules, pairs, quality_types(read)?))
+}
+
+/// `AlternateQualityTypes` with each catalyst mod's fixed stats, in table
+/// order; `None` without the table.
+///
+/// # Errors
+/// A message when a table or column the others need is missing.
+pub fn quality_types(read: Read<'_>) -> Result<Option<Vec<QualityType>>, String> {
     let Some(aq) = Table::read(read, "AlternateQualityTypes")? else {
-        return Ok(Properties::new(&rules, pairs, None));
+        return Ok(None);
     };
     let mods = Table::require(read, "Mods")?;
     let stats = Table::require(read, "Stats")?;
@@ -155,7 +164,7 @@ pub fn load(read: Read<'_>) -> Result<Properties, String> {
             stats: list,
         });
     }
-    Ok(Properties::new(&rules, pairs, Some(qualities)))
+    Ok(Some(qualities))
 }
 
 #[cfg(test)]

@@ -100,7 +100,8 @@ Decisions marked (Q) wait for the maintainer; their defaults are in the context 
     - Sequential `vN -> vN+1` functions over `serde_json::Value`, run before DTO parsing. Each one adds entries to the migration report.
     - Phase 2 ships only v1, so test-only migrations exercise the framework: a synthetic v0 to v1, and a document newer than supported, refused with a typed error.
     - The Build records the data bundle it was made with (game, data schema version, Steam build), so a data update never reinterprets a build silently (ADR-010).
-15. **Errors and completeness.** Every failure has a stable code (ADR-014): `BUNDLE_*`, `IMPORT_*`, `MIGRATE_*`, `PERSIST_*`.
+15. **Errors and completeness.** Every failure has a stable code (ADR-014): `BUNDLE_*`, `IMPORT_*`, `MIGRATE_*`, `PERSIST_*`, `DTO_*`.
+    - Layers (maintainer decision 2026-11-10, recorded in P2-8): `MIGRATE_*` reads the document's version first on load, so a document newer than supported gives `MIGRATE_TOO_NEW` before it is parsed; `PERSIST_*` covers file I/O and atomic writes; `DTO_*` is a malformed build document, from any source. No layer wraps or renames another layer's code.
     - An import result is `Complete`, `Partial` (some content quarantined), or `Fatal`.
     - `Indeterminate` is a calculation state (ADR-014), so import never produces it.
     - Nothing is dropped silently.
@@ -235,7 +236,7 @@ Implements decision 14 (migrations) and decision 13 (persistence).
 - **Accept:**
   - a test-only v0-to-v1 migration produces its report;
   - a newer document is refused (`MIGRATE_TOO_NEW`);
-  - a damaged file gives a `PERSIST_*` code and nothing is written;
+  - a damaged file gives a `PERSIST_*` code and nothing is written (with decision 15's layers: a file that cannot be read or decoded gives `PERSIST_*`, a damaged document in it `DTO_*`; clarified in P2-9);
   - save never targets the import source;
   - the atomic write holds when the write fails after the temporary file is written (tested with an injected writer).
 - **Depends on:** 7.
@@ -315,7 +316,7 @@ Each PR is one session, small and single-purpose, and fills in the evidence sect
 | P2-3 | Step 3 (or 3a and 3b), data model, bundle v1, converter | Loader tests on synthetic bundles; two-run determinism of `bundle` on PoE1 and PoE2 (maintainer-run, summaries); `cargo deny` |
 | P2-4 | Step 4, validator | Mutation set in CI with codes; `bundle-check` on the real PoE1 and PoE2 bundles (maintainer-run) |
 | P2-5 | Step 5 (or 5a and 5b), XML import and export | Round-trip and mutation tests on public fixtures; malformed-input tests |
-| P2-6 | Step 6, `resolve_build` | Outcome tests on synthetic PoE1 and PoE2 bundles; corpus fields through the bundle equal Spike B (maintainer-run) |
+| P2-6 | Step 6 (split: 6a bundle `ItemData`, 6b `resolve_build`) | 6a: `bundle-equal` against the extract readers and corpus fields through the bundle equal Spike B (maintainer-run); 6b: outcome tests on synthetic PoE1 and PoE2 bundles |
 | P2-7 | Step 7, DTO v1 and schemas | DTO round-trip tests; cross-OS byte comparison job; schema freshness job; `cargo deny` |
 | P2-8 | Step 8, `build-round-trip` and CI job | CI job on fixtures, synthetic bundles, and the mutation set; corpus summary (maintainer-run) |
 | P2-9 | Step 9, migrations and persistence | Migration and persistence tests |

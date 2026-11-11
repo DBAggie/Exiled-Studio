@@ -28,6 +28,7 @@ impl QuarantineReason {
             Self::Unresolved(UnresolvedReason::NoVariantFits) => "LINE_NO_VARIANT_FITS",
             Self::Unresolved(UnresolvedReason::OnlyShadowed) => "LINE_ONLY_SHADOWED",
             Self::Unresolved(UnresolvedReason::Ambiguous(_)) => "LINE_AMBIGUOUS",
+            Self::Unresolved(UnresolvedReason::NoBase(_)) => "LINE_NO_BASE",
             Self::Pending => "LINE_PENDING",
             Self::UnrecognizedLine => "LINE_UNRECOGNIZED",
             Self::UnknownSpec => "LINE_UNKNOWN_SPEC",

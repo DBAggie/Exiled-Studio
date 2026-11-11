@@ -1,0 +1,21 @@
+[package]
+name = "loom-schema-gen"
+description = "Writes the JSON Schema of the successor build document from its DTOs (Phase 2 plan, decision 11)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-serialization = { workspace = true, features = ["schema"] }
+schemars.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+boon = "0.6"
+loom-domain.workspace = true
+
+[lints]
+workspace = true

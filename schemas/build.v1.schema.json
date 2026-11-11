@@ -1,0 +1,2513 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Build document v1",
+  "description": "The document: its format, its version, and the build.",
+  "type": "object",
+  "properties": {
+    "build": {
+      "description": "The build.",
+      "$ref": "#/$defs/Build"
+    },
+    "format": {
+      "description": "Always `loom-build`.",
+      "type": "string",
+      "const": "loom-build"
+    },
+    "version": {
+      "description": "Always 1 in this version.",
+      "type": "integer",
+      "format": "uint32",
+      "const": 1,
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "version",
+    "build"
+  ],
+  "$defs": {
+    "Adapted": {
+      "description": "An import tolerance a line needed.",
+      "oneOf": [
+        {
+          "description": "Letter case only.",
+          "type": "string",
+          "const": "case-folded"
+        },
+        {
+          "description": "Resolved with the next line of another section.",
+          "type": "string",
+          "const": "split-section"
+        }
+      ]
+    },
+    "AltVariant": {
+      "description": "An alternate variant.",
+      "type": "object",
+      "properties": {
+        "index": {
+          "description": "Which alternate (0 for the first).",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "selected": {
+          "description": "The selected variant, if written.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "index"
+      ]
+    },
+    "Attribute": {
+      "description": "One untyped attribute.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Value.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ]
+    },
+    "Build": {
+      "description": "A build.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes of the build's container.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "character": {
+          "description": "The character.",
+          "$ref": "#/$defs/Character"
+        },
+        "config": {
+          "description": "Config.",
+          "$ref": "#/$defs/Config"
+        },
+        "data": {
+          "description": "The data bundle the build was made with, if recorded.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataVersion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "epilog": {
+          "description": "Untyped content after the build's container.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpaqueNode"
+          }
+        },
+        "game": {
+          "description": "The game.",
+          "$ref": "#/$defs/Game"
+        },
+        "game_specific": {
+          "description": "The game-specific choices; of the build's game.",
+          "$ref": "#/$defs/GameSpecific"
+        },
+        "items": {
+          "description": "Items and item sets.",
+          "$ref": "#/$defs/Items"
+        },
+        "layout": {
+          "description": "The sections in order, typed ones as markers.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BuildPartEntry"
+          }
+        },
+        "passives": {
+          "description": "Passive specs.",
+          "$ref": "#/$defs/Passives"
+        },
+        "prolog": {
+          "description": "Untyped content before the build's container.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpaqueNode"
+          }
+        },
+        "skills": {
+          "description": "Skills.",
+          "$ref": "#/$defs/Skills"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "game",
+        "game_specific",
+        "character",
+        "passives",
+        "skills",
+        "items",
+        "config",
+        "layout"
+      ]
+    },
+    "BuildPart": {
+      "description": "Where a typed section sits among untyped ones.",
+      "oneOf": [
+        {
+          "description": "The character.",
+          "type": "string",
+          "const": "character"
+        },
+        {
+          "description": "Passive specs.",
+          "type": "string",
+          "const": "passives"
+        },
+        {
+          "description": "Skills.",
+          "type": "string",
+          "const": "skills"
+        },
+        {
+          "description": "Items.",
+          "type": "string",
+          "const": "items"
+        },
+        {
+          "description": "Config.",
+          "type": "string",
+          "const": "config"
+        }
+      ]
+    },
+    "BuildPartEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/BuildPart"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "Character": {
+      "description": "The character.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "children": {
+          "description": "Untyped children.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OpaqueNode"
+          }
+        },
+        "class": {
+          "description": "The class, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "description": "The level, if set.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sourced_uint32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "main_socket_group": {
+          "description": "The main socket group (1-based), if set.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sourced_uint32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Config": {
+      "description": "Config sets.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The active set, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "sets": {
+          "description": "The sets.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConfigSetEntry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sets"
+      ]
+    },
+    "ConfigInput": {
+      "description": "One config input.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "name": {
+          "description": "The key.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value.",
+          "$ref": "#/$defs/ConfigValue"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ]
+    },
+    "ConfigInputEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/ConfigInput"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "ConfigSet": {
+      "description": "One config set.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "id": {
+          "description": "The set's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "inputs": {
+          "description": "Inputs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConfigInputEntry"
+          }
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "inputs"
+      ]
+    },
+    "ConfigSetEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/ConfigSet"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "ConfigValue": {
+      "description": "A config value.",
+      "oneOf": [
+        {
+          "description": "A flag.",
+          "type": "object",
+          "properties": {
+            "boolean": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "boolean"
+          ]
+        },
+        {
+          "description": "A number.",
+          "type": "object",
+          "properties": {
+            "number": {
+              "$ref": "#/$defs/Sourced_Number"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "number"
+          ]
+        },
+        {
+          "description": "Text.",
+          "type": "object",
+          "properties": {
+            "string": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "string"
+          ]
+        }
+      ]
+    },
+    "DataVersion": {
+      "description": "The data bundle a build was made with.",
+      "type": "object",
+      "properties": {
+        "game": {
+          "description": "The bundle's game.",
+          "$ref": "#/$defs/Game"
+        },
+        "schema_version": {
+          "description": "The bundle's data schema version.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "steam_build": {
+          "description": "The Steam build, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "game",
+        "schema_version"
+      ]
+    },
+    "Exclusion": {
+      "description": "Why a modifier line is not resolved by design.",
+      "oneOf": [
+        {
+          "description": "Not in the variant selection.",
+          "type": "string",
+          "const": "not-selected"
+        },
+        {
+          "description": "Marked custom.",
+          "type": "string",
+          "const": "custom"
+        },
+        {
+          "description": "Its section is not resolved.",
+          "type": "string",
+          "const": "section"
+        }
+      ]
+    },
+    "Game": {
+      "description": "A game.",
+      "oneOf": [
+        {
+          "description": "Path of Exile.",
+          "type": "string",
+          "const": "poe1"
+        },
+        {
+          "description": "Path of Exile 2.",
+          "type": "string",
+          "const": "poe2"
+        }
+      ]
+    },
+    "GameSpecific": {
+      "description": "Choices only one game has; the variant is the build's game.",
+      "oneOf": [
+        {
+          "description": "Path of Exile choices.",
+          "type": "object",
+          "properties": {
+            "poe1": {
+              "$ref": "#/$defs/Poe1Choices"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "poe1"
+          ]
+        },
+        {
+          "description": "Path of Exile 2 choices (none typed yet).",
+          "type": "object",
+          "properties": {
+            "poe2": {
+              "$ref": "#/$defs/Poe2Choices"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "poe2"
+          ]
+        }
+      ]
+    },
+    "Gem": {
+      "description": "One gem.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "enabled": {
+          "description": "Whether the gem is enabled.",
+          "type": "boolean"
+        },
+        "gem": {
+          "description": "The gem item, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "description": "Level.",
+          "$ref": "#/$defs/Sourced_uint32"
+        },
+        "name": {
+          "description": "The name as written, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quality": {
+          "description": "Quality.",
+          "$ref": "#/$defs/Sourced_int32"
+        },
+        "skill": {
+          "description": "The skill, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "quality",
+        "enabled"
+      ]
+    },
+    "GemEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/Gem"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "HeaderLine": {
+      "description": "A header line.",
+      "oneOf": [
+        {
+          "description": "The item class.",
+          "type": "string",
+          "const": "item-class"
+        },
+        {
+          "description": "The rarity.",
+          "type": "string",
+          "const": "rarity"
+        },
+        {
+          "description": "A separator.",
+          "type": "string",
+          "const": "separator"
+        },
+        {
+          "description": "The name.",
+          "type": "string",
+          "const": "name"
+        },
+        {
+          "description": "The base.",
+          "type": "string",
+          "const": "base"
+        }
+      ]
+    },
+    "Item": {
+      "description": "One item.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "body": {
+          "description": "The item as read from its text.",
+          "$ref": "#/$defs/ItemBody"
+        },
+        "id": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "layout": {
+          "description": "The item's children.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemPartEntry"
+          }
+        },
+        "text_spacing": {
+          "description": "Legacy-XML whitespace of the body's text (`lines + 1` entries),\nor empty.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "body",
+        "layout"
+      ]
+    },
+    "ItemBody": {
+      "description": "An item as read from its text.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base name, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "implicits": {
+          "description": "The implicit count, if written.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "item_class": {
+          "description": "The item class, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lines": {
+          "description": "Every source line, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemLine"
+          }
+        },
+        "name": {
+          "description": "The name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rarity": {
+          "description": "Rarity, if read.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Rarity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "variants": {
+          "description": "Variant selection.",
+          "$ref": "#/$defs/VariantSelection"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "variants",
+        "lines"
+      ]
+    },
+    "ItemLine": {
+      "description": "One source line of an item.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "description": "What it is.",
+          "$ref": "#/$defs/LineKind"
+        },
+        "source": {
+          "description": "The line as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "kind"
+      ]
+    },
+    "ItemPart": {
+      "description": "Where an item's body sits among untyped children.",
+      "oneOf": [
+        {
+          "description": "The text the item was read from.",
+          "type": "string",
+          "const": "body"
+        }
+      ]
+    },
+    "ItemPartEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/ItemPart"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "ItemSet": {
+      "description": "An item set.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "id": {
+          "description": "The set's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "slots": {
+          "description": "Slots.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlotEntryEntry"
+          }
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "slots"
+      ]
+    },
+    "Items": {
+      "description": "Items and item sets.",
+      "type": "object",
+      "properties": {
+        "active_set": {
+          "description": "The active item set, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "entries": {
+          "description": "Items and sets in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemsEntryEntry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ]
+    },
+    "ItemsEntry": {
+      "description": "An item or an item set.",
+      "oneOf": [
+        {
+          "description": "An item.",
+          "type": "object",
+          "properties": {
+            "item": {
+              "$ref": "#/$defs/Item"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "item"
+          ]
+        },
+        {
+          "description": "An item set.",
+          "type": "object",
+          "properties": {
+            "set": {
+              "$ref": "#/$defs/ItemSet"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set"
+          ]
+        }
+      ]
+    },
+    "ItemsEntryEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/ItemsEntry"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "JewelSocket": {
+      "description": "A jewel socket and its item.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "item": {
+          "description": "The item, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The socket node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ]
+    },
+    "JewelSocketEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/JewelSocket"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "LineKind": {
+      "description": "What a line is.",
+      "oneOf": [
+        {
+          "description": "A header line.",
+          "type": "object",
+          "properties": {
+            "header": {
+              "$ref": "#/$defs/HeaderLine"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "header"
+          ]
+        },
+        {
+          "description": "A spec line.",
+          "type": "object",
+          "properties": {
+            "spec": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "description": "The key.",
+                  "type": "string"
+                },
+                "known": {
+                  "description": "Whether the import adapter knows the key.",
+                  "type": "boolean"
+                },
+                "value": {
+                  "description": "The value, as written.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "value",
+                "known"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "spec"
+          ]
+        },
+        {
+          "description": "A base line of one variant.",
+          "type": "object",
+          "properties": {
+            "variant-base": {
+              "type": "object",
+              "properties": {
+                "base": {
+                  "description": "The base text.",
+                  "type": "string"
+                },
+                "selected": {
+                  "description": "Whether the variant selection includes it.",
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "base",
+                "selected"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "variant-base"
+          ]
+        },
+        {
+          "description": "An influence line.",
+          "type": "object",
+          "properties": {
+            "influence": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "influence"
+          ]
+        },
+        {
+          "description": "An item flag line.",
+          "type": "string",
+          "const": "flag"
+        },
+        {
+          "description": "A modifier line.",
+          "type": "object",
+          "properties": {
+            "modifier": {
+              "$ref": "#/$defs/ModifierLine"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "modifier"
+          ]
+        },
+        {
+          "description": "A line not recognized.",
+          "type": "string",
+          "const": "unrecognized"
+        }
+      ]
+    },
+    "LineResolution": {
+      "description": "The state of a modifier line.",
+      "oneOf": [
+        {
+          "description": "Not resolved yet.",
+          "type": "string",
+          "const": "pending"
+        },
+        {
+          "description": "Not resolved by design.",
+          "type": "object",
+          "properties": {
+            "excluded": {
+              "$ref": "#/$defs/Exclusion"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "excluded"
+          ]
+        },
+        {
+          "description": "Resolved.",
+          "type": "object",
+          "properties": {
+            "resolved": {
+              "type": "object",
+              "properties": {
+                "adapted": {
+                  "description": "The tolerance it needed, if any.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Adapted"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "result": {
+                  "description": "The result.",
+                  "$ref": "#/$defs/Resolved"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "result"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "resolved"
+          ]
+        },
+        {
+          "description": "Resolved with an earlier line, which carries the result.",
+          "type": "object",
+          "properties": {
+            "continues": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "Index of that line among the item's lines.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "continues"
+          ]
+        },
+        {
+          "description": "Not resolved; quarantined.",
+          "type": "object",
+          "properties": {
+            "unresolved": {
+              "$ref": "#/$defs/UnresolvedReason"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unresolved"
+          ]
+        }
+      ]
+    },
+    "MasteryEffect": {
+      "description": "A mastery node and its chosen effect.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "The effect.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "effect"
+      ]
+    },
+    "ModSection": {
+      "description": "Which modifier list a line belongs to.",
+      "oneOf": [
+        {
+          "description": "Enchantments.",
+          "type": "string",
+          "const": "enchant"
+        },
+        {
+          "description": "Implicit modifiers.",
+          "type": "string",
+          "const": "implicit"
+        },
+        {
+          "description": "Explicit modifiers.",
+          "type": "string",
+          "const": "explicit"
+        },
+        {
+          "description": "Another section, by name.",
+          "type": "object",
+          "properties": {
+            "other": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "other"
+          ]
+        }
+      ]
+    },
+    "ModifierLine": {
+      "description": "A modifier line.",
+      "type": "object",
+      "properties": {
+        "prefixes": {
+          "description": "Prefixes, in line order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Prefix"
+          }
+        },
+        "resolution": {
+          "description": "What the line resolved to.",
+          "$ref": "#/$defs/LineResolution"
+        },
+        "section": {
+          "description": "The section.",
+          "$ref": "#/$defs/ModSection"
+        },
+        "selected": {
+          "description": "Whether the variant selection includes the line.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "The text without prefixes.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "section",
+        "selected",
+        "resolution"
+      ]
+    },
+    "NoBase": {
+      "description": "Why an item has no base.",
+      "oneOf": [
+        {
+          "description": "The import adapter named none; its reason.",
+          "type": "object",
+          "properties": {
+            "unnamed": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unnamed"
+          ]
+        },
+        {
+          "description": "Not in the game data.",
+          "type": "string",
+          "const": "not-found"
+        },
+        {
+          "description": "More than one stat-description scope.",
+          "type": "string",
+          "const": "scope-conflict"
+        }
+      ]
+    },
+    "NonFinite": {
+      "description": "A non-finite number, by its IEEE 754 bit pattern.",
+      "type": "object",
+      "properties": {
+        "f64_bits": {
+          "description": "The bits as 16 lowercase hexadecimal digits.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "f64_bits"
+      ]
+    },
+    "Number": {
+      "description": "A number: a JSON number when finite, otherwise its bit pattern (JSON\nhas no NaN or infinity). Finite values are written in the shortest\nform that reads back to the same bits.",
+      "anyOf": [
+        {
+          "description": "A finite number.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "A non-finite number.",
+          "$ref": "#/$defs/NonFinite"
+        }
+      ]
+    },
+    "OpaqueNode": {
+      "description": "A node of untyped content.",
+      "oneOf": [
+        {
+          "description": "An element.",
+          "type": "object",
+          "properties": {
+            "element": {
+              "type": "object",
+              "properties": {
+                "attributes": {
+                  "description": "Attributes, in source order.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Attribute"
+                  }
+                },
+                "children": {
+                  "description": "Children, in source order.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/OpaqueNode"
+                  }
+                },
+                "name": {
+                  "description": "Name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "element"
+          ]
+        },
+        {
+          "description": "Text.",
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "description": "A comment.",
+          "type": "object",
+          "properties": {
+            "comment": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "comment"
+          ]
+        },
+        {
+          "description": "A processing instruction.",
+          "type": "object",
+          "properties": {
+            "processing-instruction": {
+              "type": "object",
+              "properties": {
+                "data": {
+                  "description": "Data, if any.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "target": {
+                  "description": "Target.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "target"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "processing-instruction"
+          ]
+        }
+      ]
+    },
+    "PassiveSpec": {
+      "description": "One passive tree spec.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "id": {
+          "description": "The spec's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "jewel_sockets": {
+          "description": "Jewel sockets.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/JewelSocketEntry"
+          }
+        },
+        "layout": {
+          "description": "The spec's children.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SpecPartEntry"
+          }
+        },
+        "mastery_effects": {
+          "description": "Mastery effects, in order.",
+          "$ref": "#/$defs/Sourced_Array_of_MasteryEffect"
+        },
+        "nodes": {
+          "description": "Allocated nodes, in order.",
+          "$ref": "#/$defs/Sourced_Array_of_uint32"
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tree_version": {
+          "description": "The tree version, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nodes",
+        "mastery_effects",
+        "jewel_sockets",
+        "layout"
+      ]
+    },
+    "PassiveSpecEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/PassiveSpec"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "Passives": {
+      "description": "Passive specs.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The active spec, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "specs": {
+          "description": "The specs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PassiveSpecEntry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "specs"
+      ]
+    },
+    "Poe1Choices": {
+      "description": "Path of Exile choices, as the game data names them.",
+      "type": "object",
+      "properties": {
+        "bandit": {
+          "description": "The bandit choice, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pantheon_major": {
+          "description": "The major pantheon god, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pantheon_minor": {
+          "description": "The minor pantheon god, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Poe2Choices": {
+      "description": "Path of Exile 2 choices (none typed yet).",
+      "type": "object",
+      "additionalProperties": false
+    },
+    "Prefix": {
+      "description": "A prefix or flag word on a modifier line.",
+      "type": "object",
+      "properties": {
+        "key": {
+          "description": "The key.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "key"
+      ]
+    },
+    "PropertyValue": {
+      "description": "One placeholder value of a property line.",
+      "type": "object",
+      "properties": {
+        "slot": {
+          "description": "The placeholder's number.",
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "text": {
+          "description": "The value's text.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "text"
+      ]
+    },
+    "Rarity": {
+      "description": "Item rarity.",
+      "oneOf": [
+        {
+          "description": "Normal.",
+          "type": "string",
+          "const": "normal"
+        },
+        {
+          "description": "Magic.",
+          "type": "string",
+          "const": "magic"
+        },
+        {
+          "description": "Rare.",
+          "type": "string",
+          "const": "rare"
+        },
+        {
+          "description": "Unique.",
+          "type": "string",
+          "const": "unique"
+        },
+        {
+          "description": "Relic.",
+          "type": "string",
+          "const": "relic"
+        }
+      ]
+    },
+    "Resolved": {
+      "description": "A resolution result.",
+      "oneOf": [
+        {
+          "description": "Stat IDs with values.",
+          "type": "object",
+          "properties": {
+            "stats": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StatLine"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "stats"
+          ]
+        },
+        {
+          "description": "A typed result.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/TypedResolution"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        }
+      ]
+    },
+    "SkillSet": {
+      "description": "One skill set.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "groups": {
+          "description": "Socket groups.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SocketGroupEntry"
+          }
+        },
+        "id": {
+          "description": "The set's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "groups"
+      ]
+    },
+    "SkillSetEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/SkillSet"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "Skills": {
+      "description": "Skill sets.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The active set, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "sets": {
+          "description": "The sets.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SkillSetEntry"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sets"
+      ]
+    },
+    "SlotEntry": {
+      "description": "One slot of an item set.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "item": {
+          "description": "The item, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "slot": {
+          "description": "The slot.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "slot"
+      ]
+    },
+    "SlotEntryEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/SlotEntry"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "SocketGroup": {
+      "description": "A group of linked gems.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "enabled": {
+          "description": "Whether the group is enabled.",
+          "type": "boolean"
+        },
+        "gems": {
+          "description": "Gems.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GemEntry"
+          }
+        },
+        "label": {
+          "description": "The label, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "main_active_skill": {
+          "description": "The main active skill (1-based), if set.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Sourced_uint32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slot": {
+          "description": "The slot, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "gems"
+      ]
+    },
+    "SocketGroupEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/SocketGroup"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "Sourced_Array_of_MasteryEffect": {
+      "description": "A typed value and the text it was read from, if any.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "The source text, while the value is unchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryEffect"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "Sourced_Array_of_uint32": {
+      "description": "A typed value and the text it was read from, if any.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "The source text, while the value is unchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "Sourced_Number": {
+      "description": "A typed value and the text it was read from, if any.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "The source text, while the value is unchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "Sourced_int32": {
+      "description": "A typed value and the text it was read from, if any.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "The source text, while the value is unchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "Sourced_uint32": {
+      "description": "A typed value and the text it was read from, if any.",
+      "type": "object",
+      "properties": {
+        "source": {
+          "description": "The source text, while the value is unchanged.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ]
+    },
+    "SpecPart": {
+      "description": "Where a spec's typed child sits among untyped ones.",
+      "oneOf": [
+        {
+          "description": "The jewel socket list.",
+          "type": "string",
+          "const": "jewel-sockets"
+        }
+      ]
+    },
+    "SpecPartEntry": {
+      "description": "One entry of a list with untyped content in place.",
+      "oneOf": [
+        {
+          "description": "A typed entry.",
+          "type": "object",
+          "properties": {
+            "typed": {
+              "$ref": "#/$defs/SpecPart"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "typed"
+          ]
+        },
+        {
+          "description": "Untyped content at this position.",
+          "type": "object",
+          "properties": {
+            "opaque": {
+              "$ref": "#/$defs/OpaqueNode"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "opaque"
+          ]
+        }
+      ]
+    },
+    "StatLine": {
+      "description": "A stat ID and its value.",
+      "type": "object",
+      "properties": {
+        "stat": {
+          "description": "The stat.",
+          "type": "string"
+        },
+        "value": {
+          "description": "Its value.",
+          "$ref": "#/$defs/StatValue"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stat",
+        "value"
+      ]
+    },
+    "StatValue": {
+      "description": "A stat's value as read from a line.",
+      "oneOf": [
+        {
+          "description": "Shown as one number.",
+          "type": "object",
+          "properties": {
+            "exact": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "description": "Highest raw value.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "min": {
+                  "description": "Lowest raw value.",
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "min",
+                "max"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "exact"
+          ]
+        },
+        {
+          "description": "Shown as a range.",
+          "type": "object",
+          "properties": {
+            "ranged": {
+              "type": "object",
+              "properties": {
+                "max": {
+                  "description": "Highest raw value.",
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "min": {
+                  "description": "Lowest raw value.",
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "min",
+                "max"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "ranged"
+          ]
+        },
+        {
+          "description": "Not shown.",
+          "type": "object",
+          "properties": {
+            "hidden": {
+              "type": "object",
+              "properties": {
+                "assumed": {
+                  "description": "The assumed value, if clear.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int64"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "hidden"
+          ]
+        },
+        {
+          "description": "Shown as a name: every key with it, sorted.",
+          "type": "object",
+          "properties": {
+            "lookup": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "lookup"
+          ]
+        }
+      ]
+    },
+    "TypedResolution": {
+      "description": "A typed result read from game data.",
+      "oneOf": [
+        {
+          "description": "A skill the item grants.",
+          "type": "object",
+          "properties": {
+            "granted-skill": {
+              "type": "object",
+              "properties": {
+                "gem": {
+                  "description": "The gem.",
+                  "type": "string"
+                },
+                "level": {
+                  "description": "The level.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "source": {
+                  "description": "The data row that grants it.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "gem",
+                "level"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "granted-skill"
+          ]
+        },
+        {
+          "description": "A display property.",
+          "type": "object",
+          "properties": {
+            "item-property": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "description": "The property's data ID.",
+                  "type": "string"
+                },
+                "values": {
+                  "description": "Values by placeholder, in text order.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/PropertyValue"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "property",
+                "values"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "item-property"
+          ]
+        },
+        {
+          "description": "A quality type and its stats.",
+          "type": "object",
+          "properties": {
+            "catalyst-quality": {
+              "type": "object",
+              "properties": {
+                "quality": {
+                  "description": "The quality as shown.",
+                  "type": "string"
+                },
+                "quality_type": {
+                  "description": "The quality type's data ID.",
+                  "type": "string"
+                },
+                "stats": {
+                  "description": "Its stats.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/StatLine"
+                  }
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "quality_type",
+                "stats",
+                "quality"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "catalyst-quality"
+          ]
+        }
+      ]
+    },
+    "UnresolvedReason": {
+      "description": "Why a line did not resolve.",
+      "oneOf": [
+        {
+          "description": "No description has the text.",
+          "type": "string",
+          "const": "no-template"
+        },
+        {
+          "description": "None fits the values.",
+          "type": "string",
+          "const": "no-variant-fits"
+        },
+        {
+          "description": "Only shadowed descriptions fit.",
+          "type": "string",
+          "const": "only-shadowed"
+        },
+        {
+          "description": "More than one fits: the candidates' stats.",
+          "type": "object",
+          "properties": {
+            "ambiguous": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "ambiguous"
+          ]
+        },
+        {
+          "description": "The item has no base in the game data.",
+          "type": "object",
+          "properties": {
+            "no-base": {
+              "$ref": "#/$defs/NoBase"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "no-base"
+          ]
+        }
+      ]
+    },
+    "VariantSelection": {
+      "description": "Variant selection.",
+      "type": "object",
+      "properties": {
+        "alternates": {
+          "description": "Alternate variants.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AltVariant"
+          }
+        },
+        "count": {
+          "description": "Number of variants.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "selected": {
+          "description": "The selected variant, if written.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "count"
+      ]
+    }
+  }
+}
