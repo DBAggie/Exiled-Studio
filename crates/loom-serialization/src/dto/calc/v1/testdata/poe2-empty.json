@@ -1,0 +1,11 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe2",
+    "state": "unsupported",
+    "reasons": {},
+    "fields": [],
+    "graph": []
+  }
+}

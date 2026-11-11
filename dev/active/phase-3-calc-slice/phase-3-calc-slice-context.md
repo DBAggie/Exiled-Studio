@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-4: engine core)
+Last Updated: 2026-11-11 (P3-13: calc result document v1)
 
 # Phase 3: calc slice (context)
 
@@ -172,7 +172,13 @@ No code blockers; the docs gap it named is this PR's docs commit. Applied: `move
 - **Property tests without a crate:** a fixed-seed SplitMix64 in `crates/loom-calc/tests/engine.rs`, 300 cases per property, so the core gains no dependency (only `thiserror`, already in the workspace). Checked: the order test fails when the canonical sort is removed.
 - **Cancellation:** `&dyn Fn() -> bool`, polled before collecting, after collecting, and after each phase.
 - **For P3-13:** the DTO needs `Field`/`Quantity` `Display`, the reason/state `name()`s, and the graph's nodes; `loom-serialization` does not depend on `loom-calc` today (AGENTS.md crate boundaries), so P3-13 decides where the conversion lives.
+- **Read side checked:** `from_json` runs `Document::check_shape` (`DTO_CALC_SHAPE`): children earlier, arity and term per kind, field node in range with equal value bits, reasons matching the state. It does not re-evaluate the graph (P3-5 can, with `loom_calc::math`, if it needs to).
+- **Adding to v1:** strings for names that grow; a new reason, source, or node kind is added to v1 (schema and TypeScript regenerated) while every reader is in the repo and no document lives outside it, until the Phase 3 gate; after that, a new version with a migration. Written in `dto/calc/v1/mod.rs`.
+- **Inputs are not in the document:** `CalcResult` has none; the runner (P3-5 `calc-run` summary) records build hash, bundle, oracle pin, slice revision.
 - No ADR changed or extended; no divergence from the oracle (nothing is compared yet).
+
+## code-architecture-reviewer (P3-13, 2026-11-11) summary
+No blockers; one-way dependency, LF goldens, and the golden-bytes cross-platform argument accepted (cite the `rust (windows-latest)` and `rust (ubuntu-latest)` jobs). Applied: S1 the additive-variant rule (written down); S2 the read-side shape check with 11 rejecting tests; S3 the separate `reason` key for `unsupported` fields; S4 inputs recorded as the runner's (above); the macOS wording in the golden test; the shadowed `reasons` binding. Not applied: a `NodeIndex::get_u32` accessor (the cast is lossless and annotated; not worth touching `loom-calc` here); the double parse through `serde_json::Value` (as build v1; revisit if large graphs cost); schema `enum`s for `op`/`term` (strings on purpose, decision above).
 
 ## code-architecture-reviewer (P3-4, 2026-11-11) summary
 No ADR violation, no scope miss; agreed with the ten design choices above. Applied:
@@ -181,3 +187,12 @@ No ADR violation, no scope miss; agreed with the ten design choices above. Appli
 - **S2:** `CalcResult.reasons` keeps the reasons from collecting (unmapped stats, quarantined lines), so they show while no field is computed (the gate's mutation set needs them).
 - **N1:** the accepted `Hidden` assumption is documented at `ingest::settle`. **N3:** `UnmodelledCondition` names the left-out effect's quantity and source. **N4:** the PoE2 path polls the hook too.
 Not applied: N2 (how many real `Exact` values have `min < max`; P3-8 counts them when it maps real stats), N5 (`Graph::evaluate` recomputes all; use `evaluate_all` in loops), N6 (byte comparison of the serialized document is P3-13's).
+
+## Decisions in P3-13 (calc result document v1)
+- **Where the conversion lives:** in `loom-serialization` (`dto::calc::v1`), which now depends on `loom-calc` (new edge `loom-calc` <- `loom-serialization`, AGENTS.md). The serialization layer depends on the model it writes, as it does on `loom-domain`; `loom-calc` stays free of serde and DTOs. No cycle: neither `loom-calc` nor `loom-data` depends on serialization. Rejected: DTOs in serialization with the conversion in `loom-calc` (the engine would depend on its persistence form), and the conversion in `tools/parity-cli` (the UI and `loom-app` need the same document).
+- **One way:** the engine names rules, labels, terms, and reasons by `&'static str`, so a document does not convert back to a `CalcResult`. Readers (P3-5's `calc-parity`, the UI) read the DTO `Document` through `from_json`, which checks `format` then `version` first, as build v1.
+- **Consistent or not written:** `to_json` runs `Graph::check` (`DTO_CALC_GRAPH`) and checks each field's value is its node's recorded value, bit for bit, and that value and node are both set or both absent (`DTO_CALC_FIELD`). So each node has one `value` (a contribution's value equals its recorded value), and a reader can recompute every value from the leaves.
+- **Shape:** build v1's conventions. Nodes are `{kind, term?, children?, value}`: `kind` is `{"contribution": {source, quantity, op}}`, `{"constant": {label}}`, or a string (`sum`, `product`, `percent-factor`, `any`, `override`, `floor`, `round-half-up`, `min`, `max`); `children` in the engine's order (an override's `by` then `replaced`; min/max `a` then `b`); `term` absent on leaves and overrides. A field has `reason` (exactly when `unsupported`: why it is not computed) and two lists named by reason type, `unsupported` (what was not modelled: not empty for `partial`, possibly for `indeterminate`) and `indeterminate` (not empty exactly for `indeterminate`). Build-level reasons are the two lists. Fields in `Field`'s order (the map's), not `SLICE` order.
+- **Names as strings:** fields and quantities by `Display`, reasons and states by `name()` (a test checks each tag equals it), ops by `Op::name`, terms `base`/`increased`/`more`/`override`/`result`/`step.<name>`. Strings keep game-specific names (`poe1.*`) out of shared DTO enums (ADR-001) and need no DTO change when P3-6 on add fields or quantities; the schema types them as strings.
+- **Cross-platform:** no new CI job. The golden-bytes test runs in the required `rust` job on Windows and Linux; each must equal the committed bytes (LF by `.gitattributes`), which is stronger than a hash diff between the two. P3-5 adds the `calc-run` documents' hashes to `dto cross-platform` once real results exist.
+- No ADR changed or extended; no divergence from the oracle (nothing is compared yet).

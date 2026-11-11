@@ -1850,6 +1850,7 @@ dependencies = [
 name = "loom-serialization"
 version = "0.0.0"
 dependencies = [
+ "loom-calc",
  "loom-domain",
  "miniz_oxide 0.9.1",
  "roxmltree",

@@ -1,0 +1,790 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calc result document v1",
+  "description": "The document: its format, its version, and the result.",
+  "type": "object",
+  "properties": {
+    "format": {
+      "description": "Always `loom-calc-result`.",
+      "type": "string",
+      "const": "loom-calc-result"
+    },
+    "result": {
+      "description": "The result.",
+      "$ref": "#/$defs/CalcResult"
+    },
+    "version": {
+      "description": "Always 1 in this version.",
+      "type": "integer",
+      "format": "uint32",
+      "const": 1,
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "version",
+    "result"
+  ],
+  "$defs": {
+    "Adapted": {
+      "description": "An import tolerance a line needed.",
+      "oneOf": [
+        {
+          "description": "Letter case only.",
+          "type": "string",
+          "const": "case-folded"
+        },
+        {
+          "description": "Resolved with the next line of another section.",
+          "type": "string",
+          "const": "split-section"
+        }
+      ]
+    },
+    "CalcResult": {
+      "description": "A calculation's result.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Every field of the game's slice; empty when the game has no\ncalculation.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldResult"
+          }
+        },
+        "game": {
+          "description": "The build's game.",
+          "$ref": "#/$defs/Game"
+        },
+        "graph": {
+          "description": "The provenance graph; a node's position is its index.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Node"
+          }
+        },
+        "reasons": {
+          "description": "The reasons that apply to every computed field.",
+          "$ref": "#/$defs/Reasons"
+        },
+        "state": {
+          "description": "The worst state of the fields; `unsupported` when the game has\nno calculation.",
+          "$ref": "#/$defs/StateKind"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "game",
+        "state",
+        "reasons",
+        "fields",
+        "graph"
+      ]
+    },
+    "FieldResult": {
+      "description": "One field's result.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The field's name (`life`, `resistance.fire`).",
+          "type": "string"
+        },
+        "indeterminate": {
+          "description": "Why the value cannot be settled: not empty exactly when `state`\nis `indeterminate`.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IndeterminateReason"
+          }
+        },
+        "node": {
+          "description": "The value's node in `graph`; absent when not computed. Its\nvalue is `value`.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "reason": {
+          "description": "Why the field is not computed: present exactly when `state` is\n`unsupported`.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UnsupportedReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "description": "The state.",
+          "$ref": "#/$defs/StateKind"
+        },
+        "unsupported": {
+          "description": "What was not modelled: not empty when `state` is `partial`,\npossibly empty when `indeterminate`, empty otherwise.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UnsupportedReason"
+          }
+        },
+        "value": {
+          "description": "The value; absent when the field is not computed.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "state"
+      ]
+    },
+    "Game": {
+      "description": "A game.",
+      "oneOf": [
+        {
+          "description": "Path of Exile.",
+          "type": "string",
+          "const": "poe1"
+        },
+        {
+          "description": "Path of Exile 2.",
+          "type": "string",
+          "const": "poe2"
+        }
+      ]
+    },
+    "IndeterminateReason": {
+      "description": "Why a value cannot be settled.",
+      "oneOf": [
+        {
+          "description": "Two overrides of one quantity give different values.",
+          "type": "object",
+          "properties": {
+            "conflicting-override": {
+              "type": "object",
+              "properties": {
+                "quantity": {
+                  "description": "The quantity.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "quantity"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "conflicting-override"
+          ]
+        },
+        {
+          "description": "A stat's value read from its line is not one number.",
+          "type": "object",
+          "properties": {
+            "unsettled-value": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "Where it comes from.",
+                  "$ref": "#/$defs/Source"
+                },
+                "stat": {
+                  "description": "The stat ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "stat",
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unsettled-value"
+          ]
+        }
+      ]
+    },
+    "Node": {
+      "description": "A provenance graph node. Its children are earlier nodes; its value\nis what the engine computed, equal to the graph's evaluation from\nthe leaves.",
+      "type": "object",
+      "properties": {
+        "children": {
+          "description": "The children's indices, in order: a sum's terms, a product's\nfactors, an override's `by` then `replaced`, a minimum's or\nmaximum's two inputs.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "kind": {
+          "description": "What the node is.",
+          "$ref": "#/$defs/NodeKind"
+        },
+        "term": {
+          "description": "The breakdown term (`base`, `increased`, `more`, `override`,\n`result`, or `step.<name>`); absent for leaves and overrides.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "description": "The value.",
+          "$ref": "#/$defs/Number"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "value"
+      ]
+    },
+    "NodeKind": {
+      "description": "What a node is, and how its children combine.",
+      "oneOf": [
+        {
+          "description": "One effect from one source (a leaf; its value is the effect's).",
+          "type": "object",
+          "properties": {
+            "contribution": {
+              "type": "object",
+              "properties": {
+                "op": {
+                  "description": "How it combines (`base`, `increased`, `more`, `flag`,\n`override`).",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "What it changes.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "Where it comes from.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "quantity",
+                "op"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "contribution"
+          ]
+        },
+        {
+          "description": "A constant of a rule or of the game data (a leaf).",
+          "type": "object",
+          "properties": {
+            "constant": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "What it is.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "label"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "constant"
+          ]
+        },
+        {
+          "description": "The sum of the children, from 0.",
+          "type": "string",
+          "const": "sum"
+        },
+        {
+          "description": "The product of the children, from 1.",
+          "type": "string",
+          "const": "product"
+        },
+        {
+          "description": "`1 + child / 100`.",
+          "type": "string",
+          "const": "percent-factor"
+        },
+        {
+          "description": "1 if a child is not 0, else 0.",
+          "type": "string",
+          "const": "any"
+        },
+        {
+          "description": "The first child's value, replacing the second's.",
+          "type": "string",
+          "const": "override"
+        },
+        {
+          "description": "The child rounded down.",
+          "type": "string",
+          "const": "floor"
+        },
+        {
+          "description": "The child rounded half up.",
+          "type": "string",
+          "const": "round-half-up"
+        },
+        {
+          "description": "The smaller child.",
+          "type": "string",
+          "const": "min"
+        },
+        {
+          "description": "The larger child.",
+          "type": "string",
+          "const": "max"
+        }
+      ]
+    },
+    "NonFinite": {
+      "description": "A non-finite number, by its IEEE 754 bit pattern.",
+      "type": "object",
+      "properties": {
+        "f64_bits": {
+          "description": "The bits as 16 lowercase hexadecimal digits.",
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "f64_bits"
+      ]
+    },
+    "Number": {
+      "description": "A number: a JSON number when finite, otherwise its bit pattern (JSON\nhas no NaN or infinity). Finite values are written in the shortest\nform that reads back to the same bits.",
+      "anyOf": [
+        {
+          "description": "A finite number.",
+          "type": "number",
+          "format": "double"
+        },
+        {
+          "description": "A non-finite number.",
+          "$ref": "#/$defs/NonFinite"
+        }
+      ]
+    },
+    "Reasons": {
+      "description": "Reasons collected for the whole build.",
+      "type": "object",
+      "properties": {
+        "indeterminate": {
+          "description": "Values that could not be settled.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IndeterminateReason"
+          }
+        },
+        "unsupported": {
+          "description": "Content that was not modelled.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UnsupportedReason"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Source": {
+      "description": "Where a contribution comes from.",
+      "oneOf": [
+        {
+          "description": "The character itself.",
+          "type": "string",
+          "const": "character"
+        },
+        {
+          "description": "A line of an item.",
+          "type": "object",
+          "properties": {
+            "item": {
+              "type": "object",
+              "properties": {
+                "adapted": {
+                  "description": "The import tolerance the line needed, if any.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Adapted"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "item": {
+                  "description": "The item's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "line": {
+                  "description": "The line's index among the item's lines.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "item",
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "item"
+          ]
+        },
+        {
+          "description": "An allocated passive node.",
+          "type": "object",
+          "properties": {
+            "passive": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "passive"
+          ]
+        },
+        {
+          "description": "A gem.",
+          "type": "object",
+          "properties": {
+            "gem": {
+              "type": "object",
+              "properties": {
+                "gem": {
+                  "description": "The gem's index in the group.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                },
+                "group": {
+                  "description": "The socket group's index.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "gem"
+          ]
+        },
+        {
+          "description": "A config input.",
+          "type": "object",
+          "properties": {
+            "config": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "description": "The input's name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "input"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "config"
+          ]
+        },
+        {
+          "description": "The enemy.",
+          "type": "string",
+          "const": "enemy"
+        },
+        {
+          "description": "A rule of the engine, by name.",
+          "type": "object",
+          "properties": {
+            "rule": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "rule"
+          ]
+        }
+      ]
+    },
+    "StateKind": {
+      "description": "A state's kind, from best to worst.",
+      "oneOf": [
+        {
+          "description": "Every contribution modelled.",
+          "type": "string",
+          "const": "complete"
+        },
+        {
+          "description": "Computed; some content not modelled.",
+          "type": "string",
+          "const": "partial"
+        },
+        {
+          "description": "Not computed.",
+          "type": "string",
+          "const": "unsupported"
+        },
+        {
+          "description": "Not settled.",
+          "type": "string",
+          "const": "indeterminate"
+        }
+      ]
+    },
+    "UnsupportedReason": {
+      "description": "Why a field is not complete, or not computed.",
+      "oneOf": [
+        {
+          "description": "A stat the stat-to-effect mapping does not know.",
+          "type": "object",
+          "properties": {
+            "unmapped-stat": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "Where it comes from.",
+                  "$ref": "#/$defs/Source"
+                },
+                "stat": {
+                  "description": "The stat ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "stat",
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmapped-stat"
+          ]
+        },
+        {
+          "description": "An item line that did not resolve.",
+          "type": "object",
+          "properties": {
+            "unresolved-line": {
+              "type": "object",
+              "properties": {
+                "reason": {
+                  "description": "The resolver's reason.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "reason"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unresolved-line"
+          ]
+        },
+        {
+          "description": "An item line excluded by design whose effect the game may\nstill apply.",
+          "type": "object",
+          "properties": {
+            "excluded-line": {
+              "type": "object",
+              "properties": {
+                "exclusion": {
+                  "description": "The exclusion.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "exclusion"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "excluded-line"
+          ]
+        },
+        {
+          "description": "An item line that was never resolved.",
+          "type": "object",
+          "properties": {
+            "pending-line": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "pending-line"
+          ]
+        },
+        {
+          "description": "A typed resolution without a handler.",
+          "type": "object",
+          "properties": {
+            "unhandled-kind": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "description": "The typed resolution's `kind`.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "Where it comes from.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unhandled-kind"
+          ]
+        },
+        {
+          "description": "An effect needs a named condition the build and config do not\nsettle.",
+          "type": "object",
+          "properties": {
+            "unmodelled-condition": {
+              "type": "object",
+              "properties": {
+                "condition": {
+                  "description": "The condition's name.",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "The quantity of the effect left out.",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "The source of the effect left out.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "condition",
+                "quantity",
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-condition"
+          ]
+        },
+        {
+          "description": "A field derived from another field that is not computed.",
+          "type": "object",
+          "properties": {
+            "depends-on-not-computed": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "description": "The field it needs.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "field"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "depends-on-not-computed"
+          ]
+        },
+        {
+          "description": "The engine does not compute this field yet.",
+          "type": "string",
+          "const": "not-computed"
+        }
+      ]
+    }
+  }
+}
