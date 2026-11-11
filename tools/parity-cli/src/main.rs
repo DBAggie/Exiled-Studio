@@ -13,6 +13,7 @@ mod bundle;
 mod bundle_equal;
 mod categorize;
 mod divergence;
+mod dto_hashes;
 mod extract;
 mod grafts;
 mod item_tags;
@@ -116,6 +117,12 @@ const USAGE: &str = "usage:
       when every difference is registered, 20
       (ORACLE_UNEXPECTED_DIFFERENCE) otherwise, or the class of a fixture
       that has no output on a side when that is smaller.
+  loom-parity-cli dto-hashes <dir>...
+      Import every *.xml PoB build directly in each <dir> (in name order),
+      write its v1 build document twice and read it back (loom_serialization::
+      dto::v1); print each document's SHA-256 and size as JSON. CI compares
+      the output of Windows and Linux. Exit 1 if a document differs on a
+      second run or does not read back to the same build.
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -683,6 +690,16 @@ fn divergence_check(register: &Path) -> ExitCode {
     }
 }
 
+fn dto_hashes(dirs: &[String]) -> Result<bool, String> {
+    let report = dto_hashes::run(dirs)?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    for failure in &report.failures {
+        eprintln!("failure: {failure}");
+    }
+    Ok(report.failures.is_empty())
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if let [cmd, manifest, oracle_dir] = args.as_slice()
@@ -710,6 +727,7 @@ fn main() -> ExitCode {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))

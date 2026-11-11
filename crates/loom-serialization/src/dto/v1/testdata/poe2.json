@@ -1,0 +1,572 @@
+{
+  "format": "loom-build",
+  "version": 1,
+  "build": {
+    "game": "poe2",
+    "game_specific": {
+      "poe2": {}
+    },
+    "data": {
+      "game": "poe2",
+      "schema_version": 1
+    },
+    "character": {
+      "class": "Made-up Class"
+    },
+    "passives": {
+      "specs": []
+    },
+    "skills": {
+      "sets": []
+    },
+    "items": {
+      "entries": [
+        {
+          "typed": {
+            "item": {
+              "id": 1,
+              "body": {
+                "item_class": "Rings",
+                "rarity": "rare",
+                "name": "Made-up Name",
+                "base": "Made-up Base",
+                "implicits": 2,
+                "variants": {
+                  "count": 2,
+                  "selected": 1,
+                  "alternates": [
+                    {
+                      "index": 0,
+                      "selected": 2
+                    },
+                    {
+                      "index": 1
+                    }
+                  ]
+                },
+                "lines": [
+                  {
+                    "source": "Rarity: RARE",
+                    "kind": {
+                      "header": "rarity"
+                    }
+                  },
+                  {
+                    "source": "Made-up Name",
+                    "kind": {
+                      "header": "name"
+                    }
+                  },
+                  {
+                    "source": "Made-up Base",
+                    "kind": {
+                      "header": "base"
+                    }
+                  },
+                  {
+                    "source": "Item Class: Rings",
+                    "kind": {
+                      "header": "item-class"
+                    }
+                  },
+                  {
+                    "source": "--------",
+                    "kind": {
+                      "header": "separator"
+                    }
+                  },
+                  {
+                    "source": "Item Level: 84",
+                    "kind": {
+                      "spec": {
+                        "key": "Item Level",
+                        "value": "84",
+                        "known": true
+                      }
+                    }
+                  },
+                  {
+                    "source": "Odd Key: x",
+                    "kind": {
+                      "spec": {
+                        "key": "Odd Key",
+                        "value": "x",
+                        "known": false
+                      }
+                    }
+                  },
+                  {
+                    "source": "{variant:2}Other Base",
+                    "kind": {
+                      "variant-base": {
+                        "base": "Other Base",
+                        "selected": false
+                      }
+                    }
+                  },
+                  {
+                    "source": "Made-up Influence Item",
+                    "kind": {
+                      "influence": "Made-up"
+                    }
+                  },
+                  {
+                    "source": "Corrupted",
+                    "kind": "flag"
+                  },
+                  {
+                    "source": "??? strange",
+                    "kind": "unrecognized"
+                  },
+                  {
+                    "source": "{crafted}{range:0.5}+(10-20) to made-up stat",
+                    "kind": {
+                      "modifier": {
+                        "text": "+(10-20) to made-up stat",
+                        "prefixes": [
+                          {
+                            "key": "crafted"
+                          },
+                          {
+                            "key": "range",
+                            "value": "0.5"
+                          }
+                        ],
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "resolved": {
+                            "result": {
+                              "stats": [
+                                {
+                                  "stat": "made_up_a",
+                                  "value": {
+                                    "ranged": {
+                                      "min": 10,
+                                      "max": 20
+                                    }
+                                  }
+                                },
+                                {
+                                  "stat": "made_up_b",
+                                  "value": {
+                                    "exact": {
+                                      "min": -3,
+                                      "max": -3
+                                    }
+                                  }
+                                },
+                                {
+                                  "stat": "made_up_c",
+                                  "value": {
+                                    "hidden": {
+                                      "assumed": 1
+                                    }
+                                  }
+                                },
+                                {
+                                  "stat": "made_up_d",
+                                  "value": {
+                                    "hidden": {}
+                                  }
+                                },
+                                {
+                                  "stat": "made_up_e",
+                                  "value": {
+                                    "lookup": [
+                                      2,
+                                      7,
+                                      9223372036854775807
+                                    ]
+                                  }
+                                }
+                              ]
+                            },
+                            "adapted": "case-folded"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "first half",
+                    "kind": {
+                      "modifier": {
+                        "text": "first half",
+                        "section": "implicit",
+                        "selected": true,
+                        "resolution": {
+                          "resolved": {
+                            "result": {
+                              "stats": [
+                                {
+                                  "stat": "made_up_split",
+                                  "value": {
+                                    "exact": {
+                                      "min": 1,
+                                      "max": 1
+                                    }
+                                  }
+                                }
+                              ]
+                            },
+                            "adapted": "split-section"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "second half",
+                    "kind": {
+                      "modifier": {
+                        "text": "second half",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "continues": {
+                            "line": 12
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "Grants Level 20 Made-up Skill",
+                    "kind": {
+                      "modifier": {
+                        "text": "Grants Level 20 Made-up Skill",
+                        "section": {
+                          "other": "made-up-section"
+                        },
+                        "selected": true,
+                        "resolution": {
+                          "resolved": {
+                            "result": {
+                              "typed": {
+                                "granted-skill": {
+                                  "source": "MadeUpGraft",
+                                  "gem": "Metadata/Items/Gems/MadeUp",
+                                  "level": 20
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "Made-up property: 1.5",
+                    "kind": {
+                      "modifier": {
+                        "text": "Made-up property: 1.5",
+                        "section": "enchant",
+                        "selected": true,
+                        "resolution": {
+                          "resolved": {
+                            "result": {
+                              "typed": {
+                                "item-property": {
+                                  "property": "MadeUpProperty",
+                                  "values": [
+                                    {
+                                      "slot": 1,
+                                      "text": "1.5"
+                                    }
+                                  ]
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "Quality (Made-up): +20%",
+                    "kind": {
+                      "modifier": {
+                        "text": "Quality (Made-up): +20%",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "resolved": {
+                            "result": {
+                              "typed": {
+                                "catalyst-quality": {
+                                  "quality_type": "MadeUpQuality",
+                                  "stats": [
+                                    {
+                                      "stat": "made_up_q",
+                                      "value": {
+                                        "exact": {
+                                          "min": 20,
+                                          "max": 20
+                                        }
+                                      }
+                                    }
+                                  ],
+                                  "quality": "20"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "pending",
+                    "kind": {
+                      "modifier": {
+                        "text": "pending",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "not selected",
+                    "kind": {
+                      "modifier": {
+                        "text": "not selected",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "excluded": "not-selected"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "custom",
+                    "kind": {
+                      "modifier": {
+                        "text": "custom",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "excluded": "custom"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "section",
+                    "kind": {
+                      "modifier": {
+                        "text": "section",
+                        "section": {
+                          "other": "class-requirement"
+                        },
+                        "selected": true,
+                        "resolution": {
+                          "excluded": "section"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "no template",
+                    "kind": {
+                      "modifier": {
+                        "text": "no template",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": "no-template"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "no variant fits",
+                    "kind": {
+                      "modifier": {
+                        "text": "no variant fits",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": "no-variant-fits"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "only shadowed",
+                    "kind": {
+                      "modifier": {
+                        "text": "only shadowed",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": "only-shadowed"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "ambiguous",
+                    "kind": {
+                      "modifier": {
+                        "text": "ambiguous",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": {
+                            "ambiguous": [
+                              [
+                                "a",
+                                "b"
+                              ],
+                              [
+                                "c"
+                              ]
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "unnamed",
+                    "kind": {
+                      "modifier": {
+                        "text": "unnamed",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": {
+                            "no-base": {
+                              "unnamed": "tie"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "not found",
+                    "kind": {
+                      "modifier": {
+                        "text": "not found",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": {
+                            "no-base": "not-found"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "scope conflict",
+                    "kind": {
+                      "modifier": {
+                        "text": "scope conflict",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "unresolved": {
+                            "no-base": "scope-conflict"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "layout": [
+                {
+                  "opaque": {
+                    "text": "an older text"
+                  }
+                },
+                {
+                  "typed": "body"
+                },
+                {
+                  "opaque": {
+                    "element": {
+                      "name": "ModRange",
+                      "attributes": [
+                        {
+                          "name": "id",
+                          "value": "1"
+                        },
+                        {
+                          "name": "range",
+                          "value": "0.5"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "text_spacing": [
+                "\n\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\n",
+                "\n",
+                "\n",
+                "\n"
+              ],
+              "attributes": [
+                {
+                  "name": "variant",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "config": {
+      "sets": []
+    },
+    "layout": [
+      {
+        "typed": "character"
+      },
+      {
+        "typed": "passives"
+      },
+      {
+        "typed": "skills"
+      },
+      {
+        "typed": "items"
+      },
+      {
+        "typed": "config"
+      }
+    ]
+  }
+}
