@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2c: Mods filter; stack #42 <- #43 <- #44 <- P2-2c)
+Last Updated: 2026-11-10 (PR P2-2d: compositions, grafts, properties, tolerances; stack #42 <- #43 <- #44 <- #45 <- P2-2d)
 
 # Phase 2: context
 
@@ -180,3 +180,32 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - `ModRow`'s crafting-class and essence fields, and the `craft_class`/`essence_class` clause flags, are PoE1-shaped. The bundle model may need them optional, or PoE2 may need other clause predicates. Decide when the PoE2 bundle is built (P2-3).
   - `mods.rs` has a large public surface (open-field structs). Consider `#[non_exhaustive]` and constructors once the bundle loader (P2-6) is the only builder.
   - An influence the rules do not name gives no value. The item's other influences still count, as in Spike B.
+
+## Decisions in P2-2d (compositions, grafts, properties, tolerances, 2026-11-10)
+- **`loom-parser::import` gains three modules:**
+  - `grafts`: `Grafts::new(bases, wrapper, levels)` and `resolve(base, line) -> GrantedSkill { graft, level: u32 }`;
+  - `properties`: `Properties::new(&TextRules, texts, Option<Vec<QualityType>>)` and `resolve(line) -> PropertyMatch::{Template, Label, Quality}` with `kind()`. `missing()` returns the typed `Missing::{Text, QualityType}`;
+  - `tolerance`: `case_folded(index, text, &resolution, composed)` and `split_section(index, &body, n)`.
+- **`split_section` reads the body as read.** It reads `Pending` modifier lines, which is what the old `resolvable` checked. P2-6 must call it before writing resolutions into the body, or pass a copy.
+- **`TextRules` (`ItemRules.text`)** holds `compositions`, `property_ids`, `label_ids`, and `granted_skill_wrapper`. The PoE1 values (`PROPERTY_IDS`, `LABEL_IDS`, `GRAFT_WRAPPER_ID`, `COMPOSITIONS`) are in `tools/parity-cli/src/poe1.rs`, and `categorize` reads compositions through the rules.
+- **The tool keeps** table loading (`grafts::load`, `properties::load`), the summary inputs, the report's `detail` strings (`properties::property`, and the graft detail in `resolve_corpus`), and the categories and legacy-text evidence (plan). `properties::missing` maps `Missing::QualityType` to Spike B's `AlternateQualityTypes:<description>`.
+- **Domain change:** `TypedResolution::CatalystQuality.quality` is now the quality's text (`String`), not `i64`. The game data allows a decimal part (`number()`), and the line keeps its text, like `PropertyValue.text`.
+- **For P2-6 (mapping onto the domain):**
+  - `PropertyMatch::Template` maps to `ItemProperty { property, values: PropertyValue { slot, text } }`.
+  - `Label` maps to `ItemProperty` with one value.
+  - `Quality` maps to `CatalystQuality { quality_type, stats (StatValue::Exact), quality }`, or to `ItemProperty` when it has no stats.
+  - `GrantedSkill` maps to `GrantedSkill { source: graft id, gem, level }`. The gem is looked up from the skill's base name through the bundle's graft data, so P2-3 should store the gem ID with each graft.
+- **Step 2 is complete.** The lifted pipeline gives Spike B's exact result: the 12 fields are equal and `report.json` is byte-identical (`docs/phase-2/lift-evidence.md`).
+
+## code-architecture-reviewer (P2-2d, 2026-11-10) summary
+- **No blockers.** The moved logic is equivalent: graft conflicts, property order, quality dedup, the case-fold conditions, and the split-section neighbour order and filter.
+- **Should-fix, all applied:**
+  - documented that `split_section` needs the body before resolution is written, and added tests (earlier neighbour wins; an excluded neighbour does not pair; case-fold on a resolved line);
+  - the quality is text in the domain;
+  - the granted-skill level is `u32`;
+  - `Missing` is an enum.
+- **Nits, not done:**
+  - `PropertyMatch::kind` repeats the domain's kind names;
+  - the `composed: bool` argument;
+  - the graft-named types and the fixed `{1}`/`{0}` wrapper shape are PoE1-flavoured. They are game-data shaped, the IDs are data, and "Graft" is not in the gate 3c list. Rename when PoE2 data shows the general form;
+  - `categorize::compositions()` rebuilds the rules on each call (tool only).

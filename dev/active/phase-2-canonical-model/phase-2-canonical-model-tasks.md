@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2c: Mods filter)
+Last Updated: 2026-11-10 (PR P2-2d: compositions, grafts, properties, tolerances)
 
 # Phase 2: tasks
 
@@ -42,8 +42,10 @@ Last Updated: 2026-11-10 (PR P2-2c: Mods filter)
 - [x] Open PR (#45, base `feat/p2-2b-scope-bases`); write the PR number into the docs right after
 
 ## PR P2-2d: compositions, grafts, properties, tolerances (step 2d)
-- [ ] Move grafts, properties, case-fold, split-section; `COMPOSITIONS` as per-game data
-- [ ] Maintainer-run: Spike B field list equal
+- [x] Move grafts, properties, case-fold, split-section to `loom-parser::import` (`grafts`, `properties`, `tolerance`); `COMPOSITIONS`, the property and label ids, and the graft wrapper as per-game `TextRules` data
+- [x] Spike B field list equal (run in the session; `docs/phase-2/lift-evidence.md`, with the step 2 result)
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-2c-mods-filter`); write the PR number into the docs right after
 
 ## PR P2-3: canonical data model, bundle v1, converter (step 3; may split 3a/3b)
 - [ ] Canonical types (our schema) for what import and validation read; `item_rules`; `poe1` section; game-specific table list and its test

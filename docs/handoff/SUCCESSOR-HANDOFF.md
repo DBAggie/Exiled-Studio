@@ -24,8 +24,23 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-2c Mods filter PR #45 open, in review, branch `feat/p2-2c-mods-filter`, stacked on P2-2b)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`).
+## Current state (updated 2026-11-10, P2-2d compositions and tolerances open, in review, branch `feat/p2-2d-compositions-tolerances`, stacked on P2-2c)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- P2-2d (base `feat/p2-2c-mods-filter`).
+- **PR P2-2d: compositions, grafts, properties, tolerances (open, in review, branch `feat/p2-2d-compositions-tolerances`, base `feat/p2-2c-mods-filter`).** Plan step 2d, the last lift PR. CI on #44: all 13 checks green (2026-11-10).
+  - **What:** new modules in `loom-parser::import`:
+    - `grafts`: granted-skill lines;
+    - `properties`: `item-property` and `catalyst-quality` lines, returned as a typed `PropertyMatch`;
+    - `tolerance`: `case_folded`, and `split_section` over `Pending` modifier lines.
+
+    Their client-text IDs (compositions, property and label IDs, the granted-skill wrapper) are per-game `TextRules` data in `ItemRules.text`, and the PoE1 IDs moved to `tools/parity-cli/src/poe1.rs`.
+  - **parity-cli:** `grafts.rs` and `properties.rs` keep table loading, the summary inputs, and the report's `detail` formatting. `missing()` maps the core's `quality-type:` back to `AlternateQualityTypes:`. `categorize` reads compositions through the rules, and `resolve_corpus` calls the core tolerances. The categories and the legacy-text evidence stay in the tool.
+  - **Gate 3c:** the list gained the PoE1 client-text IDs. `resolve/compose.rs` docs were reworded to pass it.
+  - **Evidence:** `resolve-corpus` from a clean tree at `4c22ec2` and `0222f0c`: all fields are equal and `report.json` is byte-identical. **Step 2 is complete:** the lifted pipeline gives exactly Spike B's result (`docs/phase-2/lift-evidence.md`). Workspace tests pass (tool 251; `loom-parser` 98), and so do clippy and wasm32.
+  - **Review:** `code-architecture-reviewer` found no blockers; the moved logic is equivalent. Applied:
+    - `split_section` takes the body before any resolution is written, with tests for the earlier neighbour and an excluded neighbour;
+    - the granted-skill level is `u32`;
+    - `Properties::missing` is a typed `Missing` enum;
+    - the domain's `CatalystQuality.quality` is now the quality's text, because the data allows a decimal.
 - **PR P2-2c: Mods filter (PR #45, open, in review, branch `feat/p2-2c-mods-filter`, base `feat/p2-2b-scope-bases`).** Plan step 2c. CI on #43: all 13 checks green (2026-11-10).
   - **What:** the Spike B `Mods` filter logic moved to the new `crates/loom-parser/src/import/mods.rs`, with 13 tests on made-up rules. That logic is fit, backing, the filter steps, `local-stat`, `numbered-stat`, and `mod-backed`. Every PoE1 number and name the filter used is now `ModRules` data in `ItemRules.mods`:
     - `fits: Vec<FitRule>` (section, flag, rarity, then clauses of generation types and a `DomainMatch`);
@@ -155,13 +170,18 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 7`): if the maintainer merged or asked for changes on #42 to #45, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-2. **P2-2d: compositions, grafts, properties, tolerances** (plan step 2d). Branch from `feat/p2-2c-mods-filter` and target it as base:
-   - move `grafts.rs`, `properties.rs`, the case-fold tolerance, and the split-section marking (`mark_split_lines`) to `loom-parser::import`, with the `ClientStrings`, graft, and quality data they read coming through plain core types filled by the tool (as `Mods` is);
-   - `COMPOSITIONS` (`categorize.rs`, `ClientStrings` wrapper keys) becomes per-game data in `ItemRules`, with the PoE1 list moving to `tools/parity-cli/src/poe1.rs`;
-   - the categories and the PoB legacy-text evidence stay in the tool;
-   - extend the gate 3c list (`BrequelGraftSkillString` and similar wrapper IDs);
-   - evidence: `resolve-corpus` before and after, with the docs stashed.
+1. **Stack check** (`gh pr list --state all --limit 8`): if the maintainer merged or asked for changes on #42 to #45 or P2-2d, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+2. **P2-3: canonical game-data model and bundle v1** (plan step 3; may split into 3a core and 3b tool). Branch from `feat/p2-2d-compositions-tolerances` and target it as base:
+   - 3a, `loom-data`:
+     - canonical types (our own schema) for what import and validation read: stats; mods (rows as `loom_parser::import::mods::ModRow` needs them, with stable IDs rather than row indices); base items (with precomputed tags and the implicit mods); item classes; tags; the client texts the pipeline names; stat-description files; lookup tables; `item_rules`, which carries `ItemRules`' data (domain scopes, `ModRules`, `TextRules`); the `poe1` section (essences with their item classes precomputed, alternate quality types, grafts and graft skill levels);
+     - `bundle.json`, with `signatures` reserved;
+     - `BundleSource` (`list`, `read`);
+     - the loader, with `BUNDLE_*` errors;
+     - `sha2` (run `cargo deny`);
+     - synthetic PoE1 and PoE2 bundles in `crates/loom-data/tests/fixtures/`;
+   - 3b, the tool: `loom-extractor bundle <extract> --out <dir>`, which maps dat-schema rows to canonical types and writes `item_rules` (the PoE1 values now in `tools/parity-cli/src/poe1.rs`);
+   - maintainer-run, done in-session as before: two `bundle` runs per game must be byte-identical; commit scrubbed summaries.
+   - Note the open items for P2-3 in the context file ("Decisions in P2-2c" and "P2-2d").
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

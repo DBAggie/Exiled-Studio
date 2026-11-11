@@ -27,3 +27,11 @@ The script compares `non_unique`, `unique`, `rate`, `resolved_kinds`, `adapted`,
 - Before: the P2-2a baseline above (`c7bbffa`).
 - After: `f03a92c`, and again at `54d6fb6` (review fixes), each clean with exit 0.
 - All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical.
+
+## P2-2d: compositions, grafts, properties, tolerances, 2026-11-10
+- Before: the P2-2a baseline above (`c7bbffa`).
+- After: `4c22ec2`, and again at `0222f0c` (review fixes), each clean with exit 0.
+- All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical.
+
+## Step 2 result
+After the four lift PRs, the whole item pipeline below the categories runs from `loom-parser::import` over the domain item, with its per-game rules as `ItemRules` data. On Spike B's inputs it gives exactly Spike B's result: the 12 fields are equal and `report.json` is byte-identical. The categories, the PoB legacy-text evidence, and table loading stay in the tool, as planned.
