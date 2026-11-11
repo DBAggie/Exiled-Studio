@@ -89,10 +89,10 @@ tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
 # Cross-check an extract output against a PoB checkout cloned into local/ (never the legacy repo);
 # writes report.json and summary.json, exits 1 while the gate is not met:
 cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game poe1|poe2 --out local/cross-check/<game>/<build>
-# Convert an extract (PoE1 or PoE2) into a data bundle of format v1 (loom_data::bundle; <dir> must not exist);
+# Convert an extract (PoE1 or PoE2) into a data bundle of format 2 (loom_data::bundle, with the skill tables; <dir> must not exist);
 # loads it back and prints a scrubbed summary (row counts, hashes). Two runs give byte-identical output (P2-3b):
 cargo run --release -p loom-parity-cli -- bundle local/extract/<game>/<build> --out <dir>
-# Validate a bundle (hashes, sizes, unlisted files, schema, references, unique IDs, item rules, scopes; P2-4);
+# Validate a bundle, format 1 or 2 (hashes, sizes, unlisted files, schema, references, unique IDs, item rules, scopes, skill levels; P2-4, P3-1a);
 # prints the findings as JSON; exit 0 valid, 1 not:
 cargo run --release -p loom-parity-cli -- bundle-check <bundle-dir>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
@@ -101,7 +101,7 @@ cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<bu
 cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
 # Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
 cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build> local/pob/<checkout> --out <dir>
-# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract with item_types/, manifest format 4);
+# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract with item_types/, manifest format 4 or 5);
 # ambiguous lines go through the Mods filter, resolved lines get mod-backed, every other line gets a
 # category; summary.json is scrubbed (builds by content hash, no item names or author text); exits 1
 # while the Spike B gate is not met. Each --pob is a `git archive <tag> src/Data` of the legacy repo

@@ -1,0 +1,17 @@
+[
+ {
+  "base_item": "Test/Gems/Bolt",
+  "effects": [
+   "TestBolt"
+  ],
+  "intelligence": 100
+ },
+ {
+  "base_item": "Test/Gems/SupportDamage",
+  "dexterity": 50,
+  "effects": [
+   "SupportTestDamage"
+  ],
+  "strength": 50
+ }
+]

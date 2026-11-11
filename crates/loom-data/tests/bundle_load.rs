@@ -14,7 +14,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use loom_data::bundle::{self, Bundle, MemorySource};
+use loom_data::bundle::{self, Bundle, MemorySource, skills};
 use loom_data::stat_desc::{Lookup, LookupHandler};
 use loom_domain::Game;
 
@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 11, 3, 3, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 22, 3, 4, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
@@ -121,7 +121,7 @@ fn bundle_should_answer_lookups_from_its_tables() {
 #[test]
 fn load_should_refuse_an_unknown_format() {
     let mut src = source("bundle-poe2").unwrap();
-    edit_manifest(&mut src, |m| m["format"] = 2.into());
+    edit_manifest(&mut src, |m| m["format"] = 9.into());
     assert_eq!(load(&src).err(), Some("BUNDLE_FORMAT"));
 }
 
@@ -222,5 +222,183 @@ fn scope_root_should_find_one_file_by_name_in_any_case() {
     assert_eq!(
         b.scope_root("stat_descriptions"),
         Err(bundle::ScopeRootError::Several(2))
+    );
+}
+
+#[test]
+fn format_2_bundles_should_load_their_skill_tables_in_each_game_shape() {
+    let one = load(&source("bundle-poe1").unwrap()).unwrap();
+    let two = load(&source("bundle-poe2").unwrap()).unwrap();
+    let shape = |b: &Bundle| {
+        let sk = b.skills.as_ref().unwrap();
+        let bolt = &sk.stat_sets[0];
+        let support = &sk.granted_effects[2];
+        (
+            (
+                sk.skill_types.len(),
+                sk.active_skills.len(),
+                sk.granted_effects.len(),
+                sk.stat_sets.len(),
+                sk.gems.len(),
+                sk.gem_effects.len(),
+                sk.gem_tags.len(),
+            ),
+            // f32 values read back exactly.
+            (bolt.base_effectiveness, bolt.levels[1].float_stats[0].value),
+            bolt.levels[0].damage_effectiveness,
+            bolt.damage_incremental_effectiveness,
+            support.levels[0].reservations[0].resource,
+        )
+    };
+    assert_eq!(
+        (shape(&one), shape(&two)),
+        (
+            (
+                (3, 2, 3, 3, 2, 2, 2),
+                (1.5, 6.25),
+                Some(0),
+                None,
+                skills::Resource::Mana
+            ),
+            (
+                (3, 2, 3, 3, 2, 2, 2),
+                (1.5, 6.25),
+                None,
+                Some(0.01),
+                skills::Resource::Spirit
+            ),
+        )
+    );
+}
+
+/// The bundle as format 1: no skill files, `format` 1.
+fn as_format_1(src: &mut MemorySource) {
+    for path in bundle::calc_files() {
+        src.remove(path);
+    }
+    edit_manifest(src, |m| {
+        m["format"] = 1.into();
+        m["files"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|f| !loom_data::bundle::calc_files().any(|c| f["path"] == c));
+    });
+}
+
+#[test]
+fn format_1_bundle_should_still_load_for_import_without_skill_tables() {
+    for name in ["bundle-poe1", "bundle-poe2"] {
+        let mut src = source(name).unwrap();
+        as_format_1(&mut src);
+        let b = load(&src).unwrap();
+        assert_eq!(
+            (b.manifest.format, b.skills.is_none(), b.mods.len()),
+            (1, true, 3),
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn load_should_refuse_a_skill_file_in_a_format_1_bundle() {
+    let mut src = source("bundle-poe2").unwrap();
+    as_format_1(&mut src);
+    add_listed(&mut src, skills::GEMS);
+    assert_eq!(load(&src).err(), Some("BUNDLE_FORMAT_FILE"));
+}
+
+#[test]
+fn load_should_refuse_a_format_2_bundle_without_a_skill_file() {
+    for path in bundle::calc_files() {
+        let mut src = source("bundle-poe1").unwrap();
+        edit_manifest(&mut src, |m| {
+            m["files"]
+                .as_array_mut()
+                .unwrap()
+                .retain(|f| f["path"] != path);
+        });
+        assert_eq!(load(&src).err(), Some("BUNDLE_MISSING_FILE"), "{path}");
+    }
+}
+
+#[test]
+fn load_should_refuse_an_unknown_field_in_a_skill_row() {
+    let mut src = source("bundle-poe2").unwrap();
+    src.insert(skills::GEM_TAGS, r#"[{"id": "a", "colour": "red"}]"#);
+    assert_eq!(load(&src).err(), Some("BUNDLE_JSON"));
+}
+
+fn stat_set(base: f32, damage: Option<f32>) -> skills::StatSet {
+    skills::StatSet {
+        id: "x".to_owned(),
+        implicit_stats: Vec::new(),
+        constant_stats: Vec::new(),
+        base_effectiveness: base,
+        incremental_effectiveness: base,
+        damage_incremental_effectiveness: damage,
+        levels: Vec::new(),
+    }
+}
+
+/// `f32` fields are written as their shortest text and read back to the
+/// same bits, over a spread of bit patterns (normal, subnormal, large).
+#[test]
+fn f32_fields_should_round_trip_through_their_shortest_text() {
+    let json = serde_json::to_string(&stat_set(2.921, Some(0.0495))).unwrap();
+    assert!(
+        json.contains("\"base_effectiveness\":2.921,") && json.contains(":0.0495,"),
+        "{json}"
+    );
+    let mut bits: u32 = 1;
+    while bits < 0x7f80_0000 {
+        let v = f32::from_bits(bits);
+        let set = stat_set(v, Some(-v));
+        let back: skills::StatSet =
+            serde_json::from_str(&serde_json::to_string(&set).unwrap()).unwrap();
+        assert_eq!(
+            (
+                back.base_effectiveness.to_bits(),
+                back.damage_incremental_effectiveness.map(f32::to_bits)
+            ),
+            (bits, Some((-v).to_bits())),
+            "{v:e}"
+        );
+        bits = bits.saturating_add(0x0001_3579);
+    }
+}
+
+#[test]
+fn format_2_bundles_should_load_their_passive_tables_in_each_game_shape() {
+    let shape = |name: &str| {
+        let b = load(&source(name).unwrap()).unwrap();
+        let p = b.passives.unwrap();
+        (
+            (
+                p.characters.len(),
+                p.ascendancies.len(),
+                p.object_templates.len(),
+                p.passives.len(),
+                p.mastery_groups.len(),
+                p.mastery_effects.len(),
+                p.tree.groups.len(),
+            ),
+            p.characters[0].template.clone(),
+            p.object_templates[0].values.len(),
+            (p.tree.groups[0].x, p.tree.groups[0].y),
+            p.tree.groups[0].nodes[1].connections[0].orbit,
+        )
+    };
+    assert_eq!(
+        (shape("bundle-poe1"), shape("bundle-poe2")),
+        (
+            (
+                (2, 1, 2, 5, 1, 1, 2),
+                Some("test/chars/str".to_owned()),
+                0,
+                (-1.5, 2.25),
+                Some(-2)
+            ),
+            ((2, 1, 1, 5, 1, 1, 2), None, 1, (-1.5, 2.25), Some(-2)),
+        )
     );
 }

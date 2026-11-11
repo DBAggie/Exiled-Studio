@@ -3,14 +3,26 @@
 //! exists). Five kinds of check, each finding with a stable code (ADR-014):
 //!
 //! - **structural:** every listed file exists with its SHA-256 and size; no
-//!   file is unlisted; `signatures` is empty in format 1;
+//!   file is unlisted; `signatures` is empty (formats 1 and 2);
 //! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
 //!   required files, every file parses);
 //! - **referential:** mod stats, quality stats, and the stats of the
 //!   rules' compositions are stats; mod classes and base classes are item
 //!   classes; base implicits are mods; graft gems are base items; client
-//!   texts the rules name exist;
-//! - **domain:** IDs are unique per kind; the item rules validate;
+//!   texts the rules name exist; in the skill tables (format 2), every
+//!   stat, skill type, item class, active skill, granted effect, stat set,
+//!   base item, gem effect, gem tag, and cost type a row names exists; in
+//!   the character and passive tables, every stat, character, ascendancy,
+//!   object template, mastery group, and mastery effect, every passive of a
+//!   tree node, and every tree node of a connection or root; no object
+//!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`);
+//! - **domain:** IDs are unique per kind, and in the calc tables not empty
+//!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
+//!   mastery effect hashes, class numbers, and ascendancy numbers within a
+//!   class are unique; the item rules validate; the
+//!   per-level rows of a granted effect or stat set have strictly
+//!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
 //!   builds, and renders a sample.
 //!
@@ -26,6 +38,8 @@ use std::collections::BTreeSet;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use super::passives::{self, PassiveTables};
+use super::skills::{self, SkillTables};
 use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
 use crate::stat_desc::{StatValue, VariantFilter, render_description};
 
@@ -100,7 +114,8 @@ fn at_of(e: &BundleError) -> String {
         BundleError::MissingFile(p)
         | BundleError::BadPath(p)
         | BundleError::DuplicatePath(p)
-        | BundleError::GameSection(p, _) => p.clone(),
+        | BundleError::GameSection(p, _)
+        | BundleError::FormatFile(p, _) => p.clone(),
         _ => MANIFEST.to_owned(),
     }
 }
@@ -115,7 +130,7 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
             return false;
         }
     };
-    // An unknown format is the loader's finding; this check needs format 1.
+    // An unknown format is the loader's finding; this check needs a known one.
     let manifest: Manifest = match serde_json::from_slice(&bytes) {
         Ok(m) => m,
         Err(_) => return true,
@@ -128,7 +143,7 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         report.add(
             "BUNDLE_SIGNATURES",
             MANIFEST,
-            "signatures are reserved and empty in format 1",
+            "signatures are reserved and empty in formats 1 and 2",
         );
     }
     for f in &manifest.files {
@@ -221,6 +236,12 @@ fn referential(b: &Bundle, report: &mut Report) {
             }
         }
     }
+    if let Some(sk) = &b.skills {
+        skill_refs(sk, &stats, &classes, &bases, report);
+    }
+    if let Some(p) = &b.passives {
+        passive_refs(p, &stats, report);
+    }
     let texts: BTreeSet<&str> = b.client_texts.iter().map(|t| t.id.as_str()).collect();
     let t = &b.item_rules.text;
     let named = t
@@ -237,6 +258,403 @@ fn referential(b: &Bundle, report: &mut Report) {
                 "data/client_texts.json",
                 format!("the item rules name {id:?}"),
             );
+        }
+    }
+}
+
+/// The skill tables' references (module docs).
+fn skill_refs(
+    sk: &SkillTables,
+    stats: &BTreeSet<&str>,
+    classes: &BTreeSet<&str>,
+    bases: &BTreeSet<&str>,
+    report: &mut Report,
+) {
+    fn ids<'a>(it: impl Iterator<Item = &'a str>) -> BTreeSet<&'a str> {
+        it.collect()
+    }
+    let types = ids(sk.skill_types.iter().map(|t| t.id.as_str()));
+    let actives = ids(sk.active_skills.iter().map(|a| a.id.as_str()));
+    let effects = ids(sk.granted_effects.iter().map(|e| e.id.as_str()));
+    let sets = ids(sk.stat_sets.iter().map(|s| s.id.as_str()));
+    let gem_effects = ids(sk.gem_effects.iter().map(|e| e.id.as_str()));
+    let tags = ids(sk.gem_tags.iter().map(|t| t.id.as_str()));
+    let costs = ids(sk.cost_types.iter().map(String::as_str));
+    let mut check = |known: &BTreeSet<&str>, at: &dyn Fn() -> String, what: &str, id: &str| {
+        if !known.contains(id) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                at(),
+                format!("{what} {id:?} does not exist"),
+            );
+        }
+    };
+    for t in &sk.skill_types {
+        let at = || format!("skill_types:{}", t.id);
+        if let Some(s) = &t.flag_stat {
+            check(stats, &at, "stat", s);
+        }
+    }
+    for a in &sk.active_skills {
+        let at = || format!("active_skills:{}", a.id);
+        for t in a.types.iter().chain(&a.minion_types) {
+            check(&types, &at, "skill type", t);
+        }
+        for c in &a.weapon_classes {
+            check(classes, &at, "item class", c);
+        }
+    }
+    for e in &sk.granted_effects {
+        let at = || format!("granted_effects:{}", e.id);
+        if let Some(a) = &e.active_skill {
+            check(&actives, &at, "active skill", a);
+        }
+        for t in e
+            .allowed_types
+            .iter()
+            .chain(&e.added_types)
+            .chain(&e.excluded_types)
+            .chain(&e.added_minion_types)
+        {
+            check(&types, &at, "skill type", t);
+        }
+        for s in &e.stat_sets {
+            check(&sets, &at, "stat set", s);
+        }
+        for q in &e.quality {
+            check(stats, &at, "stat", &q.stat);
+        }
+        for c in e.levels.iter().flat_map(|l| &l.costs) {
+            check(&costs, &at, "cost type", &c.resource);
+        }
+    }
+    for set in &sk.stat_sets {
+        let at = || format!("stat_sets:{}", set.id);
+        let set_stats = set
+            .implicit_stats
+            .iter()
+            .chain(set.constant_stats.iter().map(|c| &c.stat));
+        let level_stats = set.levels.iter().flat_map(|l| {
+            l.float_stats
+                .iter()
+                .map(|f| &f.stat)
+                .chain(l.stats.iter().map(|s| &s.stat))
+                .chain(&l.flags)
+        });
+        for s in set_stats.chain(level_stats) {
+            check(stats, &at, "stat", s);
+        }
+        for e in set.levels.iter().flat_map(|l| &l.granted_effects) {
+            check(&effects, &at, "granted effect", e);
+        }
+    }
+    for g in &sk.gems {
+        let at = || format!("gems:{}", g.base_item);
+        check(bases, &at, "base item", &g.base_item);
+        for e in &g.effects {
+            check(&gem_effects, &at, "gem effect", e);
+        }
+    }
+    for e in &sk.gem_effects {
+        let at = || format!("gem_effects:{}", e.id);
+        for g in e.granted_effect.iter().chain(&e.additional_granted_effects) {
+            check(&effects, &at, "granted effect", g);
+        }
+        for t in &e.tags {
+            check(&tags, &at, "gem tag", t);
+        }
+    }
+}
+
+/// The skill tables' domain checks: IDs not empty and unique per file,
+/// ascending levels.
+fn skill_domain(sk: &SkillTables, report: &mut Report) {
+    let files: [(&str, Vec<&str>); 8] = [
+        (
+            skills::SKILL_TYPES,
+            sk.skill_types.iter().map(|t| t.id.as_str()).collect(),
+        ),
+        (
+            skills::COST_TYPES,
+            sk.cost_types.iter().map(String::as_str).collect(),
+        ),
+        (
+            skills::ACTIVE_SKILLS,
+            sk.active_skills.iter().map(|a| a.id.as_str()).collect(),
+        ),
+        (
+            skills::GRANTED_EFFECTS,
+            sk.granted_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+        (
+            skills::STAT_SETS,
+            sk.stat_sets.iter().map(|s| s.id.as_str()).collect(),
+        ),
+        (
+            skills::GEMS,
+            sk.gems.iter().map(|g| g.base_item.as_str()).collect(),
+        ),
+        (
+            skills::GEM_EFFECTS,
+            sk.gem_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+        (
+            skills::GEM_TAGS,
+            sk.gem_tags.iter().map(|t| t.id.as_str()).collect(),
+        ),
+    ];
+    for (file, ids) in files {
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+    }
+    let ascending = |levels: Vec<i64>| levels.iter().zip(levels.iter().skip(1)).all(|(a, b)| a < b);
+    for e in &sk.granted_effects {
+        if !ascending(e.levels.iter().map(|l| l.level).collect()) {
+            report.add(
+                "BUNDLE_SKILL_LEVELS",
+                format!("granted_effects:{}", e.id),
+                "levels are not strictly ascending",
+            );
+        }
+    }
+    for s in &sk.stat_sets {
+        if !ascending(s.levels.iter().map(|l| l.level).collect()) {
+            report.add(
+                "BUNDLE_SKILL_LEVELS",
+                format!("stat_sets:{}", s.id),
+                "levels are not strictly ascending",
+            );
+        }
+    }
+}
+
+/// The character and passive tables' references (module docs).
+fn passive_refs(p: &PassiveTables, stats: &BTreeSet<&str>, report: &mut Report) {
+    fn ids<'a>(it: impl Iterator<Item = &'a str>) -> BTreeSet<&'a str> {
+        it.collect()
+    }
+    let characters = ids(p.characters.iter().map(|c| c.id.as_str()));
+    let ascendancies = ids(p.ascendancies.iter().map(|a| a.id.as_str()));
+    let templates = ids(p.object_templates.iter().map(|t| t.id.as_str()));
+    let groups = ids(p.mastery_groups.iter().map(|g| g.id.as_str()));
+    let effects = ids(p.mastery_effects.iter().map(|e| e.id.as_str()));
+    let passive_nodes: BTreeSet<i64> = p.passives.iter().map(|x| x.node).collect();
+    let tree_nodes: BTreeSet<i64> = p
+        .tree
+        .groups
+        .iter()
+        .flat_map(|g| &g.nodes)
+        .map(|n| n.node)
+        .collect();
+    let mut check = |known: &BTreeSet<&str>, at: &dyn Fn() -> String, what: &str, id: &str| {
+        if !known.contains(id) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                at(),
+                format!("{what} {id:?} does not exist"),
+            );
+        }
+    };
+    for c in &p.characters {
+        let at = || format!("characters:{}", c.id);
+        if let Some(t) = &c.template {
+            check(&templates, &at, "object template", t);
+        }
+    }
+    for a in &p.ascendancies {
+        let at = || format!("ascendancies:{}", a.id);
+        if let Some(c) = &a.character {
+            check(&characters, &at, "character", c);
+        }
+    }
+    for t in &p.object_templates {
+        let at = || format!("object_templates:{}", t.id);
+        if let Some(e) = &t.extends {
+            check(&templates, &at, "object template", e);
+        }
+        for s in &t.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+    }
+    for x in &p.passives {
+        let at = || format!("passives:{}", x.id);
+        for s in &x.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+        if let Some(g) = &x.mastery_group {
+            check(&groups, &at, "mastery group", g);
+        }
+        if let Some(a) = &x.ascendancy {
+            check(&ascendancies, &at, "ascendancy", a);
+        }
+        for c in &x.characters {
+            check(&characters, &at, "character", c);
+        }
+    }
+    for g in &p.mastery_groups {
+        let at = || format!("mastery_groups:{}", g.id);
+        for e in &g.effects {
+            check(&effects, &at, "mastery effect", e);
+        }
+    }
+    for e in &p.mastery_effects {
+        let at = || format!("mastery_effects:{}", e.id);
+        for s in &e.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+    }
+    // Every tree node is a passive; every connection and root a tree node.
+    let mut node = |known: &BTreeSet<i64>, what: &str, n: i64| {
+        if !known.contains(&n) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("passive_tree:{n}"),
+                format!("{what} {n} does not exist"),
+            );
+        }
+    };
+    for n in p.tree.groups.iter().flat_map(|g| &g.nodes) {
+        node(&passive_nodes, "passive node", n.node);
+        for c in &n.connections {
+            node(&tree_nodes, "tree node", c.node);
+        }
+    }
+    for r in &p.tree.roots {
+        node(&tree_nodes, "tree node", *r);
+    }
+    // Template chains end.
+    let parent: std::collections::BTreeMap<&str, &str> = p
+        .object_templates
+        .iter()
+        .filter_map(|t| Some((t.id.as_str(), t.extends.as_deref()?)))
+        .collect();
+    for t in &p.object_templates {
+        let mut at = t.id.as_str();
+        for _ in 0..=parent.len() {
+            match parent.get(at) {
+                Some(next) => at = next,
+                None => break,
+            }
+        }
+        if parent.contains_key(at) {
+            report.add(
+                "BUNDLE_TEMPLATE_CYCLE",
+                format!("object_templates:{}", t.id),
+                "its extends chain loops",
+            );
+        }
+    }
+    // Orbits and positions fit the orbit slots.
+    let slots = &p.tree.orbit_slots;
+    for n in p.tree.groups.iter().flat_map(|g| &g.nodes) {
+        let fits = usize::try_from(n.orbit)
+            .ok()
+            .and_then(|o| slots.get(o))
+            .is_some_and(|max| (0..*max).contains(&n.orbit_index));
+        if !fits {
+            report.add(
+                "BUNDLE_TREE_GEOMETRY",
+                format!("passive_tree:{}", n.node),
+                format!(
+                    "orbit {} position {} does not fit the orbit slots",
+                    n.orbit, n.orbit_index
+                ),
+            );
+        }
+    }
+}
+
+/// The character and passive tables' domain checks: IDs not empty and
+/// unique per file; passive node numbers, tree nodes, and mastery effect
+/// hashes unique.
+fn passive_domain(p: &PassiveTables, report: &mut Report) {
+    let files: [(&str, Vec<&str>); 6] = [
+        (
+            passives::CHARACTERS,
+            p.characters.iter().map(|c| c.id.as_str()).collect(),
+        ),
+        (
+            passives::ASCENDANCIES,
+            p.ascendancies.iter().map(|a| a.id.as_str()).collect(),
+        ),
+        (
+            passives::OBJECT_TEMPLATES,
+            p.object_templates.iter().map(|t| t.id.as_str()).collect(),
+        ),
+        (
+            passives::PASSIVES,
+            p.passives.iter().map(|x| x.id.as_str()).collect(),
+        ),
+        (
+            passives::MASTERY_GROUPS,
+            p.mastery_groups.iter().map(|g| g.id.as_str()).collect(),
+        ),
+        (
+            passives::MASTERY_EFFECTS,
+            p.mastery_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+    ];
+    for (file, ids) in files {
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+    }
+    let numbers: [(&str, &str, Vec<i64>); 5] = [
+        (passives::PASSIVE_TREE, "root", p.tree.roots.clone()),
+        (
+            passives::CHARACTERS,
+            "class number",
+            p.characters.iter().map(|c| c.class_number).collect(),
+        ),
+        (
+            passives::PASSIVES,
+            "node",
+            p.passives.iter().map(|x| x.node).collect(),
+        ),
+        (
+            passives::PASSIVE_TREE,
+            "node",
+            p.tree
+                .groups
+                .iter()
+                .flat_map(|g| &g.nodes)
+                .map(|n| n.node)
+                .collect(),
+        ),
+        (
+            passives::MASTERY_EFFECTS,
+            "hash",
+            p.mastery_effects.iter().map(|e| e.hash).collect(),
+        ),
+    ];
+    let mut ascendancy_numbers = BTreeSet::new();
+    for a in &p.ascendancies {
+        if !ascendancy_numbers.insert((a.character.as_deref(), a.class_number)) {
+            report.add(
+                "BUNDLE_DUPLICATE_ID",
+                passives::ASCENDANCIES,
+                format!(
+                    "class number {} is on two ascendancies of one class",
+                    a.class_number
+                ),
+            );
+        }
+    }
+    for (file, what, values) in numbers {
+        let mut seen = BTreeSet::new();
+        for v in values {
+            if !seen.insert(v) {
+                report.add(
+                    "BUNDLE_DUPLICATE_ID",
+                    file,
+                    format!("{what} {v} is on two rows"),
+                );
+            }
         }
     }
 }
@@ -269,6 +687,12 @@ fn domain(b: &Bundle, report: &mut Report) {
     );
     if let Err(e) = b.item_rules.mods.validate() {
         report.add("BUNDLE_ITEM_RULES", super::ITEM_RULES, e.code());
+    }
+    if let Some(sk) = &b.skills {
+        skill_domain(sk, report);
+    }
+    if let Some(p) = &b.passives {
+        passive_domain(p, report);
     }
 }
 
