@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-13: calc result document v1)
+Last Updated: 2026-11-11 (P3-5: parity harness)
 
 # Phase 3: calc slice (context)
 
@@ -15,6 +15,7 @@ Last Updated: 2026-11-11 (P3-13: calc result document v1)
 | `crates/loom-parser/src/import/` | `ItemData`, `resolve_build`: the pattern `CalcData` follows |
 | `crates/loom-parser/tests/no_poe1_identifiers.rs` | Gate 3c scan; extend to `loom-calc` |
 | `tools/parity-cli/src/oracle_compare.rs`, `divergence.rs` | Register classification and exit codes `calc-parity` reuses |
+| `tools/parity-cli/src/calc_run.rs`, `calc_parity.rs`, `docs/phase-3/calc-parity.md` | P3-5: `calc-run`, `calc-parity`, the breakdown reader |
 | `tools/parity-cli/src/bundle.rs` | The extract-to-bundle converter (v2 in step 1b) |
 | `tools/extractor/` | Tables to add: per-level stat sets, weapon, armour, shield types, default monster stats |
 | `tools/oracle/fixtures/fixtures.json` | Fixture manifest; mechanic fixtures join it (tier `mechanic`) |
@@ -63,6 +64,7 @@ No ADR needs an amendment for this plan.
 - **Q5** Keep the oracle at PoB v2.67.2 and register data differences as `data-version`. Default: yes; moving the pin needs ADR-001's process.
 - **Q6** Default comparison per field: `exact` for values PoB rounds (life, mana, resistances, attributes), `rel` with a written reason (summation order) only where the survey shows non-rounded floats differ in the last bits. Default: yes, each written in `slice-fields.json`.
 - **Q7** The excluded-mechanics list (plan decision 3), written in P3-3 from game data. Default: what P3-3 proposes, at least timeless and cluster jewels in allocated sockets if the survey shows they reach slice fields; the maintainer confirms before P3-6. P3-3 proposes `timeless-jewel`, `cluster-jewel`, `not-carried-passive` (`docs/phase-3/calc-scope-poe1.json`).
+- **Q9** (P3-5) PoB's CALCS view, which the oracle's breakdowns come from, calculates the Calcs tab's socket group (`skill_number`, absent or 1 in the fixtures), not the main group: in all 7 in-scope builds the `TotalDPS` breakdown is another skill's, so `calc-parity` compares none of their breakdowns (gate item 3). Options (`docs/phase-3/calc-parity.md`): (a) the adapter sets `calcsTab.input.skill_number` to `mainSocketGroup`, and the group's `mainActiveSkillCalcs` and `skillPartCalcs` to the main view's, before reading breakdowns (recommended; one rule for every build; adapter protocol bump, all outputs change once); (b) the derived fixtures add `<Input name="skill_number">` (new pins; community and corpus builds stay unfixed). No default: needed before P3-9b compares hit breakdowns.
 - **Q8** (P3-3) How to reach 3 in-scope builds per chosen skill: the survey finds 1 (Winter Orb) and no attack. Options in `docs/phase-3/calc-survey.md`: (a) credited public builds of the chosen skills on the 3_29 tree without the excluded jewels (recommended), (b) derived fixtures with a guide's earlier 3_29 spec active, (c) a lower minimum. No default: P3-3b waits for the answer and for Q2.
 
 ## plan-reviewer (2026-11-11) summary
@@ -196,3 +198,18 @@ Not applied: N2 (how many real `Exact` values have `min < max`; P3-8 counts them
 - **Names as strings:** fields and quantities by `Display`, reasons and states by `name()` (a test checks each tag equals it), ops by `Op::name`, terms `base`/`increased`/`more`/`override`/`result`/`step.<name>`. Strings keep game-specific names (`poe1.*`) out of shared DTO enums (ADR-001) and need no DTO change when P3-6 on add fields or quantities; the schema types them as strings.
 - **Cross-platform:** no new CI job. The golden-bytes test runs in the required `rust` job on Windows and Linux; each must equal the committed bytes (LF by `.gitattributes`), which is stronger than a hash diff between the two. P3-5 adds the `calc-run` documents' hashes to `dto cross-platform` once real results exist.
 - No ADR changed or extended; no divergence from the oracle (nothing is compared yet).
+
+## Decisions in P3-5 (parity harness; evidence `docs/phase-3/calc-parity.md`)
+- **`calc-run` outputs:** `documents/<id>.json`, `report.json` (deterministic for one commit; what `calc-parity` reads), `summary.json` (counts and timing), `timing.json` (per build, not deterministic). Ids as `oracle-run`'s, so runs pair. Inputs as `build-round-trip` (folders, `*.xml`, v1 `*.json`); no fixture manifest input (PoB's 3.13 builds are passed as their folder in the oracle checkout).
+- **Overlay:** `OverlayData` (tool-side `CalcData`) refuses an overlay of another bundle or with a duplicate row; it changes no value until P3-6 adds table reads to `CalcData`. **P3-6 must route every new `CalcData` read through `OverlayData::pob_value`** (and drop its `expect(dead_code)`), or every `data-version` entry stays refused.
+- **Our names in the tool only:** `calc_parity::slice::OUR_NAMES` maps PoB ids to `Field` names; a test ties it to `poe1::SLICE`.
+- **`slice-fields.json` revision 2:** a `graph` reference per breakdown term (`base`, `increased`, `more`, `result`, `row`, `step.<name>`, `field:<id>`) and slot rows as nodes `step.slot.<source>[.<sourceName>]`. This is the contract the engine's graphs are built to. The term search stops at another field's `result` node.
+- **Comparison at printed decimals:** ours printed with the line's format (`%g`, `%.Nf`, Lua `tostring` = `%.14g`, emulated in Rust; exact ties round to even, as glibc), compared as text. `(a + b) ^8(base)` compares as the printed sum.
+- **Not a pass unless compared:** a build with no complete field, or a complete field whose breakdown was not compared, is `incomplete`; the report exits 5. A build whose bytes differ between the runs is `not_compared` (`ORACLE_PROTOCOL`). An overlay run must hold the same builds and tool commit. A manifest mechanic fixture missing from the comparison fails it.
+- **Successor failure classes:** `read` -> `ORACLE_IMPORT`, `resolve`/`calculate` -> `ORACLE_CALCULATION`, `document` -> `ORACLE_PROTOCOL` (the harness's taxonomy, reused for both sides).
+- **PoB's views:** a chain breakdown total that is not `main_output`'s value printed alike blocks the build's breakdowns (`views_differ`). Found in 12 of 36 public builds (all 7 in scope) and 11 of 21 corpus builds: the Calcs tab's `skill_number` is not the main group (Q9).
+- **For P3-6/P3-7:** `Term::Step(&'static str)` cannot hold data-derived names; slot row nodes (`step.slot.body-armour`, `step.slot.conversion.life-to-energy-shield`) need either a static table of the slot and conversion names PoB prints, or a dynamic term (a graph and DTO change; the DTO prints `step.<name>` as a string already). Decide before the first slot node. The CI check `field_states.unsupported == 24` changes when fields are computed.
+- No ADR changed or extended; no divergence registered (nothing is computed yet).
+
+## code-architecture-reviewer (P3-5, 2026-11-11) summary
+Core sound; no ADR or boundary issue. Blockers, all applied with a test each: `input_differs` only flagged (now `not_compared`, `ORACLE_PROTOCOL`); nothing compared read as a pass (now `incomplete`, exit 5); overlay run not tied to the same builds (ids, SHA-256, tool commit now required); mechanic fixtures missing from the runs silent (`missing_mechanic`, 20). Should-fix applied: a required term absent on both sides is a difference; the term search stops at other fields' results; every unreadable breakdown reported; byte-safe format scan; `.partial` appended to the out name; ids escaped in the summary; tie-rounding test. Not applied: (a + b) base compared only as its sum (documented); `Exact` compared at `%.14g` (JSON numbers PoB writes are already `%.14g`-round-trip values); the views check covers chain breakdowns only (a mismatch elsewhere shows as differences, fail-safe); `Term::Step` naming for slots (left to P3-6/P3-7, above). It recommended option (a) for Q9 (adapter protocol bump), keeping `views_differ` as a tripwire.

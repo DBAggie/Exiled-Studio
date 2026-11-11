@@ -1,0 +1,139 @@
+{
+  "format": 1,
+  "status": "incomplete",
+  "class": null,
+  "oracle": {
+    "sha256": "69b082e1dc6f5d900bf25d173f85455afc1b38cee80b789b5742cf1680491cbe",
+    "platform": "windows-x86_64",
+    "tool_commit": "a7a1a2cb83e16ca3c6c7caa30dd8e55cb145c124"
+  },
+  "successor": {
+    "sha256": "6e5257618edf80422cea50d09979f9b2235063ae11c5e21c287ecdd687c6d8f5",
+    "platform": null,
+    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+  },
+  "overlay": {
+    "sha256": "7b23e5dd76414a4edca68eee8cc4a3da01ac99a01b95f9af722785dd814340bb",
+    "platform": null,
+    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+  },
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba"
+  },
+  "slice": {
+    "sha256": "6b120021dbe21ba7db2515fdb6571532ae938f7fa2c75800299e9c59f3a6c0bb",
+    "revision": 2,
+    "status": "proposed"
+  },
+  "register": {
+    "sha256": "da96b56c4f581639a17350da661cb980a73822b936a05bf24623bcaf7e7e5f10",
+    "entries": 0,
+    "accepted": 0
+  },
+  "counts": {
+    "builds": 37,
+    "no_difference": 36,
+    "expected": 0,
+    "unexpected": 0,
+    "failed": 0,
+    "expected_failures": 1,
+    "not_compared": 0,
+    "fields": {
+      "not-computed": 864
+    },
+    "breakdowns": {
+      "not-compared": 360
+    },
+    "views_differ": 12,
+    "incomplete": 36,
+    "expected_differences": 0,
+    "unexpected_differences": 0
+  },
+  "unpaired": [],
+  "missing_mechanic": [],
+  "unused_entries": [],
+  "views_differ": [
+    {
+      "id": "Dual Savior.xml",
+      "views": [
+        "TotalDPS: breakdown total 89.8, main output 47.5"
+      ]
+    },
+    {
+      "id": "Generals Perforate Zerker.xml",
+      "views": [
+        "TotalDPS: breakdown total 0.0, main output 22360012.5"
+      ]
+    },
+    {
+      "id": "Mirage Archer Toxic Rain.xml",
+      "views": [
+        "TotalDPS: breakdown total 90539.0, main output 92213.6"
+      ]
+    },
+    {
+      "id": "arakaalis-raise-spider-occultist.xml",
+      "views": [
+        "TotalDPS: breakdown total 5792.5, main output 0.0"
+      ]
+    },
+    {
+      "id": "holy-flame-totem-hierophant.xml",
+      "views": [
+        "TotalDPS: breakdown total 0.0, main output 3920655.7"
+      ]
+    },
+    {
+      "id": "ice-nova-elementalist-campaign-lab1.xml",
+      "views": [
+        "TotalDPS: breakdown total 84002.1, main output 115856.6"
+      ]
+    },
+    {
+      "id": "ice-nova-elementalist-campaign.xml",
+      "views": [
+        "TotalDPS: breakdown total 294235.1, main output 563489.9"
+      ]
+    },
+    {
+      "id": "ice-nova-elementalist-mapping.xml",
+      "views": [
+        "TotalDPS: breakdown total 0.0, main output 11486312.2"
+      ]
+    },
+    {
+      "id": "smite-inquisitor-act1.xml",
+      "views": [
+        "TotalDPS: breakdown total 620.2, main output 1466.6"
+      ]
+    },
+    {
+      "id": "smite-inquisitor-act2.xml",
+      "views": [
+        "TotalDPS: breakdown total 2400.4, main output 2709.5"
+      ]
+    },
+    {
+      "id": "smite-inquisitor-act5.xml",
+      "views": [
+        "TotalDPS: breakdown total 31519.1, main output 42416.9"
+      ]
+    },
+    {
+      "id": "smite-inquisitor-act10.xml",
+      "views": [
+        "TotalDPS: breakdown total 66115.7, main output 91369.6"
+      ]
+    }
+  ],
+  "not_no_difference": [
+    {
+      "id": "malformed.xml",
+      "status": "expected_failure",
+      "reason": "both sides failed to import, as the fixture manifest expects (oracle ORACLE_IMPORT, successor IMPORT_XML at read)"
+    }
+  ]
+}

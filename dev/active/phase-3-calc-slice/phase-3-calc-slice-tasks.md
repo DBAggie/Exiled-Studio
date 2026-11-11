@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-4: engine core)
+Last Updated: 2026-11-11 (P3-5: parity harness)
 
 # Phase 3: calc slice (tasks)
 
@@ -57,9 +57,12 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #69 (base `dev`)
 
 ## P3-5: parity harness
-- [ ] `calc-run` (with `--data-overlay`, timing), `calc-parity` (field mapping, rules, breakdown terms at displayed decimals, completeness, register, overlay rule)
-- [ ] `mechanic` tier in `oracle_fixtures.rs` and the CI `oracle` job
-- [ ] Tests per outcome; breakdown parser on every public-fixture line shape; AGENTS.md commands
+- [x] `calc-run` (with `--data-overlay`, timing), `calc-parity` (field mapping, rules, breakdown terms at displayed decimals, completeness, register, overlay rule, PoB's views check, mechanic targets)
+- [x] `mechanic` tier in `oracle_fixtures.rs` (`mechanic/`, `targets`); the CI `oracle` job runs every tier of the manifest; CI runs `calc-run` on the synthetic builds and `dto cross-platform` diffs the documents
+- [x] Tests per outcome; breakdown parser on every public-fixture breakdown (`testdata/calc-parity/breakdown-lines.json`); AGENTS.md commands; `slice-fields.json` revision 2 (`graph` per term)
+- [x] Evidence (`docs/phase-3/calc-parity.md`): public and corpus runs byte-identical twice; `calc-parity` exit 5 `incomplete` (all fields `not-computed`, nothing passed); PoB's views differ in 12 public (all 7 in-scope) and 11 corpus builds (Q9)
+- [x] `code-architecture-reviewer` run; findings in the context file
+- [ ] Open PR
 
 ## P3-6 to P3-12: engine
 - [ ] P3-6 character, attributes, life, mana, ES

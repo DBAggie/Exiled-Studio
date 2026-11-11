@@ -1,0 +1,40 @@
+{
+  "format": 1,
+  "tool": {
+    "commit": "ff8c539dba40724439376c437c3a346c99bcb816",
+    "dirty": false
+  },
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba"
+  },
+  "overlay": null,
+  "builds": 37,
+  "ok": 36,
+  "failed": 1,
+  "failures": {
+    "IMPORT_XML": 1
+  },
+  "build_states": {
+    "unsupported": 36
+  },
+  "field_states": {
+    "complete": 0,
+    "partial": 0,
+    "unsupported": 864,
+    "indeterminate": 0
+  },
+  "field_reasons": {
+    "not-computed": 864
+  },
+  "build_reasons": {},
+  "timing": {
+    "builds": 36,
+    "min_micros": 1,
+    "median_micros": 1,
+    "max_micros": 10,
+    "total_micros": 52
+  }
+}
