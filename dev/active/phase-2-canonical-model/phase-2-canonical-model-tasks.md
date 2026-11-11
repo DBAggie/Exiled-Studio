@@ -71,7 +71,7 @@ Last Updated: 2026-11-10 (PR P2-4: bundle validator)
 - [x] Gate 3d: the converter's PoE1-only tables are in the extractor's `*_POE1` lists (parity-cli test)
 - [x] Real PoE1 and PoE2 bundles, 0 findings (in-session; `docs/phase-2/bundle-check-*.json`)
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-3b-bundle-converter`); write the PR number into the docs right after
+- [x] Open PR (#49, base `feat/p2-3b-bundle-converter`); write the PR number into the docs right after
 
 ## PR P2-5: PoB XML import and semantic export (step 5; may split 5a/5b)
 - [ ] Typed sections, opaque rest, item lines as source text
