@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-1c: item property and monster tables)
+Last Updated: 2026-11-11 (P3-2: data parity)
 
 # Phase 3: calc slice (context)
 
@@ -20,7 +20,10 @@ Last Updated: 2026-11-11 (P3-1c: item property and monster tables)
 | `tools/oracle/fixtures/fixtures.json` | Fixture manifest; mechanic fixtures join it (tier `mechanic`) |
 | `tools/oracle/adapter/oracle.lua` | Oracle output: `main_output` and ten breakdowns |
 | `docs/parity/README.md`, `divergence-register.json` | Register rules; empty until this phase |
-| `local/pob-v2.67.2` | `git archive` of PoB's `src/Data` at the oracle tag (Spike B), for `data-parity` |
+| `local/pob-v2.67.2` | `git archive` of PoB's `src/Data` at the oracle tag (Spike B) |
+| `tools/oracle/data/pob_data.lua`, `tools/parity-cli/src/data_parity*` | P3-2: PoB data export and `data-parity` |
+| `docs/phase-3/data-parity-rules-poe1.json` | The categorization rules with evidence (per Steam build) |
+| `local/p3/p3-2/` | P3-2's export, runs, and overlay (local) |
 | `local/determinism/poe1/run1`, `local/determinism/poe2/run1` | The Spike A/B extracts (Steam builds 26530219, 26476662) |
 
 ## ADRs this plan touches
@@ -115,6 +118,26 @@ No blockers. Applied: template cycle check; tree geometry check and required gra
 - **Validator:** base item references; one row per base and per constant; `BUNDLE_MONSTER_LEVELS` (1, 2, 3, ... without gaps: the calc reads level n at row n - 1); `BUNDLE_VALUE_RANGE` (ranges of amounts, positive attack times and divisors, no negative chances, ranges, reload times, block); `BUNDLE_GAME_SHAPE` (PoE1: no reload time, `alt_life_1` and the conversion multiplier; PoE2: reload time, single-value defences, no PoE1 columns).
 - **Monster armour:** PoB v2.67.2 does not read `DefaultMonsterStats.Armour` and derives monster armour from `MonsterDamageReductionImprovement`; the bundle keeps both; P3-11 decides with evidence (a `pob-derivation` candidate for P3-2's `data-parity`).
 - **Against PoB:** every monster table, game constant, and monster constant equal (damage tables at `f32` precision); weapon and armour bases equal. The calc widens `f32` with `f64::from`.
+
+## Decisions in P3-2 (data parity; evidence `docs/phase-3/data-parity.md`)
+- **Two steps, not one command.** `tools/oracle/data/pob_data.lua` exports PoB's loaded data on the oracle runtime (maintainer-run, like the share-code script; outside the adapter protocol); `data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>` compares. The plan's `<pob-checkout>` argument became the export, so the Rust side needs no runtime and the tests use a hand-written export. The export's SHA-256 and PoB version are recorded.
+- **Compared in PoB's form.** Each bundle value goes through the conversion PoB's exporter made (cited per field in `compare::TRANSFORMS`), numbers at 14 significant digits (Lua's `tostring` wrote PoB's data files), then compared exactly. Absent equals 0 only where PoB writes a field only when not 0 (named at each comparison). Skill levels are found the way PoB pairs rows (by level, or the single row). Passive text: the bundle's stats rendered with `passive_skill_stat_descriptions`, stats without a description render nothing (as in game), "Grants N Passive Skill Points" compared as `skill_points`.
+- **Categories:** the plan's `patch-delta`, `pob-derivation`, `representation`, plus **`not-carried`**: the game has the value in a column the bundle does not carry (`PassiveSkills.PassiveSkillBuffs`, `DescendancyKey`, `Character.ot` Pathfinding). Not a game-vs-PoB difference; a calc reaching it must be `Partial`. The overlay holds `patch-delta` and `pob-derivation` rows only. Rules need citations by category (validator): a patch-note thread for `patch-delta`, `v2.67.2:`/`pob@<commit>:`/`game:` otherwise, `game:` for `not-carried`. First matching rule wins; an unused rule fails the run.
+- **Result on Steam build 26530219:** 534 differences in about 530,000 compared values, all categorized; the game build is 3.29.3 or later (Conflagration's level-1 fix, 3.29.3, 2026-08-12), PoB's data 3.29.2 or earlier (v2.67.2 is dated 2026-08-07). Most differences are PoB's own: hand-written skills and levels, `#addSkillTypes`, the exporter's stat-order shift (a new stat in a later level lands values under the wrong names), monster armour derived.
+- **For the maintainer:** the Vaal transfigured gem tags (8) are classed `patch-delta` without a patch-note line (PoB copies `GemEffects.Tags` verbatim, so only the game can have changed them); confirm or reclassify. The PoB `dev` branch in the read-only legacy repo (`3dbca44`, 2026-10-29) is cited as corroboration (`pob@`).
+- **For P3-3/P3-8:** 15 ascendancy nodes grant buffs or skills whose stats the bundle does not carry (`passives-buff-text`); bloodline nodes have no ascendancy link. A build allocating one gets `Partial`, or the bundle gains the buff tables (a format change).
+- **For P3-11:** monster armour: PoB derives it (`monster-armour-derived`); the overlay carries PoB's table.
+
+## code-architecture-reviewer (P3-2, 2026-11-11) summary
+No ADR or crate-boundary issue; deviations 1 (export instead of checkout) and 2 (`not-carried`) accepted. Applied:
+- rules pin an exact `count` and fail on a key pattern that matched nothing, so a new difference on a covered row fails the run (a rule matched on table, key, and field only);
+- the rules file names its `steam_build` and `pob_version`; a bundle or export of another version is refused;
+- bundle rows, levels, and additional stat sets PoB lacks are listed in `report.json` (`bundle_only`, not gating, stated in `NOT_COMPARED`);
+- support constraints and additional stat sets (35 effects; PoB exports the main set only) named in `NOT_COMPARED`;
+- `named_in_notes` on `patch-delta` rules (`false` for the Vaal tags, shown in the summary); `pob@` citations only corroborate (a `v2.67.2:` or `game:` source is required);
+- non-finite numbers never equal "absent"; monster levels found by level through a column table; `skill_points` from `grantedPassivePoints`; a support's PoB cast time compared; non-numeric level keys are differences; the export records `jit.version`;
+- tests for the committed rules file, rendering, crit fallback, single-row levels, level not found, absent vs 0, armour ranges, gems, characters, constants, mastery effects, base name matching (19 tests).
+Not applied: the overlay naming the bundle column per field (P3-5 defines the inverse with the transforms list); duplicate stat names in a PoB skill (none seen; would show as differences).
 
 ## code-architecture-reviewer (P3-1c, 2026-11-11) summary
 No code blockers; the docs gap it named is this PR's docs commit. Applied: `movement_speed` required; per-game shape check; contiguous monster levels; value rules (positive attack time and divisor, no negatives); the armour error names both column sets; a game constant without an ID is an error; tests for each, a drop per table and a null key, missing weapon and monster columns; `MonsterLevel` docs on row lookup, `f32` widening, the armour constant; PoE2 weapon classes noted for P3-10. Not applied: a shared helper module for `required`/`float`/`one_of` (cosmetic); the commit trailer remark (the trailer is the one the session was given).
