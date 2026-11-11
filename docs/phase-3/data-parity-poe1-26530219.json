@@ -1,0 +1,371 @@
+{
+  "format": 1,
+  "tool": {
+    "commit": "92199cc00ab2bd22d7d8a73313bf30bae644767a",
+    "dirty": false
+  },
+  "inputs": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "bundle_manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba",
+    "data_schema": 2,
+    "pob_export_sha256": "08a8c34ec0f50d3ad3bdfd83ea84d4dc3bc99b06709f8be0433833a2cee96fcf",
+    "pob_version": "2.67.2",
+    "tree_version": "3_29",
+    "pob_runtime": "LuaJIT 2.1.1784580905",
+    "rules_sha256": "b3562c6a130d8676e9b1cbdf3db372c25ac330710a7ba826cf4a16a50533a7e6"
+  },
+  "tables": {
+    "bases": {
+      "compared": 6550,
+      "differences": 5,
+      "pob_only_rows": 5,
+      "bundle_only_rows": 10
+    },
+    "character_constants": {
+      "compared": 89,
+      "differences": 1,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "characters": {
+      "compared": 28,
+      "differences": 0,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "game_constants": {
+      "compared": 42,
+      "differences": 0,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "gems": {
+      "compared": 5220,
+      "differences": 8,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 422
+    },
+    "mastery_effects": {
+      "compared": 353,
+      "differences": 1,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 1
+    },
+    "monster_constants": {
+      "compared": 57,
+      "differences": 0,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "monster_levels": {
+      "compared": 1100,
+      "differences": 100,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "passives": {
+      "compared": 27168,
+      "differences": 214,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 2310
+    },
+    "skills": {
+      "compared": 495396,
+      "differences": 205,
+      "pob_only_rows": 13,
+      "bundle_only_rows": 11332
+    }
+  },
+  "categories": {
+    "not-carried": 163,
+    "patch-delta": 130,
+    "pob-derivation": 184,
+    "representation": 57,
+    "uncategorized": 0
+  },
+  "rules": [
+    {
+      "id": "skills-pob-written",
+      "category": "pob-derivation",
+      "matched": 13,
+      "expected": 13,
+      "stale_keys": []
+    },
+    {
+      "id": "skills-pob-added-types",
+      "category": "pob-derivation",
+      "matched": 6,
+      "expected": 6,
+      "stale_keys": []
+    },
+    {
+      "id": "skills-pob-written-levels",
+      "category": "pob-derivation",
+      "matched": 37,
+      "expected": 37,
+      "stale_keys": []
+    },
+    {
+      "id": "skills-conflagration-level-1",
+      "category": "patch-delta",
+      "matched": 122,
+      "expected": 122,
+      "named_in_notes": true,
+      "stale_keys": []
+    },
+    {
+      "id": "skills-exporter-stat-order",
+      "category": "pob-derivation",
+      "matched": 26,
+      "expected": 26,
+      "stale_keys": []
+    },
+    {
+      "id": "skills-windburst-level-31",
+      "category": "pob-derivation",
+      "matched": 1,
+      "expected": 1,
+      "stale_keys": []
+    },
+    {
+      "id": "gems-vaal-transfigured-tags",
+      "category": "patch-delta",
+      "matched": 8,
+      "expected": 8,
+      "named_in_notes": false,
+      "stale_keys": []
+    },
+    {
+      "id": "bases-pob-names",
+      "category": "representation",
+      "matched": 5,
+      "expected": 5,
+      "stale_keys": []
+    },
+    {
+      "id": "character-base-speed",
+      "category": "not-carried",
+      "matched": 1,
+      "expected": 1,
+      "stale_keys": []
+    },
+    {
+      "id": "monster-armour-derived",
+      "category": "pob-derivation",
+      "matched": 100,
+      "expected": 100,
+      "stale_keys": []
+    },
+    {
+      "id": "passive-harness-the-void",
+      "category": "pob-derivation",
+      "matched": 1,
+      "expected": 1,
+      "stale_keys": []
+    },
+    {
+      "id": "passives-bloodline",
+      "category": "not-carried",
+      "matched": 147,
+      "expected": 147,
+      "stale_keys": []
+    },
+    {
+      "id": "passives-cluster-mastery-icons",
+      "category": "representation",
+      "matched": 38,
+      "expected": 38,
+      "stale_keys": []
+    },
+    {
+      "id": "passives-eldritch-notable",
+      "category": "representation",
+      "matched": 5,
+      "expected": 5,
+      "stale_keys": []
+    },
+    {
+      "id": "passives-buff-text",
+      "category": "not-carried",
+      "matched": 15,
+      "expected": 15,
+      "stale_keys": []
+    },
+    {
+      "id": "passives-tree-text-wording",
+      "category": "representation",
+      "matched": 8,
+      "expected": 8,
+      "stale_keys": []
+    },
+    {
+      "id": "mastery-tree-text-wording",
+      "category": "representation",
+      "matched": 1,
+      "expected": 1,
+      "stale_keys": []
+    }
+  ],
+  "failed_rules": [],
+  "bundle_only": {
+    "bases": 10,
+    "gems": 422,
+    "mastery_effects": 1,
+    "passives": 2310,
+    "skills": 11332
+  },
+  "overlay_rows": 314,
+  "transforms": [
+    {
+      "table": "*",
+      "fields": "*",
+      "transform": "numbers at 14 significant digits (Lua's tostring, which wrote PoB's data files); f32 widened to f64 first",
+      "source": "v2.67.2:src/Export/Main.lua (tables written with tostring)"
+    },
+    {
+      "table": "skills",
+      "fields": "cast_time",
+      "transform": "milliseconds / 1000",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:251"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.cooldown",
+      "transform": "milliseconds / 1000; absent when 0",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:292-293"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.damage_effectiveness, level.*.base_multiplier",
+      "transform": "raw / 10000 + 1; absent when 0",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:311-312, 320-321"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.crit_chance",
+      "transform": "hundredths / 100; the bundle's attack_crit_chance (PoB's spec: OffhandCritChance) when not 0, else spell_crit_chance (PoB's spec: AttackCritChance); absent when both are 0",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:314-319; v2.67.2:src/Export/spec.lua:6166, 6173"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.mana_multiplier",
+      "transform": "cost multiplier - 100; absent when 0",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:283-284"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.*_reservation_percent",
+      "transform": "hundredths of a percent / 100",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:274-282"
+    },
+    {
+      "table": "skills",
+      "fields": "level.*.stat.*",
+      "transform": "float stats: value / max(interpolation base, 0.00001) in f64 of the f32 columns; a stat absent on one side is 0 (PoB fills missing stats with 0)",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:342, 354"
+    },
+    {
+      "table": "skills",
+      "fields": "quality_stats",
+      "transform": "per mille / 1000, without dummy_stat_display_nothing",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:431-432"
+    },
+    {
+      "table": "skills",
+      "fields": "base_effectiveness, incremental_effectiveness",
+      "transform": "absent is 1 and 0",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:158-163"
+    },
+    {
+      "table": "skills",
+      "fields": "types",
+      "transform": "sorted set of skill type IDs against PoB's SkillType names (numbered by ActiveSkillType row)",
+      "source": "v2.67.2:src/Export/Scripts/skills.lua:1-4, 11-13; v2.67.2:src/Data/Global.lua:217"
+    },
+    {
+      "table": "bases",
+      "fields": "*",
+      "transform": "matched by name: PoB's display name (o for ö, trimmed), Royale bases skipped",
+      "source": "v2.67.2:src/Export/Scripts/bases.lua:116-117, 342"
+    },
+    {
+      "table": "bases",
+      "fields": "crit_chance, attack_rate",
+      "transform": "crit hundredths / 100; attack rate round(1000 / attack time, 2)",
+      "source": "v2.67.2:src/Export/Scripts/bases.lua:209-210"
+    },
+    {
+      "table": "bases",
+      "fields": "movement_penalty",
+      "transform": "negated movement speed; absent when 0",
+      "source": "v2.67.2:src/Export/Scripts/bases.lua:237-238"
+    },
+    {
+      "table": "game_constants",
+      "fields": "value",
+      "transform": "value / divisor",
+      "source": "v2.67.2:src/Export/Scripts/miscdata.lua:47-52"
+    },
+    {
+      "table": "passives, mastery_effects",
+      "fields": "stats",
+      "transform": "stats rendered with the bundle's passive_skill_stat_descriptions scope (a stat without a description shows no line, as in game), lines sorted; PoB's lines split at newlines, sorted, without the 'Grants N Passive Skill Point(s)' line (skill_points is compared against grantedPassivePoints)",
+      "source": "game:passive_skill_stat_descriptions.txt (the tree file's text is GGG's tree export)"
+    },
+    {
+      "table": "passives",
+      "fields": "mastery",
+      "transform": "PoB's isMastery against the bundle passive's mastery group",
+      "source": "v2.67.2:src/TreeData/3_29/tree.lua (isMastery)"
+    }
+  ],
+  "not_compared": [
+    {
+      "table": "skills",
+      "fields": "level requirement, Vaal soul cost and stored uses, soul gain prevention",
+      "reason": "not carried by the bundle (P3-1a, context file)"
+    },
+    {
+      "table": "skills",
+      "fields": "stat interpolation kinds",
+      "reason": "kept raw in the bundle until P3-9a gives them a meaning with evidence"
+    },
+    {
+      "table": "skills",
+      "fields": "PvP damage multiplier, descriptions, parts, base flags, stat maps",
+      "reason": "PvP is not calculated; the rest is PoB's own model, not game data"
+    },
+    {
+      "table": "skills",
+      "fields": "support constraints: allowed, added, excluded, and minion types; supports gems only; cannot be supported; weapon restrictions",
+      "reason": "not exported in this step; P3-9a (skill model) compares them before support matching is calculated"
+    },
+    {
+      "table": "skills",
+      "fields": "additional stat sets (35 PoE1 effects have more than one)",
+      "reason": "PoB v2.67.2 exports the main stat set only (skills.lua:256); listed per effect under bundle_only"
+    },
+    {
+      "table": "*",
+      "fields": "bundle rows and skill levels PoB does not have",
+      "reason": "no PoB build reads them, so they cannot differ in an oracle comparison; listed in report.json bundle_only, not gating"
+    },
+    {
+      "table": "gems",
+      "fields": "names, natural maximum level",
+      "reason": "display data; the calc reads gem levels from the build"
+    },
+    {
+      "table": "passives",
+      "fields": "tree geometry (groups, orbits, connections) and class start nodes",
+      "reason": "P3-3 decides the tree version label with evidence; the slice reads node stats"
+    },
+    {
+      "table": "monster_levels",
+      "fields": "experience, difficulty, and the PoE2-only columns",
+      "reason": "not carried by the bundle (P3-1c)"
+    }
+  ],
+  "pass": true
+}
