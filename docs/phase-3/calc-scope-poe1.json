@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "game": "poe1",
+  "steam_build": 26530219,
+  "status": "proposed",
+  "tree_version": "3_29",
+  "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
+  "minimum_per_skill": 3,
+  "skills": {
+    "spell": null,
+    "attack": null
+  },
+  "excluded_mechanics": [
+    {
+      "id": "timeless-jewel",
+      "reason": "A timeless jewel changes the nodes in its radius by seed and conqueror, from the timeless jewel tables (LegionPassives and the per-jewel lookup files), which the bundle does not carry; PoB reads its own copies of them (Data/TimelessJewelData)."
+    },
+    {
+      "id": "cluster-jewel",
+      "reason": "A cluster jewel adds passive nodes that are not in the tree (PassiveTreeExpansionJewels, PassiveTreeExpansionSkills, PassiveTreeExpansionSpecialSkills), which the bundle does not carry; PoB numbers them from 65536 up, so the survey also sees them as unknown passives."
+    },
+    {
+      "id": "not-carried-passive",
+      "reason": "P3-2's not-carried rules: passives that grant a buff or a skill (PassiveSkillBuffs, GrantedEffectsPerLevel) and bloodline passives (DescendancyKey), whose effect or link the bundle does not carry."
+    }
+  ]
+}

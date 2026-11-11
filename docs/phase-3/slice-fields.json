@@ -1,0 +1,157 @@
+{
+  "format": 1,
+  "revision": 1,
+  "status": "proposed",
+  "oracle": "PoB 2.67.2",
+  "notes": [
+    "Phase 3 plan, decision 4 (Q3, Q6). The calc computes these fields for the character and the main skill; calc-parity (P3-5) compares the Complete ones with each field's rule and the ten breakdowns term by term.",
+    "comparison: every field is exact for now (Q6 default). A field moves to abs or rel only with a written reason once a successor output shows where summation order changes the last bits (P3-5 on); no broad tolerance (ADR-006).",
+    "applies: always, or only when the main skill is an attack or a spell (calc_survey::rules::Kind).",
+    "Average hit: PoB has no top-level AverageHit for attacks (it is per hand); the hit DPS line names output.AverageDamage for both kinds (Modules/CalcOffence.lua, breakdown.TotalDPS), which is the average hit times the hit chance for attacks and the average hit for spells. The slice field is AverageDamage.",
+    "Rate: TotalDPS multiplies AverageDamage by HitSpeed when the skill has one (for example Winter Orb's hit rate), else by Speed; HitSpeed is compared when the oracle has it.",
+    "Breakdown decimals: each term is compared at the precision its line prints. Lua formats: %.2f and %.1f fixed decimals; %g 6 significant digits; concatenation (\"..\") prints the number as Lua's tostring (14 significant digits) of a value PoB has already cut to an integer with m_modf.",
+    "contributions name the parts of our provenance graph each term sums or multiplies (P3-4): base (Base effects and the values the character, items, and gems give), increased (1 + the sum of Increased / 100), more (the product of More), result (the field's value)."
+  ],
+  "fields": [
+    {"id": "Str", "group": "character", "pob_key": "Str", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "Dex", "group": "character", "pob_key": "Dex", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "Int", "group": "character", "pob_key": "Int", "applies": "always", "comparison": {"rule": "exact"}},
+    {
+      "id": "Life", "group": "character", "pob_key": "Life", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "Life", "shape": "chain", "source": "Modules/CalcBreakdown.lua breakdown.simple",
+        "absent_when": "no increased and no more (PoB writes no breakdown)",
+        "terms": [
+          {"term": "base", "line": "%g ^8(base)", "contributions": ["base"], "note": "\"(%g + %g) ^8(base)\" when PoB adds an extra base to a non-zero base; compared as their sum"},
+          {"term": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
+          {"term": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
+          {"term": "total", "line": "= %g", "contributions": ["result"]}
+        ]
+      }
+    },
+    {
+      "id": "Mana", "group": "character", "pob_key": "Mana", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "Mana", "shape": "chain", "source": "Modules/CalcBreakdown.lua breakdown.simple",
+        "absent_when": "no increased and no more (PoB writes no breakdown)",
+        "terms": [
+          {"term": "base", "line": "%g ^8(base)", "contributions": ["base"]},
+          {"term": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
+          {"term": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
+          {"term": "total", "line": "= %g", "contributions": ["result"]}
+        ]
+      }
+    },
+    {
+      "id": "EnergyShield", "group": "defence", "pob_key": "EnergyShield", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "EnergyShield", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
+        "row": {
+          "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
+          "base": {"line": "number", "contributions": ["base"]},
+          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"line": "%.2f", "contributions": ["result"]}
+        }
+      }
+    },
+    {
+      "id": "Armour", "group": "defence", "pob_key": "Armour", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "Armour", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
+        "row": {
+          "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
+          "base": {"line": "number", "contributions": ["base"]},
+          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"line": "%.2f", "contributions": ["result"]}
+        }
+      }
+    },
+    {
+      "id": "Evasion", "group": "defence", "pob_key": "Evasion", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "Evasion", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
+        "row": {
+          "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
+          "base": {"line": "number", "contributions": ["base"]},
+          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"line": "%.2f", "contributions": ["result"]}
+        }
+      }
+    },
+    {
+      "id": "FireResist", "group": "defence", "pob_key": "FireResist", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "FireResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
+        "terms": [
+          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+        ]
+      }
+    },
+    {
+      "id": "ColdResist", "group": "defence", "pob_key": "ColdResist", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "ColdResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
+        "terms": [
+          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+        ]
+      }
+    },
+    {
+      "id": "LightningResist", "group": "defence", "pob_key": "LightningResist", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "LightningResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
+        "terms": [
+          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+        ]
+      }
+    },
+    {
+      "id": "ChaosResist", "group": "defence", "pob_key": "ChaosResist", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "ChaosResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
+        "terms": [
+          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+        ]
+      }
+    },
+    {"id": "BlockChance", "group": "defence", "pob_key": "BlockChance", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "SpellBlockChance", "group": "defence", "pob_key": "SpellBlockChance", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "SpellSuppressionChance", "group": "defence", "pob_key": "SpellSuppressionChance", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "LifeUnreserved", "group": "character", "pob_key": "LifeUnreserved", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "ManaUnreserved", "group": "character", "pob_key": "ManaUnreserved", "applies": "always", "comparison": {"rule": "exact"}, "note": "PoB leaves the key out for some builds (rf-chieftain-life-stack, lacerate-bleed-gladiator); absent on the oracle side is a difference unless our side is absent too"},
+    {"id": "AverageDamage", "group": "hit", "pob_key": "AverageDamage", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "Speed", "group": "hit", "pob_key": "Speed", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "HitSpeed", "group": "hit", "pob_key": "HitSpeed", "applies": "always", "comparison": {"rule": "exact"}, "note": "only when the oracle has it"},
+    {"id": "HitChance", "group": "hit", "pob_key": "HitChance", "applies": "attack", "comparison": {"rule": "exact"}},
+    {"id": "CritChance", "group": "hit", "pob_key": "CritChance", "applies": "always", "comparison": {"rule": "exact"}},
+    {"id": "CritMultiplier", "group": "hit", "pob_key": "CritMultiplier", "applies": "always", "comparison": {"rule": "exact"}},
+    {
+      "id": "TotalDPS", "group": "hit", "pob_key": "TotalDPS", "applies": "always", "comparison": {"rule": "exact"},
+      "breakdown": {
+        "pob_key": "TotalDPS", "shape": "chain", "source": "Modules/CalcOffence.lua breakdown.TotalDPS",
+        "terms": [
+          {"term": "average", "line": "%.1f ^8(average damage) for attacks, %.1f ^8(average hit) for spells; both print output.AverageDamage", "contributions": ["AverageDamage"]},
+          {"term": "rate", "line": "x %.2f ^8(hit rate) when HitSpeed is set, else x %.2f ^8(attack rate | cast rate | trigger rate)", "contributions": ["HitSpeed or Speed"]},
+          {"term": "dps-multiplier", "line": "x %g ^8(DPS multiplier for this skill)", "contributions": ["the skill's DPS multiplier"], "optional": "the multiplier is 1"},
+          {"term": "quantity-multiplier", "line": "x %g ^8(quantity multiplier for this skill)", "contributions": ["the skill's quantity multiplier"], "optional": "the multiplier is 1"},
+          {"term": "total", "line": "= %.1f", "contributions": ["result"]}
+        ]
+      }
+    }
+  ],
+  "not_in_slice": [
+    {"what": "damage over time, ailments, minions, CombinedDPS beyond hit DPS", "why": "plan decision 4: their absence is reported, not compared"},
+    {"what": "AverageHit", "why": "absent for attacks (per hand in PoB); AverageDamage stands for the average hit of both kinds"}
+  ]
+}

@@ -12,6 +12,7 @@
 mod build_round_trip;
 mod bundle;
 mod bundle_equal;
+mod calc_survey;
 mod categorize;
 mod data_parity;
 mod divergence;
@@ -158,6 +159,25 @@ const USAGE: &str = "usage:
       when every build passes, 1 when one fails (or no build was given),
       2 on a usage error, 3 when the run cannot start (an input or the
       bundle does not read or validate, or <dir> exists).
+  loom-parity-cli calc-survey <input>... --bundle <dir> --scope <file> --data-rules <file> --out <dir>
+                  [--anonymous]
+      Decide which builds are in the calc slice's scope from game data
+      (Phase 3 plan, step 3): import each PoB build (a folder: every *.xml
+      directly in it, in name order; or a *.xml file; identical files count
+      once), resolve it with the bundle (format 2, PoE1, validated first),
+      find its main skill as PoB does, and apply the archetype rules, the
+      tree-version rule, unknown passives, and the excluded mechanics of
+      the scope file <file> (docs/phase-3/calc-scope-poe1.json); the
+      data-parity rules (docs/phase-3/data-parity-rules-poe1.json) name the
+      passives the bundle does not fully carry. Write summary.json (per
+      build: main skill, verdict and reasons; candidate skills per kind,
+      ranked; the chosen skills' in-scope builds) and report.json (each
+      build's mechanic inventory; how many builds reach each stat,
+      support, skill, and config input) to <dir>, which must not exist.
+      --anonymous names builds by SHA-256. Exit 0 when every chosen skill
+      has the scope file's minimum of in-scope builds (or none is chosen),
+      1 when one has fewer, 2 on a usage error, 3 when the run cannot
+      start.
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -990,8 +1010,173 @@ fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
     Ok(summary.failed == 0 && summary.builds > 0)
 }
 
+/// `calc-survey`'s arguments.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct SurveyArgs {
+    inputs: Vec<String>,
+    bundle: Option<String>,
+    scope: Option<String>,
+    data_rules: Option<String>,
+    out: Option<String>,
+    anonymous: bool,
+}
+
+/// Parses the arguments after `calc-survey`; `None` is a usage error.
+fn survey_args(args: &[String]) -> Option<SurveyArgs> {
+    let mut out = SurveyArgs::default();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        let slot = match arg.as_str() {
+            "--anonymous" => {
+                out.anonymous = true;
+                continue;
+            }
+            "--bundle" => &mut out.bundle,
+            "--scope" => &mut out.scope,
+            "--data-rules" => &mut out.data_rules,
+            "--out" => &mut out.out,
+            flag if flag.starts_with("--") => return None,
+            input => {
+                out.inputs.push(input.to_owned());
+                continue;
+            }
+        };
+        let [value, tail @ ..] = rest else {
+            return None;
+        };
+        if slot.replace(value.clone()).is_some() {
+            return None;
+        }
+        rest = tail;
+    }
+    let complete = !out.inputs.is_empty()
+        && out.bundle.is_some()
+        && out.scope.is_some()
+        && out.data_rules.is_some()
+        && out.out.is_some();
+    complete.then_some(out)
+}
+
+/// `calc-survey` (module `calc_survey`).
+fn calc_survey_cmd(args: &[String]) -> ExitCode {
+    let Some(args) = survey_args(args) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match calc_survey_run(&args) {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("calc-survey: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
+    let path = |p: &Option<String>| Path::new(p.as_deref().unwrap_or_default()).to_path_buf();
+    let read = |p: &Path| std::fs::read(p).map_err(|e| format!("{}: {e}", p.display()));
+    let sha = |b: &[u8]| {
+        use sha2::Digest as _;
+        sha2::Sha256::digest(b)
+            .iter()
+            .map(|x| format!("{x:02x}"))
+            .collect::<String>()
+    };
+    let out = path(&args.out);
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let scope_bytes = read(&path(&args.scope))?;
+    let scope = calc_survey::rules::Scope::read(&scope_bytes)?;
+    let rules_bytes = read(&path(&args.data_rules))?;
+    let not_carried = calc_survey::not_carried_passives(&rules_bytes, scope.steam_build)?;
+    let inputs: Vec<calc_survey::Input> = round_trip_inputs(&args.inputs)?
+        .into_iter()
+        .map(|i| match i.format {
+            build_round_trip::Format::PobXml => Ok(calc_survey::Input {
+                path: i.path,
+                bytes: i.bytes,
+            }),
+            build_round_trip::Format::BuildDocument => {
+                Err(format!("{}: calc-survey reads PoB builds (*.xml)", i.path))
+            }
+        })
+        .collect::<Result<_, _>>()?;
+    let bundle = load_bundle(&path(&args.bundle))?;
+    let m = &bundle.manifest;
+    if m.game != "poe1" || m.source.steam_build != Some(scope.steam_build) {
+        return Err(format!(
+            "the bundle is {} Steam build {:?}; the scope file is for poe1 {}",
+            m.game, m.source.steam_build, scope.steam_build
+        ));
+    }
+    let tables = calc_survey::Tables::new(&bundle)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data)
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let request = calc_survey::Request {
+        resolver: &resolver,
+        data: &data,
+        tables: &tables,
+        scope: &scope,
+        not_carried: &not_carried,
+        anonymous: args.anonymous,
+        inputs: calc_survey::Inputs {
+            tool: resolve_corpus::Tool {
+                commit: git(&["rev-parse", "HEAD"]),
+                dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+            },
+            bundle: resolve_corpus::BundleInputs {
+                game: m.game.clone(),
+                steam_build: m.source.steam_build,
+                index_sha256: m.source.index_sha256.clone(),
+            },
+            scope_sha256: sha(&scope_bytes),
+            data_rules_sha256: sha(&rules_bytes),
+            anonymous: args.anonymous,
+        },
+    };
+    let (summary, report) = calc_survey::run(&inputs, &request);
+    write_out(&out, &summary, &report)?;
+    println!(
+        "calc-survey: {} builds, {} in scope ({} duplicates skipped)",
+        summary.builds, summary.in_scope, summary.duplicates
+    );
+    for (kind, list) in &summary.candidates {
+        for c in list.iter().take(3) {
+            println!(
+                "  {kind} {}: {} in scope of {} archetype builds",
+                c.skill,
+                c.in_scope.len(),
+                c.archetype_builds
+            );
+        }
+    }
+    for (kind, c) in &summary.chosen {
+        println!(
+            "  chosen {kind} {}: {} in scope (minimum {}){}",
+            c.skill,
+            c.in_scope.len(),
+            summary.scope.minimum_per_skill,
+            if c.meets_minimum {
+                ""
+            } else {
+                ", below the minimum"
+            }
+        );
+    }
+    Ok(summary.pass)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-survey"
+    {
+        return calc_survey_cmd(rest);
+    }
     if let [cmd, rest @ ..] = args.as_slice()
         && cmd == "build-round-trip"
     {

@@ -1,0 +1,898 @@
+{
+  "format": 1,
+  "inputs": {
+    "tool": {
+      "commit": "c6ca40032be8268a75561613fbb7310f2adbded8",
+      "dirty": false
+    },
+    "bundle": {
+      "game": "poe1",
+      "steam_build": 26530219,
+      "index_sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
+    },
+    "scope_sha256": "97e95a8cc2363ccbe56722671bf5772d87da791c56fadd101de2028b06b6268e",
+    "data_rules_sha256": "b3562c6a130d8676e9b1cbdf3db372c25ac330710a7ba826cf4a16a50533a7e6",
+    "anonymous": false
+  },
+  "scope": {
+    "format": 1,
+    "game": "poe1",
+    "steam_build": 26530219,
+    "status": "proposed",
+    "tree_version": "3_29",
+    "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
+    "minimum_per_skill": 3,
+    "skills": {
+      "spell": null,
+      "attack": null
+    },
+    "excluded_mechanics": [
+      {
+        "id": "timeless-jewel",
+        "reason": "A timeless jewel changes the nodes in its radius by seed and conqueror, from the timeless jewel tables (LegionPassives and the per-jewel lookup files), which the bundle does not carry; PoB reads its own copies of them (Data/TimelessJewelData)."
+      },
+      {
+        "id": "cluster-jewel",
+        "reason": "A cluster jewel adds passive nodes that are not in the tree (PassiveTreeExpansionJewels, PassiveTreeExpansionSkills, PassiveTreeExpansionSpecialSkills), which the bundle does not carry; PoB numbers them from 65536 up, so the survey also sees them as unknown passives."
+      },
+      {
+        "id": "not-carried-passive",
+        "reason": "P3-2's not-carried rules: passives that grant a buff or a skill (PassiveSkillBuffs, GrantedEffectsPerLevel) and bloodline passives (DescendancyKey), whose effect or link the bundle does not carry."
+      }
+    ]
+  },
+  "builds": 29,
+  "duplicates": 0,
+  "in_scope": 1,
+  "reasons": {
+    "archetype:brand": 1,
+    "archetype:mine": 1,
+    "archetype:minion": 2,
+    "archetype:mirage": 1,
+    "archetype:not-hit": 5,
+    "archetype:not-manually-cast": 1,
+    "archetype:totem": 2,
+    "archetype:trap": 1,
+    "archetype:triggered": 1,
+    "excluded:cluster-jewel": 19,
+    "excluded:not-carried-passive": 9,
+    "excluded:timeless-jewel": 11,
+    "main-skill:no-active-skill": 1,
+    "main-skill:no-skill-set": 8,
+    "tree:unknown-passive": 19,
+    "tree:version": 16
+  },
+  "states": {
+    "in-scope": 1,
+    "indeterminate": 27,
+    "out-of-scope": 1
+  },
+  "candidates": {
+    "attack": [
+      {
+        "skill": "BoneshatterAltX",
+        "name": "Boneshatter of Complex Trauma",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 148
+      },
+      {
+        "skill": "FlickerStrike",
+        "name": "Flicker Strike",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 156
+      },
+      {
+        "skill": "KineticBlastAltX",
+        "name": "Kinetic Blast of Clustering",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 158
+      },
+      {
+        "skill": "Earthshatter",
+        "name": "Earthshatter",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 161
+      },
+      {
+        "skill": "PoisonousConcoctionAltX",
+        "name": "Poisonous Concoction of Bouncing",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 172
+      },
+      {
+        "skill": "Cyclone",
+        "name": "Cyclone",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 173
+      },
+      {
+        "skill": "LacerateAltY",
+        "name": "Lacerate of Haemorrhage",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 190
+      }
+    ],
+    "spell": [
+      {
+        "skill": "WinterOrb",
+        "name": "Winter Orb",
+        "archetype_builds": 1,
+        "in_scope": [
+          "tools/oracle/fixtures/community/winter-orb-elementalist.xml"
+        ],
+        "mean_inventory": 114
+      },
+      {
+        "skill": "ShockNova",
+        "name": "Shock Nova",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 161
+      }
+    ]
+  },
+  "chosen": {},
+  "pass": true,
+  "per_build": [
+    {
+      "name": "tools/oracle/fixtures/community/animate-guardian-guardian.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 9,
+        "skill": "RaiseSpectre",
+        "name": "Raise Spectre",
+        "types": [
+          "CanRapidFire",
+          "CreatesMinion",
+          "Mineable",
+          "Minion",
+          "MinionsCanExplode",
+          "Multicastable",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:not-hit",
+        "archetype:minion",
+        "excluded:not-carried-passive"
+      ],
+      "state": "out-of-scope",
+      "inventory_size": 183
+    },
+    {
+      "name": "tools/oracle/fixtures/community/arakaalis-raise-spider-occultist.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 10,
+        "skill": "RaiseSpiders",
+        "name": "Raise Spiders",
+        "types": [
+          "Cooldown",
+          "CreatesMinion",
+          "InbuiltTrigger",
+          "Minion",
+          "MinionsAreUndamagable",
+          "Spell",
+          "Triggerable",
+          "Triggered"
+        ],
+        "item_granted": true
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:not-hit",
+        "archetype:not-manually-cast",
+        "archetype:triggered",
+        "archetype:minion",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 168
+    },
+    {
+      "name": "tools/oracle/fixtures/community/boneshatter-juggernaut.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "BoneshatterAltX",
+        "name": "Boneshatter of Complex Trauma",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Duration",
+          "InnateTrauma",
+          "Melee",
+          "MeleeSingleTarget",
+          "Multistrikeable",
+          "Physical"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 148
+    },
+    {
+      "name": "tools/oracle/fixtures/community/cyclone-shockwave-slayer.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "Cyclone",
+        "name": "Cyclone",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Channel",
+          "Melee",
+          "Movement"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 173
+    },
+    {
+      "name": "tools/oracle/fixtures/community/elemental-hit-of-the-spectrum-deadeye.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "ElementalHitAltX",
+        "name": "Elemental Hit of the Spectrum",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Cold",
+          "Duration",
+          "Fire",
+          "Lightning",
+          "Mineable",
+          "MirageArcherCanUse",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RangedAttack",
+          "Totemable",
+          "Trappable",
+          "Triggerable",
+          "WandAttack"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:mirage",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 198
+    },
+    {
+      "name": "tools/oracle/fixtures/community/essence-drain-contagion-occultist.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "VaalBlight",
+        "name": "Vaal Blight",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Chaos",
+          "DamageOverTime",
+          "DegenOnlySpellDamage",
+          "Duration",
+          "Multicastable",
+          "Nova",
+          "Spell",
+          "Totemable",
+          "Vaal"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:not-hit",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 186
+    },
+    {
+      "name": "tools/oracle/fixtures/community/ethereal-knives-mines-assassin.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "EtherealKnives",
+        "name": "Ethereal Knives",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "Aura",
+          "AuraAffectsEnemies",
+          "CanRapidFire",
+          "Damage",
+          "HasReservation",
+          "Mineable",
+          "Multicastable",
+          "Physical",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RemoteMined",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:mine",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 169
+    },
+    {
+      "name": "tools/oracle/fixtures/community/facebreaker-luminary.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "Earthshatter",
+        "name": "Earthshatter",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Duration",
+          "Melee",
+          "Multistrikeable",
+          "Slam",
+          "Totemable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 161
+    },
+    {
+      "name": "tools/oracle/fixtures/community/flicker-strike-berserker.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "FlickerStrike",
+        "name": "Flicker Strike",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Buff",
+          "Cooldown",
+          "Duration",
+          "Melee",
+          "MeleeSingleTarget",
+          "Movement",
+          "Multistrikeable",
+          "NeverExertable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 156
+    },
+    {
+      "name": "tools/oracle/fixtures/community/forged-frostbearer-spectre-necromancer.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 14,
+        "skill": "PurityOfElements",
+        "name": "Purity of Elements",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Aura",
+          "Buff",
+          "CanHaveBlessing",
+          "Cooldown",
+          "HasReservation",
+          "Instant",
+          "InstantNoRepeatWhenHeld",
+          "InstantShiftAttackForLeftMouse",
+          "Spell",
+          "TotemCastsAlone",
+          "Totemable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:not-hit",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 135
+    },
+    {
+      "name": "tools/oracle/fixtures/community/holy-flame-totem-hierophant.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "HolyFlameTotem",
+        "name": "Holy Flame Totem",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "Channel",
+          "Damage",
+          "Fire",
+          "Mineable",
+          "Physical",
+          "Projectile",
+          "ProjectilesFromUser",
+          "Spell",
+          "SummonsTotem",
+          "Trappable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:totem",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 156
+    },
+    {
+      "name": "tools/oracle/fixtures/community/kinetic-blast-of-clustering-necromancer.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "KineticBlastAltX",
+        "name": "Kinetic Blast of Clustering",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Mineable",
+          "Physical",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RangedAttack",
+          "Totemable",
+          "Trappable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 158
+    },
+    {
+      "name": "tools/oracle/fixtures/community/kinetic-fusillade-ballista-hierophant.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 2,
+        "skill": "KineticFusillade",
+        "name": "Kinetic Fusillade",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Duration",
+          "Mineable",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RangedAttack",
+          "ReservationBecomesCost",
+          "SummonsTotem",
+          "Totemable",
+          "TotemsAreBallistae",
+          "Trappable",
+          "Triggerable",
+          "WandAttack"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:totem",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 190
+    },
+    {
+      "name": "tools/oracle/fixtures/community/lacerate-bleed-gladiator.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 5,
+        "skill": "LacerateAltY",
+        "name": "Lacerate of Haemorrhage",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Melee",
+          "Multistrikeable",
+          "Physical"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 190
+    },
+    {
+      "name": "tools/oracle/fixtures/community/lightning-trap-of-sparking-elementalist.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "LightningTrapAltX",
+        "name": "Lightning Trap of Sparking",
+        "kind": "spell",
+        "types": [
+          "Damage",
+          "Lightning",
+          "Mineable",
+          "Projectile",
+          "ProjectilesFromUser",
+          "Spell",
+          "Trapped"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:trap",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 183
+    },
+    {
+      "name": "tools/oracle/fixtures/community/penance-brand-ignite-elementalist.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "PenanceBrand",
+        "name": "Penance Brand",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Brand",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Mineable",
+          "Multicastable",
+          "Physical",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:brand",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 186
+    },
+    {
+      "name": "tools/oracle/fixtures/community/poisonous-concoction-of-bouncing-pathfinder.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "PoisonousConcoctionAltX",
+        "name": "Poisonous Concoction of Bouncing",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Chains",
+          "Chaos",
+          "Damage",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RangedAttack",
+          "RequiresOffHandNotWeapon",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 172
+    },
+    {
+      "name": "tools/oracle/fixtures/community/rf-chieftain-league-start.xml",
+      "tree_version": "3_28",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-active-skill",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 53
+    },
+    {
+      "name": "tools/oracle/fixtures/community/rf-chieftain-life-stack.xml",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 2,
+        "skill": "VaalRighteousFire",
+        "name": "Vaal Righteous Fire",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Buff",
+          "CausesBurning",
+          "Cooldown",
+          "DamageOverTime",
+          "Duration",
+          "Fire",
+          "Instant",
+          "InstantNoRepeatWhenHeld",
+          "InstantShiftAttackForLeftMouse",
+          "Spell",
+          "Totemable",
+          "Vaal"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:not-hit",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 145
+    },
+    {
+      "name": "tools/oracle/fixtures/community/shock-nova-archmage-hierophant.xml",
+      "tree_version": "3_27",
+      "main_skill": {
+        "group": 1,
+        "skill": "ShockNova",
+        "name": "Shock Nova",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CanRapidFire",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Mineable",
+          "Multicastable",
+          "Nova",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 161
+    },
+    {
+      "name": "tools/oracle/fixtures/community/winter-orb-elementalist.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "WinterOrb",
+        "name": "Winter Orb",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Channel",
+          "Cold",
+          "Damage",
+          "Duration",
+          "Orb",
+          "Projectile",
+          "ProjectilesNotFromUser",
+          "Spell",
+          "Totemable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 114
+    },
+    {
+      "name": "tools/oracle/fixtures/minimal-level1.xml",
+      "tree_version": "3_29",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 0
+    },
+    {
+      "name": "tools/oracle/fixtures/timeless-militant-faith.xml",
+      "tree_version": "3_29",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "excluded:timeless-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 8
+    },
+    {
+      "name": "tools/oracle/fixtures/discrepancy-movement-speed.xml",
+      "tree_version": "3_29",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 0
+    },
+    {
+      "name": "local/oracle/pob/spec/TestBuilds/3.13/Dual Savior.xml",
+      "tree_version": "3_13",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 13
+    },
+    {
+      "name": "local/oracle/pob/spec/TestBuilds/3.13/Dual Wield Cospris CoC.xml",
+      "tree_version": "3_13",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 148
+    },
+    {
+      "name": "local/oracle/pob/spec/TestBuilds/3.13/Generals Perforate Zerker.xml",
+      "tree_version": "3_13",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 142
+    },
+    {
+      "name": "local/oracle/pob/spec/TestBuilds/3.13/Mirage Archer Toxic Rain.xml",
+      "tree_version": "3_13",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 102
+    },
+    {
+      "name": "local/oracle/pob/spec/TestBuilds/3.13/OccVortex.xml",
+      "tree_version": "3_13",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 102
+    }
+  ]
+}
