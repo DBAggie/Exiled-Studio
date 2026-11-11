@@ -15,14 +15,29 @@ use super::ImportError;
 /// (layout between elements, which the export writes its own way).
 pub(super) fn opaque(node: Node<'_, '_>) -> Option<OpaqueNode> {
     match node.node_type() {
-        NodeType::Element => Some(OpaqueNode::Element {
-            name: node.tag_name().name().to_owned(),
-            attributes: node
-                .attributes()
-                .map(|a| Attribute::new(a.name(), a.value()))
-                .collect(),
-            children: node.children().filter_map(opaque).collect(),
-        }),
+        NodeType::Element => {
+            // Mixed content (an element with text, such as an item's text
+            // around `<ModRange>`): every text child is kept, whitespace
+            // included, and the export writes it without layout.
+            let mixed = is_mixed(node);
+            Some(OpaqueNode::Element {
+                name: node.tag_name().name().to_owned(),
+                attributes: node
+                    .attributes()
+                    .map(|a| Attribute::new(a.name(), a.value()))
+                    .collect(),
+                children: node
+                    .children()
+                    .filter_map(|c| {
+                        if mixed && c.is_text() {
+                            Some(OpaqueNode::Text(c.text().unwrap_or("").to_owned()))
+                        } else {
+                            opaque(c)
+                        }
+                    })
+                    .collect(),
+            })
+        }
         NodeType::Text => {
             let t = node.text().unwrap_or("");
             (!t.trim().is_empty()).then(|| OpaqueNode::Text(t.to_owned()))
@@ -50,10 +65,24 @@ fn text(node: Node<'_, '_>, name: &str) -> Option<String> {
 
 /// `Some(None)` when absent, `Some(Some(v))` when it parses, `None` when
 /// present and not a number (the element is then kept opaque).
+/// Whether an element has a text child that is not only whitespace.
+pub(super) fn is_mixed(node: Node<'_, '_>) -> bool {
+    node.children()
+        .any(|c| c.is_text() && c.text().is_some_and(|t| !t.trim().is_empty()))
+}
+
+/// A number written in its canonical form (`+5` and `007` are not: the
+/// export would write them differently, so their element is kept whole).
+fn canonical<T: std::str::FromStr + ToString>(s: &str) -> Option<T> {
+    s.parse::<T>().ok().filter(|v| v.to_string() == s)
+}
+
+/// `Some(None)` when absent, `Some(Some(v))` when it reads, `None` when
+/// present and not a canonical number (the element is then kept whole).
 fn number_u32(node: Node<'_, '_>, name: &str) -> Option<Option<Sourced<u32>>> {
     match node.attribute(name) {
         None => Some(None),
-        Some(s) => s.parse().ok().map(|v| Some(Sourced::read(v, s))),
+        Some(s) => canonical(s).map(|v| Some(Sourced::read(v, s))),
     }
 }
 
@@ -63,7 +92,7 @@ fn required_u32(node: Node<'_, '_>, name: &str) -> Option<Sourced<u32>> {
 
 fn required_i32(node: Node<'_, '_>, name: &str) -> Option<Sourced<i32>> {
     let s = node.attribute(name)?;
-    s.parse().ok().map(|v| Sourced::read(v, s))
+    canonical(s).map(|v| Sourced::read(v, s))
 }
 
 fn boolean(s: &str) -> Option<bool> {
@@ -265,7 +294,10 @@ fn sockets(n: Node<'_, '_>) -> Option<Ordered<JewelSocket>> {
         if c.tag_name().name() == "Socket" && c.is_element() && children(c).next().is_none() {
             out.push(JewelSocket {
                 node: NodeId(*required_u32(c, "nodeId")?.value()),
-                item: Some(ItemId(*required_u32(c, "itemId")?.value())),
+                // PoB writes `itemId="0"` for an empty socket.
+                item: Some(*required_u32(c, "itemId")?.value())
+                    .filter(|i| *i != 0)
+                    .map(ItemId),
                 attributes: rest(c, &["nodeId", "itemId"]),
             });
         } else {

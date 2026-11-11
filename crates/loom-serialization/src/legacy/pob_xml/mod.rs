@@ -76,6 +76,72 @@ pub fn import(xml: &str) -> Result<Build, ImportError> {
     read::build(&doc)
 }
 
+/// Typed elements kept whole because their fields did not read (the
+/// plan's fallback), by path (`Skills/SkillSet/Skill/Gem`), in document
+/// order: the import's quarantine list for typed content (ADR-015: kept
+/// and shown, never silently ignored). Code `IMPORT_KEPT_WHOLE`.
+#[must_use]
+pub fn kept_whole(build: &Build) -> Vec<String> {
+    use loom_domain::{BuildPart, Entry, OpaqueNode};
+    fn named<'a, T>(
+        list: &'a loom_domain::Ordered<T>,
+        name: &str,
+    ) -> impl Iterator<Item = ()> + 'a {
+        let name = name.to_owned();
+        list.opaque().filter_map(move |o| match o {
+            OpaqueNode::Element { name: n, .. } if *n == name => Some(()),
+            _ => None,
+        })
+    }
+    let mut out = Vec::new();
+    for e in build.layout.entries() {
+        match e {
+            Entry::Opaque(OpaqueNode::Element { name, .. })
+                if ["Build", "Tree", "Skills", "Config"].contains(&name.as_str()) =>
+            {
+                out.push(name.clone());
+            }
+            Entry::Typed(BuildPart::Passives) => {
+                out.extend(named(&build.passives.specs, "Spec").map(|()| "Tree/Spec".to_owned()));
+                for spec in build.passives.specs.typed() {
+                    out.extend(
+                        named(&spec.jewel_sockets, "Socket")
+                            .map(|()| "Tree/Spec/Sockets/Socket".to_owned()),
+                    );
+                }
+            }
+            Entry::Typed(BuildPart::Skills) => {
+                out.extend(
+                    named(&build.skills.sets, "SkillSet").map(|()| "Skills/SkillSet".to_owned()),
+                );
+                for set in build.skills.sets.typed() {
+                    out.extend(
+                        named(&set.groups, "Skill").map(|()| "Skills/SkillSet/Skill".to_owned()),
+                    );
+                    for group in set.groups.typed() {
+                        out.extend(
+                            named(&group.gems, "Gem")
+                                .map(|()| "Skills/SkillSet/Skill/Gem".to_owned()),
+                        );
+                    }
+                }
+            }
+            Entry::Typed(BuildPart::Config) => {
+                out.extend(
+                    named(&build.config.sets, "ConfigSet").map(|()| "Config/ConfigSet".to_owned()),
+                );
+                for set in build.config.sets.typed() {
+                    out.extend(
+                        named(&set.inputs, "Input").map(|()| "Config/ConfigSet/Input".to_owned()),
+                    );
+                }
+            }
+            _ => {}
+        }
+    }
+    out
+}
+
 /// Exports a build as a PoB build document.
 #[must_use]
 pub fn export(build: &Build) -> String {

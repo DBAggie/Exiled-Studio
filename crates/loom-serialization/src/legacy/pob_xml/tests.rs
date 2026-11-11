@@ -178,8 +178,43 @@ fn xml_equal_should_ignore_whitespace_between_elements() {
 }
 
 #[test]
-fn xml_equal_should_read_crlf_as_lf_in_text() {
-    assert!(xml_equal("<a>x\r\ny</a>", "<a>x\ny</a>").unwrap());
+fn xml_equal_should_compare_whitespace_in_mixed_content() {
+    assert!(!xml_equal("<a>x<b/> <c/></a>", "<a>x<b/><c/></a>").unwrap());
+}
+
+#[test]
+fn mixed_content_whitespace_should_survive_the_round_trip() {
+    let xml = BASE.replace(
+        "<Items/>",
+        "<Items><Item id=\"1\">A<B/> <C/>\n</Item></Items>",
+    );
+    round_trip(&xml);
+}
+
+#[test]
+fn empty_socket_should_have_no_item() {
+    let b = import(BASE).unwrap();
+    let spec = b.passives.specs.typed().next().unwrap();
+    assert_eq!(spec.jewel_sockets.typed().next().unwrap().item, None);
+}
+
+#[test]
+fn non_canonical_number_should_keep_its_element_whole() {
+    let xml = BASE.replace(r#"<SkillSet id="1">"#, r#"<SkillSet id="+1">"#);
+    let b = round_trip(&xml);
+    assert_eq!(kept_whole(&b), ["Skills/SkillSet"]);
+}
+
+#[test]
+fn kept_whole_should_list_typed_elements_that_did_not_read() {
+    let xml = BASE.replace(r#"skillId="A" level="20""#, r#"skillId="A" level="x""#);
+    let b = import(&xml).unwrap();
+    assert_eq!(kept_whole(&b), ["Skills/SkillSet/Skill/Gem"]);
+}
+
+#[test]
+fn kept_whole_should_be_empty_when_everything_reads() {
+    assert_eq!(kept_whole(&import(BASE).unwrap()), [] as [&str; 0]);
 }
 
 #[test]
@@ -191,14 +226,7 @@ fn xml_equal_should_see_a_changed_value_or_text() {
 #[test]
 fn normalizations_should_be_the_closed_list() {
     let names: Vec<&str> = NORMALIZATIONS.iter().map(|(n, _)| *n).collect();
-    assert_eq!(
-        names,
-        [
-            "attribute-order",
-            "whitespace-between-elements",
-            "line-endings"
-        ]
-    );
+    assert_eq!(names, ["attribute-order", "whitespace-between-elements"]);
 }
 
 #[test]

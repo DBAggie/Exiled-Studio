@@ -10,6 +10,9 @@ use loom_domain::{
 #[derive(Default)]
 struct Writer {
     out: String,
+    /// Inside mixed content: no layout is written (the kept text carries
+    /// its own whitespace).
+    inline: usize,
 }
 
 fn escape(s: &str, attribute: bool) -> String {
@@ -55,7 +58,7 @@ impl Writer {
     /// A new line and indentation, only after a tag: text keeps its own
     /// whitespace (PoB item text is mixed with `<ModRange>` elements).
     fn indent(&mut self, depth: usize) {
-        if !self.out.ends_with('>') {
+        if self.inline > 0 || !self.out.ends_with('>') {
             return;
         }
         self.out.push('\n');
@@ -104,11 +107,24 @@ impl Writer {
             } => {
                 let mut a = Attrs::new();
                 kept(&mut a, attributes);
-                self.element(depth, name, &a, |w| {
-                    for c in children {
-                        w.opaque(depth + 1, c);
-                    }
-                });
+                let mixed = children.iter().any(|c| matches!(c, OpaqueNode::Text(_)));
+                self.open(depth, name, &a);
+                self.out.push('>');
+                self.inline += usize::from(mixed);
+                let start = self.out.len();
+                for c in children {
+                    self.opaque(depth + 1, c);
+                }
+                if self.out.len() == start {
+                    self.out.pop();
+                    self.out.push_str("/>");
+                } else {
+                    self.indent(depth);
+                    self.out.push_str("</");
+                    self.out.push_str(name);
+                    self.out.push('>');
+                }
+                self.inline -= usize::from(mixed);
             }
             OpaqueNode::Text(t) => self.out.push_str(&escape(t, false)),
             OpaqueNode::Comment(t) => {
@@ -241,7 +257,9 @@ fn spec(w: &mut Writer, s: &PassiveSpec) {
             SpecPart::JewelSockets => w.element(3, "Sockets", &Attrs::new(), |w| {
                 w.ordered(4, &s.jewel_sockets, |w, j| {
                     let mut a = vec![("nodeId".to_owned(), j.node.0.to_string())];
-                    put(&mut a, "itemId", j.item.map(|i| i.0.to_string()).as_deref());
+                    // No item: PoB's `itemId="0"`.
+                    let item = j.item.map_or_else(|| "0".to_owned(), |i| i.0.to_string());
+                    put(&mut a, "itemId", Some(&item));
                     kept(&mut a, &j.attributes);
                     w.element(4, "Socket", &a, |_| {});
                 });
