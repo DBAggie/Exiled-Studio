@@ -1,6 +1,7 @@
 """Writes the synthetic test bundles (Phase 2 plan, step 3; decision 10),
-format 2 with the skill tables (Phase 3 plan, step 1a) and the character
-and passive tables (step 1b).
+format 2 with the skill tables (Phase 3 plan, step 1a), the character
+and passive tables (step 1b), and the item property and monster tables
+(step 1c).
 
 Every row is made up for the tests: no game data. Run from the repository
 root after changing a row, then commit the output:
@@ -441,6 +442,66 @@ def passives(game):
     }
 
 
+def properties(game):
+    """The item property and monster tables: a wand, a shield (also an
+    armour), two monster levels, one game constant. PoE1 stores defences as
+    ranges and has the alternative life and conversion columns; PoE2 one
+    value per defence and a reload time."""
+    poe1 = game == "poe1"
+
+    def defence(lo, hi):
+        return {"min": lo, "max": hi if poe1 else lo}
+
+    weapon = {
+        "base_item": "Test/Items/Wand1",
+        "crit_chance": 700,
+        "attack_time": 714,
+        "damage_min": 5,
+        "damage_max": 9,
+        "range": 120,
+    }
+    if not poe1:
+        weapon["reload_time"] = 0
+
+    def level(n, damage, life):
+        row = {
+            "level": n,
+            "damage": damage,
+            "evasion": 67 * n,
+            "accuracy": 14 * n,
+            "life": life,
+            "armour": 16 * n,
+            "ailment_threshold": life,
+            "evasive_evasion": 76 * n,
+            "ally_life": 15 * n,
+            "ally_damage": 5.62 * n,
+            "alt_life_2": 13 * n,
+        }
+        if poe1:
+            row["alt_life_1"] = 10 * n
+            row["phys_conversion_multi"] = 0
+        return row
+
+    return {
+        "data/weapon_types.json": [weapon],
+        "data/armour_types.json": [
+            {
+                "base_item": "Test/Items/Shield1",
+                "armour": defence(9, 12),
+                "evasion": defence(0, 0),
+                "energy_shield": defence(0, 0),
+                "ward": defence(0, 0),
+                "movement_speed": -3,
+            }
+        ],
+        "data/shield_types.json": [{"base_item": "Test/Items/Shield1", "block": 24}],
+        "data/monster_levels.json": [level(1, 4.99, 22), level(2, 5.5, 28)],
+        "data/game_constants.json": [
+            {"id": "MonsterDamageReductionImprovement", "value": 670, "divisor": 100}
+        ],
+    }
+
+
 def with_skills(game, files):
     files["data/stats.json"].extend({"id": s} for s in SKILL_STATS)
     files["data/base_items.json"].extend(
@@ -452,6 +513,13 @@ def with_skills(game, files):
     files.update(skills(game))
     files["data/stats.json"].extend({"id": s} for s in PASSIVE_STATS)
     files.update(passives(game))
+    files["data/base_items.json"].extend(
+        [
+            {"id": "Test/Items/Wand1", "name": "Plain Test Wand", "domain": 1, "item_class": "TestRing", "tags": ["wand"], "implicits": []},
+            {"id": "Test/Items/Shield1", "name": "Plain Test Shield", "domain": 1, "item_class": "TestRing", "tags": ["shield"], "implicits": []},
+        ]
+    )
+    files.update(properties(game))
     return files
 
 

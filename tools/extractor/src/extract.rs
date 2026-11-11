@@ -131,8 +131,23 @@ pub const PASSIVE_TABLES: [&str; 4] = [
     "PassiveSkillMasteryEffects",
 ];
 
+/// Item property and monster tables the calc bundle reads (Phase 3 plan,
+/// step 1c), in both games: weapon, armour, and shield properties of base
+/// items, the per-level monster stats, and the game constants (PoB derives
+/// monster armour from `MonsterDamageReductionImprovement` there instead
+/// of reading `DefaultMonsterStats.Armour`). The default monster stats of
+/// the monster object template come with [`crate::itemtype::OBJECT_TEMPLATES`].
+pub const ITEM_PROPERTY_TABLES: [&str; 5] = [
+    "WeaponTypes",
+    "ArmourTypes",
+    "ShieldTypes",
+    "DefaultMonsterStats",
+    "GameConstants",
+];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
-/// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
+/// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
+/// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
@@ -140,6 +155,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
     roots.extend(LOOKUP_TABLES);
     roots.extend(SKILL_TABLES);
     roots.extend(PASSIVE_TABLES);
+    roots.extend(ITEM_PROPERTY_TABLES);
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
@@ -1947,6 +1963,7 @@ mod tests {
         assert!(LOOKUP_TABLES.iter().all(|t| poe2.contains(t)));
         assert!(SKILL_TABLES.iter().all(|t| poe2.contains(t)));
         assert!(PASSIVE_TABLES.iter().all(|t| poe2.contains(t)));
+        assert!(ITEM_PROPERTY_TABLES.iter().all(|t| poe2.contains(t)));
         assert!(LOOKUP_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
         assert!(
             LOOKUP_TABLES_POE1

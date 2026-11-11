@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 22, 3, 4, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 22, 3, 6, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
@@ -399,6 +399,34 @@ fn format_2_bundles_should_load_their_passive_tables_in_each_game_shape() {
                 Some(-2)
             ),
             ((2, 1, 1, 5, 1, 1, 2), None, 1, (-1.5, 2.25), Some(-2)),
+        )
+    );
+}
+
+#[test]
+fn format_2_bundles_should_load_their_property_tables_in_each_game_shape() {
+    let shape = |name: &str| {
+        let p = load(&source(name).unwrap()).unwrap().properties.unwrap();
+        (
+            (
+                p.weapon_types.len(),
+                p.armour_types.len(),
+                p.shield_types.len(),
+                p.monster_levels.len(),
+                p.game_constants.len(),
+            ),
+            p.weapon_types[0].reload_time,
+            p.armour_types[0].armour,
+            p.monster_levels[0].damage,
+            p.monster_levels[0].alt_life_1,
+        )
+    };
+    let range = |min, max| bundle::properties::ValueRange { min, max };
+    assert_eq!(
+        (shape("bundle-poe1"), shape("bundle-poe2")),
+        (
+            ((1, 1, 1, 2, 1), None, range(9, 12), 4.99, Some(10)),
+            ((1, 1, 1, 2, 1), Some(0), range(9, 9), 4.99, None),
         )
     );
 }

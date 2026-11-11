@@ -1,12 +1,17 @@
 {
   "game": "poe1",
   "steam_build": 26530219,
-  "manifest_sha256": "e2e97f0968f8ba10d30ba83f45cf205bab7de313f7c044ccdaeff9ba7a81e587",
+  "manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba",
   "files": {
     "data/active_skills.json": {
       "rows": 1941,
       "sha256": "eceaa8f773e8b852ec2bc88c90bf539c54099b8377589c3184bbc5a748aa9f58",
       "size": 635787
+    },
+    "data/armour_types.json": {
+      "rows": 481,
+      "sha256": "1ed5fa8a4dc0020367ca5bf8a42fc620f8cd2ae0acf3ab83ffc7cf42168cdc5e",
+      "size": 155760
     },
     "data/ascendancies.json": {
       "rows": 21,
@@ -32,6 +37,11 @@
       "rows": 13,
       "sha256": "0cd04bbce4028d557d4ea48ff912bd359a6ccb38888aef0de5f47048bb312025",
       "size": 233
+    },
+    "data/game_constants.json": {
+      "rows": 42,
+      "sha256": "24b2e582c368f27c294e724f42d5be0840119106bcc55d026e0138611f665efa",
+      "size": 3667
     },
     "data/gem_effects.json": {
       "rows": 1292,
@@ -83,6 +93,11 @@
       "sha256": "b6c707b0f332a7941b7af57691280f13c61778205e0057e29ed71e6e6dc8b84b",
       "size": 23133178
     },
+    "data/monster_levels.json": {
+      "rows": 100,
+      "sha256": "6e80b2a33ab8fa4914f6607fc87ab7a926ba4c30297977352f22b7c6ce9999fe",
+      "size": 31469
+    },
     "data/object_templates.json": {
       "rows": 9,
       "sha256": "4f1e9f0cba5805674a78ffe592d28479602c394751e8295295b5fcd0ae3f3f16",
@@ -98,6 +113,11 @@
       "sha256": "02b97e276d9d6bca8c2f8ef268515f140e4bae96c6c5a3fab0c14740188908b9",
       "size": 3181213
     },
+    "data/shield_types.json": {
+      "rows": 98,
+      "sha256": "a5c362b675f584b4d434a1215262fdc3948bda85ed9399c9b892ca016eddd1ca",
+      "size": 8693
+    },
     "data/skill_types.json": {
       "rows": 135,
       "sha256": "5b11dd13dc381cd26312c9575c9d242eb3cc80651de956f4b9793f712c4a32b0",
@@ -112,6 +132,11 @@
       "rows": 23362,
       "sha256": "cba5cce2ceb3c44bd94d541cec6af51e9df57d624dbe466602b93bb9ff90ab1f",
       "size": 2561049
+    },
+    "data/weapon_types.json": {
+      "rows": 366,
+      "sha256": "3886dad94e98a4f1b706abe31b662a1b49264388abab5fdc8ec1627dba1b07f4",
+      "size": 81207
     },
     "poe1/grafts.json": {
       "rows": 16,
@@ -386,5 +411,8 @@
     "templates": 9,
     "template_values": 0,
     "dropped_stats": 0
+  },
+  "properties": {
+    "dropped_rows": 0
   }
 }

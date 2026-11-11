@@ -42,5 +42,25 @@
   "tags": [
    "gem"
   ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Items/Wand1",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Plain Test Wand",
+  "tags": [
+   "wand"
+  ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Items/Shield1",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Plain Test Shield",
+  "tags": [
+   "shield"
+  ]
  }
 ]

@@ -1,0 +1,22 @@
+[
+ {
+  "armour": {
+   "max": 9,
+   "min": 9
+  },
+  "base_item": "Test/Items/Shield1",
+  "energy_shield": {
+   "max": 0,
+   "min": 0
+  },
+  "evasion": {
+   "max": 0,
+   "min": 0
+  },
+  "movement_speed": -3,
+  "ward": {
+   "max": 0,
+   "min": 0
+  }
+ }
+]
