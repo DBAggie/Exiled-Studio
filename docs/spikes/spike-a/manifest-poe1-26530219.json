@@ -38,7 +38,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "678f9022e212301f5891f3450d8123507d740cd6",
+    "commit": "e43d8f6e40bc07a7dbbb7b804757c3cd11682360",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1971,6 +1971,10 @@
       "rows": 179,
       "sha256": "f74a7e0eb3e3148a8250166648e684f041533c016584fcbd0cb434a05e952ba9"
     },
+    "tables/ArmourTypes.json": {
+      "rows": 481,
+      "sha256": "e207caaf177d3b6cd0e0dbe3daa67512e331e8b4e95fd24b12d882d0e799b24b"
+    },
     "tables/Ascendancy.json": {
       "rows": 21,
       "sha256": "dc14c6c21171c106c9f387e7be1c01ac7884e99ab91588304729fb7fb0f5bc39"
@@ -2039,6 +2043,10 @@
       "rows": 162,
       "sha256": "3316a65b6610b2927e4b8ccd75e2fd6f88673bfcbab6c88061c346404efa89e1"
     },
+    "tables/DefaultMonsterStats.json": {
+      "rows": 100,
+      "sha256": "090db3c02d4cd591578a2dcf589caf8a0492c647b6ab4f810e3c8be18400db1d"
+    },
     "tables/Descendancy.json": {
       "rows": 17,
       "sha256": "c5d69e79d066b9edb1fc6a3818e6962e3e2ad5e9e420bba2e6d63b3ec2079783"
@@ -2058,6 +2066,10 @@
     "tables/FlavourText.json": {
       "rows": 2962,
       "sha256": "e922afcdbfa6afe0227d126e4cab649de4c2ee36f24044d41f8b2e76a6ac4b46"
+    },
+    "tables/GameConstants.json": {
+      "rows": 42,
+      "sha256": "aa02ccf9d79ab4e7cea784fcb96a6519613a4a54718345b8014c100a55b3c266"
     },
     "tables/GemEffects.json": {
       "rows": 1292,
@@ -2267,6 +2279,10 @@
       "rows": 468,
       "sha256": "212eec15a1a5fc25fcd431f0490d9da584d657ff128633d90d2b5ed5c46a673a"
     },
+    "tables/ShieldTypes.json": {
+      "rows": 98,
+      "sha256": "fd1a7ac5adb081dc06dabd73de73bfe5eb3cb4caa9bee1c9cd4631b0e05d9a77"
+    },
     "tables/ShopTag.json": {
       "rows": 953,
       "sha256": "03ea02658b735a052b75410c68c422916c73e093a4b471e75277becb5566f0f2"
@@ -2298,6 +2314,10 @@
     "tables/VirtualStatContextFlags.json": {
       "rows": 40,
       "sha256": "eac1dda8f5e1bd05e2e751f741a10885a15e9228f541e899d44e5cc8c051e02a"
+    },
+    "tables/WeaponTypes.json": {
+      "rows": 366,
+      "sha256": "498a0507c614ba1ee11dc29cdf8fc10daf55d23e103bb0a1a9ff4a2308ef4543"
     },
     "tables/Words.json": {
       "rows": 4117,
@@ -9452,6 +9472,28 @@
       "source_sha256": "d262703103aea222045d0fe2c9b536668dc8c90f476d64a313fe682f73495b65",
       "status": "ok"
     },
+    "ArmourTypes": {
+      "columns": 12,
+      "columns_read": 12,
+      "error": null,
+      "key_columns": {
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 481
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ArmourTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 60,
+      "row_size_mismatch": null,
+      "rows": 481,
+      "source": "data/armourtypes.datc64",
+      "source_sha256": "6ccaf92bf5f121d94ae52fd7f441de5b7622903d6bce1ee514829b7bedede8e3",
+      "status": "ok"
+    },
     "Ascendancy": {
       "columns": 20,
       "columns_read": 20,
@@ -9589,12 +9631,15 @@
       "output": "tables/BaseItemTypes.json",
       "referenced_by": [
         "AlternateQualityTypes",
+        "ArmourTypes",
         "BaseItemTypes",
         "BrequelPassiveSubTrees",
         "Characters",
         "Essences",
         "PassiveTreeExpansionJewels",
-        "SkillGems"
+        "ShieldTypes",
+        "SkillGems",
+        "WeaponTypes"
       ],
       "root": true,
       "row_len": 374,
@@ -10240,6 +10285,22 @@
       "source_sha256": "1ad5067f9d93d8d02f29cd0eb713c483ca9f396e2451ed261511f30c027f1b9c",
       "status": "ok"
     },
+    "DefaultMonsterStats": {
+      "columns": 17,
+      "columns_read": 17,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/DefaultMonsterStats.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 72,
+      "row_size_mismatch": null,
+      "rows": 100,
+      "source": "data/defaultmonsterstats.datc64",
+      "source_sha256": "62b2287c2539ce232c503b3249d6515ce4a4fc2ab61feba1f2b5a64f8fb36e0d",
+      "status": "ok"
+    },
     "Descendancy": {
       "columns": 12,
       "columns_read": 12,
@@ -10589,6 +10650,22 @@
       "rows": 2962,
       "source": "data/flavourtext.datc64",
       "source_sha256": "5c8c1e24928e95a7c2a26d096048ec975e521be99ce394a81720b1b0cc7b65c5",
+      "status": "ok"
+    },
+    "GameConstants": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/GameConstants.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 16,
+      "row_size_mismatch": null,
+      "rows": 42,
+      "source": "data/gameconstants.datc64",
+      "source_sha256": "b6c8b23e1da7bcd5db1d90b053ebdfe116d122c099e9b8098b3e30f49becee48",
       "status": "ok"
     },
     "GemEffects": {
@@ -12373,6 +12450,28 @@
       "source_sha256": "09667a176d63f0772644ee224fc524151ecf8e9c07924d2834e2a49d2aec290b",
       "status": "ok"
     },
+    "ShieldTypes": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 98
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ShieldTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 20,
+      "row_size_mismatch": null,
+      "rows": 98,
+      "source": "data/shieldtypes.datc64",
+      "source_sha256": "620b41b12a05bf25c6520b0795345436ec3c516fe837aaaf85563cae4efa25f4",
+      "status": "ok"
+    },
     "ShopTag": {
       "columns": 9,
       "columns_read": 9,
@@ -12645,6 +12744,28 @@
       "rows": 40,
       "source": "data/virtualstatcontextflags.datc64",
       "source_sha256": "17079242b5cfc3a284b2cc2ebe79b4d19a04228ac1a72ae6db53d3edd03f9107",
+      "status": "ok"
+    },
+    "WeaponTypes": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "BaseItemTypesKey": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 366
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/WeaponTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 40,
+      "row_size_mismatch": null,
+      "rows": 366,
+      "source": "data/weapontypes.datc64",
+      "source_sha256": "d679cf8842b5ae9cba9db478a469f4e57bb679c70e975afff97a44a410d885c9",
       "status": "ok"
     },
     "Words": {

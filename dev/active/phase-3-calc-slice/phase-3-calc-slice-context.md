@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-1b: character and passive tables)
+Last Updated: 2026-11-11 (P3-1c: item property and monster tables)
 
 # Phase 3: calc slice (context)
 
@@ -108,3 +108,13 @@ No code blockers; no ADR or crate-boundary issue. Applied: required columns per 
 
 ## code-architecture-reviewer (P3-1b, 2026-11-11) summary
 No blockers. Applied: template cycle check; tree geometry check and required graph lists; required integers instead of 0; unique class and ascendancy numbers and roots; `StatAmount` rename; docs on tree identity, connection direction, orbit radii; tests for each, the three "kept as written" rules, and missing inputs; exact-code duplicate tests. Not applied: a chain resolver in `loom-data` (the calc owns the override rule, P3-6; the validator guarantees chains end); a check that each root is a class start (PoE1 roots include ascendancy starts; P3-3 decides with the data); `calc_files()` as a const array (cosmetic).
+
+## Decisions in P3-1c (item property and monster tables; evidence `docs/phase-3/bundle-v2-items-monsters.md`)
+- **`loom_data::bundle::properties`**, required in format 2: `weapon_types.json`, `armour_types.json` (defences as `ValueRange`; PoE2 `min` = `max`), `shield_types.json`, `monster_levels.json` (`DefaultMonsterStats`, the columns PoB reads), `game_constants.json`. The non-level monster defaults are the monster object template (P3-1b). Format 2 is complete: a later change to its sections is a new format.
+- **Extractor:** `ITEM_PROPERTY_TABLES` roots (`WeaponTypes`, `ArmourTypes`, `ShieldTypes`, `DefaultMonsterStats`, `GameConstants`), both games; PoE2 also brings `WeaponClasses` (not carried).
+- **Validator:** base item references; one row per base and per constant; `BUNDLE_MONSTER_LEVELS` (1, 2, 3, ... without gaps: the calc reads level n at row n - 1); `BUNDLE_VALUE_RANGE` (ranges of amounts, positive attack times and divisors, no negative chances, ranges, reload times, block); `BUNDLE_GAME_SHAPE` (PoE1: no reload time, `alt_life_1` and the conversion multiplier; PoE2: reload time, single-value defences, no PoE1 columns).
+- **Monster armour:** PoB v2.67.2 does not read `DefaultMonsterStats.Armour` and derives monster armour from `MonsterDamageReductionImprovement`; the bundle keeps both; P3-11 decides with evidence (a `pob-derivation` candidate for P3-2's `data-parity`).
+- **Against PoB:** every monster table, game constant, and monster constant equal (damage tables at `f32` precision); weapon and armour bases equal. The calc widens `f32` with `f64::from`.
+
+## code-architecture-reviewer (P3-1c, 2026-11-11) summary
+No code blockers; the docs gap it named is this PR's docs commit. Applied: `movement_speed` required; per-game shape check; contiguous monster levels; value rules (positive attack time and divisor, no negatives); the armour error names both column sets; a game constant without an ID is an error; tests for each, a drop per table and a null key, missing weapon and monster columns; `MonsterLevel` docs on row lookup, `f32` widening, the armour constant; PoE2 weapon classes noted for P3-10. Not applied: a shared helper module for `required`/`float`/`one_of` (cosmetic); the commit trailer remark (the trailer is the one the session was given).
