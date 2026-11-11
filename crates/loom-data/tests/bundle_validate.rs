@@ -450,8 +450,19 @@ fn duplicate_passive_ids_and_numbers_should_give_their_code() {
     assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"]);
     // Two passives on one node; a tree node twice; two effects, one hash.
     type Edit = fn(&mut Value);
-    let numbers: [(&str, Edit); 3] = [
-        ("data/passives.json", |v| v[1]["node"] = 100.into()),
+    let numbers: [(&str, Edit); 6] = [
+        ("data/passive_tree.json", |v| v["roots"] = json!([100, 100])),
+        ("data/characters.json", |v| v[1]["class_number"] = 1.into()),
+        ("data/ascendancies.json", |v| {
+            let mut other = v[0].clone();
+            other["id"] = "Other".into();
+            v.as_array_mut().unwrap().push(other);
+        }),
+        ("data/passives.json", |v| {
+            let mut other = v[0].clone();
+            other["id"] = "other".into();
+            v.as_array_mut().unwrap().push(other);
+        }),
         ("data/passive_tree.json", |v| {
             v["groups"][1]["nodes"][0]["node"] = 100.into();
         }),
@@ -463,11 +474,7 @@ fn duplicate_passive_ids_and_numbers_should_give_their_code() {
     ];
     for (path, edit) in numbers {
         let src = edited("bundle-poe2", path, edit);
-        let found = validate(&src).findings;
-        assert!(
-            found.iter().any(|f| f.code == "BUNDLE_DUPLICATE_ID"),
-            "{path}: {found:?}"
-        );
+        assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"], "{path}");
     }
 }
 
@@ -477,4 +484,41 @@ fn empty_passive_id_should_give_its_code() {
         v[2]["id"] = "".into();
     });
     assert_eq!(codes(&src), ["BUNDLE_EMPTY_ID"]);
+}
+
+#[test]
+fn template_chain_that_loops_should_give_its_code() {
+    let src = edited("bundle-poe1", "data/object_templates.json", |v| {
+        v[0]["extends"] = "test/chars/character".into();
+    });
+    assert_eq!(codes(&src), ["BUNDLE_TEMPLATE_CYCLE"], "itself");
+    let src = edited("bundle-poe1", "data/object_templates.json", |v| {
+        v[0]["extends"] = "test/chars/str".into();
+    });
+    let found = validate(&src).findings;
+    assert_eq!(
+        (codes(&src), found.len()),
+        (vec!["BUNDLE_TEMPLATE_CYCLE"], 2),
+        "two in a loop"
+    );
+}
+
+#[test]
+fn tree_node_outside_its_orbit_should_give_its_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, Edit); 3] = [
+        ("orbit past the slots", |v| {
+            v["groups"][0]["nodes"][1]["orbit"] = 2.into();
+        }),
+        ("negative orbit", |v| {
+            v["groups"][0]["nodes"][1]["orbit"] = (-1).into();
+        }),
+        ("position past the orbit", |v| {
+            v["groups"][0]["nodes"][1]["orbit_index"] = 6.into();
+        }),
+    ];
+    for (what, edit) in cases {
+        let src = edited("bundle-poe2", "data/passive_tree.json", edit);
+        assert_eq!(codes(&src), ["BUNDLE_TREE_GEOMETRY"], "{what}");
+    }
 }

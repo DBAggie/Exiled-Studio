@@ -192,7 +192,9 @@ fn extract(poe1: bool) -> (BTreeMap<String, Vec<u8>>, Value) {
         json!([
             {"key": "life_per_level", "quoted": false, "value": "12"},
             {"key": "enable_weapon_sets", "quoted": false, "value": "true"},
-            {"key": "s_a", "quoted": true, "value": "12"}
+            {"key": "s_a", "quoted": true, "value": "12"},
+            {"key": "s_b", "quoted": false, "value": "1.5"},
+            {"key": "s_b", "quoted": false, "value": "-3"}
         ]),
     );
     if poe1 {
@@ -259,7 +261,7 @@ fn poe1_shape_should_convert_with_class_templates() {
         (
             Some("metadata/characters/str/str"),
             vec![
-                ("metadata/characters/character", None, 1, 2),
+                ("metadata/characters/character", None, 2, 3),
                 (
                     "metadata/characters/str/str",
                     Some("metadata/characters/character"),
@@ -312,7 +314,7 @@ fn poe1_shape_should_convert_with_class_templates() {
         (
             PassiveSummary {
                 templates: 2,
-                template_values: 2,
+                template_values: 3,
                 dropped_stats: 2,
             },
             2
@@ -357,4 +359,66 @@ fn missing_inputs_should_fail_the_conversion() {
     manifest["object_templates"]["files"]["metadata/characters/character.ot"]["status"] =
         "failed".into();
     assert!(run(&files, &manifest).is_err(), "failed template");
+    // A missing integer that identifies a row or feeds the calc.
+    for (name, cols, rows) in [
+        (
+            "Characters",
+            &[
+                "Id",
+                "Name",
+                "IntegerId",
+                "BaseMaxLife",
+                "BaseMaxMana",
+                "BaseStrength",
+                "BaseDexterity",
+                "BaseIntelligence",
+            ][..],
+            json!([[
+                "Metadata/Characters/Str/Str",
+                "Brute",
+                null,
+                38,
+                34,
+                32,
+                14,
+                14
+            ]]),
+        ),
+        (
+            "PassiveSkillMasteryEffects",
+            &[
+                "Id",
+                "HASH16",
+                "Stats",
+                "Stat1Value",
+                "Stat2Value",
+                "Stat3Value",
+            ][..],
+            json!([["LifeMastery1", null, [1], 5, 0, 0]]),
+        ),
+    ] {
+        let (mut files, manifest) = extract(true);
+        files.insert(format!("tables/{name}.json"), table(name, cols, &rows).1);
+        assert!(run(&files, &manifest).is_err(), "{name}");
+    }
+    // A graph without one of its lists, or with a non-integer node.
+    for edit in [
+        |g: &mut Value| g["orbit_slots"] = Value::Null,
+        |g: &mut Value| g["groups"] = Value::Null,
+        |g: &mut Value| g["groups"][0]["nodes"][0]["connections"][0]["id"] = "x".into(),
+    ] {
+        let (mut files, manifest) = extract(true);
+        let path = "passive_skill_graphs/metadata/passiveskillgraph.psg.json";
+        let mut g: Value = serde_json::from_slice(&files[path]).unwrap();
+        edit(&mut g);
+        files.insert(path.to_owned(), g.to_string().into_bytes());
+        assert!(run(&files, &manifest).is_err(), "{g}");
+    }
+    // A template file without `extends`.
+    let (mut files, manifest) = extract(true);
+    let path = "object_templates/metadata/characters/character.ot.json";
+    let mut t: Value = serde_json::from_slice(&files[path]).unwrap();
+    t.as_object_mut().unwrap().remove("extends");
+    files.insert(path.to_owned(), t.to_string().into_bytes());
+    assert!(run(&files, &manifest).is_err(), "no extends");
 }

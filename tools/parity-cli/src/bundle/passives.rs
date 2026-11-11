@@ -17,7 +17,7 @@ use std::collections::BTreeSet;
 
 use loom_data::bundle::passives::{
     Ascendancy, Character, MasteryEffect, MasteryGroup, ObjectTemplate, Passive, PassiveTables,
-    PassiveTree, StatValue, TemplateValue, TreeConnection, TreeGroup, TreeNode,
+    PassiveTree, StatAmount, TemplateValue, TreeConnection, TreeGroup, TreeNode,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -54,6 +54,15 @@ fn int_or_0(row: &[Value], col: usize) -> i64 {
     Table::int(row, col).unwrap_or(0)
 }
 
+/// An integer that identifies a row or drives the calc: missing is an
+/// error, never 0.
+fn required(t: &Table, row: &[Value], col: usize, what: &str) -> Result<i64, String> {
+    Table::int(row, col).ok_or_else(|| {
+        let id = row.first().and_then(Value::as_str).unwrap_or("?");
+        format!("{}: row {id:?} has no {what}", t.table)
+    })
+}
+
 fn text(row: &[Value], col: usize) -> String {
     Table::text(row, col).unwrap_or("").to_owned()
 }
@@ -81,13 +90,13 @@ fn stat_values(
     values: &[usize],
     counts: &Counts,
     summary: &mut PassiveSummary,
-) -> Vec<StatValue> {
+) -> Vec<StatAmount> {
     let mut out = Vec::new();
     for (i, k) in ints(row, keys).into_iter().enumerate() {
         let stat = at(stats, Some(k), counts);
         let value = values.get(i).and_then(|c| Table::int(row, *c));
         match (stat, value) {
-            (Some(stat), Some(value)) => out.push(StatValue { stat, value }),
+            (Some(stat), Some(value)) => out.push(StatAmount { stat, value }),
             _ => bump(&mut summary.dropped_stats),
         }
     }
@@ -132,24 +141,24 @@ fn characters(read: Read<'_>, templates: &BTreeSet<&str>) -> Result<Vec<Characte
         c("BaseDexterity")?,
         c("BaseIntelligence")?,
     );
-    Ok(t.rows
+    t.rows
         .iter()
         .map(|r| {
             let id = text(r, id);
             let own = id.to_ascii_lowercase();
-            Character {
+            Ok(Character {
                 template: templates.contains(own.as_str()).then_some(own),
                 id,
                 name: text(r, name),
-                class_number: int_or_0(r, number),
-                base_life: int_or_0(r, life),
-                base_mana: int_or_0(r, mana),
-                strength: int_or_0(r, s),
-                dexterity: int_or_0(r, d),
-                intelligence: int_or_0(r, i),
-            }
+                class_number: required(&t, r, number, "class number")?,
+                base_life: required(&t, r, life, "base life")?,
+                base_mana: required(&t, r, mana, "base mana")?,
+                strength: required(&t, r, s, "strength")?,
+                dexterity: required(&t, r, d, "dexterity")?,
+                intelligence: required(&t, r, i, "intelligence")?,
+            })
         })
-        .collect())
+        .collect()
 }
 
 fn ascendancies(
@@ -164,15 +173,17 @@ fn ascendancies(
         t.column("Character")?,
         t.column("ClassNo")?,
     );
-    Ok(t.rows
+    t.rows
         .iter()
-        .map(|r| Ascendancy {
-            id: text(r, id),
-            name: text(r, name),
-            character: at(characters, Table::int(r, character), counts),
-            class_number: int_or_0(r, number),
+        .map(|r| {
+            Ok(Ascendancy {
+                id: text(r, id),
+                name: text(r, name),
+                character: at(characters, Table::int(r, character), counts),
+                class_number: required(&t, r, number, "class number")?,
+            })
         })
-        .collect())
+        .collect()
 }
 
 /// An object template's ID: its lowercase path without `.ot`.
@@ -218,7 +229,7 @@ fn templates(
                 e["quoted"] == false,
                 value.parse::<i64>(),
             ) {
-                (true, true, Ok(v)) => tstats.push(StatValue {
+                (true, true, Ok(v)) => tstats.push(StatAmount {
                     stat: key.to_owned(),
                     value: v,
                 }),
@@ -274,7 +285,7 @@ fn passives(
     for r in &t.rows {
         out.push(Passive {
             id: text(r, id),
-            node: int_or_0(r, node),
+            node: required(&t, r, node, "node number")?,
             name: text(r, name),
             stats: stat_values(stats, r, keys, &values, counts, summary),
             keystone: flag(r, keystone),
@@ -320,7 +331,7 @@ fn mastery_effects(
     for r in &t.rows {
         out.push(MasteryEffect {
             id: text(r, id),
-            hash: int_or_0(r, hash),
+            hash: required(&t, r, hash, "hash")?,
             stats: stat_values(stats, r, keys, &values, counts, summary),
         });
     }
@@ -347,16 +358,22 @@ fn tree(read: Read<'_>) -> Result<PassiveTree, String> {
         graph.to_ascii_lowercase()
     );
     let g: Value = serde_json::from_slice(&read(&path)?).map_err(|e| format!("{path}: {e}"))?;
-    let list = |v: &Value| v.as_array().map_or(&[][..], Vec::as_slice).to_vec();
+    // Every list the tree has must be there: a missing one is an error,
+    // never an empty tree.
+    let list = |v: &Value, what: &str| -> Result<Vec<Value>, String> {
+        v.as_array()
+            .cloned()
+            .ok_or_else(|| format!("{path}: no {what} list"))
+    };
     let ints_of = |v: &Value, what: &str| -> Result<Vec<i64>, String> {
-        list(v).iter().map(|x| num(x, what)).collect()
+        list(v, what)?.iter().map(|x| num(x, what)).collect()
     };
     let mut groups = Vec::new();
-    for gr in list(&g["groups"]) {
+    for gr in list(&g["groups"], "groups")? {
         let mut nodes = Vec::new();
-        for n in list(&gr["nodes"]) {
+        for n in list(&gr["nodes"], "nodes")? {
             let mut connections = Vec::new();
-            for c in list(&n["connections"]) {
+            for c in list(&n["connections"], "connections")? {
                 connections.push(TreeConnection {
                     node: num(&c["id"], "a connection")?,
                     orbit: if c["orbit"].is_null() {

@@ -13,9 +13,18 @@
 //!
 //! Values are the game's, unscaled. A template's chain (`extends`) is not
 //! resolved here; the calc applies it (a class template overrides
-//! `Metadata/Characters/Character`). The bundle holds one passive tree,
-//! the one the extract's game build has; which PoB tree version label it
-//! answers to is decided with evidence where the calc needs it (P3-3).
+//! `Metadata/Characters/Character`); the validator refuses a chain that
+//! loops. A key repeated in one `Stats` block is kept in file order (none
+//! in PoE1 26530219 or PoE2 26476662). PoE2 classes have no own template.
+//!
+//! The bundle holds one passive tree, the one of the game build in the
+//! manifest's provenance (`source.steam_build`); that build is the tree's
+//! identity. Which PoB tree version label it answers to is decided with
+//! evidence where the calc needs it (P3-3). Connections are undirected and
+//! stored once, as the graph file stores them (PoE1 3,359, PoE2 6,070; one
+//! PoE2 pair both ways). Node positions need orbit radii, which are not in
+//! the game data read here; a rule that needs distances brings them with
+//! their evidence (connectivity needs none).
 //!
 //! Not carried (no Phase 3 calc reads them; adding one is a new field): the
 //! templates' other blocks (movement speed in `Pathfinding`, render and
@@ -53,10 +62,10 @@ pub const FILES: [&str; 7] = [
     PASSIVE_TREE,
 ];
 
-/// A stat and its value.
+/// A stat and its value (not `stat_desc::StatValue`, a rendering input).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct StatValue {
+pub struct StatAmount {
     /// Stat ID.
     pub stat: String,
     /// Value.
@@ -127,7 +136,7 @@ pub struct ObjectTemplate {
     pub extends: Option<String>,
     /// `Stats` entries that are stats with integer values, in file order.
     #[serde(default)]
-    pub stats: Vec<StatValue>,
+    pub stats: Vec<StatAmount>,
     /// Other `Stats` entries, in file order.
     #[serde(default)]
     pub values: Vec<TemplateValue>,
@@ -146,7 +155,7 @@ pub struct Passive {
     pub name: String,
     /// Stats and values.
     #[serde(default)]
-    pub stats: Vec<StatValue>,
+    pub stats: Vec<StatAmount>,
     /// A keystone.
     #[serde(default)]
     pub keystone: bool,
@@ -206,7 +215,7 @@ pub struct MasteryEffect {
     pub hash: i64,
     /// Stats and values.
     #[serde(default)]
-    pub stats: Vec<StatValue>,
+    pub stats: Vec<StatAmount>,
 }
 
 /// A connection from a tree node.

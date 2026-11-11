@@ -14,10 +14,13 @@
 //!   base item, gem effect, gem tag, and cost type a row names exists; in
 //!   the character and passive tables, every stat, character, ascendancy,
 //!   object template, mastery group, and mastery effect, every passive of a
-//!   tree node, and every tree node of a connection or root;
+//!   tree node, and every tree node of a connection or root; no object
+//!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`);
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
-//!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, and mastery
-//!   effect hashes are unique; the item rules validate; the
+//!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
+//!   mastery effect hashes, class numbers, and ascendancy numbers within a
+//!   class are unique; the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
 //!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
@@ -522,6 +525,46 @@ fn passive_refs(p: &PassiveTables, stats: &BTreeSet<&str>, report: &mut Report) 
     for r in &p.tree.roots {
         node(&tree_nodes, "tree node", *r);
     }
+    // Template chains end.
+    let parent: std::collections::BTreeMap<&str, &str> = p
+        .object_templates
+        .iter()
+        .filter_map(|t| Some((t.id.as_str(), t.extends.as_deref()?)))
+        .collect();
+    for t in &p.object_templates {
+        let mut at = t.id.as_str();
+        for _ in 0..=parent.len() {
+            match parent.get(at) {
+                Some(next) => at = next,
+                None => break,
+            }
+        }
+        if parent.contains_key(at) {
+            report.add(
+                "BUNDLE_TEMPLATE_CYCLE",
+                format!("object_templates:{}", t.id),
+                "its extends chain loops",
+            );
+        }
+    }
+    // Orbits and positions fit the orbit slots.
+    let slots = &p.tree.orbit_slots;
+    for n in p.tree.groups.iter().flat_map(|g| &g.nodes) {
+        let fits = usize::try_from(n.orbit)
+            .ok()
+            .and_then(|o| slots.get(o))
+            .is_some_and(|max| (0..*max).contains(&n.orbit_index));
+        if !fits {
+            report.add(
+                "BUNDLE_TREE_GEOMETRY",
+                format!("passive_tree:{}", n.node),
+                format!(
+                    "orbit {} position {} does not fit the orbit slots",
+                    n.orbit, n.orbit_index
+                ),
+            );
+        }
+    }
 }
 
 /// The character and passive tables' domain checks: IDs not empty and
@@ -561,7 +604,13 @@ fn passive_domain(p: &PassiveTables, report: &mut Report) {
         }
         duplicates(report, file, ids.into_iter());
     }
-    let numbers: [(&str, &str, Vec<i64>); 3] = [
+    let numbers: [(&str, &str, Vec<i64>); 5] = [
+        (passives::PASSIVE_TREE, "root", p.tree.roots.clone()),
+        (
+            passives::CHARACTERS,
+            "class number",
+            p.characters.iter().map(|c| c.class_number).collect(),
+        ),
         (
             passives::PASSIVES,
             "node",
@@ -583,6 +632,19 @@ fn passive_domain(p: &PassiveTables, report: &mut Report) {
             p.mastery_effects.iter().map(|e| e.hash).collect(),
         ),
     ];
+    let mut ascendancy_numbers = BTreeSet::new();
+    for a in &p.ascendancies {
+        if !ascendancy_numbers.insert((a.character.as_deref(), a.class_number)) {
+            report.add(
+                "BUNDLE_DUPLICATE_ID",
+                passives::ASCENDANCIES,
+                format!(
+                    "class number {} is on two ascendancies of one class",
+                    a.class_number
+                ),
+            );
+        }
+    }
     for (file, what, values) in numbers {
         let mut seen = BTreeSet::new();
         for v in values {
