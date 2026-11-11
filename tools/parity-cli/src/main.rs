@@ -9,10 +9,12 @@
 //! `oracle-compare`, and `divergence-check` (the divergence register,
 //! `docs/parity/`).
 
+mod build_round_trip;
 mod bundle;
 mod bundle_equal;
 mod categorize;
 mod divergence;
+mod dto_hashes;
 mod extract;
 mod grafts;
 mod item_tags;
@@ -116,6 +118,30 @@ const USAGE: &str = "usage:
       when every difference is registered, 20
       (ORACLE_UNEXPECTED_DIFFERENCE) otherwise, or the class of a fixture
       that has no output on a side when that is smaller.
+  loom-parity-cli dto-hashes <dir>...
+      Import every *.xml PoB build directly in each <dir> (in name order),
+      write its v1 build document twice and read it back (loom_serialization::
+      dto::v1); print each document's SHA-256 and size as JSON. CI compares
+      the output of Windows and Linux. Exit 1 if a document differs on a
+      second run or does not read back to the same build.
+  loom-parity-cli build-round-trip <input>... --out <dir> [--bundle <dir>] [--anonymous]
+                  [--expect-import-error <file name>]...
+      Run every build through import (A), resolution with the bundle if
+      given (validated first), the v1 JSON document (B), and PoB XML export
+      and re-import (C, resolved again; PoE1 builds only), and check
+      (a) export(B) xml_equal to the input, (b) A, B, and C equal with
+      resolutions, (c) the same JSON bytes on a second run, (d) every
+      item's source lines in equal its lines out; PoB input also runs the
+      unknown-content mutation set (plan step 8). An input is a folder
+      (every *.xml directly in it, in name order), a PoB build *.xml, or a
+      v1 build document *.json; identical files count once. A file named
+      by --expect-import-error must not import, and then passes.
+      A name that is no input's file name stops the run (exit 3).
+      --anonymous names builds by SHA-256. Write summary.json (scrubbed)
+      and report.json (failures) to <dir>, which must not exist. Exit 0
+      when every build passes, 1 when one fails (or no build was given),
+      2 on a usage error, 3 when the run cannot start (an input or the
+      bundle does not read or validate, or <dir> exists).
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -683,8 +709,178 @@ fn divergence_check(register: &Path) -> ExitCode {
     }
 }
 
+fn dto_hashes(dirs: &[String]) -> Result<bool, String> {
+    let report = dto_hashes::run(dirs)?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    for failure in &report.failures {
+        eprintln!("failure: {failure}");
+    }
+    Ok(report.failures.is_empty())
+}
+
+/// `build-round-trip`'s arguments.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct RoundTripArgs {
+    inputs: Vec<String>,
+    bundle: Option<String>,
+    out: Option<String>,
+    anonymous: bool,
+    expect_import_error: std::collections::BTreeSet<String>,
+}
+
+/// Parses the arguments after `build-round-trip`; `None` is a usage error.
+fn round_trip_args(args: &[String]) -> Option<RoundTripArgs> {
+    let mut out = RoundTripArgs::default();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        match arg.as_str() {
+            "--anonymous" => out.anonymous = true,
+            "--bundle" | "--out" | "--expect-import-error" => {
+                let [value, tail @ ..] = rest else {
+                    return None;
+                };
+                rest = tail;
+                match arg.as_str() {
+                    "--bundle" if out.bundle.is_none() => out.bundle = Some(value.clone()),
+                    "--out" if out.out.is_none() => out.out = Some(value.clone()),
+                    "--expect-import-error" => {
+                        out.expect_import_error.insert(value.clone());
+                    }
+                    _ => return None,
+                }
+            }
+            flag if flag.starts_with("--") => return None,
+            input => out.inputs.push(input.to_owned()),
+        }
+    }
+    (!out.inputs.is_empty() && out.out.is_some()).then_some(out)
+}
+
+/// The inputs: each `*.xml` directly in a folder (in name order), or a
+/// file (`*.xml` or `*.json`).
+fn round_trip_inputs(args: &[String]) -> Result<Vec<build_round_trip::Input>, String> {
+    use build_round_trip::{Format, Input};
+    let format_of = |path: &Path| match path.extension().and_then(|e| e.to_str()) {
+        Some(e) if e.eq_ignore_ascii_case("xml") => Some(Format::PobXml),
+        Some(e) if e.eq_ignore_ascii_case("json") => Some(Format::BuildDocument),
+        _ => None,
+    };
+    let mut inputs = Vec::new();
+    for arg in args {
+        let path = Path::new(arg);
+        let mut files = Vec::new();
+        if path.is_dir() {
+            for entry in std::fs::read_dir(path).map_err(|e| format!("{arg}: {e}"))? {
+                let p = entry.map_err(|e| format!("{arg}: {e}"))?.path();
+                if p.is_file() && format_of(&p) == Some(Format::PobXml) {
+                    files.push(p);
+                }
+            }
+            files.sort();
+        } else {
+            files.push(path.to_path_buf());
+        }
+        for p in files {
+            let format =
+                format_of(&p).ok_or_else(|| format!("{}: not *.xml or *.json", p.display()))?;
+            let file = p
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let shown = if path.is_dir() {
+                format!("{}/{file}", arg.trim_end_matches(['/', '\\']))
+            } else {
+                arg.clone()
+            };
+            inputs.push(Input {
+                path: shown.replace('\\', "/"),
+                file,
+                format,
+                bytes: std::fs::read(&p).map_err(|e| format!("{}: {e}", p.display()))?,
+            });
+        }
+    }
+    Ok(inputs)
+}
+
+/// `build-round-trip` (module `build_round_trip`). Exit 0 when every build
+/// passes, 1 when one fails, 2 on a usage error, 3 when the run cannot
+/// start (an input or the bundle does not read or validate, or `--out`
+/// exists).
+fn build_round_trip_cmd(args: &[String]) -> ExitCode {
+    let Some(args) = round_trip_args(args) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match build_round_trip_run(&args) {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
+    let out = Path::new(args.out.as_deref().unwrap_or_default());
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let inputs = round_trip_inputs(&args.inputs)?;
+    if let Some(missing) = args
+        .expect_import_error
+        .iter()
+        .find(|name| !inputs.iter().any(|i| &i.file == *name))
+    {
+        return Err(format!("--expect-import-error {missing}: no such input"));
+    }
+    let bundle = args
+        .bundle
+        .as_deref()
+        .map(|d| load_bundle(Path::new(d)))
+        .transpose()?;
+    let data = bundle.as_ref().map(loom_parser::import::BundleData::new);
+    let resolver = data
+        .as_ref()
+        .map(loom_parser::import::Resolver::new)
+        .transpose()
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let options = build_round_trip::Options {
+        data: resolver
+            .as_ref()
+            .zip(data.as_ref())
+            .map(|(resolver, data)| build_round_trip::Data { resolver, data }),
+        anonymous: args.anonymous,
+        expect_import_error: &args.expect_import_error,
+        tool: resolve_corpus::Tool {
+            commit: git(&["rev-parse", "HEAD"]),
+            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+        },
+    };
+    let (summary, report) = build_round_trip::run(&inputs, &options);
+    write_out(out, &summary, &report)?;
+    println!(
+        "build-round-trip: {} builds, {} passed, {} failed ({} duplicates skipped)",
+        summary.builds, summary.passed, summary.failed, summary.duplicates
+    );
+    for build in &report.builds {
+        for failure in &build.failures {
+            eprintln!("{}: {failure}", build.name);
+        }
+    }
+    Ok(summary.failed == 0 && summary.builds > 0)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "build-round-trip"
+    {
+        return build_round_trip_cmd(rest);
+    }
     if let [cmd, manifest, oracle_dir] = args.as_slice()
         && cmd == "oracle-verify"
     {
@@ -710,6 +906,7 @@ fn main() -> ExitCode {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))

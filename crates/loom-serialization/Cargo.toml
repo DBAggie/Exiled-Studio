@@ -8,9 +8,21 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# JSON Schema derives on the DTOs; only tools/schema-gen enables it (Phase 2
+# plan, decision 11).
+schema = ["dep:schemars"]
+
 [dependencies]
 loom-domain.workspace = true
+# zlib for PoB share codes (plan decision 16); MIT, Zlib, or Apache-2.0; pure Rust.
+miniz_oxide = { version = "0.9", default-features = false, features = ["with-alloc"] }
 roxmltree = "0.21"
+schemars = { workspace = true, optional = true }
+serde.workspace = true
+# float_roundtrip: finite numbers read back to the same bits (dto::v1).
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+thiserror.workspace = true
 
 [lints]
 workspace = true
