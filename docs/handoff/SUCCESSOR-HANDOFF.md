@@ -24,9 +24,9 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-2a item input open, in review, branch `feat/p2-2a-item-input`, stacked on P2-1)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- P2-2a (base `feat/p2-1-domain-model`).
-- **PR P2-2a: item input (open, in review, branch `feat/p2-2a-item-input`, base `feat/p2-1-domain-model`).** Plan step 2a.
+## Current state (updated 2026-11-10, P2-2a item input PR #43 open, in review, branch `feat/p2-2a-item-input`, stacked on P2-1)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`).
+- **PR P2-2a: item input (PR #43, open, in review, branch `feat/p2-2a-item-input`, base `feat/p2-1-domain-model`).** Plan step 2a.
   - **What:** `pob_item` moved by `git mv` from `loom-parser` to `crates/loom-serialization/src/legacy/pob_item/`, with its 20 tests unchanged. `loom-serialization` gains `pub mod legacy` and the `clippy::indexing_slicing` warning. New `legacy::pob_item::to_domain` maps a read item onto `loom_domain::ItemBody`, with 8 tests:
     - every line is kept;
     - spec values use `after_key`;
@@ -127,7 +127,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 5`): if the maintainer merged or asked for changes on P2-1 (#42) or P2-2a, record it and make the changes on that PR's branch first (then merge them up the stack with `git merge`, never force-push).
+1. **Stack check** (`gh pr list --state all --limit 5`): if the maintainer merged or asked for changes on P2-1 (#42) or P2-2a (#43), record it and make the changes on that PR's branch first (then merge them up the stack with `git merge`, never force-push).
 2. **P2-2b: scope and bases** (plan step 2b), branch from `feat/p2-2a-item-input` and target it as base:
    - add the `ItemData` trait in `loom-parser::import`, starting with bases and `item_rules`;
    - move base lookup and scope (`resolve_corpus.rs` `Bases`, `Found`, `DOMAIN_SCOPES`) to `loom-parser::import`. `POB_SUFFIXED_BASES` and `magic_base`/`base_name` stay PoB rules in `legacy` or the tool;
