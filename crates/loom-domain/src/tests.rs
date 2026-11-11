@@ -283,7 +283,7 @@ fn sample_build(game: Game, item: Item) -> Build {
     });
     build.character.class = Some(ClassId::new("Class1"));
     build.character.ascendancy = Some(AscendancyId::new("Ascendancy1"));
-    build.character.level = Sourced::read(90, "90");
+    build.character.level = Some(Sourced::read(90, "90"));
     build.character.main_socket_group = Some(Sourced::read(1, "1"));
 
     let mut spec = PassiveSpec::new(SpecId(1));

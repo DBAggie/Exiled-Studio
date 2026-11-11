@@ -3,3 +3,4 @@
 //! format (Phase 2 plan, decision 5).
 
 pub mod pob_item;
+pub mod pob_xml;
