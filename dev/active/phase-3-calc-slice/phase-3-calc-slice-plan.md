@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-3: scope survey, slice fields)
+Last Updated: 2026-11-11 (P3-3b: skills chosen, in-scope builds)
 
 # Phase 3: calc slice (plan)
 
@@ -100,6 +100,7 @@ Each sub-PR adds whole sections, end to end: canonical types and loader in `loom
 - **Accept:** the classifier's rules and each excluded-mechanic rule have a test on synthetic builds; the survey summary is committed (scrubbed for the corpus); the chosen skills, the in-scope builds (corpus by SHA-256; at least 3 per skill), the excluded-mechanics list, and `docs/phase-3/slice-fields.json` are in the PR; the maintainer confirms the choice and the exclusions (Q2, Q7) before any engine PR (P3-6).
 - **Depends on:** 1a, 1b (skills, passives and tree version; item jewel kinds come from v1 base items).
 - **Done in P3-3** (PR #66; `docs/phase-3/calc-survey.md`; context file, "Decisions in P3-3"): `calc-survey` takes a committed scope file (`docs/phase-3/calc-scope-poe1.json`: tree version `3_29` with evidence, the proposed excluded mechanics, the chosen skills, the minimum) and the data-parity rules (for `not-carried` passives). Result: 1 of 50 builds in scope (Winter Orb), no attack, so the minimum of 3 per skill is not met; the skill choice (Q2), the exclusions (Q7), and how to reach 3 builds (Q8) wait for the maintainer, and the top-up with public builds is a follow-up PR (P3-3b) once the skills are chosen. `slice-fields.json` is committed (revision 1, proposed): `AverageDamage` replaces `AverageHit`, `HitSpeed` added.
+- **Done in P3-3b** (`docs/phase-3/calc-survey.md`, "P3-3b"): the maintainer chose (2026-11-11) **spell Ice Nova (`IceNova`) and attack Smite (`Smite`)**, confirmed the three exclusions, and accepted derived setups of a guide as builds (Q8 (b), minimum 3). Seven credited derived fixtures (Maxroll guides by aer0 and Shayd): Ice Nova 3 in scope, Smite 4; the scope file is `confirmed`.
 
 ### 4. Engine core (M-L)
 In `loom-calc`, game-neutral:
@@ -138,6 +139,7 @@ Map every stat that step 3's inventory finds in the in-scope builds' passives, i
 - **Depends on:** 3 (Q2 confirmed), 4, 6, 11; 9b on 9a.
 
 ### 10. Attacks (L)
+The chosen attack, Smite, has two PoB skill parts (Melee Hit, Area Hit): the harness (P3-5) and this step follow PoB's part selection (`skillPart`, default 1) and say which part each field compares.
 Weapon damage from the base and local mods, attack speed, accuracy and hit chance, attack crit, one-hand, two-hand, and dual-wield rules the chosen attack's builds use (anything else `Partial`), the attack skill's per-level stats and supports, average hit and hit DPS.
 - **Accept:** as step 9b, for the chosen attack.
 - **Depends on:** 3 (Q2 confirmed), 4, 6, 9a, 11.

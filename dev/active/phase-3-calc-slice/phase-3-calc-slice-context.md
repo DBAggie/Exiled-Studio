@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-3: scope survey, slice fields)
+Last Updated: 2026-11-11 (P3-3b: skills chosen, in-scope builds)
 
 # Phase 3: calc slice (context)
 
@@ -139,6 +139,11 @@ No blockers. Applied: template cycle check; tree geometry check and required gra
 - **Slice fields** (`docs/phase-3/slice-fields.json`, revision 1, proposed): `AverageDamage` replaces `AverageHit` (no top-level `AverageHit` for attacks; the DPS line prints `AverageDamage`), `HitSpeed` added; all `exact`; the ten breakdowns with their PoB line formats and term groupings (`chain`, `slots`, `min-max-total`).
 - **Result:** public 1 of 29 in scope, corpus 0 of 21; the gate's minimum is not met (Q8).
 - **Review (code-architecture-reviewer):** no blockers. Applied: `--anonymous` reports keep aggregates only (ADR-007); `tree:unread-jewel` for an allocated socket whose jewel cannot be read (ADR-015); gems-only supports; a `confirmed` scope file names both skills. Not applied: re-checking supports after all types are added (PoB's second loop reconsiders only non-support entries; documented in `main_skill.rs`).
+
+## Decisions in P3-3b (maintainer, 2026-11-11; evidence `docs/phase-3/calc-survey.md`, "P3-3b")
+- **Q2:** spell `IceNova`, attack `Smite` (the skills that reached the minimum; preference for no PoB skill parts held for the spell, Smite has two). **Q7:** `timeless-jewel`, `cluster-jewel`, `not-carried-passive` confirmed. **Q8:** derived setups of a guide count as builds; minimum stays 3. Scope file `confirmed`.
+- **Derived fixtures:** a guide's own setup made active (spec, skill set, item set, main group of the same name; for Smite Act 5 and 10 also the group's `mainActiveSkill` and `mainActiveSkillCalcs`, since the oracle's breakdowns come from PoB's CALCS view, which reads the latter). Tag `derived` in `fixtures.json`; the exact change and the Maxroll terms note in `community/SOURCES.md`.
+- **For P3-5 and P3-10:** Smite's two skill parts; PoB's CALCS view uses `mainActiveSkillCalcs` and `skill_number`, the main output `mainActiveSkill`: the harness must check both select the same skill (they do in the seven fixtures).
 
 ## code-architecture-reviewer (P3-2, 2026-11-11) summary
 No ADR or crate-boundary issue; deviations 1 (export instead of checkout) and 2 (`not-carried`) accepted. Applied:

@@ -2,7 +2,7 @@
   "format": 1,
   "inputs": {
     "tool": {
-      "commit": "c6ca40032be8268a75561613fbb7310f2adbded8",
+      "commit": "f77cb8020d50091f6caa193ee7e9e1a3dcc25f6b",
       "dirty": false
     },
     "bundle": {
@@ -10,7 +10,7 @@
       "steam_build": 26530219,
       "index_sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
     },
-    "scope_sha256": "97e95a8cc2363ccbe56722671bf5772d87da791c56fadd101de2028b06b6268e",
+    "scope_sha256": "02ff7fe5924e28d7e1ad628bf6e449c63f496930841514c15fd31d1298a33656",
     "data_rules_sha256": "b3562c6a130d8676e9b1cbdf3db372c25ac330710a7ba826cf4a16a50533a7e6",
     "anonymous": true
   },
@@ -18,13 +18,13 @@
     "format": 1,
     "game": "poe1",
     "steam_build": 26530219,
-    "status": "proposed",
+    "status": "confirmed",
     "tree_version": "3_29",
     "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
     "minimum_per_skill": 3,
     "skills": {
-      "spell": null,
-      "attack": null
+      "spell": "IceNova",
+      "attack": "Smite"
     },
     "excluded_mechanics": [
       {
@@ -77,8 +77,19 @@
       }
     ]
   },
-  "chosen": {},
-  "pass": true,
+  "chosen": {
+    "attack": {
+      "skill": "Smite",
+      "in_scope": [],
+      "meets_minimum": false
+    },
+    "spell": {
+      "skill": "IceNova",
+      "in_scope": [],
+      "meets_minimum": false
+    }
+  },
+  "pass": false,
   "per_build": [
     {
       "name": "sha256:33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
