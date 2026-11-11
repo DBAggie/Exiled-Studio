@@ -102,6 +102,12 @@ pub struct Item {
     pub body: ItemBody,
     /// The item's children: where the body sits among untyped content.
     pub layout: Ordered<ItemPart>,
+    /// The whitespace of the body's text as read: before the first line,
+    /// between each two lines (blank lines included), and after the last
+    /// (`lines + 1` entries). Empty: the lines are written one per line.
+    /// The text itself always comes from the lines' sources (Phase 2 plan,
+    /// decision 6).
+    pub text_spacing: Vec<String>,
     /// Attributes not typed.
     pub attributes: Attributes,
 }

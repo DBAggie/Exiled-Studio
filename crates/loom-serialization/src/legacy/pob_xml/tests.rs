@@ -237,3 +237,99 @@ fn mixed_text_and_elements_should_keep_their_text() {
     );
     round_trip(&xml);
 }
+
+const ITEMS: &str = r#"<Items activeItemSet="1">
+		<Item id="1" variant="2">
+			Rarity: RARE
+			Doom Loop
+			Two-Stone Ring
+			Implicits: 0
+			+20 to maximum Life
+			<ModRange id="1" range="0.5"/>
+		</Item>
+		<!-- between items -->
+		<Item id="2">old text<ModRange id="1" range="1"/>
+			Rarity: MAGIC
+			Plain Ring
+		</Item>
+		<ItemSet id="1" useSecondWeaponSet="false">
+			<Slot name="Ring 1" itemId="1" future="x"/>
+			<Slot name="Ring 2" itemId="0"/>
+			<SocketIdURL nodeId="1" name="J" itemPbURL=""/>
+		</ItemSet>
+	</Items>"#;
+
+fn with_items() -> String {
+    BASE.replace("<Items/>", ITEMS)
+}
+
+#[test]
+fn items_should_be_typed_and_round_trip() {
+    let b = round_trip(&with_items());
+    let first = b.items.items().next().unwrap();
+    assert_eq!(
+        (
+            b.items.items().count(),
+            b.items.sets().count(),
+            first.body.lines.len(),
+            first.body.name.as_deref(),
+            kept_whole(&b).len(),
+        ),
+        (2, 1, 5, Some("Doom Loop"), 0)
+    );
+}
+
+#[test]
+fn item_body_should_be_the_last_non_blank_text() {
+    let b = import(&with_items()).unwrap();
+    let second = b.items.items().nth(1).unwrap();
+    // "old text" stays in place; the item reads the later text.
+    assert_eq!(
+        (second.body.name.as_deref(), &second.layout.entries()[0]),
+        (
+            Some("Plain Ring"),
+            &Entry::Opaque(OpaqueNode::Text("old text".to_owned()))
+        )
+    );
+}
+
+#[test]
+fn empty_slot_should_have_no_item() {
+    let b = import(&with_items()).unwrap();
+    let set = b.items.sets().next().unwrap();
+    let items: Vec<Option<u32>> = set.slots.typed().map(|s| s.item.map(|i| i.0)).collect();
+    assert_eq!(items, [Some(1), None]);
+}
+
+#[test]
+fn item_export_should_come_from_the_lines() {
+    let mut b = import(&with_items()).unwrap();
+    let mut entries: Vec<loom_domain::Entry<loom_domain::ItemsEntry>> =
+        b.items.entries.entries().to_vec();
+    if let Entry::Typed(loom_domain::ItemsEntry::Item(item)) = &mut entries[0] {
+        item.body.lines[4].source = "+21 to maximum Life".to_owned();
+    }
+    b.items.entries = entries.into_iter().collect();
+    let out = export(&b);
+    assert!(out.contains("+21 to maximum Life") && !out.contains("+20 to maximum Life"));
+}
+
+#[test]
+fn nil_main_active_skill_should_stay_an_untyped_attribute() {
+    let xml = BASE.replace(r#"mainActiveSkill="1""#, r#"mainActiveSkill="nil""#);
+    let b = round_trip(&xml);
+    let group = b
+        .skills
+        .sets
+        .typed()
+        .next()
+        .unwrap()
+        .groups
+        .typed()
+        .next()
+        .unwrap();
+    assert_eq!(
+        (group.main_active_skill.is_none(), kept_whole(&b).len()),
+        (true, 0)
+    );
+}

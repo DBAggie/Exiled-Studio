@@ -256,6 +256,7 @@ fn every_line_item(id: u32) -> Item {
             lines,
         },
         layout,
+        text_spacing: Vec::new(),
         attributes: Attributes::new(),
     }
 }
@@ -398,6 +399,7 @@ fn clean_item(id: u32) -> Item {
             ..ItemBody::default()
         },
         layout: [Entry::Typed(ItemPart::Body)].into_iter().collect(),
+        text_spacing: Vec::new(),
         attributes: Attributes::new(),
     }
 }
