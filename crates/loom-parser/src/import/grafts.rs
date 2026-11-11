@@ -47,7 +47,7 @@ impl Wrapper {
     }
 
     /// `(level, name)` of a line, when the level is a whole number.
-    fn read<'l>(&self, line: &'l str) -> Option<(i64, &'l str)> {
+    fn read<'l>(&self, line: &'l str) -> Option<(u32, &'l str)> {
         let rest = line.trim().strip_prefix(self.prefix.as_str())?;
         let (level, name) = rest.split_once(self.middle.as_str())?;
         let name = name.strip_suffix(self.suffix.as_str())?;
@@ -64,7 +64,7 @@ impl Wrapper {
 pub struct Grafts {
     by_base: BTreeMap<String, Graft>,
     wrapper: Option<Wrapper>,
-    levels: Option<(i64, i64)>,
+    levels: Option<(u32, u32)>,
     conflicts: Vec<String>,
 }
 
@@ -74,14 +74,16 @@ pub struct GrantedSkill {
     /// The base's graft.
     pub graft: Graft,
     /// The skill level shown.
-    pub level: i64,
+    pub level: u32,
 }
 
 impl Grafts {
     /// From the game data:
     /// - `bases`: `(base name, graft)` for each base row that grants a
     ///   skill; a base name whose rows name different grafts is dropped
-    ///   and listed in [`Grafts::conflicts`];
+    ///   and listed in [`Grafts::conflicts`]; the graft names the skill by
+    ///   its gem's base name (the domain's gem ID is looked up from the
+    ///   data when the line is written to the build, plan step 6);
     /// - `wrapper`: the wrapper text, if the data has it (a text of
     ///   another shape is not read);
     /// - `levels`: every allowed skill level; a level between the lowest
@@ -90,7 +92,7 @@ impl Grafts {
     pub fn new(
         bases: impl IntoIterator<Item = (String, Graft)>,
         wrapper: Option<&str>,
-        levels: &[i64],
+        levels: &[u32],
     ) -> Self {
         let mut out = Self::default();
         for (name, graft) in bases {
@@ -123,7 +125,7 @@ impl Grafts {
 
     /// The allowed level range.
     #[must_use]
-    pub fn levels(&self) -> Option<(i64, i64)> {
+    pub fn levels(&self) -> Option<(u32, u32)> {
         self.levels
     }
 

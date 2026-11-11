@@ -52,6 +52,10 @@ fn pending(body: &ItemBody, n: usize) -> Option<&ModifierLine> {
 /// another section, and the two-line description the pair resolves to.
 /// The line before is tried first; when both neighbours would complete a
 /// pair, the earlier one wins.
+///
+/// Pass the body as read, before any resolution is written into it: a
+/// neighbour counts only while it is [`LineResolution::Pending`], as the
+/// import adapter left it (excluded lines never pair).
 #[must_use]
 pub fn split_section(index: &Index<'_>, body: &ItemBody, n: usize) -> Option<(usize, Resolution)> {
     let this = pending(body, n)?;
@@ -186,6 +190,46 @@ mod tests {
             split_section(&index, &b, 1).map(|(other, r)| (other, r.lines)),
             Some((0, 2))
         );
+    }
+
+    #[test]
+    fn split_section_should_prefer_the_earlier_neighbour() {
+        let set = set();
+        let scope = set.scope("a.txt").unwrap();
+        let index = Index::build(&scope);
+        // Line 1 pairs with line 0 (before) and with line 2 (after).
+        let b = body(vec![
+            modifier("3 first half", ModSection::Implicit),
+            modifier("4 second half", ModSection::Explicit),
+            modifier("5 first half", ModSection::Enchant),
+        ]);
+        assert_eq!(
+            split_section(&index, &b, 1).map(|(other, _)| other),
+            Some(0)
+        );
+    }
+
+    #[test]
+    fn split_section_should_not_pair_with_an_excluded_neighbour() {
+        let set = set();
+        let scope = set.scope("a.txt").unwrap();
+        let index = Index::build(&scope);
+        let mut first = modifier("3 first half", ModSection::Implicit);
+        if let LineKind::Modifier(m) = &mut first.kind {
+            m.resolution = LineResolution::Excluded(loom_domain::Exclusion::Custom);
+        }
+        let b = body(vec![first, modifier("4 second half", ModSection::Explicit)]);
+        assert_eq!(split_section(&index, &b, 1), None);
+    }
+
+    #[test]
+    fn case_folded_should_not_run_for_a_line_that_resolved() {
+        let set = set();
+        let scope = set.scope("a.txt").unwrap();
+        let index = Index::build(&scope);
+        let line = "+12 to maximum Life";
+        let exact = index.resolve(line);
+        assert_eq!(case_folded(&index, line, &exact, false), None);
     }
 
     #[test]

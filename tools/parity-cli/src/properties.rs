@@ -22,7 +22,7 @@
 //! charges are not extracted). A line that matches nothing keeps its
 //! category.
 
-use loom_parser::import::properties::{Properties, PropertyMatch, QualityType};
+use loom_parser::import::properties::{Missing, Properties, PropertyMatch, QualityType};
 use serde_json::Value;
 
 use crate::extract::{Read, Table};
@@ -79,9 +79,9 @@ pub fn missing(properties: &Properties) -> Vec<String> {
     properties
         .missing()
         .iter()
-        .map(|m| match m.strip_prefix("quality-type:") {
-            Some(d) => format!("AlternateQualityTypes:{d}"),
-            None => m.clone(),
+        .map(|m| match m {
+            Missing::Text(id) => id.clone(),
+            Missing::QualityType(d) => format!("AlternateQualityTypes:{d}"),
         })
         .collect()
 }

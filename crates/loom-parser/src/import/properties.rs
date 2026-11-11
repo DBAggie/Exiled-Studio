@@ -132,13 +132,23 @@ pub struct QualityType {
     pub stats: Vec<(String, i64)>,
 }
 
+/// Something the rules name that the data did not give.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Missing {
+    /// A named text ID absent from the texts, or of another shape.
+    Text(String),
+    /// A quality description two types share with different stats
+    /// (dropped).
+    QualityType(String),
+}
+
 /// Property texts, labels, and quality types read from the game data.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Properties {
     templates: Vec<(String, Template)>,
     labels: Vec<(String, String)>,
     qualities: BTreeMap<String, (String, Vec<(String, i64)>)>,
-    missing: Vec<String>,
+    missing: Vec<Missing>,
 }
 
 impl Properties {
@@ -168,7 +178,7 @@ impl Properties {
             let read = out.templates.iter().any(|(i, _)| i == id)
                 || out.labels.iter().any(|(i, _)| i == id);
             if !read {
-                out.missing.push(id.clone());
+                out.missing.push(Missing::Text(id.clone()));
             }
         }
         let mut duplicates = Vec::new();
@@ -185,14 +195,14 @@ impl Properties {
         duplicates.dedup();
         for d in duplicates {
             out.qualities.remove(&d);
-            out.missing.push(format!("quality-type:{d}"));
+            out.missing.push(Missing::QualityType(d));
         }
         out
     }
 
     /// Named IDs not read and duplicate quality descriptions dropped.
     #[must_use]
-    pub fn missing(&self) -> &[String] {
+    pub fn missing(&self) -> &[Missing] {
         &self.missing
     }
 
@@ -314,7 +324,13 @@ mod tests {
     #[test]
     fn new_should_record_named_ids_the_texts_lack() {
         let p = Properties::new(&rules(), [("Lasts", "Lasts {0} Seconds")], None);
-        assert_eq!(p.missing(), ["Uses".to_owned(), "Strands".to_owned()]);
+        assert_eq!(
+            p.missing(),
+            [
+                Missing::Text("Uses".to_owned()),
+                Missing::Text("Strands".to_owned())
+            ]
+        );
     }
 
     #[test]
@@ -325,7 +341,10 @@ mod tests {
             stats: vec![("s".to_owned(), v)],
         };
         let p = Properties::new(&rules(), [], Some(vec![q("A", 1), q("B", 2)]));
-        assert!(p.missing().contains(&"quality-type:Same".to_owned()));
+        assert!(
+            p.missing()
+                .contains(&Missing::QualityType("Same".to_owned()))
+        );
     }
 
     #[test]

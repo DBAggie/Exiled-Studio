@@ -149,7 +149,7 @@ fn every_line_item(id: u32) -> Item {
                             stat: StatId::new("jewellery_attribute_quality"),
                             value: StatValue::Exact { min: 1, max: 1 },
                         }],
-                        quality: 20,
+                        quality: "20".to_owned(),
                     }),
                     None,
                 ),

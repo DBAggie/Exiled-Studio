@@ -36,7 +36,7 @@ pub struct Inputs {
     /// `BrequelGraftSkillString` found with `{1}` then `{0}`.
     pub wrapper: bool,
     /// The `SkillLevel` range.
-    pub levels: Option<(i64, i64)>,
+    pub levels: Option<(u32, u32)>,
     /// Base names whose rows name different skills (dropped).
     pub conflicts: Vec<String>,
 }
@@ -102,7 +102,11 @@ pub fn load(read: Read<'_>) -> Result<Grafts, String> {
     let mut levels = Vec::new();
     if let Some(t) = Table::read(read, "BrequelGraftGrantedSkillLevels")? {
         let c = t.column("SkillLevel")?;
-        levels = t.rows.iter().filter_map(|r| Table::int(r, c)).collect();
+        levels = t
+            .rows
+            .iter()
+            .filter_map(|r| Table::int(r, c).and_then(|v| u32::try_from(v).ok()))
+            .collect();
     }
     let mut wrapper = None;
     if let Some(cs) = Table::read(read, "ClientStrings")? {

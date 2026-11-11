@@ -70,8 +70,9 @@ pub enum TypedResolution {
         quality_type: String,
         /// The type's stats.
         stats: Vec<StatLine>,
-        /// The quality read from the line.
-        quality: i64,
+        /// The quality as the line shows it (a plain number; the data
+        /// allows a decimal part).
+        quality: String,
     },
 }
 
