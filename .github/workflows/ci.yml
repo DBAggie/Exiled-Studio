@@ -100,10 +100,12 @@ jobs:
           path: out
       - name: Compare build-round-trip documents, Windows with Linux
         run: |
+          # Extracted here, on Linux: jq on the Windows runner writes CRLF.
+          hashes() { jq '[.per_build[] | {name, json_sha256}]' "$1"; }
           for set in public poe1 poe2; do
-            w="out/round-trip-Windows/$set-hashes.json"; l="out/round-trip-Linux/$set-hashes.json"
+            w="out/round-trip-Windows/$set/summary.json"; l="out/round-trip-Linux/$set/summary.json"
             [ -f "$w" ] && [ -f "$l" ] || { echo "a build-round-trip run is missing ($set)" >&2; exit 1; }
-            diff "$w" "$l"
+            diff <(hashes "$w") <(hashes "$l")
           done
 
   # Phase 2 decision 11: the committed JSON Schema and TypeScript are what
@@ -186,11 +188,6 @@ jobs:
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'
         run: cargo test --locked -p loom-parser --test no_poe1_identifiers
-      - name: Document hashes (for dto-compare)
-        run: |
-          for set in public poe1 poe2; do
-            jq '[.per_build[] | {name, json_sha256}]' "out/round-trip/$set/summary.json" > "out/round-trip/$set-hashes.json"
-          done
       - name: Summary
         if: always()
         run: |
