@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-2: data parity)
+Last Updated: 2026-11-11 (after P3-2: stack merged, `dev` branch)
 
 # Phase 3: calc slice (context)
 
@@ -87,6 +87,7 @@ Verdict: proceed, with changes. No ADR contradicted; decision 12 (WP1, WP2, WP6 
 - The bundle has no calc tables; the extract has most of them (Current state in the plan). Per-level stat sets (`GrantedEffectStatSetsPerLevel`), `WeaponTypes`, `ArmourTypes`, `ShieldTypes`, and default monster stats are not in `local/determinism/poe1/run1/tables`.
 - `oracle-compare` treats a field absent on one side as a difference, so comparing a slice needs a completeness-aware mode (`calc-parity`), not the current tool as is.
 - The PR stack: PR #42 (`feat/p2-1-domain-model`) holds all of Phase 2 (#43 to #58 squash-merged into it 2026-11-11); its merge to `main` is blocked by an external DNS problem (maintainer, 2026-11-11). P3-0 branches from it and targets it; CI is not checked until the maintainer says so.
+- Merged 2026-11-11: the whole stack, #42 into `main` (`7c122b9`). From then on PRs branch from and target `dev` (permanent; the maintainer merges it into `main`).
 
 ## Decisions in P3-1a (bundle format 2, skill tables; evidence `docs/phase-3/bundle-v2-skills.md`)
 - **Format 2 = format 1 + whole sections.** `loom_data::bundle::skills`: `data/skill_types.json`, `cost_types.json`, `active_skills.json`, `granted_effects.json` (per-level rows and quality stats inside), `stat_sets.json` (per-level values inside), `gems.json` (keyed by base item), `gem_effects.json`, `gem_tags.json`. All required in format 2; one in a format-1 bundle is `BUNDLE_FORMAT_FILE`. Format 1 still loads (`skills` is `None`). `data_schema` is 2 (each build's data version records it). P3-1b and P3-1c add required files to format 2, so local format-2 bundles are remade after each.
