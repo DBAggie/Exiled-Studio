@@ -91,6 +91,8 @@ cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build
 # while the Spike B gate is not met. Each --pob is a `git archive <tag> src/Data` of the legacy repo
 # (read-only), the legacy-text evidence; Spike B used the six tags listed in docs/spikes/spike-b-resolution.md:
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/extract/poe1/<build> --out <dir> --pob <tag>=local/pob-<tag> [--pob ...]
+cargo run --release -p loom-parity-cli -- resolve-corpus ... --bundle <bundle-dir>   # pipeline data from a bundle (plan step 6)
+cargo run --release -p loom-parity-cli -- bundle-equal <extract-dir> <bundle-dir>
 
 # PoB oracle (Spike C). Acquire: fetch PoB, LuaJIT and luautf8 at the commits in tools/oracle/manifest.json
 # into local/oracle/ and build the runtime there (network: git fetch only; nothing installed elsewhere).

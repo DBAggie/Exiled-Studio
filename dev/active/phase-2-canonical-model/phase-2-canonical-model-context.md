@@ -348,3 +348,23 @@ All applied as docs and tests; no behavior change. Nit 1: `text_spacing` stays o
    - Phase 3 needs an index of item IDs and slots, with diagnostics for dangling or duplicate IDs. `itemId="0"` collides with a real item 0.
    - Missing tests: an item with no body text but a `<ModRange>`; a non-numeric item id (kept whole); a `<Slot>` with children (opaque).
    - Rust's `trim` is Unicode-aware, but PoB's `%s` is ASCII-only, so a line of only non-breaking spaces may differ from PoB. This comes from Spike B; note it.
+
+## Decisions in P2-6a (bundle-backed `ItemData`, 2026-11-10)
+- **Step 6 is split** into P2-6a (the bundle's `ItemData`, with the corpus evidence through the bundle) and P2-6b (`resolve_build`, the domain mapping, the outcome tests).
+- **`BundleData<'b>` borrows the `Bundle`**, so `indexes()` can return `Index<'b>` over the bundle's stat descriptions. It assumes a validated bundle and cannot fail; an unresolvable reference (an unvalidated bundle only) is skipped, documented in the module.
+- **ID to number mapping** (the pipeline's types number rows): mod `n` is row `n`; item class `n` is `item_classes[n]`; mod types are numbered by first use. Crafting classes come out sorted and without repeats (the bundle stores them that way; the extract reader keeps row order, and the filter reads them with `contains` only). Mod types are read only for equality (`type_spawn`).
+- **`Bundle::scope_root`** (in `loom-data`) finds a scope's root file by stem; the validator's smoke check uses it too, so both read the same file.
+- **Granted gems:** `BundleData::granted_gem(graft)` gives the gem ID P2-6b needs for `TypedResolution::GrantedSkill.gem`. `Graft` is unchanged.
+- **parity-cli:** `resolve-corpus --bundle <dir>` (validated first) takes bases, mod rows, granted skills, properties, compositions, and indexes from the bundle; the categories still read the extract (tool-only evidence). The summary records the bundle under `inputs.bundle`, left out in extract mode. `bundle-equal <extract> <bundle>` compares the two sides (crafting classes as sets, mod types as a partition).
+- **PoE2 equality:** the harness's extract readers (`mod_filter::load`, `Bases::load`) read PoE1 column names only (Spike B was PoE1), so there is no PoE2 extract side to compare. The mapping code is game-independent; PoE2 is covered by the synthetic PoE2 bundle in CI and the ignored real-bundle test (`LOOM_BUNDLE_DIR`): 16,911 mod rows, 5,075 base rows, 1 scope indexed.
+
+## code-architecture-reviewer (P2-6a, 2026-11-10) summary
+- **No blockers.** The mappings match `mod_filter::load`, `Bases::load`, and the converter: the `(0, 0)` split, min and max order, locality (weapon first), implicits, class numbers, and mod types by equality. `scope_root` moved without a behaviour change.
+- **Should-fix, applied:**
+  - an unvalidated bundle's skipped references are counted (`BundleData::skipped_references`), shown by `bundle-equal`, and tested (dangling implicit and classes);
+  - documented that `Mods::bad_spawn_rows` stays 0 on the bundle path (the converter counts such rows: 0 on PoE1 26530219) and that duplicate mod-type names would merge types (`mod_type_duplicate_names`: 0);
+  - `bundle-equal` also compares compositions (against `GameText`), essence rows, and skipped references; a test for each;
+  - a direct `Bundle::scope_root` test in `loom-data` (`None`, `Several`, any case).
+- **Nits applied:** a stale doc line in `main.rs`; the mod-type counter without `unwrap_or`; client texts looked up through a map; `COMPOSED_VALUE` named; `bundle-equal`'s exit codes in the usage text.
+- **For P2-6b:** call `indexes()` once and keep the map (it rebuilds every scope); consider returning the gem with the graft instead of a separate `granted_gem` lookup; wrap `IndexError` in `resolve_build`'s error type with a stable code; `resolve_build` should report `skipped_references` if nonzero, or take a validated-bundle type.
+

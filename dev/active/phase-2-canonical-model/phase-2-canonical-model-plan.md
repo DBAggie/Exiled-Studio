@@ -315,7 +315,7 @@ Each PR is one session, small and single-purpose, and fills in the evidence sect
 | P2-3 | Step 3 (or 3a and 3b), data model, bundle v1, converter | Loader tests on synthetic bundles; two-run determinism of `bundle` on PoE1 and PoE2 (maintainer-run, summaries); `cargo deny` |
 | P2-4 | Step 4, validator | Mutation set in CI with codes; `bundle-check` on the real PoE1 and PoE2 bundles (maintainer-run) |
 | P2-5 | Step 5 (or 5a and 5b), XML import and export | Round-trip and mutation tests on public fixtures; malformed-input tests |
-| P2-6 | Step 6, `resolve_build` | Outcome tests on synthetic PoE1 and PoE2 bundles; corpus fields through the bundle equal Spike B (maintainer-run) |
+| P2-6 | Step 6 (split: 6a bundle `ItemData`, 6b `resolve_build`) | 6a: `bundle-equal` against the extract readers and corpus fields through the bundle equal Spike B (maintainer-run); 6b: outcome tests on synthetic PoE1 and PoE2 bundles |
 | P2-7 | Step 7, DTO v1 and schemas | DTO round-trip tests; cross-OS byte comparison job; schema freshness job; `cargo deny` |
 | P2-8 | Step 8, `build-round-trip` and CI job | CI job on fixtures, synthetic bundles, and the mutation set; corpus summary (maintainer-run) |
 | P2-9 | Step 9, migrations and persistence | Migration and persistence tests |

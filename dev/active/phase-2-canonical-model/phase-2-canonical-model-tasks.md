@@ -86,13 +86,20 @@ Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 - [x] Item round-trip and mutation tests (several item texts, comment between items, unknown slot attribute, empty slot, export from the lines); all 24 fixtures with every section typed and nothing kept whole; corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items) in-session
 - [x] `code-architecture-reviewer`: no blockers; findings recorded in the context file ("P2-5b review findings, applied")
 - [x] Review findings applied (docs, 6 tests); fixtures, corpus 21/21, and 3.13 5/5 round-trips rerun
-- [ ] Apply the P2-5b should-fix findings on this branch (next session)
 - [x] Open PR (#51, base `feat/p2-5a-pob-xml-structure`); write the PR number into the docs right after
 
-## PR P2-6: `resolve_build` (step 6)
-- [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness
-- [ ] Rebuilding `Mods` (split `(0, 0)` stats into `unset`; class, mod-type, and implicit IDs onto rows) and `BaseRow` from a bundle equals `mod_filter::load` and `Bases::load` on the extract, for both games (P2-3b review)
-- [ ] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b); maintainer-run corpus fields equal Spike B
+## PR P2-6a: bundle-backed `ItemData` (step 6, first half)
+- [x] `loom_parser::import::BundleData`: `Mods` (split `(0, 0)` stats into `unset`; class, mod-type, and implicit IDs onto row numbers), base rows, local stats, grafts and gems, properties and quality types, compositions, an index per scope; `Bundle::scope_root` shared with the validator
+- [x] Tests on the synthetic PoE1 and PoE2 bundles (`crates/loom-parser/tests/bundle_data.rs`)
+- [x] `bundle-equal`: the bundle-built data equal `mod_filter::load` and `Bases::load` on the PoE1 extract (40,355 mod rows, 4,309 base names, 0 mismatches). PoE2: the harness's extract readers are PoE1-only, so the PoE2 check is the ignored real-bundle test (builds, every scope indexes, counts match)
+- [x] `resolve-corpus --bundle`: the 12 step 2 fields equal Spike B, `report.json` byte-identical (`docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`: no blockers; should-fix and nits applied (context file)
+- [ ] Open PR (base `feat/p2-5b-pob-xml-items`); write the PR number into the docs right after
+
+## PR P2-6b: `resolve_build` (step 6, second half)
+- [ ] `loom_parser::import::resolve_build(&mut Build, &data)` over every item: lines to `LineResolution`s (stats, typed `kind`, or unresolved with a reason; `adapted`; `Continues`); completeness
+- [ ] The PoB base-name rules reach the core as a `BaseQuery` from the adapter (`loom-parser` cannot depend on `loom-serialization`)
+- [ ] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b), each outcome and `kind`; source lines in equal source lines out
 
 ## PR P2-7: DTO v1 and generated schemas (step 7)
 - [ ] DTOs, deterministic conversion
