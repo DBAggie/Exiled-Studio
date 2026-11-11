@@ -1828,7 +1828,10 @@ dependencies = [
 name = "loom-persistence"
 version = "0.0.0"
 dependencies = [
+ "loom-domain",
  "loom-serialization",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
