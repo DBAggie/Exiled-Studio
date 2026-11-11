@@ -53,7 +53,7 @@ Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader)
 - [x] Synthetic PoE1 and PoE2 bundles (`crates/loom-data/tests/fixtures/`, `make_bundles.py`) and loader tests
 - [x] Decided: `sha2` and hash checks move to the validator (P2-4), which is the first code that hashes
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-2d-compositions-tolerances`); write the PR number into the docs right after
+- [x] Open PR (#47, base `feat/p2-2d-compositions-tolerances`); write the PR number into the docs right after
 
 ## PR P2-3b: `loom-extractor bundle` (step 3b)
 - [ ] Map the extract's dat-schema rows to the canonical types; write `item_rules` (the PoE1 values now in `tools/parity-cli/src/poe1.rs`; PoE2 values from its schema enums)
