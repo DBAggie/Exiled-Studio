@@ -14,33 +14,20 @@ use crate::skill::Skills;
 use crate::value::Sourced;
 
 /// The character a build is for.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Character {
     /// The class, if set.
     pub class: Option<ClassId>,
     /// The ascendancy, if set.
     pub ascendancy: Option<AscendancyId>,
-    /// The level.
-    pub level: Sourced<u32>,
+    /// The level, if the build sets it.
+    pub level: Option<Sourced<u32>>,
     /// The main socket group (1-based, as builds write it), if set.
     pub main_socket_group: Option<Sourced<u32>>,
     /// Attributes not typed.
     pub attributes: Attributes,
     /// Untyped children, in order.
     pub children: Vec<OpaqueNode>,
-}
-
-impl Default for Character {
-    fn default() -> Self {
-        Self {
-            class: None,
-            ascendancy: None,
-            level: Sourced::new(1),
-            main_socket_group: None,
-            attributes: Attributes::new(),
-            children: Vec::new(),
-        }
-    }
 }
 
 /// Where a typed section sits among a build's untyped sections.
@@ -78,6 +65,13 @@ pub struct Build {
     /// The sections in order: typed ones as [`BuildPart`] markers,
     /// untyped ones in place.
     pub layout: Ordered<BuildPart>,
+    /// Attributes of the build's own container not typed.
+    pub attributes: Attributes,
+    /// Untyped content before the build's container (comments, processing
+    /// instructions), in order.
+    pub prolog: Vec<OpaqueNode>,
+    /// Untyped content after the build's container, in order.
+    pub epilog: Vec<OpaqueNode>,
 }
 
 impl Build {
@@ -105,6 +99,9 @@ impl Build {
             items: Items::default(),
             config: Config::default(),
             layout,
+            attributes: Attributes::new(),
+            prolog: Vec::new(),
+            epilog: Vec::new(),
         }
     }
 

@@ -1,0 +1,36 @@
+[
+ {
+  "domain": 1,
+  "id": "Test/Items/Ring1",
+  "implicits": [
+   "TestLife1"
+  ],
+  "item_class": "TestRing",
+  "name": "Plain Test Ring",
+  "tags": [
+   "ring",
+   "default"
+  ]
+ },
+ {
+  "domain": 34,
+  "id": "Test/Items/Charm1",
+  "implicits": [],
+  "item_class": "TestCharm",
+  "name": "Plain Test Charm",
+  "tags": [
+   "charm",
+   "default"
+  ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Gems/Bolt",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Test Bolt",
+  "tags": [
+   "gem"
+  ]
+ }
+]

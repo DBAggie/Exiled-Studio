@@ -14,3 +14,9 @@
 
 # Vendored third-party data: keep the committed bytes exact (the hash is checked in tests).
 tools/extractor/schema/schema.min.json binary
+
+# Synthetic data bundles: bundle.json records each file's SHA-256 (P2-3).
+crates/loom-data/tests/fixtures/bundle-*/** -text
+
+# PoB-made share codes and the XML each was made from (P2-10): the code must decode to the exact bytes.
+tools/oracle/fixtures/share-codes/** -text

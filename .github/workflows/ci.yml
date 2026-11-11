@@ -58,6 +58,152 @@ jobs:
       - name: Divergence register
         if: runner.os == 'Linux'
         run: cargo run --locked -p loom-parity-cli -- divergence-check docs/parity/divergence-register.json
+      # Phase 2 step 7: the v1 build document of every public fixture, for
+      # dto-compare (Windows against Linux). The command also fails when a
+      # second run differs or a document does not read back.
+      - name: Build documents (dto-hashes)
+        if: runner.os != 'macOS'
+        shell: bash
+        run: |
+          mkdir -p out/dto
+          cargo run --locked -p loom-parity-cli -- dto-hashes tools/oracle/fixtures tools/oracle/fixtures/community > out/dto/dto-hashes.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: runner.os != 'macOS'
+        with:
+          name: dto-${{ runner.os }}
+          path: out/dto
+          if-no-files-found: error
+
+  # Phase 2 step 7: the build documents are byte-identical on Windows and
+  # Linux (as in oracle cross-platform). Runs when a rust job failed too (and
+  # then fails itself: a run is missing), but not when the run was cancelled.
+  dto-compare:
+    name: dto cross-platform
+    needs: [rust, round-trip]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dto-*
+          path: out
+      - name: Compare Windows with Linux
+        run: |
+          [ -f out/dto-Windows/dto-hashes.json ] && [ -f out/dto-Linux/dto-hashes.json ] || { echo "a dto-hashes run is missing" >&2; exit 1; }
+          sha256sum out/dto-*/dto-hashes.json | tee -a "$GITHUB_STEP_SUMMARY"
+          diff out/dto-Windows/dto-hashes.json out/dto-Linux/dto-hashes.json
+      # Phase 2 step 8: the resolved synthetic builds and the public fixtures
+      # through build-round-trip (documents' SHA-256 per build).
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: round-trip-*
+          path: out
+      - name: Compare build-round-trip documents, Windows with Linux
+        run: |
+          # Extracted here, on Linux: jq on the Windows runner writes CRLF.
+          hashes() { jq '[.per_build[] | {name, json_sha256}]' "$1"; }
+          for set in public poe1 poe2; do
+            w="out/round-trip-Windows/$set/summary.json"; l="out/round-trip-Linux/$set/summary.json"
+            [ -f "$w" ] && [ -f "$l" ] || { echo "a build-round-trip run is missing ($set)" >&2; exit 1; }
+            diff <(hashes "$w") <(hashes "$l")
+          done
+
+  # Phase 2 decision 11: the committed JSON Schema and TypeScript are what
+  # the DTOs generate. Regenerates both and fails on any difference.
+  schema:
+    name: schema freshness
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: ui/package.json # version from "packageManager"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: cargo run --locked -p loom-schema-gen -- schemas
+      - run: pnpm install --frozen-lockfile
+        working-directory: ui
+      - run: pnpm generate:schema
+        working-directory: ui
+      - name: No difference
+        run: |
+          changed="$(git status --porcelain -- schemas ui/src/generated)"
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            git diff -- schemas ui/src/generated
+            echo "stale generated files: run 'cargo run -p loom-schema-gen', then 'pnpm generate:schema' in ui/" >&2
+            exit 1
+          fi
+
+  # Phase 2 step 8 (gates 1a, 2, 3b, 3c): build-round-trip on the public
+  # fixtures (no bundle; malformed.xml must not import) and on the synthetic
+  # PoE1 and PoE2 builds with their synthetic bundles, on Windows and Linux;
+  # dto-compare diffs the documents' SHA-256 between the two. Then the scan
+  # for PoE1-only identifiers in shared code. Exit codes: build-round-trip
+  # in tools/parity-cli/src/main.rs (USAGE).
+  round-trip:
+    name: build round-trip (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      # Release: the mutation set runs thousands of import and export cycles.
+      - name: Build loom-parity-cli
+        run: cargo build --release --locked -p loom-parity-cli
+      - name: Public fixtures (no bundle)
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/oracle/fixtures tools/oracle/fixtures/community
+          --expect-import-error malformed.xml --out out/round-trip/public
+      - name: Synthetic PoE1 build with the synthetic PoE1 bundle
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml
+          --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/poe1
+      - name: Synthetic PoE2 build with the synthetic PoE2 bundle (gate 3b)
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json
+          --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/poe2
+      - name: Every public fixture ran; the synthetic builds resolved
+        run: |
+          jq -e '.builds >= 25 and .failed == 0 and .checks.d_source_lines.pass >= 24' out/round-trip/public/summary.json
+          for game in poe1 poe2; do
+            jq -e '.failed == 0 and .modifier_lines.resolved > 0 and (.modifier_lines.pending // 0) == 0' "out/round-trip/$game/summary.json"
+          done
+      - name: No PoE1-only identifiers in shared code (gate 3c)
+        if: runner.os == 'Linux'
+        run: cargo test --locked -p loom-parser --test no_poe1_identifiers
+      - name: Summary
+        if: always()
+        run: |
+          for f in out/round-trip/*/summary.json; do
+            [ -f "$f" ] || continue
+            echo "### $f" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            jq '{builds, passed, failed, checks, modifier_lines, mutations}' "$f" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: round-trip-${{ runner.os }}
+          path: out/round-trip
+          if-no-files-found: ignore
 
   # Spike C step 4: the PoB oracle on the public fixtures (tools/oracle/fixtures/
   # fixtures.json), 3 runs each. Required through ci-ok since C5, after 10
@@ -224,7 +370,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, oracle, oracle-compare, wasm, deny, frontend]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs

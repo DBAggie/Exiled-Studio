@@ -2,11 +2,10 @@
 //!
 //! Some item lines are not one stat description's text: the client wraps a
 //! described line in a `ClientStrings` text and the wrapper stands for a
-//! stat of the same mod. Example (PoE1 26530219): eldritch implicits with
-//! `local_influence_mod_requires_unique_monster_presence` show as
-//! `While a Unique Enemy is in your Presence, {0}` (`ClientStrings` id
-//! `InfluenceStatConditionPresenceUniqueMonster`) around the line of the
-//! mod's other stat. A [`Composition`] is that wrapper with its stat;
+//! stat of the same mod. Example (PoE1 26530219): some implicits show as
+//! `While a Unique Enemy is in your Presence, {0}` around the line of the
+//! mod's other stat. Which wrappers a game has, and the stat each stands
+//! for, is per-game data (`import::TextRules::compositions`). A [`Composition`] is that wrapper with its stat;
 //! [`Index::resolve_lines_composed`] resolves the wrapped remainder and adds
 //! the stat to every reading.
 //!

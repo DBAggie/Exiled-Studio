@@ -149,7 +149,7 @@ fn every_line_item(id: u32) -> Item {
                             stat: StatId::new("jewellery_attribute_quality"),
                             value: StatValue::Exact { min: 1, max: 1 },
                         }],
-                        quality: 20,
+                        quality: "20".to_owned(),
                     }),
                     None,
                 ),
@@ -256,6 +256,7 @@ fn every_line_item(id: u32) -> Item {
             lines,
         },
         layout,
+        text_spacing: Vec::new(),
         attributes: Attributes::new(),
     }
 }
@@ -283,7 +284,7 @@ fn sample_build(game: Game, item: Item) -> Build {
     });
     build.character.class = Some(ClassId::new("Class1"));
     build.character.ascendancy = Some(AscendancyId::new("Ascendancy1"));
-    build.character.level = Sourced::read(90, "90");
+    build.character.level = Some(Sourced::read(90, "90"));
     build.character.main_socket_group = Some(Sourced::read(1, "1"));
 
     let mut spec = PassiveSpec::new(SpecId(1));
@@ -398,6 +399,7 @@ fn clean_item(id: u32) -> Item {
             ..ItemBody::default()
         },
         layout: [Entry::Typed(ItemPart::Body)].into_iter().collect(),
+        text_spacing: Vec::new(),
         attributes: Attributes::new(),
     }
 }

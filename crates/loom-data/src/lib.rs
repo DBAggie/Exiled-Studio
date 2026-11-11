@@ -10,4 +10,6 @@
 
 #![warn(clippy::indexing_slicing)]
 
+pub mod bundle;
+pub mod rules;
 pub mod stat_desc;
