@@ -1,0 +1,60 @@
+{
+ "data_schema": 1,
+ "files": [
+  {
+   "path": "data/base_items.json",
+   "sha256": "61fa1015b762463ac9f074706b165df40640db5e65a19b34c60ea12476b1b8ee",
+   "size": 357
+  },
+  {
+   "path": "data/client_texts.json",
+   "sha256": "b6d01b6162e9962074bc7371d61341c938c62787eb034ff91ebf652464b15a59",
+   "size": 275
+  },
+  {
+   "path": "data/item_classes.json",
+   "sha256": "94b5364bb457ca29ca8fa2f4c1c8e58718eaef7fce0396453f7af935f985d2d5",
+   "size": 30
+  },
+  {
+   "path": "data/item_rules.json",
+   "sha256": "a160745d90412ceba235d97be7915cb91b4e9e872df55e01f0dbca47e2ab9cb8",
+   "size": 1612
+  },
+  {
+   "path": "data/lookups.json",
+   "sha256": "fce548d78f7035024d2327b820135f8a976be1953ce0a10ee2073363d42be684",
+   "size": 91
+  },
+  {
+   "path": "data/mods.json",
+   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
+   "size": 663
+  },
+  {
+   "path": "data/stats.json",
+   "sha256": "39ae37f644c9fbe9a01587a26467a41310f0364551a12b8348c6c4e53ed3e1bb",
+   "size": 378
+  },
+  {
+   "path": "stat_descriptions/charm_stat_descriptions.json",
+   "sha256": "d993c0f7f1c4c323bc20409c3d394fb658c2bcf1713261fe54d76439ca4a12b9",
+   "size": 624
+  },
+  {
+   "path": "stat_descriptions/stat_descriptions.json",
+   "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
+   "size": 4380
+  }
+ ],
+ "format": 1,
+ "game": "poe2",
+ "signatures": [],
+ "source": {
+  "dat_schema": "synthetic",
+  "decoder": "none",
+  "extractor_commit": "synthetic",
+  "index_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "steam_build": null
+ }
+}

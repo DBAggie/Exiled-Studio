@@ -889,6 +889,86 @@ pub fn base_name(line: &str) -> &str {
     line.strip_prefix("Vestigial ").unwrap_or(line)
 }
 
+/// Every PoB base name with a ` (...)` suffix (`itemBases["... (...)"]` in
+/// `v2.67.2:src/Data/Bases/*.lua`, listed 2026-11-09): PoB splits one game
+/// base name over several rows (`BaseItemTypes` has three `Two-Stone Ring`
+/// rows, for example) and tells them apart by the suffix.
+pub const SUFFIXED_BASES: [&str; 13] = [
+    "Avian Twins Talisman (Cold-To-Fire)",
+    "Avian Twins Talisman (Cold-To-Lightning)",
+    "Avian Twins Talisman (Fire-To-Cold)",
+    "Avian Twins Talisman (Fire-To-Lightning)",
+    "Avian Twins Talisman (Lightning-To-Cold)",
+    "Monkey Paw Talisman (Frenzy)",
+    "Monkey Paw Talisman (Power)",
+    "Two-Stone Ring (Cold/Lightning)",
+    "Two-Stone Ring (Fire/Cold)",
+    "Two-Stone Ring (Fire/Lightning)",
+    "Two-Toned Boots (Armour/Energy Shield)",
+    "Two-Toned Boots (Armour/Evasion)",
+    "Two-Toned Boots (Evasion/Energy Shield)",
+];
+
+/// The game base name of one of PoB's [`SUFFIXED_BASES`] (the name before
+/// ` (`); `None` for any other name, which is looked up as written.
+#[must_use]
+pub fn suffix_removed(name: &str) -> Option<&str> {
+    SUFFIXED_BASES
+        .contains(&name)
+        .then(|| name.rsplit_once(" (").map(|(n, _)| n))
+        .flatten()
+}
+
+/// Why PoB's rules name no base for an item ([`item_base`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoBaseName {
+    /// No base line and no name.
+    NoName,
+    /// The name holds no base name.
+    NoBaseInName,
+    /// The name holds several base names equally ([`BaseMatch::Tie`]).
+    Tie,
+}
+
+impl NoBaseName {
+    /// Stable name (Spike B's report names).
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::NoName => "no-name",
+            Self::NoBaseInName => "no-base-in-name",
+            Self::Tie => "tie",
+        }
+    }
+}
+
+/// The base name PoB's rules give a domain item, and the name to look up
+/// when it is not a base ([`suffix_removed`]). Rare, unique, and relic
+/// items name their base on the base line ([`base_name`]); normal and
+/// magic items (and items without a base line) hold it in their name
+/// ([`magic_base`] over `bases`, every base name of the game data). An
+/// item without a rarity is read as unique.
+///
+/// # Errors
+/// [`NoBaseName`] when the rules name no base.
+pub fn item_base<'n>(
+    item: &loom_domain::ItemBody,
+    bases: impl IntoIterator<Item = &'n str>,
+) -> Result<(String, Option<String>), NoBaseName> {
+    let rarity = item.rarity.unwrap_or(loom_domain::Rarity::Unique);
+    let name = match (&item.base, &item.name) {
+        (Some(base), _) if !rarity.names_base_in_name() => base_name(base).to_owned(),
+        (_, Some(name)) => match magic_base(name, bases) {
+            BaseMatch::One(base) => base,
+            BaseMatch::None => return Err(NoBaseName::NoBaseInName),
+            BaseMatch::Tie(_) => return Err(NoBaseName::Tie),
+        },
+        _ => return Err(NoBaseName::NoName),
+    };
+    let fallback = suffix_removed(&name).map(str::to_owned);
+    Ok((name, fallback))
+}
+
 /// Result of [`magic_base`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BaseMatch {

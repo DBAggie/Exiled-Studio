@@ -4,15 +4,13 @@
 //! outcome (ADR-015: nothing is dropped).
 //!
 //! - **Scope** (Spike B plan, "Scope by mod domain"): the base's
-//!   `BaseItemTypes.ModDomain`. PoE1 values, from the vendored schema's
-//!   `ModDomains` enum (`indexing: 1`) and checked on the rows of
-//!   PoE1 26530219: 34 = `TINCTURE` (the 18 tincture bases, e.g. `Ironwood
-//!   Tincture`) uses `tincture_stat_descriptions`, 38 = `GRAFT` (the 17
-//!   graft bases, e.g. `Fleshgraft`) uses `graft_stat_descriptions`, every
-//!   other domain uses `stat_descriptions`.
+//!   `BaseItemTypes.ModDomain` through the PoE1 item rules (`poe1`) and
+//!   `loom_parser::import::find_base` (since P2-2b).
 //! - **Base:** the base line of rare, unique, and relic items after
 //!   `pob_item::base_name`; for normal and magic items (and items without
-//!   a base line) `pob_item::magic_base` over every `BaseItemTypes.Name`.
+//!   a base line) `pob_item::magic_base` over every `BaseItemTypes.Name`;
+//!   PoB's suffixed base names fall back to the game name
+//!   (`pob_item::suffix_removed`).
 //!   No base, a tie, a name not in `BaseItemTypes`, or names whose rows
 //!   point to different scopes give `unknown-base/<reason>` for every
 //!   modifier line of the item.
@@ -59,66 +57,38 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Hand, Scope};
 use loom_domain::{ItemBody as Item, LineKind, LineResolution, ModifierLine as Modifier, Rarity};
+use loom_parser::import::{
+    BaseError, BaseQuery, BaseRow, BundleData, FoundBase, ItemBaseName, ItemData, ItemRules,
+    Resolver, find_base,
+};
 use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
 };
-use loom_serialization::legacy::pob_item::{self, BaseMatch};
+use loom_serialization::legacy::pob_item;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
+
+mod build_check;
+
+pub use build_check::BuildCheck;
 
 use crate::categorize::{self, GameText, LineFacts};
 use crate::extract::{Extract, Inputs, Read, Table};
 use crate::grafts::{self, Grafts};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
-use crate::mod_filter::{self, BaseRow, Context, LineContext, Mods};
-use crate::properties::Properties;
+use crate::mod_filter::{self, Context, LineContext, Mods};
+use crate::poe1;
+use crate::properties;
+use loom_parser::import::properties::Properties;
+use loom_parser::import::tolerance;
 
-/// Scope root files by name, in the order domains are tested.
-const SCOPES: [&str; 3] = [
-    "stat_descriptions",
-    "tincture_stat_descriptions",
-    "graft_stat_descriptions",
-];
-
-/// `ModDomain` values with their own scope (PoE1; see the module docs).
-const DOMAIN_SCOPES: [(i64, &str); 2] = [
-    (34, "tincture_stat_descriptions"),
-    (38, "graft_stat_descriptions"),
-];
-
-fn scope_of_domain(domain: Option<i64>) -> &'static str {
-    DOMAIN_SCOPES
-        .iter()
-        .find(|(d, _)| Some(*d) == domain)
-        .map_or("stat_descriptions", |(_, s)| s)
-}
-
-/// Every PoB base name with a ` (...)` suffix (`itemBases["... (...)"]` in
-/// `v2.67.2:src/Data/Bases/*.lua`, listed 2026-11-09): PoB splits one game
-/// base name over several rows (`BaseItemTypes` has three `Two-Stone Ring`
-/// rows, for example) and tells them apart by the suffix.
-const POB_SUFFIXED_BASES: [&str; 13] = [
-    "Avian Twins Talisman (Cold-To-Fire)",
-    "Avian Twins Talisman (Cold-To-Lightning)",
-    "Avian Twins Talisman (Fire-To-Cold)",
-    "Avian Twins Talisman (Fire-To-Lightning)",
-    "Avian Twins Talisman (Lightning-To-Cold)",
-    "Monkey Paw Talisman (Frenzy)",
-    "Monkey Paw Talisman (Power)",
-    "Two-Stone Ring (Cold/Lightning)",
-    "Two-Stone Ring (Fire/Cold)",
-    "Two-Stone Ring (Fire/Lightning)",
-    "Two-Toned Boots (Armour/Energy Shield)",
-    "Two-Toned Boots (Armour/Evasion)",
-    "Two-Toned Boots (Evasion/Energy Shield)",
-];
-
-/// `BaseItemTypes` names, the scopes their rows give, and the rows.
-#[derive(Debug, Default)]
+/// `BaseItemTypes` rows by name, with the PoE1 item rules: the harness's
+/// [`ItemData`].
+#[derive(Debug)]
 pub struct Bases {
-    scopes: BTreeMap<String, BTreeSet<&'static str>>,
+    rules: ItemRules,
     rows: BTreeMap<String, Vec<BaseRow>>,
     /// Named rows whose tags are unknown (`item_tags`).
     pub tags_unknown: usize,
@@ -157,17 +127,12 @@ impl Bases {
                 .unwrap_or_default()
         };
         let mut item_tags = ItemTags::default();
-        let mut bases = Self::default();
+        let mut bases = Self::new();
         for row in &table.rows {
             let Some(n) = Table::text(row, name).filter(|n| !n.is_empty()) else {
                 continue;
             };
             let row_domain = Table::int(row, domain);
-            bases
-                .scopes
-                .entry(n.to_owned())
-                .or_default()
-                .insert(scope_of_domain(row_domain));
             let row_tags = Table::text(row, inherits)
                 .and_then(|path| item_tags.tags(read, path))
                 .map(|mut t| {
@@ -188,8 +153,8 @@ impl Bases {
                 implicits: index_list(row, implicits),
             });
         }
-        bases.grafts = Grafts::load(read)?;
-        bases.properties = Properties::load(read)?;
+        bases.grafts = grafts::load(read)?;
+        bases.properties = properties::load(read)?;
         Ok(bases)
     }
 
@@ -212,71 +177,82 @@ impl Bases {
 
     #[cfg(test)]
     pub fn from_rows(rows: Vec<(&str, BaseRow)>) -> Self {
-        let mut bases = Self::default();
+        let mut bases = Self::new();
         for (n, row) in rows {
-            bases
-                .scopes
-                .entry(n.to_owned())
-                .or_default()
-                .insert(scope_of_domain(Some(row.domain)));
             bases.rows.entry(n.to_owned()).or_default().push(row);
         }
         bases
     }
 
-    /// The item's scope, or why there is none; `true` when the base is one
-    /// of [`POB_SUFFIXED_BASES`] and was found after removing its ` (...)`
-    /// suffix. Any other name is looked up as written.
-    #[cfg(test)]
-    fn scope(&self, item: &Item) -> Result<(&'static str, bool), String> {
-        self.find(item).map(|f| (f.scope, f.suffix_removed))
+    /// The bases, granted skills, and properties of a bundle (`--bundle`,
+    /// plan step 6), with the bundle's item rules.
+    pub fn from_bundle(data: &BundleData<'_>) -> Self {
+        Self {
+            rules: data.item_rules().clone(),
+            rows: data
+                .base_names()
+                .filter_map(|n| data.base(n))
+                .map(|(n, rows)| (n.to_owned(), rows.to_vec()))
+                .collect(),
+            tags_unknown: data.tags_unknown(),
+            grafts: data.grafts().clone(),
+            properties: data.properties().clone(),
+        }
     }
 
-    /// The item's base: its rows and scope, or why there is none.
-    fn find(&self, item: &Item) -> Result<Found<'_>, String> {
-        let rarity = item.rarity.unwrap_or(Rarity::Unique);
-        let name = match (&item.base, &item.name) {
-            (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
-            (_, Some(name)) => {
-                match pob_item::magic_base(name, self.scopes.keys().map(String::as_str)) {
-                    BaseMatch::One(base) => base,
-                    BaseMatch::None => return Err("no-base-in-name".to_owned()),
-                    BaseMatch::Tie(_) => return Err("tie".to_owned()),
-                }
-            }
-            _ => return Err("no-name".to_owned()),
-        };
-        let stripped = POB_SUFFIXED_BASES
-            .contains(&name.as_str())
-            .then(|| name.rsplit_once(" (").map(|(n, _)| n))
-            .flatten();
-        let (key, suffix_removed) = match (self.scopes.contains_key(&name), stripped) {
-            (true, _) => (name.as_str(), false),
-            (false, Some(n)) if self.scopes.contains_key(n) => (n, true),
-            _ => return Err("not-in-base-item-types".to_owned()),
-        };
-        let scopes: Option<Vec<&'static str>> =
-            self.scopes.get(key).map(|s| s.iter().copied().collect());
-        match scopes.as_deref() {
-            Some([one]) => Ok(Found {
-                name: key.to_owned(),
-                scope: one,
-                suffix_removed,
-                rows: self.rows.get(key).map_or(&[], Vec::as_slice),
-            }),
-            _ => Err("scope-conflict".to_owned()),
+    /// No rows, with the PoE1 item rules.
+    fn new() -> Self {
+        Self {
+            rules: poe1::item_rules(),
+            rows: BTreeMap::new(),
+            tags_unknown: 0,
+            grafts: Grafts::default(),
+            properties: Properties::default(),
         }
+    }
+
+    /// The item's scope, or why there is none; `true` when the base is one
+    /// of PoB's suffixed base names and was found after removing its
+    /// ` (...)` suffix. Any other name is looked up as written.
+    #[cfg(test)]
+    fn scope(&self, item: &Item) -> Result<(&str, bool), String> {
+        self.find(item).map(|f| (f.scope, f.fallback_used))
+    }
+
+    /// The item's base: its rows and scope, or why there is none. The name
+    /// follows PoB's rules (`pob_item`); the lookup is the shared one.
+    fn find(&self, item: &Item) -> Result<FoundBase<'_>, String> {
+        let (name, fallback) =
+            pob_item::item_base(item, self.base_names()).map_err(|e| e.name().to_owned())?;
+        let query = BaseQuery {
+            name: &name,
+            fallback: fallback.as_deref(),
+        };
+        find_base(self, query).map_err(|e| {
+            // The Spike B report's names for the shared lookup's errors.
+            match e {
+                BaseError::NotABase => "not-in-base-item-types",
+                BaseError::ScopeConflict => "scope-conflict",
+            }
+            .to_owned()
+        })
     }
 }
 
-/// An item's base as [`Bases::find`] found it.
-struct Found<'b> {
-    /// The base's name, as found in `BaseItemTypes` (after removing a PoB
-    /// suffix, see `suffix_removed`).
-    name: String,
-    scope: &'static str,
-    suffix_removed: bool,
-    rows: &'b [BaseRow],
+impl ItemData for Bases {
+    fn item_rules(&self) -> &ItemRules {
+        &self.rules
+    }
+
+    fn base_names(&self) -> impl Iterator<Item = &str> {
+        self.rows.keys().map(String::as_str)
+    }
+
+    fn base(&self, name: &str) -> Option<(&str, &[BaseRow])> {
+        self.rows
+            .get_key_value(name)
+            .map(|(k, v)| (k.as_str(), v.as_slice()))
+    }
 }
 
 /// One build file: its content hash and text.
@@ -338,12 +314,26 @@ pub struct Tool {
 pub struct RunInputs {
     /// The extract.
     pub extract: Inputs,
+    /// The data bundle the pipeline read (`--bundle`), if any.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bundle: Option<BundleInputs>,
     /// The tool.
     pub tool: Tool,
     /// Content hash of every build, sorted.
     pub builds: Vec<String>,
     /// PoB text sources for `data-gap/legacy-text` (B4b).
     pub pob: Vec<categorize::PobSource>,
+}
+
+/// The bundle a `--bundle` run read.
+#[derive(Debug, Clone, Serialize)]
+pub struct BundleInputs {
+    /// `poe1` or `poe2`.
+    pub game: String,
+    /// The bundle's Steam build.
+    pub steam_build: Option<u64>,
+    /// SHA-256 of the install's bundle index, as the manifest records it.
+    pub index_sha256: String,
 }
 
 /// Counts of one group of lines.
@@ -471,7 +461,7 @@ pub struct Summary {
     /// Lookup tables.
     pub lookup: LookupReport,
     /// Scope to its index counts.
-    pub scopes: BTreeMap<&'static str, IndexFields>,
+    pub scopes: BTreeMap<String, IndexFields>,
     /// Builds that are not UTF-8 or not XML, by hash, with the error.
     pub unreadable_builds: BTreeMap<String, String>,
     /// `<Item>` elements.
@@ -808,18 +798,12 @@ impl<'i> Lines<'i, '_> {
                         .composition
                         .and_then(|n| self.compositions.get(n))
                         .map(|c| c.id.clone());
-                    // A line game text holds in another letter case (B5e).
+                    // A line game text holds in another letter case (B5e;
+                    // `loom_parser::import::tolerance`).
                     let mut adapted = None;
-                    if via.is_none()
-                        && resolution.lines == 1
-                        && matches!(
-                            resolution.outcome,
-                            Outcome::Unresolved(Unresolved::NoTemplate)
-                        )
-                        && let Some(folded) = texts
-                            .get(at)
-                            .and_then(|t| index.resolve_case_folded(t))
-                            .filter(|r| !matches!(r.outcome, Outcome::Unresolved(_)))
+                    if let Some(folded) = texts
+                        .get(at)
+                        .and_then(|t| tolerance::case_folded(index, t, &resolution, via.is_some()))
                     {
                         resolution = folded;
                         adapted = Some("case-folded");
@@ -887,13 +871,13 @@ impl<'i> Lines<'i, '_> {
             detail: detail(&resolution.outcome),
             ..LineRecord::default()
         };
-        let line = run.get(at).and_then(|(_, m)| LineContext::of(m));
+        let line = run.get(at).map(|(_, m)| LineContext::of(m));
         let mut resolved = match &resolution.outcome {
             Outcome::Resolved(c) => Some(c),
             _ => None,
         };
         if let (Some(ctx), Some(line), Outcome::Ambiguous(cs)) =
-            (self.ctx, line, &resolution.outcome)
+            (self.ctx, line.as_ref(), &resolution.outcome)
         {
             let d = mod_filter::filter(ctx, line, cs);
             record.filter = Some(d.name());
@@ -919,7 +903,7 @@ impl<'i> Lines<'i, '_> {
                     .collect();
             }
         }
-        if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line, resolved)
+        if let (Some(ctx), Some(line), Some(c)) = (self.ctx, line.as_ref(), resolved)
             && !ctx.unique
         {
             match mod_filter::backing(ctx, line, &c.stats) {
@@ -1058,48 +1042,21 @@ fn resolvable(m: &Modifier) -> bool {
 /// split-section`; not in `mod-backed`, the sections differ); before, it was
 /// `parser-gap/split-section`.
 fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, bool)]) {
-    let modifier = |n: usize| match item.lines.get(n).map(|l| &l.kind) {
-        Some(LineKind::Modifier(m)) if resolvable(m) => Some(m),
-        _ => None,
-    };
     for (record, _) in records.iter_mut() {
         if record.outcome != "unresolved/no-template" {
             continue;
         }
-        let n = record.line;
-        let Some(this) = modifier(n) else {
-            continue;
-        };
-        // The line before is tried first; when both neighbours would
-        // complete a pair, the earlier one wins (no corpus line has two).
-        let neighbours = [n.checked_sub(1), n.checked_add(1)];
-        for other in neighbours.into_iter().flatten() {
-            let Some(m) = modifier(other).filter(|m| m.section != this.section) else {
-                continue;
-            };
-            let pair = if other < n {
-                [m.text.as_str(), this.text.as_str()]
-            } else {
-                [this.text.as_str(), m.text.as_str()]
-            };
-            let joined = index
-                .resolve_lines(&pair)
-                .into_iter()
-                .next()
-                .filter(|r| r.lines == 2 && matches!(r.outcome, Outcome::Resolved(_)));
-            if let Some(r) = joined {
-                // The pair is one description: both lines take its reading
-                // (B5e), as the lines of any multi-line template do.
-                // `backed` stays `None`: the halves sit in two sections,
-                // so no one section's `Mods` fit applies; the line is left
-                // out of `mod-backed` on purpose.
-                record.split_with = Some(other);
-                record.outcome = "resolved".to_owned();
-                record.detail = detail(&r.outcome);
-                record.adapted = Some("split-section");
-                record.evidence = Some(format!("resolves with item line {other}"));
-                break;
-            }
+        if let Some((other, r)) = tolerance::split_section(index, item, record.line) {
+            // The pair is one description: both lines take its reading
+            // (B5e), as the lines of any multi-line template do. `backed`
+            // stays `None`: the halves sit in two sections, so no one
+            // section's `Mods` fit applies; the line is left out of
+            // `mod-backed` on purpose.
+            record.split_with = Some(other);
+            record.outcome = "resolved".to_owned();
+            record.detail = detail(&r.outcome);
+            record.adapted = Some("split-section");
+            record.evidence = Some(format!("resolves with item line {other}"));
         }
     }
 }
@@ -1121,50 +1078,31 @@ pub fn run(
     game: &GameText,
     builds: &[Build],
     tool: Tool,
-) -> Result<(Summary, Report), String> {
+    bundle: Option<&BundleData<'_>>,
+) -> Result<(Summary, Report, Option<BuildCheck>), String> {
     if extract.inputs.game != "poe1" {
         return Err(format!(
             "resolve-corpus reads PoE1 builds; the extract is {}",
             extract.inputs.game
         ));
     }
-    let mut scopes: BTreeMap<&'static str, Scope<'_>> = BTreeMap::new();
-    for name in SCOPES {
-        let file = format!("{name}.txt");
-        let path = extract
-            .files
-            .iter()
-            .find(|p| {
-                p.rsplit('/')
-                    .next()
-                    .is_some_and(|f| f.eq_ignore_ascii_case(&file))
-            })
-            .ok_or_else(|| format!("{file}: not in the extract"))?;
-        let scope = extract
-            .set
-            .scope(path)
-            .map_err(|e| format!("{path}: {} ({e})", e.code()))?;
-        scopes.insert(name, scope);
-    }
-    let indexes: BTreeMap<&'static str, Index<'_>> = scopes
-        .iter()
-        .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
-        .collect();
-    let chains: BTreeMap<&'static str, BTreeSet<String>> = scopes
-        .iter()
-        .map(|(name, scope)| {
-            (
-                *name,
-                scope.chain().iter().map(|f| f.source.clone()).collect(),
-            )
-        })
-        .collect();
+    let (indexes, chains, compositions, compositions_missing) = match bundle {
+        Some(data) => bundle_inputs(data)?,
+        None => extract_inputs(extract, lookup, bases, game)?,
+    };
+    let resolver = bundle
+        .map(Resolver::new)
+        .transpose()
+        .map_err(|e| format!("{} ({e})", e.code()))?;
+    let mut check = resolver.as_ref().map(|_| BuildCheck::default());
     let corpus = Corpus {
         bases,
         mods,
         indexes: &indexes,
         chains: &chains,
+        compositions: &compositions,
         game,
+        resolver: resolver.as_ref(),
     };
 
     let (essence_rows_known, essence_rows_unknown) = mods.essence_rows();
@@ -1172,7 +1110,7 @@ pub fn run(
         lookup: lookup_report,
         scopes: indexes
             .iter()
-            .map(|(n, i)| (*n, i.stats().into()))
+            .map(|(n, i)| ((*n).to_owned(), i.stats().into()))
             .collect(),
         mods_rows: mods.row_count(),
         mods_bad_spawn_rows: mods.bad_spawn_rows,
@@ -1180,22 +1118,20 @@ pub fn run(
         essence_rows_unknown,
         bases_with_unknown_tags: bases.tags_unknown,
         colour_code_in_game_text: game.colour_code_in_game_text,
-        compositions: game
-            .compositions
+        compositions: compositions
             .iter()
             .map(|c| (c.id.clone(), c.stat.clone()))
             .collect(),
-        compositions_missing: game.compositions_missing.clone(),
+        compositions_missing,
         graft_bases: bases.grafts.len(),
-        graft_inputs: bases.grafts.inputs(),
+        graft_inputs: grafts::inputs(&bases.grafts),
         property_inputs: bases.properties.inputs(),
-        property_missing: bases.properties.missing().to_vec(),
+        property_missing: properties::missing(&bases.properties),
         resolved_kinds: BTreeMap::new(),
         adapted: BTreeMap::new(),
-        composition_rows: game
-            .compositions
+        composition_rows: compositions
             .iter()
-            .map(|c| (c.stat.clone(), mods.eldritch_share(&c.stat)))
+            .map(|c| (c.stat.clone(), mod_filter::eldritch_share(mods, &c.stat)))
             .collect(),
         ..Summary::default()
     };
@@ -1249,26 +1185,126 @@ pub fn run(
                 *s.unsupported_features.entry(feature).or_default() += n;
             }
             let item = pob_item::to_domain(&pob);
-            let record = count_item(&mut s, &mut distinct, (n, &item, ranges), &corpus);
+            let record = count_item(
+                &mut s,
+                &mut distinct,
+                (n, &item, ranges),
+                &corpus,
+                check.as_mut().map(|c| (c, build.hash.as_str())),
+            );
             items.push(record);
         }
         report.builds.insert(build.hash.clone(), items);
     }
     s.inputs.tool = tool;
     s.inputs.extract = extract.inputs.clone();
+    s.inputs.bundle = bundle.map(|d| {
+        let m = &d.bundle().manifest;
+        BundleInputs {
+            game: m.game.clone(),
+            steam_build: m.source.steam_build,
+            index_sha256: m.source.index_sha256.clone(),
+        }
+    });
     s.inputs.pob = game.pob_sources();
     finish_rate(&mut s, &distinct);
-    Ok((s, report))
+    Ok((s, report, check))
+}
+
+/// Scope name to index, scope name to its chain's sources, the
+/// compositions, and the composition IDs not read.
+type PipelineInputs<'i> = (
+    BTreeMap<&'i str, Index<'i>>,
+    BTreeMap<&'i str, BTreeSet<String>>,
+    Vec<Composition>,
+    Vec<String>,
+);
+
+/// The pipeline's indexes and texts from the extract (Spike B's inputs).
+fn extract_inputs<'i>(
+    extract: &'i Extract,
+    lookup: &TableLookup,
+    bases: &'i Bases,
+    game: &GameText,
+) -> Result<PipelineInputs<'i>, String> {
+    let mut scopes: BTreeMap<&str, Scope<'_>> = BTreeMap::new();
+    for name in bases.item_rules().scopes() {
+        let file = format!("{name}.txt");
+        let path = extract
+            .files
+            .iter()
+            .find(|p| {
+                p.rsplit('/')
+                    .next()
+                    .is_some_and(|f| f.eq_ignore_ascii_case(&file))
+            })
+            .ok_or_else(|| format!("{file}: not in the extract"))?;
+        let scope = extract
+            .set
+            .scope(path)
+            .map_err(|e| format!("{path}: {} ({e})", e.code()))?;
+        scopes.insert(name, scope);
+    }
+    let indexes = scopes
+        .iter()
+        .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
+        .collect();
+    let chains = scopes
+        .iter()
+        .map(|(name, scope)| {
+            (
+                *name,
+                scope.chain().iter().map(|f| f.source.clone()).collect(),
+            )
+        })
+        .collect();
+    Ok((
+        indexes,
+        chains,
+        game.compositions.clone(),
+        game.compositions_missing.clone(),
+    ))
+}
+
+/// The pipeline's indexes and texts from a bundle (`--bundle`).
+fn bundle_inputs<'i>(data: &BundleData<'i>) -> Result<PipelineInputs<'i>, String> {
+    let b = data.bundle();
+    let indexes = data.indexes().map_err(|e| format!("{} ({e})", e.code()))?;
+    let mut chains = BTreeMap::new();
+    for name in b.item_rules.scopes() {
+        let chain = b
+            .scope_root(name)
+            .ok()
+            .and_then(|root| b.stat_descriptions.scope(root).ok())
+            .ok_or_else(|| format!("{name}: no scope chain"))?;
+        chains.insert(
+            name,
+            chain.chain().iter().map(|f| f.source.clone()).collect(),
+        );
+    }
+    Ok((
+        indexes,
+        chains,
+        data.compositions().to_vec(),
+        data.compositions_missing()
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+    ))
 }
 
 /// What every item of the run is resolved and categorized with.
 struct Corpus<'c, 'i> {
     bases: &'c Bases,
     mods: &'c Mods,
-    indexes: &'c BTreeMap<&'static str, Index<'i>>,
+    indexes: &'c BTreeMap<&'c str, Index<'i>>,
     /// Scope name to the sources of its chain's files.
-    chains: &'c BTreeMap<&'static str, BTreeSet<String>>,
+    chains: &'c BTreeMap<&'c str, BTreeSet<String>>,
+    /// The composition wrappers the pipeline reads.
+    compositions: &'c [Composition],
     game: &'c GameText,
+    /// The core pipeline, for the cross-check (`--bundle` only).
+    resolver: Option<&'c Resolver<'c, 'i>>,
 }
 
 /// Resolves a graft's `Uses level {1} {0}` line as a granted skill
@@ -1295,7 +1331,7 @@ fn item_property(record: &mut LineRecord, properties: &Properties) {
     if record.outcome != "unresolved/no-template" {
         return;
     }
-    if let Some(p) = properties.resolve(&record.text) {
+    if let Some(p) = properties::resolve(properties, &record.text) {
         record.outcome = "resolved".to_owned();
         record.kind = Some(p.kind);
         record.detail = p.detail;
@@ -1344,6 +1380,7 @@ fn count_item(
     distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
     (n, item, ranges): (usize, &Item, usize),
     corpus: &Corpus<'_, '_>,
+    check: Option<(&mut BuildCheck, &str)>,
 ) -> ItemRecord {
     let (bases, mods, indexes) = (corpus.bases, corpus.mods, corpus.indexes);
     s.items += 1;
@@ -1384,7 +1421,7 @@ fn count_item(
     let found = bases.find(item);
     let scope_name = match &found {
         Ok(f) => {
-            if f.suffix_removed {
+            if f.fallback_used {
                 s.pob_base_suffix_removed += 1;
             }
             f.scope.to_owned()
@@ -1395,14 +1432,17 @@ fn count_item(
     let unique = item.rarity.is_none_or(Rarity::is_unique);
     let index = found.as_ref().ok().and_then(|f| indexes.get(f.scope));
     let ctx = found.as_ref().ok().map(|f| Context {
+        rules: &bases.item_rules().mods,
         mods,
         bases: f.rows,
         unique,
         influences: item
             .lines
             .iter()
-            .filter(|l| matches!(l.kind, LineKind::Influence(_)))
-            .filter_map(|l| mod_filter::influence_type(&l.source))
+            .filter_map(|l| match &l.kind {
+                LineKind::Influence(id) => bases.item_rules().mods.influence_value(id),
+                _ => None,
+            })
             .collect(),
     });
     let mut records = item_lines(
@@ -1410,15 +1450,24 @@ fn count_item(
         index,
         found.as_ref().err().map(String::as_str),
         ctx.as_ref(),
-        &corpus.game.compositions,
+        corpus.compositions,
     );
     if let Ok(f) = &found {
         for (record, _) in &mut records {
-            granted_skill(record, &bases.grafts, &f.name);
+            granted_skill(record, &bases.grafts, f.name);
         }
     }
     for (record, _) in &mut records {
         item_property(record, &bases.properties);
+    }
+    if let (Some((check, build)), Some(resolver)) = (check, corpus.resolver) {
+        let mut body = item.clone();
+        let base = pob_item::item_base(item, bases.base_names())
+            .map(|(name, fallback)| ItemBaseName { name, fallback })
+            .map_err(pob_item::NoBaseName::name);
+        resolver.resolve_item(&mut body, base.as_ref().map_err(|e| *e));
+        let lines: Vec<LineRecord> = records.iter().map(|(r, _)| r.clone()).collect();
+        check.compare(build, n, &body, &lines);
     }
     let empty = BTreeSet::new();
     let chain = found

@@ -408,3 +408,38 @@ fn read_should_never_panic_and_should_give_every_line_a_kind() {
         assert_eq!(item.lines.len(), non_blank, "{text:?}");
     }
 }
+
+#[test]
+fn item_base_should_follow_pobs_rules_for_each_rarity() {
+    let bases = [
+        "Two-Stone Ring",
+        "Iron Ring",
+        "Ring",
+        "Gold Ring",
+        "Blue Ring",
+    ];
+    let base = |text: &str| item_base(&to_domain(&read(text)), bases).map_err(NoBaseName::name);
+    assert_eq!(
+        (
+            base("Rarity: RARE\nDoom Loop\nSuperior Iron Ring\n--------\nImplicits: 0"),
+            base("Rarity: MAGIC\nHale Iron Ring of Fire\n--------\nImplicits: 0"),
+            base("Rarity: RARE\nDoom Loop\nTwo-Stone Ring (Fire/Cold)\n--------\nImplicits: 0"),
+            base("Rarity: MAGIC\nHale Thing\n--------\nImplicits: 0"),
+            base("Rarity: MAGIC\nGold Ring Blue Ring\n--------\nImplicits: 0"),
+        ),
+        (
+            Ok(("Iron Ring".to_owned(), None)),
+            Ok(("Iron Ring".to_owned(), None)),
+            Ok((
+                "Two-Stone Ring (Fire/Cold)".to_owned(),
+                Some("Two-Stone Ring".to_owned())
+            )),
+            Err("no-base-in-name"),
+            Err("tie"),
+        )
+    );
+    assert_eq!(
+        item_base(&loom_domain::ItemBody::default(), bases),
+        Err(NoBaseName::NoName)
+    );
+}

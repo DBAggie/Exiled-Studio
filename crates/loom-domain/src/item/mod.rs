@@ -9,7 +9,7 @@
 mod resolution;
 
 pub use resolution::{
-    Adapted, Exclusion, LineResolution, PropertyValue, Resolved, StatLine, StatValue,
+    Adapted, Exclusion, LineResolution, NoBase, PropertyValue, Resolved, StatLine, StatValue,
     TypedResolution, UnresolvedReason,
 };
 
@@ -102,6 +102,21 @@ pub struct Item {
     pub body: ItemBody,
     /// The item's children: where the body sits among untyped content.
     pub layout: Ordered<ItemPart>,
+    /// The whitespace of the body's text as read: before the first line,
+    /// between each two lines (blank lines included), and after the last
+    /// (`lines + 1` entries). Empty: the lines are written one per line.
+    /// The text itself always comes from the lines' sources (Phase 2 plan,
+    /// decision 6).
+    ///
+    /// Legacy-XML formatting only: it lets the PoB XML export write an
+    /// item's text as it was read. It carries no meaning, and the canonical
+    /// format may leave it out.
+    ///
+    /// **Any edit that adds, removes, or reorders lines must clear it.**
+    /// The writer checks only its length, so a stale value with the right
+    /// length puts the old gaps (blank lines among them) between the new
+    /// lines. Changing a line's source in place keeps it valid.
+    pub text_spacing: Vec<String>,
     /// Attributes not typed.
     pub attributes: Attributes,
 }
