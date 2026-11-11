@@ -21,7 +21,12 @@
 //! `MonsterDamageReductionImprovement` instead ("The table here is wrong",
 //! `src/Export/Scripts/miscdata.lua`); the calc decides with evidence.
 //!
-//! Not carried (no Phase 3 calc reads them): PoE2 weapon classes,
+//! Shape per game (validated, `BUNDLE_GAME_SHAPE`): PoE1 has no reload
+//! time and has `alt_life_1` and `phys_conversion_multi`; PoE2 has a reload
+//! time, one value per defence (`min` = `max`), and neither PoE1 column.
+//!
+//! Not carried (no Phase 3 calc reads them): PoE2 weapon classes (for P3-10
+//! if PoE2 attacks come into scope),
 //! `DefaultMonsterStats`' experience-only, difficulty, and PoE2-only leech
 //! and damage columns.
 
@@ -95,7 +100,6 @@ pub struct ArmourType {
     /// Ward.
     pub ward: ValueRange,
     /// Movement speed change, percent.
-    #[serde(default)]
     pub movement_speed: i64,
 }
 
@@ -109,7 +113,12 @@ pub struct ShieldType {
     pub block: i64,
 }
 
-/// The game's monster stats at one level (`DefaultMonsterStats`).
+/// The game's monster stats at one level (`DefaultMonsterStats`). The
+/// levels run from 1 without gaps (validated), so level `n` is row `n - 1`.
+/// The `f32` values are the game's: the calc widens them with
+/// `f64::from`, never by reparsing the text, so they equal PoB's widened
+/// values. `armour` is the stored column; PoB uses the game constant
+/// `MonsterDamageReductionImprovement` instead (module docs).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MonsterLevel {

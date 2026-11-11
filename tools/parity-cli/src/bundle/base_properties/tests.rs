@@ -288,3 +288,75 @@ fn missing_or_unreadable_inputs_should_fail_the_conversion() {
         assert!(run(&files).is_err(), "{what}");
     }
 }
+
+/// `table`'s file with the column `column` removed.
+fn without(files: &mut BTreeMap<String, Vec<u8>>, name: &str, column: &str) {
+    let path = format!("tables/{name}.json");
+    let mut v: Value = serde_json::from_slice(&files[&path]).unwrap();
+    let at = v["columns"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|c| c["name"] == column)
+        .unwrap();
+    v["columns"].as_array_mut().unwrap().remove(at);
+    for row in v["rows"].as_array_mut().unwrap() {
+        row.as_array_mut().unwrap().remove(at);
+    }
+    files.insert(path, v.to_string().into_bytes());
+}
+
+#[test]
+fn each_table_should_drop_and_count_rows_without_a_base() {
+    // A key past the table's end is dropped and dangling; a null key is
+    // dropped only (it names nothing).
+    for (name, key, dangling) in [
+        ("ArmourTypes", json!(9), 1),
+        ("ShieldTypes", json!(9), 1),
+        ("ShieldTypes", Value::Null, 0),
+    ] {
+        let mut files = extract(true);
+        let path = format!("tables/{name}.json");
+        let mut v: Value = serde_json::from_slice(&files[&path]).unwrap();
+        v["rows"][0][0] = key.clone();
+        files.insert(path, v.to_string().into_bytes());
+        let (_, s, d) = run(&files).unwrap();
+        // The weapon table's own dangling row is always there.
+        assert_eq!((s.dropped_rows, d), (2, 1 + dangling), "{name} {key}");
+    }
+}
+
+#[test]
+fn missing_columns_of_each_table_should_fail_the_conversion() {
+    for (poe1, name, column) in [
+        (true, "WeaponTypes", "Speed"),
+        (true, "WeaponTypes", "Critical"),
+        (false, "WeaponTypes", "CritChance"),
+        (true, "DefaultMonsterStats", "MinionLife"),
+        (false, "DefaultMonsterStats", "AllyLife"),
+        (true, "DefaultMonsterStats", "AltLife2"),
+        (true, "DefaultMonsterStats", "MinionDamage"),
+        (true, "GameConstants", "Divisor"),
+    ] {
+        let mut files = extract(poe1);
+        without(&mut files, name, column);
+        assert!(run(&files).is_err(), "{name}.{column}");
+    }
+    // A partial PoE1 defence set names both sets in its message.
+    let mut files = extract(true);
+    without(&mut files, "ArmourTypes", "WardMax");
+    let err = run(&files).unwrap_err();
+    assert!(err.contains("WardMax") && err.contains("\"Ward\""), "{err}");
+    // A constant without an ID.
+    let mut files = extract(true);
+    files.insert(
+        "tables/GameConstants.json".to_owned(),
+        table(
+            "GameConstants",
+            &["Id", "Value", "Divisor"],
+            &json!([[null, 670, 100]]),
+        )
+        .1,
+    );
+    assert!(run(&files).is_err(), "constant without ID");
+}

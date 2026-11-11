@@ -54,7 +54,9 @@ pub fn convert(
     Ok((tables, summary))
 }
 
-/// The base item of each row, `None` (counted) when past the table's end.
+/// The base item of each row, `None` (counted in `dropped_rows`) when past
+/// the table's end or null; only a key past the end is also a dangling
+/// reference (a null key names nothing).
 fn base(
     bases: &[String],
     row: &[Value],
@@ -117,23 +119,25 @@ fn armours(
     let key = column(&t, &["BaseItemTypesKey", "BaseItemType"])?;
     let speed = t.column("IncreasedMovementSpeed")?;
     // PoE1: a range per defence; PoE2: one value (min = max).
-    let cols: [(usize, usize); 4] = match one_of(
-        &t,
-        &[[
-            "ArmourMin",
-            "ArmourMax",
-            "EvasionMin",
-            "EvasionMax",
-            "EnergyShieldMin",
-            "EnergyShieldMax",
-            "WardMin",
-            "WardMax",
-        ]],
-    ) {
-        Ok([a0, a1, e0, e1, s0, s1, w0, w1]) => [(a0, a1), (e0, e1), (s0, s1), (w0, w1)],
-        Err(_) => {
-            let [a, e, s, w] = one_of(&t, &[["Armour", "Evasion", "EnergyShield", "Ward"]])?;
-            [(a, a), (e, e), (s, s), (w, w)]
+    const RANGES: [&str; 8] = [
+        "ArmourMin",
+        "ArmourMax",
+        "EvasionMin",
+        "EvasionMax",
+        "EnergyShieldMin",
+        "EnergyShieldMax",
+        "WardMin",
+        "WardMax",
+    ];
+    const SINGLES: [&str; 4] = ["Armour", "Evasion", "EnergyShield", "Ward"];
+    let cols: [(usize, usize); 4] = match (one_of(&t, &[RANGES]), one_of(&t, &[SINGLES])) {
+        (Ok([a0, a1, e0, e1, s0, s1, w0, w1]), _) => [(a0, a1), (e0, e1), (s0, s1), (w0, w1)],
+        (Err(_), Ok([a, e, s, w])) => [(a, a), (e, e), (s, s), (w, w)],
+        (Err(_), Err(_)) => {
+            return Err(format!(
+                "ArmourTypes: neither the PoE1 columns {RANGES:?} nor the PoE2 columns \
+                 {SINGLES:?} are all there"
+            ));
         }
     };
     let mut out = Vec::with_capacity(t.rows.len());
@@ -235,8 +239,11 @@ fn game_constants(read: Read<'_>) -> Result<Vec<GameConstant>, String> {
     t.rows
         .iter()
         .map(|r| {
+            let id = Table::text(r, id)
+                .filter(|s| !s.is_empty())
+                .ok_or("GameConstants: a row has no ID")?;
             Ok(GameConstant {
-                id: text(r, id),
+                id: id.to_owned(),
                 value: required(&t, r, value, "value")?,
                 divisor: required(&t, r, divisor, "divisor")?,
             })
