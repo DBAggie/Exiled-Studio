@@ -62,7 +62,7 @@ Last Updated: 2026-11-10 (PR P2-3b: bundle converter)
 - [ ] Gate 3d (the game-specific table list agrees with the extractor's lists): moved to P2-4, with the validator's domain checks
 - [x] Two `bundle` runs per game byte-identical (in-session, also from a clean tree); scrubbed summaries `docs/phase-2/bundle-*.json`
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-3a-bundle-model`); write the PR number into the docs right after
+- [x] Open PR (#48, base `feat/p2-3a-bundle-model`); write the PR number into the docs right after
 
 ## PR P2-4: bundle validator (step 4)
 - [ ] Structural, schema, referential, domain, smoke checks with `BUNDLE_*` codes

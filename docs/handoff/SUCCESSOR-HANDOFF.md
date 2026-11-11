@@ -24,9 +24,9 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-3b bundle converter open, in review, branch `feat/p2-3b-bundle-converter`, stacked on P2-3a)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- P2-3b (base `feat/p2-3a-bundle-model`).
-- **PR P2-3b: bundle converter (open, in review, branch `feat/p2-3b-bundle-converter`, base `feat/p2-3a-bundle-model`).** Plan step 3b.
+## Current state (updated 2026-11-10, P2-3b bundle converter PR #48 open, in review, branch `feat/p2-3b-bundle-converter`, stacked on P2-3a)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`).
+- **PR P2-3b: bundle converter (PR #48, open, in review, branch `feat/p2-3b-bundle-converter`, base `feat/p2-3a-bundle-model`).** Plan step 3b.
   - **What:** `loom-parity-cli bundle <extract> --out <dir>` (`tools/parity-cli/src/bundle.rs`) converts a PoE1 or PoE2 extract to bundle v1:
     - stats;
     - mods by ID (stats including `(0, 0)`; spawn weights by tag; influence without `NONE`; crafting and essence classes by `ItemClasses.Id`; mod type by `ModType.Name`);
@@ -215,7 +215,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 10`): if the maintainer merged or asked for changes on #42 to #47 or P2-3b, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+1. **Stack check** (`gh pr list --state all --limit 10`): if the maintainer merged or asked for changes on #42 to #48, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
 2. **P2-4: bundle validator** (plan step 4). Branch from `feat/p2-3b-bundle-converter` and target it as base:
    - `loom-data::validate` with five kinds of check:
      - structural: the format is known; every listed file exists with matching SHA-256 (`sha2` joins `loom-data`; run `cargo deny`) and size; there is no unlisted file (`BundleSource::list`); `signatures` is empty in format 1;
