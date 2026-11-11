@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-1b: character and passive tables)
+Last Updated: 2026-11-11 (P3-2: data parity)
 
 # Phase 3: calc slice (tasks)
 
@@ -22,11 +22,14 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #61 (base `feat/p3-1a-bundle-v2-skills`)
 
 ## P3-1c: item property and monster tables
-- [ ] Weapon, armour, shield properties; default monster stats (same checklist as 1a)
+- [x] Weapon, armour, shield properties; default monster stats (same checklist as 1a); game constants
+- [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-items-monsters.md`)
+- [x] Open PR: #63 (base `docs/ui-draft-v1`, #62)
 
 ## P3-2: data parity
-- [ ] `data-parity` (PoB data read by a script in `tools/oracle/data/`, outside the adapter protocol)
-- [ ] Categories with cited evidence and tests; overlay file; report with `uncategorized` 0
+- [x] `data-parity` (PoB data read by a script in `tools/oracle/data/`, outside the adapter protocol)
+- [x] Categories with cited evidence and tests; overlay file; report with `uncategorized` 0 (`docs/phase-3/data-parity.md`)
+- [x] Open PR: #64 (base `feat/p3-1c-bundle-v2-items-monsters`, #63)
 
 ## P3-3: survey and slice
 - [ ] `calc-survey`: archetype classifier, tree-version rule, excluded-mechanics rules (tests each), mechanic inventory

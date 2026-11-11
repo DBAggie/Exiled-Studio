@@ -13,6 +13,7 @@ mod build_round_trip;
 mod bundle;
 mod bundle_equal;
 mod categorize;
+mod data_parity;
 mod divergence;
 mod dto_hashes;
 mod extract;
@@ -124,6 +125,21 @@ const USAGE: &str = "usage:
       dto::v1); print each document's SHA-256 and size as JSON. CI compares
       the output of Windows and Linux. Exit 1 if a document differs on a
       second run or does not read back to the same build.
+  loom-parity-cli data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>
+      Compare the values a calculation reads (skills and their levels,
+      gems, item bases, classes, character and monster constants, game
+      constants, monster levels, passive and mastery text) in a PoE1
+      bundle of format 2 (validated first) with PoB v2.67.2's data, as
+      tools/oracle/data/pob_data.lua exports it (plan step 3, step 2).
+      Each bundle value is put into PoB's form by the conversion PoB's
+      exporter made, then compared exactly. Each difference gets the first
+      matching rule of <file> (docs/phase-3/data-parity-rules-poe1.json:
+      patch-delta, pob-derivation, representation, with evidence) or is
+      uncategorized. Write summary.json, report.json (every difference),
+      and overlay.json (PoB's values for patch-delta and pob-derivation
+      differences, for calc-run --data-overlay) to <dir>, which must not
+      exist. Exit 0 when nothing is uncategorized and every rule matched
+      exactly its count with every key pattern, 1 otherwise, 2 on a usage error, 3 when an input does not read.
   loom-parity-cli build-round-trip <input>... --out <dir> [--bundle <dir>] [--anonymous]
                   [--expect-import-error <file name>]...
       Run every build through import (A), resolution with the bundle if
@@ -709,6 +725,106 @@ fn divergence_check(register: &Path) -> ExitCode {
     }
 }
 
+/// `data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>`.
+fn data_parity_cmd(args: &[String]) -> ExitCode {
+    let mut positional = Vec::new();
+    let (mut rules, mut out) = (None, None);
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        match (arg.as_str(), tail) {
+            ("--rules", [value, tail @ ..]) if rules.is_none() => {
+                rules = Some(value.clone());
+                rest = tail;
+            }
+            ("--out", [value, tail @ ..]) if out.is_none() => {
+                out = Some(value.clone());
+                rest = tail;
+            }
+            (flag, _) if flag.starts_with("--") => {
+                eprintln!("{USAGE}");
+                return ExitCode::from(2);
+            }
+            (value, tail) => {
+                positional.push(value.to_owned());
+                rest = tail;
+            }
+        }
+    }
+    let ([bundle_dir, export], Some(rules), Some(out)) = (positional.as_slice(), rules, out) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    let out = Path::new(&out);
+    let start = || -> Result<data_parity::Outputs, String> {
+        if out.exists() {
+            return Err(format!("{}: already exists", out.display()));
+        }
+        let bundle_dir = Path::new(bundle_dir);
+        let bundle = load_bundle(bundle_dir)?;
+        let read =
+            |path: &Path| std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()));
+        let manifest = read(&bundle_dir.join("bundle.json"))?;
+        let export = read(Path::new(export))?;
+        let rules = read(Path::new(&rules))?;
+        data_parity::run(&data_parity::Request {
+            bundle: &bundle,
+            bundle_manifest: &manifest,
+            export: &export,
+            rules: &rules,
+            passive_scope: data_parity::compare::PASSIVE_SCOPE,
+            tool: resolve_corpus::Tool {
+                commit: git(&["rev-parse", "HEAD"]),
+                dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+            },
+        })
+    };
+    let outputs = match start() {
+        Ok(outputs) => outputs,
+        Err(message) => {
+            eprintln!("data-parity: {message}");
+            return ExitCode::from(3);
+        }
+    };
+    let written = write_out(out, &outputs.summary, &outputs.report).and_then(|()| {
+        let mut text = serde_json::to_string_pretty(&outputs.overlay).map_err(|e| e.to_string())?;
+        text.push('\n');
+        let path = out.join("overlay.json");
+        std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))
+    });
+    if let Err(message) = written {
+        eprintln!("data-parity: {message}");
+        return ExitCode::from(3);
+    }
+    let summary = &outputs.summary;
+    println!(
+        "data-parity: {} differences ({}), {} overlay rows, {} failed rules",
+        outputs.report.differences.len(),
+        summary
+            .categories
+            .iter()
+            .map(|(k, v)| format!("{k} {v}"))
+            .collect::<Vec<_>>()
+            .join(", "),
+        summary.overlay_rows,
+        summary.failed_rules.len()
+    );
+    for rule in summary
+        .rules
+        .iter()
+        .filter(|r| summary.failed_rules.contains(&r.id))
+    {
+        eprintln!(
+            "failed rule {}: matched {} of {}, stale keys {:?}",
+            rule.id, rule.matched, rule.expected, rule.stale_keys
+        );
+    }
+    if summary.pass {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::FAILURE
+    }
+}
+
 fn dto_hashes(dirs: &[String]) -> Result<bool, String> {
     let report = dto_hashes::run(dirs)?;
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
@@ -895,6 +1011,11 @@ fn main() -> ExitCode {
         && cmd == "oracle-compare"
     {
         return oracle_compare(Path::new(left), Path::new(right), rest);
+    }
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "data-parity"
+    {
+        return data_parity_cmd(rest);
     }
     if let [cmd, register] = args.as_slice()
         && cmd == "divergence-check"

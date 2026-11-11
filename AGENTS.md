@@ -151,6 +151,12 @@ LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixtures -- --ignored --nocapture
 # Make a share code with PoB itself on the oracle runtime (P2-10; maintainer-run, not in CI): the command and why runs differ
 # are in tools/oracle/fixtures/share-codes/README.md; the committed codes are checked by the share_code_fixtures test.
+# Data parity (P3-2; maintainer-run, not in CI): export PoB v2.67.2's data on the oracle runtime with
+# tools/oracle/data/pob_data.lua (command in tools/oracle/data/README.md; outside the adapter protocol), then
+# compare a PoE1 bundle of format 2 with it. Every difference needs a rule in the rules file (patch-delta,
+# pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
+# (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
+cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

@@ -1,0 +1,11 @@
+[
+ {
+  "attack_time": 714,
+  "base_item": "Test/Items/Wand1",
+  "crit_chance": 700,
+  "damage_max": 9,
+  "damage_min": 5,
+  "range": 120,
+  "reload_time": 0
+ }
+]

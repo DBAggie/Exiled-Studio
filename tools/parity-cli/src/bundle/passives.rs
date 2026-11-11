@@ -56,7 +56,7 @@ fn int_or_0(row: &[Value], col: usize) -> i64 {
 
 /// An integer that identifies a row or drives the calc: missing is an
 /// error, never 0.
-fn required(t: &Table, row: &[Value], col: usize, what: &str) -> Result<i64, String> {
+pub(super) fn required(t: &Table, row: &[Value], col: usize, what: &str) -> Result<i64, String> {
     Table::int(row, col).ok_or_else(|| {
         let id = row.first().and_then(Value::as_str).unwrap_or("?");
         format!("{}: row {id:?} has no {what}", t.table)

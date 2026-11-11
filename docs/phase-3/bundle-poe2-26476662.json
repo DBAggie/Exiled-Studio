@@ -1,12 +1,17 @@
 {
   "game": "poe2",
   "steam_build": 26476662,
-  "manifest_sha256": "e11fdb338ed8e4317b60db9d72ea261f825d78483468e14dfc554681e7188205",
+  "manifest_sha256": "944f2c0ec84d4865891fa85a57039508039954b36ca38e86417e654d99915eff",
   "files": {
     "data/active_skills.json": {
       "rows": 1148,
       "sha256": "17f25cdcc66872d7aa53dfd05d48112396a3a400d9e295a374ea02ba8869109d",
       "size": 384926
+    },
+    "data/armour_types.json": {
+      "rows": 1280,
+      "sha256": "13a831467c6f26d6dcad7935ff907305f53196c3d049f22d4c3e3adfc3f7da6c",
+      "size": 430811
     },
     "data/ascendancies.json": {
       "rows": 37,
@@ -32,6 +37,11 @@
       "rows": 18,
       "sha256": "b7283a6ccad7cb35c7f6c8f4cb32f80cab3d39f9cfc273d12cfbada7ad01f06c",
       "size": 313
+    },
+    "data/game_constants.json": {
+      "rows": 121,
+      "sha256": "5b01ac5902195ab8a61941a336bc309bca7c56d893d55fc73274383436994dad",
+      "size": 10327
     },
     "data/gem_effects.json": {
       "rows": 1194,
@@ -83,6 +93,11 @@
       "sha256": "bb11fb0c647b1e6d38e5ebae882300b924fab982b84b988da329ddab68e9ad0d",
       "size": 8643337
     },
+    "data/monster_levels.json": {
+      "rows": 100,
+      "sha256": "cb34f9b8e33a8389d598e98c3761b7974ebd766146e1d7061345ebbb7b044106",
+      "size": 31486
+    },
     "data/object_templates.json": {
       "rows": 4,
       "sha256": "333f432e98a95b4f7bbf518cf579dc4919f409fa221289289acb5f851c297caa",
@@ -98,6 +113,11 @@
       "sha256": "67d9d3632b36687db6813cef4f9bac8dee2f289c036521bfc8113e9f4ebd390a",
       "size": 4953455
     },
+    "data/shield_types.json": {
+      "rows": 203,
+      "sha256": "3b559a66c4d5a1ad5486bcc39f5875bd9a37830d41106e98bcd3418f35b6e973",
+      "size": 20378
+    },
     "data/skill_types.json": {
       "rows": 290,
       "sha256": "af2342cd38e1a479fbdbfeabb2b929b1326b6cd0c5b8ff9d925d8ee2f1f36ef2",
@@ -112,6 +132,11 @@
       "rows": 27299,
       "sha256": "8d7e6fb574213ebfcaf3393903a862f4c2974d61b3c625473a9c58ef6d1e1f2c",
       "size": 2995301
+    },
+    "data/weapon_types.json": {
+      "rows": 407,
+      "sha256": "e48aaa70088d76b432abcf3aadb761b71e8af30dac93e20ce4ebba6e2da2fe48",
+      "size": 92376
     },
     "stat_descriptions/active_skill_gem_stat_descriptions.csd.json": {
       "rows": null,
@@ -3101,5 +3126,8 @@
     "templates": 4,
     "template_values": 4,
     "dropped_stats": 0
+  },
+  "properties": {
+    "dropped_rows": 0
   }
 }

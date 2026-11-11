@@ -7,14 +7,19 @@
    "size": 316
   },
   {
+   "path": "data/armour_types.json",
+   "sha256": "2f2d6054e20e0faec3a13921e2e3cd3e189a8bf1f35251e7bd158735c2717366",
+   "size": 252
+  },
+  {
    "path": "data/ascendancies.json",
    "sha256": "0783837a80111563c682349fdfd134e7008ee90d3999e847d0e86c123ce5a455",
    "size": 114
   },
   {
    "path": "data/base_items.json",
-   "sha256": "95a30c32c61c8edf7fc591c49e171ead95b0aee446a48b5288c55acf757a655b",
-   "size": 662
+   "sha256": "bb60e4457b690c1804706033f90fb5f9790df4595d2d0226cad7b00784edc4b3",
+   "size": 972
   },
   {
    "path": "data/characters.json",
@@ -30,6 +35,11 @@
    "path": "data/cost_types.json",
    "sha256": "7b1a14ac75827d33687605a1d8598a93992aaf68047363973112869ae3231d02",
    "size": 21
+  },
+  {
+   "path": "data/game_constants.json",
+   "sha256": "22957b190f48f534f8d7778977b0ed8447f826ca7b0f0ab8cfb8d21651240660",
+   "size": 88
   },
   {
    "path": "data/gem_effects.json",
@@ -82,6 +92,11 @@
    "size": 663
   },
   {
+   "path": "data/monster_levels.json",
+   "sha256": "9d851f897c30abed12d482f77c9354b616993a5d2fe01d84ef15bbb0d100999b",
+   "size": 439
+  },
+  {
    "path": "data/object_templates.json",
    "sha256": "5bad84dbe63c6891bbc7cd99dd1100186c6cff4330bee299433861578baa4c19",
    "size": 202
@@ -97,6 +112,11 @@
    "size": 596
   },
   {
+   "path": "data/shield_types.json",
+   "sha256": "c6640cafa9e2fbff97381f79abf5ab145455dfa366f07a26427ac5719617036f",
+   "size": 61
+  },
+  {
    "path": "data/skill_types.json",
    "sha256": "4cc0a305ece4a9859306ae4196fb47da9a1b9151c94817ad77d82febe4d383da",
    "size": 154
@@ -110,6 +130,11 @@
    "path": "data/stats.json",
    "sha256": "e5a16b162c312e85bff67524f411fb780b35623c907fa150cb16cc291f5d624a",
    "size": 782
+  },
+  {
+   "path": "data/weapon_types.json",
+   "sha256": "2aea2c97df005c9bb5751096969a74f5bff745b04c33c32f0cfdfcd5b13b6d2d",
+   "size": 162
   },
   {
    "path": "stat_descriptions/charm_stat_descriptions.json",

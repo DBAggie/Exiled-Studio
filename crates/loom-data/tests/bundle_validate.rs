@@ -522,3 +522,255 @@ fn tree_node_outside_its_orbit_should_give_its_code() {
         assert_eq!(codes(&src), ["BUNDLE_TREE_GEOMETRY"], "{what}");
     }
 }
+
+/// The item property and monster tables' checks (Phase 3 plan, step 1c):
+/// each mutation gives exactly its code.
+#[test]
+fn property_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, &str, Edit, &str); 13] = [
+        (
+            "data/weapon_types.json",
+            "weapon base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/armour_types.json",
+            "armour base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/shield_types.json",
+            "shield base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/weapon_types.json",
+            "weapon twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/armour_types.json",
+            "armour twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/shield_types.json",
+            "shield twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/game_constants.json",
+            "constant twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/game_constants.json",
+            "constant without ID",
+            |v| {
+                v[0]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "data/monster_levels.json",
+            "levels reversed",
+            |v| {
+                v.as_array_mut().unwrap().reverse();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "data/monster_levels.json",
+            "level repeated",
+            |v| {
+                v[1]["level"] = 1.into();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "data/armour_types.json",
+            "armour range upside down",
+            |v| {
+                v[0]["evasion"] = json!({"min": 5, "max": 4});
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "data/weapon_types.json",
+            "damage range upside down",
+            |v| {
+                v[0]["damage_min"] = 10.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "data/game_constants.json",
+            "divisor 0",
+            |v| {
+                v[0]["divisor"] = 0.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (path, what, edit, code) in cases {
+        let src = edited("bundle-poe1", path, edit);
+        assert_eq!(codes(&src), [code], "{what}");
+    }
+}
+
+/// The value and game-shape rules of the property tables: each mutation,
+/// in the bundle of `game`, gives exactly its code.
+#[test]
+fn property_values_and_shapes_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, &str, &str, Edit, &str); 13] = [
+        (
+            "bundle-poe1",
+            "data/monster_levels.json",
+            "a gap",
+            |v| {
+                v[1]["level"] = 3.into();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "bundle-poe1",
+            "data/monster_levels.json",
+            "not from 1",
+            |v| {
+                v[0]["level"] = 0.into();
+                v[1]["level"] = 1.into();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "bundle-poe1",
+            "data/weapon_types.json",
+            "attack time 0",
+            |v| {
+                v[0]["attack_time"] = 0.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "bundle-poe1",
+            "data/weapon_types.json",
+            "negative crit",
+            |v| {
+                v[0]["crit_chance"] = (-1).into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "bundle-poe1",
+            "data/shield_types.json",
+            "negative block",
+            |v| {
+                v[0]["block"] = (-1).into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "bundle-poe1",
+            "data/armour_types.json",
+            "negative defence",
+            |v| {
+                v[0]["ward"] = json!({"min": -1, "max": 0});
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "bundle-poe1",
+            "data/game_constants.json",
+            "negative divisor",
+            |v| {
+                v[0]["divisor"] = (-100).into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "bundle-poe1",
+            "data/weapon_types.json",
+            "PoE1 reload time",
+            |v| {
+                v[0]["reload_time"] = 0.into();
+            },
+            "BUNDLE_GAME_SHAPE",
+        ),
+        (
+            "bundle-poe2",
+            "data/weapon_types.json",
+            "PoE2 without reload time",
+            |v| {
+                v[0].as_object_mut().unwrap().remove("reload_time");
+            },
+            "BUNDLE_GAME_SHAPE",
+        ),
+        (
+            "bundle-poe2",
+            "data/armour_types.json",
+            "PoE2 defence range",
+            |v| {
+                v[0]["armour"] = json!({"min": 9, "max": 12});
+            },
+            "BUNDLE_GAME_SHAPE",
+        ),
+        (
+            "bundle-poe1",
+            "data/monster_levels.json",
+            "PoE1 level without its columns",
+            |v| {
+                v[0].as_object_mut().unwrap().remove("alt_life_1");
+            },
+            "BUNDLE_GAME_SHAPE",
+        ),
+        (
+            "bundle-poe2",
+            "data/monster_levels.json",
+            "PoE2 level with PoE1 columns",
+            |v| {
+                v[0]["phys_conversion_multi"] = 0.into();
+            },
+            "BUNDLE_GAME_SHAPE",
+        ),
+        (
+            "bundle-poe1",
+            "data/armour_types.json",
+            "movement speed omitted",
+            |v| {
+                v[0].as_object_mut().unwrap().remove("movement_speed");
+            },
+            "BUNDLE_JSON",
+        ),
+    ];
+    for (bundle, path, what, edit, code) in cases {
+        let src = edited(bundle, path, edit);
+        assert_eq!(codes(&src), [code], "{what}");
+    }
+}
