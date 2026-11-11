@@ -1180,13 +1180,13 @@
     "not_met": []
   },
   "inputs": {
-    "extract_commit": "c9b58aae11f8860f25ef26778ba81847aede504b",
+    "extract_commit": "678f9022e212301f5891f3450d8123507d740cd6",
     "extract_dirty": false,
     "provenance": {
-      "extract_manifest_sha256": "dec05d477acb000dee5217119931031ba9f1d94f760f0f90e88ba31f6e3e0cd6",
+      "extract_manifest_sha256": "048c4764d29948196e47c214778a827f5aaa2c7453f4b896b0e81385d356da61",
       "pob_commit": "49e93925dcb79024175c58d25befadab67b4dd44",
-      "tool_commit": "13be856742c66b47e47e51b476a3ec22b0e7f2bb",
-      "tool_dirty": false,
+      "tool_commit": "678f9022e212301f5891f3450d8123507d740cd6",
+      "tool_dirty": true,
       "tool_version": "0.0.0"
     },
     "pob_tree_version": "0_5",

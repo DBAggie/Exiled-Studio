@@ -1,6 +1,6 @@
 # Bundle format 2, skill tables (P3-1a): evidence
 
-Phase 3 plan, step 1a (`dev/active/phase-3-calc-slice/`). Maintainer workstation, Windows, 2026-11-11.
+Phase 3 plan, step 1a (`dev/active/phase-3-calc-slice/`). Maintainer workstation, Windows, 2026-11-11. The bundle summaries in this folder were replaced by P3-1b's (`bundle-v2-passives.md`); the hashes below are P3-1a's.
 
 ## Inputs
 - Game data: PoE1 Steam build 26530219, PoE2 Steam build 26476662 (unchanged since Spike A).

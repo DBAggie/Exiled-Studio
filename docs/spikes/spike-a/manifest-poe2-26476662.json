@@ -81,7 +81,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "c9b58aae11f8860f25ef26778ba81847aede504b",
+    "commit": "678f9022e212301f5891f3450d8123507d740cd6",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1193,6 +1193,22 @@
     "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json": {
       "rows": 2,
       "sha256": "2032842b4c6d79dd6d3eda130b1185e2d165f297c3ae5e214acb0d6e03dc2e34"
+    },
+    "object_templates/metadata/characters/character.ot.json": {
+      "rows": 11,
+      "sha256": "60e6b9c0b31b705bbd480a6de74c5c8f3a3f9eb10cedb148f8850cb71da27784"
+    },
+    "object_templates/metadata/characters/character_login.ot.json": {
+      "rows": 7,
+      "sha256": "9a0ede5035b7d4295547869734296cb6a157caadc5d35d40fea1d75a72d006a8"
+    },
+    "object_templates/metadata/characters/character_mobile.ot.json": {
+      "rows": 1,
+      "sha256": "017fa55ddc9a211807f2e39fc5a8ce88934bd7696b2cc08d0e16f78da3ec5501"
+    },
+    "object_templates/metadata/monsters/monster.ot.json": {
+      "rows": 13,
+      "sha256": "418e623934a97821100a27765d2c2fc5a90817ba7aa192a6198a66adb693b8a3"
     },
     "passive_skill_graphs/metadata/alternateskillgraphs/royalepassiveskillgraph.psg.json": {
       "rows": 6,
@@ -3943,7 +3959,7 @@
       "sha256": "36071ad34e857e80e07ddc3d94feb470509837f6962dec9d1cd88d1eb4254bc0"
     }
   },
-  "format": 4,
+  "format": 5,
   "game": "poe2",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -6722,6 +6738,53 @@
         "output": "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json",
         "source": "metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it",
         "source_sha256": "4f87d87c78f5050d06561489b46d66a3c019d4606555b535a0f2864241fb6c32",
+        "status": "ok"
+      }
+    }
+  },
+  "object_templates": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "object_templates",
+    "files": {
+      "metadata/characters/character.ot": {
+        "abstract": true,
+        "blocks": 11,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character.ot.json",
+        "source": "metadata/characters/character.ot",
+        "source_sha256": "e9ccfd3765422e556a59f56a6702636a6fdca79b0f929e511434352b42bc1af2",
+        "status": "ok"
+      },
+      "metadata/characters/character_login.ot": {
+        "abstract": false,
+        "blocks": 7,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character_login.ot.json",
+        "source": "metadata/characters/character_login.ot",
+        "source_sha256": "982e9918f10dccc1cd82edd119c89fd084f102cff36d3f0c595aa7d7bf9a2fef",
+        "status": "ok"
+      },
+      "metadata/characters/character_mobile.ot": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/character_mobile.ot.json",
+        "source": "metadata/characters/character_mobile.ot",
+        "source_sha256": "367221863ba0d90366f57bf3bff700d2d4133e5965ad3ba2bf7aa4901af47271",
+        "status": "ok"
+      },
+      "metadata/monsters/monster.ot": {
+        "abstract": true,
+        "blocks": 13,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/monsters/monster.ot.json",
+        "source": "metadata/monsters/monster.ot",
+        "source_sha256": "b3d038cfec761b236ecf68883607478aaa134bd97093bd6c6491612025ce5762",
         "status": "ok"
       }
     }
@@ -39591,7 +39654,7 @@
         "Ascendancy",
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 165,
       "row_size_mismatch": null,
       "rows": 37,
@@ -40327,7 +40390,7 @@
         "PassiveSkills",
         "SkillCraftingData"
       ],
-      "root": false,
+      "root": true,
       "row_len": 640,
       "row_size_mismatch": null,
       "rows": 12,
@@ -41739,7 +41802,7 @@
       "referenced_by": [
         "PassiveSkillMasteryGroups"
       ],
-      "root": false,
+      "root": true,
       "row_len": 54,
       "row_size_mismatch": null,
       "rows": 332,
@@ -41778,7 +41841,7 @@
       "referenced_by": [
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 73,
       "row_size_mismatch": null,
       "rows": 81,

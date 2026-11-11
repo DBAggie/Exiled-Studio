@@ -29,6 +29,7 @@
     "Folders/metadata/statdescriptions_2": "3ddb84d93c0e5953627038545696023d661ebde128c71756791110da49efc0ce",
     "Metadata/AlternateSkillGraphs": "fbebc63ba02efdd53782f5ff1849051d1ba72a9d694e1e5268461e4386005595",
     "Tiny_02": "ed2c825a31ef0e6d14530eb8a6f534b8a49c6dc97de083d9aa26f5402d2eb4d6",
+    "Tiny_11": "330de120da4bd7ad2caa3f3f60a9a1e828f01b81e1ff9297ed47756729cf37f3",
     "Tiny_9": "633bc1d83890e2bf898db2035d3bc1a0d803025c9d62a07c3571a6e940ce284b",
     "Tiny_E": "04b2962be2648227dd6641b7ac7f80121f945fb815bfb6ca663d908456f19774"
   },
@@ -37,7 +38,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "c9b58aae11f8860f25ef26778ba81847aede504b",
+    "commit": "678f9022e212301f5891f3450d8123507d740cd6",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1694,6 +1695,42 @@
       "rows": 1,
       "sha256": "14dee955c27c1d06926bc63c7657f219f0ce427281125f42ff1a98a7b9671b1b"
     },
+    "object_templates/metadata/characters/character.ot.json": {
+      "rows": 11,
+      "sha256": "f160fba6eba293bbe5b8560b3f9579b1a058d4a9e13605565f3e239e2586984a"
+    },
+    "object_templates/metadata/characters/dex/dex.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/dexint/dexint.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/int/int.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/str/str.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/strdex/strdex.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/strdexint/strdexint.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/characters/strint/strint.ot.json": {
+      "rows": 8,
+      "sha256": "8d1b3dccfc41a367ed0d1809d82587fa250f919f97d1c8439e81a5bdf5d4e563"
+    },
+    "object_templates/metadata/monsters/monster.ot.json": {
+      "rows": 12,
+      "sha256": "34e8984ab36249a2836038acc3130b0ac57e15e01920eb0288bbca2fd77ab6bd"
+    },
     "passive_skill_graphs/metadata/alternateskillgraphs/customascendancypassiveskillgraph.psg.json": {
       "rows": 2928,
       "sha256": "a7fffd61ce55c6a9e81846b3e006076e1cfeac6cfc3355a039dc181ef5d22827"
@@ -2267,7 +2304,7 @@
       "sha256": "7335f210cc518f5d65d822e85c4bce37d4916008591d9e6ca58adc09f72ee1ff"
     }
   },
-  "format": 4,
+  "format": 5,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -6410,6 +6447,103 @@
       }
     }
   },
+  "object_templates": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "object_templates",
+    "files": {
+      "metadata/characters/character.ot": {
+        "abstract": true,
+        "blocks": 11,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character.ot.json",
+        "source": "metadata/characters/character.ot",
+        "source_sha256": "a9fcdf168d84956e569c345b474aa2c2262efa61057046a87eb8036d36ef9f4b",
+        "status": "ok"
+      },
+      "metadata/characters/dex/dex.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/dex/dex.ot.json",
+        "source": "metadata/characters/dex/dex.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/dexint/dexint.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/dexint/dexint.ot.json",
+        "source": "metadata/characters/dexint/dexint.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/int/int.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/int/int.ot.json",
+        "source": "metadata/characters/int/int.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/str/str.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/str/str.ot.json",
+        "source": "metadata/characters/str/str.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/strdex/strdex.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/strdex/strdex.ot.json",
+        "source": "metadata/characters/strdex/strdex.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/strdexint/strdexint.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/strdexint/strdexint.ot.json",
+        "source": "metadata/characters/strdexint/strdexint.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/characters/strint/strint.ot": {
+        "abstract": false,
+        "blocks": 8,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/strint/strint.ot.json",
+        "source": "metadata/characters/strint/strint.ot",
+        "source_sha256": "087176117e602d9d7c5757d6cc4ce38851b070203cf032f145fee5fad090a054",
+        "status": "ok"
+      },
+      "metadata/monsters/monster.ot": {
+        "abstract": true,
+        "blocks": 12,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/monsters/monster.ot.json",
+        "source": "metadata/monsters/monster.ot",
+        "source_sha256": "27bc3ceddf8e4798b1a18e239b3fc5650b302d10c9b7fc67b754b70ef61c4dff",
+        "status": "ok"
+      }
+    }
+  },
   "passive_skill_graphs": {
     "dir": "passive_skill_graphs",
     "files": {
@@ -9334,7 +9468,7 @@
       "referenced_by": [
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 141,
       "row_size_mismatch": null,
       "rows": 21,
@@ -10024,7 +10158,7 @@
         "Ascendancy",
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 612,
       "row_size_mismatch": null,
       "rows": 7,
@@ -11825,7 +11959,7 @@
       "referenced_by": [
         "PassiveSkillMasteryGroups"
       ],
-      "root": false,
+      "root": true,
       "row_len": 70,
       "row_size_mismatch": null,
       "rows": 354,
@@ -11859,7 +11993,7 @@
       "referenced_by": [
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 81,
       "row_size_mismatch": null,
       "rows": 61,
