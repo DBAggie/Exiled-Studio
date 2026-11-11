@@ -1,0 +1,557 @@
+{
+  "format": 1,
+  "game": "poe1",
+  "rules": [
+    {
+      "id": "skills-pob-written",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "DarkMarionetteExplode",
+        "DarkMarionetteExplodePerfect",
+        "DelveMonsterEnfeebleOnHit",
+        "EnemyExplode",
+        "GuardianSentinelFireAura",
+        "HarvestNessaCrabScreechDebuff",
+        "HarvestRhexScreechDebuff",
+        "InfernalLegion",
+        "MinionInstability",
+        "MonsterChanceToTemporalChainsOnHit1",
+        "MonsterVulnerabilityOnHit1",
+        "ReplicaSiegebreakerBurningGround",
+        "SiegebreakerCausticGround"
+      ],
+      "evidence": "PoB writes these skills by hand in its export spec files (a whole skills[...] block, not a #skill line read from GrantedEffects), for monsters, minions, and spectres; the game has no granted effect with these IDs.",
+      "sources": [
+        "v2.67.2:src/Export/Skills/spectre.txt:1389",
+        "v2.67.2:src/Export/Skills/spectre.txt:1417",
+        "v2.67.2:src/Export/Skills/spectre.txt:1176",
+        "v2.67.2:src/Export/Skills/other.txt:1585",
+        "v2.67.2:src/Export/Skills/minion.txt:386",
+        "v2.67.2:src/Export/Skills/spectre.txt:768",
+        "v2.67.2:src/Export/Skills/spectre.txt:813",
+        "v2.67.2:src/Export/Skills/minion.txt:364",
+        "v2.67.2:src/Export/Skills/minion.txt:293",
+        "v2.67.2:src/Export/Skills/spectre.txt:1124",
+        "v2.67.2:src/Export/Skills/spectre.txt:1220",
+        "v2.67.2:src/Export/Skills/minion.txt:342",
+        "v2.67.2:src/Export/Skills/minion.txt:320"
+      ]
+    },
+    {
+      "id": "skills-pob-added-types",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "types"
+      ],
+      "keys": [
+        "AvengingFlame",
+        "BreachBlizzardSpectre",
+        "GSAncestralDruidFlaskExplode",
+        "AzmeriOversoulExplosionIgnite",
+        "AzmeriDualStrikeDemonFireEnrage",
+        "EmptyActionSpellWarlordGrandmaster"
+      ],
+      "evidence": "PoB adds skill types the game row does not have: #addSkillTypes lines (read by skills.lua:73-76, written at :221-224) and one hand-written skillTypes list.",
+      "sources": [
+        "v2.67.2:src/Export/Skills/sup_str.txt:354",
+        "v2.67.2:src/Export/Skills/spectre.txt:1104",
+        "v2.67.2:src/Export/Skills/spectre.txt:1666",
+        "v2.67.2:src/Export/Skills/spectre.txt:1692",
+        "v2.67.2:src/Export/Skills/spectre.txt:2066",
+        "v2.67.2:src/Export/Skills/spectre.txt:1076",
+        "v2.67.2:src/Export/Scripts/skills.lua:221"
+      ]
+    },
+    {
+      "id": "skills-pob-written-levels",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "constant_stats",
+        "level.*"
+      ],
+      "keys": [
+        "DTTHellscapeStabWeb",
+        "EmptyActionSpellWarlordGrandmaster",
+        "GAHarvestCrabDashSlam",
+        "GAHarvestRhexDashSlash",
+        "GSHarvestRhexScreech",
+        "LegionKaruiMeleeCombo2"
+      ],
+      "evidence": "PoB replaces the game's stats and levels of these monster skills with hand-written stats and levels lists (#mods noStats noLevels), or writes the whole skill by hand.",
+      "sources": [
+        "v2.67.2:src/Export/Skills/spectre.txt:1030",
+        "v2.67.2:src/Export/Skills/spectre.txt:1037",
+        "v2.67.2:src/Export/Skills/spectre.txt:1091",
+        "v2.67.2:src/Export/Skills/spectre.txt:1097",
+        "v2.67.2:src/Export/Skills/spectre.txt:750",
+        "v2.67.2:src/Export/Skills/spectre.txt:797",
+        "v2.67.2:src/Export/Skills/spectre.txt:808",
+        "v2.67.2:src/Export/Skills/spectre.txt:2206"
+      ]
+    },
+    {
+      "id": "skills-conflagration-level-1",
+      "category": "patch-delta",
+      "table": "skills",
+      "fields": [
+        "level.*"
+      ],
+      "keys": [
+        "Conflagration"
+      ],
+      "evidence": "3.29.3 (2026-08-12, after PoB v2.67.2 of 2026-08-07): 'Fixed a bug introduced in 3.29 which caused level one Conflagration to deal no damage and fire many more projectiles than intended.' PoB's level 1 row is the bugged one (8 projectiles, no damage stat); its stat order, taken from level 1, then puts every later level's values under the wrong stat names. PoB's later re-export (dev, 2026-10-29) has the bundle's level 1 and order.",
+      "sources": [
+        "https://www.pathofexile.com/forum/view-thread/3996516",
+        "v2.67.2:src/Data/Skills/act_dex.lua (Conflagration levels[1])",
+        "pob@3dbca4463c0a59079d9f7f032d8240cf868e09da:src/Data/Skills/act_dex.lua:4305"
+      ]
+    },
+    {
+      "id": "skills-exporter-stat-order",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "level.*.stat.*"
+      ],
+      "keys": [
+        "AnimateGuardiansWeapon",
+        "TriggerSummonedAncestorAhuana",
+        "TriggerSummonedAncestorAkoya",
+        "TriggerSummonedAncestorIkiaho",
+        "TriggerSummonedAncestorKahuturoa",
+        "TriggerSummonedAncestorKaom",
+        "TriggerSummonedAncestorKiloava",
+        "TriggerSummonedAncestorMaata",
+        "TriggerSummonedAncestorRakiata",
+        "TriggerSummonedAncestorTawhanuku",
+        "TriggerSummonedAncestorUtula"
+      ],
+      "evidence": "A level whose row adds a stat the first level does not have: PoB's exporter appends the new stat ID to the end of the skill's stats list but writes the row's values in row order, so values land under the wrong names (the bundle keeps each value with its stat). The same shift is in PoB's later re-export.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/skills.lua:327-356",
+        "v2.67.2:src/Export/Scripts/skills.lua:382-406",
+        "pob@3dbca4463c0a59079d9f7f032d8240cf868e09da:src/Data/Skills/other.lua:5786",
+        "pob@3dbca4463c0a59079d9f7f032d8240cf868e09da:src/Data/Skills/other.lua:65"
+      ]
+    },
+    {
+      "id": "skills-windburst-level-31",
+      "category": "pob-derivation",
+      "table": "skills",
+      "fields": [
+        "level.31"
+      ],
+      "keys": [
+        "SupportWindburst"
+      ],
+      "evidence": "The game's stat set has no level 31 row (levels 30, 32, ...); PoB pairs GrantedEffectsPerLevel and GrantedEffectStatSetsPerLevel rows by index, not by level, so it makes a level 31 from the next stat row.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/skills.lua:262-266",
+        "game:GrantedEffectStatSetsPerLevel.GemLevel"
+      ]
+    },
+    {
+      "id": "gems-vaal-transfigured-tags",
+      "category": "patch-delta",
+      "table": "gems",
+      "fields": [
+        "tags"
+      ],
+      "keys": [
+        "VaalColdSnapAltX",
+        "VaalStormCallAltX",
+        "VaalBladeFlurryAltX",
+        "VaalPowerSiphonAltX",
+        "VaalAnimateWeaponAltX",
+        "VaalFlickerStrikeAltX",
+        "VaalLightningStrikeAltX",
+        "VaalSummonSkeletonsAltY"
+      ],
+      "evidence": "Tags of eight Vaal transfigured gem effects. PoB copies GemEffects.Tags without edits (skills.lua:573), so the difference is a game data change between PoB's export (3.29.2 or earlier) and the bundle's build (3.29.3 or later; see skills-conflagration-level-1). Not named in the 3.29.3 notes: an unlisted data change. PoB's later re-export no longer lists these gem effects. Tags do not enter a calculation of the slice.",
+      "sources": [
+        "https://www.pathofexile.com/forum/view-thread/3996516",
+        "v2.67.2:src/Export/Scripts/skills.lua:573",
+        "game:GemEffects.Tags"
+      ]
+    },
+    {
+      "id": "bases-pob-names",
+      "category": "representation",
+      "table": "bases",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "Energy Blade One Handed",
+        "Energy Blade Two Handed",
+        "Two-Toned Boots (Armour/Evasion)",
+        "Two-Toned Boots (Armour/Energy Shield)",
+        "Two-Toned Boots (Evasion/Energy Shield)"
+      ],
+      "evidence": "PoB renames these bases: Energy Blade by hand type, and the three Two-Toned Boots (one game name for three bases) by defence type in its base spec. The bundle has them under the game's names; their values are not compared through PoB's names.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/bases.lua:118",
+        "v2.67.2:src/Export/Bases/boots.txt:23",
+        "v2.67.2:src/Export/Bases/boots.txt:29",
+        "v2.67.2:src/Export/Bases/boots.txt:36"
+      ]
+    },
+    {
+      "id": "character-base-speed",
+      "category": "not-carried",
+      "table": "character_constants",
+      "fields": [
+        "value"
+      ],
+      "keys": [
+        "base_speed"
+      ],
+      "evidence": "PoB reads base_speed from the Pathfinding block of Character.ot; the bundle keeps the Stats block only (P3-1b). Movement speed is not a slice field.",
+      "sources": [
+        "game:Metadata/Characters/Character.ot (Pathfinding block)",
+        "v2.67.2:src/Export/Scripts/miscdata.lua:61"
+      ]
+    },
+    {
+      "id": "monster-armour-derived",
+      "category": "pob-derivation",
+      "table": "monster_levels",
+      "fields": [
+        "armour"
+      ],
+      "keys": [
+        "*"
+      ],
+      "evidence": "PoB does not read DefaultMonsterStats.Armour ('The table here is wrong so we generate it instead') and computes floor((10 + 2 level) * (1 + MonsterDamageReductionImprovement / 100) ^ level). P3-11 decides which the calc uses, with evidence.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/miscdata.lua:26",
+        "v2.67.2:src/Export/Scripts/miscdata.lua:31",
+        "game:DefaultMonsterStats.Armour"
+      ]
+    },
+    {
+      "id": "passive-harness-the-void",
+      "category": "pob-derivation",
+      "table": "passives",
+      "fields": [
+        "ascendancy"
+      ],
+      "keys": [
+        "57331"
+      ],
+      "evidence": "AscendancyTrickster14 (Harness the Void): the game row's AscendancyKey is Trickster; PoB's tree file (3_27 to 3_29) names Saboteur.",
+      "sources": [
+        "v2.67.2:src/TreeData/3_29/tree.lua:90091",
+        "game:PassiveSkills.AscendancyKey"
+      ]
+    },
+    {
+      "id": "passives-bloodline",
+      "category": "not-carried",
+      "table": "passives",
+      "fields": [
+        "ascendancy"
+      ],
+      "keys": [
+        "542",
+        "699",
+        "2643",
+        "3872",
+        "4245",
+        "5220",
+        "5452",
+        "6344",
+        "7403",
+        "7442",
+        "7600",
+        "8066",
+        "8133",
+        "8138",
+        "8243",
+        "8638",
+        "8982",
+        "9086",
+        "9414",
+        "9437",
+        "9920",
+        "9939",
+        "10538",
+        "10539",
+        "10622",
+        "10696",
+        "10861",
+        "10916",
+        "12354",
+        "12542",
+        "12860",
+        "13362",
+        "13988",
+        "14190",
+        "14588",
+        "15739",
+        "16287",
+        "16350",
+        "17080",
+        "17297",
+        "17309",
+        "17570",
+        "18060",
+        "18519",
+        "19078",
+        "19208",
+        "19689",
+        "20772",
+        "20931",
+        "21785",
+        "22174",
+        "23155",
+        "24462",
+        "24764",
+        "24924",
+        "25187",
+        "25703",
+        "26596",
+        "27121",
+        "27737",
+        "27869",
+        "28601",
+        "28609",
+        "29212",
+        "29259",
+        "29914",
+        "30061",
+        "30271",
+        "30632",
+        "31878",
+        "31958",
+        "32216",
+        "32265",
+        "32605",
+        "32740",
+        "33670",
+        "33897",
+        "34229",
+        "34442",
+        "34637",
+        "34814",
+        "34952",
+        "34977",
+        "35011",
+        "35069",
+        "35214",
+        "35380",
+        "36020",
+        "36393",
+        "37670",
+        "37815",
+        "38740",
+        "38886",
+        "39142",
+        "39381",
+        "39486",
+        "40953",
+        "41197",
+        "41387",
+        "41389",
+        "41464",
+        "42328",
+        "43376",
+        "43660",
+        "43670",
+        "43902",
+        "44848",
+        "44903",
+        "45727",
+        "46649",
+        "46704",
+        "47543",
+        "47767",
+        "48251",
+        "48406",
+        "48606",
+        "48711",
+        "48816",
+        "48836",
+        "49785",
+        "51685",
+        "52349",
+        "52408",
+        "52417",
+        "52553",
+        "52780",
+        "52855",
+        "53398",
+        "53414",
+        "54139",
+        "57290",
+        "57472",
+        "57850",
+        "58281",
+        "58438",
+        "58999",
+        "59826",
+        "60118",
+        "60511",
+        "60686",
+        "61092",
+        "63020",
+        "63362",
+        "63623",
+        "63630",
+        "63834",
+        "64963"
+      ],
+      "evidence": "Bloodline and alternate ascendancy nodes link to their bloodline through PassiveSkills.DescendancyKey; the bundle links passives to the Ascendancy table only (P3-1b), so their ascendancy is null. PoB's tree file names the bloodline (isBloodline).",
+      "sources": [
+        "game:PassiveSkills.DescendancyKey"
+      ]
+    },
+    {
+      "id": "passives-cluster-mastery-icons",
+      "category": "representation",
+      "table": "passives",
+      "fields": [
+        "mastery"
+      ],
+      "keys": [
+        "2054",
+        "2510",
+        "7883",
+        "10118",
+        "10576",
+        "12117",
+        "14933",
+        "15015",
+        "16351",
+        "16808",
+        "20314",
+        "21841",
+        "25429",
+        "27397",
+        "32642",
+        "33431",
+        "37971",
+        "37977",
+        "38334",
+        "40036",
+        "40966",
+        "42783",
+        "43130",
+        "43904",
+        "44078",
+        "44100",
+        "44810",
+        "45259",
+        "45462",
+        "45474",
+        "48978",
+        "49424",
+        "52606",
+        "54888",
+        "54935",
+        "57049",
+        "58618",
+        "63454"
+      ],
+      "evidence": "Cluster jewel mastery icons (affliction_mastery_*): IsJustIcon in the game row and no mastery group; the tree file marks them isMastery. They have no stats.",
+      "sources": [
+        "game:PassiveSkills.IsJustIcon",
+        "game:PassiveSkills.MasteryGroup"
+      ]
+    },
+    {
+      "id": "passives-eldritch-notable",
+      "category": "representation",
+      "table": "passives",
+      "fields": [
+        "notable"
+      ],
+      "keys": [
+        "18054",
+        "27602",
+        "42469",
+        "52435",
+        "57568"
+      ],
+      "evidence": "The Eldritch ascendancy nodes (AscendancySpecialEldritch*) have IsNotable false in the game row; the tree file marks them notable for display. Their stats are compared separately.",
+      "sources": [
+        "game:PassiveSkills.IsNotable"
+      ]
+    },
+    {
+      "id": "passives-buff-text",
+      "category": "not-carried",
+      "table": "passives",
+      "fields": [
+        "stats"
+      ],
+      "keys": [
+        "6778",
+        "13374",
+        "17315",
+        "19641",
+        "23225",
+        "24848",
+        "25309",
+        "27096",
+        "34567",
+        "40059",
+        "43962",
+        "47630",
+        "51462",
+        "61355",
+        "62634"
+      ],
+      "evidence": "These nodes grant a buff (PassiveSkillBuffs) or a skill (GrantedEffectsPerLevel) whose text is in the tree file; the bundle carries a passive's own stats only. A calculation that allocates one must report the fields it can reach Partial (P3-3, P3-8).",
+      "sources": [
+        "game:PassiveSkills.PassiveSkillBuffs",
+        "game:PassiveSkills.GrantedEffectsPerLevel"
+      ]
+    },
+    {
+      "id": "passives-tree-text-wording",
+      "category": "representation",
+      "table": "passives",
+      "fields": [
+        "stats"
+      ],
+      "keys": [
+        "8081",
+        "14190",
+        "17988",
+        "18054",
+        "27038",
+        "27602",
+        "52544",
+        "53123"
+      ],
+      "evidence": "Same stats and values; the tree file's line differs from the client's stat description only in wording or number format (for example 'All Damage can Shock' and 'All Damage with Hits can Shock', '1.5%' and '1.50%', 'Trigger level 1' for a stat of value 1). The tree file is GGG's tree export, not the client's descriptions.",
+      "sources": [
+        "game:passive_skill_stat_descriptions.txt",
+        "v2.67.2:src/TreeData/3_29/tree.lua"
+      ]
+    },
+    {
+      "id": "mastery-tree-text-wording",
+      "category": "representation",
+      "table": "mastery_effects",
+      "fields": [
+        "stats"
+      ],
+      "keys": [
+        "57179"
+      ],
+      "evidence": "Same stat and value; '20% increased effect of Offerings' in the tree file, 'Your Offerings have 20% increased Effect' in the client's description.",
+      "sources": [
+        "game:passive_skill_stat_descriptions.txt",
+        "v2.67.2:src/TreeData/3_29/tree.lua"
+      ]
+    }
+  ]
+}
