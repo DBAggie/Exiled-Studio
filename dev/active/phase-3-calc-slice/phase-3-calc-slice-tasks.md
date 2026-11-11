@@ -14,7 +14,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] v2 manifest (v1 still loads for import)
 - [x] Skills, skill types, granted effects, per-level and per-quality stat sets, gems, gem tags: types, loader, validator codes with mutation cases, synthetic rows, extractor table, converter (plus cost types and gem effects)
 - [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-skills.md`)
-- [x] Open PR: #PR_NUMBER (base `plan/phase-3-calc-slice`)
+- [x] Open PR: #60 (base `plan/phase-3-calc-slice`)
 
 ## P3-1b: character and passive tables
 - [ ] Characters, ascendancies, passives, passive graph with tree version, mastery effects (same checklist as 1a)
