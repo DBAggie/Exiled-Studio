@@ -10,7 +10,7 @@ publish.workspace = true
 
 [dependencies]
 loom-serialization = { workspace = true, features = ["schema"] }
-schemars = "1.2"
+schemars.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]

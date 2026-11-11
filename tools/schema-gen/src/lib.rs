@@ -7,19 +7,24 @@
 use loom_serialization::dto::v1;
 
 /// Every generated schema: its file name under `schemas/` and its text.
-#[must_use]
-pub fn schemas() -> Vec<(&'static str, String)> {
-    vec![("build.v1.schema.json", build_v1())]
+///
+/// # Errors
+/// As [`build_v1`].
+pub fn schemas() -> Result<Vec<(&'static str, String)>, serde_json::Error> {
+    Ok(vec![("build.v1.schema.json", build_v1()?)])
 }
 
 /// The schema of build document v1, as pretty JSON with a final newline.
-#[must_use]
-pub fn build_v1() -> String {
+///
+/// # Errors
+/// When the schema does not serialize (it always does).
+pub fn build_v1() -> Result<String, serde_json::Error> {
     let mut schema = schemars::schema_for!(v1::Document);
     schema.insert("title".to_owned(), "Build document v1".into());
-    // `serde_json::Map` is sorted unless `preserve_order` is on; either
-    // way the order is fixed by the code, so the text is deterministic.
-    let mut out = serde_json::to_string_pretty(&schema).unwrap_or_default();
+    // Key order depends on `serde_json`'s `preserve_order` feature (sorted
+    // without it), which feature unification could switch; this crate's
+    // own build is what writes and checks the file, so it is stable.
+    let mut out = serde_json::to_string_pretty(&schema)?;
     out.push('\n');
-    out
+    Ok(out)
 }

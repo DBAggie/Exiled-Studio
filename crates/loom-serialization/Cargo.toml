@@ -16,7 +16,7 @@ schema = ["dep:schemars"]
 [dependencies]
 loom-domain.workspace = true
 roxmltree = "0.21"
-schemars = { version = "1.2", optional = true }
+schemars = { workspace = true, optional = true }
 serde.workspace = true
 # float_roundtrip: finite numbers read back to the same bits (dto::v1).
 serde_json = { workspace = true, features = ["float_roundtrip"] }

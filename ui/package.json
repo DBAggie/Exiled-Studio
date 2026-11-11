@@ -10,7 +10,7 @@
     "lint": "oxlint --deny-warnings",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate:schema": "json2ts --input ../schemas/build.v1.schema.json --output src/generated/build.v1.ts --bannerComment \"// Generated from schemas/build.v1.schema.json by `pnpm generate:schema`; do not edit.\" && prettier --write src/generated",
+    "generate:schema": "json2ts --input ../schemas/build.v1.schema.json --output src/generated/build.v1.ts --bannerComment \"// Generated from schemas/build.v1.schema.json by pnpm generate:schema; do not edit.\" && prettier --write src/generated",
     "preview": "vite preview"
   },
   "dependencies": {

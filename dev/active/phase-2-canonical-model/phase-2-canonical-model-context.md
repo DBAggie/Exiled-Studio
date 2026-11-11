@@ -418,3 +418,18 @@ All applied as docs and tests; no behavior change. Nit 1: `text_spacing` stays o
 - **CI:** `dto-compare` (`dto cross-platform`) and `schema` (`schema freshness`: regenerates both and fails on any `git status` change) are in `ci-ok`. The Rust side is also checked by the `committed_schemas_should_be_fresh` test.
 - **Gate 3b:** `crates/loom-parser/tests/resolve_build.rs` `resolved_builds_should_round_trip_through_json`: the resolved synthetic PoE1 and PoE2 builds round-trip with the same bytes twice. `loom-parser` has `loom-serialization` as a dev-dependency for it (AGENTS.md notes that test-only edges may cross).
 - **For P2-8/P2-9:** `build-round-trip` can call `to_json`/`from_json` directly; migrations run on `serde_json::Value` before `Document` is parsed, keyed on `format` and `version`.
+
+## code-architecture-reviewer (P2-7, 2026-11-10) summary
+The first run stopped on an API rate limit; it was resumed on the committed branch.
+- **Blocker, applied:** the `generate:schema` banner had backticks inside double quotes. pnpm runs scripts with `sh -c` on Linux, so the script would have called itself recursively in the CI `schema` job (Windows `cmd` keeps them literal, so it worked locally). The backticks are gone, and the script text was run with `sh -c` in-session.
+- **Should-fix, applied:**
+  - `from_json` used to parse the whole strict `Document` before checking the header, so a v2 document with new fields gave `DTO_JSON`. It now parses to a `serde_json::Value`, reads `format` and `version` first (`DTO_FORMAT`, `DTO_VERSION`, version as `u64`), then the rest. The new `from_value(Value)` is the entry point P2-9's migrations will call. Test added.
+  - Deeply nested untyped content: `to_json` refuses text deeper than `MAX_DEPTH` (100; `serde_json` reads 127), with `DTO_TOO_DEEP`, so a saved document always reads back. Tests: 30 nested elements round-trip, 200 are refused, brackets in strings are not counted.
+- **Should-fix, not changed:** cross-platform coverage of every variant. The golden files (`testdata/*.json`, built from a build with every DTO type and variant) are compared byte for byte by `cargo test` on Windows, Linux, and macOS, so `dto-hashes` covers only the fixtures.
+- **Nits:**
+  - **Applied:** `schemars` moved to `[workspace.dependencies]`; `loom-schema-gen` returns a `Result` instead of `unwrap_or_default`; `to_json` documents that only its own output is canonical (`1` is written back as `1.0`).
+  - **Not done:**
+    - the error text repeats the code, as `pob_xml::ImportError` does;
+    - `u64` and `i64` become TypeScript `number` (exact up to 2^53; the values are line indices, Steam builds, and stat values);
+    - an untagged `Number` gives a generic `DTO_JSON` message for a malformed config number;
+    - `usize as u64` is commented.

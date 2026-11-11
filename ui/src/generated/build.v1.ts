@@ -1,4 +1,4 @@
-// Generated from schemas/build.v1.schema.json by `pnpm generate:schema`; do not edit.
+// Generated from schemas/build.v1.schema.json by pnpm generate:schema; do not edit.
 
 /**
  * A node of untyped content.

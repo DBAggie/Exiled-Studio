@@ -20,7 +20,14 @@ fn main() -> ExitCode {
         }
     }
     let mut stale = 0;
-    for (name, text) in loom_schema_gen::schemas() {
+    let schemas = match loom_schema_gen::schemas() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("loom-schema-gen: {e}");
+            return ExitCode::FAILURE;
+        }
+    };
+    for (name, text) in schemas {
         let path = dir.join(name);
         if check {
             if std::fs::read_to_string(&path).ok().as_deref() != Some(text.as_str()) {

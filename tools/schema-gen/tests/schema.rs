@@ -20,7 +20,7 @@ fn root() -> PathBuf {
 
 #[test]
 fn committed_schemas_should_be_fresh() {
-    for (name, text) in loom_schema_gen::schemas() {
+    for (name, text) in loom_schema_gen::schemas().unwrap() {
         let committed = fs::read_to_string(root().join("schemas").join(name)).unwrap();
         assert!(
             committed == text,
@@ -36,7 +36,7 @@ struct Validator {
 
 impl Validator {
     fn new() -> Self {
-        let schema: Value = serde_json::from_str(&loom_schema_gen::build_v1()).unwrap();
+        let schema: Value = serde_json::from_str(&loom_schema_gen::build_v1().unwrap()).unwrap();
         let mut compiler = boon::Compiler::new();
         compiler
             .add_resource("build.v1.schema.json", schema)

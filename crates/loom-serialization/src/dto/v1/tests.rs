@@ -650,3 +650,51 @@ fn an_index_past_usize_should_give_dto_out_of_range() {
     let json = poe1_json().replacen("\"line\": 12", "\"line\": 4294967296", 1);
     assert_eq!(code(&json), "DTO_OUT_OF_RANGE");
 }
+
+#[test]
+fn a_newer_document_with_new_fields_should_give_dto_version() {
+    // The header is read first: a v2 document's new fields do not hide
+    // its version behind `DTO_JSON`.
+    let json = poe1_json()
+        .replacen("\"version\": 1,", "\"version\": 2, \"new_field\": [],", 1)
+        .replacen("\"game\": \"poe1\",", "\"game\": \"poe1\", \"x\": 1,", 1);
+    assert_eq!(code(&json), "DTO_VERSION");
+    let other = r#"{"format": "other", "version": 9, "anything": {}}"#;
+    assert_eq!(code(other), "DTO_FORMAT");
+}
+
+#[test]
+fn from_value_should_read_a_parsed_document() {
+    let b = poe1_build();
+    let value: serde_json::Value = serde_json::from_str(&to_json(&b).unwrap()).unwrap();
+    assert_eq!(super::from_value(value).unwrap(), b);
+}
+
+fn nested(levels: usize) -> Build {
+    let mut node = OpaqueNode::Text("deep".to_owned());
+    for _ in 0..levels {
+        node = element("Deep", Vec::new(), vec![node]);
+    }
+    let mut b = Build::new(Game::Poe2);
+    b.epilog = vec![node];
+    b
+}
+
+#[test]
+fn deep_untyped_content_should_round_trip_up_to_the_limit() {
+    // 30 levels nest about 93 deep in JSON, under MAX_DEPTH.
+    round_trip(&nested(30));
+}
+
+#[test]
+fn deeper_untyped_content_should_give_dto_too_deep() {
+    // Past serde_json's 127-level read limit: refused on write, so a
+    // saved document always reads back.
+    let err = to_json(&nested(200)).unwrap_err();
+    assert_eq!(err.code(), "DTO_TOO_DEEP");
+}
+
+#[test]
+fn nesting_should_skip_brackets_in_strings() {
+    assert_eq!(super::nesting(r#"{"a": "[[[{\"}", "b": [[]]}"#), 3);
+}
