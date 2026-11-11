@@ -66,7 +66,7 @@ fn bases() -> Bases {
         ("Twin Base", 34),
     ]);
     // The fixture's `ClientStrings` has `Lasts {0} Seconds` (B5d).
-    b.properties = Properties::load(&read).unwrap();
+    b.properties = properties::load(&read).unwrap();
     b
 }
 
@@ -684,7 +684,7 @@ fn granted_skill_should_change_only_unresolved_no_template_lines() {
     granted_skill(&mut resolved, &grafts, "Aegis Tulgraft");
     assert_eq!(resolved.kind, None);
     // With the graft: resolved, typed, wrapper named.
-    let grafts = Grafts::with_one("Aegis Tulgraft", "TulGraft4", "Preserving Stillness");
+    let grafts = grafts::with_one("Aegis Tulgraft", "TulGraft4", "Preserving Stillness");
     granted_skill(&mut record, &grafts, "Aegis Tulgraft");
     assert_eq!(
         (

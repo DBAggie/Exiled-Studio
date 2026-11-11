@@ -23,6 +23,23 @@ pub struct ItemRules {
     pub domain_scopes: Vec<(i64, String)>,
     /// The mod-row filter's rules.
     pub mods: ModRules,
+    /// The client texts the pipeline reads lines through.
+    pub text: TextRules,
+}
+
+/// The client texts (by ID) the pipeline reads item lines through; their
+/// texts come from the game data.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct TextRules {
+    /// Wrappers the client composes a modifier line with: `(text ID, the
+    /// stat the wrapper stands for)`, in the order they are tried.
+    pub compositions: Vec<(String, String)>,
+    /// Property texts with numeric placeholders.
+    pub property_ids: Vec<String>,
+    /// Property labels written as `<label>: <number>`.
+    pub label_ids: Vec<String>,
+    /// The wrapper of a granted skill's line (`{1}` level, `{0}` name).
+    pub granted_skill_wrapper: Option<String>,
 }
 
 impl ItemRules {

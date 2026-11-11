@@ -52,6 +52,7 @@ fn data(rows: &[(&str, i64)]) -> Data {
                 local_carriers: crate::import::mods::LocalCarriers::default(),
                 influences: Vec::new(),
             },
+            text: TextRules::default(),
         },
         bases,
     }

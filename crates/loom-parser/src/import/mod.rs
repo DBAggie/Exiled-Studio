@@ -12,8 +12,17 @@
 //! - [`base`]: an item's base rows and stat-description scope (P2-2b).
 //! - [`mods`]: the mod-row filter for ambiguous lines and the
 //!   `mod-backed` measure (P2-2c).
+//! - [`grafts`], [`properties`]: typed resolutions read from game data
+//!   (`granted-skill`, `item-property`, `catalyst-quality`; P2-2d).
+//! - [`tolerance`]: the `case-folded` and `split-section` import
+//!   tolerances (P2-2d).
 
 pub mod base;
+pub mod grafts;
 pub mod mods;
+pub mod properties;
+pub mod tolerance;
 
-pub use base::{BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, find_base};
+pub use base::{
+    BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, TextRules, find_base,
+};

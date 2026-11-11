@@ -75,7 +75,9 @@ use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::mod_filter::{self, Context, LineContext, Mods};
 use crate::poe1;
-use crate::properties::Properties;
+use crate::properties;
+use loom_parser::import::properties::Properties;
+use loom_parser::import::tolerance;
 
 /// `BaseItemTypes` rows by name, with the PoE1 item rules: the harness's
 /// [`ItemData`].
@@ -146,8 +148,8 @@ impl Bases {
                 implicits: index_list(row, implicits),
             });
         }
-        bases.grafts = Grafts::load(read)?;
-        bases.properties = Properties::load(read)?;
+        bases.grafts = grafts::load(read)?;
+        bases.properties = properties::load(read)?;
         Ok(bases)
     }
 
@@ -769,18 +771,12 @@ impl<'i> Lines<'i, '_> {
                         .composition
                         .and_then(|n| self.compositions.get(n))
                         .map(|c| c.id.clone());
-                    // A line game text holds in another letter case (B5e).
+                    // A line game text holds in another letter case (B5e;
+                    // `loom_parser::import::tolerance`).
                     let mut adapted = None;
-                    if via.is_none()
-                        && resolution.lines == 1
-                        && matches!(
-                            resolution.outcome,
-                            Outcome::Unresolved(Unresolved::NoTemplate)
-                        )
-                        && let Some(folded) = texts
-                            .get(at)
-                            .and_then(|t| index.resolve_case_folded(t))
-                            .filter(|r| !matches!(r.outcome, Outcome::Unresolved(_)))
+                    if let Some(folded) = texts
+                        .get(at)
+                        .and_then(|t| tolerance::case_folded(index, t, &resolution, via.is_some()))
                     {
                         resolution = folded;
                         adapted = Some("case-folded");
@@ -1019,48 +1015,21 @@ fn resolvable(m: &Modifier) -> bool {
 /// split-section`; not in `mod-backed`, the sections differ); before, it was
 /// `parser-gap/split-section`.
 fn mark_split_lines(item: &Item, index: &Index<'_>, records: &mut [(LineRecord, bool)]) {
-    let modifier = |n: usize| match item.lines.get(n).map(|l| &l.kind) {
-        Some(LineKind::Modifier(m)) if resolvable(m) => Some(m),
-        _ => None,
-    };
     for (record, _) in records.iter_mut() {
         if record.outcome != "unresolved/no-template" {
             continue;
         }
-        let n = record.line;
-        let Some(this) = modifier(n) else {
-            continue;
-        };
-        // The line before is tried first; when both neighbours would
-        // complete a pair, the earlier one wins (no corpus line has two).
-        let neighbours = [n.checked_sub(1), n.checked_add(1)];
-        for other in neighbours.into_iter().flatten() {
-            let Some(m) = modifier(other).filter(|m| m.section != this.section) else {
-                continue;
-            };
-            let pair = if other < n {
-                [m.text.as_str(), this.text.as_str()]
-            } else {
-                [this.text.as_str(), m.text.as_str()]
-            };
-            let joined = index
-                .resolve_lines(&pair)
-                .into_iter()
-                .next()
-                .filter(|r| r.lines == 2 && matches!(r.outcome, Outcome::Resolved(_)));
-            if let Some(r) = joined {
-                // The pair is one description: both lines take its reading
-                // (B5e), as the lines of any multi-line template do.
-                // `backed` stays `None`: the halves sit in two sections,
-                // so no one section's `Mods` fit applies; the line is left
-                // out of `mod-backed` on purpose.
-                record.split_with = Some(other);
-                record.outcome = "resolved".to_owned();
-                record.detail = detail(&r.outcome);
-                record.adapted = Some("split-section");
-                record.evidence = Some(format!("resolves with item line {other}"));
-                break;
-            }
+        if let Some((other, r)) = tolerance::split_section(index, item, record.line) {
+            // The pair is one description: both lines take its reading
+            // (B5e), as the lines of any multi-line template do. `backed`
+            // stays `None`: the halves sit in two sections, so no one
+            // section's `Mods` fit applies; the line is left out of
+            // `mod-backed` on purpose.
+            record.split_with = Some(other);
+            record.outcome = "resolved".to_owned();
+            record.detail = detail(&r.outcome);
+            record.adapted = Some("split-section");
+            record.evidence = Some(format!("resolves with item line {other}"));
         }
     }
 }
@@ -1148,9 +1117,9 @@ pub fn run(
             .collect(),
         compositions_missing: game.compositions_missing.clone(),
         graft_bases: bases.grafts.len(),
-        graft_inputs: bases.grafts.inputs(),
+        graft_inputs: grafts::inputs(&bases.grafts),
         property_inputs: bases.properties.inputs(),
-        property_missing: bases.properties.missing().to_vec(),
+        property_missing: properties::missing(&bases.properties),
         resolved_kinds: BTreeMap::new(),
         adapted: BTreeMap::new(),
         composition_rows: game
@@ -1256,7 +1225,7 @@ fn item_property(record: &mut LineRecord, properties: &Properties) {
     if record.outcome != "unresolved/no-template" {
         return;
     }
-    if let Some(p) = properties.resolve(&record.text) {
+    if let Some(p) = properties::resolve(properties, &record.text) {
         record.outcome = "resolved".to_owned();
         record.kind = Some(p.kind);
         record.detail = p.detail;
