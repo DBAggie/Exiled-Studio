@@ -17,3 +17,8 @@ The script compares `non_unique`, `unique`, `rate`, `resolved_kinds`, `adapted`,
 - All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical: SHA-256 `eda17243a5af1a7f…` before and after.
 - The after run also equals the committed Spike B summary `docs/spikes/spike-b/resolve-corpus-poe1-26530219.json` on all 12 fields.
 - How to run it: with uncommitted doc edits, the tree reads dirty, `gate.inputs_recorded` turns false and the run exits 1. Stash the docs for the run (`git stash push -u`), or run it before writing them.
+
+## P2-2b: scope and bases (`ItemData`, `ItemRules`, `find_base`), 2026-11-10
+- Before: the P2-2a baseline above (`c7bbffa`; P2-2a left the result unchanged).
+- After: `814a896`, and again at `591aa43` (review fixes), each clean with exit 0.
+- All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical.

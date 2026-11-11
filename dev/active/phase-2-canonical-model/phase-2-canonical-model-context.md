@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2a: item input; PR stack P2-1 #42 <- P2-2a)
+Last Updated: 2026-11-10 (PR P2-2b: scope and bases; stack #42 <- #43 <- P2-2b)
 
 # Phase 2: context
 
@@ -126,3 +126,29 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - `influence_type` still parses the source line, so switch it to the `InfluenceId` in 2c;
   - a `From` impl could replace `to_domain` when the XML adapter arrives;
   - the spec test now finds its line by key.
+
+## Decisions in P2-2b (scope and bases, 2026-11-10)
+- **`loom-parser::import`** is the pipeline's home (`import/mod.rs`, `import/base.rs`).
+  - `ItemRules { default_scope, domain_scopes }` holds the per-game rules. For a domain listed more than once, the first entry wins.
+  - `ItemData` is the trait over game data: `item_rules`, `base_names`, and `base(name) -> Option<(&str, &[BaseRow])>`, where the slice is never empty.
+  - `BaseQuery { name, fallback }`.
+  - `find_base` reads an empty slice as no base, and its errors carry ADR-014 codes (`IMPORT_BASE_NOT_FOUND`, `IMPORT_BASE_SCOPE_CONFLICT`). The corpus report's names (`not-in-base-item-types`, `scope-conflict`) are mapped in the tool.
+- **`BaseRow.domain` is `i64`, with 0 when the data has none.** No rule lists 0, so the result equals the old `None`, and `mod_filter` is unchanged.
+- **PoB naming stays PoB's.** `base_name` (the `Superior`/`Synthesised`/`Vestigial` prefixes) and `magic_base` stay in `legacy::pob_item`, and so does the suffixed-base list (`SUFFIXED_BASES`, `suffix_removed`, moved from the tool). The tool builds a `BaseQuery` from them.
+- **PoE1 rules in the tool:** `tools/parity-cli/src/poe1.rs::item_rules()` (domains 34 and 38) holds them until step 3 puts them in the bundle. The harness's scope list comes from `ItemRules::scopes()`, and the summary's `scopes` map is keyed by `String`; its serialization is unchanged.
+- **Gate 3c scan:** `crates/loom-parser/tests/no_poe1_identifiers.rs` scans every core crate's `src/` for PoE1-only identifiers by substring, a heuristic.
+  - Allowed: any `poe1.rs` or `poe1/` module, `loom-serialization/src/legacy/`, and `tests.rs` files.
+  - The list grows with each lift PR.
+  - It fails on an injected identifier (checked).
+
+## code-architecture-reviewer (P2-2b, 2026-11-10) summary
+- **No blockers.** `find_base` matches the old `Bases::find`.
+- **Should-fix, applied:**
+  - an empty row slice is no base (test added);
+  - the allow-list is narrowed (`/tests/` directories dropped, along with the redundant `loom-domain` clause);
+  - the scan is documented as a heuristic.
+- **Nits, applied:** ADR-014 codes on `BaseError`; "first entry wins" documented.
+- **Design notes, decided for later PRs:**
+  - **P2-2c:** mod rows, item tags, grafts, and properties come through a separate `ModData` trait (or sibling traits) next to `ItemData`, so `find_base`'s bound stays minimal.
+  - **P2-6:** `ItemData` uses `impl Iterator` in a trait method, so it is not object-safe. `resolve_build` takes it as a generic. If the app layer needs `dyn`, decide before P2-6 (for example, `base_names` returning a `Vec` or a boxed iterator).
+  - **P2-3/P2-6:** `BaseRow::implicits` are row indices into `Mods`. The bundle's canonical model should use stable mod IDs and interned tags.
