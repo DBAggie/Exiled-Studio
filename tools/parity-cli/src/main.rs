@@ -9,8 +9,12 @@
 //! `oracle-compare`, and `divergence-check` (the divergence register,
 //! `docs/parity/`).
 
+mod build_round_trip;
+mod bundle;
+mod bundle_equal;
 mod categorize;
 mod divergence;
+mod dto_hashes;
 mod extract;
 mod grafts;
 mod item_tags;
@@ -25,6 +29,7 @@ mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
 mod poe1;
+mod poe2;
 mod properties;
 mod render_check;
 mod resolve_corpus;
@@ -36,6 +41,15 @@ use std::process::ExitCode;
 use serde::Serialize;
 
 const USAGE: &str = "usage:
+  loom-parity-cli bundle <extract-dir> --out <dir>
+      Convert a `loom-extractor extract` output (PoE1 or PoE2) into a data
+      bundle of format v1 (loom_data::bundle) in <dir>, which must not
+      exist; load it back with Bundle::load; print a summary (row counts,
+      hashes) as JSON. Two runs on one extract give the same bytes.
+  loom-parity-cli bundle-check <bundle-dir>
+      Validate a data bundle (loom_data::bundle::validate: hashes, sizes,
+      unlisted files, schema, references, unique IDs, item rules, scopes);
+      print the findings as JSON. Exit 0 when valid, 1 when not.
   loom-parity-cli load-statdesc <extract-dir>
       Load every stat-description file of a `loom-extractor extract` output
       through loom-data; print counts as JSON. Exit 1 if a check fails.
@@ -48,7 +62,13 @@ const USAGE: &str = "usage:
       Render every PoE1 Mods row and compare with PoB's exported mod text
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
       <dir>, which must not exist. Exit 1 if a difference is uncategorized.
-  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--pob <tag>=<dir>]...
+  loom-parity-cli bundle-equal <extract-dir> <bundle-dir>
+      Check that the item pipeline's data built from the bundle (validated
+      first) equal those the corpus harness reads from the extract: mod
+      rows, local stats, base rows, granted skills, properties (plan
+      step 6). Print a JSON report; exit 1 on any mismatch, or with a
+      message when the extract or the bundle does not load or validate.
+  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--bundle <dir>] [--pob <tag>=<dir>]...
       Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
       subfolders are not read; identical files count once), resolve
       each modifier line in its item's scope (PoE1 extract), and
@@ -56,7 +76,11 @@ const USAGE: &str = "usage:
       report.json (builds by content hash, no item names) to <dir>, which
       must not exist. Each --pob names a `git archive` of a PoB tag's
       src/Data (<dir>/src/Data), the legacy-text evidence. Exit 1 while
-      the Spike B gate is not met or a build is unreadable.
+      the Spike B gate is not met or a build is unreadable. With
+      --bundle, the bases, mod rows, granted skills, properties,
+      compositions, and stat-description indexes come from that data
+      bundle (validated first; plan step 6) instead of the extract; the
+      categories still read the extract.
   loom-parity-cli oracle-verify <manifest> <oracle-dir>
       Check an oracle directory written by tools/oracle/acquire.ps1 or
       acquire.sh against the manifest (tools/oracle/manifest.json): PoB
@@ -94,6 +118,30 @@ const USAGE: &str = "usage:
       when every difference is registered, 20
       (ORACLE_UNEXPECTED_DIFFERENCE) otherwise, or the class of a fixture
       that has no output on a side when that is smaller.
+  loom-parity-cli dto-hashes <dir>...
+      Import every *.xml PoB build directly in each <dir> (in name order),
+      write its v1 build document twice and read it back (loom_serialization::
+      dto::v1); print each document's SHA-256 and size as JSON. CI compares
+      the output of Windows and Linux. Exit 1 if a document differs on a
+      second run or does not read back to the same build.
+  loom-parity-cli build-round-trip <input>... --out <dir> [--bundle <dir>] [--anonymous]
+                  [--expect-import-error <file name>]...
+      Run every build through import (A), resolution with the bundle if
+      given (validated first), the v1 JSON document (B), and PoB XML export
+      and re-import (C, resolved again; PoE1 builds only), and check
+      (a) export(B) xml_equal to the input, (b) A, B, and C equal with
+      resolutions, (c) the same JSON bytes on a second run, (d) every
+      item's source lines in equal its lines out; PoB input also runs the
+      unknown-content mutation set (plan step 8). An input is a folder
+      (every *.xml directly in it, in name order), a PoB build *.xml, or a
+      v1 build document *.json; identical files count once. A file named
+      by --expect-import-error must not import, and then passes.
+      A name that is no input's file name stops the run (exit 3).
+      --anonymous names builds by SHA-256. Write summary.json (scrubbed)
+      and report.json (failures) to <dir>, which must not exist. Exit 0
+      when every build passes, 1 when one fails (or no build was given),
+      2 on a usage error, 3 when the run cannot start (an input or the
+      bundle does not read or validate, or <dir> exists).
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -118,6 +166,101 @@ fn reader(dir: &Path) -> impl Fn(&str) -> Result<Vec<u8>, String> + '_ {
         let path = dir.join(relative);
         std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))
     }
+}
+
+/// A bundle in a folder, for the validator.
+struct DirSource<'d>(&'d Path);
+
+impl loom_data::bundle::BundleSource for DirSource<'_> {
+    fn list(&self) -> Result<Vec<String>, loom_data::bundle::SourceError> {
+        fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) -> std::io::Result<()> {
+            for entry in std::fs::read_dir(dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                // A link could point out of the bundle: refused.
+                if entry.file_type()?.is_symlink() {
+                    return Err(std::io::Error::other(format!(
+                        "{}: a symbolic link",
+                        path.display()
+                    )));
+                }
+                if path.is_dir() {
+                    walk(root, &path, out)?;
+                } else if let Ok(rel) = path.strip_prefix(root) {
+                    out.push(rel.to_string_lossy().replace('\\', "/"));
+                }
+            }
+            Ok(())
+        }
+        let mut out = Vec::new();
+        walk(self.0, self.0, &mut out).map_err(|e| loom_data::bundle::SourceError::Unreadable {
+            path: self.0.display().to_string(),
+            message: e.to_string(),
+        })?;
+        out.sort();
+        Ok(out)
+    }
+
+    fn read(&self, path: &str) -> Result<Vec<u8>, loom_data::bundle::SourceError> {
+        // The loader refuses paths that leave the bundle before reading;
+        // this source refuses them again.
+        if path.split('/').any(|s| s.is_empty() || s == "..") || path.contains(['\\', ':']) {
+            return Err(loom_data::bundle::SourceError::NotFound(path.to_owned()));
+        }
+        let full = self.0.join(path);
+        match std::fs::read(&full) {
+            Ok(b) => Ok(b),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                Err(loom_data::bundle::SourceError::NotFound(path.to_owned()))
+            }
+            Err(e) => Err(loom_data::bundle::SourceError::Unreadable {
+                path: path.to_owned(),
+                message: e.to_string(),
+            }),
+        }
+    }
+}
+
+/// `bundle-check`: validates a bundle folder, prints the findings.
+fn bundle_check(dir: &Path) -> Result<bool, String> {
+    let report = loom_data::bundle::validate::validate(&DirSource(dir));
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(report.is_valid())
+}
+
+/// `bundle`: converts, writes, loads back, prints the summary.
+fn bundle_cmd(extract: &Path, out: &Path) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let read = reader(extract);
+    let loaded = extract::load(&read)?;
+    let (files, summary) = bundle::convert(&read, &loaded)?;
+    // Written to a sibling folder and renamed at the end, so a failed run
+    // leaves no partial <dir>.
+    let partial = out.with_extension("partial");
+    if partial.exists() {
+        return Err(format!(
+            "{}: already exists (an earlier run?)",
+            partial.display()
+        ));
+    }
+    let mut source = loom_data::bundle::MemorySource::new();
+    for (path, bytes) in &files {
+        let target = partial.join(path);
+        if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        std::fs::write(&target, bytes).map_err(|e| format!("{}: {e}", target.display()))?;
+        source.insert(path.clone(), bytes.clone());
+    }
+    let back = loom_data::bundle::Bundle::load(&source)
+        .map_err(|e| format!("the written bundle does not load: {} ({e})", e.code()))?;
+    std::fs::rename(&partial, out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(back.game.name() == summary.game)
 }
 
 fn load_statdesc(extract: &Path) -> Result<bool, String> {
@@ -228,11 +371,17 @@ fn lua_tree(dir: &Path) -> Result<Vec<(String, String)>, String> {
     Ok(out)
 }
 
-/// `<tag>=<dir>` arguments to PoB text sources.
-fn pob_sources(args: &[String]) -> Result<Vec<categorize::PobText>, String> {
+/// `--pob <tag>=<dir>` sources, and the `--bundle <dir>`, if given.
+fn corpus_args(args: &[String]) -> Result<(Vec<categorize::PobText>, Option<&Path>), String> {
     let mut out = Vec::new();
+    let mut bundle = None;
     let mut rest = args;
     while let [flag, value, tail @ ..] = rest {
+        if flag == "--bundle" && bundle.is_none() {
+            bundle = Some(Path::new(value.as_str()));
+            rest = tail;
+            continue;
+        }
         if flag != "--pob" {
             return Err(format!("unknown argument {flag}"));
         }
@@ -246,7 +395,38 @@ fn pob_sources(args: &[String]) -> Result<Vec<categorize::PobText>, String> {
     if !rest.is_empty() {
         return Err(format!("unexpected argument {}", rest.join(" ")));
     }
-    Ok(out)
+    Ok((out, bundle))
+}
+
+/// Loads a bundle folder after the validator accepts it.
+fn load_bundle(dir: &Path) -> Result<loom_data::bundle::Bundle, String> {
+    let source = DirSource(dir);
+    let report = loom_data::bundle::validate::validate(&source);
+    if !report.is_valid() {
+        return Err(format!(
+            "{}: the bundle is not valid ({})",
+            dir.display(),
+            report.codes().join(", ")
+        ));
+    }
+    loom_data::bundle::Bundle::load(&source)
+        .map_err(|e| format!("{}: {} ({e})", dir.display(), e.code()))
+}
+
+/// `bundle-equal`: the pipeline's data from a bundle against the
+/// extract's (`bundle_equal`).
+fn bundle_equal(extract: &Path, bundle_dir: &Path) -> Result<bool, String> {
+    let read = reader(extract);
+    let loaded = extract::load(&read)?;
+    let bases = resolve_corpus::Bases::load(&read)?;
+    let mods = mod_filter::load(&read)?;
+    let game = categorize::GameText::load(&loaded.set, &read, Vec::new())?;
+    let bundle = load_bundle(bundle_dir)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let report = bundle_equal::compare(&bases, &mods, &game.compositions, &data);
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(report.equal())
 }
 
 fn resolve_corpus(
@@ -255,12 +435,26 @@ fn resolve_corpus(
     out: &Path,
     pob: &[String],
 ) -> Result<bool, String> {
-    let pob = pob_sources(pob)?;
+    let (pob, bundle_dir) = corpus_args(pob)?;
     let read = reader(extract);
     let loaded = extract::load(&read)?;
     let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
-    let bases = resolve_corpus::Bases::load(&read)?;
-    let mods = mod_filter::load(&read)?;
+    // `--bundle`: the pipeline's data come from the bundle (plan step 6);
+    // the extract still gives the categories' evidence.
+    let bundle = bundle_dir.map(load_bundle).transpose()?;
+    let data = bundle.as_ref().map(loom_parser::import::BundleData::new);
+    let (bases, extract_mods) = match &data {
+        Some(d) => (resolve_corpus::Bases::from_bundle(d), None),
+        None => (
+            resolve_corpus::Bases::load(&read)?,
+            Some(mod_filter::load(&read)?),
+        ),
+    };
+    let mods = match (&data, &extract_mods) {
+        (Some(d), _) => d.mods(),
+        (None, Some(m)) => m,
+        (None, None) => return Err("no mod rows".to_owned()),
+    };
     let game = categorize::GameText::load(&loaded.set, &read, pob)?;
     let mut builds = Vec::new();
     for entry in
@@ -279,21 +473,37 @@ fn resolve_corpus(
         commit: git(&["rev-parse", "HEAD"]),
         dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
     };
-    let (summary, report) = resolve_corpus::run(
+    let (summary, report, check) = resolve_corpus::run(
         &loaded,
         &lookup,
         lookup_report,
         &bases,
-        &mods,
+        mods,
         &game,
         &builds,
         tool,
+        data.as_ref(),
     )?;
     write_out(out, &summary, &report)?;
     let json =
         serde_json::to_string_pretty(&(&summary.rate, &summary.gate)).map_err(|e| e.to_string())?;
     println!("{json}");
-    Ok(summary.gate.met && summary.unreadable_builds.is_empty())
+    // `--bundle`: the core's `resolve_build` against the harness, per line.
+    let check_equal = match &check {
+        Some(c) => {
+            let path = out.join("resolve-build-check.json");
+            let mut text = serde_json::to_string_pretty(c).map_err(|e| e.to_string())?;
+            text.push('\n');
+            std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+            println!(
+                "resolve_build: {} of {} modifier lines equal the harness",
+                c.equal, c.lines
+            );
+            c.differences.is_empty()
+        }
+        None => true,
+    };
+    Ok(summary.gate.met && summary.unreadable_builds.is_empty() && check_equal)
 }
 
 fn oracle_verify(manifest: &Path, oracle_dir: &Path) -> ExitCode {
@@ -499,8 +709,178 @@ fn divergence_check(register: &Path) -> ExitCode {
     }
 }
 
+fn dto_hashes(dirs: &[String]) -> Result<bool, String> {
+    let report = dto_hashes::run(dirs)?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    for failure in &report.failures {
+        eprintln!("failure: {failure}");
+    }
+    Ok(report.failures.is_empty())
+}
+
+/// `build-round-trip`'s arguments.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct RoundTripArgs {
+    inputs: Vec<String>,
+    bundle: Option<String>,
+    out: Option<String>,
+    anonymous: bool,
+    expect_import_error: std::collections::BTreeSet<String>,
+}
+
+/// Parses the arguments after `build-round-trip`; `None` is a usage error.
+fn round_trip_args(args: &[String]) -> Option<RoundTripArgs> {
+    let mut out = RoundTripArgs::default();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        match arg.as_str() {
+            "--anonymous" => out.anonymous = true,
+            "--bundle" | "--out" | "--expect-import-error" => {
+                let [value, tail @ ..] = rest else {
+                    return None;
+                };
+                rest = tail;
+                match arg.as_str() {
+                    "--bundle" if out.bundle.is_none() => out.bundle = Some(value.clone()),
+                    "--out" if out.out.is_none() => out.out = Some(value.clone()),
+                    "--expect-import-error" => {
+                        out.expect_import_error.insert(value.clone());
+                    }
+                    _ => return None,
+                }
+            }
+            flag if flag.starts_with("--") => return None,
+            input => out.inputs.push(input.to_owned()),
+        }
+    }
+    (!out.inputs.is_empty() && out.out.is_some()).then_some(out)
+}
+
+/// The inputs: each `*.xml` directly in a folder (in name order), or a
+/// file (`*.xml` or `*.json`).
+fn round_trip_inputs(args: &[String]) -> Result<Vec<build_round_trip::Input>, String> {
+    use build_round_trip::{Format, Input};
+    let format_of = |path: &Path| match path.extension().and_then(|e| e.to_str()) {
+        Some(e) if e.eq_ignore_ascii_case("xml") => Some(Format::PobXml),
+        Some(e) if e.eq_ignore_ascii_case("json") => Some(Format::BuildDocument),
+        _ => None,
+    };
+    let mut inputs = Vec::new();
+    for arg in args {
+        let path = Path::new(arg);
+        let mut files = Vec::new();
+        if path.is_dir() {
+            for entry in std::fs::read_dir(path).map_err(|e| format!("{arg}: {e}"))? {
+                let p = entry.map_err(|e| format!("{arg}: {e}"))?.path();
+                if p.is_file() && format_of(&p) == Some(Format::PobXml) {
+                    files.push(p);
+                }
+            }
+            files.sort();
+        } else {
+            files.push(path.to_path_buf());
+        }
+        for p in files {
+            let format =
+                format_of(&p).ok_or_else(|| format!("{}: not *.xml or *.json", p.display()))?;
+            let file = p
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let shown = if path.is_dir() {
+                format!("{}/{file}", arg.trim_end_matches(['/', '\\']))
+            } else {
+                arg.clone()
+            };
+            inputs.push(Input {
+                path: shown.replace('\\', "/"),
+                file,
+                format,
+                bytes: std::fs::read(&p).map_err(|e| format!("{}: {e}", p.display()))?,
+            });
+        }
+    }
+    Ok(inputs)
+}
+
+/// `build-round-trip` (module `build_round_trip`). Exit 0 when every build
+/// passes, 1 when one fails, 2 on a usage error, 3 when the run cannot
+/// start (an input or the bundle does not read or validate, or `--out`
+/// exists).
+fn build_round_trip_cmd(args: &[String]) -> ExitCode {
+    let Some(args) = round_trip_args(args) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match build_round_trip_run(&args) {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("loom-parity-cli: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
+    let out = Path::new(args.out.as_deref().unwrap_or_default());
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let inputs = round_trip_inputs(&args.inputs)?;
+    if let Some(missing) = args
+        .expect_import_error
+        .iter()
+        .find(|name| !inputs.iter().any(|i| &i.file == *name))
+    {
+        return Err(format!("--expect-import-error {missing}: no such input"));
+    }
+    let bundle = args
+        .bundle
+        .as_deref()
+        .map(|d| load_bundle(Path::new(d)))
+        .transpose()?;
+    let data = bundle.as_ref().map(loom_parser::import::BundleData::new);
+    let resolver = data
+        .as_ref()
+        .map(loom_parser::import::Resolver::new)
+        .transpose()
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let options = build_round_trip::Options {
+        data: resolver
+            .as_ref()
+            .zip(data.as_ref())
+            .map(|(resolver, data)| build_round_trip::Data { resolver, data }),
+        anonymous: args.anonymous,
+        expect_import_error: &args.expect_import_error,
+        tool: resolve_corpus::Tool {
+            commit: git(&["rev-parse", "HEAD"]),
+            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+        },
+    };
+    let (summary, report) = build_round_trip::run(&inputs, &options);
+    write_out(out, &summary, &report)?;
+    println!(
+        "build-round-trip: {} builds, {} passed, {} failed ({} duplicates skipped)",
+        summary.builds, summary.passed, summary.failed, summary.duplicates
+    );
+    for build in &report.builds {
+        for failure in &build.failures {
+            eprintln!("{}: {failure}", build.name);
+        }
+    }
+    Ok(summary.failed == 0 && summary.builds > 0)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "build-round-trip"
+    {
+        return build_round_trip_cmd(rest);
+    }
     if let [cmd, manifest, oracle_dir] = args.as_slice()
         && cmd == "oracle-verify"
     {
@@ -522,12 +902,20 @@ fn main() -> ExitCode {
         return divergence_check(Path::new(register));
     }
     let result = match args.as_slice() {
+        [cmd, extract, flag, out] if cmd == "bundle" && flag == "--out" => {
+            bundle_cmd(Path::new(extract), Path::new(out))
+        }
+        [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))
         }
         [cmd, extract, pob, flag, out] if cmd == "render-check" && flag == "--out" => {
             render_check(Path::new(extract), Path::new(pob), Path::new(out))
+        }
+        [cmd, extract, bundle] if cmd == "bundle-equal" => {
+            bundle_equal(Path::new(extract), Path::new(bundle))
         }
         [cmd, builds, extract, flag, out, pob @ ..]
             if cmd == "resolve-corpus" && flag == "--out" =>

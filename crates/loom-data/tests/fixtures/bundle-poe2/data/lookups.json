@@ -1,0 +1,11 @@
+[
+ {
+  "entries": [
+   [
+    1,
+    "Test Node"
+   ]
+  ],
+  "handler": "passive_hash"
+ }
+]

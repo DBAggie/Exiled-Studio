@@ -1,0 +1,551 @@
+{
+  "format": "loom-build",
+  "version": 1,
+  "build": {
+    "game": "poe2",
+    "game_specific": {
+      "poe2": {}
+    },
+    "character": {},
+    "passives": {
+      "specs": []
+    },
+    "skills": {
+      "sets": []
+    },
+    "items": {
+      "active_set": 1,
+      "entries": [
+        {
+          "typed": {
+            "item": {
+              "id": 1,
+              "body": {
+                "rarity": "rare",
+                "name": "Loom Test Band",
+                "base": "Plain Test Ring",
+                "implicits": 1,
+                "variants": {
+                  "count": 0
+                },
+                "lines": [
+                  {
+                    "source": "Rarity: RARE",
+                    "kind": {
+                      "header": "rarity"
+                    }
+                  },
+                  {
+                    "source": "Loom Test Band",
+                    "kind": {
+                      "header": "name"
+                    }
+                  },
+                  {
+                    "source": "Plain Test Ring",
+                    "kind": {
+                      "header": "base"
+                    }
+                  },
+                  {
+                    "source": "Implicits: 1",
+                    "kind": {
+                      "spec": {
+                        "key": "Implicits",
+                        "value": "1",
+                        "known": true
+                      }
+                    }
+                  },
+                  {
+                    "source": "+3 first half",
+                    "kind": {
+                      "modifier": {
+                        "text": "+3 first half",
+                        "section": "implicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+4 second half",
+                    "kind": {
+                      "modifier": {
+                        "text": "+4 second half",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 to maximum Life",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+15 TO MAXIMUM LIFE",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 TO MAXIMUM LIFE",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+12 to Accuracy",
+                    "kind": {
+                      "modifier": {
+                        "text": "+12 to Accuracy",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+12 to Evasion",
+                    "kind": {
+                      "modifier": {
+                        "text": "+12 to Evasion",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+50 to Strength",
+                    "kind": {
+                      "modifier": {
+                        "text": "+50 to Strength",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+5 to Shadowed Text",
+                    "kind": {
+                      "modifier": {
+                        "text": "+5 to Shadowed Text",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "Nothing like this",
+                    "kind": {
+                      "modifier": {
+                        "text": "Nothing like this",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+1 first half",
+                    "kind": {
+                      "modifier": {
+                        "text": "+1 first half",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+2 second half",
+                    "kind": {
+                      "modifier": {
+                        "text": "+2 second half",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "While a Test Enemy is near, +15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "While a Test Enemy is near, +15 to maximum Life",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "{custom}+15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 to maximum Life",
+                        "prefixes": [
+                          {
+                            "key": "custom"
+                          }
+                        ],
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": {
+                          "excluded": "custom"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "source": "Lasts 4 Seconds",
+                    "kind": {
+                      "modifier": {
+                        "text": "Lasts 4 Seconds",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "Test Strands: 5",
+                    "kind": {
+                      "modifier": {
+                        "text": "Test Strands: 5",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "Quality (Test Modifiers): +20%",
+                    "kind": {
+                      "modifier": {
+                        "text": "Quality (Test Modifiers): +20%",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "Corrupted",
+                    "kind": "flag"
+                  }
+                ]
+              },
+              "layout": [
+                {
+                  "typed": "body"
+                }
+              ],
+              "text_spacing": [
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\t\t"
+              ]
+            }
+          }
+        },
+        {
+          "typed": {
+            "item": {
+              "id": 2,
+              "body": {
+                "rarity": "rare",
+                "name": "Loom Test Trinket",
+                "base": "Plain Test Charm",
+                "implicits": 0,
+                "variants": {
+                  "count": 0
+                },
+                "lines": [
+                  {
+                    "source": "Rarity: RARE",
+                    "kind": {
+                      "header": "rarity"
+                    }
+                  },
+                  {
+                    "source": "Loom Test Trinket",
+                    "kind": {
+                      "header": "name"
+                    }
+                  },
+                  {
+                    "source": "Plain Test Charm",
+                    "kind": {
+                      "header": "base"
+                    }
+                  },
+                  {
+                    "source": "Implicits: 0",
+                    "kind": {
+                      "spec": {
+                        "key": "Implicits",
+                        "value": "0",
+                        "known": true
+                      }
+                    }
+                  },
+                  {
+                    "source": "Grants Level 5 Test Bolt Skill",
+                    "kind": {
+                      "modifier": {
+                        "text": "Grants Level 5 Test Bolt Skill",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  },
+                  {
+                    "source": "+15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 to maximum Life",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  }
+                ]
+              },
+              "layout": [
+                {
+                  "typed": "body"
+                }
+              ],
+              "text_spacing": [
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\t\t"
+              ]
+            }
+          }
+        },
+        {
+          "typed": {
+            "item": {
+              "id": 3,
+              "body": {
+                "rarity": "rare",
+                "name": "Loom Test Mystery",
+                "base": "Not A Test Base",
+                "implicits": 0,
+                "variants": {
+                  "count": 0
+                },
+                "lines": [
+                  {
+                    "source": "Rarity: RARE",
+                    "kind": {
+                      "header": "rarity"
+                    }
+                  },
+                  {
+                    "source": "Loom Test Mystery",
+                    "kind": {
+                      "header": "name"
+                    }
+                  },
+                  {
+                    "source": "Not A Test Base",
+                    "kind": {
+                      "header": "base"
+                    }
+                  },
+                  {
+                    "source": "Implicits: 0",
+                    "kind": {
+                      "spec": {
+                        "key": "Implicits",
+                        "value": "0",
+                        "known": true
+                      }
+                    }
+                  },
+                  {
+                    "source": "+15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 to maximum Life",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  }
+                ]
+              },
+              "layout": [
+                {
+                  "typed": "body"
+                }
+              ],
+              "text_spacing": [
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\t\t"
+              ]
+            }
+          }
+        },
+        {
+          "typed": {
+            "item": {
+              "id": 4,
+              "body": {
+                "rarity": "magic",
+                "name": "Shiny Thing of Testing",
+                "implicits": 0,
+                "variants": {
+                  "count": 0
+                },
+                "lines": [
+                  {
+                    "source": "Rarity: MAGIC",
+                    "kind": {
+                      "header": "rarity"
+                    }
+                  },
+                  {
+                    "source": "Shiny Thing of Testing",
+                    "kind": {
+                      "header": "name"
+                    }
+                  },
+                  {
+                    "source": "Implicits: 0",
+                    "kind": {
+                      "spec": {
+                        "key": "Implicits",
+                        "value": "0",
+                        "known": true
+                      }
+                    }
+                  },
+                  {
+                    "source": "+15 to maximum Life",
+                    "kind": {
+                      "modifier": {
+                        "text": "+15 to maximum Life",
+                        "section": "explicit",
+                        "selected": true,
+                        "resolution": "pending"
+                      }
+                    }
+                  }
+                ]
+              },
+              "layout": [
+                {
+                  "typed": "body"
+                }
+              ],
+              "text_spacing": [
+                "\n",
+                "\n",
+                "\n",
+                "\n",
+                "\n\t\t"
+              ]
+            }
+          }
+        },
+        {
+          "typed": {
+            "set": {
+              "id": 1,
+              "slots": [
+                {
+                  "typed": {
+                    "slot": "Ring 1",
+                    "item": 1
+                  }
+                },
+                {
+                  "typed": {
+                    "slot": "Ring 2"
+                  }
+                }
+              ],
+              "attributes": [
+                {
+                  "name": "useSecondWeaponSet",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "attributes": [
+        {
+          "name": "useSecondWeaponSet",
+          "value": "false"
+        }
+      ]
+    },
+    "config": {
+      "sets": []
+    },
+    "layout": [
+      {
+        "typed": "character"
+      },
+      {
+        "typed": "passives"
+      },
+      {
+        "typed": "skills"
+      },
+      {
+        "typed": "items"
+      },
+      {
+        "typed": "config"
+      }
+    ]
+  }
+}
+

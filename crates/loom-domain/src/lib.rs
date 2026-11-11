@@ -44,8 +44,9 @@ pub use id::{
 };
 pub use item::{
     Adapted, AltVariant, Exclusion, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items,
-    ItemsEntry, LineKind, LineResolution, ModSection, ModifierLine, Prefix, PropertyValue, Rarity,
-    Resolved, SlotEntry, StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
+    ItemsEntry, LineKind, LineResolution, ModSection, ModifierLine, NoBase, Prefix, PropertyValue,
+    Rarity, Resolved, SlotEntry, StatLine, StatValue, TypedResolution, UnresolvedReason,
+    VariantSelection,
 };
 pub use opaque::{Attribute, Attributes, Entry, OpaqueNode, Ordered};
 pub use passive::{JewelSocket, MasteryEffect, PassiveSpec, Passives, SpecPart};

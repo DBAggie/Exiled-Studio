@@ -9,62 +9,7 @@
 
 use std::collections::BTreeSet;
 
-use super::mods::ModRules;
-
-/// Per-game item rules, read from the game's data bundle (Phase 2 plan,
-/// decision 5); until step 3 a tool supplies them.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ItemRules {
-    /// The stat-description scope root of every domain not listed in
-    /// `domain_scopes` (for example `stat_descriptions`).
-    pub default_scope: String,
-    /// Mod domains with their own scope root; the first entry of a domain
-    /// wins.
-    pub domain_scopes: Vec<(i64, String)>,
-    /// The mod-row filter's rules.
-    pub mods: ModRules,
-    /// The client texts the pipeline reads lines through.
-    pub text: TextRules,
-}
-
-/// The client texts (by ID) the pipeline reads item lines through; their
-/// texts come from the game data.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct TextRules {
-    /// Wrappers the client composes a modifier line with: `(text ID, the
-    /// stat the wrapper stands for)`, in the order they are tried.
-    pub compositions: Vec<(String, String)>,
-    /// Property texts with numeric placeholders.
-    pub property_ids: Vec<String>,
-    /// Property labels written as `<label>: <number>`.
-    pub label_ids: Vec<String>,
-    /// The wrapper of a granted skill's line (`{1}` level, `{0}` name).
-    pub granted_skill_wrapper: Option<String>,
-}
-
-impl ItemRules {
-    /// The scope root of a base row's mod domain.
-    #[must_use]
-    pub fn scope_of_domain(&self, domain: i64) -> &str {
-        self.domain_scopes
-            .iter()
-            .find(|(d, _)| *d == domain)
-            .map_or(self.default_scope.as_str(), |(_, s)| s.as_str())
-    }
-
-    /// Every scope root: the default, then the domain scopes in order,
-    /// without repeats.
-    #[must_use]
-    pub fn scopes(&self) -> Vec<&str> {
-        let mut out = vec![self.default_scope.as_str()];
-        for (_, s) in &self.domain_scopes {
-            if !out.contains(&s.as_str()) {
-                out.push(s);
-            }
-        }
-        out
-    }
-}
+pub use loom_data::rules::{ItemRules, TextRules};
 
 /// One base item row of a base name.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

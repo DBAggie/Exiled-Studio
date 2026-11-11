@@ -118,7 +118,7 @@ use crate::poe1::{self, generation};
 /// `Mods` row stat columns (`StatsKeyN`, `StatNMin`, `StatNMax`).
 const STAT_SLOTS: usize = 8;
 
-fn ints(row: &[Value], col: usize) -> Vec<i64> {
+pub(crate) fn ints(row: &[Value], col: usize) -> Vec<i64> {
     row.get(col)
         .and_then(Value::as_array)
         .map(|a| a.iter().filter_map(Value::as_i64).collect())
@@ -146,7 +146,7 @@ fn ids(read: Read<'_>, table: &str) -> Result<Vec<String>, String> {
 /// position before anything is dropped, so a bad entry (unknown tag index,
 /// non-integer weight) drops its own pair only and never shifts the rest;
 /// `None` when the two arrays differ in length (measured: never).
-fn spawn_pairs(
+pub(crate) fn spawn_pairs(
     row: &[Value],
     tags: usize,
     weights: usize,
@@ -208,7 +208,9 @@ const ESSENCE_COLUMNS: [(&str, &[&str]); 22] = [
 /// # Errors
 /// A message when `Essences` exists but `ItemClasses`, a column, or a class
 /// of [`ESSENCE_COLUMNS`] is missing.
-fn essence_classes(read: Read<'_>) -> Result<Option<BTreeMap<usize, BTreeSet<i64>>>, String> {
+pub(crate) fn essence_classes(
+    read: Read<'_>,
+) -> Result<Option<BTreeMap<usize, BTreeSet<i64>>>, String> {
     let Some(essences) = Table::read(read, "Essences")? else {
         return Ok(None);
     };

@@ -49,6 +49,7 @@ fn data(rows: &[(&str, i64)]) -> Data {
                     flags: Vec::new(),
                 },
                 no_spawn_flags: Vec::new(),
+                sections: Vec::new(),
                 local_carriers: crate::import::mods::LocalCarriers::default(),
                 influences: Vec::new(),
             },

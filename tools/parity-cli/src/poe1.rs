@@ -290,6 +290,9 @@ fn mod_rules() -> ModRules {
             flags: eldritch_flags,
         },
         no_spawn_flags: vec!["crafted".to_owned()],
+        sections: ["scourge", "crucible", "class-requirement"]
+            .map(str::to_owned)
+            .to_vec(),
         local_carriers: LocalCarriers {
             weapon: "weapon".to_owned(),
             item: "armour".to_owned(),
@@ -306,6 +309,14 @@ mod tests {
     use loom_serialization::legacy::pob_item::{Section, domain_section};
 
     use super::*;
+
+    /// The PoE1 rules survive the bundle's JSON form (`data/item_rules.json`).
+    #[test]
+    fn item_rules_should_round_trip_through_bundle_json() {
+        let rules = item_rules();
+        let json = serde_json::to_string(&rules).unwrap();
+        assert_eq!(serde_json::from_str::<ItemRules>(&json).unwrap(), rules);
+    }
 
     #[test]
     fn mod_rules_should_validate() {
