@@ -2,7 +2,7 @@
   "format": 1,
   "inputs": {
     "tool": {
-      "commit": "c6ca40032be8268a75561613fbb7310f2adbded8",
+      "commit": "f77cb8020d50091f6caa193ee7e9e1a3dcc25f6b",
       "dirty": false
     },
     "bundle": {
@@ -10,7 +10,7 @@
       "steam_build": 26530219,
       "index_sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
     },
-    "scope_sha256": "97e95a8cc2363ccbe56722671bf5772d87da791c56fadd101de2028b06b6268e",
+    "scope_sha256": "02ff7fe5924e28d7e1ad628bf6e449c63f496930841514c15fd31d1298a33656",
     "data_rules_sha256": "b3562c6a130d8676e9b1cbdf3db372c25ac330710a7ba826cf4a16a50533a7e6",
     "anonymous": false
   },
@@ -18,13 +18,13 @@
     "format": 1,
     "game": "poe1",
     "steam_build": 26530219,
-    "status": "proposed",
+    "status": "confirmed",
     "tree_version": "3_29",
     "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
     "minimum_per_skill": 3,
     "skills": {
-      "spell": null,
-      "attack": null
+      "spell": "IceNova",
+      "attack": "Smite"
     },
     "excluded_mechanics": [
       {
@@ -41,9 +41,9 @@
       }
     ]
   },
-  "builds": 29,
+  "builds": 36,
   "duplicates": 0,
-  "in_scope": 1,
+  "in_scope": 8,
   "reasons": {
     "archetype:brand": 1,
     "archetype:mine": 1,
@@ -63,12 +63,24 @@
     "tree:version": 16
   },
   "states": {
-    "in-scope": 1,
+    "in-scope": 8,
     "indeterminate": 27,
     "out-of-scope": 1
   },
   "candidates": {
     "attack": [
+      {
+        "skill": "Smite",
+        "name": "Smite",
+        "archetype_builds": 4,
+        "in_scope": [
+          "tools/oracle/fixtures/community/smite-inquisitor-act1.xml",
+          "tools/oracle/fixtures/community/smite-inquisitor-act10.xml",
+          "tools/oracle/fixtures/community/smite-inquisitor-act2.xml",
+          "tools/oracle/fixtures/community/smite-inquisitor-act5.xml"
+        ],
+        "mean_inventory": 98
+      },
       {
         "skill": "BoneshatterAltX",
         "name": "Boneshatter of Complex Trauma",
@@ -121,6 +133,17 @@
     ],
     "spell": [
       {
+        "skill": "IceNova",
+        "name": "Ice Nova",
+        "archetype_builds": 3,
+        "in_scope": [
+          "tools/oracle/fixtures/community/ice-nova-elementalist-campaign-lab1.xml",
+          "tools/oracle/fixtures/community/ice-nova-elementalist-campaign.xml",
+          "tools/oracle/fixtures/community/ice-nova-elementalist-mapping.xml"
+        ],
+        "mean_inventory": 108
+      },
+      {
         "skill": "WinterOrb",
         "name": "Winter Orb",
         "archetype_builds": 1,
@@ -138,7 +161,27 @@
       }
     ]
   },
-  "chosen": {},
+  "chosen": {
+    "attack": {
+      "skill": "Smite",
+      "in_scope": [
+        "tools/oracle/fixtures/community/smite-inquisitor-act1.xml",
+        "tools/oracle/fixtures/community/smite-inquisitor-act10.xml",
+        "tools/oracle/fixtures/community/smite-inquisitor-act2.xml",
+        "tools/oracle/fixtures/community/smite-inquisitor-act5.xml"
+      ],
+      "meets_minimum": true
+    },
+    "spell": {
+      "skill": "IceNova",
+      "in_scope": [
+        "tools/oracle/fixtures/community/ice-nova-elementalist-campaign-lab1.xml",
+        "tools/oracle/fixtures/community/ice-nova-elementalist-campaign.xml",
+        "tools/oracle/fixtures/community/ice-nova-elementalist-mapping.xml"
+      ],
+      "meets_minimum": true
+    }
+  },
   "pass": true,
   "per_build": [
     {
@@ -494,6 +537,99 @@
       "inventory_size": 156
     },
     {
+      "name": "tools/oracle/fixtures/community/ice-nova-elementalist-campaign-lab1.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 32,
+        "skill": "IceNova",
+        "name": "Ice Nova",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CanRapidFire",
+          "Cold",
+          "Damage",
+          "Duration",
+          "GainsIntensity",
+          "Mineable",
+          "Multicastable",
+          "Nova",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 68
+    },
+    {
+      "name": "tools/oracle/fixtures/community/ice-nova-elementalist-campaign.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 32,
+        "skill": "IceNova",
+        "name": "Ice Nova",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CanRapidFire",
+          "Cold",
+          "Damage",
+          "Duration",
+          "GainsIntensity",
+          "Mineable",
+          "Multicastable",
+          "Nova",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 103
+    },
+    {
+      "name": "tools/oracle/fixtures/community/ice-nova-elementalist-mapping.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 1,
+        "skill": "IceNova",
+        "name": "Ice Nova",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CanRapidFire",
+          "Cold",
+          "Damage",
+          "Duration",
+          "GainsIntensity",
+          "Mineable",
+          "Multicastable",
+          "Nova",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 155
+    },
+    {
       "name": "tools/oracle/fixtures/community/kinetic-blast-of-clustering-necromancer.xml",
       "tree_version": "3_29",
       "main_skill": {
@@ -763,6 +899,114 @@
       ],
       "state": "indeterminate",
       "inventory_size": 161
+    },
+    {
+      "name": "tools/oracle/fixtures/community/smite-inquisitor-act1.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 6,
+        "skill": "Smite",
+        "name": "Smite",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Aura",
+          "Buff",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Melee",
+          "MeleeSingleTarget",
+          "Multistrikeable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 77
+    },
+    {
+      "name": "tools/oracle/fixtures/community/smite-inquisitor-act10.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 2,
+        "skill": "Smite",
+        "name": "Smite",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Aura",
+          "Buff",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Melee",
+          "MeleeSingleTarget",
+          "Multistrikeable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 124
+    },
+    {
+      "name": "tools/oracle/fixtures/community/smite-inquisitor-act2.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 6,
+        "skill": "Smite",
+        "name": "Smite",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Aura",
+          "Buff",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Melee",
+          "MeleeSingleTarget",
+          "Multistrikeable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 87
+    },
+    {
+      "name": "tools/oracle/fixtures/community/smite-inquisitor-act5.xml",
+      "tree_version": "3_29",
+      "main_skill": {
+        "group": 2,
+        "skill": "Smite",
+        "name": "Smite",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Aura",
+          "Buff",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Melee",
+          "MeleeSingleTarget",
+          "Multistrikeable"
+        ]
+      },
+      "in_scope": true,
+      "archetype_ok": true,
+      "reasons": [],
+      "state": "in-scope",
+      "inventory_size": 104
     },
     {
       "name": "tools/oracle/fixtures/community/winter-orb-elementalist.xml",

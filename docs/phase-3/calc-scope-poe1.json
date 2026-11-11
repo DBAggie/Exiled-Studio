@@ -2,13 +2,13 @@
   "format": 1,
   "game": "poe1",
   "steam_build": 26530219,
-  "status": "proposed",
+  "status": "confirmed",
   "tree_version": "3_29",
   "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
   "minimum_per_skill": 3,
   "skills": {
-    "spell": null,
-    "attack": null
+    "spell": "IceNova",
+    "attack": "Smite"
   },
   "excluded_mechanics": [
     {

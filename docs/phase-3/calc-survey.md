@@ -2,7 +2,7 @@
 
 Phase 3 plan, step 3 (`dev/active/phase-3-calc-slice/`). `loom-parity-cli calc-survey` decides from game data and the build, never from the engine, which builds are in the calc slice's scope (plan decision 3), and lists what a calculation of them would need. This page records the rules, the run, the result, and the decisions it leaves for the maintainer.
 
-**Result in one line:** under the plan's rules, 1 of 50 builds is in scope (`winter-orb-elementalist`, a spell); no attack is. Gate 1 needs at least 3 in-scope builds per chosen skill, so the denominator cannot be met from the current fixtures and corpus. The plan's remedy (credited public builds of the chosen skills) needs the maintainer's choice of skills first (Q2, Q7, and new Q8 below).
+**Result in one line:** P3-3 found 1 of 50 builds in scope (`winter-orb-elementalist`) and no attack. The maintainer then chose the skills and how to reach the minimum (2026-11-11, "P3-3b" below): **spell Ice Nova (`IceNova`, 3 in-scope builds), attack Smite (`Smite`, 4)**, all derived setups of two credited Maxroll league-start guides. The scope file is `confirmed`.
 
 ## Rules (`tools/parity-cli/src/calc_survey/`)
 **Main skill, as PoB v2.67.2 finds it** (`main_skill.rs`; `Modules/CalcSetup.lua`, `Classes/SkillsTab.lua`): the active skill set's groups; group `mainSocketGroup`, clamped; its active skills are the non-support granted effects of its enabled gems, in order (the gem effect's own, then its additional ones); `mainActiveSkill`, clamped. A gem is found by `gemId` and `variantId` (or the gem effect whose granted effect is `skillId`); without `gemId` by `skillId`. PoB skips an effect it marks as global (its own stat map, not game data) while `enableGlobal<n>` is off; the survey tries every combination of such effects counted or not and reports `main-skill-uncertain` when they pick different skills. A gem the bundle does not have is `unknown-gem` (PoB v2.67.2 skips it too: the 7 corpus cases are gem variants PoB no longer knows either).
@@ -52,7 +52,7 @@ A build can have several reasons. Candidates (main skill passes the archetype ru
 
 **Why the tree rule stays strict.** PoB computes a 3_28 build with its 3_28 tree file. Comparing PoB's own `TreeData/3_28` and `3_29` files: 171 nodes changed (52 new), and 17 of the 18 builds on 3_28 allocate 2 to 10 changed nodes (for example "Attack Mana Cost", "Life and Reduced Cost", masteries). A looser rule "in scope when every allocated node is equal in both trees" would keep 1 of the 18, and that one is out for other reasons.
 
-## Decisions for the maintainer (before P3-6)
+## Decisions for the maintainer (P3-3; answered in P3-3b)
 - **Q2 (skills).** By the plan's rule (most in-scope builds, then the smaller inventory) the spell is `WinterOrb` (1 build) and there is no attack. Winter Orb is channelled: its DPS uses a hit rate from stages (oracle: `Speed` 9.8, `HitSpeed` 5.78), heavier than a plain self-cast spell. Choose: Winter Orb, or another self-cast hit spell; and an attack.
 - **Q7 (exclusions).** Confirm the three proposed exclusions. Without `cluster-jewel` and `timeless-jewel` the engine would need the cluster and timeless jewel tables (new bundle sections); with them, endgame builds are mostly out.
 - **Q8 (new): how to reach 3 in-scope builds per skill.** The fixtures and corpus give 1 and 0. Options:
@@ -63,6 +63,21 @@ A build can have several reasons. Candidates (main skill passes the archetype ru
   The recommendation is (a), with (b) where a guide's build already holds a 3_29 spec without the excluded jewels.
 
 The scope file stays `"status": "proposed"` with no chosen skill until the maintainer answers; `calc-survey` then reports the chosen skills' in-scope builds and exits 1 while either has fewer than 3.
+
+## P3-3b: chosen skills and their builds (2026-11-11)
+**Maintainer decisions (2026-11-11):** Q7, the three exclusions are confirmed; Q8, public builds, and where those are too few, derived setups of a guide (option (b)), with the minimum kept at 3; Q2, the skills follow from which candidates reach the minimum, preferring skills without PoB skill parts.
+
+**Search** (local, nothing committed but the chosen files): candidates without skill parts in PoB's data (Arc, Ice Nova, Frostbolt, Freezing Pulse, Kinetic Bolt; Lightning Arrow, Splitting Steel, Cleave, Double Strike, Tectonic Slam), plus Smite and Static Strike. Sources: poebuilds.cc (3.29 video guides with pobb.in codes), Maxroll's 44 league-start guides (4 export a PoB code), pobarchives.com (refuses automated requests). Each code was surveyed with every passive spec, then with each setup a guide ships (spec, skill set, item set, and main group of the same name made active together).
+- Arc: 1 in-scope build of 10 video-guide codes (the others: cluster or timeless jewels, another main skill, older trees); single-spec files, so no setups to derive.
+- Ice Nova (Maxroll, aer0): the file opens on its Aspirational setup (cluster jewels; main group Frostblink); its Campaign (lab 1), Campaign, and Mapping setups are in scope.
+- Smite of Divine Judgement Inquisitor (Maxroll, Shayd): plain `Smite` is the main skill of the Act 1, 2, 5, and 10 setups (in Act 5 and 10 selected in its group with Leap Slam), all in scope; the transfigured `SmiteAltX` is in scope in one setup (Red Maps).
+- Frostbolt, Splitting Steel, Tectonic Slam: no 3.29 guide with a PoB code found; Lightning Arrow's 3.29 guide links a character, not a code.
+
+**Chosen:** spell `IceNova` (no skill parts), attack `Smite` (two PoB skill parts, Melee Hit and Area Hit: P3-5 and P3-10 follow PoB's part selection, `skillPart`, default 1). Seven derived fixtures in `tools/oracle/fixtures/community/` (`ice-nova-elementalist-*`, `smite-inquisitor-act*`), tag `derived`, credited with the exact change in `community/SOURCES.md`. Each changes only the active-setup attributes of the decoded export (and for Smite Act 5 and 10 the group's `mainActiveSkill` and `mainActiveSkillCalcs`, so PoB's CALCS view, which the oracle's breakdowns come from, selects Smite too).
+
+**Oracle:** `oracle-run` on the seven, 3 runs each on the pinned oracle (PoB 2.67.2, Windows): all `ok`, runs identical. The Smite files make one inflate call (the guide file holds a timeless jewel outside the active setup's allocated sockets; the `inflate` shim, as for other community fixtures).
+
+**Survey** from clean `f77cb80`, two runs each byte-identical (summaries `098143f6…` public, `ad813a2d…` corpus): public 36 builds, 8 in scope, `IceNova` 3 and `Smite` 4 in scope, `pass` true, exit 0; corpus 21 builds, 0 in scope (exit 1 on its own: the tool checks the minimum per run, and the corpus adds none; gate 1 counts corpus and public builds together). Outputs in `docs/phase-3/calc-survey/`.
 
 ## Slice fields (`docs/phase-3/slice-fields.json`, revision 1, proposed; Q3, Q6)
 The plan's default list, with two changes found in the oracle outputs:
