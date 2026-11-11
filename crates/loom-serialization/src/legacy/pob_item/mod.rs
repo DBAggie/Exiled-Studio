@@ -919,6 +919,56 @@ pub fn suffix_removed(name: &str) -> Option<&str> {
         .flatten()
 }
 
+/// Why PoB's rules name no base for an item ([`item_base`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoBaseName {
+    /// No base line and no name.
+    NoName,
+    /// The name holds no base name.
+    NoBaseInName,
+    /// The name holds several base names equally ([`BaseMatch::Tie`]).
+    Tie,
+}
+
+impl NoBaseName {
+    /// Stable name (Spike B's report names).
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::NoName => "no-name",
+            Self::NoBaseInName => "no-base-in-name",
+            Self::Tie => "tie",
+        }
+    }
+}
+
+/// The base name PoB's rules give a domain item, and the name to look up
+/// when it is not a base ([`suffix_removed`]). Rare, unique, and relic
+/// items name their base on the base line ([`base_name`]); normal and
+/// magic items (and items without a base line) hold it in their name
+/// ([`magic_base`] over `bases`, every base name of the game data). An
+/// item without a rarity is read as unique.
+///
+/// # Errors
+/// [`NoBaseName`] when the rules name no base.
+pub fn item_base<'n>(
+    item: &loom_domain::ItemBody,
+    bases: impl IntoIterator<Item = &'n str>,
+) -> Result<(String, Option<String>), NoBaseName> {
+    let rarity = item.rarity.unwrap_or(loom_domain::Rarity::Unique);
+    let name = match (&item.base, &item.name) {
+        (Some(base), _) if !rarity.names_base_in_name() => base_name(base).to_owned(),
+        (_, Some(name)) => match magic_base(name, bases) {
+            BaseMatch::One(base) => base,
+            BaseMatch::None => return Err(NoBaseName::NoBaseInName),
+            BaseMatch::Tie(_) => return Err(NoBaseName::Tie),
+        },
+        _ => return Err(NoBaseName::NoName),
+    };
+    let fallback = suffix_removed(&name).map(str::to_owned);
+    Ok((name, fallback))
+}
+
 /// Result of [`magic_base`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BaseMatch {

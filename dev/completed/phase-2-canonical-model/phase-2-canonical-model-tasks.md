@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
+Last Updated: 2026-11-11 (PR P2-11: Phase 2 report and gate verdict; Phase 2 complete)
 
 # Phase 2: tasks
 
@@ -86,30 +86,53 @@ Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 - [x] Item round-trip and mutation tests (several item texts, comment between items, unknown slot attribute, empty slot, export from the lines); all 24 fixtures with every section typed and nothing kept whole; corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items) in-session
 - [x] `code-architecture-reviewer`: no blockers; findings recorded in the context file ("P2-5b review findings, applied")
 - [x] Review findings applied (docs, 6 tests); fixtures, corpus 21/21, and 3.13 5/5 round-trips rerun
-- [ ] Apply the P2-5b should-fix findings on this branch (next session)
 - [x] Open PR (#51, base `feat/p2-5a-pob-xml-structure`); write the PR number into the docs right after
 
-## PR P2-6: `resolve_build` (step 6)
-- [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness
-- [ ] Rebuilding `Mods` (split `(0, 0)` stats into `unset`; class, mod-type, and implicit IDs onto rows) and `BaseRow` from a bundle equals `mod_filter::load` and `Bases::load` on the extract, for both games (P2-3b review)
-- [ ] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b); maintainer-run corpus fields equal Spike B
+## PR P2-6a: bundle-backed `ItemData` (step 6, first half)
+- [x] `loom_parser::import::BundleData`: `Mods` (split `(0, 0)` stats into `unset`; class, mod-type, and implicit IDs onto row numbers), base rows, local stats, grafts and gems, properties and quality types, compositions, an index per scope; `Bundle::scope_root` shared with the validator
+- [x] Tests on the synthetic PoE1 and PoE2 bundles (`crates/loom-parser/tests/bundle_data.rs`)
+- [x] `bundle-equal`: the bundle-built data equal `mod_filter::load` and `Bases::load` on the PoE1 extract (40,355 mod rows, 4,309 base names, 0 mismatches). PoE2: the harness's extract readers are PoE1-only, so the PoE2 check is the ignored real-bundle test (builds, every scope indexes, counts match)
+- [x] `resolve-corpus --bundle`: the 12 step 2 fields equal Spike B, `report.json` byte-identical (`docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`: no blockers; should-fix and nits applied (context file)
+- [x] Open PR (#52, base `feat/p2-5b-pob-xml-items`); write the PR number into the docs right after
+
+## PR P2-6b: `resolve_build` (step 6, second half)
+- [x] `loom_parser::import::resolve_build(&mut Build, &data, base_of)` and `Resolver` over every item: lines to `LineResolution`s (stats, typed `kind`, or unresolved with a reason; `adapted`; `Continues`); completeness; the bundle's `DataVersion` recorded; `ResolveError` codes
+- [x] The PoB base-name rules reach the core as an `ItemBaseName` from the adapter through a closure (`pob_item::item_base`); domain `UnresolvedReason::NoBase` (`LINE_NO_BASE`)
+- [x] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b), each outcome and `kind`; source lines in equal source lines out (`crates/loom-parser/tests/resolve_build.rs`; fixtures grown in `make_bundles.py`)
+- [x] `resolve-corpus --bundle` cross-check: 6,061 of 6,061 corpus modifier lines equal the harness; 12 fields and `report.json` unchanged (`docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`: no blockers; should-fix applied (context file)
+- [x] Open PR (#53, base `feat/p2-6-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-7: DTO v1 and generated schemas (step 7)
-- [ ] DTOs, deterministic conversion
-- [ ] `tools/schema-gen`, JSON Schema, TypeScript; CI freshness check
-- [ ] Cross-OS hash comparison job in CI; `cargo deny`
+- [x] `loom_serialization::dto::v1` DTOs, deterministic conversion both ways (`to_json`, `from_json`, `DTO_*` codes); golden synthetic PoE1 and PoE2 documents; all 24 public fixtures round-trip
+- [x] `tools/schema-gen`, `schemas/build.v1.schema.json`, TypeScript (`pnpm generate:schema`); schema validation test (`boon`); CI `schema freshness`
+- [x] `dto-hashes` and CI `dto cross-platform` (in-session: Windows and WSL Linux identical); `cargo deny` ok
+- [x] Gate 3b: resolved synthetic builds round-trip through JSON
+- [x] `code-architecture-reviewer` (resumed after an API rate limit): 1 blocker (the banner's backticks under `sh`) and 2 should-fix (read the header before the strict parse, with `from_value`; `DTO_TOO_DEEP`) applied, plus nits; context file
+- [x] Open PR (#54, base `feat/p2-6b-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-8: `build-round-trip` and CI gate job (step 8)
-- [ ] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; PoE1-identifier scan in the gate job
-- [ ] CI job; maintainer-run corpus summary
+- [x] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; v1 documents as input (PoE2); PoE1-identifier scan in the gate job
+- [x] CI job `round-trip` in `ci-ok` (in-session: the job's commands on Windows and WSL Linux, JSON hashes equal); corpus run 21/21, scrubbed summary `docs/phase-2/build-round-trip-poe1-26530219.json`
+- [x] Maintainer decisions on P2-7: `DTO_*` in plan decision 15 with the layers; gate 3b test moved to the harness, `loom-parser` dev-dependency and AGENTS.md exception removed
+- [x] `code-architecture-reviewer`: no blockers; 4 should-fix and most nits applied (context file)
+- [x] Open PR (#55, base `feat/p2-7-dto-v1`); write the PR number into the docs right after
 
 ## PR P2-9: migrations and persistence (step 9)
-- [ ] Migration framework and report; `MIGRATE_*`
-- [ ] Atomic save, load with migration; `PERSIST_*`
+- [x] Migration framework and report; `MIGRATE_*` (`loom_serialization::migrate`, `dto::read`; test-only v0 to v1)
+- [x] Atomic save, load with migration; `PERSIST_*` (`loom_persistence::Store`; injected `FileOps` failures; WSL Linux in-session)
+- [x] `code-architecture-reviewer`: no blockers; atomic `Never`, full read before replacing, docs and tests applied (context file)
+- [x] Open PR (#56, base `feat/p2-8-build-round-trip`); write the PR number into the docs right after
 
 ## PR P2-10: share codes (step 10, gated)
-- [ ] Import and export through the XML adapter
+- [x] Import and export through the XML adapter (`legacy::share_code`, `miniz_oxide`, our base64; `IMPORT_SHARE_CODE_*`)
+- [x] Our code of every public fixture; two PoB-made codes from the oracle runtime with their XML (`tools/oracle/adapter/share_code.lua`, `tools/oracle/fixtures/share-codes/`)
+- [x] `code-architecture-reviewer`: no blockers; code length cap, one-pass decoding, fixture-count-free tests, nits applied (context file)
+- [x] Open PR (#57, base `feat/p2-9-migrations-persistence`); write the PR number into the docs right after
 
 ## PR P2-11: report and gate (step 11)
-- [ ] `docs/phase-2/phase-2-report.md`, scrubbed summaries, gate verdict
-- [ ] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `docs/phase-2/phase-2-report.md`, gate verdict: met; maintainer-run evidence re-run at `3982838`, equal to the committed summaries (none replaced)
+- [x] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `code-architecture-reviewer`: no blockers; report precision, `ModDomain` in the gate 3c scan, CI run recorded (context file)
+- [x] Open PR (#58, base `feat/p2-10-share-codes`); write the PR number into the docs right after

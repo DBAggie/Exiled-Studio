@@ -89,9 +89,16 @@
   }
  },
  "text": {
-  "compositions": [],
-  "granted_skill_wrapper": null,
-  "label_ids": [],
+  "compositions": [
+   [
+    "TestPresence",
+    "test_presence"
+   ]
+  ],
+  "granted_skill_wrapper": "TestGrantedSkill",
+  "label_ids": [
+   "TestStrands"
+  ],
   "property_ids": [
    "DisplayLastsSeconds"
   ]

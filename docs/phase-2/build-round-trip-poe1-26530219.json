@@ -1,0 +1,1187 @@
+{
+  "inputs": {
+    "tool": {
+      "commit": "d1aa9b7beadeea979e573668ac5ea9830eb20b96",
+      "dirty": false
+    },
+    "bundle": {
+      "game": "poe1",
+      "steam_build": 26530219,
+      "index_sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
+    },
+    "anonymous": true
+  },
+  "builds": 21,
+  "duplicates": 0,
+  "passed": 21,
+  "failed": 0,
+  "checks": {
+    "a_xml_equal": {
+      "pass": 21
+    },
+    "b_builds_equal": {
+      "pass": 21
+    },
+    "c_json_stable": {
+      "pass": 21
+    },
+    "d_source_lines": {
+      "pass": 21
+    }
+  },
+  "items": 1055,
+  "lines": 18842,
+  "modifier_lines": {
+    "continues": 49,
+    "excluded": 1471,
+    "resolved": 4121,
+    "resolved-adapted": 23,
+    "unresolved": 397
+  },
+  "completeness": {
+    "complete": 5,
+    "partial": 16
+  },
+  "kept_whole": 0,
+  "mutations": {
+    "attribute": {
+      "tried": 665,
+      "survived": 665
+    },
+    "comment-before": {
+      "tried": 665,
+      "survived": 665
+    },
+    "element-after": {
+      "tried": 644,
+      "survived": 644
+    },
+    "extra-item-text": {
+      "tried": 21,
+      "survived": 21
+    },
+    "first-child": {
+      "tried": 665,
+      "survived": 665
+    },
+    "instruction-after": {
+      "tried": 665,
+      "survived": 665
+    },
+    "last-child": {
+      "tried": 665,
+      "survived": 665
+    }
+  },
+  "per_build": [
+    {
+      "name": "sha256:33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 63,
+      "lines": 1050,
+      "modifier_lines": {
+        "continues": 3,
+        "excluded": 23,
+        "resolved": 220,
+        "unresolved": 4
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 32,
+          "survived": 32
+        },
+        "comment-before": {
+          "tried": 32,
+          "survived": 32
+        },
+        "element-after": {
+          "tried": 31,
+          "survived": 31
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 32,
+          "survived": 32
+        },
+        "instruction-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "last-child": {
+          "tried": 32,
+          "survived": 32
+        }
+      },
+      "json_sha256": "48cc2297b0659f8f703b2a76bbf4282879aeded882e868bc54be145645c58ff4"
+    },
+    {
+      "name": "sha256:d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 17,
+      "lines": 255,
+      "modifier_lines": {
+        "continues": 1,
+        "resolved": 94
+      },
+      "completeness": "complete",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 33,
+          "survived": 33
+        },
+        "comment-before": {
+          "tried": 33,
+          "survived": 33
+        },
+        "element-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 33,
+          "survived": 33
+        },
+        "instruction-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "last-child": {
+          "tried": 33,
+          "survived": 33
+        }
+      },
+      "json_sha256": "85243ca5ba23cd447ff0dcd37f0cd553f45e9a26a2b0c23271b6d780888268e3"
+    },
+    {
+      "name": "sha256:9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 18,
+      "lines": 250,
+      "modifier_lines": {
+        "continues": 1,
+        "resolved": 93
+      },
+      "completeness": "complete",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 32,
+          "survived": 32
+        },
+        "comment-before": {
+          "tried": 32,
+          "survived": 32
+        },
+        "element-after": {
+          "tried": 31,
+          "survived": 31
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 32,
+          "survived": 32
+        },
+        "instruction-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "last-child": {
+          "tried": 32,
+          "survived": 32
+        }
+      },
+      "json_sha256": "5cf25418c6b2d08c47d5aa1885113cc365684407d9a199845b3f28d62c60d472"
+    },
+    {
+      "name": "sha256:a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 17,
+      "lines": 248,
+      "modifier_lines": {
+        "continues": 2,
+        "resolved": 90,
+        "unresolved": 4
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 31,
+          "survived": 31
+        },
+        "comment-before": {
+          "tried": 31,
+          "survived": 31
+        },
+        "element-after": {
+          "tried": 30,
+          "survived": 30
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 31,
+          "survived": 31
+        },
+        "instruction-after": {
+          "tried": 31,
+          "survived": 31
+        },
+        "last-child": {
+          "tried": 31,
+          "survived": 31
+        }
+      },
+      "json_sha256": "2e9ddbeffeea3fbdcf717fbcd6c4f6a79b5fc20e8ad10729ab2b46bec031a20f"
+    },
+    {
+      "name": "sha256:2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 55,
+      "lines": 765,
+      "modifier_lines": {
+        "excluded": 6,
+        "resolved": 94,
+        "resolved-adapted": 2,
+        "unresolved": 55
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 29,
+          "survived": 29
+        },
+        "comment-before": {
+          "tried": 29,
+          "survived": 29
+        },
+        "element-after": {
+          "tried": 28,
+          "survived": 28
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 29,
+          "survived": 29
+        },
+        "instruction-after": {
+          "tried": 29,
+          "survived": 29
+        },
+        "last-child": {
+          "tried": 29,
+          "survived": 29
+        }
+      },
+      "json_sha256": "c03519629db9f5ab8b3e6af934c332125bd8fd8b2d24c6062c604ec74e7da196"
+    },
+    {
+      "name": "sha256:2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 44,
+      "lines": 813,
+      "modifier_lines": {
+        "continues": 1,
+        "excluded": 18,
+        "resolved": 171,
+        "unresolved": 2
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 29,
+          "survived": 29
+        },
+        "comment-before": {
+          "tried": 29,
+          "survived": 29
+        },
+        "element-after": {
+          "tried": 28,
+          "survived": 28
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 29,
+          "survived": 29
+        },
+        "instruction-after": {
+          "tried": 29,
+          "survived": 29
+        },
+        "last-child": {
+          "tried": 29,
+          "survived": 29
+        }
+      },
+      "json_sha256": "83903c4363196f8cefcd715cf0af9f3faad0bcd8bb94e01bdb8473843c9bdbe9"
+    },
+    {
+      "name": "sha256:da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 15,
+      "lines": 208,
+      "modifier_lines": {
+        "continues": 2,
+        "resolved": 76
+      },
+      "completeness": "complete",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 30,
+          "survived": 30
+        },
+        "comment-before": {
+          "tried": 30,
+          "survived": 30
+        },
+        "element-after": {
+          "tried": 29,
+          "survived": 29
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 30,
+          "survived": 30
+        },
+        "instruction-after": {
+          "tried": 30,
+          "survived": 30
+        },
+        "last-child": {
+          "tried": 30,
+          "survived": 30
+        }
+      },
+      "json_sha256": "42158b0d4b41ef9570cfe037003a1ab9404ed3748136f119475174e3aab86d4d"
+    },
+    {
+      "name": "sha256:e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 60,
+      "lines": 925,
+      "modifier_lines": {
+        "continues": 6,
+        "excluded": 22,
+        "resolved": 236,
+        "resolved-adapted": 1,
+        "unresolved": 4
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 33,
+          "survived": 33
+        },
+        "comment-before": {
+          "tried": 33,
+          "survived": 33
+        },
+        "element-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 33,
+          "survived": 33
+        },
+        "instruction-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "last-child": {
+          "tried": 33,
+          "survived": 33
+        }
+      },
+      "json_sha256": "3d347dce22ab2bb671f67cfca1c16ec0b1bbabfcf5a539f516eced8538ef8505"
+    },
+    {
+      "name": "sha256:8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 5,
+      "lines": 99,
+      "modifier_lines": {
+        "continues": 2,
+        "excluded": 10,
+        "resolved": 19,
+        "unresolved": 5
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 33,
+          "survived": 33
+        },
+        "comment-before": {
+          "tried": 33,
+          "survived": 33
+        },
+        "element-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 33,
+          "survived": 33
+        },
+        "instruction-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "last-child": {
+          "tried": 33,
+          "survived": 33
+        }
+      },
+      "json_sha256": "893f23dd2e5e982757c0f3976d0c7ca4ce093b919f1e261007f4bef180a512a2"
+    },
+    {
+      "name": "sha256:978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 33,
+      "lines": 462,
+      "modifier_lines": {
+        "continues": 1,
+        "excluded": 11,
+        "resolved": 63
+      },
+      "completeness": "complete",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 31,
+          "survived": 31
+        },
+        "comment-before": {
+          "tried": 31,
+          "survived": 31
+        },
+        "element-after": {
+          "tried": 30,
+          "survived": 30
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 31,
+          "survived": 31
+        },
+        "instruction-after": {
+          "tried": 31,
+          "survived": 31
+        },
+        "last-child": {
+          "tried": 31,
+          "survived": 31
+        }
+      },
+      "json_sha256": "0f05691e39c9e32f61a8750d5b9450a2b85777bc361f1d98a1b1ccdcba223296"
+    },
+    {
+      "name": "sha256:ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 44,
+      "lines": 804,
+      "modifier_lines": {
+        "continues": 3,
+        "excluded": 61,
+        "resolved": 181,
+        "resolved-adapted": 1,
+        "unresolved": 18
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 33,
+          "survived": 33
+        },
+        "comment-before": {
+          "tried": 33,
+          "survived": 33
+        },
+        "element-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 33,
+          "survived": 33
+        },
+        "instruction-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "last-child": {
+          "tried": 33,
+          "survived": 33
+        }
+      },
+      "json_sha256": "2b3b271c67543285acc29efc6f0ecc6ef59b495da36337983c580a8dca103391"
+    },
+    {
+      "name": "sha256:a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 37,
+      "lines": 605,
+      "modifier_lines": {
+        "continues": 2,
+        "excluded": 41,
+        "resolved": 184,
+        "resolved-adapted": 2,
+        "unresolved": 4
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 34,
+          "survived": 34
+        },
+        "comment-before": {
+          "tried": 34,
+          "survived": 34
+        },
+        "element-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 34,
+          "survived": 34
+        },
+        "instruction-after": {
+          "tried": 34,
+          "survived": 34
+        },
+        "last-child": {
+          "tried": 34,
+          "survived": 34
+        }
+      },
+      "json_sha256": "10c02898f92692bd0a5acdf8f11b87ef0de391720e6b2d445c4610db0f982401"
+    },
+    {
+      "name": "sha256:6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 142,
+      "lines": 2523,
+      "modifier_lines": {
+        "continues": 4,
+        "excluded": 138,
+        "resolved": 536,
+        "resolved-adapted": 2,
+        "unresolved": 88
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 35,
+          "survived": 35
+        },
+        "comment-before": {
+          "tried": 35,
+          "survived": 35
+        },
+        "element-after": {
+          "tried": 34,
+          "survived": 34
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 35,
+          "survived": 35
+        },
+        "instruction-after": {
+          "tried": 35,
+          "survived": 35
+        },
+        "last-child": {
+          "tried": 35,
+          "survived": 35
+        }
+      },
+      "json_sha256": "10d854d3aa7b9672831077e73d16db899ec5de3753c9bdf8b40079762d4476e4"
+    },
+    {
+      "name": "sha256:7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 14,
+      "lines": 208,
+      "modifier_lines": {
+        "continues": 1,
+        "resolved": 29
+      },
+      "completeness": "complete",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 30,
+          "survived": 30
+        },
+        "comment-before": {
+          "tried": 30,
+          "survived": 30
+        },
+        "element-after": {
+          "tried": 29,
+          "survived": 29
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 30,
+          "survived": 30
+        },
+        "instruction-after": {
+          "tried": 30,
+          "survived": 30
+        },
+        "last-child": {
+          "tried": 30,
+          "survived": 30
+        }
+      },
+      "json_sha256": "7722f69ce59424dfe72ebd7dab3f507f1947c33511d149ab9bbf8480f77d6b96"
+    },
+    {
+      "name": "sha256:b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 139,
+      "lines": 2472,
+      "modifier_lines": {
+        "continues": 4,
+        "excluded": 138,
+        "resolved": 512,
+        "resolved-adapted": 1,
+        "unresolved": 101
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 34,
+          "survived": 34
+        },
+        "comment-before": {
+          "tried": 34,
+          "survived": 34
+        },
+        "element-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 34,
+          "survived": 34
+        },
+        "instruction-after": {
+          "tried": 34,
+          "survived": 34
+        },
+        "last-child": {
+          "tried": 34,
+          "survived": 34
+        }
+      },
+      "json_sha256": "9ee738c8241f564564549e053a0c5c5562b78b04caca910098ed81c88a8363c3"
+    },
+    {
+      "name": "sha256:5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 36,
+      "lines": 1164,
+      "modifier_lines": {
+        "continues": 2,
+        "excluded": 322,
+        "resolved": 175,
+        "unresolved": 10
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 34,
+          "survived": 34
+        },
+        "comment-before": {
+          "tried": 34,
+          "survived": 34
+        },
+        "element-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 34,
+          "survived": 34
+        },
+        "instruction-after": {
+          "tried": 34,
+          "survived": 34
+        },
+        "last-child": {
+          "tried": 34,
+          "survived": 34
+        }
+      },
+      "json_sha256": "5046e3f0876fcf8f816d66f606671b4d9f597aba6c0390eb8b994c76cd7cc2f9"
+    },
+    {
+      "name": "sha256:d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 28,
+      "lines": 388,
+      "modifier_lines": {
+        "continues": 2,
+        "resolved": 131,
+        "unresolved": 8
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 33,
+          "survived": 33
+        },
+        "comment-before": {
+          "tried": 33,
+          "survived": 33
+        },
+        "element-after": {
+          "tried": 32,
+          "survived": 32
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 33,
+          "survived": 33
+        },
+        "instruction-after": {
+          "tried": 33,
+          "survived": 33
+        },
+        "last-child": {
+          "tried": 33,
+          "survived": 33
+        }
+      },
+      "json_sha256": "928510db7ad560fb31585fb20903cc16a3079862b97e2517a1ddd399dceea03c"
+    },
+    {
+      "name": "sha256:59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 28,
+      "lines": 487,
+      "modifier_lines": {
+        "excluded": 4,
+        "resolved": 111,
+        "unresolved": 19
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 27,
+          "survived": 27
+        },
+        "comment-before": {
+          "tried": 27,
+          "survived": 27
+        },
+        "element-after": {
+          "tried": 26,
+          "survived": 26
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 27,
+          "survived": 27
+        },
+        "instruction-after": {
+          "tried": 27,
+          "survived": 27
+        },
+        "last-child": {
+          "tried": 27,
+          "survived": 27
+        }
+      },
+      "json_sha256": "e046dfdce716811709c17f1cdc5ebdc3c6162b0163ad9cc4dbc34713c1a7dd01"
+    },
+    {
+      "name": "sha256:e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 58,
+      "lines": 723,
+      "modifier_lines": {
+        "continues": 1,
+        "excluded": 8,
+        "resolved": 131,
+        "resolved-adapted": 4,
+        "unresolved": 61
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 27,
+          "survived": 27
+        },
+        "comment-before": {
+          "tried": 27,
+          "survived": 27
+        },
+        "element-after": {
+          "tried": 26,
+          "survived": 26
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 27,
+          "survived": 27
+        },
+        "instruction-after": {
+          "tried": 27,
+          "survived": 27
+        },
+        "last-child": {
+          "tried": 27,
+          "survived": 27
+        }
+      },
+      "json_sha256": "d49c5a46b0b75dbde08d0454ba3d48dcd4a5d7ab6a633a35b7016d2fe86c8e3b"
+    },
+    {
+      "name": "sha256:4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 51,
+      "lines": 921,
+      "modifier_lines": {
+        "continues": 4,
+        "excluded": 44,
+        "resolved": 205,
+        "resolved-adapted": 1,
+        "unresolved": 6
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 30,
+          "survived": 30
+        },
+        "comment-before": {
+          "tried": 30,
+          "survived": 30
+        },
+        "element-after": {
+          "tried": 29,
+          "survived": 29
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 30,
+          "survived": 30
+        },
+        "instruction-after": {
+          "tried": 30,
+          "survived": 30
+        },
+        "last-child": {
+          "tried": 30,
+          "survived": 30
+        }
+      },
+      "json_sha256": "d1564e95a7b431dcbf0ddfb821f745222be8d1d56fcc7e8eb2320c3bb5a7feca"
+    },
+    {
+      "name": "sha256:34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "format": "pob-xml",
+      "game": "poe1",
+      "ok": true,
+      "checks": {
+        "a_xml_equal": "pass",
+        "b_builds_equal": "pass",
+        "c_json_stable": "pass",
+        "d_source_lines": "pass"
+      },
+      "items": 151,
+      "lines": 3472,
+      "modifier_lines": {
+        "continues": 7,
+        "excluded": 625,
+        "resolved": 770,
+        "resolved-adapted": 9,
+        "unresolved": 8
+      },
+      "completeness": "partial",
+      "kept_whole": 0,
+      "mutations": {
+        "attribute": {
+          "tried": 35,
+          "survived": 35
+        },
+        "comment-before": {
+          "tried": 35,
+          "survived": 35
+        },
+        "element-after": {
+          "tried": 34,
+          "survived": 34
+        },
+        "extra-item-text": {
+          "tried": 1,
+          "survived": 1
+        },
+        "first-child": {
+          "tried": 35,
+          "survived": 35
+        },
+        "instruction-after": {
+          "tried": 35,
+          "survived": 35
+        },
+        "last-child": {
+          "tried": 35,
+          "survived": 35
+        }
+      },
+      "json_sha256": "0cd5db0dda8afa9305cbd9a5172c9d83605bb386cf43edb49e444d89a484a8b5"
+    }
+  ]
+}
