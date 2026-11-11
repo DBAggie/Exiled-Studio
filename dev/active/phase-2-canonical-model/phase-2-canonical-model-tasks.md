@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-7: DTO v1 and generated schemas)
+Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
 
 # Phase 2: tasks
 
@@ -113,8 +113,11 @@ Last Updated: 2026-11-10 (PR P2-7: DTO v1 and generated schemas)
 - [x] Open PR (#54, base `feat/p2-6b-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-8: `build-round-trip` and CI gate job (step 8)
-- [ ] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; PoE1-identifier scan in the gate job
-- [ ] CI job; maintainer-run corpus summary
+- [x] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; v1 documents as input (PoE2); PoE1-identifier scan in the gate job
+- [x] CI job `round-trip` in `ci-ok` (in-session: the job's commands on Windows and WSL Linux, JSON hashes equal); corpus run 21/21, scrubbed summary `docs/phase-2/build-round-trip-poe1-26530219.json`
+- [x] Maintainer decisions on P2-7: `DTO_*` in plan decision 15 with the layers; gate 3b test moved to the harness, `loom-parser` dev-dependency and AGENTS.md exception removed
+- [ ] `code-architecture-reviewer`; apply findings
+- [ ] Open PR (base `feat/p2-7-dto-v1`); write the PR number into the docs right after
 
 ## PR P2-9: migrations and persistence (step 9)
 - [ ] Migration framework and report; `MIGRATE_*`

@@ -100,7 +100,8 @@ Decisions marked (Q) wait for the maintainer; their defaults are in the context 
     - Sequential `vN -> vN+1` functions over `serde_json::Value`, run before DTO parsing. Each one adds entries to the migration report.
     - Phase 2 ships only v1, so test-only migrations exercise the framework: a synthetic v0 to v1, and a document newer than supported, refused with a typed error.
     - The Build records the data bundle it was made with (game, data schema version, Steam build), so a data update never reinterprets a build silently (ADR-010).
-15. **Errors and completeness.** Every failure has a stable code (ADR-014): `BUNDLE_*`, `IMPORT_*`, `MIGRATE_*`, `PERSIST_*`.
+15. **Errors and completeness.** Every failure has a stable code (ADR-014): `BUNDLE_*`, `IMPORT_*`, `MIGRATE_*`, `PERSIST_*`, `DTO_*`.
+    - Layers (maintainer decision 2026-11-10, recorded in P2-8): `MIGRATE_*` reads the document's version first on load, so a document newer than supported gives `MIGRATE_TOO_NEW` before it is parsed; `PERSIST_*` covers file I/O and atomic writes; `DTO_*` is a malformed build document, from any source. No layer wraps or renames another layer's code.
     - An import result is `Complete`, `Partial` (some content quarantined), or `Fatal`.
     - `Indeterminate` is a calculation state (ADR-014), so import never produces it.
     - Nothing is dropped silently.
