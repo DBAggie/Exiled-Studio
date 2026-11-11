@@ -1,4 +1,11 @@
-//! Item type files (`*.it`, Spike B, PR B4x): the class hierarchy of item
+//! Item type files (`*.it`, Spike B, PR B4x) and object templates (`*.ot`,
+//! Phase 3 PR P3-1b), one grammar. Object templates hold the base stats of
+//! characters (`Metadata/Characters/Character.ot`: `life_per_level`,
+//! resistance caps, ...) and monsters (`Metadata/Monsters/Monster.ot`); only
+//! those and the class templates beside them are read ([`is_object_template`]).
+//! A collection holds one [`Kind`]; both use the `EXTRACT_IT_*` codes.
+//!
+//! Item types are the class hierarchy of item
 //! types. Each `BaseItemTypes` row names its parent type in `InheritsFrom`
 //! (for example `Metadata/Items/Rings/AbstractRing`); the type's file and
 //! the files it `extends` hold the inherited spawn tags (`ring`,
@@ -11,7 +18,8 @@
 //! (or `nothing`, the root) and no chain loops.
 //!
 //! Grammar (UTF-16LE with a byte-order mark; observed on all 413 PoE1 and
-//! 277 PoE2 files of the installs, report section 19). Lines are trimmed;
+//! 277 PoE2 item type files of the installs, report section 19, and on the
+//! 9 PoE1 and 4 PoE2 object templates read, P3-1b). Lines are trimmed;
 //! blank lines and `//` comment lines are skipped.
 //!
 //! ```text
@@ -24,7 +32,10 @@
 //!     tag = "ring"                 an entry: key = "text" | bare token
 //!     remove_tag = "weapon"
 //!     x_size = 1
+//!     life_per_level = 12          keys may hold `%` and `+` (stat IDs)
 //! }
+//! Life { }                         "Name { }" is an empty block too
+//! on_death = { HideWeapons(); }    a one-line script value, kept as written
 //! client { RenderItem { } }        blocks nest (one construct per line)
 //! ```
 //!
@@ -45,6 +56,76 @@ pub const ITEM_TYPES_DIR: &str = "item_types";
 /// File extension of an item type in the index.
 pub const EXTENSION: &str = ".it";
 
+/// Folder of the object templates in the extract output.
+pub const OBJECT_TEMPLATES_DIR: &str = "object_templates";
+
+/// File extension of an object template in the index.
+pub const OBJECT_TEMPLATE_EXTENSION: &str = ".ot";
+
+/// The object templates read besides the character folder: the monster
+/// base (default monster stats, P3-1c).
+pub const MONSTER_TEMPLATE: &str = "metadata/monsters/monster.ot";
+
+/// One kind of file this grammar reads.
+#[derive(Debug, Clone, Copy)]
+pub struct Kind {
+    /// Output folder.
+    pub dir: &'static str,
+    /// File extension in the index.
+    pub extension: &'static str,
+    wants: fn(&str) -> bool,
+}
+
+/// Item type files.
+pub const ITEM_TYPES: Kind = Kind {
+    dir: ITEM_TYPES_DIR,
+    extension: EXTENSION,
+    wants: is_item_type,
+};
+
+/// Object templates.
+pub const OBJECT_TEMPLATES: Kind = Kind {
+    dir: OBJECT_TEMPLATES_DIR,
+    extension: OBJECT_TEMPLATE_EXTENSION,
+    wants: is_object_template,
+};
+
+impl Kind {
+    /// Whether `path` (as listed in the index) is a file of this kind.
+    #[must_use]
+    pub fn wants(&self, path: &str) -> bool {
+        (self.wants)(path)
+    }
+
+    /// Output path of the file at `path` (lowercase index path plus `.json`).
+    #[must_use]
+    pub fn output_path(&self, path: &str) -> String {
+        format!("{}/{}.json", self.dir, path.to_ascii_lowercase())
+    }
+
+    /// The index path an `extends` target names: lowercase plus the
+    /// extension; `None` for [`ROOT`].
+    #[must_use]
+    pub fn target_path(&self, extends: &str) -> Option<String> {
+        (extends != ROOT).then(|| format!("{}{}", extends.to_ascii_lowercase(), self.extension))
+    }
+}
+
+/// Whether `path` is an object template this extractor reads: an `.ot`
+/// file directly in `Metadata/Characters/` or one folder below it (the
+/// class templates, `Metadata/Characters/Str/Str.ot`), and
+/// [`MONSTER_TEMPLATE`].
+#[must_use]
+pub fn is_object_template(path: &str) -> bool {
+    let path = path.to_ascii_lowercase();
+    if path == MONSTER_TEMPLATE {
+        return true;
+    }
+    path.strip_prefix("metadata/characters/")
+        .and_then(|rest| rest.strip_suffix(OBJECT_TEMPLATE_EXTENSION))
+        .is_some_and(|rest| !rest.is_empty() && rest.split('/').count() <= 2)
+}
+
 /// The `extends` target of a root type (`Metadata/Items/Item` on both
 /// installs). `v2.67.2:src/Export/Scripts/bases.lua` `getBaseItemTags`
 /// treats it as the base case too.
@@ -61,17 +142,16 @@ pub fn is_item_type(path: &str) -> bool {
     path.to_ascii_lowercase().ends_with(EXTENSION)
 }
 
-/// Output path of the file at `path` (lowercase index path plus `.json`).
+/// Output path of an item type file (`ITEM_TYPES.output_path`).
 #[must_use]
 pub fn output_path(path: &str) -> String {
-    format!("{ITEM_TYPES_DIR}/{}.json", path.to_ascii_lowercase())
+    ITEM_TYPES.output_path(path)
 }
 
-/// The index path an `extends` target names: lowercase plus [`EXTENSION`];
-/// `None` for [`ROOT`].
+/// The item type file an `extends` target names (`ITEM_TYPES.target_path`).
 #[must_use]
 pub fn target_path(extends: &str) -> Option<String> {
-    (extends != ROOT).then(|| format!("{}{EXTENSION}", extends.to_ascii_lowercase()))
+    ITEM_TYPES.target_path(extends)
 }
 
 /// Errors from reading an item type file. Each variant has a stable
@@ -184,11 +264,27 @@ fn is_name(s: &str) -> bool {
     !s.is_empty() && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_')
 }
 
+/// Whether `s` is an entry key: a name, or a stat ID with `%` and `+`
+/// (object templates: `base_maximum_all_resistances_%`).
+fn is_key(s: &str) -> bool {
+    !s.is_empty()
+        && s.bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'%' | b'+'))
+}
+
 /// Whether `s` is a bare value: ASCII letters, digits, `_`, `.`, `+`, `-`.
 fn is_bare(s: &str) -> bool {
     !s.is_empty()
         && s.bytes()
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.' | b'+' | b'-'))
+}
+
+/// A one-line script value, `{ HideWeapons(); }` (PoE2 object templates'
+/// client events): braces around text without braces. Kept as written.
+fn is_script(s: &str) -> bool {
+    s.strip_prefix('{')
+        .and_then(|t| t.strip_suffix('}'))
+        .is_some_and(|t| !t.contains(['{', '}']))
 }
 
 /// `"text"` without inner quotes, as the text.
@@ -210,7 +306,10 @@ fn block_line(line: &str) -> Option<Opens<'_>> {
     if is_name(line) {
         return Some(Opens::Pending(line));
     }
-    if let Some(name) = line.strip_suffix("{}") {
+    if let Some(name) = line
+        .strip_suffix('}')
+        .and_then(|l| l.trim_end().strip_suffix('{'))
+    {
         let name = name.trim_end();
         return is_name(name).then_some(Opens::Empty(name));
     }
@@ -221,12 +320,12 @@ fn block_line(line: &str) -> Option<Opens<'_>> {
 fn entry_line(line: &str) -> Option<Entry> {
     let (key, value) = line.split_once('=')?;
     let (key, value) = (key.trim(), value.trim());
-    if !is_name(key) {
+    if !is_key(key) {
         return None;
     }
     let (quoted, value) = match quoted(value) {
         Some(text) => (true, text),
-        None if is_bare(value) => (false, value),
+        None if is_bare(value) || is_script(value) => (false, value),
         None => return None,
     };
     Some(Entry {
@@ -435,8 +534,11 @@ pub struct ItemTypeManifest {
     pub dangling_extends: BTreeMap<String, String>,
     /// Output folder.
     pub dir: &'static str,
-    /// Every `*.it` file in the index, by lowercase index path.
+    /// Every file of the kind in the index, by lowercase index path.
     pub files: BTreeMap<String, ItemTypeEntry>,
+    /// The kind's extension (not written).
+    #[serde(skip)]
+    pub extension: &'static str,
 }
 
 impl ItemTypeManifest {
@@ -446,7 +548,7 @@ impl ItemTypeManifest {
     pub fn problems(&self) -> Vec<String> {
         let mut problems = Vec::new();
         if self.files.is_empty() {
-            problems.push(format!("no {EXTENSION} files in the index"));
+            problems.push(format!("no {} files in the index", self.extension));
         }
         for (path, file) in &self.files {
             if file.status == ItemTypeStatus::Failed {
@@ -470,20 +572,24 @@ impl ItemTypeManifest {
 /// failed files included), so a failed parent is reported once, as failed,
 /// not again for each child.
 fn chain_checks(
+    kind: Kind,
     extends: &BTreeMap<String, String>,
     known: &BTreeSet<String>,
 ) -> (BTreeMap<String, String>, BTreeSet<String>) {
     let mut dangling = BTreeMap::new();
     let mut cycles = BTreeSet::new();
     for (path, target) in extends {
-        if target_path(target).is_some_and(|t| !known.contains(&t)) {
+        if kind
+            .target_path(target)
+            .is_some_and(|t| !known.contains(&t))
+        {
             dangling.insert(path.clone(), target.clone());
         }
         // Walk up from `path`; coming back to it means it is on a cycle. A
         // chain that loops above `path` stops when a file repeats.
         let mut seen = BTreeSet::new();
         let mut at = path.clone();
-        while let Some(next) = extends.get(&at).and_then(|t| target_path(t)) {
+        while let Some(next) = extends.get(&at).and_then(|t| kind.target_path(t)) {
             if next == *path {
                 cycles.insert(path.clone());
                 break;
@@ -504,17 +610,19 @@ struct Added {
     result: Result<(ItemType, Vec<u8>), TableError>,
 }
 
-/// Collects the item type files of one game in any order.
-#[derive(Debug, Clone, Default)]
+/// Collects the files of one kind of one game in any order.
+#[derive(Debug, Clone)]
 pub struct Collection {
+    kind: Kind,
     added: BTreeMap<String, Added>,
 }
 
 impl Collection {
-    /// An empty collection.
+    /// An empty collection of `kind`.
     #[must_use]
-    pub const fn new() -> Self {
+    pub const fn new(kind: Kind) -> Self {
         Self {
+            kind,
             added: BTreeMap::new(),
         }
     }
@@ -526,7 +634,7 @@ impl Collection {
     /// [`ExtractError`] if `path` is not an item type file, was added
     /// before, or JSON cannot be written.
     pub fn add(&mut self, path: &str, bytes: &[u8]) -> Result<(), ExtractError> {
-        if !is_item_type(path) {
+        if !self.kind.wants(path) {
             return Err(ExtractError::UnplannedFile {
                 path: path.to_owned(),
             });
@@ -585,7 +693,7 @@ impl Collection {
             };
             match added.result {
                 Ok((item, json)) => {
-                    let out = output_path(&key);
+                    let out = self.kind.output_path(&key);
                     entry.is_abstract = Some(item.is_abstract);
                     entry.blocks = Some(item.blocks.len());
                     entry.extends = Some(item.extends.clone());
@@ -599,14 +707,15 @@ impl Collection {
             entries.insert(key, entry);
         }
         let known: BTreeSet<String> = entries.keys().cloned().collect();
-        let (dangling_extends, cycles) = chain_checks(&extends, &known);
+        let (dangling_extends, cycles) = chain_checks(self.kind, &extends, &known);
         (
             files,
             ItemTypeManifest {
                 cycles,
                 dangling_extends,
-                dir: ITEM_TYPES_DIR,
+                dir: self.kind.dir,
                 files: entries,
+                extension: self.kind.extension,
             },
         )
     }
@@ -729,7 +838,7 @@ mod tests {
 
     #[test]
     fn finish_should_report_a_failed_parent_once() {
-        let mut c = Collection::new();
+        let mut c = Collection::new(ITEM_TYPES);
         c.add("metadata/items/parent.it", b"odd").unwrap();
         c.add("metadata/items/child.it", &file("Metadata/Items/Parent"))
             .unwrap();
@@ -768,7 +877,7 @@ mod tests {
 
     #[test]
     fn finish_should_check_the_extends_chain() {
-        let mut c = Collection::new();
+        let mut c = Collection::new(ITEM_TYPES);
         c.add("Metadata/Items/Item.it", &file(ROOT)).unwrap();
         c.add(
             "metadata/items/rings/abstractring.it",
@@ -823,7 +932,7 @@ mod tests {
 
     #[test]
     fn collection_should_refuse_other_files_and_duplicates() {
-        let mut c = Collection::new();
+        let mut c = Collection::new(ITEM_TYPES);
         assert_eq!(
             c.add("metadata/items/x.ot", &file(ROOT))
                 .unwrap_err()
@@ -844,8 +953,108 @@ mod tests {
             Some("EXTRACT_IT_BAD_PATH")
         );
         assert_eq!(
-            Collection::new().finish().1.problems(),
+            Collection::new(ITEM_TYPES).finish().1.problems(),
             ["no .it files in the index"]
+        );
+    }
+
+    #[test]
+    fn object_templates_should_be_the_character_folder_and_the_monster_base() {
+        for (path, wanted) in [
+            ("Metadata/Characters/Character.ot", true),
+            ("metadata/characters/str/str.ot", true),
+            ("metadata/characters/character_login.ot", true),
+            ("metadata/monsters/monster.ot", true),
+            ("metadata/characters/str/deeper/x.ot", false),
+            ("metadata/characters/.ot", false),
+            ("metadata/monsters/zombie/zombie.ot", false),
+            ("metadata/characters/character.it", false),
+            ("metadata/items/item.it", false),
+        ] {
+            assert_eq!(is_object_template(path), wanted, "{path}");
+        }
+    }
+
+    #[test]
+    fn parse_should_read_stat_keys_and_spaced_empty_blocks() {
+        let text = "version 3\nextends \"nothing\"\nStats\n{\n\tlife_per_level = 12\n\
+            \tbase_maximum_all_resistances_% = 75\n\tdamage_+%_per_10_rampage_stacks = 2\n}\n\
+            Life { }\nBuffs {}\n";
+        let t = parse(&utf16(text)).unwrap();
+        let names: Vec<&str> = t.blocks.iter().map(|b| b.name.as_str()).collect();
+        assert_eq!(names, ["Stats", "Life", "Buffs"]);
+        assert_eq!(
+            t.values("Stats", "base_maximum_all_resistances_%")
+                .collect::<Vec<_>>(),
+            ["75"]
+        );
+        assert_eq!(t.blocks[0].entries.len(), 3);
+        let script = "version 3
+extends \"nothing\"
+client
+{
+	on_death = { HideWeapons(); }
+}
+";
+        assert_eq!(
+            parse(&utf16(script))
+                .unwrap()
+                .values("client", "on_death")
+                .collect::<Vec<_>>(),
+            ["{ HideWeapons(); }"]
+        );
+        let nested = "version 3
+extends \"nothing\"
+client
+{
+	on_death = { a { b } }
+}
+";
+        assert_eq!(
+            parse(&utf16(nested)).unwrap_err().code(),
+            "EXTRACT_IT_UNEXPECTED_LINE"
+        );
+        // Other characters are still not keys.
+        let bad = "version 3\nextends \"nothing\"\nStats\n{\n\ta/b = 1\n}\n";
+        assert_eq!(
+            parse(&utf16(bad)).unwrap_err().code(),
+            "EXTRACT_IT_UNEXPECTED_LINE"
+        );
+    }
+
+    #[test]
+    fn object_template_collection_should_check_its_own_chain() {
+        let mut c = Collection::new(OBJECT_TEMPLATES);
+        c.add("metadata/characters/character.ot", &file(ROOT))
+            .unwrap();
+        c.add(
+            "metadata/characters/str/str.ot",
+            &file("Metadata/Characters/Character"),
+        )
+        .unwrap();
+        c.add(
+            "metadata/characters/dex/dex.ot",
+            &file("Metadata/Characters/Gone"),
+        )
+        .unwrap();
+        assert_eq!(
+            c.add("metadata/items/item.it", &file(ROOT))
+                .unwrap_err()
+                .code(),
+            "EXTRACT_UNPLANNED_FILE"
+        );
+        let (files, m) = c.finish();
+        assert!(files.contains_key("object_templates/metadata/characters/str/str.ot.json"));
+        assert_eq!(m.dir, OBJECT_TEMPLATES_DIR);
+        assert_eq!(
+            m.problems(),
+            [
+                "metadata/characters/dex/dex.ot: extends \"Metadata/Characters/Gone\", which is not in the index"
+            ]
+        );
+        assert_eq!(
+            Collection::new(OBJECT_TEMPLATES).finish().1.problems(),
+            ["no .ot files in the index"]
         );
     }
 }

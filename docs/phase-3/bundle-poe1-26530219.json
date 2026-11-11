@@ -1,0 +1,418 @@
+{
+  "game": "poe1",
+  "steam_build": 26530219,
+  "manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba",
+  "files": {
+    "data/active_skills.json": {
+      "rows": 1941,
+      "sha256": "eceaa8f773e8b852ec2bc88c90bf539c54099b8377589c3184bbc5a748aa9f58",
+      "size": 635787
+    },
+    "data/armour_types.json": {
+      "rows": 481,
+      "sha256": "1ed5fa8a4dc0020367ca5bf8a42fc620f8cd2ae0acf3ab83ffc7cf42168cdc5e",
+      "size": 155760
+    },
+    "data/ascendancies.json": {
+      "rows": 21,
+      "sha256": "2bfea4f204f7d796c5d5c1ced737734331f601ba03ad28c24f544fd45f3b25e1",
+      "size": 2756
+    },
+    "data/base_items.json": {
+      "rows": 5041,
+      "sha256": "564c6ac2d9984fecbe4e13a382091f4619058a5f23b05380a25e23aec6c24c83",
+      "size": 1358045
+    },
+    "data/characters.json": {
+      "rows": 7,
+      "sha256": "893dd2d06bf9ea9ad0407d0adc62a21fe82ae477efb060f23241c21e2830a4ba",
+      "size": 1801
+    },
+    "data/client_texts.json": {
+      "rows": 12,
+      "sha256": "5a2e875ba201732914516cd6011d9d5780eca183c297d1974187e16e90eea983",
+      "size": 1194
+    },
+    "data/cost_types.json": {
+      "rows": 13,
+      "sha256": "0cd04bbce4028d557d4ea48ff912bd359a6ccb38888aef0de5f47048bb312025",
+      "size": 233
+    },
+    "data/game_constants.json": {
+      "rows": 42,
+      "sha256": "24b2e582c368f27c294e724f42d5be0840119106bcc55d026e0138611f665efa",
+      "size": 3667
+    },
+    "data/gem_effects.json": {
+      "rows": 1292,
+      "sha256": "b6e2d2c9524d4a9a118976159f0735fd48e83f9a6fd117d83b750c8dddb3aa10",
+      "size": 357560
+    },
+    "data/gem_tags.json": {
+      "rows": 54,
+      "sha256": "5bb711ea2b35c5f94cb66eef3c157e97ccfed59b20db9a46718b18385b3aee79",
+      "size": 2688
+    },
+    "data/gems.json": {
+      "rows": 847,
+      "sha256": "3c9450333b48640bcf977dddaf487b85778f9f08c2b32c671437932d5ac77503",
+      "size": 183479
+    },
+    "data/granted_effects.json": {
+      "rows": 12829,
+      "sha256": "9d2c6332b25b69ecce0d9ce0e3941a7fe93c4e0317a977b46c834b22cb02f79b",
+      "size": 27001196
+    },
+    "data/item_classes.json": {
+      "rows": 103,
+      "sha256": "78a435018682c45f254c66e1a992669d5f3ee6a442d309df31ad42c7e7d9f237",
+      "size": 1800
+    },
+    "data/item_rules.json": {
+      "rows": null,
+      "sha256": "0f9db5f94b67c6c1093255c57ee89421e6af0c9fd900f0631a8ba564be0bfa09",
+      "size": 6376
+    },
+    "data/lookups.json": {
+      "rows": 5,
+      "sha256": "bc4b42e51a3e0261389fec308af2bf59ba9dd4a878c483842af1deedd7d83bb8",
+      "size": 392011
+    },
+    "data/mastery_effects.json": {
+      "rows": 354,
+      "sha256": "766960be0c502e87dae1bf6b338eb9e1bfe6cfe013f9fac4d07069014f9b4433",
+      "size": 63800
+    },
+    "data/mastery_groups.json": {
+      "rows": 61,
+      "sha256": "c1bea0d0eb92df8cc02342f9ba023f78676f839054aa5ce26d90533782890eb0",
+      "size": 9597
+    },
+    "data/mods.json": {
+      "rows": 40355,
+      "sha256": "b6c707b0f332a7941b7af57691280f13c61778205e0057e29ed71e6e6dc8b84b",
+      "size": 23133178
+    },
+    "data/monster_levels.json": {
+      "rows": 100,
+      "sha256": "6e80b2a33ab8fa4914f6607fc87ab7a926ba4c30297977352f22b7c6ce9999fe",
+      "size": 31469
+    },
+    "data/object_templates.json": {
+      "rows": 9,
+      "sha256": "4f1e9f0cba5805674a78ffe592d28479602c394751e8295295b5fcd0ae3f3f16",
+      "size": 14362
+    },
+    "data/passive_tree.json": {
+      "rows": 797,
+      "sha256": "5c5d1ba75a37776c5c9d403948ffccb96853940aaad61db9986f5f10776e0c2a",
+      "size": 760521
+    },
+    "data/passives.json": {
+      "rows": 5706,
+      "sha256": "02b97e276d9d6bca8c2f8ef268515f140e4bae96c6c5a3fab0c14740188908b9",
+      "size": 3181213
+    },
+    "data/shield_types.json": {
+      "rows": 98,
+      "sha256": "a5c362b675f584b4d434a1215262fdc3948bda85ed9399c9b892ca016eddd1ca",
+      "size": 8693
+    },
+    "data/skill_types.json": {
+      "rows": 135,
+      "sha256": "5b11dd13dc381cd26312c9575c9d242eb3cc80651de956f4b9793f712c4a32b0",
+      "size": 8621
+    },
+    "data/stat_sets.json": {
+      "rows": 12763,
+      "sha256": "2bd42db0987224c34c8e3d0994d8c9b6df6f33ef31fdc27db76d0dc0e007d775",
+      "size": 59234910
+    },
+    "data/stats.json": {
+      "rows": 23362,
+      "sha256": "cba5cce2ceb3c44bd94d541cec6af51e9df57d624dbe466602b93bb9ff90ab1f",
+      "size": 2561049
+    },
+    "data/weapon_types.json": {
+      "rows": 366,
+      "sha256": "3886dad94e98a4f1b706abe31b662a1b49264388abab5fdc8ec1627dba1b07f4",
+      "size": 81207
+    },
+    "poe1/grafts.json": {
+      "rows": 16,
+      "sha256": "5c46bf2d14348d6ec20f221324f3ec5655e8b0660d301918732567a5babd63fc",
+      "size": 2930
+    },
+    "poe1/quality_types.json": {
+      "rows": 18,
+      "sha256": "642f43fc34d2c05b6f1db5884bb2ab634a461ce1eece9b2d2012450d570964f1",
+      "size": 2680
+    },
+    "stat_descriptions/active_skill_gem_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "d69049eb4fc13b334ab6b5598cf9d3518ae1c7980d2e4b7a9d1124f397b89509",
+      "size": 171431
+    },
+    "stat_descriptions/advanced_mod_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "fc696d02be8965447af7092dda0d41307b7b637b92db4d97d82cb35e1eef5858",
+      "size": 26797
+    },
+    "stat_descriptions/atlas_relic_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "cffce0d97f705b002c0a649817656d8685e3c987e38a155226daaa86604ac670",
+      "size": 1969
+    },
+    "stat_descriptions/atlas_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "094b9466380cbc9027005335f8638d1bc27bf946601a265b1ef48322ca270adc",
+      "size": 441673
+    },
+    "stat_descriptions/aura_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "263ad39ed8cd202fc422f0876bf0f81248eb09845ac6c8315ffbf9106979ba26",
+      "size": 40646
+    },
+    "stat_descriptions/banner_aura_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "6986150cf19102be52c2d03601c66235cb4fe1a256a3b4ad799fbd7b8f8b1ff5",
+      "size": 9265
+    },
+    "stat_descriptions/beam_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "31b57f57adbd2c8900bc1d84b0a329024868597ffb51bb77fc407d4e2bcd6969",
+      "size": 2438
+    },
+    "stat_descriptions/brand_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "ab63c9a2dbf0f9bcece7c12db4b7e16ecec431292ced7e8004dce4229352eb88",
+      "size": 6683
+    },
+    "stat_descriptions/buff_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "5e730396140db62d71cd441d29f968f7aa022335c20ea719339648f5fc65107b",
+      "size": 28862
+    },
+    "stat_descriptions/chest_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "64e85833222723f24c5f27b2cf3a26ef23f9919f80346daa404ad69cb240351e",
+      "size": 43379
+    },
+    "stat_descriptions/curse_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "e513f61aaff5b0ef767905e331c225c0e5bc9489e70ba5f19b98c1ae2977f9de",
+      "size": 35967
+    },
+    "stat_descriptions/debuff_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "4c9cac0b4984373c08f247c006c8cbb4662215ddc48098d1baaaf467de4706db",
+      "size": 12265
+    },
+    "stat_descriptions/deepwater_applied_adjacent_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "a52a85142393b2493e84ee2a1f69d91bd3805df38f6a05f1d379cc46addd57c8",
+      "size": 2092
+    },
+    "stat_descriptions/deepwater_explicit_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "fcab9fd7656586ed65b0dab4f35fa03ada60d887fbca5f9b4f8b45a258c793f9",
+      "size": 12236
+    },
+    "stat_descriptions/deepwater_implicit_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "2bf84bddb8ad70f30e75f57b644d2771981885d60def7d5800134f5e322e3f09",
+      "size": 34031
+    },
+    "stat_descriptions/deepwater_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "d7768d6154050b826e4ed89d4f067623e8def51cf6b9467452fa2a883f361caf",
+      "size": 312
+    },
+    "stat_descriptions/expedition_relic_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "3e7705a8602bfa539b9e46fdd2567b5216b0daeb2655e4413a94db9a61dafe43",
+      "size": 66165
+    },
+    "stat_descriptions/gem_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "54942da54bee92453d04b7fbb9f8a7e6068ebe12175575863155290ad21a913c",
+      "size": 415552
+    },
+    "stat_descriptions/graft_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "f6dfe4c62336b921b90b3b6875b001fb03314243c93a3977a694073057c4accb",
+      "size": 51001
+    },
+    "stat_descriptions/heist_equipment_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "f4adc9c92d43979d88d27a444124b3f7603505533391a9e58502da9143ac5da7",
+      "size": 55709
+    },
+    "stat_descriptions/leaguestone_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "bb53f954b878727b299fcd7e0cca605b0e4595276178a6533616d006859a4052",
+      "size": 78669
+    },
+    "stat_descriptions/map_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "87ad8587e0de521da3aa98bfb31adcaff357504e7095200a0e86202b805263e0",
+      "size": 93404
+    },
+    "stat_descriptions/mercenary_support_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "8d1a5ba88bf2f2bb60af48ec782448aa7ea034d497939517b07ec829b31f0a58",
+      "size": 25278
+    },
+    "stat_descriptions/minion_attack_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "03b67839f8714455df75852d11d44ec4a80080c0f1936e64971592a66ca7ed0b",
+      "size": 92521
+    },
+    "stat_descriptions/minion_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "7ad35c1ff9e7a073f6861431963d7d47e3b96f4f2f264d3a5415a77bf2532ad5",
+      "size": 183233
+    },
+    "stat_descriptions/minion_spell_damage_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "58677f0eb91c018c56fd1313d8ca6817cbfac56222497a8a024a172dbf264d77",
+      "size": 51568
+    },
+    "stat_descriptions/minion_spell_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "47ca9f241f43edfeea8cbecd7b1c8773fc1be6409d89e600669248009c1954e4",
+      "size": 4806
+    },
+    "stat_descriptions/mirage_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "d573bde48be9ea662285dee1ae54a2f30422413998735936dbd6d1e4e41f3c63",
+      "size": 25981
+    },
+    "stat_descriptions/monster_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "d83bb1aeb68154dce2f39f310a072eaace0d8fc63baeb20bb29adf7a134fd8fb",
+      "size": 10254
+    },
+    "stat_descriptions/necropolis_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "f6c3f633be01a915f0a9e338641da7167708af31c7e25b7dd9c701e248652873",
+      "size": 71040
+    },
+    "stat_descriptions/offering_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "e17b7bd62d7ca864b55acb50d828ea6c68a3f0284226cda8ad50fbd0b47475bc",
+      "size": 7688
+    },
+    "stat_descriptions/passive_skill_aura_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "2898392d5eba075e971e098fcb6e30932ff7a7468afefac3fe34dfa500363cdd",
+      "size": 11960
+    },
+    "stat_descriptions/passive_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "524e8a1da2cba39c82759fb4549da765dacc96011b97b1d17daf0f34942dab07",
+      "size": 54330
+    },
+    "stat_descriptions/primordial_altar_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "2db0d97a23cfb7a66b6633d3343d74ec81133fa65766fe6b5619e76b10488b9d",
+      "size": 71737
+    },
+    "stat_descriptions/sanctum_relic_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "f5706803909b97338d96bdfd64cb43ad0486989edac43225ab1238cd9834f649",
+      "size": 23066
+    },
+    "stat_descriptions/secondary_debuff_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "e585fa58fe781a7b9897dbb0c6ff96876d0466388e5634e5adea709356eabc17",
+      "size": 1421
+    },
+    "stat_descriptions/sentinel_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "5dd49b455c9a94b6b76ce2039f5bfae4673bc4bbc5256713b3cc092b1f23b2d0",
+      "size": 61944
+    },
+    "stat_descriptions/single_minion_spell_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "e979829386f2fcb7284b5c3aea8aa4a04c94ccd32a0d874e3394bbd97cf42c93",
+      "size": 25007
+    },
+    "stat_descriptions/skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "0b05064ba94b1a70a094ffca06450e85e0fb84c70bd1236e6f9d3aaabc306264",
+      "size": 976964
+    },
+    "stat_descriptions/stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "134c60358323b4227caa1524fdd2fe656ed4eabad0e4ba680c992f86062a2a4d",
+      "size": 4889545
+    },
+    "stat_descriptions/tincture_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "e5a1f9f7506829ced73e4ef39a4c1d11d54462d535c8eaecac07bf8f55cb1c20",
+      "size": 43615
+    },
+    "stat_descriptions/vaal_side_area_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "071db75e28041715313a84b2caa203ceece867055e23cb446245ed899be6177e",
+      "size": 281
+    },
+    "stat_descriptions/variable_duration_skill_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "266b31728a22557207d8f73e44a69627f9daff14e40352cf1c4e9a8f8acc3563",
+      "size": 3404
+    },
+    "stat_descriptions/village_stat_descriptions.txt.json": {
+      "rows": null,
+      "sha256": "11d5e743e9585afdc8d23288421e9e94097ebdfc66797a47487c0e284d0ebdbc",
+      "size": 25287
+    }
+  },
+  "mods_bad_spawn_rows": 0,
+  "bases_tags_unknown": 0,
+  "dangling_references": 0,
+  "nameless_bases_skipped": 420,
+  "stat_slots_without_range": 0,
+  "client_texts_missing": [],
+  "mod_type_duplicate_names": 0,
+  "lookup": {
+    "keys": {
+      "display_indexable_non_active_support": 164,
+      "display_indexable_skill": 287,
+      "display_indexable_support": 172,
+      "passive_hash": 5706,
+      "tree_expansion_jewel_passive": 55
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  },
+  "skills": {
+    "effect_levels_sorted": 1,
+    "stat_set_levels_sorted": 0,
+    "stat_sets_without_levels": 4,
+    "parallel_lists_unequal": 0,
+    "effects_with_several_quality_rows": 0,
+    "rows_without_owner": 0,
+    "dropped_stats": 0,
+    "dropped_gems": 0
+  },
+  "passives": {
+    "templates": 9,
+    "template_values": 0,
+    "dropped_stats": 0
+  },
+  "properties": {
+    "dropped_rows": 0
+  }
+}

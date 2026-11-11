@@ -24,9 +24,266 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, Phase 2 plan PR #41 (P2-0) open, in review, branch `plan/phase-2-canonical-model`)
-- **PR P2-0: Phase 2 plan (PR #41, open, in review, branch `plan/phase-2-canonical-model`).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted. Its main CI run 42922016104 was still in progress when this PR opened; P2-1 checks its result.
-  - **Task docs:** new `dev/active/phase-2-canonical-model/` (plan, context, tasks), made with `/dev-docs`.
+## Current state (updated 2026-11-11, P3-2 PR #64 open, in review, branch `feat/p3-2-data-parity`, base `feat/p3-1c-bundle-v2-items-monsters` (#63))
+- **PR P3-2: data parity (PR #64, open, in review, branch `feat/p3-2-data-parity`, base `feat/p3-1c-bundle-v2-items-monsters`).** Plan step 2. Stack check at the start: #42, #62, #63 open, no reviews or comments.
+  - **What:** `tools/oracle/data/pob_data.lua` exports PoB v2.67.2's loaded data on the oracle runtime (maintainer-run, outside the adapter protocol; `tools/oracle/data/README.md`); `loom-parity-cli data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>` puts each bundle value into PoB's form (the exporter's conversions, cited), compares exactly, and classifies differences by `docs/phase-3/data-parity-rules-poe1.json` (exact counts, stale keys fail, bound to Steam build 26530219 and PoB 2.67.2); writes summary, report (with bundle-only rows), overlay. Categories `patch-delta`, `pob-derivation`, `representation`, and a new `not-carried`. Decisions: context file, "Decisions in P3-2".
+  - **Evidence** (`docs/phase-3/data-parity.md`, summary `docs/phase-3/data-parity-poe1-26530219.json`): 536,003 values compared, 534 differences, `uncategorized` 0 (patch-delta 130, pob-derivation 184, representation 57, not-carried 163), 314 overlay rows; two exports and two runs byte-identical from clean `92199cc`; oracle checkout clean. The game build is 3.29.3 or later, PoB's data 3.29.2 or earlier. 874 workspace tests (19 new); clippy, fmt.
+  - **Open for the maintainer:** the 8 Vaal transfigured gem tag rows are `patch-delta` without a patch-note line (`named_in_notes: false`); the fifth category `not-carried`; 15 ascendancy nodes whose buff stats the bundle does not carry (P3-3/P3-8 decide: buff tables or `Partial`).
+  - **Review:** `code-architecture-reviewer`: no ADR issue; findings applied (context file).
+- **PR P3-1c: item property and monster tables (PR #63, open, in review, branch `feat/p3-1c-bundle-v2-items-monsters`, base `docs/ui-draft-v1`).** Plan step 1c, the last section of format 2 (step 1 done). Stack check at the start: #59, #60, #61 merged into #42's branch; #42 open.
+  - **What:** extractor `ITEM_PROPERTY_TABLES` roots; `loom_data::bundle::properties` (weapon, armour, shield types; monster levels; game constants), required in format 2; validator (base references, `BUNDLE_MONSTER_LEVELS`, `BUNDLE_VALUE_RANGE`, `BUNDLE_GAME_SHAPE`); converter for both games. Decisions: context file, "Decisions in P3-1c".
+  - **Evidence** (`docs/phase-3/bundle-v2-items-monsters.md`): extracts from clean `e43d8f6` byte-identical over two runs (571 and 975 files), earlier files unchanged; bundles from clean `9e8586a` byte-identical over two runs (`6099814e…`, `944f2c0e…`), `bundle-check` exit 0, 0 dangling or dropped; every P3-1b bundle file byte-identical; corpus round trip equal to P3-1b's but the tool commit; PoB v2.67.2's monster tables, game constants, monster constants, weapon and armour bases equal; `cross-check` unchanged but inputs. 855 workspace tests; clippy, fmt, wasm32 pass.
+  - **Open:** `cargo deny` advisory RUSTSEC-2024-0370 as before. Monster armour: the table's column vs PoB's derivation, for P3-2/P3-11.
+  - **Review:** `code-architecture-reviewer`: no code blockers; findings applied (context file).
+- **Stack merged down to #42 again (2026-11-11, 18:10 UTC).** The maintainer merged #61 into #60's branch, #60 into #59's, #59 into `feat/p2-1-domain-model` (#42's branch, now `2e9dd24`, tree equal to P3-1b's tip). #42 into `main` is still open (DNS block). New PRs branch from #42's branch (or the newest open PR's) and target it; CI is still not checked.
+- **Docs PR: UI design reference (PR #62, open, branch `docs/ui-draft-v1`, base `feat/p2-1-domain-model`).** Maintainer request 2026-11-11: store the UI rough draft v1 for the UI work. `docs/ui/UI-DESIGN-BRIEF.md` (the brief), `docs/ui/exiled-studio-ui-draft-v1.zip` (screenshots, rendered HTML, canvas source, scripts, walkthrough video), `docs/ui/README.md`; `*.zip` marked binary. Checked against ADR-000: placeholder drawings only, no game art. Reference only until the UI phase (Phase 4).
+- **Phase 2 stack merged down to #42 (2026-11-11).** The maintainer squash-merged #58 to #43, each into its base, between 15:00 and 15:05 UTC; `feat/p2-1-domain-model` (#42) at `020e218` now holds all of Phase 2 (its tree equals P2-11's tip `64c532b`). **#42 into `main` is blocked by an external DNS problem** (maintainer, 2026-11-11). Maintainer instruction (2026-11-11): until it clears, each new PR branches from the open PR's branch and targets it, and **CI is not checked** until the maintainer says to start again. So PR results below say "CI not checked".
+- **PR P3-1b: character and passive tables (PR #61, open, in review, branch `feat/p3-1b-bundle-v2-passives`, base `feat/p3-1a-bundle-v2-skills`).** Plan step 1b. Stack check at the start: #42, #59, #60 open, no reviews or comments.
+  - **What:** the extractor reads object templates (`*.ot`: the character folder and `Monster.ot`) with the widened item-type grammar, manifest format 5, `PASSIVE_TABLES` roots; `loom_data::bundle::passives` (characters, ascendancies, object templates' `Stats`, passives, mastery groups and effects, the main passive tree), required in format 2; validator (references, `BUNDLE_TEMPLATE_CYCLE`, `BUNDLE_TREE_GEOMETRY`, unique numbers); converter for both games. Decisions: context file, "Decisions in P3-1b".
+  - **Evidence** (`docs/phase-3/bundle-v2-passives.md`): extracts from clean `678f902` byte-identical over two runs (566 and 969 files), earlier files unchanged; bundles from clean `db8b8c2` byte-identical over two runs (`e2e97f09…`, `e11fdb33…`), `bundle-check` exit 0, 0 dangling or dropped; every P3-1a bundle file byte-identical; corpus round trip equal to P3-1a's but the tool commit; the PoE1 character template equals PoB's `characterConstants` (but `base_speed`, not carried); `cross-check` unchanged but inputs. 847 workspace tests; clippy, fmt, wasm32 pass.
+  - **Open:** `cargo deny` advisory RUSTSEC-2024-0370 as in P3-1a. Local format-2 bundles from P3-1a no longer load (new required files). PoE1 bundle 127 MB.
+  - **Review:** `code-architecture-reviewer`: no blockers; findings applied (context file).
+- **PR P3-1a: bundle format 2 with the skill tables (PR #60, open, in review, branch `feat/p3-1a-bundle-v2-skills`, base `plan/phase-3-calc-slice`).** Plan step 1a. Stack check at the start: #42 and #59 open, no reviews or comments.
+  - **What:** `loom_data::bundle::skills` (format 2, both games): skill types, cost types, active skills, granted effects (per-level costs, reservations, cooldown, attack time; quality stats), stat sets (per-level float and integer stats, flags, granted effects, crit, effectiveness), gems, gem effects, gem tags; values as stored, our own names. Format 1 still loads for import; a skill file in format 1 is `BUNDLE_FORMAT_FILE`. Validator: every skill reference, `BUNDLE_EMPTY_ID`, `BUNDLE_SKILL_LEVELS`. Extractor: `SKILL_TABLES` roots. `loom-parity-cli bundle` writes format 2 (`data_schema` 2). Synthetic bundles are format 2 with made-up skill rows. Decisions: context file, "Decisions in P3-1a".
+  - **Evidence** (`docs/phase-3/bundle-v2-skills.md`): extracts from clean `c9b58aa` byte-identical over two runs (PoE1 557 files, PoE2 965), earlier files unchanged; bundles from clean `13be856` byte-identical over two runs (`fa0b0cc9…`, `97913df4…`), `bundle-check` exit 0 both, 0 dangling or dropped, format-1 files byte-identical to Phase 2's; corpus `build-round-trip` equal to Phase 2's summary but the document hashes, whose only cause is `data_schema` 2 (shown by a run with it set back to 1); `cross-check` unchanged but inputs (summaries and manifests replaced in `docs/spikes/spike-a/`). 835 workspace tests; clippy, fmt, wasm32 pass.
+  - **Open:** `cargo deny check` fails on RUSTSEC-2024-0370 (`proc-macro-error` unmaintained, via Tauri/GTK) on the base branch too. Format 2 gains required files in P3-1b and P3-1c, so remake local format-2 bundles after each. The PoE1 bundle is now 123 MB (skill tables 87 MB; compression is Phase 5).
+  - **Review:** `code-architecture-reviewer`: no code blockers; findings applied (context file).
+- **PR P3-0: Phase 3 plan (PR #59, open, in review, branch `plan/phase-3-calc-slice`, base `feat/p2-1-domain-model`).** Docs only: `dev/active/phase-3-calc-slice/` (plan, context, tasks). The plan reads the ACTION-PLAN's Phase 3 through ADR-013 (one self-cast spell, one non-triggered attack, core defences), decides "in scope" by archetype rules independent of the engine (`calc-survey`), compares a committed list of slice fields (`docs/phase-3/slice-fields.json`, written in P3-3) completeness-aware against the oracle (`calc-parity`), checks data versions first (`data-parity` against PoB v2.67.2's data), fixes the excluded mechanics and a minimum of 3 in-scope builds per skill before any engine PR, accepts a `data-version` divergence only when a run with PoB's data values (`--data-overlay`) matches, and adds bundle v2 with the calc tables in three PRs. Steps 1 to 15, PRs P3-1a to P3-15. Open questions Q1 to Q7 in the context file, taken on their defaults (Q1: real data stays out of CI for now; the plan recommends committing a pruned derived PoE1 bundle before P3-6). Reviewed by `plan-reviewer` (summary in the context file).
+- Phase 2 records below are kept for reference.
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`) <- #49 P2-4 (base `feat/p2-3b-bundle-converter`) <- #50 P2-5a (base `feat/p2-4-bundle-validator`) <- #51 P2-5b (base `feat/p2-5a-pob-xml-structure`) <- #52 P2-6a (base `feat/p2-5b-pob-xml-items`) <- #53 P2-6b (base `feat/p2-6-resolve-build`) <- #54 P2-7 (base `feat/p2-6b-resolve-build`) <- #55 P2-8 (base `feat/p2-7-dto-v1`) <- #56 P2-9 (base `feat/p2-8-build-round-trip`) <- #57 P2-10 (base `feat/p2-9-migrations-persistence`) <- #58 P2-11 (base `feat/p2-10-share-codes`). #56's CI green on `a834717` (2026-11-11). Stack check 2026-11-11: #42 to #55 all open, none merged, no changes asked; #55's last CI run (`fbfb173`) green.
+- **PR P2-11: Phase 2 report and gate verdict (PR #58, open, in review, branch `feat/p2-11-phase-2-report`, base `feat/p2-10-share-codes`).** Plan step 11. **Phase 2: gate met** (`docs/phase-2/phase-2-report.md`); the maintainer confirms it by merging the stack.
+  - **Evidence re-run** at `3982838` (P2-10's tip), clean tree, 2026-11-11, outputs in `local/p2/p2-11/` (`run.log`): corpus `build-round-trip` twice, 21 of 21 pass, runs byte-identical, summary equal to the committed one but the tool commit; `bundle-check` PoE1 and PoE2 equal to the committed findings (none); `resolve-corpus --bundle` all 12 Spike B fields equal, `report.json` byte-identical, 6,061 of 6,061 lines equal the harness; `bundle-equal` equal to the committed one (0 mismatches); `bundle` twice per game byte-identical and identical to P2-3b's (`6c628cd6…`, `366342d2…`). No committed summary changed.
+  - **Moved:** `dev/active/phase-2-canonical-model/` to `dev/completed/` (references updated). CLAUDE.md and ACTION-PLAN record the gate.
+  - Gate 3c: `ModDomain` added to `no_poe1_identifiers` (named by the plan, missing from the test; no shared source used it).
+  - Review: `code-architecture-reviewer`, no blockers; precision fixes applied (context file).
+  - CI: #56 green on `a834717`; #57 on `3982838` (run 43031816939) green, every job.
+- **PR P2-10: share codes (PR #57, open, in review, branch `feat/p2-10-share-codes`, base `feat/p2-9-migrations-persistence`).** Plan step 10, decision 16 (context file, "Decisions in P2-10").
+  - **What:**
+    - `loom_serialization::legacy::share_code` (core): `import`, `export`, `decode`, `encode`; zlib through `miniz_oxide` 0.9 (no default features; already in the lock file through another crate), our own base64 (PoB's URL-safe alphabet and `=` padding on write; both alphabets, whitespace, and missing padding on read); the code limited to about 44 MiB (`MAX_CODE_BYTES`, enough for an incompressible 32 MiB document) and decoded in one pass, inflate limited to 32 MiB; codes `IMPORT_SHARE_CODE_BASE64`, `_ZLIB`, `_TOO_LARGE`, `_UTF8`, then the XML adapter's own;
+    - `tools/oracle/adapter/share_code.lua` (maintainer-run, not in CI): PoB v2.67.2's own `ImportTab.lua:504` expression on the oracle runtime, with zlib `compress2` for the headless `Deflate` stub; writes the code and the `SaveDB` XML;
+    - `tools/oracle/fixtures/share-codes/`: two PoB-made codes, each with the XML it was made from (`minimal-level1`, ours; `boneshatter-juggernaut`, credited community build, removal note in `SOURCES.md`); README with the command and hashes; `.gitattributes` keeps the bytes exact.
+  - **Found:** PoB's `SaveDB` writes attributes and some children (`Calcs` sections and inputs) in Lua `pairs` order, which changes per run: five runs of `minimal-level1` gave five different codes from same-length XML. So each code is committed with its exact XML. Boneshatter's Glorious Vanity cache write is refused as in Spike C.
+  - **Evidence:** the Accept item: every public fixture (24 builds) round-trips through our code to the same build, and `malformed.xml` gives `IMPORT_XML` through a code too; both PoB-made codes decode to their recorded XML byte for byte and import to the same build (`tests/share_code_fixtures.rs`; counts follow the fixtures present, so removing a community build on request needs no test change). 819 workspace tests (13 new).
+  - **Review:** `code-architecture-reviewer`: no blockers; applied: the code length cap and one-pass decoding (a 100 MB paste cost about 400 MB before), test counts derived from the fixtures, explicit item check instead of a name exemption, spare-bit leniency documented and tested (`Zh==`), cast comments, the limit named in the message. Possible follow-up, not in the Accept: show that PoB's own reader accepts our codes. Clippy, fmt, wasm32, `cargo deny` pass; the oracle checkout stayed clean.
+- **PR P2-9: migrations and file persistence (PR #56, open, in review, branch `feat/p2-9-migrations-persistence`, base `feat/p2-8-build-round-trip`).** Plan step 9 (decisions 13, 14, 15; context file, "Decisions in P2-9").
+  - **What:**
+    - `loom_serialization::migrate` (core): `Migrations` is a chain of `vN -> vN+1` steps over `serde_json::Value` (`Migrations::new` checks the chain, `MIGRATE_CHAIN`); `run` checks the version before any step (`MIGRATE_TOO_NEW`, `MIGRATE_TOO_OLD`), sets `version` after each step, and returns a `MigrationReport` (steps with their changes; `Serialize` for hosts); a failing step gives `MIGRATE_STEP`. `Migrations::shipped()` is empty: Phase 2 ships only v1;
+    - `loom_serialization::dto::{read, read_with, write, Loaded, ReadError}`: text to `Value`, header first (a value that is no build document's header goes to `v1::from_value` for its `DTO_*` code), migrate, then `v1::from_value`; `ReadError::code` is the failing layer's code, unchanged;
+    - `loom_persistence` (host): `Store<F: FileOps>` with `load` (never writes; `PERSIST_READ`, `PERSIST_ENCODING` for non-UTF-8 or a byte order mark, then `MIGRATE_*`/`DTO_*`) and `save` (current document to a `create_new` temporary file in the target's folder, flushed, then published: to a new target by a hard link that fails if the target appeared meanwhile, so `Overwrite::Never` is atomic (no hard links: second check and rename), over an existing target by a rename; temporary file removed on failure, `leftover` reported if that fails too). `SaveOptions { overwrite, imported_from }`: `Overwrite::Never` (default) gives `PERSIST_EXISTS`; `Overwrite::BuildDocument` replaces only a build document that reads in full (`PERSIST_NOT_A_BUILD`, or the document's own `MIGRATE_*`/`DTO_*` code); a target naming `imported_from` (canonicalized) gives `PERSIST_IMPORT_SOURCE`. Also `PERSIST_PATH`, `PERSIST_WRITE`, `PERSIST_RENAME`. `Error` keeps each layer's code.
+  - **Review:** `code-architecture-reviewer`: no blockers. Applied: `Never` made atomic (hard-link publish, race and no-hard-link tests); a target is replaced only if it reads in full (damaged body, old version tests); missing-folder and all-names-taken tests; docs on hard links to the import source, links at the target, permissions, Windows durability; `Migrations::new` documents `CURRENT`, `skip_while`. Plan step 9's Accept wording clarified with decision 15's layers (a damaged document gives `DTO_*`, a damaged file `PERSIST_*`). Not done: `save` returning a hash for lost-update checks, stale `.loom-tmp` sweeping, Windows rename retries (Phase 4 autosave and the single-writer task).
+  - **Evidence:** 806 workspace tests (28 new: 11 in `migrate::tests`, 17 in `loom-persistence`), among them the step 9 Accept list: the test-only v0-to-v1 migration and its report; `MIGRATE_TOO_NEW` before the document is read; damaged files (truncated, empty, Latin-1, BOM, newer, other format, XML, missing, a folder) each give their code with no write, rename, or remove; the import source refused under three spellings (and letter case on Windows); an injected writer that fails after the temporary file is written, and a failing rename, leave the target unchanged and no temporary file. Same tests pass on WSL Ubuntu 24.04. Clippy, fmt, wasm32, `cargo deny` pass.
+- **PR P2-8: `build-round-trip` and the CI gate job (PR #55, open, in review, branch `feat/p2-8-build-round-trip`, base `feat/p2-7-dto-v1`).** Plan step 8 (context file, "Decisions in P2-8"; evidence `docs/phase-2/build-round-trip.md`).
+  - **What:**
+    - `loom-parity-cli build-round-trip <input>... --out <dir> [--bundle <dir>] [--anonymous] [--expect-import-error <file>]...` (`tools/parity-cli/src/build_round_trip.rs`): import (A), resolve with the validated bundle, JSON (B), PoB XML export and re-import (C, resolved again; PoE1 only); checks (a) `xml_equal`, (b) A = B = C with resolutions, (c) JSON bytes stable over two runs, (d) source lines in = out per item; scrubbed `summary.json`, `report.json`; exit 0, 1, 2 (usage), 3 (cannot start);
+    - the unknown-content mutation set (`build_round_trip/mutate.rs`): 7 kinds on the first element of every element path of each PoB input;
+    - inputs are PoB `*.xml` (folders or files) or v1 build documents (`*.json`, files only), so a PoE2 build can run: `testdata/build-round-trip/synthetic-poe1.xml` (every default-scope outcome through the XML adapter) and `synthetic-poe2.json` (made from it; freshness test);
+    - CI job `round-trip` (`build round-trip`, Windows and Linux, in `ci-ok`): public fixtures without a bundle, synthetic builds with their bundles, the PoE1-identifier scan (Linux); `dto cross-platform` also diffs the documents' SHA-256 of these runs between Windows and Linux.
+  - **Review:** `code-architecture-reviewer`: no blockers. Should-fix applied: resolved documents compared across OSes in CI (matrix plus `dto-compare`); the stale gate 3b pointer in P2-7's entry; a lossy-export test for the mutation check; `d_source_lines.pass >= 24` in the job. Nits applied: an `--expect-import-error` name that is no input exits 3; docs on (c), (d), and the writer's DOCTYPE and CDATA; `timeout-minutes`.
+  - **Maintainer decisions applied:** (a) `DTO_*` added to plan decision 15 with the layers; (b) gate 3b's JSON test moved into the harness (`synthetic_builds_should_round_trip_resolved`), `loom-parser`'s dev-dependency on `loom-serialization` dropped, the AGENTS.md exception removed (the narrowed rule stays).
+  - **Evidence:**
+    - public fixtures: 24 pass (a) to (d), `malformed.xml` gives `IMPORT_XML` as expected; 4,492 mutations survive;
+    - synthetic PoE1 and PoE2 with their bundles pass; JSON SHA-256 equal on Windows and WSL Ubuntu for all 27 builds;
+    - **corpus (gate 1b): 21 of 21 builds pass (a) to (d)** with the PoE1 bundle (`6c628cd6…`), two runs byte-identical, 6,061 modifier lines, 3,990 mutations survive; scrubbed summary `docs/phase-2/build-round-trip-poe1-26530219.json`;
+    - 778 workspace tests (15 new, 1 moved), clippy, fmt, wasm32, `cargo deny` pass.
+- **PR P2-7: DTO v1 and generated schemas (PR #54, open, in review, branch `feat/p2-7-dto-v1`, base `feat/p2-6b-resolve-build`).** Plan step 7 (context file, "Decisions in P2-7").
+  - **What:**
+    - `loom_serialization::dto::v1`: serde DTOs separate from the domain, `to_json(&Build)` / `from_json(&str)`, document `{format: "loom-build", version: 1, build}`. The whole `Build` is kept: opaque content in place, sourced values, item lines with every `LineResolution` (`NoBase`, `Adapted`, `Continues`), `Item::text_spacing`, `Build::data`. No maps; `deny_unknown_fields`; finite numbers exact (`float_roundtrip`), non-finite by bit pattern. Codes `DTO_JSON`, `DTO_FORMAT`, `DTO_VERSION`, `DTO_TOO_DEEP`, `DTO_DOMAIN`, `DTO_ITEM_LINKS`, `DTO_OUT_OF_RANGE`, `DTO_NUMBER`; `from_value` reads the header first (for P2-9 migrations);
+    - `tools/schema-gen` (`loom-schema-gen`, `schemars` behind the `schema` feature) writes `schemas/build.v1.schema.json`; `ui/` generates `src/generated/build.v1.ts` with `json-schema-to-typescript` 16.0.0 (`pnpm generate:schema`);
+    - `loom-parity-cli dto-hashes <dir>...`; CI jobs `dto cross-platform` (Windows against Linux bytes) and `schema freshness`, both in `ci-ok`.
+  - **Evidence:**
+    - golden bytes for synthetic PoE1 and PoE2 builds (every DTO type and variant, special numbers), round-trips and every error code (11 unit tests);
+    - all 24 public fixtures: `Build -> JSON -> Build` equal and bytes equal on a second run (`tests/dto_fixtures.rs`); their documents validate against the schema with `boon`, and 6 broken documents do not (`tools/schema-gen/tests/schema.rs`);
+    - gate 3b: resolved synthetic PoE1 and PoE2 builds round-trip (was `resolve_build.rs`; moved in P2-8 to `tools/parity-cli/src/build_round_trip/tests.rs`, `synthetic_builds_should_round_trip_resolved`, and the CI `round-trip` job);
+    - in-session, `dto-hashes` on Windows and WSL Ubuntu 24.04: identical output for all 24 documents;
+    - 764 workspace tests, clippy, fmt, wasm32, `cargo deny` (licenses, bans, sources), and the UI's format, lint, and build pass.
+  - **Review:** `code-architecture-reviewer`, resumed after an API rate limit. Its blocker is applied: the backticks in the `generate:schema` banner would have run as a command under `sh` on Linux CI. Both should-fix items are applied: the header is read before the strict parse (`from_value(Value)` for P2-9), and `DTO_TOO_DEEP` for nesting past `MAX_DEPTH`. Most nits are applied too (context file, "code-architecture-reviewer (P2-7)"). Rerun after the fixes: 764 tests, clippy, wasm32, `cargo deny`, and the UI pass.
+- **PR P2-6b: `resolve_build` (PR #53, open, in review, branch `feat/p2-6b-resolve-build`, base `feat/p2-6-resolve-build`).** Plan step 6, second half; step 6 complete (context file, "Decisions in P2-6b").
+  - **What:**
+    - `loom_parser::import::{Resolver, resolve_build}` run the step 2 pipeline over every item of a `Build` with a `BundleData` and write each pending modifier line's `LineResolution`: stats, a typed `kind`, `adapted`, `Continues`, or unresolved with a reason. The result is the build's completeness.
+    - It records the bundle's `DataVersion` on the build and refuses another game or another recorded version. It also refuses an unvalidated bundle (`ResolveError` codes `IMPORT_GAME_MISMATCH`, `IMPORT_DATA_VERSION_MISMATCH`, `IMPORT_DATA_UNVALIDATED`, `BUNDLE_SCOPE`).
+    - The adapter names the base through a closure (`ItemBaseName`, or its reason for naming none). PoB's rules are `legacy::pob_item::item_base`, which the harness uses too.
+    - Domain: `UnresolvedReason::NoBase` (`LINE_NO_BASE`).
+    - Split-section pairs form only when both halves have no template alone (a deliberate difference from the harness).
+  - **Evidence:**
+    - gate 3b: 9 outcome tests on the synthetic PoE1 and PoE2 bundles, which gained made-up rows per outcome (`make_bundles.py`). They cover each outcome and `kind`, check that source lines in equal source lines out, and check the links, a second run, and the errors;
+    - `resolve-corpus --bundle` resolves every corpus item through the core too and compares each line: **6,061 of 6,061 modifier lines equal the harness**. The 12 fields and `report.json` are unchanged in both modes (`docs/phase-2/lift-evidence.md`, P2-6b);
+    - 742 workspace tests, clippy, fmt, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. The should-fix items are applied (the adapter's no-base reason is kept; `split_section_with`; the gem guarantee is documented), and the corpus check was repeated after them (context file, "code-architecture-reviewer (P2-6b)").
+- **PR P2-6a: bundle-backed `ItemData` (PR #52, open, in review, branch `feat/p2-6-resolve-build`, base `feat/p2-5b-pob-xml-items`).** Plan step 6, first half; step 6 is split into 6a and 6b (context file, "Decisions in P2-6a").
+  - **What:** `loom_parser::import::BundleData<'b>` builds the item pipeline's data from a validated bundle:
+    - `Mods`: bundle mod `n` is row `n`; `(0, 0)` stats go to `unset`; class, mod-type, and implicit IDs become row numbers; local stats from the stats file;
+    - base rows by name; grafts with each graft's gem (`granted_gem`) and quality types from the `poe1` section; properties; compositions;
+    - `indexes()`, one per scope, through `Bundle::scope_root` (new in `loom-data`, shared with the validator).
+  - **parity-cli:** `resolve-corpus --bundle <dir>` takes the pipeline's data from a validated bundle (the categories still read the extract). `bundle-equal <extract> <bundle>` compares the bundle-built data with the extract readers.
+  - **Evidence:**
+    - the corpus through the PoE1 bundle: all 12 step 2 fields equal Spike B, `report.json` byte-identical, no other summary key differs but `inputs` (`docs/phase-2/lift-evidence.md`, P2-6a). This is gate 2's third check;
+    - `bundle-equal` on PoE1: 40,355 mod rows and 4,309 base names, 0 mismatches (`docs/phase-2/bundle-equal-poe1-26530219.json`). PoE2 has no extract reader in the harness (Spike B was PoE1), so the PoE2 check is the ignored `LOOM_BUNDLE_DIR` test: the real PoE2 bundle builds and indexes, with counts equal to the bundle's;
+    - 10 tests on the synthetic PoE1 and PoE2 bundles, 5 comparator tests, a `scope_root` test; workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers; the should-fix items and nits are applied (context file, "code-architecture-reviewer (P2-6a)"), and the corpus and `bundle-equal` runs were repeated after them. Its notes for P2-6b are in the same section.
+- **PR P2-5b: PoB XML items, item sets, and slots (PR #51, open, in review, branch `feat/p2-5b-pob-xml-items`, base `feat/p2-5a-pob-xml-structure`).** Plan step 5b; step 5 complete.
+  - **What:** `<Items>` is typed (`legacy/pob_xml/items.rs`):
+    - each `<Item>` reads its body from the last non-blank text child (PoB's rule), through `pob_item::read` and `to_domain`;
+    - every other child (other texts, `<ModRange>`) stays in place around `ItemPart::Body`;
+    - item sets and slots are typed (`itemId="0"`: empty).
+
+    The export writes each item's text from its lines' sources plus the whitespace as read: the new domain field `Item::text_spacing` (decision 6).
+  - **Found and fixed:** PoB writes `mainActiveSkill="nil"` for an unset main skill. Such a group was kept whole in P2-5a, unseen until the fixture test started requiring `kept_whole` to be empty. A non-numeric value now stays an untyped attribute.
+  - **Evidence:**
+    - all 24 public fixtures round-trip with every section typed, items present in the community builds, and nothing kept whole;
+    - 11 new unit tests (6 from the review: a non-breaking-space gap, a CRLF body, cleared spacing, an item with only a `<ModRange>`, a non-numeric item id, a `<Slot>` with children);
+    - in-session: the corpus 21/21 (1,055 items, 0 kept whole) and PoB 3.13 5/5 (100 items).
+  - **Review:** `code-architecture-reviewer` found no blockers; the text reconstruction is exact. The findings are applied (context file, "P2-5b review findings, applied"): the `spacing()` invariant and the Unicode-`trim` edge are documented; `Item::text_spacing` is documented as legacy-XML formatting only that any line add, remove, or reorder must clear; the `
+` join fallback is documented; the item and slot ID checks are left to Phase 3's index. The corpus and 3.13 round-trips were rerun after: 21/21 (1,055 items) and 5/5 (100 items), 0 kept whole.
+- **PR P2-5a: PoB XML import and semantic export, structure (PR #50, open, in review, branch `feat/p2-5a-pob-xml-structure`, base `feat/p2-4-bundle-validator`).** Plan step 5a.
+  - **What:** `loom_serialization::legacy::pob_xml` (`import`, `export`, `xml_equal`, `NORMALIZATIONS`; `roxmltree` added to `loom-serialization`).
+    - Typed, with source text kept:
+      - `<Build>` (class, ascendancy, level, main socket group; bandit and pantheon as PoE1 choices);
+      - `<Tree>` specs (tree version, nodes, mastery effects, jewel sockets);
+      - skill sets, socket groups, and gems;
+      - config sets and inputs.
+    - Everything else stays opaque and in place. An element whose typed fields do not read is kept whole (the plan's fallback). `<Items>` stays whole until P2-5b.
+    - The export comes from the model, written by our own writer.
+    - `xml_equal` compares parsed trees, with two normalizations, each with a reason and a test: attribute order, and whitespace between elements. Whitespace is not normalized in mixed content: an element with text keeps every text child, is written without layout, and is compared exactly.
+    - `kept_whole(&Build)` lists the typed elements kept whole: the import's quarantine for typed content (`IMPORT_KEPT_WHOLE`).
+  - **Domain:** `Character.level` is optional. `Build` keeps its container's `attributes`, plus a `prolog` and an `epilog` (content outside the root element).
+  - **Evidence:**
+    - all 24 public fixtures round-trip in CI (`xml_equal`, and re-import gives an equal Build, with the sections typed);
+    - `malformed.xml` gives an `IMPORT_*` code;
+    - 15 unit tests: mutations, fallback, source text, codes, normalizations;
+    - in-session, with the ignored `LOOM_XML_DIR` test: the maintainer's 21-build corpus and PoB's 5 3.13 test builds, 26 of 26.
+
+    wasm32 and `cargo deny` pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. Applied:
+    - exact mixed content (it would have hidden item-text changes in P2-5b);
+    - `kept_whole`, so a fallback is visible;
+    - canonical numbers (`+5` and `007` keep their element whole);
+    - `itemId="0"` means no item;
+    - the redundant line-endings normalization removed.
+    
+    Kept by decision: a missing `enabled` or `quality` keeps the gem or group whole and listed. PoB reads a missing `enabled` as false and a missing `quality` as nil, but a missing attribute and `"false"` would not round-trip the same.
+- **PR P2-4: bundle validator (PR #49, open, in review, branch `feat/p2-4-bundle-validator`, base `feat/p2-3b-bundle-converter`).** Plan step 4; gate items 3d and 4.
+  - **What:** `loom_data::bundle::validate` (`crates/loom-data/src/bundle/validate.rs`) runs five kinds of check, each finding with a `BUNDLE_*` code:
+    - structural: SHA-256 (`sha2` now in `loom-data`) and size of every listed file, unlisted files, an empty `signatures`;
+    - schema: `Bundle::load`;
+    - referential: stats, item classes, implicit mods, graft gems, and the client texts the rules name;
+    - domain: unique IDs per kind, and `ModRules::validate`;
+    - smoke: the stat-description scope of every rule builds, found by file stem, so PoE1's `.txt` and PoE2's `.csd` sources both match.
+
+    `loom-parity-cli bundle-check <dir>` prints the findings and exits 0 or 1.
+  - **Mutation set (CI, `cargo test`):** `crates/loom-data/tests/bundle_validate.rs`, 13 cases, each giving exactly its code. The validator found that the PoE1 fixture's graft named a gem with no base item; the fixture was fixed.
+  - **Gate 3d:** a parity-cli test checks that the converter's PoE1-only tables (`AlternateQualityTypes`, `BrequelGrafts`, `BrequelGraftGrantedSkillLevels`, `Essences`) are in the extractor's `*_POE1` lists. It reads `tools/extractor/src/extract.rs` as text, because tools cannot depend on each other.
+  - **Review:** `code-architecture-reviewer` found no blockers. Applied:
+    - the smoke check needs exactly one file per scope and a description that renders, as the plan says;
+    - the `poe1/` section is documented as optional for PoE1;
+    - the gate 3d scan cuts each list at its end and checks that the shared lists hold no PoE1-only table;
+    - `bundle-check`'s folder source refuses symbolic links.
+  - **Evidence (in-session):** `bundle-check` gives 0 findings on the real PoE1 26530219 and PoE2 26476662 bundles (`docs/phase-2/bundle-check-*.json`) and on both fixtures. The smoke check first failed on PoE2 (`.csd` sources) and was fixed. `cargo deny` and wasm32 pass.
+- **PR P2-3b: bundle converter (PR #48, open, in review, branch `feat/p2-3b-bundle-converter`, base `feat/p2-3a-bundle-model`).** Plan step 3b.
+  - **What:** `loom-parity-cli bundle <extract> --out <dir>` (`tools/parity-cli/src/bundle.rs`) converts a PoE1 or PoE2 extract to bundle v1:
+    - stats;
+    - mods by ID (stats including `(0, 0)`; spawn weights by tag; influence without `NONE`; crafting and essence classes by `ItemClasses.Id`; mod type by `ModType.Name`);
+    - named base items, with derived tags and implicits by mod ID;
+    - item classes, the named `ClientStrings` rows, and the lookup tables;
+    - the stat-description files, at their path relative to the extract;
+    - item rules;
+    - for PoE1, `poe1/quality_types.json` and `poe1/grafts.json` (with gem IDs).
+
+    It writes sorted-key JSON and `bundle.json`, loads the result back, and prints a scrubbed summary. It reads both schemas' column names: PoE2 says `ModType`, `ItemClass`, `Tags`, `Implicit_Mods`, `SpawnWeight_Tags`, `InfluenceType`, and `Stat<n>` with a `Stat<n>Value` `[min, max]` pair.
+  - **Deviation, by decision:** the converter is in parity-cli, not `loom-extractor`. Every extract reader it needs is there, and tools depend only on core crates.
+  - **PoE2 rules:** the new `tools/parity-cli/src/poe2.rs` writes PoE2 item rules from the schema enums both games share. It is a **hypothesis**: PoE2 item import is backlog (ADR-005), so nothing measures them yet.
+  - **Evidence (in-session, the real extracts):**
+    - PoE1 26530219: 23,362 stats, 40,355 mods, 5,041 bases, 103 classes, 12 client texts, 5 lookup tables, 44 stat-description files, 18 quality types, 16 grafts.
+    - PoE2 26476662: 27,299 stats, 16,911 mods, 5,075 bases, 118 classes, 1 lookup table, 589 stat-description files, and no `poe1/`.
+    - For each game, two runs (also from a clean tree at `2ac5507` and `508cb85`) are byte-identical, and the bundle loads back.
+    - At `508cb85`: 0 dangling row references, 0 duplicate `ModType` names, 0 stat slots without a range, and no missing client texts in both games. Nameless `BaseItemTypes` rows skipped: 420 for PoE1, 421 for PoE2.
+    - Summaries: `docs/phase-2/bundle-poe1-26530219.json` and `bundle-poe2-26476662.json`.
+    - The corpus `report.json` is still byte-identical. The graft and quality loaders now expose raw rows (`grafts::rows`, `properties::quality_types`).
+  - **Gate 3d** (the game-specific table list agrees with the extractor's lists) moved to P2-4.
+  - **Review:** `code-architecture-reviewer` found no blockers; the deviation is justified and the summaries are scrubbed. Applied:
+    - the converter fails on a duplicate `Mods`, `Stats`, or `ItemClasses` ID;
+    - the summary counts dangling references, skipped nameless bases, stat slots without a range, missing client texts, and duplicate `ModType` names, and carries the lookup report;
+    - output is written to `<dir>.partial` and renamed only once it loads.
+
+    Still open, for P2-6: rebuilding `Mods` from a bundle must equal `mod_filter::load` on the extract, for both games. The bundle keeps `(0, 0)` stats in `stats`; the parser's `ModRow` keeps them in `unset`.
+- **PR P2-3a: bundle format v1 model and loader (PR #47, open, in review, branch `feat/p2-3a-bundle-model`, base `feat/p2-2d-compositions-tolerances`).** Plan step 3a.
+  - **Rules moved down:** `ItemRules`, `TextRules`, `ModRules` and their parts moved from `loom-parser` to `crates/loom-data/src/rules.rs`, with serde. `loom-parser` re-exports them. Reason: `loom-data` sits below `loom-parser`, and a bundle carries its game's rules (`data/item_rules.json`). `ModSection` is written by name, so `loom-domain` gains no dependency.
+  - **Bundle:** `crates/loom-data/src/bundle/` defines the v1 layout (the table in `mod.rs`):
+    - `Manifest` (`bundle.json`: format, data schema, game, `Provenance`, files with SHA-256 and size, `signatures` reserved);
+    - `BundleSource { list, read }` and `MemorySource`;
+    - canonical types keyed by ID: `Stat`, `ModEntry`, `BaseItem` (precomputed tags, implicits by mod ID), `ClientText`, `LookupTable`;
+    - stat-description files in the extractor's format;
+    - the `poe1` section (quality types; grafts with gem IDs and levels; essences precomputed into `ModEntry.essence_classes`);
+    - `Bundle::load` with `BUNDLE_*` codes, and `impl Lookup for Bundle`.
+  - **Fixtures:** synthetic PoE1 and PoE2 bundles of made-up rows in `crates/loom-data/tests/fixtures/` (written by `make_bundles.py`, marked `-text` in `.gitattributes`). Loader tests in `tests/bundle_load.rs`: both load, the PoE2 one has no `poe1` section, and each error code is checked. The PoE1 `item_rules()` round-trips through JSON.
+  - **Deferred:** `sha2` and hash checks go to the validator (P2-4). The `loom-extractor bundle` converter is P2-3b. Building the pipeline's `Mods`, `BaseRow`, `Grafts`, and `Properties` from a `Bundle` is P2-6.
+  - **Evidence:** workspace tests (`loom-data` bundle 14), clippy, gate 3c, and wasm32 pass. The corpus `report.json` is unchanged (byte-identical).
+  - **Review:** `code-architecture-reviewer` found no blockers. Applied:
+    - manifest paths must be plain relative paths and unique (`BUNDLE_BAD_PATH`, `BUNDLE_DUPLICATE_PATH`), checked before any read;
+    - a `poe1/` file in a PoE2 bundle is refused (`BUNDLE_GAME_SECTION`);
+    - `ModRules.sections` lists a game's non-shared section names, and `validate` refuses any other (`IMPORT_MOD_RULES_UNKNOWN_SECTION`);
+    - `Bundle::load` is documented as unverified.
+  - **Gate for P2-6:** the app may use a bundle only after the P2-4 validator accepts it.
+- **PR P2-2d: compositions, grafts, properties, tolerances (PR #46, open, in review, branch `feat/p2-2d-compositions-tolerances`, base `feat/p2-2c-mods-filter`).** Plan step 2d, the last lift PR. CI on #44: all 13 checks green (2026-11-10).
+  - **What:** new modules in `loom-parser::import`:
+    - `grafts`: granted-skill lines;
+    - `properties`: `item-property` and `catalyst-quality` lines, returned as a typed `PropertyMatch`;
+    - `tolerance`: `case_folded`, and `split_section` over `Pending` modifier lines.
+
+    Their client-text IDs (compositions, property and label IDs, the granted-skill wrapper) are per-game `TextRules` data in `ItemRules.text`, and the PoE1 IDs moved to `tools/parity-cli/src/poe1.rs`.
+  - **parity-cli:** `grafts.rs` and `properties.rs` keep table loading, the summary inputs, and the report's `detail` formatting. `missing()` maps the core's `quality-type:` back to `AlternateQualityTypes:`. `categorize` reads compositions through the rules, and `resolve_corpus` calls the core tolerances. The categories and the legacy-text evidence stay in the tool.
+  - **Gate 3c:** the list gained the PoE1 client-text IDs. `resolve/compose.rs` docs were reworded to pass it.
+  - **Evidence:** `resolve-corpus` from a clean tree at `4c22ec2` and `0222f0c`: all fields are equal and `report.json` is byte-identical. **Step 2 is complete:** the lifted pipeline gives exactly Spike B's result (`docs/phase-2/lift-evidence.md`). Workspace tests pass (tool 251; `loom-parser` 98), and so do clippy and wasm32.
+  - **Review:** `code-architecture-reviewer` found no blockers; the moved logic is equivalent. Applied:
+    - `split_section` takes the body before any resolution is written, with tests for the earlier neighbour and an excluded neighbour;
+    - the granted-skill level is `u32`;
+    - `Properties::missing` is a typed `Missing` enum;
+    - the domain's `CatalystQuality.quality` is now the quality's text, because the data allows a decimal.
+- **PR P2-2c: Mods filter (PR #45, open, in review, branch `feat/p2-2c-mods-filter`, base `feat/p2-2b-scope-bases`).** Plan step 2c. CI on #43: all 13 checks green (2026-11-10).
+  - **What:** the Spike B `Mods` filter logic moved to the new `crates/loom-parser/src/import/mods.rs`, with 13 tests on made-up rules. That logic is fit, backing, the filter steps, `local-stat`, `numbered-stat`, and `mod-backed`. Every PoE1 number and name the filter used is now `ModRules` data in `ItemRules.mods`:
+    - `fits: Vec<FitRule>` (section, flag, rarity, then clauses of generation types and a `DomainMatch`);
+    - the spawn exclusion and base-implicit gates;
+    - the no-spawn flags;
+    - the local-stat carrier tags;
+    - influences, read from the domain `InfluenceId`.
+  - **parity-cli:** the PoE1 rules are written in `tools/parity-cli/src/poe1.rs::mod_rules()`, with the `domain` and `generation` constants moved there. `mod_filter.rs` keeps loading from the extract (`load`, the spawn pairs, the essence-column map, `Stats` locality), `eldritch_share`, and PoB section naming. Its tests run against the core through a test-local shim.
+  - **Deviations, recorded in the context file:**
+    - `item_tags` and the essence-column map stay in the tool, because they are extract loading and `loom-parser` must not gain `serde_json`. The step 3 converter precomputes base tags and essence classes.
+    - No `ModData` trait: `Mods` is a concrete core index that any loader fills with `from_rows`.
+  - **Evidence:** `resolve-corpus` from a clean tree at `f03a92c` and `54d6fb6`: all fields are equal and `report.json` is byte-identical (`docs/phase-2/lift-evidence.md`). The gate 3c list gained the moved constant names. Workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. It checked the data-driven `fits` against the old `match` case by case. Applied:
+    - rules name their section as a `ModSection`;
+    - `ModRules::validate` (`IMPORT_MOD_RULES_*`) refuses empty or shadowed rules;
+    - the PoE1 rules are tested to validate and to cover every PoB section except class requirement;
+    - rule order is documented.
+- **PR P2-2b: scope and bases (PR #44, open, in review, branch `feat/p2-2b-scope-bases`, base `feat/p2-2a-item-input`).** Plan step 2b.
+  - **What:** new `crates/loom-parser/src/import/`:
+    - `ItemRules`, the per-game rules: a default stat-description scope plus mod domains with their own scope;
+    - `BaseRow`;
+    - the `ItemData` trait (`item_rules`, `base_names`, `base(name)`);
+    - `BaseQuery { name, fallback }`;
+    - `find_base`: tries the name, then the fallback, and requires every row to give one scope (`BaseError::{NotABase, ScopeConflict}`). Covered by 9 tests on game-neutral synthetic data.
+  - **parity-cli:** `Bases` implements `ItemData`. The PoE1 rules (domains 34 and 38) live in the new `tools/parity-cli/src/poe1.rs` until step 3 puts them in the bundle. PoB's naming (`base_name`, `magic_base`) stays PoB's, and `POB_SUFFIXED_BASES` moved to `legacy::pob_item::{SUFFIXED_BASES, suffix_removed}`. `mod_filter::BaseRow` re-exports the core type.
+  - **Gate 3c started:** `crates/loom-parser/tests/no_poe1_identifiers.rs` scans every core crate's `src/` for PoE1-only identifiers. It allows `loom-domain/src/poe1.rs`, `legacy/`, any `poe1` module, and test files. It was checked to fail on an injected identifier.
+  - **Evidence:** `resolve-corpus` from a clean tree at `814a896` and `591aa43`: all fields are equal and `report.json` is byte-identical (`docs/phase-2/lift-evidence.md`). Workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. Applied: `BaseError` has ADR-014 codes (`IMPORT_BASE_*`) and the report names moved to the tool; an empty row slice is no base; the scan's allow-list was narrowed and documented as a heuristic. Open design notes for P2-2c and P2-6 are in the context file.
+- **PR P2-2a: item input (PR #43, open, in review, branch `feat/p2-2a-item-input`, base `feat/p2-1-domain-model`).** Plan step 2a.
+  - **What:** `pob_item` moved by `git mv` from `loom-parser` to `crates/loom-serialization/src/legacy/pob_item/`, with its 20 tests unchanged. `loom-serialization` gains `pub mod legacy` and the `clippy::indexing_slicing` warning. New `legacy::pob_item::to_domain` maps a read item onto `loom_domain::ItemBody`, with 8 tests:
+    - every line is kept;
+    - spec values use `after_key`;
+    - influences are named by their display;
+    - only the alternate variants the item has are kept;
+    - sections and exclusions follow "Decisions in P2-1".
+  - **parity-cli:** `resolve_corpus.rs` and `mod_filter.rs` now take the domain item. `resolvable` reads `LineResolution::Pending`. `mod_filter::pob_section` and `section_name` map a `ModSection` back to PoB's `Section`; the PoE1 constants stay until P2-2c. PoB-reader diagnostics (`unsupported_features`, unknown prefixes) still read PoB's item or rules. Crate graph unchanged: `loom-parser` no longer has `pob_item`, and `loom-serialization` depends only on `loom-domain`.
+  - **Evidence:** `resolve-corpus` on Spike B's inputs, before (`c7bbffa`) and after (`916640a`, and again at `e7ffda1` after the review fixes), all from a clean tree with exit 0. All 12 step 2 fields are equal, and `report.json` is byte-identical. The run also equals the committed Spike B summary. Recorded in `docs/phase-2/lift-evidence.md`, compared with the new `tools/parity-cli/scripts/compare-spike-b.py`. Workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. Three should-fix items were applied (spec values from the reader's `spec_value`; `Rarity::names_base_in_name` on the domain; `pob_section` matching by variant). Details in the context file.
+  - **Tip for later lift PRs:** run `resolve-corpus` with the docs stashed. A dirty tree makes it exit 1 (`inputs_recorded` false).
+- **PR P2-1: domain model (PR #42, open, in review, branch `feat/p2-1-domain-model`).** Session start: PR #41 (P2-0, the Phase 2 plan) merged 2026-11-10 as `fc4513d`, main CI run 42926701060 green; PR #40's main CI run 42922016104 green. No comments on #41, so plan questions Q1 to Q6 stand at their defaults.
+  - **What:** the Build aggregate in `crates/loom-domain` (plan step 1), no dependencies, wasm32 builds. `Build` (game, `GameSpecific`, `DataVersion`, character, passives, skills, items, config, layout); PoE1-only choices only in `loom_domain::poe1::Poe1Choices`; `Ordered<T>` and `OpaqueNode` keep untyped content in place between typed siblings, layout markers place single typed children; `Sourced<T>` keeps source text, `Number` has bitwise equality; items keep every source line typed by kind; modifier lines carry `LineResolution` (pending, excluded, resolved as stats or a typed `kind` with `adapted`, `Continues` for multi-line and split-section, unresolved with a reason); `ItemBody::check_links`; quarantine and completeness derived from the lines with `LINE_*` codes; `DomainError` with `DOMAIN_*` codes.
+  - **Mapping notes for P2-2a:** PoB's scourge, crucible, and class-requirement sections become `ModSection::Other(..)`; class-requirement lines are `Excluded(Section)`; filter, mod-backing, and composed details are report-only. Full list: context file, "Decisions in P2-1".
+  - **Evidence:** 27 unit tests (PoE1 and PoE2 builds, every line kind, every resolution and `kind`, split pair and multi-line links, opaque content between gems and between sections, a scan that `bandit`/`pantheon` appear only in `poe1.rs`); fmt, workspace clippy, wasm32 build of the core crates pass.
+  - **Review:** `code-architecture-reviewer`: 1 blocker (a same-section multi-line description had no valid form; fixed) and 4 should-fix items, applied (context file).
+- **PR P2-0: Phase 2 plan (PR #41, merged 2026-11-10 as `fc4513d`; main CI run 42926701060 green).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted; its main CI run 42922016104 green.
+  - **Task docs:** new `dev/completed/phase-2-canonical-model/` (plan, context, tasks), made with `/dev-docs`.
   - **Steps:** 11 steps in about 15 PRs:
     - P2-1, domain model;
     - P2-2a to P2-2d, lift the item import pipeline from `tools/parity-cli` into `loom-parser` in four PRs, each keeping Spike B's `summary.json` fields unchanged;
@@ -110,15 +367,9 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Merge check for the Phase 2 plan PR #41 (P2-0)** (`gh pr view 41`). Record the squash commit and the main CI run in the next PR's Current state. Also record the result of main CI run 42922016104 (PR #40). If the maintainer answered Q1 to Q6 differently from the defaults, or asked for changes, update the plan on the same branch first.
-2. **P2-1: domain model** (plan step 1, `dev/active/phase-2-canonical-model/`). Build the aggregate in `loom-domain`:
-   - `Game`; IDs; `GameSpecific::Poe1`; typed values with their source strings;
-   - items with every line typed by kind, a `continues` link for split-section pairs, and the fields the import pipeline reads (rarity, sections, influences, flags, variant selection, prefixes);
-   - the modifier line enum from ADR-015 Amendment 1 (stat IDs, typed `kind`, or unresolved with a reason) and `adapted`;
-   - the `Opaque` container, keeping content in place between typed siblings;
-   - quarantine and completeness.
-
-   No dependencies; unit tests with PoE1 and PoE2 Builds; wasm32. P2-2a (item input) follows.
-Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
+1. **Stack check** (`gh pr list --state all --limit 15`): record whether #42 merged into `main`, #62 (UI docs) into #42's branch, #63 (P3-1c) into #62's, and #64 (P3-2) into #63's; make any change the maintainer asked for on that PR's branch first (merge it up with `git merge`, never force-push). While the DNS block lasts, do not wait for or check CI (maintainer, 2026-11-11).
+2. **P3-3: scope survey and slice definition** (plan step 3, `dev/active/phase-3-calc-slice/`): `loom-parity-cli calc-survey <builds...> --bundle <dir> --out <dir> [--anonymous]`: archetype classifier from game data (main skill, its `ActiveSkillType` flags and supports; not triggered, totem, trap, mine, brand, minion, mirage), the tree-version rule (decide the PoB tree label of the bundle's tree with evidence; `data-parity` compared against `3_29`), excluded-mechanics rules from game data (each with a test; include nodes in `passives-buff-text` and bloodline nodes, P3-2), the mechanic inventory; pick the spell and the attack (Q2), at least 3 in-scope builds each; commit `docs/phase-3/slice-fields.json` (Q3, Q6). Branch from the newest open PR's branch (`feat/p3-2-data-parity` until it merges) and target it. The bundles are in `local/p3/p3-1c/evidence2/bundle-<game>-a`; P3-2's report and overlay in `local/p3/p3-2/evidence/run-a`. The maintainer instruction of 2026-11-11 to continue the cascade covers it.
+3. Before P3-6, ask the maintainer about Q1 (a pruned derived PoE1 bundle in CI), Q2 and Q7 (the chosen spell and attack and the excluded mechanics, from P3-3's survey), and P3-2's open items (Vaal tag rows, `not-carried`).
+Open for the maintainer: Phase 2 plan questions Q1 to Q6 were taken on their defaults (context file, `dev/completed/phase-2-canonical-model/`), confirm or change them; post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

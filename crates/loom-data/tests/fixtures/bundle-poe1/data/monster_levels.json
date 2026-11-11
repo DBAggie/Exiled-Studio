@@ -1,0 +1,32 @@
+[
+ {
+  "accuracy": 14,
+  "ailment_threshold": 22,
+  "ally_damage": 5.62,
+  "ally_life": 15,
+  "alt_life_1": 10,
+  "alt_life_2": 13,
+  "armour": 16,
+  "damage": 4.99,
+  "evasion": 67,
+  "evasive_evasion": 76,
+  "level": 1,
+  "life": 22,
+  "phys_conversion_multi": 0
+ },
+ {
+  "accuracy": 28,
+  "ailment_threshold": 28,
+  "ally_damage": 11.24,
+  "ally_life": 30,
+  "alt_life_1": 20,
+  "alt_life_2": 26,
+  "armour": 32,
+  "damage": 5.5,
+  "evasion": 134,
+  "evasive_evasion": 152,
+  "level": 2,
+  "life": 28,
+  "phys_conversion_multi": 0
+ }
+]

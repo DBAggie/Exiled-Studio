@@ -66,7 +66,7 @@ fn bases() -> Bases {
         ("Twin Base", 34),
     ]);
     // The fixture's `ClientStrings` has `Lasts {0} Seconds` (B5d).
-    b.properties = Properties::load(&read).unwrap();
+    b.properties = properties::load(&read).unwrap();
     b
 }
 
@@ -135,7 +135,9 @@ fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
         &game,
         builds,
         Tool::default(),
+        None,
     )
+    .map(|(s, r, _)| (s, r))
     .unwrap()
 }
 
@@ -366,7 +368,7 @@ fn run_should_be_deterministic_and_record_unreadable_builds() {
 #[test]
 fn bases_scope_should_follow_the_mod_domain() {
     let b = bases();
-    let item = |t: &str| pob_item::read(t);
+    let item = |t: &str| pob_item::to_domain(&pob_item::read(t));
     assert_eq!(
         b.scope(&item(
             "Rarity: RARE\nN\nSuperior Fleshgraft\nImplicits: 0\n"
@@ -585,7 +587,7 @@ fn run_should_meet_the_gate_when_every_input_is_recorded_and_lines_resolve() {
         commit: Some("abc".to_owned()),
         dirty: Some(false),
     };
-    let (s, _) = run(
+    let (s, _, _) = run(
         &extract,
         &lookup,
         lookup_report,
@@ -594,6 +596,7 @@ fn run_should_meet_the_gate_when_every_input_is_recorded_and_lines_resolve() {
         &game,
         &[Build::new(xml.as_bytes().to_vec())],
         tool,
+        None,
     )
     .unwrap();
     assert_eq!((s.rate.resolved, s.rate.denominator), (1, 1));
@@ -684,7 +687,7 @@ fn granted_skill_should_change_only_unresolved_no_template_lines() {
     granted_skill(&mut resolved, &grafts, "Aegis Tulgraft");
     assert_eq!(resolved.kind, None);
     // With the graft: resolved, typed, wrapper named.
-    let grafts = Grafts::with_one("Aegis Tulgraft", "TulGraft4", "Preserving Stillness");
+    let grafts = grafts::with_one("Aegis Tulgraft", "TulGraft4", "Preserving Stillness");
     granted_skill(&mut record, &grafts, "Aegis Tulgraft");
     assert_eq!(
         (

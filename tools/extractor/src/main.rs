@@ -14,8 +14,10 @@
 //!   `<dir>/stat_descriptions/**/*.json` (see [`loom_extractor::statdesc`]),
 //!   every passive skill graph (`*.psg`) into
 //!   `<dir>/passive_skill_graphs/**/*.json` (see [`loom_extractor::psg`]),
-//!   every item type file (`*.it`) into `<dir>/item_types/**/*.json` (see
-//!   [`loom_extractor::itemtype`]), plus `<dir>/manifest.json` (see
+//!   every item type file (`*.it`) into `<dir>/item_types/**/*.json` and
+//!   the character and monster object templates (`*.ot`) into
+//!   `<dir>/object_templates/**/*.json` (see [`loom_extractor::itemtype`]),
+//!   plus `<dir>/manifest.json` (see
 //!   [`loom_extractor::extract`]). `<dir>` (and `<dir>.partial`, where the
 //!   output is written before it is renamed) must not exist yet; this is
 //!   checked before anything is decoded. Exits with an error if a root table
@@ -364,6 +366,7 @@ fn planned_files(
         if source_kind(plan.game(), &path).is_some()
             || psg::is_graph(&path)
             || itemtype::is_item_type(&path)
+            || itemtype::is_object_template(&path)
         {
             by_path.entry(path.clone()).or_default();
         }

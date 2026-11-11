@@ -50,7 +50,7 @@
 //!    client composes a modifier with (`While a Unique Enemy is in your
 //!    Presence, {0}`, `Uses level {1} {0}`); the composed remainder is not
 //!    resolved, and the evidence says so. Since PR B5c the resolver reads
-//!    the [`COMPOSITIONS`] wrappers itself, so a presence line gets here
+//!    the [`compositions`] wrappers itself, so a presence line gets here
 //!    only when its remainder does not resolve.
 //! 10. `parser-gap/near-miss`: the word key equals a variant line of the
 //!     item's scope (case, sign, missing value, or one line of a multi-line
@@ -68,8 +68,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Handler, Segment, StatDescriptions};
-use loom_parser::pob_item;
 use loom_parser::resolve::compose::Composition;
+use loom_serialization::legacy::pob_item;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -114,20 +114,14 @@ pub const CLIENT_STRINGS: [(&str, ClientKind); 12] = [
 
 /// `ClientStrings` wrappers the resolver reads through (PR B5c;
 /// [`loom_parser::resolve::compose`]), each with the stat the wrapper
-/// stands for, value 1. Pairing: every `Mods` row with the stat is an
-/// eldritch implicit (`*EldritchImplicitUniquePresence*`,
-/// `*PinnaclePresence*`) whose other stat's line the client wraps in the
-/// text (PoE1 26530219).
-pub const COMPOSITIONS: [(&str, &str); 2] = [
-    (
-        "InfluenceStatConditionPresenceUniqueMonster",
-        "local_influence_mod_requires_unique_monster_presence",
-    ),
-    (
-        "InfluenceStatConditionPresenceCelestialBoss",
-        "local_influence_mod_requires_celestial_boss_presence",
-    ),
-];
+/// stands for, value 1: the PoE1 item rules' `text.compositions` (since
+/// P2-2d, data in [`crate::poe1::COMPOSITIONS`]). Pairing: every `Mods`
+/// row with the stat is an eldritch implicit
+/// (`*EldritchImplicitUniquePresence*`, `*PinnaclePresence*`) whose other
+/// stat's line the client wraps in the text (PoE1 26530219).
+fn compositions() -> Vec<(String, String)> {
+    crate::poe1::item_rules().text.compositions
+}
 
 /// What a `ClientStrings` line is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -399,10 +393,10 @@ pub struct GameText {
     pob: Vec<PobText>,
     /// Whether a description or client text holds `^` and a digit or `x`.
     pub colour_code_in_game_text: bool,
-    /// The [`COMPOSITIONS`] whose `ClientStrings` text was found and has
+    /// The [`compositions`] whose `ClientStrings` text was found and has
     /// one `{0}`, in that order.
     pub compositions: Vec<Composition>,
-    /// [`COMPOSITIONS`] ids not read (no `ClientStrings` row, or a text
+    /// [`compositions`] ids not read (no `ClientStrings` row, or a text
     /// without exactly one `{0}`), recorded rather than skipped silently.
     pub compositions_missing: Vec<String>,
 }
@@ -459,6 +453,7 @@ impl GameText {
                 }
             }
         }
+        let wrappers = compositions();
         let table = Table::require(read, "ClientStrings")?;
         let (id, text) = (table.column("Id")?, table.column("Text")?);
         for row in &table.rows {
@@ -466,7 +461,7 @@ impl GameText {
                 continue;
             };
             out.colour_code_in_game_text |= has_colour_code(t);
-            if let Some((_, stat)) = COMPOSITIONS.iter().find(|(id, _)| *id == i)
+            if let Some((_, stat)) = wrappers.iter().find(|(id, _)| id == i)
                 && let Some(c) = Composition::new(i, t, stat, 1)
             {
                 out.compositions.push(c);
@@ -485,11 +480,11 @@ impl GameText {
             }
         }
         out.compositions
-            .sort_by_key(|c| COMPOSITIONS.iter().position(|(id, _)| *id == c.id));
-        out.compositions_missing = COMPOSITIONS
+            .sort_by_key(|c| wrappers.iter().position(|(id, _)| *id == c.id));
+        out.compositions_missing = wrappers
             .iter()
             .filter(|(id, _)| out.compositions.iter().all(|c| c.id != *id))
-            .map(|(id, _)| (*id).to_owned())
+            .map(|(id, _)| id.clone())
             .collect();
         // A stale pairing (a stat renamed by a patch) fails the run instead
         // of writing a stat ID the game no longer has.

@@ -1,0 +1,170 @@
+{
+ "data_schema": 2,
+ "files": [
+  {
+   "path": "data/active_skills.json",
+   "sha256": "2fb328e0be0aae79e164651d3d701d1e51a2c0082cb30e4608ce0e609aaa1a9f",
+   "size": 333
+  },
+  {
+   "path": "data/armour_types.json",
+   "sha256": "aeb86b8ff81b0f2ebb66fdcba750dfd6413c162f8fa6559f2be3be49ed56a631",
+   "size": 253
+  },
+  {
+   "path": "data/ascendancies.json",
+   "sha256": "0783837a80111563c682349fdfd134e7008ee90d3999e847d0e86c123ce5a455",
+   "size": 114
+  },
+  {
+   "path": "data/base_items.json",
+   "sha256": "4be1ac0f811443fb0af8bcad714d5292b03311a82e56ac0ad2b69f1ebc25f38d",
+   "size": 973
+  },
+  {
+   "path": "data/characters.json",
+   "sha256": "b89612e377cd1d331c74d0b69c31368a2c3078ad090fd0a7920bacf1933d06b2",
+   "size": 382
+  },
+  {
+   "path": "data/client_texts.json",
+   "sha256": "b6d01b6162e9962074bc7371d61341c938c62787eb034ff91ebf652464b15a59",
+   "size": 275
+  },
+  {
+   "path": "data/cost_types.json",
+   "sha256": "7b1a14ac75827d33687605a1d8598a93992aaf68047363973112869ae3231d02",
+   "size": 21
+  },
+  {
+   "path": "data/game_constants.json",
+   "sha256": "22957b190f48f534f8d7778977b0ed8447f826ca7b0f0ab8cfb8d21651240660",
+   "size": 88
+  },
+  {
+   "path": "data/gem_effects.json",
+   "sha256": "bb146b4f6af0c171f28e7fcd6d31bac5110bf9a96d2e15ceda4014f14105cf56",
+   "size": 261
+  },
+  {
+   "path": "data/gem_tags.json",
+   "sha256": "6b57d090325246b0b4c8c42bb8d5f465176a83200e2b58a4e2c1adca74697bfc",
+   "size": 101
+  },
+  {
+   "path": "data/gems.json",
+   "sha256": "e37fc293a1b2c8dc6c29072788dc6abca04a77b2778e2fc9da6de31e05d380b8",
+   "size": 227
+  },
+  {
+   "path": "data/granted_effects.json",
+   "sha256": "9e712309e747b6576928493c63f1bbed3f39ffef036c172f5b859673f8ad80ea",
+   "size": 1144
+  },
+  {
+   "path": "data/item_classes.json",
+   "sha256": "94b5364bb457ca29ca8fa2f4c1c8e58718eaef7fce0396453f7af935f985d2d5",
+   "size": 30
+  },
+  {
+   "path": "data/item_rules.json",
+   "sha256": "73832fdfb6c522ff7d93d3a42958f2a6050f7eb4573cf0f4588662530fbff699",
+   "size": 1613
+  },
+  {
+   "path": "data/lookups.json",
+   "sha256": "fce548d78f7035024d2327b820135f8a976be1953ce0a10ee2073363d42be684",
+   "size": 91
+  },
+  {
+   "path": "data/mastery_effects.json",
+   "sha256": "41f0174d0a405fdcd3a549ec143224a180dccd1f5e5a513653bc69ed0f05e880",
+   "size": 129
+  },
+  {
+   "path": "data/mastery_groups.json",
+   "sha256": "bf29052c7e0c3aa9e716fd4101dc9e0b247fd4b52f60e678fdc10fe906fdaf4d",
+   "size": 78
+  },
+  {
+   "path": "data/mods.json",
+   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
+   "size": 663
+  },
+  {
+   "path": "data/monster_levels.json",
+   "sha256": "2d2d6859f038febe80f853f0fb31fb8f610192038e12d07fb8a8544cf89389c7",
+   "size": 539
+  },
+  {
+   "path": "data/object_templates.json",
+   "sha256": "7fadc4167a082c4d970962cd93f2c7f2ca3c32e7870c55eba8034248fb6922e4",
+   "size": 236
+  },
+  {
+   "path": "data/passive_tree.json",
+   "sha256": "cdbb6d4ba338842a19e7b2ff20076fd41b6a546558ceb55023e8af3d46c25d90",
+   "size": 922
+  },
+  {
+   "path": "data/passives.json",
+   "sha256": "b70c1c3719fba4205f85422a7e7cd5aef9bddd4031e4cdf54812d9e0bf119fd7",
+   "size": 596
+  },
+  {
+   "path": "data/shield_types.json",
+   "sha256": "c6640cafa9e2fbff97381f79abf5ab145455dfa366f07a26427ac5719617036f",
+   "size": 61
+  },
+  {
+   "path": "data/skill_types.json",
+   "sha256": "4cc0a305ece4a9859306ae4196fb47da9a1b9151c94817ad77d82febe4d383da",
+   "size": 154
+  },
+  {
+   "path": "data/stat_sets.json",
+   "sha256": "09688215d5941433d09865b64f25ab066d30d4ca28c7dacb69f0c4dca8884f91",
+   "size": 1953
+  },
+  {
+   "path": "data/stats.json",
+   "sha256": "e5a16b162c312e85bff67524f411fb780b35623c907fa150cb16cc291f5d624a",
+   "size": 782
+  },
+  {
+   "path": "data/weapon_types.json",
+   "sha256": "86108c9750ecce57dd177de567bb3f57693377eb0884b872be2b3ca9357e93a0",
+   "size": 142
+  },
+  {
+   "path": "poe1/grafts.json",
+   "sha256": "2724bbcc0f4a54997746944b7df4039bc7f950ac98538461b5cbee95583dcb02",
+   "size": 163
+  },
+  {
+   "path": "poe1/quality_types.json",
+   "sha256": "111b8b10a17f224fdf089bfa958fb8db20200080ad29731d83abf70ff2c09ee4",
+   "size": 136
+  },
+  {
+   "path": "stat_descriptions/charm_stat_descriptions.json",
+   "sha256": "d993c0f7f1c4c323bc20409c3d394fb658c2bcf1713261fe54d76439ca4a12b9",
+   "size": 624
+  },
+  {
+   "path": "stat_descriptions/stat_descriptions.json",
+   "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
+   "size": 4380
+  }
+ ],
+ "format": 2,
+ "game": "poe1",
+ "signatures": [],
+ "source": {
+  "dat_schema": "synthetic",
+  "decoder": "none",
+  "extractor_commit": "synthetic",
+  "index_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "steam_build": null
+ }
+}

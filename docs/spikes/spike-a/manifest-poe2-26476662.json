@@ -10,6 +10,7 @@
     "Folders/data/12/balance.datc64": "87deca04c9cdc9c91c9fea45eacf245a9e1c6d75a75f095bdf131115ff7d4d83",
     "Folders/data/13/balance.datc64": "4ef4c2b6e55e7cc383e034869a9ea84cd6dc6077200c2fcf8084a0e8efccfbbf",
     "Folders/data/15/balance.datc64": "b3f407ca6b500bf645501d39b1a4ae7c483949bc39ad67472d0ee5795f4ab6e7",
+    "Folders/data/1C/balance.datc64": "af3ed121c08de945fffc03276ca4f5a446defea703d1b57cfe6c609e644dd31e",
     "Folders/data/1E/balance.datc64": "bf2631189ac897e5e8c77ba0c8b4d2f9a23a8a89571d23c9c3d2f682fc2c1cb4",
     "Folders/data/1F/balance.datc64": "5f7c54155f1da6166711dd6b6fc8d7a714b6d0a2ffa9bdc09b6ab4c5b95ce611",
     "Folders/data/22/balance.datc64": "95a4f44b75f6cd5ff0009197aacfc4ca02478bdb1dfcd37bb4ee4a82afeaaf5a",
@@ -22,6 +23,7 @@
     "Folders/data/2F/balance.datc64": "17c4ad587633449e8c84f198b254cbe2af218df8126283498616aad4ff639a7f",
     "Folders/data/32/balance.datc64": "5bd5ca1369d705b058a7d2bae3660727da7a2a59805306027f1b92566cb2cf15",
     "Folders/data/36/balance.datc64.1": "b3cfb41afd31a6101e4ec24019151e7c9262531ac9aa02fa508e6b059aa93150",
+    "Folders/data/38/balance.datc64": "fc2cf88a1ff2b8c8a0dcc074d16e71adcdab97b0d29f78e92fe084797c9806d6",
     "Folders/data/3E/balance.datc64": "f89e950703ff60c545afc1f0d85023b899f09bfbf35f62f52300e12b6069a353",
     "Folders/data/40/balance.datc64": "e12ceea1f26e7fcaba4add652feaca9eecc5a6ed7aa5f1526c64a2e998dc1b2f",
     "Folders/data/41/balance.datc64": "8d467983013645c00f5560f4f0838de8d563de658a6129a8268b67f5c505c422",
@@ -33,6 +35,7 @@
     "Folders/data/51/balance.datc64": "3540b9f663e4eab83a54aaa976f19e01a3d26077166dcfbf76772a7b17ce4e94",
     "Folders/data/55/balance.datc64": "01933e2e86c369394f77dc74a3228dc27f9278b6b514fbf6c14a8d4defc9de1c",
     "Folders/data/60/balance.datc64": "46e6534985e914ca666773de7290cb69f72c54d14c51d75663fb632baf38afde",
+    "Folders/data/61/balance.datc64": "fac993f684425941f6c5f017cd85b17c40e0d98ab8891707660d48e8ac492105",
     "Folders/data/66/balance.datc64": "8a07754e9a37bd380e21226b1179f89e50840ccfff95dacfd01cb80acbca5732",
     "Folders/data/67/balance.datc64.1": "144525f092228e0d210dcc5ed8e67ab195e655a60c591bb8652ad324c5ea50c0",
     "Folders/data/6D/balance.datc64": "464edec44cd307dfcd3299814b0ac1fe1bce57be781271fae94bd752f7cdbc99",
@@ -40,12 +43,14 @@
     "Folders/data/76/balance.datc64": "e7e0cf03f67c9f6ee9e53f87b6307189ff9a60333e63801e969b2e4263d59a87",
     "Folders/data/77/balance.datc64": "de3e20722d88311fe0a28c9226f2f02e491151235de7624ff978aaf1c29373a1",
     "Folders/data/7A/balance.datc64": "653ffa1d099db80132b45d0e6c378f8aef333346e98df86098219c753ff456a9",
+    "Folders/data/85/balance.datc64": "41cb34522808c75385ab18fd12baece7b68128c45d29626c5806059a415adb28",
     "Folders/data/A5/balance.datc64": "aaa613f7078a85a7f4593fa79e3ae00bef8b18e7a2b30ded39cda0aba8a39f32",
     "Folders/data/AC/balance.datc64": "458dedbef7a9fad60c8f9fe2c244e7b88c7f8397a5c7869960c75c87d9526a4c",
     "Folders/data/C0/balance.datc64": "c33aa831a463b60c8f3b5e3c3b9b227c0c386d105b83ef35d34b5db0fbba74b4",
     "Folders/data/C5/balance.datc64": "c97c1e47bdc1b18b435f35e9ce9c82486b25c5a9cb1a89259627f2ff61133b0e",
     "Folders/data/CD/balance.datc64": "d2f9bc4c846573d6d81be41234dec4228aa5fb56ac05a54d0d101133143ff616",
     "Folders/data/D0/balance.datc64": "a7c034552cd610df18fe324c88fb3a0efdaa0be75ca94d585de04e4e713d191a",
+    "Folders/data/D5/balance.datc64": "ef7e915e0941dae260eef6f5f03971e8fe22364db60ee423f9de7eb6dea99b90",
     "Folders/data/DD/statdescriptions": "d6f651f2f0a0fb31d43b14d24e85111d6cc97080f972f559b19fa4d9d14411d6",
     "Folders/data/E0/balance.datc64": "5b25de30e09237d3e3c07198aa6bab4aa96e5e764e8b9041183e977b4840eb86",
     "Folders/data/E1/balance.datc64": "dae42bc99fac46d7f5a57fa909c3c45aead57d213f6ec3b3fb5c11419c510197",
@@ -79,7 +84,7 @@
     "version": "oozextract 0.5.7"
   },
   "extractor": {
-    "commit": "c3c7e150ade34fcf52d11e576bc8e9dfc3daf86b",
+    "commit": "e43d8f6e40bc07a7dbbb7b804757c3cd11682360",
     "dirty": false,
     "version": "0.0.0"
   },
@@ -1191,6 +1196,22 @@
     "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json": {
       "rows": 2,
       "sha256": "2032842b4c6d79dd6d3eda130b1185e2d165f297c3ae5e214acb0d6e03dc2e34"
+    },
+    "object_templates/metadata/characters/character.ot.json": {
+      "rows": 11,
+      "sha256": "60e6b9c0b31b705bbd480a6de74c5c8f3a3f9eb10cedb148f8850cb71da27784"
+    },
+    "object_templates/metadata/characters/character_login.ot.json": {
+      "rows": 7,
+      "sha256": "9a0ede5035b7d4295547869734296cb6a157caadc5d35d40fea1d75a72d006a8"
+    },
+    "object_templates/metadata/characters/character_mobile.ot.json": {
+      "rows": 1,
+      "sha256": "017fa55ddc9a211807f2e39fc5a8ce88934bd7696b2cc08d0e16f78da3ec5501"
+    },
+    "object_templates/metadata/monsters/monster.ot.json": {
+      "rows": 13,
+      "sha256": "418e623934a97821100a27765d2c2fc5a90817ba7aa192a6198a66adb693b8a3"
     },
     "passive_skill_graphs/metadata/alternateskillgraphs/royalepassiveskillgraph.psg.json": {
       "rows": 6,
@@ -3608,6 +3629,10 @@
       "rows": 1088,
       "sha256": "6b78357d5d036474f68b0a4160a85f4cf40a7d04badee47a152450e339271c65"
     },
+    "tables/ArmourTypes.json": {
+      "rows": 1280,
+      "sha256": "c87aae66f36c5b6696ffaa1659a0eba47feff5c2e415aefdb929dc54e7e685ec"
+    },
     "tables/Ascendancy.json": {
       "rows": 37,
       "sha256": "2fdeb030cfd4e76b6ca0e3708d979bb1636c0056cdbf13f76334484382981e72"
@@ -3684,9 +3709,21 @@
       "rows": 18,
       "sha256": "805f5d566719e262b997be84e820bdd4af9f24041d7a56d1ae9e73335c1e4de0"
     },
+    "tables/DefaultMonsterStats.json": {
+      "rows": 100,
+      "sha256": "596a5eec3b49ca15da20a4ca45e9d0cdaa7b155830a3935c28381816089fed72"
+    },
+    "tables/EffectivenessCostConstants.json": {
+      "rows": 3,
+      "sha256": "0f858721b16c34900b6437f26e1565ceb96e195adb6d55aacf26109cceb4f09b"
+    },
     "tables/FlavourText.json": {
       "rows": 3591,
       "sha256": "a85d3d0502e1b74830f2f85f48a86566c1a28490eee98c8286c465bec97c7559"
+    },
+    "tables/GameConstants.json": {
+      "rows": 121,
+      "sha256": "06c2e0a0aee2afa70dfcb36695892a225646136b3f6762bfb65eb367f7e0c238"
     },
     "tables/GemEffects.json": {
       "rows": 1194,
@@ -3700,9 +3737,17 @@
       "rows": 202,
       "sha256": "8105f7c9bf37b762b84239c7e4fd93f538c319602e7884c8a9639fba3917e373"
     },
+    "tables/GrantedEffectQualityStats.json": {
+      "rows": 429,
+      "sha256": "7d193880967af56a80ff3349485cc82ac8dd394395157b5dfe60d940b85c7023"
+    },
     "tables/GrantedEffectStatSets.json": {
       "rows": 8284,
       "sha256": "62202ca1b05d819461a0b25faa606646af511137a5f80720e6bf8b2a1f866e1d"
+    },
+    "tables/GrantedEffectStatSetsPerLevel.json": {
+      "rows": 41558,
+      "sha256": "61cd4c17b1e49b22a4417164564f2d4203cf36e2f5a963e3d2cc1573be1c0e5e"
     },
     "tables/GrantedEffects.json": {
       "rows": 8350,
@@ -3880,6 +3925,10 @@
       "rows": 8,
       "sha256": "97f10103733e384c937d8d3fc159a75d1534fe5047225cc80e4e4768c69e8261"
     },
+    "tables/ShieldTypes.json": {
+      "rows": 203,
+      "sha256": "a0f7d453f2cc0667951f4485df8ee44474e6c4bfdb1e9752929dd57804aedae3"
+    },
     "tables/ShopTag.json": {
       "rows": 949,
       "sha256": "057e9e67d7243c732f2385bd4a222cefd56a5a44cc48fdcc5618dcfa84cc75f6"
@@ -3920,16 +3969,24 @@
       "rows": 42,
       "sha256": "b5e929d4c7a19315a6536a69707715ca25704a15213acfc8534257f52fdeac4d"
     },
+    "tables/WeaponClasses.json": {
+      "rows": 15,
+      "sha256": "8b8c7efe25953a41cbb4c625217f228d3cb597e16a8b3ae34d2d5c662db70cf1"
+    },
     "tables/WeaponSoundTypes.json": {
       "rows": 32,
       "sha256": "23be7145a18f3338d425b6e964cc8815a748669c1bb0500fcc0d9f77acd3d570"
+    },
+    "tables/WeaponTypes.json": {
+      "rows": 407,
+      "sha256": "10bad595d534708da950ad3258b93dd5ee3c81eed89f378910d4968c9348bb09"
     },
     "tables/WieldableClasses.json": {
       "rows": 28,
       "sha256": "36071ad34e857e80e07ddc3d94feb470509837f6962dec9d1cd88d1eb4254bc0"
     }
   },
-  "format": 4,
+  "format": 5,
   "game": "poe2",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -6708,6 +6765,53 @@
         "output": "item_types/metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it.json",
         "source": "metadata/items/weapons/twohandweapons/twohandtalismans/abstracttalisman.it",
         "source_sha256": "4f87d87c78f5050d06561489b46d66a3c019d4606555b535a0f2864241fb6c32",
+        "status": "ok"
+      }
+    }
+  },
+  "object_templates": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "object_templates",
+    "files": {
+      "metadata/characters/character.ot": {
+        "abstract": true,
+        "blocks": 11,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character.ot.json",
+        "source": "metadata/characters/character.ot",
+        "source_sha256": "e9ccfd3765422e556a59f56a6702636a6fdca79b0f929e511434352b42bc1af2",
+        "status": "ok"
+      },
+      "metadata/characters/character_login.ot": {
+        "abstract": false,
+        "blocks": 7,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character_login.ot.json",
+        "source": "metadata/characters/character_login.ot",
+        "source_sha256": "982e9918f10dccc1cd82edd119c89fd084f102cff36d3f0c595aa7d7bf9a2fef",
+        "status": "ok"
+      },
+      "metadata/characters/character_mobile.ot": {
+        "abstract": true,
+        "blocks": 1,
+        "error": null,
+        "extends": "Metadata/Characters/Character",
+        "output": "object_templates/metadata/characters/character_mobile.ot.json",
+        "source": "metadata/characters/character_mobile.ot",
+        "source_sha256": "367221863ba0d90366f57bf3bff700d2d4133e5965ad3ba2bf7aa4901af47271",
+        "status": "ok"
+      },
+      "metadata/monsters/monster.ot": {
+        "abstract": true,
+        "blocks": 13,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/monsters/monster.ot.json",
+        "source": "metadata/monsters/monster.ot",
+        "source_sha256": "b3d038cfec761b236ecf68883607478aaa134bd97093bd6c6491612025ce5762",
         "status": "ok"
       }
     }
@@ -39308,9 +39412,10 @@
       "output": "tables/ActiveSkillType.json",
       "referenced_by": [
         "ActiveSkills",
+        "GrantedEffectQualityStats",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 24,
       "row_size_mismatch": null,
       "rows": 290,
@@ -39534,6 +39639,28 @@
       "source_sha256": "910815bf72498571c16415f5d362abf2f71625cee374193406047e278e872e80",
       "status": "ok"
     },
+    "ArmourTypes": {
+      "columns": 7,
+      "columns_read": 7,
+      "error": null,
+      "key_columns": {
+        "BaseItemType": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 1280
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ArmourTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 40,
+      "row_size_mismatch": null,
+      "rows": 1280,
+      "source": "data/balance/armourtypes.datc64",
+      "source_sha256": "3c242ba0dfb8383ae8d4b3c6e47bf7c57bd58b59ef14b3e675e61687ef227cab",
+      "status": "ok"
+    },
     "Ascendancy": {
       "columns": 19,
       "columns_read": 19,
@@ -39576,7 +39703,7 @@
         "Ascendancy",
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 165,
       "row_size_mismatch": null,
       "rows": 37,
@@ -39720,11 +39847,14 @@
       "non_finite_floats": 0,
       "output": "tables/BaseItemTypes.json",
       "referenced_by": [
+        "ArmourTypes",
         "BaseItemTypes",
         "BrequelPassiveSubTrees",
         "Characters",
         "PassiveTreeExpansionJewels",
-        "SkillGems"
+        "ShieldTypes",
+        "SkillGems",
+        "WeaponTypes"
       ],
       "root": true,
       "row_len": 360,
@@ -40312,7 +40442,7 @@
         "PassiveSkills",
         "SkillCraftingData"
       ],
-      "root": false,
+      "root": true,
       "row_len": 640,
       "row_size_mismatch": null,
       "rows": 12,
@@ -40333,7 +40463,8 @@
         "AtlasPassiveSkillSubTrees",
         "PassiveSkillTrees",
         "PassiveSkills",
-        "Tags"
+        "Tags",
+        "WeaponClasses"
       ],
       "root": false,
       "row_len": 52,
@@ -40385,6 +40516,40 @@
       "source_sha256": "13b7f7b5ae99fcce6489e4bf66331c39daedd3f9c3dfd5c26751472d3e240745",
       "status": "ok"
     },
+    "DefaultMonsterStats": {
+      "columns": 21,
+      "columns_read": 21,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/DefaultMonsterStats.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 88,
+      "row_size_mismatch": null,
+      "rows": 100,
+      "source": "data/balance/defaultmonsterstats.datc64",
+      "source_sha256": "2c5bb67cc64294785f72b0ded90209b474f824b5d70e69871d73602945fb0ad9",
+      "status": "ok"
+    },
+    "EffectivenessCostConstants": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/EffectivenessCostConstants.json",
+      "referenced_by": [
+        "GrantedEffectStatSetsPerLevel"
+      ],
+      "root": false,
+      "row_len": 12,
+      "row_size_mismatch": null,
+      "rows": 3,
+      "source": "data/balance/effectivenesscostconstants.datc64",
+      "source_sha256": "768f19841d61f0d9429a4fda34e2ef5812285acb8d2026960049c87aabb96acd",
+      "status": "ok"
+    },
     "FlavourText": {
       "columns": 3,
       "columns_read": 3,
@@ -40401,6 +40566,22 @@
       "rows": 3591,
       "source": "data/balance/flavourtext.datc64",
       "source_sha256": "845532d81c3f2709a1ad343f39982046131081d08516f67756d6df84bc275769",
+      "status": "ok"
+    },
+    "GameConstants": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {},
+      "non_finite_floats": 0,
+      "output": "tables/GameConstants.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 16,
+      "row_size_mismatch": null,
+      "rows": 121,
+      "source": "data/balance/gameconstants.datc64",
+      "source_sha256": "3a7c378b990a9b2012989a3a24eefdd92577b736823499620115a456857b4e0f",
       "status": "ok"
     },
     "GemEffects": {
@@ -40434,7 +40615,7 @@
       "referenced_by": [
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 142,
       "row_size_mismatch": null,
       "rows": 1194,
@@ -40468,7 +40649,7 @@
       "referenced_by": [
         "GemEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 64,
       "row_size_mismatch": null,
       "rows": 67,
@@ -40492,6 +40673,48 @@
       "rows": 202,
       "source": "data/balance/grantedeffectlabels.datc64",
       "source_sha256": "fb15d2f4a437a6739b27525670da1475d46408031e64e25eb8b2a25ae182bad8",
+      "status": "ok"
+    },
+    "GrantedEffectQualityStats": {
+      "columns": 9,
+      "columns_read": 9,
+      "error": null,
+      "key_columns": {
+        "AddMinionTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 0
+        },
+        "AddTypes": {
+          "dangling": 0,
+          "target": "ActiveSkillType",
+          "values": 0
+        },
+        "AltStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 273
+        },
+        "GrantedEffect": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 429
+        },
+        "Stats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 442
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectQualityStats.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 144,
+      "row_size_mismatch": null,
+      "rows": 429,
+      "source": "data/balance/grantedeffectqualitystats.datc64",
+      "source_sha256": "c1d6d517bdd38abfb01dd7e9847c377c49e6a46d7ae45f11154628ae6f3921f5",
       "status": "ok"
     },
     "GrantedEffectStatSets": {
@@ -40523,14 +40746,62 @@
       "non_finite_floats": 0,
       "output": "tables/GrantedEffectStatSets.json",
       "referenced_by": [
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects"
       ],
-      "root": false,
+      "root": true,
       "row_len": 101,
       "row_size_mismatch": null,
       "rows": 8284,
       "source": "data/balance/grantedeffectstatsets.datc64",
       "source_sha256": "1b01d58841c9550316628198d1a0c4d0900337724517c3823021ba5a64859d55",
+      "status": "ok"
+    },
+    "GrantedEffectStatSetsPerLevel": {
+      "columns": 17,
+      "columns_read": 17,
+      "error": null,
+      "key_columns": {
+        "AdditionalFlags": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 2
+        },
+        "AdditionalStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 17162
+        },
+        "FloatStats": {
+          "dangling": 0,
+          "target": "Stats",
+          "values": 20175
+        },
+        "GrantedEffects": {
+          "dangling": 0,
+          "target": "GrantedEffects",
+          "values": 42032
+        },
+        "InterpolationBases": {
+          "dangling": 0,
+          "target": "EffectivenessCostConstants",
+          "values": 20175
+        },
+        "StatSet": {
+          "dangling": 0,
+          "target": "GrantedEffectStatSets",
+          "values": 41558
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/GrantedEffectStatSetsPerLevel.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 185,
+      "row_size_mismatch": null,
+      "rows": 41558,
+      "source": "data/balance/grantedeffectstatsetsperlevel.datc64",
+      "source_sha256": "35ba3efcef0de264c9110e077736716b6d6e3730f228f53a23f290600188f769",
       "status": "ok"
     },
     "GrantedEffects": {
@@ -40608,6 +40879,8 @@
       "output": "tables/GrantedEffects.json",
       "referenced_by": [
         "GemEffects",
+        "GrantedEffectQualityStats",
+        "GrantedEffectStatSetsPerLevel",
         "GrantedEffects",
         "GrantedEffectsPerLevel",
         "MonsterVarieties"
@@ -40637,7 +40910,7 @@
         "Characters",
         "Mods"
       ],
-      "root": false,
+      "root": true,
       "row_len": 116,
       "row_size_mismatch": null,
       "rows": 34301,
@@ -40722,6 +40995,7 @@
         "BaseItemTypes",
         "Mods",
         "MonsterVarieties",
+        "WeaponClasses",
         "WieldableClasses"
       ],
       "root": false,
@@ -41614,7 +41888,7 @@
       "referenced_by": [
         "PassiveSkillMasteryGroups"
       ],
-      "root": false,
+      "root": true,
       "row_len": 54,
       "row_size_mismatch": null,
       "rows": 332,
@@ -41653,7 +41927,7 @@
       "referenced_by": [
         "PassiveSkills"
       ],
-      "root": false,
+      "root": true,
       "row_len": 73,
       "row_size_mismatch": null,
       "rows": 81,
@@ -42137,6 +42411,28 @@
       "source_sha256": "05cc0cbf21fed83ddfa4952cd959330e9f25e4b0c4795f70451c06bd75adf1ed",
       "status": "ok"
     },
+    "ShieldTypes": {
+      "columns": 2,
+      "columns_read": 2,
+      "error": null,
+      "key_columns": {
+        "BaseItemType": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 203
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/ShieldTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 20,
+      "row_size_mismatch": null,
+      "rows": 203,
+      "source": "data/balance/shieldtypes.datc64",
+      "source_sha256": "c80ef3850088921ac34db11bf0e780de763306277f2022cee37995aa513b733c",
+      "status": "ok"
+    },
     "ShopTag": {
       "columns": 9,
       "columns_read": 9,
@@ -42277,7 +42573,7 @@
         "PassiveSkills",
         "SkillGems"
       ],
-      "root": false,
+      "root": true,
       "row_len": 250,
       "row_size_mismatch": null,
       "rows": 1191,
@@ -42398,7 +42694,9 @@
         "BuffVisualOrbTypes",
         "CostTypes",
         "GemTags",
+        "GrantedEffectQualityStats",
         "GrantedEffectStatSets",
+        "GrantedEffectStatSetsPerLevel",
         "ItemVisualIdentity",
         "MinionType",
         "ModType",
@@ -42467,6 +42765,35 @@
       "source_sha256": "ae97d4fc0e4369e50803deeea6f68f314c4805e21c4ec21746cbc29ece7af063",
       "status": "ok"
     },
+    "WeaponClasses": {
+      "columns": 3,
+      "columns_read": 3,
+      "error": null,
+      "key_columns": {
+        "ItemClass": {
+          "dangling": 0,
+          "target": "ItemClasses",
+          "values": 15
+        },
+        "Name": {
+          "dangling": 0,
+          "target": "ClientStrings",
+          "values": 15
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/WeaponClasses.json",
+      "referenced_by": [
+        "WeaponTypes"
+      ],
+      "root": false,
+      "row_len": 36,
+      "row_size_mismatch": null,
+      "rows": 15,
+      "source": "data/balance/weaponclasses.datc64",
+      "source_sha256": "5da01fb7a04c3bd0fb8e7afa24e8c295511f151ad45316a63c475bd13a5f0df3",
+      "status": "ok"
+    },
     "WeaponSoundTypes": {
       "columns": 2,
       "columns_read": 2,
@@ -42486,6 +42813,33 @@
       "rows": 32,
       "source": "data/balance/weaponsoundtypes.datc64",
       "source_sha256": "5f25541e4e6f4b7534075e115312586e9d7924e7d809a63338199dc5187ea692",
+      "status": "ok"
+    },
+    "WeaponTypes": {
+      "columns": 8,
+      "columns_read": 8,
+      "error": null,
+      "key_columns": {
+        "BaseItemType": {
+          "dangling": 0,
+          "target": "BaseItemTypes",
+          "values": 407
+        },
+        "WeaponClass": {
+          "dangling": 0,
+          "target": "WeaponClasses",
+          "values": 407
+        }
+      },
+      "non_finite_floats": 0,
+      "output": "tables/WeaponTypes.json",
+      "referenced_by": [],
+      "root": true,
+      "row_len": 56,
+      "row_size_mismatch": null,
+      "rows": 407,
+      "source": "data/balance/weapontypes.datc64",
+      "source_sha256": "46229b57602b9e1136837360862c5f43e137be26ad9c47283aeadd684d2683f1",
       "status": "ok"
     },
     "WieldableClasses": {
