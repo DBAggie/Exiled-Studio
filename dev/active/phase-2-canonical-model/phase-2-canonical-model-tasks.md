@@ -79,7 +79,7 @@ Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure)
 - [x] `xml_equal` (parsed trees) and the closed normalization list (attribute order, whitespace between elements, line endings)
 - [x] Round-trip on the 24 public fixtures (CI) and, in-session, the 21-build corpus and PoB's 5 3.13 builds; mutation tests (unknown attribute, element between gems, section, comment, instruction, prolog); malformed-input codes
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-4-bundle-validator`); write the PR number into the docs right after
+- [x] Open PR (#50, base `feat/p2-4-bundle-validator`); write the PR number into the docs right after
 
 ## PR P2-5b: PoB XML items, item sets, slots (step 5b)
 - [ ] `<Items>`: items (every `<Item>` text child kept; the last non-blank one read with `pob_item::to_domain`; `ModRange` and other children opaque in place), item sets, slots; export generated from the item model (decision 6)
