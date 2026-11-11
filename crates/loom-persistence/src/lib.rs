@@ -136,6 +136,16 @@ impl FileOps for StdFiles {
         Ok(())
     }
 
+    /// Hard links differ by file system (measured 2026-11-11 unless noted):
+    /// - NTFS (Windows), ext4 (Linux), and WSL 2's `/mnt/<drive>` (9p over
+    ///   NTFS) have them; linking onto an existing name fails with
+    ///   `AlreadyExists` on each, which is what makes a new-target save
+    ///   atomic;
+    /// - FAT32 and exFAT have none, and network shares depend on the
+    ///   server (not measured): the error kind there is not one we can
+    ///   rely on, so [`Store::save`] treats every error but
+    ///   `AlreadyExists` as "no hard links" and falls back to a second
+    ///   check and a rename, where a new-target save is not atomic.
     fn link_new(&self, from: &Path, to: &Path) -> io::Result<()> {
         std::fs::hard_link(from, to)?;
         sync_dir(to);
@@ -448,8 +458,9 @@ impl<F: FileOps> Store<F> {
         if !exists {
             match self.files.link_new(&temp, target) {
                 Ok(()) => {
-                    // Published; a temporary file that cannot be removed
-                    // only takes space.
+                    // Published. A temporary name that cannot be removed
+                    // is a second name of the saved file, not a copy:
+                    // deleting it later loses nothing.
                     self.discard(&temp);
                     return Ok(());
                 }
