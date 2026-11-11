@@ -15,6 +15,7 @@
 //! the vendored schema's `ModDomains` and `ModGenerationType` (both
 //! `indexing: 1`) and `InfluenceTypes` (`indexing: 0`).
 
+use loom_domain::ModSection;
 use loom_parser::import::ItemRules;
 use loom_parser::import::mods::{
     DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, Unflagged,
@@ -95,6 +96,10 @@ const INFLUENCE_TYPES: [(&str, i64); 6] = [
     ("Warlord", 5),
 ];
 
+fn other(name: &str) -> ModSection {
+    ModSection::Other(name.to_owned())
+}
+
 fn own() -> DomainMatch {
     DomainMatch {
         own: true,
@@ -111,13 +116,13 @@ fn clause(generations: &[i64], domains: DomainMatch) -> FitClause {
 }
 
 fn rule(
-    section: &str,
+    section: ModSection,
     flag: Option<&str>,
     unique: Option<bool>,
     clauses: Vec<FitClause>,
 ) -> FitRule {
     FitRule {
-        section: section.to_owned(),
+        section,
         flag: flag.map(str::to_owned),
         unique,
         clauses,
@@ -132,7 +137,7 @@ fn mod_rules() -> ModRules {
     ModRules {
         fits: vec![
             rule(
-                "explicit",
+                ModSection::Explicit,
                 Some("crafted"),
                 None,
                 vec![FitClause {
@@ -147,13 +152,13 @@ fn mod_rules() -> ModRules {
                 }],
             ),
             rule(
-                "explicit",
+                ModSection::Explicit,
                 None,
                 Some(true),
                 vec![clause(&[g::UNIQUE], own())],
             ),
             rule(
-                "explicit",
+                ModSection::Explicit,
                 None,
                 None,
                 vec![FitClause {
@@ -175,19 +180,19 @@ fn mod_rules() -> ModRules {
                 }],
             ),
             rule(
-                "implicit",
+                ModSection::Implicit,
                 Some("exarch"),
                 None,
                 vec![clause(&[g::EXARCH], own())],
             ),
             rule(
-                "implicit",
+                ModSection::Implicit,
                 Some("eater"),
                 None,
                 vec![clause(&[g::EATER], own())],
             ),
             rule(
-                "implicit",
+                ModSection::Implicit,
                 None,
                 None,
                 vec![
@@ -202,7 +207,7 @@ fn mod_rules() -> ModRules {
                 ],
             ),
             rule(
-                "enchant",
+                ModSection::Enchant,
                 None,
                 None,
                 vec![clause(
@@ -219,17 +224,27 @@ fn mod_rules() -> ModRules {
                     },
                 )],
             ),
-            rule("scourge", None, None, vec![clause(&g::SCOURGE, own())]),
-            rule("crucible", None, None, vec![clause(&g::WEAPON_TREE, own())]),
+            rule(
+                other("scourge"),
+                None,
+                None,
+                vec![clause(&g::SCOURGE, own())],
+            ),
+            rule(
+                other("crucible"),
+                None,
+                None,
+                vec![clause(&g::WEAPON_TREE, own())],
+            ),
             // `class-requirement`: no rule, so no row fits.
         ],
         spawn_exclusion: Unflagged {
-            section: "implicit".to_owned(),
+            section: ModSection::Implicit,
             flags: eldritch_flags.clone(),
         },
         spawn_excluded_generations: vec![g::EXARCH, g::EATER],
         base_implicit: Unflagged {
-            section: "implicit".to_owned(),
+            section: ModSection::Implicit,
             flags: eldritch_flags,
         },
         no_spawn_flags: vec!["crafted".to_owned()],
@@ -241,5 +256,40 @@ fn mod_rules() -> ModRules {
             .iter()
             .map(|(n, v)| ((*n).to_owned(), *v))
             .collect(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use loom_serialization::legacy::pob_item::{Section, domain_section};
+
+    use super::*;
+
+    #[test]
+    fn mod_rules_should_validate() {
+        assert_eq!(item_rules().mods.validate(), Ok(()));
+    }
+
+    /// Every PoB section but class requirement has a fit rule, so no
+    /// section's lines silently fit no row.
+    #[test]
+    fn mod_rules_should_cover_every_pob_section_but_class_requirement() {
+        let rules = item_rules().mods;
+        let covered: Vec<&str> = [
+            Section::Enchant,
+            Section::Scourge,
+            Section::ClassRequirement,
+            Section::Implicit,
+            Section::Crucible,
+            Section::Explicit,
+        ]
+        .into_iter()
+        .filter(|s| rules.fits.iter().any(|r| r.section == domain_section(*s)))
+        .map(Section::name)
+        .collect();
+        assert_eq!(
+            covered,
+            ["enchant", "scourge", "implicit", "crucible", "explicit"]
+        );
     }
 }

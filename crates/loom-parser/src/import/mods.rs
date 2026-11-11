@@ -72,10 +72,10 @@ pub struct FitClause {
 }
 
 /// The fit rule of the lines of one section (and flag, and rarity).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FitRule {
-    /// The section's name ([`ModSection::name`]).
-    pub section: String,
+    /// The section.
+    pub section: ModSection,
     /// A line flag (prefix key) the line must carry, if any.
     pub flag: Option<String>,
     /// Only for unique items (`Some(true)`), only for others
@@ -86,17 +86,17 @@ pub struct FitRule {
 }
 
 /// Lines of one section that carry none of some flags.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Unflagged {
-    /// The section's name.
-    pub section: String,
+    /// The section.
+    pub section: ModSection,
     /// The flags.
     pub flags: Vec<String>,
 }
 
 impl Unflagged {
     fn matches(&self, line: &LineContext) -> bool {
-        line.section.name() == self.section && !self.flags.iter().any(|f| line.has(f))
+        line.section == self.section && !self.flags.iter().any(|f| line.has(f))
     }
 }
 
@@ -110,10 +110,13 @@ pub struct LocalCarriers {
     pub item: String,
 }
 
-/// Per-game rules of the filter (part of [`super::ItemRules`]).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+/// Per-game rules of the filter (part of [`super::ItemRules`]). Check a
+/// game's rules with [`ModRules::validate`]: rules with no fit rule would
+/// let no row fit any line.
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModRules {
-    /// Fit rules, tested in order.
+    /// Fit rules. Order matters: for a line, the first rule whose section,
+    /// flag, and rarity match is the only one used.
     pub fits: Vec<FitRule>,
     /// On these lines, rows of `generations` do not count as spawning
     /// (they have spawn weights where the rows the lines usually carry
@@ -133,8 +136,57 @@ pub struct ModRules {
     pub influences: Vec<(String, i64)>,
 }
 
+/// Why a game's [`ModRules`] cannot be used.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModRulesError {
+    /// No fit rule: no row would fit any line.
+    NoFitRules,
+    /// A fit rule (by index) has no clause, so its lines fit no row.
+    EmptyRule(usize),
+    /// A rule (by index) can never apply: an earlier rule of the same
+    /// section has no flag and covers the same rarity.
+    Shadowed(usize),
+}
+
+impl ModRulesError {
+    /// Stable code (ADR-014).
+    #[must_use]
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::NoFitRules => "IMPORT_MOD_RULES_EMPTY",
+            Self::EmptyRule(_) => "IMPORT_MOD_RULES_EMPTY_RULE",
+            Self::Shadowed(_) => "IMPORT_MOD_RULES_SHADOWED",
+        }
+    }
+}
+
 impl ModRules {
-    /// The rows' influence value of an influence.
+    /// Checks the rules (see [`ModRulesError`]).
+    ///
+    /// # Errors
+    /// The first problem found.
+    pub fn validate(&self) -> Result<(), ModRulesError> {
+        if self.fits.is_empty() {
+            return Err(ModRulesError::NoFitRules);
+        }
+        for (n, rule) in self.fits.iter().enumerate() {
+            if rule.clauses.is_empty() {
+                return Err(ModRulesError::EmptyRule(n));
+            }
+            let shadowed = self.fits.iter().take(n).any(|earlier| {
+                earlier.section == rule.section
+                    && earlier.flag.is_none()
+                    && earlier.unique.is_none_or(|u| rule.unique == Some(u))
+            });
+            if shadowed {
+                return Err(ModRulesError::Shadowed(n));
+            }
+        }
+        Ok(())
+    }
+
+    /// The rows' influence value of an influence; `None` for an influence
+    /// the rows do not name (the item's other influences still count).
     #[must_use]
     pub fn influence_value(&self, id: &InfluenceId) -> Option<i64> {
         self.influences
@@ -488,7 +540,7 @@ pub fn fits(
     line: &LineContext,
 ) -> bool {
     let Some(rule) = rules.fits.iter().find(|r| {
-        r.section == line.section.name()
+        r.section == line.section
             && r.flag.as_deref().is_none_or(|f| line.has(f))
             && r.unique.is_none_or(|u| u == unique)
     }) else {
@@ -905,4 +957,8 @@ fn backing_row<'m>(
 }
 
 #[cfg(test)]
+#[expect(
+    clippy::indexing_slicing,
+    reason = "tests index fixed synthetic data; a bad index should panic"
+)]
 mod tests;

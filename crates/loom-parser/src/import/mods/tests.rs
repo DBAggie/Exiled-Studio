@@ -20,7 +20,7 @@ fn rules() -> ModRules {
     ModRules {
         fits: vec![
             FitRule {
-                section: "explicit".to_owned(),
+                section: ModSection::Explicit,
                 flag: None,
                 unique: None,
                 clauses: vec![FitClause {
@@ -35,7 +35,7 @@ fn rules() -> ModRules {
                 }],
             },
             FitRule {
-                section: "implicit".to_owned(),
+                section: ModSection::Implicit,
                 flag: Some("marked".to_owned()),
                 unique: None,
                 clauses: vec![FitClause {
@@ -48,7 +48,7 @@ fn rules() -> ModRules {
                 }],
             },
             FitRule {
-                section: "implicit".to_owned(),
+                section: ModSection::Implicit,
                 flag: None,
                 unique: None,
                 clauses: vec![FitClause {
@@ -62,12 +62,12 @@ fn rules() -> ModRules {
             },
         ],
         spawn_exclusion: Unflagged {
-            section: "implicit".to_owned(),
+            section: ModSection::Implicit,
             flags: vec!["marked".to_owned()],
         },
         spawn_excluded_generations: vec![MARKED],
         base_implicit: Unflagged {
-            section: "implicit".to_owned(),
+            section: ModSection::Implicit,
             flags: vec!["marked".to_owned()],
         },
         no_spawn_flags: vec!["bench".to_owned()],
@@ -332,4 +332,27 @@ fn unnumbered_should_strip_a_single_digit_suffix_from_two_to_nine() {
         [unnumbered("x_3"), unnumbered("x_10"), unnumbered("x")],
         [("x", 3), ("x_10", 1), ("x", 1)]
     );
+}
+
+#[test]
+fn validate_should_accept_the_test_rules() {
+    assert_eq!(rules().validate(), Ok(()));
+}
+
+#[test]
+fn validate_should_refuse_rules_without_fit_rules() {
+    let mut r = rules();
+    r.fits.clear();
+    assert_eq!(
+        r.validate().map_err(|e| e.code()),
+        Err("IMPORT_MOD_RULES_EMPTY")
+    );
+}
+
+#[test]
+fn validate_should_refuse_a_rule_an_earlier_unflagged_rule_shadows() {
+    let mut r = rules();
+    let unflagged = r.fits[2].clone();
+    r.fits.insert(1, unflagged);
+    assert_eq!(r.validate(), Err(ModRulesError::Shadowed(2)));
 }
