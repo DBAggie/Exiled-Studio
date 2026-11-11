@@ -1,17 +1,27 @@
 {
   "game": "poe1",
   "steam_build": 26530219,
-  "manifest_sha256": "fa0b0cc9a952d716c1330c9ea126fd99a7ad0df942e908ff07b977423b0ad767",
+  "manifest_sha256": "e2e97f0968f8ba10d30ba83f45cf205bab7de313f7c044ccdaeff9ba7a81e587",
   "files": {
     "data/active_skills.json": {
       "rows": 1941,
       "sha256": "eceaa8f773e8b852ec2bc88c90bf539c54099b8377589c3184bbc5a748aa9f58",
       "size": 635787
     },
+    "data/ascendancies.json": {
+      "rows": 21,
+      "sha256": "2bfea4f204f7d796c5d5c1ced737734331f601ba03ad28c24f544fd45f3b25e1",
+      "size": 2756
+    },
     "data/base_items.json": {
       "rows": 5041,
       "sha256": "564c6ac2d9984fecbe4e13a382091f4619058a5f23b05380a25e23aec6c24c83",
       "size": 1358045
+    },
+    "data/characters.json": {
+      "rows": 7,
+      "sha256": "893dd2d06bf9ea9ad0407d0adc62a21fe82ae477efb060f23241c21e2830a4ba",
+      "size": 1801
     },
     "data/client_texts.json": {
       "rows": 12,
@@ -58,10 +68,35 @@
       "sha256": "bc4b42e51a3e0261389fec308af2bf59ba9dd4a878c483842af1deedd7d83bb8",
       "size": 392011
     },
+    "data/mastery_effects.json": {
+      "rows": 354,
+      "sha256": "766960be0c502e87dae1bf6b338eb9e1bfe6cfe013f9fac4d07069014f9b4433",
+      "size": 63800
+    },
+    "data/mastery_groups.json": {
+      "rows": 61,
+      "sha256": "c1bea0d0eb92df8cc02342f9ba023f78676f839054aa5ce26d90533782890eb0",
+      "size": 9597
+    },
     "data/mods.json": {
       "rows": 40355,
       "sha256": "b6c707b0f332a7941b7af57691280f13c61778205e0057e29ed71e6e6dc8b84b",
       "size": 23133178
+    },
+    "data/object_templates.json": {
+      "rows": 9,
+      "sha256": "4f1e9f0cba5805674a78ffe592d28479602c394751e8295295b5fcd0ae3f3f16",
+      "size": 14362
+    },
+    "data/passive_tree.json": {
+      "rows": 797,
+      "sha256": "5c5d1ba75a37776c5c9d403948ffccb96853940aaad61db9986f5f10776e0c2a",
+      "size": 760521
+    },
+    "data/passives.json": {
+      "rows": 5706,
+      "sha256": "02b97e276d9d6bca8c2f8ef268515f140e4bae96c6c5a3fab0c14740188908b9",
+      "size": 3181213
     },
     "data/skill_types.json": {
       "rows": 135,
@@ -346,5 +381,10 @@
     "rows_without_owner": 0,
     "dropped_stats": 0,
     "dropped_gems": 0
+  },
+  "passives": {
+    "templates": 9,
+    "template_values": 0,
+    "dropped_stats": 0
   }
 }

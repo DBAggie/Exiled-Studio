@@ -26,29 +26,9 @@
 //! costs, PoE2 quality `AltStats` and `ApplyToStatSets`, PoE2 weapon
 //! requirements of active skills.
 
-use serde::{Deserialize, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 
-use super::{BundleError, BundleSource, json};
-
-/// Writes an `f32` as its shortest text (`2.921`, not the widened
-/// `2.9210000038146973`), so the bundle shows the extract's value; it reads
-/// back to the same `f32`.
-fn short_f32<S: Serializer>(v: &f32, s: S) -> Result<S::Ok, S::Error> {
-    let wide: f64 = v.to_string().parse().map_err(serde::ser::Error::custom)?;
-    s.serialize_f64(wide)
-}
-
-/// [`short_f32`] for an optional value.
-#[expect(
-    clippy::ref_option,
-    reason = "serde's `serialize_with` passes the field by reference"
-)]
-fn short_f32_opt<S: Serializer>(v: &Option<f32>, s: S) -> Result<S::Ok, S::Error> {
-    match v {
-        Some(v) => short_f32(v, s),
-        None => s.serialize_none(),
-    }
-}
+use super::{BundleError, BundleSource, json, short_f32, short_f32_opt};
 
 /// Skill types.
 pub const SKILL_TYPES: &str = "data/skill_types.json";

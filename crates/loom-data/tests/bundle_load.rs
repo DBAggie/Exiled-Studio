@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 19, 3, 4, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 22, 3, 4, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
@@ -273,7 +273,7 @@ fn format_2_bundles_should_load_their_skill_tables_in_each_game_shape() {
 
 /// The bundle as format 1: no skill files, `format` 1.
 fn as_format_1(src: &mut MemorySource) {
-    for path in skills::FILES {
+    for path in bundle::calc_files() {
         src.remove(path);
     }
     edit_manifest(src, |m| {
@@ -281,7 +281,7 @@ fn as_format_1(src: &mut MemorySource) {
         m["files"]
             .as_array_mut()
             .unwrap()
-            .retain(|f| !skills::FILES.contains(&f["path"].as_str().unwrap()));
+            .retain(|f| !loom_data::bundle::calc_files().any(|c| f["path"] == c));
     });
 }
 
@@ -309,7 +309,7 @@ fn load_should_refuse_a_skill_file_in_a_format_1_bundle() {
 
 #[test]
 fn load_should_refuse_a_format_2_bundle_without_a_skill_file() {
-    for path in skills::FILES {
+    for path in bundle::calc_files() {
         let mut src = source("bundle-poe1").unwrap();
         edit_manifest(&mut src, |m| {
             m["files"]
@@ -365,4 +365,40 @@ fn f32_fields_should_round_trip_through_their_shortest_text() {
         );
         bits = bits.saturating_add(0x0001_3579);
     }
+}
+
+#[test]
+fn format_2_bundles_should_load_their_passive_tables_in_each_game_shape() {
+    let shape = |name: &str| {
+        let b = load(&source(name).unwrap()).unwrap();
+        let p = b.passives.unwrap();
+        (
+            (
+                p.characters.len(),
+                p.ascendancies.len(),
+                p.object_templates.len(),
+                p.passives.len(),
+                p.mastery_groups.len(),
+                p.mastery_effects.len(),
+                p.tree.groups.len(),
+            ),
+            p.characters[0].template.clone(),
+            p.object_templates[0].values.len(),
+            (p.tree.groups[0].x, p.tree.groups[0].y),
+            p.tree.groups[0].nodes[1].connections[0].orbit,
+        )
+    };
+    assert_eq!(
+        (shape("bundle-poe1"), shape("bundle-poe2")),
+        (
+            (
+                (2, 1, 2, 5, 1, 1, 2),
+                Some("test/chars/str".to_owned()),
+                0,
+                (-1.5, 2.25),
+                Some(-2)
+            ),
+            ((2, 1, 1, 5, 1, 1, 2), None, 1, (-1.5, 2.25), Some(-2)),
+        )
+    );
 }

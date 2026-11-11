@@ -19,7 +19,8 @@
 //! - PoE1: `poe1/quality_types.json` (`properties::quality_types`) and
 //!   `poe1/grafts.json` (`grafts::rows`);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
-//! - format 2, both games: the skill tables ([`skills`]).
+//! - format 2, both games: the skill tables ([`skills`]) and the character
+//!   and passive tables ([`passives`]; the extract's manifest format 5).
 //!
 //! JSON is written with sorted keys and two-space indentation, rows in
 //! table order, so two runs on one extract give the same bytes.
@@ -27,6 +28,7 @@
 use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_data::bundle::passives as bundle_passives;
 use loom_data::bundle::poe1::{self as bundle_poe1, Grafts as BundleGrafts};
 use loom_data::bundle::skills as bundle_skills;
 use loom_data::bundle::{
@@ -44,6 +46,7 @@ use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::{grafts, mod_filter, poe1, poe2, properties};
 
+mod passives;
 mod skills;
 
 /// The bundle's files by path (the manifest included).
@@ -94,6 +97,8 @@ pub struct Summary {
     pub lookup: LookupReport,
     /// The skill tables (format 2).
     pub skills: skills::SkillSummary,
+    /// The character and passive tables (format 2).
+    pub passives: passives::PassiveSummary,
 }
 
 /// Counters the readers fill (see [`Summary`]).
@@ -478,6 +483,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     unique_ids("Mods", mod_rows.iter().map(|m| m.id.as_str()))?;
     let (bases, tags_unknown, nameless) = base_items(read, &classes, &mod_rows, &counts)?;
     let (skill_tables, skill_summary) = skills::convert(read, &classes, &counts)?;
+    let (passive_tables, passive_summary) = passives::convert(read, &raw, &counts)?;
 
     let mut files: Files = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
@@ -577,6 +583,49 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         ),
     ];
     for (path, bytes, n) in skill_files {
+        put(&mut files, &mut rows, path, bytes, Some(n));
+    }
+    let pt = &passive_tables;
+    // Every file of `bundle_passives::FILES`; the load-back refuses a
+    // bundle that lacks one. The tree's rows are its groups.
+    let passive_files: [(&str, Vec<u8>, usize); 7] = [
+        (
+            bundle_passives::CHARACTERS,
+            to_json(&pt.characters)?,
+            pt.characters.len(),
+        ),
+        (
+            bundle_passives::ASCENDANCIES,
+            to_json(&pt.ascendancies)?,
+            pt.ascendancies.len(),
+        ),
+        (
+            bundle_passives::OBJECT_TEMPLATES,
+            to_json(&pt.object_templates)?,
+            pt.object_templates.len(),
+        ),
+        (
+            bundle_passives::PASSIVES,
+            to_json(&pt.passives)?,
+            pt.passives.len(),
+        ),
+        (
+            bundle_passives::MASTERY_GROUPS,
+            to_json(&pt.mastery_groups)?,
+            pt.mastery_groups.len(),
+        ),
+        (
+            bundle_passives::MASTERY_EFFECTS,
+            to_json(&pt.mastery_effects)?,
+            pt.mastery_effects.len(),
+        ),
+        (
+            bundle_passives::PASSIVE_TREE,
+            to_json(&pt.tree)?,
+            pt.tree.groups.len(),
+        ),
+    ];
+    for (path, bytes, n) in passive_files {
         put(&mut files, &mut rows, path, bytes, Some(n));
     }
 
@@ -679,6 +728,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         mod_type_duplicate_names: duplicate_types,
         lookup: lookup_report,
         skills: skill_summary,
+        passives: passive_summary,
     };
     files.insert(bundle::MANIFEST.to_owned(), manifest_json);
     Ok((files, summary))
@@ -720,10 +770,15 @@ mod tests {
             .map(|(_, body)| *body)
             .collect();
         // No PoE1-only table is in a list extracted for both games.
-        for (name, body) in lists
-            .iter()
-            .filter(|(n, _)| ["SPIKE_TABLES", "LOOKUP_TABLES", "SKILL_TABLES"].contains(n))
-        {
+        for (name, body) in lists.iter().filter(|(n, _)| {
+            [
+                "SPIKE_TABLES",
+                "LOOKUP_TABLES",
+                "SKILL_TABLES",
+                "PASSIVE_TABLES",
+            ]
+            .contains(n)
+        }) {
             for t in POE1_ONLY_TABLES {
                 assert!(
                     !body.contains(&format!("\"{t}\"")),

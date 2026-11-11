@@ -15,7 +15,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use loom_data::bundle::validate::validate;
-use loom_data::bundle::{BundleSource, MANIFEST, MemorySource, skills};
+use loom_data::bundle::{BundleSource, MANIFEST, MemorySource};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
@@ -345,7 +345,7 @@ fn skill_levels_out_of_order_should_give_their_code() {
 /// The bundle as format 1 (no skill files), rehashed.
 fn format_1(name: &str) -> MemorySource {
     let mut src = source(name);
-    for p in skills::FILES {
+    for p in loom_data::bundle::calc_files() {
         src.remove(p);
     }
     let mut m = json_of(&src, MANIFEST);
@@ -353,7 +353,7 @@ fn format_1(name: &str) -> MemorySource {
     m["files"]
         .as_array_mut()
         .unwrap()
-        .retain(|f| !skills::FILES.contains(&f["path"].as_str().unwrap()));
+        .retain(|f| !loom_data::bundle::calc_files().any(|c| f["path"] == c));
     put(&mut src, MANIFEST, &m);
     src
 }
@@ -372,4 +372,153 @@ fn skill_file_in_a_format_1_bundle_should_be_refused() {
     list(&mut src, "data/gem_tags.json");
     rehash(&mut src);
     assert_eq!(codes(&src), ["BUNDLE_FORMAT_FILE"]);
+}
+
+/// Each reference the character and passive tables hold, pointed at
+/// nothing, gives `BUNDLE_DANGLING_REF` alone (Phase 3 plan, step 1b).
+#[test]
+fn dangling_passive_references_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, &str, Edit); 13] = [
+        ("class template", "data/characters.json", |v| {
+            v[0]["template"] = "nope".into();
+        }),
+        ("ascendancy class", "data/ascendancies.json", |v| {
+            v[0]["character"] = "Nope".into();
+        }),
+        ("template parent", "data/object_templates.json", |v| {
+            v[1]["extends"] = "nope".into();
+        }),
+        ("template stat", "data/object_templates.json", |v| {
+            v[0]["stats"][0]["stat"] = "nope".into();
+        }),
+        ("passive stat", "data/passives.json", |v| {
+            v[1]["stats"][0]["stat"] = "nope".into();
+        }),
+        ("passive mastery", "data/passives.json", |v| {
+            v[3]["mastery_group"] = "Nope".into();
+        }),
+        ("passive ascendancy", "data/passives.json", |v| {
+            v[4]["ascendancy"] = "Nope".into();
+        }),
+        ("passive class", "data/passives.json", |v| {
+            v[0]["characters"] = json!(["Nope"]);
+        }),
+        ("group effect", "data/mastery_groups.json", |v| {
+            v[0]["effects"] = json!(["Nope"]);
+        }),
+        ("effect stat", "data/mastery_effects.json", |v| {
+            v[0]["stats"][0]["stat"] = "nope".into();
+        }),
+        ("tree node", "data/passive_tree.json", |v| {
+            v["groups"][1]["nodes"][0]["node"] = 999.into();
+        }),
+        ("tree connection", "data/passive_tree.json", |v| {
+            v["groups"][0]["nodes"][0]["connections"][0]["node"] = 999.into();
+        }),
+        ("tree root", "data/passive_tree.json", |v| {
+            v["roots"] = json!([999]);
+        }),
+    ];
+    for (what, path, edit) in cases {
+        let src = edited("bundle-poe1", path, edit);
+        assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "{what}");
+    }
+}
+
+#[test]
+fn duplicate_passive_ids_and_numbers_should_give_their_code() {
+    for path in [
+        "data/characters.json",
+        "data/ascendancies.json",
+        "data/object_templates.json",
+        "data/mastery_groups.json",
+        "data/mastery_effects.json",
+    ] {
+        let src = edited("bundle-poe2", path, |v| {
+            let first = v[0].clone();
+            v.as_array_mut().unwrap().push(first);
+        });
+        assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"], "{path}");
+    }
+    // A passive repeated: its ID and its node number.
+    let src = edited("bundle-poe2", "data/passives.json", |v| {
+        let first = v[0].clone();
+        v.as_array_mut().unwrap().push(first);
+    });
+    assert_eq!(validate(&src).findings.len(), 2);
+    assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"]);
+    // Two passives on one node; a tree node twice; two effects, one hash.
+    type Edit = fn(&mut Value);
+    let numbers: [(&str, Edit); 6] = [
+        ("data/passive_tree.json", |v| v["roots"] = json!([100, 100])),
+        ("data/characters.json", |v| v[1]["class_number"] = 1.into()),
+        ("data/ascendancies.json", |v| {
+            let mut other = v[0].clone();
+            other["id"] = "Other".into();
+            v.as_array_mut().unwrap().push(other);
+        }),
+        ("data/passives.json", |v| {
+            let mut other = v[0].clone();
+            other["id"] = "other".into();
+            v.as_array_mut().unwrap().push(other);
+        }),
+        ("data/passive_tree.json", |v| {
+            v["groups"][1]["nodes"][0]["node"] = 100.into();
+        }),
+        ("data/mastery_effects.json", |v| {
+            let mut other = v[0].clone();
+            other["id"] = "Other".into();
+            v.as_array_mut().unwrap().push(other);
+        }),
+    ];
+    for (path, edit) in numbers {
+        let src = edited("bundle-poe2", path, edit);
+        assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"], "{path}");
+    }
+}
+
+#[test]
+fn empty_passive_id_should_give_its_code() {
+    let src = edited("bundle-poe2", "data/passives.json", |v| {
+        v[2]["id"] = "".into();
+    });
+    assert_eq!(codes(&src), ["BUNDLE_EMPTY_ID"]);
+}
+
+#[test]
+fn template_chain_that_loops_should_give_its_code() {
+    let src = edited("bundle-poe1", "data/object_templates.json", |v| {
+        v[0]["extends"] = "test/chars/character".into();
+    });
+    assert_eq!(codes(&src), ["BUNDLE_TEMPLATE_CYCLE"], "itself");
+    let src = edited("bundle-poe1", "data/object_templates.json", |v| {
+        v[0]["extends"] = "test/chars/str".into();
+    });
+    let found = validate(&src).findings;
+    assert_eq!(
+        (codes(&src), found.len()),
+        (vec!["BUNDLE_TEMPLATE_CYCLE"], 2),
+        "two in a loop"
+    );
+}
+
+#[test]
+fn tree_node_outside_its_orbit_should_give_its_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, Edit); 3] = [
+        ("orbit past the slots", |v| {
+            v["groups"][0]["nodes"][1]["orbit"] = 2.into();
+        }),
+        ("negative orbit", |v| {
+            v["groups"][0]["nodes"][1]["orbit"] = (-1).into();
+        }),
+        ("position past the orbit", |v| {
+            v["groups"][0]["nodes"][1]["orbit_index"] = 6.into();
+        }),
+    ];
+    for (what, edit) in cases {
+        let src = edited("bundle-poe2", "data/passive_tree.json", edit);
+        assert_eq!(codes(&src), ["BUNDLE_TREE_GEOMETRY"], "{what}");
+    }
 }

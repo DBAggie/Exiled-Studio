@@ -101,7 +101,7 @@ cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<bu
 cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
 # Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
 cargo run --release -p loom-parity-cli -- render-check local/extract/poe1/<build> local/pob/<checkout> --out <dir>
-# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract with item_types/, manifest format 4);
+# Resolve every item line of the PoB builds (*.xml) in <builds-dir> (PoE1 extract with item_types/, manifest format 4 or 5);
 # ambiguous lines go through the Mods filter, resolved lines get mod-backed, every other line gets a
 # category; summary.json is scrubbed (builds by content hash, no item names or author text); exits 1
 # while the Spike B gate is not met. Each --pob is a `git archive <tag> src/Data` of the legacy repo

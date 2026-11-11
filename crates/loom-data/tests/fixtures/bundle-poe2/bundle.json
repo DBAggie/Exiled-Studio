@@ -7,9 +7,19 @@
    "size": 316
   },
   {
+   "path": "data/ascendancies.json",
+   "sha256": "0783837a80111563c682349fdfd134e7008ee90d3999e847d0e86c123ce5a455",
+   "size": 114
+  },
+  {
    "path": "data/base_items.json",
    "sha256": "95a30c32c61c8edf7fc591c49e171ead95b0aee446a48b5288c55acf757a655b",
    "size": 662
+  },
+  {
+   "path": "data/characters.json",
+   "sha256": "29b4a86c15e68102bcc57514331a53549a94e6238a6e4bb48e27cdde0b861cb6",
+   "size": 350
   },
   {
    "path": "data/client_texts.json",
@@ -57,9 +67,34 @@
    "size": 91
   },
   {
+   "path": "data/mastery_effects.json",
+   "sha256": "41f0174d0a405fdcd3a549ec143224a180dccd1f5e5a513653bc69ed0f05e880",
+   "size": 129
+  },
+  {
+   "path": "data/mastery_groups.json",
+   "sha256": "bf29052c7e0c3aa9e716fd4101dc9e0b247fd4b52f60e678fdc10fe906fdaf4d",
+   "size": 78
+  },
+  {
    "path": "data/mods.json",
    "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
    "size": 663
+  },
+  {
+   "path": "data/object_templates.json",
+   "sha256": "5bad84dbe63c6891bbc7cd99dd1100186c6cff4330bee299433861578baa4c19",
+   "size": 202
+  },
+  {
+   "path": "data/passive_tree.json",
+   "sha256": "cdbb6d4ba338842a19e7b2ff20076fd41b6a546558ceb55023e8af3d46c25d90",
+   "size": 922
+  },
+  {
+   "path": "data/passives.json",
+   "sha256": "b70c1c3719fba4205f85422a7e7cd5aef9bddd4031e4cdf54812d9e0bf119fd7",
+   "size": 596
   },
   {
    "path": "data/skill_types.json",
@@ -73,8 +108,8 @@
   },
   {
    "path": "data/stats.json",
-   "sha256": "ff65a848d32d76cb6fee0cc4e7dd0884914abefbc74c2bdd081dcfc512ddd81f",
-   "size": 675
+   "sha256": "e5a16b162c312e85bff67524f411fb780b35623c907fa150cb16cc291f5d624a",
+   "size": 782
   },
   {
    "path": "stat_descriptions/charm_stat_descriptions.json",

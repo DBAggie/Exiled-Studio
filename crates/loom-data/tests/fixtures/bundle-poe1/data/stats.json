@@ -56,5 +56,14 @@
  },
  {
   "id": "test_flag_stat"
+ },
+ {
+  "id": "test_passive_life"
+ },
+ {
+  "id": "test_life_per_level"
+ },
+ {
+  "id": "test_mastery_stat"
  }
 ]

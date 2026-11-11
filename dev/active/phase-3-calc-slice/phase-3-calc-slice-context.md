@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-1a: bundle format 2 with the skill tables)
+Last Updated: 2026-11-11 (P3-1b: character and passive tables)
 
 # Phase 3: calc slice (context)
 
@@ -97,3 +97,14 @@ Verdict: proceed, with changes. No ADR contradicted; decision 12 (WP1, WP2, WP6 
 
 ## code-architecture-reviewer (P3-1a, 2026-11-11) summary
 No code blockers; no ADR or crate-boundary issue. Applied: required columns per game instead of silent zeros; dropped stats and gems counted, NaN sentinel removed; `cost_types.json` with a referential check; `ConstantStat` named rows; `BUNDLE_EMPTY_ID`; mutation cases for each support-type list and the cost type; every converter summary counter asserted; missing-column tests. Not applied: an interpolation enum (kept raw until P3-9a decides with evidence); `serde_json`'s `float_roundtrip` (the bit-pattern sweep passes; revisit if a value fails); the commit trailer remark (the trailer is the one the session was given). Format 2 changing in 1b/1c is stated above and in the handoff.
+
+## Decisions in P3-1b (character and passive tables; evidence `docs/phase-3/bundle-v2-passives.md`)
+- **Per-level growth is not in a table.** It is in the object template `Metadata/Characters/Character.ot` (`life_per_level` 12, `mana_per_level` 6, resistance caps, ...), the file PoB exports `data.characterConstants` from. The extractor now reads object templates with the item-type grammar (widened: `%`/`+` in keys, `Name { }`, one-line script values), only the character folder (and one level below) and `Metadata/Monsters/Monster.ot` (for P3-1c); manifest format 5 (`object_templates`); `loom-data` reads manifest formats 3 to 5. Item type output unchanged.
+- **`loom_data::bundle::passives`**, required in format 2: `characters.json` (class number, base life/mana/attributes, own template), `ascendancies.json`, `object_templates.json` (`Stats` block: integer stats; other entries kept as written in `values`; `extends` unresolved, the calc applies the chain), `passives.json`, `mastery_groups.json`, `mastery_effects.json` (`hash` = `HASH16`), `passive_tree.json` (`Default` tree: groups with x/y, nodes with orbit and connections, roots, orbit slots).
+- **Validator:** every reference (tree nodes are passives; connections and roots are tree nodes); `BUNDLE_TEMPLATE_CYCLE`; `BUNDLE_TREE_GEOMETRY` (orbit and position within the orbit slots); unique non-empty IDs; unique node numbers, tree nodes, roots, mastery hashes, class numbers, ascendancy numbers within a class.
+- **Converter:** identifying and calc-driving integers (class numbers, base stats, node numbers, hashes) and the graph's lists are required, never 0 or empty.
+- **For P3-3:** the tree's identity is the manifest's Steam build; the PoB tree version label is decided there with evidence. Connections are undirected and stored once. Orbit radii are not in the data read (needed only for distance rules). PoE2 attribute and weapon-set passive columns are not carried (PoE2 calc after Phase 4).
+- **For P3-6:** PoE1 classes extend `Character.ot` through their empty class templates; PoE2 classes have no own template.
+
+## code-architecture-reviewer (P3-1b, 2026-11-11) summary
+No blockers. Applied: template cycle check; tree geometry check and required graph lists; required integers instead of 0; unique class and ascendancy numbers and roots; `StatAmount` rename; docs on tree identity, connection direction, orbit radii; tests for each, the three "kept as written" rules, and missing inputs; exact-code duplicate tests. Not applied: a chain resolver in `loom-data` (the calc owns the override rule, P3-6; the validator guarantees chains end); a check that each root is a class start (PoE1 roots include ascendancy starts; P3-3 decides with the data); `calc_files()` as a const array (cosmetic).

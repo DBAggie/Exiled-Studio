@@ -1,0 +1,23 @@
+[
+ {
+  "base_life": 38,
+  "base_mana": 34,
+  "class_number": 1,
+  "dexterity": 14,
+  "id": "Test/Chars/Str",
+  "intelligence": 14,
+  "name": "Test Brute",
+  "strength": 32,
+  "template": "test/chars/str"
+ },
+ {
+  "base_life": 38,
+  "base_mana": 34,
+  "class_number": 3,
+  "dexterity": 14,
+  "id": "Test/Chars/Int",
+  "intelligence": 32,
+  "name": "Test Sage",
+  "strength": 14
+ }
+]

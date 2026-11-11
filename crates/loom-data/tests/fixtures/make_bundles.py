@@ -1,5 +1,6 @@
 """Writes the synthetic test bundles (Phase 2 plan, step 3; decision 10),
-format 2 with the skill tables (Phase 3 plan, step 1a).
+format 2 with the skill tables (Phase 3 plan, step 1a) and the character
+and passive tables (step 1b).
 
 Every row is made up for the tests: no game data. Run from the repository
 root after changing a row, then commit the output:
@@ -350,6 +351,96 @@ def skills(game):
     }
 
 
+PASSIVE_STATS = ["test_passive_life", "test_life_per_level", "test_mastery_stat"]
+
+
+def passives(game):
+    """The character and passive tables: two classes, one ascendancy, the
+    character template (PoE1 with a class template beside it, PoE2 with a
+    non-stat entry, as each game's data has), a small tree."""
+    poe1 = game == "poe1"
+    templates = [
+        {
+            "id": "test/chars/character",
+            "stats": [{"stat": "test_life_per_level", "value": 12}],
+            "values": [] if poe1 else [{"key": "enable_weapon_sets", "value": "true"}],
+        }
+    ]
+    if poe1:
+        templates.append({"id": "test/chars/str", "extends": "test/chars/character", "stats": [], "values": []})
+
+    def character(cid, name, number, s, d, i, template):
+        row = {
+            "id": cid,
+            "name": name,
+            "class_number": number,
+            "base_life": 38,
+            "base_mana": 34,
+            "strength": s,
+            "dexterity": d,
+            "intelligence": i,
+        }
+        if poe1 and template:
+            row["template"] = template
+        return row
+
+    def node(n, orbit, index, *links):
+        return {
+            "node": n,
+            "orbit": orbit,
+            "orbit_index": index,
+            "connections": [{"node": t, "orbit": o} for t, o in links],
+        }
+
+    return {
+        "data/characters.json": [
+            character("Test/Chars/Str", "Test Brute", 1, 32, 14, 14, "test/chars/str"),
+            character("Test/Chars/Int", "Test Sage", 3, 14, 14, 32, None),
+        ],
+        "data/ascendancies.json": [
+            {"id": "TestChampion", "name": "Test Champion", "character": "Test/Chars/Str", "class_number": 1}
+        ],
+        "data/object_templates.json": templates,
+        "data/passives.json": [
+            {"id": "test_start", "node": 100, "name": "Test Start", "characters": ["Test/Chars/Str"]},
+            {"id": "test_life", "node": 101, "name": "Test Life", "stats": [{"stat": "test_passive_life", "value": 10}]},
+            {"id": "test_keystone", "node": 102, "name": "Test Keystone", "keystone": True},
+            {"id": "test_mastery", "node": 103, "name": "Test Mastery", "mastery_group": "TestLifeMastery"},
+            {
+                "id": "test_champion_start",
+                "node": 200,
+                "name": "Test Champion",
+                "ascendancy": "TestChampion",
+                "ascendancy_start": True,
+            },
+        ],
+        "data/mastery_groups.json": [{"id": "TestLifeMastery", "effects": ["TestLifeMastery1"]}],
+        "data/mastery_effects.json": [
+            {"id": "TestLifeMastery1", "hash": 4242, "stats": [{"stat": "test_mastery_stat", "value": 5}]}
+        ],
+        "data/passive_tree.json": {
+            "tree": "Default",
+            "graph": "Metadata/PassiveSkillGraph",
+            "orbit_slots": [1, 6],
+            "roots": [100],
+            "groups": [
+                {
+                    "x": -1.5,
+                    "y": 2.25,
+                    "flags": 0,
+                    "nodes": [
+                        node(100, 0, 0, (101, None)),
+                        node(101, 1, 2, (102, -2), (103, None)),
+                        node(102, 1, 3),
+                        node(103, 1, 4),
+                    ],
+                },
+                {"x": 0.0, "y": 0.0, "flags": 1, "nodes": [node(200, 0, 0)]},
+            ],
+        },
+    }
+
+
 def with_skills(game, files):
     files["data/stats.json"].extend({"id": s} for s in SKILL_STATS)
     files["data/base_items.json"].extend(
@@ -359,6 +450,8 @@ def with_skills(game, files):
         ]
     )
     files.update(skills(game))
+    files["data/stats.json"].extend({"id": s} for s in PASSIVE_STATS)
+    files.update(passives(game))
     return files
 
 
