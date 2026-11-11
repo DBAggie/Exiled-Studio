@@ -536,7 +536,14 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     );
 
     let sk = &skill_tables;
-    let skill_files: [(&str, Vec<u8>, usize); 7] = [
+    // Every file of `bundle_skills::FILES`; the load-back below refuses a
+    // bundle that lacks one.
+    let skill_files: [(&str, Vec<u8>, usize); 8] = [
+        (
+            bundle_skills::COST_TYPES,
+            to_json(&sk.cost_types)?,
+            sk.cost_types.len(),
+        ),
         (
             bundle_skills::SKILL_TYPES,
             to_json(&sk.skill_types)?,
