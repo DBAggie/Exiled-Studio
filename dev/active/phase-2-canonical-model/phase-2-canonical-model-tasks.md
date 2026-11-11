@@ -18,7 +18,7 @@ Last Updated: 2026-11-10 (PR P2-1: domain model)
 - [x] `Opaque` container (content in place between typed siblings), quarantine, completeness
 - [x] Tests (PoE1 and PoE2 Builds); wasm32
 - [x] `code-architecture-reviewer`; findings recorded in the context file
-- [ ] Open PR; write the PR number into the docs right after
+- [x] Open PR (#42); write the PR number into the docs right after
 
 ## PR P2-2a: item input (step 2a)
 - [ ] Move `pob_item` to `loom-serialization::legacy::pob_item` (tests unchanged)
