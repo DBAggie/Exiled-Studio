@@ -54,7 +54,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `schemas/calc-result.v1.schema.json`, `ui/src/generated/calc-result.v1.ts`, schema validation tests
 - [x] Cross-platform: golden test in the `rust` job on Windows and Linux (calc-run documents join `dto cross-platform` in P3-5)
 - [x] `code-architecture-reviewer` run; findings in the context file
-- [ ] Open PR (base `dev`)
+- [x] Open PR: #69 (base `dev`)
 
 ## P3-5: parity harness
 - [ ] `calc-run` (with `--data-overlay`, timing), `calc-parity` (field mapping, rules, breakdown terms at displayed decimals, completeness, register, overlay rule)
