@@ -53,6 +53,9 @@ pub struct Version {
     /// `launch.versionNumber`.
     #[serde(default)]
     pub version: Option<String>,
+    /// The runtime (`jit.version`).
+    #[serde(default)]
+    pub runtime: Option<String>,
     #[expect(
         dead_code,
         reason = "read so the export is checked whole; not recorded"

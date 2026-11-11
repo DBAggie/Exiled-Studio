@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{Passive, PassiveTables, StatAmount};
-use loom_data::bundle::properties::PropertyTables;
+use loom_data::bundle::properties::{MonsterLevel, PropertyTables};
 use loom_data::bundle::skills::{Resource, SkillTables, StatSet};
 use loom_data::stat_desc::{NotRenderedReason, StatValue, VariantFilter};
 use serde::Serialize;
@@ -35,20 +35,42 @@ const MONSTER_TEMPLATE: &str = "metadata/monsters/monster";
 /// (`v2.67.2:src/Export/Scripts/skills.lua:431`).
 const DUMMY_QUALITY_STAT: &str = "dummy_stat_display_nothing";
 
-/// PoB's monster tables and the bundle's `monster_levels` field for each
-/// (`v2.67.2:src/Export/Scripts/miscdata.lua`).
-pub const MONSTER_TABLES: [(&str, &str); 11] = [
-    ("monsterEvasionTable", "evasion"),
-    ("monsterAccuracyTable", "accuracy"),
-    ("monsterLifeTable", "life"),
-    ("monsterLifeTable2", "alt_life_1"),
-    ("monsterLifeTable3", "alt_life_2"),
-    ("monsterAllyLifeTable", "ally_life"),
-    ("monsterDamageTable", "damage"),
-    ("monsterAllyDamageTable", "ally_damage"),
-    ("monsterArmourTable", "armour"),
-    ("monsterAilmentThresholdTable", "ailment_threshold"),
-    ("monsterPhysConversionMultiTable", "phys_conversion_multi"),
+/// A `monster_levels` column as a number.
+type MonsterColumn = fn(&MonsterLevel) -> Option<f64>;
+
+/// PoB's monster tables, the bundle's `monster_levels` field for each, and
+/// how to read it (`v2.67.2:src/Export/Scripts/miscdata.lua`).
+#[expect(clippy::cast_precision_loss, reason = "game integers")]
+pub const MONSTER_TABLES: [(&str, &str, MonsterColumn); 11] = [
+    ("monsterEvasionTable", "evasion", |r| Some(r.evasion as f64)),
+    ("monsterAccuracyTable", "accuracy", |r| {
+        Some(r.accuracy as f64)
+    }),
+    ("monsterLifeTable", "life", |r| Some(r.life as f64)),
+    ("monsterLifeTable2", "alt_life_1", |r| {
+        r.alt_life_1.map(|v| v as f64)
+    }),
+    ("monsterLifeTable3", "alt_life_2", |r| {
+        Some(r.alt_life_2 as f64)
+    }),
+    ("monsterAllyLifeTable", "ally_life", |r| {
+        Some(r.ally_life as f64)
+    }),
+    ("monsterDamageTable", "damage", |r| {
+        Some(f64::from(r.damage))
+    }),
+    ("monsterAllyDamageTable", "ally_damage", |r| {
+        Some(f64::from(r.ally_damage))
+    }),
+    ("monsterArmourTable", "armour", |r| Some(r.armour as f64)),
+    ("monsterAilmentThresholdTable", "ailment_threshold", |r| {
+        Some(r.ailment_threshold as f64)
+    }),
+    (
+        "monsterPhysConversionMultiTable",
+        "phys_conversion_multi",
+        |r| r.phys_conversion_multi.map(|v| v as f64),
+    ),
 ];
 
 /// A conversion from the bundle's form to PoB's, for the report.
@@ -159,7 +181,7 @@ pub const TRANSFORMS: [Transform; 17] = [
     Transform {
         table: "passives, mastery_effects",
         fields: "stats",
-        transform: "stats rendered with the bundle's passive_skill_stat_descriptions scope, lines sorted; PoB's lines split at newlines, sorted",
+        transform: "stats rendered with the bundle's passive_skill_stat_descriptions scope (a stat without a description shows no line, as in game), lines sorted; PoB's lines split at newlines, sorted, without the 'Grants N Passive Skill Point(s)' line (skill_points is compared against grantedPassivePoints)",
         source: "game:passive_skill_stat_descriptions.txt (the tree file's text is GGG's tree export)",
     },
     Transform {
@@ -195,9 +217,19 @@ pub struct TableCounts {
     pub differences: usize,
     /// PoB rows the bundle does not have (each also a difference).
     pub pob_only_rows: usize,
-    /// Bundle rows PoB does not have (not differences: no PoB build reads
-    /// them).
+    /// Bundle rows, levels, and additional stat sets PoB does not have
+    /// (not differences: no PoB build reads them; listed in the report).
     pub bundle_only_rows: usize,
+}
+
+/// A bundle row, level, or stat set PoB does not have.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct BundleOnly {
+    /// The table.
+    pub table: &'static str,
+    /// The row key; `<key>:level.<n>` for a level, `<key>:stat_set.<n>` for
+    /// an additional stat set (PoB exports the main one only).
+    pub key: String,
 }
 
 /// The result of a comparison.
@@ -207,6 +239,8 @@ pub struct Comparison {
     pub tables: BTreeMap<&'static str, TableCounts>,
     /// Every difference, in comparison order.
     pub differences: Vec<Difference>,
+    /// Every bundle row, level, and stat set PoB does not have.
+    pub bundle_only: Vec<BundleOnly>,
 }
 
 impl Comparison {
@@ -252,8 +286,12 @@ impl Comparison {
         });
     }
 
-    fn bundle_only(&mut self, table: &'static str, count: usize) {
-        self.table(table).bundle_only_rows += count;
+    fn bundle_only(&mut self, table: &'static str, keys: impl IntoIterator<Item = String>) {
+        let before = self.bundle_only.len();
+        self.bundle_only
+            .extend(keys.into_iter().map(|key| BundleOnly { table, key }));
+        let added = self.bundle_only.len() - before;
+        self.table(table).bundle_only_rows += added;
     }
 }
 
@@ -274,7 +312,9 @@ pub fn num(x: f64) -> Value {
         #[expect(clippy::cast_possible_truncation, reason = "integral below 2^53")]
         return json!(x as i64);
     }
-    serde_json::Number::from_f64(x).map_or(Value::Null, Value::Number)
+    // NaN or infinity (a zero divisor): a value of its own, never equal to
+    // an absent one.
+    serde_json::Number::from_f64(x).map_or_else(|| json!(format!("non-finite {x}")), Value::Number)
 }
 
 /// A bundle number in PoB's form.
@@ -362,7 +402,7 @@ fn compare_skills(out: &mut Comparison, skills: &SkillTables, export: &Export) {
         effects
             .keys()
             .filter(|id| !export.skills.contains_key(**id))
-            .count(),
+            .map(|id| (*id).to_owned()),
     );
     for (id, skill) in &export.skills {
         let Some(effect) = effects.get(id.as_str()) else {
@@ -375,7 +415,9 @@ fn compare_skills(out: &mut Comparison, skills: &SkillTables, export: &Export) {
             .stat_sets
             .first()
             .and_then(|s| sets.get(s.as_str()).copied());
-        if !effect.support {
+        // PoB writes castTime for active skills (skills.lua:251); a support
+        // with one is compared too.
+        if !effect.support || skill.cast_time.is_some() {
             #[expect(clippy::cast_precision_loss, reason = "milliseconds")]
             let cast = effect.cast_time as f64 / 1000.0;
             out.check(T, id, "cast_time", ours(cast), opt(skill.cast_time));
@@ -446,6 +488,10 @@ fn compare_skills(out: &mut Comparison, skills: &SkillTables, export: &Export) {
             Value::Array(quality),
             Value::Array(pob_quality),
         );
+        out.bundle_only(
+            T,
+            (2..=effect.stat_sets.len()).map(|n| format!("{id}:stat_set.{n}")),
+        );
         compare_levels(out, id, effect, set, skill);
     }
 }
@@ -462,12 +508,30 @@ fn compare_levels(
     skill: &pob::Skill,
 ) {
     const T: &str = "skills";
-    let mut levels: Vec<(i64, &pob::Level)> = skill
+    let mut levels: Vec<(i64, &pob::Level)> = Vec::new();
+    for (key, level) in &skill.levels {
+        match key.parse() {
+            Ok(n) => levels.push((n, level)),
+            Err(_) => out.check(T, id, format!("level.{key}"), Value::Null, json!("present")),
+        }
+    }
+    levels.sort_by_key(|(n, _)| *n);
+    let pob_levels: BTreeSet<i64> = levels.iter().map(|(n, _)| *n).collect();
+    let bundle_levels: BTreeSet<i64> = effect
         .levels
         .iter()
-        .filter_map(|(k, l)| k.parse().ok().map(|n| (n, l)))
+        .map(|l| l.level)
+        .chain(
+            set.into_iter()
+                .flat_map(|s| s.levels.iter().map(|l| l.level)),
+        )
         .collect();
-    levels.sort_by_key(|(n, _)| *n);
+    out.bundle_only(
+        T,
+        bundle_levels
+            .difference(&pob_levels)
+            .map(|n| format!("{id}:level.{n}")),
+    );
     for (n, level) in levels {
         let find = |count: usize, has: &dyn Fn(usize) -> bool| {
             (0..count).find(|&i| has(i)).or((count == 1).then_some(0))
@@ -619,7 +683,7 @@ fn compare_gems(out: &mut Comparison, skills: &SkillTables, export: &Export) {
         effects
             .keys()
             .filter(|id| !pob_variants.contains(*id))
-            .count(),
+            .map(|id| (*id).to_owned()),
     );
     for gem in export.gems.values() {
         let key = gem.variant_id.as_str();
@@ -812,7 +876,7 @@ fn compare_bases(
             .values()
             .flatten()
             .filter(|id| !matched.contains(*id))
-            .count(),
+            .map(|id| (*id).to_owned()),
     );
 }
 
@@ -866,7 +930,7 @@ fn compare_characters(out: &mut Comparison, passives: &PassiveTables, export: &E
             .characters
             .iter()
             .filter(|c| !seen.contains(c.id.as_str()))
-            .count(),
+            .map(|c| c.name.clone()),
     );
 }
 
@@ -946,36 +1010,31 @@ fn compare_constants(
 
 fn compare_monster_levels(out: &mut Comparison, properties: &PropertyTables, export: &Export) {
     const T: &str = "monster_levels";
-    for (table, field) in MONSTER_TABLES {
+    // PoB's entry i is level i + 1; the bundle's rows are found by level.
+    let rows: BTreeMap<i64, &MonsterLevel> = properties
+        .monster_levels
+        .iter()
+        .map(|r| (r.level, r))
+        .collect();
+    let last = rows.keys().next_back().copied().unwrap_or(0);
+    for (table, field, column) in MONSTER_TABLES {
         let pob = export
             .monster_tables
             .get(table)
             .map(Vec::as_slice)
             .unwrap_or_default();
-        let count = pob.len().max(properties.monster_levels.len());
-        for i in 0..count {
-            let row = properties.monster_levels.get(i);
-            #[expect(clippy::cast_precision_loss, reason = "game integers")]
-            let ours_value = row.and_then(|r| match field {
-                "evasion" => Some(r.evasion as f64),
-                "accuracy" => Some(r.accuracy as f64),
-                "life" => Some(r.life as f64),
-                "alt_life_1" => r.alt_life_1.map(|v| v as f64),
-                "alt_life_2" => Some(r.alt_life_2 as f64),
-                "ally_life" => Some(r.ally_life as f64),
-                "damage" => Some(f64::from(r.damage)),
-                "ally_damage" => Some(f64::from(r.ally_damage)),
-                "armour" => Some(r.armour as f64),
-                "ailment_threshold" => Some(r.ailment_threshold as f64),
-                "phys_conversion_multi" => r.phys_conversion_multi.map(|v| v as f64),
-                _ => None,
-            });
+        let count = i64::try_from(pob.len()).unwrap_or(i64::MAX).max(last);
+        for level in 1..=count {
+            let ours_value = rows.get(&level).and_then(|r| column(r));
+            let pob_value = usize::try_from(level - 1)
+                .ok()
+                .and_then(|i| pob.get(i).copied());
             out.check(
                 T,
-                &(i + 1).to_string(),
+                &level.to_string(),
                 field,
                 ours_value.map_or(Value::Null, ours),
-                opt(pob.get(i).copied()),
+                opt(pob_value),
             );
         }
     }
@@ -1024,30 +1083,27 @@ fn render(
     lines
 }
 
-/// PoB's lines, split at newlines and sorted, and the passive points the
-/// node grants: the tree text writes them as a line ("Grants 1 Passive
-/// Skill Point"), the game data as a column (`skill_points`), so they are
-/// compared as a number.
-fn pob_lines(stats: &[String]) -> (Vec<String>, i64) {
-    let mut points = 0;
-    let mut lines: Vec<String> = Vec::new();
-    for line in stats.iter().flat_map(|s| s.split('\n')) {
-        let line = line.trim();
-        let granted = line
-            .strip_prefix("Grants ")
-            .and_then(|rest| {
+/// PoB's lines, split at newlines and sorted. The passive points a node
+/// grants are a column in the game data (`skill_points`) and a field in
+/// the tree file (`grantedPassivePoints`), compared as numbers; the tree
+/// text also writes them as a line ("Grants 1 Passive Skill Point"), which
+/// is left out here.
+fn pob_lines(stats: &[String]) -> Vec<String> {
+    let mut lines: Vec<String> = stats
+        .iter()
+        .flat_map(|s| s.split('\n'))
+        .map(str::trim)
+        .filter(|line| {
+            let points = line.strip_prefix("Grants ").and_then(|rest| {
                 rest.strip_suffix(" Passive Skill Points")
                     .or_else(|| rest.strip_suffix(" Passive Skill Point"))
-            })
-            .and_then(|n| n.parse::<i64>().ok());
-        match granted {
-            Some(n) => points += n,
-            None if !line.is_empty() => lines.push(line.to_owned()),
-            None => {}
-        }
-    }
+            });
+            !line.is_empty() && points.is_none_or(|n| n.parse::<i64>().is_err())
+        })
+        .map(str::to_owned)
+        .collect();
     lines.sort();
-    (lines, points)
+    lines
 }
 
 fn compare_passives(
@@ -1074,7 +1130,13 @@ fn compare_passives(
     let mut nodes: Vec<&pob::Node> = export.tree.nodes.values().collect();
     nodes.sort_by_key(|n| n.skill);
     let pob_nodes: BTreeSet<i64> = nodes.iter().map(|n| n.skill).collect();
-    out.bundle_only(T, by_node.keys().filter(|n| !pob_nodes.contains(n)).count());
+    out.bundle_only(
+        T,
+        by_node
+            .keys()
+            .filter(|n| !pob_nodes.contains(n))
+            .map(ToString::to_string),
+    );
     let mut effects_seen = BTreeSet::new();
     for node in nodes {
         let key = node.skill.to_string();
@@ -1118,20 +1180,19 @@ fn compare_passives(
             json!(passive.ascendancy),
             json!(node.ascendancy_name),
         );
-        let (lines, points) = pob_lines(&node.stats);
         out.check(
             T,
             &key,
             "stats",
             json!(render(bundle, &scope, &passive.stats)),
-            json!(lines),
+            json!(pob_lines(&node.stats)),
         );
         out.check(
             T,
             &key,
             "skill_points",
             int(passive.skill_points),
-            int(points),
+            int(node.granted_passive_points.unwrap_or(0)),
         );
         for effect in &node.mastery_effects {
             const E: &str = "mastery_effects";
@@ -1148,7 +1209,7 @@ fn compare_passives(
                 &effect_key,
                 "stats",
                 json!(render(bundle, &scope, &ours_effect.stats)),
-                json!(pob_lines(&effect.stats).0),
+                json!(pob_lines(&effect.stats)),
             );
         }
     }
@@ -1157,7 +1218,7 @@ fn compare_passives(
         effects
             .keys()
             .filter(|h| !effects_seen.contains(*h))
-            .count(),
+            .map(ToString::to_string),
     );
     Ok(())
 }

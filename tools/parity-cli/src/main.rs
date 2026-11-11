@@ -138,8 +138,8 @@ const USAGE: &str = "usage:
       uncategorized. Write summary.json, report.json (every difference),
       and overlay.json (PoB's values for patch-delta and pob-derivation
       differences, for calc-run --data-overlay) to <dir>, which must not
-      exist. Exit 0 when nothing is uncategorized and every rule matched,
-      1 otherwise, 2 on a usage error, 3 when an input does not read.
+      exist. Exit 0 when nothing is uncategorized and every rule matched
+      exactly its count with every key pattern, 1 otherwise, 2 on a usage error, 3 when an input does not read.
   loom-parity-cli build-round-trip <input>... --out <dir> [--bundle <dir>] [--anonymous]
                   [--expect-import-error <file name>]...
       Run every build through import (A), resolution with the bundle if
@@ -797,7 +797,7 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
     }
     let summary = &outputs.summary;
     println!(
-        "data-parity: {} differences ({}), {} overlay rows, {} unused rules",
+        "data-parity: {} differences ({}), {} overlay rows, {} failed rules",
         outputs.report.differences.len(),
         summary
             .categories
@@ -806,10 +806,17 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
             .collect::<Vec<_>>()
             .join(", "),
         summary.overlay_rows,
-        summary.unused_rules.len()
+        summary.failed_rules.len()
     );
-    for rule in &summary.unused_rules {
-        eprintln!("unused rule: {rule}");
+    for rule in summary
+        .rules
+        .iter()
+        .filter(|r| summary.failed_rules.contains(&r.id))
+    {
+        eprintln!(
+            "failed rule {}: matched {} of {}, stale keys {:?}",
+            rule.id, rule.matched, rule.expected, rule.stale_keys
+        );
     }
     if summary.pass {
         ExitCode::SUCCESS

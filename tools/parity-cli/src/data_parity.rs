@@ -28,7 +28,7 @@ pub mod rules;
 #[cfg(test)]
 mod tests;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::Bundle;
 use serde::Serialize;
@@ -61,7 +61,7 @@ pub const UNCATEGORIZED: &str = "uncategorized";
 
 /// What the export and the comparison leave out on purpose, with the
 /// reason, for the report.
-pub const NOT_COMPARED: [(&str, &str, &str); 6] = [
+pub const NOT_COMPARED: [(&str, &str, &str); 9] = [
     (
         "skills",
         "level requirement, Vaal soul cost and stored uses, soul gain prevention",
@@ -76,6 +76,21 @@ pub const NOT_COMPARED: [(&str, &str, &str); 6] = [
         "skills",
         "PvP damage multiplier, descriptions, parts, base flags, stat maps",
         "PvP is not calculated; the rest is PoB's own model, not game data",
+    ),
+    (
+        "skills",
+        "support constraints: allowed, added, excluded, and minion types; supports gems only; cannot be supported; weapon restrictions",
+        "not exported in this step; P3-9a (skill model) compares them before support matching is calculated",
+    ),
+    (
+        "skills",
+        "additional stat sets (35 PoE1 effects have more than one)",
+        "PoB v2.67.2 exports the main stat set only (skills.lua:256); listed per effect under bundle_only",
+    ),
+    (
+        "*",
+        "bundle rows and skill levels PoB does not have",
+        "no PoB build reads them, so they cannot differ in an oracle comparison; listed in report.json bundle_only, not gating",
     ),
     (
         "gems",
@@ -123,6 +138,8 @@ pub struct Inputs {
     pub pob_version: Option<String>,
     /// The tree version the export read.
     pub tree_version: String,
+    /// The runtime the export ran on (LuaJIT's `jit.version`).
+    pub pob_runtime: Option<String>,
     /// SHA-256 of the rules file.
     pub rules_sha256: String,
 }
@@ -136,6 +153,13 @@ pub struct RuleUse {
     pub category: Category,
     /// Differences it covered.
     pub matched: usize,
+    /// The count the rule expects.
+    pub expected: usize,
+    /// `patch-delta`: whether the cited notes name the change.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub named_in_notes: Option<bool>,
+    /// Key patterns that matched no difference.
+    pub stale_keys: Vec<String>,
 }
 
 /// `summary.json`.
@@ -153,15 +177,18 @@ pub struct Summary {
     pub categories: BTreeMap<String, usize>,
     /// Each rule with its count, in file order.
     pub rules: Vec<RuleUse>,
-    /// Rules that covered nothing (stale).
-    pub unused_rules: Vec<String>,
+    /// Rules that covered another number of differences than their count,
+    /// or have a key pattern that matched nothing.
+    pub failed_rules: Vec<String>,
+    /// Bundle rows, levels, and stat sets PoB does not have, by table.
+    pub bundle_only: BTreeMap<&'static str, usize>,
     /// Rows written to the overlay.
     pub overlay_rows: usize,
     /// The conversions from the bundle's form to PoB's.
     pub transforms: Vec<Transform>,
     /// What is left out on purpose.
     pub not_compared: Vec<NotCompared>,
-    /// Whether the run passes: no uncategorized difference, no unused rule.
+    /// Whether the run passes: no uncategorized difference, no failed rule.
     pub pass: bool,
 }
 
@@ -183,6 +210,9 @@ pub struct Report {
     pub format: u32,
     /// Every difference, by table, key, and field.
     pub differences: Vec<Classified>,
+    /// Every bundle row, level (`<key>:level.<n>`), and additional stat
+    /// set (`<key>:stat_set.<n>`) PoB does not have.
+    pub bundle_only: Vec<compare::BundleOnly>,
 }
 
 /// One overlay row: PoB's value for a bundle row, in PoB's form (the
@@ -255,7 +285,8 @@ pub struct Request<'a> {
 ///
 /// # Errors
 /// A message when an input does not read: the export or rules file, a
-/// rules file for another game, or a bundle without the calc tables.
+/// rules file for another game, Steam build, or PoB version, or a bundle
+/// without the calc tables.
 pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
     let bundle = request.bundle;
     let game = bundle.manifest.game.clone();
@@ -266,6 +297,29 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
     }
     let export = pob::parse(request.export)?;
     let rules = Rules::parse(request.rules, &game)?;
+    // The evidence holds for one pair of inputs only.
+    if bundle.manifest.source.steam_build != Some(rules.steam_build) {
+        return Err(format!(
+            "the rules file is for Steam build {}, the bundle is from {}",
+            rules.steam_build,
+            bundle
+                .manifest
+                .source
+                .steam_build
+                .map_or_else(|| "no Steam build".to_owned(), |b| b.to_string())
+        ));
+    }
+    if export.pob.version.as_deref() != Some(rules.pob_version.as_str()) {
+        return Err(format!(
+            "the rules file is for PoB {}, the export is from {}",
+            rules.pob_version,
+            export
+                .pob
+                .version
+                .as_deref()
+                .unwrap_or("an unknown version")
+        ));
+    }
     let comparison = compare::compare(bundle, &export, request.passive_scope)?;
     let inputs = Inputs {
         game,
@@ -274,11 +328,13 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
         data_schema: bundle.manifest.data_schema,
         pob_export_sha256: sha256(request.export),
         pob_version: export.pob.version.clone(),
+        pob_runtime: export.pob.runtime.clone(),
         tree_version: export.tree_version.clone(),
         rules_sha256: sha256(request.rules),
     };
 
     let mut matched: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut keys_used: BTreeSet<(&str, &str)> = BTreeSet::new();
     let mut categories: BTreeMap<String, usize> = [
         Category::PatchDelta,
         Category::PobDerivation,
@@ -299,6 +355,11 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
         *categories.entry(name.to_owned()).or_default() += 1;
         if let Some(rule) = rule {
             *matched.entry(rule.id.as_str()).or_default() += 1;
+            for pattern in &rule.keys {
+                if rules::glob(pattern, &difference.key) {
+                    keys_used.insert((rule.id.as_str(), pattern.as_str()));
+                }
+            }
             if rule.category.overlays() {
                 rows.push(OverlayRow {
                     table: difference.table,
@@ -324,14 +385,26 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
             id: r.id.clone(),
             category: r.category,
             matched: matched.get(r.id.as_str()).copied().unwrap_or(0),
+            expected: r.count,
+            named_in_notes: r.named_in_notes,
+            stale_keys: r
+                .keys
+                .iter()
+                .filter(|k| !keys_used.contains(&(r.id.as_str(), k.as_str())))
+                .cloned()
+                .collect(),
         })
         .collect();
-    let unused_rules: Vec<String> = rule_uses
+    let failed_rules: Vec<String> = rule_uses
         .iter()
-        .filter(|r| r.matched == 0)
+        .filter(|r| r.matched != r.expected || !r.stale_keys.is_empty())
         .map(|r| r.id.clone())
         .collect();
-    let pass = categories.get(UNCATEGORIZED).copied().unwrap_or(0) == 0 && unused_rules.is_empty();
+    let pass = categories.get(UNCATEGORIZED).copied().unwrap_or(0) == 0 && failed_rules.is_empty();
+    let mut bundle_only: BTreeMap<&'static str, usize> = BTreeMap::new();
+    for row in &comparison.bundle_only {
+        *bundle_only.entry(row.table).or_default() += 1;
+    }
     let summary = Summary {
         format: FORMAT,
         tool: request.tool.clone(),
@@ -339,7 +412,8 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
         tables: comparison.tables,
         categories,
         rules: rule_uses,
-        unused_rules,
+        failed_rules,
+        bundle_only,
         overlay_rows: rows.len(),
         transforms: TRANSFORMS.to_vec(),
         not_compared: NOT_COMPARED
@@ -357,6 +431,7 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
         report: Report {
             format: FORMAT,
             differences,
+            bundle_only: comparison.bundle_only,
         },
         overlay: Overlay {
             format: FORMAT,

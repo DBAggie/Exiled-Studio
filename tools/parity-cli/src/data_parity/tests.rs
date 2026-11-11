@@ -243,7 +243,7 @@ fn each_changed_value_should_be_one_difference() {
 }
 
 #[test]
-fn rows_on_one_side_should_be_counted() {
+fn rows_on_one_side_should_be_listed() {
     let mut export = equal_export();
     let skills = export["skills"].as_object_mut().unwrap();
     skills.insert(
@@ -251,19 +251,200 @@ fn rows_on_one_side_should_be_counted() {
         json!({"stats": {}, "types": {}, "constant_stats": {}, "quality_stats": {}, "levels": {}}),
     );
     skills.remove("TestStrike");
+    // A bundle level PoB does not have.
+    export["skills"]["TestBolt"]["levels"]
+        .as_object_mut()
+        .unwrap()
+        .remove("2");
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE).unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [("skills", "PobOnly", "row")]
     );
+    let only: Vec<(&str, &str)> = comparison
+        .bundle_only
+        .iter()
+        .map(|b| (b.table, b.key.as_str()))
+        .collect();
+    assert_eq!(
+        only,
+        [("skills", "TestStrike"), ("skills", "TestBolt:level.2")]
+    );
     let skills = &comparison.tables["skills"];
-    assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 1));
+    assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 2));
+}
+
+#[test]
+fn levels_should_be_found_as_pob_pairs_them() {
+    // A level the bundle does not have.
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["levels"]["3"] =
+        json!({"values": [4.5, 9, 1], "cost": {"Mana": 6}, "critChance": 6});
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "TestBolt", "level.3")]
+    );
+    // A table with one row serves every level (skills.lua:263-264).
+    let mut export = equal_export();
+    export["skills"]["SupportTestDamage"]["levels"]["2"] =
+        export["skills"]["SupportTestDamage"]["levels"]["1"].clone();
+    assert_eq!(differences(&export), []);
+    // A level key that is not a number.
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["levels"]["x"] = json!({"values": {}, "cost": {}});
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "TestBolt", "level.x")]
+    );
+}
+
+#[test]
+fn crit_chance_should_prefer_the_second_column() {
+    // PoB's OffhandCritChance (the bundle's attack_crit_chance) overrides
+    // its AttackCritChance (spell_crit_chance) when not 0.
+    let mut bundle = bundle("bundle-poe1");
+    let skills = bundle.skills.as_mut().unwrap();
+    let set = skills
+        .stat_sets
+        .iter_mut()
+        .find(|s| s.id == "TestBolt")
+        .unwrap();
+    set.levels[0].attack_crit_chance = 750;
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["levels"]["1"]["critChance"] = json!(7.5);
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    assert_eq!(
+        compare::compare(&bundle, &export, SCOPE)
+            .unwrap()
+            .differences,
+        []
+    );
+}
+
+#[test]
+fn absent_should_equal_zero_only_where_pob_omits_zero() {
+    // Absent cost on the bundle side against PoB's 0: a difference.
+    let mut export = equal_export();
+    export["skills"]["SupportTestDamage"]["levels"]["1"]["cost"] = json!({"Mana": 0});
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "SupportTestDamage", "level.1.cost.Mana")]
+    );
+    // A stored-uses value PoB has and the bundle has not (0).
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["levels"]["1"]["storedUses"] = json!(1);
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "TestBolt", "level.1.stored_uses")]
+    );
+    // Armour ranges and block: absent is 0.
+    let mut export = equal_export();
+    export["bases"]["Plain Test Shield"]["armour"]["EvasionBaseMax"] = json!(5);
+    export["bases"]["Plain Test Shield"]["armour"]["BlockChance"] = json!(25);
+    assert_eq!(
+        fields(&differences(&export)),
+        [
+            ("bases", "Plain Test Shield", "evasion_max"),
+            ("bases", "Plain Test Shield", "block")
+        ]
+    );
+}
+
+#[test]
+fn gems_characters_and_masteries_should_compare() {
+    let mut export = equal_export();
+    export["gems"]["Test/Gems/Bolt"]["tags"] = json!(["test_spell", "fire"]);
+    export["gems"]["Test/Gems/Bolt"]["vaalGem"] = json!(true);
+    export["gems"]["Test/Gems/Bolt"]["secondaryGrantedEffectId"] = json!("TestStrike");
+    export["tree"]["classes"][1]["ascendancies"] = json!(["TestSage"]);
+    export["tree"]["nodes"]["103"]["masteryEffects"][0]["stats"] = json!(["5 Life"]);
+    export["character_constants"] = json!({"base_speed": 37});
+    assert_eq!(
+        fields(&differences(&export)),
+        [
+            ("gems", "TestBolt", "secondary_granted_effect"),
+            ("gems", "TestBolt", "tags"),
+            ("gems", "TestBolt", "vaal"),
+            ("characters", "Test Sage", "ascendancies"),
+            ("character_constants", "base_speed", "value"),
+            ("mastery_effects", "4242", "stats"),
+        ]
+    );
+}
+
+#[test]
+fn bases_should_match_one_base_by_name() {
+    // Two bundle bases with PoB's name: no single match.
+    let mut bundle = bundle("bundle-poe1");
+    let mut twin = bundle
+        .base_items
+        .iter()
+        .find(|b| b.id == "Test/Items/Wand1")
+        .unwrap()
+        .clone();
+    twin.id = "Test/Items/Wand2".to_owned();
+    bundle.base_items.push(twin.clone());
+    let properties = bundle.properties.as_mut().unwrap();
+    let mut weapon = properties.weapon_types[0].clone();
+    weapon.base_item = twin.id.clone();
+    properties.weapon_types.push(weapon.clone());
+    let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
+    let found = compare::compare(&bundle, &export, SCOPE)
+        .unwrap()
+        .differences;
+    assert_eq!(fields(&found), [("bases", "Plain Test Wand", "row")]);
+    // A Royale base is skipped, as PoB skips it (bases.lua:342).
+    let royale = "Test/Items/Wand2Royale";
+    bundle.base_items.last_mut().unwrap().id = royale.to_owned();
+    bundle
+        .properties
+        .as_mut()
+        .unwrap()
+        .weapon_types
+        .last_mut()
+        .unwrap()
+        .base_item = royale.to_owned();
+    assert_eq!(
+        compare::compare(&bundle, &export, SCOPE)
+            .unwrap()
+            .differences,
+        []
+    );
+}
+
+#[test]
+fn passive_text_should_render_as_the_game_shows_it() {
+    // A described stat renders; a stat without a description shows no line.
+    let mut bundle = bundle("bundle-poe1");
+    let passive = bundle
+        .passives
+        .as_mut()
+        .unwrap()
+        .passives
+        .iter_mut()
+        .find(|p| p.node == 101)
+        .unwrap();
+    passive.stats.push(loom_data::bundle::passives::StatAmount {
+        stat: "test_maximum_life".to_owned(),
+        value: 10,
+    });
+    let mut export = equal_export();
+    export["tree"]["nodes"]["101"]["stats"] = json!(["+10 to maximum Life"]);
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    assert_eq!(
+        compare::compare(&bundle, &export, SCOPE)
+            .unwrap()
+            .differences,
+        []
+    );
 }
 
 #[test]
 fn granted_passive_points_should_compare_as_a_number() {
     let mut export = equal_export();
+    export["tree"]["nodes"]["101"]["grantedPassivePoints"] = json!(2);
+    // The tree text's line for them is not node text.
     export["tree"]["nodes"]["101"]["stats"] = json!(["Grants 2 Passive Skill Points"]);
     assert_eq!(
         fields(&differences(&export)),
@@ -279,6 +460,9 @@ fn numbers_should_compare_at_lua_precision() {
     assert_eq!(num(5.0), json!(5));
     assert_eq!(num(-3.0), json!(-3));
     assert_eq!(num(0.5), json!(0.5));
+    // A non-finite value is never equal to an absent one.
+    assert_ne!(num(f64::NAN), Value::Null);
+    assert_ne!(num(f64::INFINITY), Value::Null);
 }
 
 #[test]
@@ -295,21 +479,42 @@ fn glob_should_match_runs() {
     assert!(!glob("row", "rows"));
 }
 
+/// The synthetic bundle's Steam build, set by [`run_with`].
+const BUILD: u64 = 1;
+
 fn rules_json(rules: &Value) -> Vec<u8> {
-    serde_json::to_vec(&json!({"format": 1, "game": "poe1", "rules": rules})).unwrap()
+    serde_json::to_vec(&json!({"format": 1, "game": "poe1", "steam_build": BUILD,
+                               "pob_version": "2.67.2", "rules": rules}))
+    .unwrap()
 }
 
+const THREAD: &str = "https://www.pathofexile.com/forum/view-thread/1";
+
+/// A rule covering `count` differences; a `patch-delta` rule's change is
+/// named in its notes.
 fn rule(id: &str, category: &str, table: &str, field: &str, key: &str, source: &str) -> Value {
-    json!({"id": id, "category": category, "table": table, "fields": [field], "keys": [key],
-           "evidence": "why", "sources": [source]})
+    let mut rule = json!({"id": id, "category": category, "table": table, "fields": [field],
+                          "keys": [key], "count": 1, "evidence": "why", "sources": [source]});
+    if category == "patch-delta" {
+        rule["named_in_notes"] = json!(true);
+    }
+    rule
 }
 
 #[test]
 fn rules_should_be_checked() {
-    let thread = "https://www.pathofexile.com/forum/view-thread/1";
-    let ok = rule("a", "patch-delta", "skills", "*", "*", thread);
+    let ok = rule("a", "patch-delta", "skills", "*", "*", THREAD);
     assert!(Rules::parse(&rules_json(&json!([ok])), "poe1").is_ok());
-    let bad: [(Value, &str); 8] = [
+    let mut without_named = ok.clone();
+    without_named
+        .as_object_mut()
+        .unwrap()
+        .remove("named_in_notes");
+    let mut named_elsewhere = rule("a", "representation", "skills", "*", "*", "game:X.Y");
+    named_elsewhere["named_in_notes"] = json!(false);
+    let mut zero = ok.clone();
+    zero["count"] = json!(0);
+    let bad: [(Value, &str); 12] = [
         (
             json!([rule("", "representation", "skills", "*", "*", "game:X.Y")]),
             "empty id",
@@ -331,8 +536,20 @@ fn rules_should_be_checked() {
             "patch-note thread",
         ),
         (
-            json!([rule("a", "pob-derivation", "skills", "*", "*", thread)]),
-            "PoB citation",
+            json!([rule("a", "pob-derivation", "skills", "*", "*", THREAD)]),
+            "PoB v2.67.2 citation",
+        ),
+        // A later PoB only corroborates.
+        (
+            json!([rule(
+                "a",
+                "pob-derivation",
+                "skills",
+                "*",
+                "*",
+                "pob@abc:src/x.lua:1"
+            )]),
+            "PoB v2.67.2 citation",
         ),
         (
             json!([rule(
@@ -345,20 +562,23 @@ fn rules_should_be_checked() {
             )]),
             "game data column",
         ),
+        (json!([without_named]), "named_in_notes"),
+        (json!([named_elsewhere]), "named_in_notes"),
+        (json!([zero]), "count"),
         (
             json!([{"id": "a", "category": "representation", "table": "skills", "fields": [], "keys": ["*"],
-                 "evidence": "why", "sources": ["game:X.Y"]}]),
+                    "count": 1, "evidence": "why", "sources": ["game:X.Y"]}]),
             "no field",
         ),
         (
             json!([{"id": "a", "category": "representation", "table": "skills", "fields": ["*"], "keys": ["*"],
-                 "evidence": " ", "sources": ["game:X.Y"]}]),
+                    "count": 1, "evidence": " ", "sources": ["game:X.Y"]}]),
             "no evidence",
         ),
     ];
     for (rules, expected) in bad {
         let error = Rules::parse(&rules_json(&rules), "poe1").unwrap_err();
-        assert!(error.contains(expected), "{error}");
+        assert!(error.contains(expected), "{expected}: {error}");
     }
     assert!(
         Rules::parse(&rules_json(&json!([])), "poe2")
@@ -367,8 +587,22 @@ fn rules_should_be_checked() {
     );
 }
 
+/// The committed rules file reads and passes every check.
+#[test]
+fn committed_rules_should_read() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../docs/phase-3/data-parity-rules-poe1.json");
+    let rules = Rules::parse(&std::fs::read(path).unwrap(), "poe1").unwrap();
+    assert_eq!(
+        (rules.steam_build, rules.pob_version.as_str()),
+        (26_530_219, "2.67.2")
+    );
+    assert!(!rules.rules.is_empty());
+}
+
 fn run_with(export: &Value, rules: &Value, bundle_name: &str) -> Result<super::Outputs, String> {
-    let bundle = bundle(bundle_name);
+    let mut bundle = bundle(bundle_name);
+    bundle.manifest.source.steam_build = Some(BUILD);
     let export = serde_json::to_vec(export).unwrap();
     let rules = rules_json(rules);
     run(&Request {
@@ -390,7 +624,6 @@ fn categories_should_decide_the_overlay() {
     export["monster_tables"]["monsterArmourTable"][0] = json!(12); // pob-derivation
     export["tree"]["nodes"]["102"]["isNotable"] = json!(true); // representation
     export["tree"]["nodes"]["101"]["stats"] = json!(["Aura line"]); // not-carried
-    let thread = "https://www.pathofexile.com/forum/view-thread/1";
     let rules = json!([
         rule(
             "cast",
@@ -398,7 +631,7 @@ fn categories_should_decide_the_overlay() {
             "skills",
             "cast_time",
             "TestBolt",
-            thread
+            THREAD
         ),
         rule(
             "armour",
@@ -426,7 +659,7 @@ fn categories_should_decide_the_overlay() {
         ),
     ]);
     let out = run_with(&export, &rules, "bundle-poe1").unwrap();
-    assert!(out.summary.pass);
+    assert!(out.summary.pass, "{:?}", out.summary.failed_rules);
     for (category, count) in [
         ("patch-delta", 1),
         ("pob-derivation", 1),
@@ -456,18 +689,21 @@ fn categories_should_decide_the_overlay() {
     );
     assert_eq!(out.summary.overlay_rows, 2);
     assert!(out.report.differences.iter().all(|d| d.rule.is_some()));
+    assert_eq!(out.summary.rules[0].named_in_notes, Some(true));
 }
 
 #[test]
-fn uncategorized_or_unused_should_fail() {
+fn rules_should_fail_unless_exact() {
     let mut export = equal_export();
     export["skills"]["TestBolt"]["castTime"] = json!(0.8);
+    // No rule: uncategorized.
     let out = run_with(&export, &json!([]), "bundle-poe1").unwrap();
     assert!(!out.summary.pass);
     assert_eq!(out.summary.categories[UNCATEGORIZED], 1);
     assert!(out.report.differences[0].category.is_none());
     assert!(out.overlay.rows.is_empty());
 
+    // A rule that matches nothing.
     let stale = json!([rule(
         "stale",
         "representation",
@@ -478,14 +714,47 @@ fn uncategorized_or_unused_should_fail() {
     )]);
     let out = run_with(&equal_export(), &stale, "bundle-poe1").unwrap();
     assert!(!out.summary.pass);
-    assert_eq!(out.summary.unused_rules, ["stale"]);
+    assert_eq!(out.summary.failed_rules, ["stale"]);
+
+    // A new difference on a covered row: the count no longer holds.
+    export["skills"]["TestBolt"]["levels"]["1"]["critChance"] = json!(5);
+    let covered = json!([rule(
+        "bolt",
+        "representation",
+        "skills",
+        "*",
+        "TestBolt",
+        "game:X.Y"
+    )]);
+    let out = run_with(&export, &covered, "bundle-poe1").unwrap();
+    assert_eq!(out.summary.categories[UNCATEGORIZED], 0);
+    assert!(!out.summary.pass);
+    assert_eq!(
+        (out.summary.rules[0].matched, out.summary.rules[0].expected),
+        (2, 1)
+    );
+
+    // A key pattern that matches nothing is stale even when the rule matched.
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["castTime"] = json!(0.8);
+    let mut two_keys = rule(
+        "bolt",
+        "representation",
+        "skills",
+        "cast_time",
+        "TestBolt",
+        "game:X.Y",
+    );
+    two_keys["keys"] = json!(["TestBolt", "Gone"]);
+    let out = run_with(&export, &json!([two_keys]), "bundle-poe1").unwrap();
+    assert!(!out.summary.pass);
+    assert_eq!(out.summary.rules[0].stale_keys, ["Gone"]);
 }
 
 #[test]
 fn first_matching_rule_should_win() {
     let mut export = equal_export();
     export["skills"]["TestBolt"]["castTime"] = json!(0.8);
-    let thread = "https://www.pathofexile.com/forum/view-thread/1";
     let rules = json!([
         rule(
             "narrow",
@@ -493,7 +762,7 @@ fn first_matching_rule_should_win() {
             "skills",
             "cast_time",
             "TestBolt",
-            thread
+            THREAD
         ),
         rule(
             "broad",
@@ -506,7 +775,7 @@ fn first_matching_rule_should_win() {
     ]);
     let out = run_with(&export, &rules, "bundle-poe1").unwrap();
     assert_eq!(out.report.differences[0].rule.as_deref(), Some("narrow"));
-    assert_eq!(out.summary.unused_rules, ["broad"]);
+    assert_eq!(out.summary.failed_rules, ["broad"]);
 }
 
 #[test]
@@ -532,4 +801,29 @@ fn bad_inputs_should_not_start() {
     let mut export = equal_export();
     export["skills"]["TestBolt"]["types"] = json!({"a": 1});
     assert!(run_with(&export, &json!([]), "bundle-poe1").is_err());
+    // Rules for another PoB version.
+    let mut export = equal_export();
+    export["pob"]["version"] = json!("2.68.0");
+    assert!(
+        run_with(&export, &json!([]), "bundle-poe1")
+            .unwrap_err()
+            .contains("for PoB 2.67.2")
+    );
+}
+
+#[test]
+fn rules_should_be_for_the_bundles_build() {
+    let bundle = bundle("bundle-poe1"); // no Steam build
+    let export = serde_json::to_vec(&equal_export()).unwrap();
+    let rules = rules_json(&json!([]));
+    let error = run(&Request {
+        bundle: &bundle,
+        bundle_manifest: b"{}",
+        export: &export,
+        rules: &rules,
+        passive_scope: SCOPE,
+        tool: Tool::default(),
+    })
+    .unwrap_err();
+    assert!(error.contains("Steam build 1"), "{error}");
 }

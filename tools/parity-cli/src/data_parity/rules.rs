@@ -60,6 +60,11 @@ pub struct Rules {
     pub format: u32,
     /// The game the rules are for.
     pub game: String,
+    /// The bundle's Steam build the rules were written for; a bundle of
+    /// another build is refused (its differences need their own evidence).
+    pub steam_build: u64,
+    /// PoB's version the rules were written for (the export records it).
+    pub pob_version: String,
     /// The rules, in matching order.
     pub rules: Vec<Rule>,
 }
@@ -76,8 +81,16 @@ pub struct Rule {
     pub table: String,
     /// Field patterns; a difference matches when one matches its field.
     pub fields: Vec<String>,
-    /// Key patterns; a difference matches when one matches its key.
+    /// Key patterns; a difference matches when one matches its key. Each
+    /// pattern must match a difference, or the rule is stale.
     pub keys: Vec<String>,
+    /// How many differences the rule covers, exactly: a new difference on
+    /// a covered row fails the run instead of joining the rule silently.
+    pub count: usize,
+    /// `patch-delta` only: whether the cited notes name the change. `false`
+    /// marks a change inferred from the data (reported as such).
+    #[serde(default)]
+    pub named_in_notes: Option<bool>,
     /// What the difference is and why it is not a bug.
     pub evidence: String,
     /// Citations: a patch-note thread URL for `patch-delta`; a PoB file
@@ -126,8 +139,9 @@ impl Rules {
     /// # Errors
     /// A message naming the first problem: format, game, an empty or
     /// duplicate ID, an unknown table, no field or key pattern, no
-    /// evidence or source, a `patch-delta` rule without a patch-note URL,
-    /// or another category without a PoB or game citation.
+    /// evidence or source, a `patch-delta` rule without a patch-note URL or
+    /// `named_in_notes`, another category without a PoB v2.67.2 or game
+    /// citation, or a count of 0.
     pub fn parse(bytes: &[u8], game: &str) -> Result<Self, String> {
         let rules: Self =
             serde_json::from_slice(bytes).map_err(|e| format!("the rules file: {e}"))?;
@@ -171,9 +185,10 @@ impl Rules {
                     cites(&[PATCH_NOTES]),
                     "a patch-note thread URL (https://www.pathofexile.com/forum/view-thread/...)",
                 ),
+                // A later PoB (`pob@`) only corroborates.
                 Category::PobDerivation | Category::Representation => (
-                    cites(&["v2.67.2:", "pob@", "game:"]),
-                    "a PoB citation (v2.67.2:<path>:<line>) or a game data column (game:<table>.<column>)",
+                    cites(&["v2.67.2:", "game:"]),
+                    "a PoB v2.67.2 citation (v2.67.2:<path>:<line>) or a game data column (game:<table>.<column>)",
                 ),
                 Category::NotCarried => (
                     cites(&["game:"]),
@@ -185,6 +200,14 @@ impl Rules {
                     "rule {id}: a {} rule needs {needs}",
                     rule.category.name()
                 ));
+            }
+            if (rule.category == Category::PatchDelta) != rule.named_in_notes.is_some() {
+                return Err(format!(
+                    "rule {id}: named_in_notes is required for patch-delta and only there"
+                ));
+            }
+            if rule.count == 0 {
+                return Err(format!("rule {id}: count must be at least 1"));
             }
         }
         Ok(rules)

@@ -88,11 +88,13 @@ end
 -- Skill types: PoB's names by number (src/Data/Global.lua `SkillType`).
 ---------------------------------------------------------------------------
 local skillTypeNames = {}
+local lastType = 0
 for name, number in pairs(SkillType) do
 	skillTypeNames[number] = name
+	lastType = math.max(lastType, number)
 end
 local skillTypes = {}
-for number = 1, #skillTypeNames do
+for number = 1, lastType do
 	skillTypes[number] = skillTypeNames[number] or ""
 end
 
@@ -265,7 +267,7 @@ end
 ---------------------------------------------------------------------------
 local document = {
 	format = FORMAT,
-	pob = { version = launch.versionNumber, branch = launch.versionBranch },
+	pob = { version = launch.versionNumber, branch = launch.versionBranch, runtime = jit and jit.version },
 	tree_version = treeVersion,
 	skill_types = skillTypes,
 	skills = skills,
