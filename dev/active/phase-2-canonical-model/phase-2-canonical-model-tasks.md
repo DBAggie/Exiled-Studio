@@ -129,7 +129,7 @@ Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
 - [x] Import and export through the XML adapter (`legacy::share_code`, `miniz_oxide`, our base64; `IMPORT_SHARE_CODE_*`)
 - [x] Our code of every public fixture; two PoB-made codes from the oracle runtime with their XML (`tools/oracle/adapter/share_code.lua`, `tools/oracle/fixtures/share-codes/`)
 - [x] `code-architecture-reviewer`: no blockers; code length cap, one-pass decoding, fixture-count-free tests, nits applied (context file)
-- [ ] Open PR (base `feat/p2-9-migrations-persistence`); write the PR number into the docs right after
+- [x] Open PR (#57, base `feat/p2-9-migrations-persistence`); write the PR number into the docs right after
 
 ## PR P2-11: report and gate (step 11)
 - [ ] `docs/phase-2/phase-2-report.md`, scrubbed summaries, gate verdict
