@@ -35,6 +35,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] `calc-survey`: archetype classifier, tree-version rule, excluded-mechanics rules (tests each), mechanic inventory (P3-3)
 - [x] Proposed excluded mechanics (Q7) in `docs/phase-3/calc-scope-poe1.json`; `docs/phase-3/slice-fields.json` with comparison rules and breakdown groupings (Q3, Q6); survey summaries (`docs/phase-3/calc-survey.md`) (P3-3)
 - [x] Plan updated (P3-3)
+- [x] Open PR: #66 (base `dev`)
 - [ ] Maintainer: Q2 (skills), Q7 (exclusions), Q8 (how to reach 3 builds per skill)
 - [ ] P3-3b: chosen skills in the scope file; credited public builds until each has 3 in scope; `calc-survey` exit 0
 
