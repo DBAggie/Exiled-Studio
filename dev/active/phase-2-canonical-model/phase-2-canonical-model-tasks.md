@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-0, #41: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-10 (PR P2-1: domain model)
 
 # Phase 2: tasks
 
@@ -11,12 +11,14 @@ Last Updated: 2026-11-10 (PR P2-0, #41: plan written, plan-reviewer findings app
 - [x] Open PR (#41); write the PR number into the docs right after
 
 ## PR P2-1: domain model (step 1)
-- [ ] Check main CI run 42922016104 (PR #40) and PR #41's merge
-- [ ] `Game`, IDs, Build, character, `GameSpecific`, passive spec, skills, items, item sets, slots, config inputs
-- [ ] Modifier line enum (stat IDs, typed `kind`, unresolved with reason), `Adapted`
-- [ ] Every item line typed by kind; `continues` for split pairs; typed values keep source strings
-- [ ] `Opaque` container (content in place between typed siblings), quarantine, completeness
-- [ ] Tests (PoE1 and PoE2 Builds); wasm32
+- [x] Check main CI run 42922016104 (PR #40, green) and PR #41's merge (`fc4513d`, main CI run 42926701060 green)
+- [x] `Game`, IDs, Build, character, `GameSpecific`, passive spec, skills, items, item sets, slots, config inputs
+- [x] Modifier line enum (stat IDs, typed `kind`, unresolved with reason), `Adapted`
+- [x] Every item line typed by kind; `continues` for split pairs; typed values keep source strings
+- [x] `Opaque` container (content in place between typed siblings), quarantine, completeness
+- [x] Tests (PoE1 and PoE2 Builds); wasm32
+- [x] `code-architecture-reviewer`; findings recorded in the context file
+- [ ] Open PR; write the PR number into the docs right after
 
 ## PR P2-2a: item input (step 2a)
 - [ ] Move `pob_item` to `loom-serialization::legacy::pob_item` (tests unchanged)

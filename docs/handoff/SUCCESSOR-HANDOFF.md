@@ -24,8 +24,13 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, Phase 2 plan PR #41 (P2-0) open, in review, branch `plan/phase-2-canonical-model`)
-- **PR P2-0: Phase 2 plan (PR #41, open, in review, branch `plan/phase-2-canonical-model`).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted. Its main CI run 42922016104 was still in progress when this PR opened; P2-1 checks its result.
+## Current state (updated 2026-11-10, P2-1 domain model open, in review, branch `feat/p2-1-domain-model`)
+- **PR P2-1: domain model (open, in review, branch `feat/p2-1-domain-model`).** Session start: PR #41 (P2-0, the Phase 2 plan) merged 2026-11-10 as `fc4513d`, main CI run 42926701060 green; PR #40's main CI run 42922016104 green. No comments on #41, so plan questions Q1 to Q6 stand at their defaults.
+  - **What:** the Build aggregate in `crates/loom-domain` (plan step 1), no dependencies, wasm32 builds. `Build` (game, `GameSpecific`, `DataVersion`, character, passives, skills, items, config, layout); PoE1-only choices only in `loom_domain::poe1::Poe1Choices`; `Ordered<T>` and `OpaqueNode` keep untyped content in place between typed siblings, layout markers place single typed children; `Sourced<T>` keeps source text, `Number` has bitwise equality; items keep every source line typed by kind; modifier lines carry `LineResolution` (pending, excluded, resolved as stats or a typed `kind` with `adapted`, `Continues` for multi-line and split-section, unresolved with a reason); `ItemBody::check_links`; quarantine and completeness derived from the lines with `LINE_*` codes; `DomainError` with `DOMAIN_*` codes.
+  - **Mapping notes for P2-2a:** PoB's scourge, crucible, and class-requirement sections become `ModSection::Other(..)`; class-requirement lines are `Excluded(Section)`; filter, mod-backing, and composed details are report-only. Full list: context file, "Decisions in P2-1".
+  - **Evidence:** 27 unit tests (PoE1 and PoE2 builds, every line kind, every resolution and `kind`, split pair and multi-line links, opaque content between gems and between sections, a scan that `bandit`/`pantheon` appear only in `poe1.rs`); fmt, workspace clippy, wasm32 build of the core crates pass.
+  - **Review:** `code-architecture-reviewer`: 1 blocker (a same-section multi-line description had no valid form; fixed) and 4 should-fix items, applied (context file).
+- **PR P2-0: Phase 2 plan (PR #41, merged 2026-11-10 as `fc4513d`; main CI run 42926701060 green).** Session start: PR #40 (ADR-015 Amendment 1) merged 2026-11-10 as `1f35323`, so the amendment is accepted; its main CI run 42922016104 green.
   - **Task docs:** new `dev/active/phase-2-canonical-model/` (plan, context, tasks), made with `/dev-docs`.
   - **Steps:** 11 steps in about 15 PRs:
     - P2-1, domain model;
@@ -110,15 +115,12 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Merge check for the Phase 2 plan PR #41 (P2-0)** (`gh pr view 41`). Record the squash commit and the main CI run in the next PR's Current state. Also record the result of main CI run 42922016104 (PR #40). If the maintainer answered Q1 to Q6 differently from the defaults, or asked for changes, update the plan on the same branch first.
-2. **P2-1: domain model** (plan step 1, `dev/active/phase-2-canonical-model/`). Build the aggregate in `loom-domain`:
-   - `Game`; IDs; `GameSpecific::Poe1`; typed values with their source strings;
-   - items with every line typed by kind, a `continues` link for split-section pairs, and the fields the import pipeline reads (rarity, sections, influences, flags, variant selection, prefixes);
-   - the modifier line enum from ADR-015 Amendment 1 (stat IDs, typed `kind`, or unresolved with a reason) and `adapted`;
-   - the `Opaque` container, keeping content in place between typed siblings;
-   - quarantine and completeness.
-
-   No dependencies; unit tests with PoE1 and PoE2 Builds; wasm32. P2-2a (item input) follows.
+1. **Merge check for P2-1** (`gh pr view <N>`, number in Current state). Record the squash commit and the main CI run in the next PR's Current state. If the maintainer asked for changes, make them on the same branch first.
+2. **P2-2a: item input** (plan step 2a, `dev/active/phase-2-canonical-model/`):
+   - move `crates/loom-parser/src/pob_item/` to `loom-serialization::legacy::pob_item`, tests unchanged (`loom-serialization` stays on `loom-domain` only);
+   - add `legacy::pob_item::to_domain`, mapping a read item onto `loom_domain::ItemBody` (sections per "Decisions in P2-1": scourge, crucible, class-requirement to `ModSection::Other`; every line kept; resolution `Pending` or `Excluded`);
+   - switch the parity-cli pipeline (`resolve_corpus.rs`, `mod_filter.rs`) to the domain item;
+   - maintainer-run: `resolve-corpus` on Spike B's inputs, the plan's step 2 field list equal.
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.
