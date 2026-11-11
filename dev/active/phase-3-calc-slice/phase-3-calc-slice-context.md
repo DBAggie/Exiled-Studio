@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-3b: skills chosen, in-scope builds)
+Last Updated: 2026-11-11 (P3-4: engine core)
 
 # Phase 3: calc slice (context)
 
@@ -158,3 +158,26 @@ Not applied: the overlay naming the bundle column per field (P3-5 defines the in
 
 ## code-architecture-reviewer (P3-1c, 2026-11-11) summary
 No code blockers; the docs gap it named is this PR's docs commit. Applied: `movement_speed` required; per-game shape check; contiguous monster levels; value rules (positive attack time and divisor, no negatives); the armour error names both column sets; a game constant without an ID is an error; tests for each, a drop per table and a null key, missing weapon and monster columns; `MonsterLevel` docs on row lookup, `f32` widening, the armour constant; PoE2 weapon classes noted for P3-10. Not applied: a shared helper module for `required`/`float`/`one_of` (cosmetic); the commit trailer remark (the trailer is the one the session was given).
+
+## Decisions in P3-4 (engine core; PR #68)
+- **Game-neutral core, PoE1 rules in `loom_calc::poe1`.** `Quantity` and `Field` are closed enums with a `Poe1(..)` variant (as `loom_domain::GameSpecific`); spell suppression and spell block are PoE1-only (`POE1_ONLY` gained `SpellSuppression`, `SpellBlock`, `spell-suppression`, `spell-block`). Our names (`Field`'s `Display`: `life`, `resistance.fire`, `hit-dps`, `poe1.spell-block-chance`) are not PoB's; the slice id mapping (`TotalDPS` is `hit-dps`) belongs to P3-5's `calc-parity`.
+- **A `Ruleset` (game, slice, mapping, `collect`, phases) runs in `calculate_with`.** The PoE1 rules have an empty mapping and no phases, so every one of the 24 slice fields is `Unsupported` (`not-computed`): no false `Complete`. A field in the slice that no phase writes is always `not-computed`. A PoE2 build (or rules of another game) gives `CalcResult::game_unsupported`: no fields, state `Unsupported`.
+- **Data version:** `Build.data` `None` is `CALC_NO_DATA_VERSION` (import always records it); a different game, schema, or Steam build is `CALC_DATA_VERSION`. Other codes: `CALC_NO_MAIN_SKILL`, `CALC_MISSING_DATA` (defined for P3-6/P3-9a), `CALC_CANCELLED`, `CALC_GRAPH` (an engine bug: a node naming a later child).
+- **Store order:** each query sorts the effects it combines by `Source`, then value (`total_cmp`), so insertion order never changes bits. Conditions: `all` flags, `any` flags, named `ConditionKey`s; a failed flag or settled condition rules an effect out before an unknown one is reported; an unknown condition leaves the effect out with `UnmodelledCondition` on the queried field only.
+- **Chain:** `base * (1 + increased/100) * product(1 + more/100)`; an applying `Override` replaces it (the product stays in the graph). Overrides of different values: `Indeterminate` `ConflictingOverride`, the first by canonical order is the value.
+- **Ingest reasons apply to every computed field** (conservative reading of decision 1, since which fields a stat reaches is unknown until mapped): `UnmappedStat`, `UnresolvedLine`, `PendingLine`, `ExcludedLine` (custom and section), `UnhandledKind` (every typed `kind` until a handler exists), and `Indeterminate` `UnsettledValue` (a stat value that is not one number: only `Exact` with `min == max` and `Hidden` with an assumption settle). `NotSelected` variant lines and `Continues` give no reason. Adapted lines carry their `Adapted` in `Source::Item`. Narrowing reasons to the fields they reach is a later step's choice.
+- **States:** `StateKind` orders Complete < Partial < Unsupported < Indeterminate (contradiction is worst); the build state is the worst field. `Indeterminate` keeps the partial reasons too.
+- **Graph:** append-only; children always earlier nodes (acyclic by construction); each node records the engine's value; `evaluate_all` recomputes from the leaves and `check` compares bits. Composite nodes carry a `Term` (`Base`, `Increased`, `More`, `Override`, `Result`, `Step(name)`) for `slice-fields.json`'s groupings.
+- **Math:** `floor`, `ceil`, `trunc`, `round_half_up` (`floor(x + 0.5)`, PoB's `m_floor(x + 0.5)`; the largest double below 0.5 rounds to 1), `round_half_up_to` (up to 6 decimals), `min`, `max`, `percent_factor`; a bit table test run on Windows and Linux in CI.
+- **Property tests without a crate:** a fixed-seed SplitMix64 in `crates/loom-calc/tests/engine.rs`, 300 cases per property, so the core gains no dependency (only `thiserror`, already in the workspace). Checked: the order test fails when the canonical sort is removed.
+- **Cancellation:** `&dyn Fn() -> bool`, polled before collecting, after collecting, and after each phase.
+- **For P3-13:** the DTO needs `Field`/`Quantity` `Display`, the reason/state `name()`s, and the graph's nodes; `loom-serialization` does not depend on `loom-calc` today (AGENTS.md crate boundaries), so P3-13 decides where the conversion lives.
+- No ADR changed or extended; no divergence from the oracle (nothing is compared yet).
+
+## code-architecture-reviewer (P3-4, 2026-11-11) summary
+No ADR violation, no scope miss; agreed with the ten design choices above. Applied:
+- **B1:** an override of `-0.0` recorded `-0.0` while its one-leaf sum evaluates to `+0.0`, failing `Graph::check`; the value is now recorded as the sum gives it (`0.0 + v`); unit test, and the property generator now draws `-0.0` (the test fails without the fix).
+- **S1:** `Calc::set_derived(field, query, deps)`: a field computed from other fields carries every reason of each dependency (never a false `Complete`); a dependency not computed makes it `Unsupported` with the new reason `DependsOnNotComputed`. P3-6 on use it for `LifeUnreserved`, `HitDps`, and the like.
+- **S2:** `CalcResult.reasons` keeps the reasons from collecting (unmapped stats, quarantined lines), so they show while no field is computed (the gate's mutation set needs them).
+- **N1:** the accepted `Hidden` assumption is documented at `ingest::settle`. **N3:** `UnmodelledCondition` names the left-out effect's quantity and source. **N4:** the PoE2 path polls the hook too.
+Not applied: N2 (how many real `Exact` values have `min < max`; P3-8 counts them when it maps real stats), N5 (`Graph::evaluate` recomputes all; use `evaluate_all` in loops), N6 (byte comparison of the serialized document is P3-13's).

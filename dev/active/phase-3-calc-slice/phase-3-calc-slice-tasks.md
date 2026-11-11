@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-3b: skills chosen, in-scope builds)
+Last Updated: 2026-11-11 (P3-4: engine core)
 
 # Phase 3: calc slice (tasks)
 
@@ -41,10 +41,12 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #67 (base `dev`)
 
 ## P3-4: engine core
-- [ ] `CalcInput`, `CalcData`, options, `DataVersion` check
-- [ ] Modifier store with conditions and provenance; graph evaluation
-- [ ] Field states, `UnsupportedReason`, `CALC_*`, cancellation hook, `math`
-- [ ] Property tests; calc PoE1-only names in `POE1_ONLY`; wasm32
+- [x] `CalcInput`, `CalcData`, options, `DataVersion` check
+- [x] Modifier store with conditions and provenance; graph evaluation
+- [x] Field states, `UnsupportedReason`, `CALC_*`, cancellation hook, `math`
+- [x] Property tests; calc PoE1-only names in `POE1_ONLY`; wasm32
+- [x] `code-architecture-reviewer` run; findings applied (context file)
+- [x] Open PR: #68 (base `dev`)
 
 ## P3-13: calc result document v1 (right after P3-4)
 - [ ] DTO, golden bytes, schema and TypeScript, cross-platform job
