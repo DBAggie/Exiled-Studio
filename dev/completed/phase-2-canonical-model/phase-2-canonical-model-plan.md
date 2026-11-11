@@ -236,7 +236,7 @@ Implements decision 14 (migrations) and decision 13 (persistence).
 - **Accept:**
   - a test-only v0-to-v1 migration produces its report;
   - a newer document is refused (`MIGRATE_TOO_NEW`);
-  - a damaged file gives a `PERSIST_*` code and nothing is written;
+  - a damaged file gives a `PERSIST_*` code and nothing is written (with decision 15's layers: a file that cannot be read or decoded gives `PERSIST_*`, a damaged document in it `DTO_*`; clarified in P2-9);
   - save never targets the import source;
   - the atomic write holds when the write fails after the temporary file is written (tested with an injected writer).
 - **Depends on:** 7.

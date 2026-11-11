@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
+Last Updated: 2026-11-11 (PR P2-11: Phase 2 report and gate verdict; Phase 2 complete)
 
 # Phase 2: tasks
 
@@ -120,12 +120,19 @@ Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
 - [x] Open PR (#55, base `feat/p2-7-dto-v1`); write the PR number into the docs right after
 
 ## PR P2-9: migrations and persistence (step 9)
-- [ ] Migration framework and report; `MIGRATE_*`
-- [ ] Atomic save, load with migration; `PERSIST_*`
+- [x] Migration framework and report; `MIGRATE_*` (`loom_serialization::migrate`, `dto::read`; test-only v0 to v1)
+- [x] Atomic save, load with migration; `PERSIST_*` (`loom_persistence::Store`; injected `FileOps` failures; WSL Linux in-session)
+- [x] `code-architecture-reviewer`: no blockers; atomic `Never`, full read before replacing, docs and tests applied (context file)
+- [x] Open PR (#56, base `feat/p2-8-build-round-trip`); write the PR number into the docs right after
 
 ## PR P2-10: share codes (step 10, gated)
-- [ ] Import and export through the XML adapter
+- [x] Import and export through the XML adapter (`legacy::share_code`, `miniz_oxide`, our base64; `IMPORT_SHARE_CODE_*`)
+- [x] Our code of every public fixture; two PoB-made codes from the oracle runtime with their XML (`tools/oracle/adapter/share_code.lua`, `tools/oracle/fixtures/share-codes/`)
+- [x] `code-architecture-reviewer`: no blockers; code length cap, one-pass decoding, fixture-count-free tests, nits applied (context file)
+- [x] Open PR (#57, base `feat/p2-9-migrations-persistence`); write the PR number into the docs right after
 
 ## PR P2-11: report and gate (step 11)
-- [ ] `docs/phase-2/phase-2-report.md`, scrubbed summaries, gate verdict
-- [ ] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `docs/phase-2/phase-2-report.md`, gate verdict: met; maintainer-run evidence re-run at `3982838`, equal to the committed summaries (none replaced)
+- [x] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `code-architecture-reviewer`: no blockers; report precision, `ModDomain` in the gate 3c scan, CI run recorded (context file)
+- [x] Open PR (#58, base `feat/p2-10-share-codes`); write the PR number into the docs right after

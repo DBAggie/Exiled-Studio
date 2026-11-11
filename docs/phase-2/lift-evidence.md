@@ -1,6 +1,6 @@
 # Phase 2, step 2: lift evidence
 
-The four lift PRs (P2-2a to P2-2d) move the item import pipeline from `tools/parity-cli` into the core crates without changing behaviour (`dev/active/phase-2-canonical-model/phase-2-canonical-model-plan.md`, step 2). Each PR runs `resolve-corpus` on Spike B's inputs (the maintainer's 21 builds, the PoE1 extract `local/determinism/poe1/run1` of Steam build 26530219, the six PoB tags) before and after its change, from a clean tree, and compares the step 2 field list:
+The four lift PRs (P2-2a to P2-2d) move the item import pipeline from `tools/parity-cli` into the core crates without changing behaviour (`dev/completed/phase-2-canonical-model/phase-2-canonical-model-plan.md`, step 2). Each PR runs `resolve-corpus` on Spike B's inputs (the maintainer's 21 builds, the PoE1 extract `local/determinism/poe1/run1` of Steam build 26530219, the six PoB tags) before and after its change, from a clean tree, and compares the step 2 field list:
 
 ```
 cargo run --release -p loom-parity-cli -- resolve-corpus "<builds-dir>" local/determinism/poe1/run1 --out <dir> \
