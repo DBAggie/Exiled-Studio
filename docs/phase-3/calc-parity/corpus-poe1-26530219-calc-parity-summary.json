@@ -3,19 +3,19 @@
   "status": "incomplete",
   "class": null,
   "oracle": {
-    "sha256": "6ee429b26b79cfc6da168e47f0cbb6d50b86c322d519d3ab5f2a44d3b459bc3e",
+    "sha256": "6fdcb67fc0ac84ab0c36867f34a4656ccfddd9d1ab8c6909be610f6613c3615a",
     "platform": "windows-x86_64",
-    "tool_commit": "aa940fda8c171d3d3947f8df5222a932419f01a6"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "successor": {
-    "sha256": "64859536ff763dcc8f0d1b47c298e6052457ce105dd7e87bf8f757e903e2f20d",
+    "sha256": "0b3258c9cd1e02dead72d2c4b28599c5155c3e3e9e30827811436cb69ff70363",
     "platform": null,
-    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "overlay": {
-    "sha256": "4f55fd0318272d1eb37c621340140d092b3a06b8cc5bbd992fd04e7f9e3318aa",
+    "sha256": "7a99e815eeeda29cf629c81ba0d2917fe986382822a05c29a8aeaa3d89c11106",
     "platform": null,
-    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "bundle": {
     "game": "poe1",
@@ -47,7 +47,7 @@
     "breakdowns": {
       "not-compared": 210
     },
-    "views_differ": 11,
+    "views_differ": 0,
     "incomplete": 21,
     "expected_differences": 0,
     "unexpected_differences": 0
@@ -55,73 +55,6 @@
   "unpaired": [],
   "missing_mechanic": [],
   "unused_entries": [],
-  "views_differ": [
-    {
-      "id": "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
-      "views": [
-        "TotalDPS: breakdown total 244.8, main output 1266.8"
-      ]
-    },
-    {
-      "id": "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 301780.8"
-      ]
-    },
-    {
-      "id": "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
-      "views": [
-        "TotalDPS: breakdown total 111928.6, main output 0.0"
-      ]
-    },
-    {
-      "id": "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 73979.8"
-      ]
-    },
-    {
-      "id": "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
-      "views": [
-        "TotalDPS: breakdown total 758735.9, main output 1517471.9"
-      ]
-    },
-    {
-      "id": "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 7146.4"
-      ]
-    },
-    {
-      "id": "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 67183.5"
-      ]
-    },
-    {
-      "id": "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
-      "views": [
-        "TotalDPS: breakdown total 33.1, main output 126687.9"
-      ]
-    },
-    {
-      "id": "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
-      "views": [
-        "TotalDPS: breakdown total 20657016.2, main output 41314032.3"
-      ]
-    },
-    {
-      "id": "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 43083051.8"
-      ]
-    },
-    {
-      "id": "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
-      "views": [
-        "TotalDPS: breakdown total 235591.6, main output 249289.6"
-      ]
-    }
-  ],
+  "views_differ": [],
   "not_no_difference": []
 }

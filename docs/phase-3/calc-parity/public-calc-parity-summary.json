@@ -3,19 +3,19 @@
   "status": "incomplete",
   "class": null,
   "oracle": {
-    "sha256": "69b082e1dc6f5d900bf25d173f85455afc1b38cee80b789b5742cf1680491cbe",
+    "sha256": "daa4092568fb49e6fc87dbeeddab8650fe293f67d036b59c0d5acdc5486db119",
     "platform": "windows-x86_64",
-    "tool_commit": "a7a1a2cb83e16ca3c6c7caa30dd8e55cb145c124"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "successor": {
-    "sha256": "6e5257618edf80422cea50d09979f9b2235063ae11c5e21c287ecdd687c6d8f5",
+    "sha256": "8033f2b37859ad5fd49da67f16650c245de3da1e18ac0fddb8c1a30c1c14fc3e",
     "platform": null,
-    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "overlay": {
-    "sha256": "7b23e5dd76414a4edca68eee8cc4a3da01ac99a01b95f9af722785dd814340bb",
+    "sha256": "1d6975615b8f5af1697bc6a2b918f02cc5a0af1600327a1c832b364bceb3a480",
     "platform": null,
-    "tool_commit": "ff8c539dba40724439376c437c3a346c99bcb816"
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "bundle": {
     "game": "poe1",
@@ -47,7 +47,7 @@
     "breakdowns": {
       "not-compared": 360
     },
-    "views_differ": 12,
+    "views_differ": 0,
     "incomplete": 36,
     "expected_differences": 0,
     "unexpected_differences": 0
@@ -55,80 +55,7 @@
   "unpaired": [],
   "missing_mechanic": [],
   "unused_entries": [],
-  "views_differ": [
-    {
-      "id": "Dual Savior.xml",
-      "views": [
-        "TotalDPS: breakdown total 89.8, main output 47.5"
-      ]
-    },
-    {
-      "id": "Generals Perforate Zerker.xml",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 22360012.5"
-      ]
-    },
-    {
-      "id": "Mirage Archer Toxic Rain.xml",
-      "views": [
-        "TotalDPS: breakdown total 90539.0, main output 92213.6"
-      ]
-    },
-    {
-      "id": "arakaalis-raise-spider-occultist.xml",
-      "views": [
-        "TotalDPS: breakdown total 5792.5, main output 0.0"
-      ]
-    },
-    {
-      "id": "holy-flame-totem-hierophant.xml",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 3920655.7"
-      ]
-    },
-    {
-      "id": "ice-nova-elementalist-campaign-lab1.xml",
-      "views": [
-        "TotalDPS: breakdown total 84002.1, main output 115856.6"
-      ]
-    },
-    {
-      "id": "ice-nova-elementalist-campaign.xml",
-      "views": [
-        "TotalDPS: breakdown total 294235.1, main output 563489.9"
-      ]
-    },
-    {
-      "id": "ice-nova-elementalist-mapping.xml",
-      "views": [
-        "TotalDPS: breakdown total 0.0, main output 11486312.2"
-      ]
-    },
-    {
-      "id": "smite-inquisitor-act1.xml",
-      "views": [
-        "TotalDPS: breakdown total 620.2, main output 1466.6"
-      ]
-    },
-    {
-      "id": "smite-inquisitor-act2.xml",
-      "views": [
-        "TotalDPS: breakdown total 2400.4, main output 2709.5"
-      ]
-    },
-    {
-      "id": "smite-inquisitor-act5.xml",
-      "views": [
-        "TotalDPS: breakdown total 31519.1, main output 42416.9"
-      ]
-    },
-    {
-      "id": "smite-inquisitor-act10.xml",
-      "views": [
-        "TotalDPS: breakdown total 66115.7, main output 91369.6"
-      ]
-    }
-  ],
+  "views_differ": [],
   "not_no_difference": [
     {
       "id": "malformed.xml",

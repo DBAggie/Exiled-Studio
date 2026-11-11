@@ -950,7 +950,13 @@ fn every_public_fixture_breakdown_should_read() {
     assert_eq!(seen("FireResist"), ["max", "min", "total"]);
     assert_eq!(
         seen("TotalDPS"),
-        ["average", "dps-multiplier", "rate", "total"]
+        [
+            "average",
+            "dps-multiplier",
+            "quantity-multiplier",
+            "rate",
+            "total"
+        ]
     );
     assert!(rows > 20, "{rows}");
     // A null breakdown is recorded for the chain fields PoB leaves out.
