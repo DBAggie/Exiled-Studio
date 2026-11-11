@@ -62,7 +62,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Tests per outcome; breakdown parser on every public-fixture breakdown (`testdata/calc-parity/breakdown-lines.json`); AGENTS.md commands; `slice-fields.json` revision 2 (`graph` per term)
 - [x] Evidence (`docs/phase-3/calc-parity.md`): public and corpus runs byte-identical twice; `calc-parity` exit 5 `incomplete` (all fields `not-computed`, nothing passed); PoB's views differ in 12 public (all 7 in-scope) and 11 corpus builds (Q9)
 - [x] `code-architecture-reviewer` run; findings in the context file
-- [ ] Open PR
+- [x] Open PR: #70 (base `dev`)
 
 ## P3-6 to P3-12: engine
 - [ ] P3-6 character, attributes, life, mana, ES
