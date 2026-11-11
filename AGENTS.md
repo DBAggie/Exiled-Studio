@@ -190,12 +190,12 @@ When to update:
 1. **Before opening the PR:** commit every update in the table on the PR branch, writing the PR as "open, in review".
 2. **Right after `gh pr create`, before any other work:** push a follow-up commit to the same branch that writes the new PR number (`PR #N, open, branch <name>`) into the handoff **Current state** and into every other document that names the PR (`CLAUDE.md` Status, `docs/plan/ACTION-PLAN.md`, `dev/active/<task>/`, where the "Open PR" task is ticked with the number). The PR number does not exist until the PR is opened, and without it the next session cannot find the PR.
 3. **On every later push to the PR** (review fixes, rebases): keep the handoff true in the same push.
-4. **The merge is recorded by the next session:** first thing, it checks the PR's state (`gh pr view <N>`), and if it merged, its own PR records the squash commit and the main CI run in **Current state**.
+4. **The merge is recorded by the next session:** first thing, it checks the PR's state (`gh pr view <N>`), and if it merged, its own PR records the squash commit and the CI run in **Current state**.
 
 Write state as facts with dates and links (PR numbers, CI runs, file paths), not as "see conversation". Record anything learned that is hard to rediscover from the code: failed approaches, environment quirks, open decisions waiting on the maintainer.
 
 ## Pull requests (ADR-012 evidence rule)
-- Small and single-purpose; branch from `main` (GitHub Flow).
+- Small and single-purpose; branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch; the maintainer merges `dev` into `main` at the end of a stretch of work and keeps `dev` open.
 - Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**, and **Handoff** (which documents above were updated). CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
 - All CI checks green. Two checks are required: `ci-ok` (`.github/workflows/ci.yml`) and `PR evidence` (`.github/workflows/pr-evidence.yml`). `PR evidence` re-runs when the description is edited, so fix an empty section by editing the PR, not by pushing. The check logic is `.github/scripts/check-pr-evidence.sh`; test it with `bash .github/scripts/test-check-pr-evidence.sh`. The maintainer reviews and merges; `main` is protected.
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).
