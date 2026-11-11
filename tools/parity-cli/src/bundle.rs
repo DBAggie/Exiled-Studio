@@ -651,14 +651,32 @@ mod tests {
     #[test]
     fn poe1_only_tables_should_be_in_the_extractor_poe1_lists() {
         let source = include_str!("../../extractor/src/extract.rs");
-        let poe1_lists: Vec<&str> = source
+        // Each `pub const NAME: [&str; n] = [...];`, cut at its `];`.
+        let lists: Vec<(&str, &str)> = source
             .split("pub const ")
-            .filter(|c| {
-                c.split(':')
-                    .next()
-                    .is_some_and(|name| name.ends_with("_POE1"))
+            .skip(1)
+            .filter_map(|c| {
+                let (name, rest) = c.split_once(':')?;
+                Some((name.trim(), rest.split_once("];")?.0))
             })
             .collect();
+        let poe1_lists: Vec<&str> = lists
+            .iter()
+            .filter(|(n, _)| n.ends_with("_POE1"))
+            .map(|(_, body)| *body)
+            .collect();
+        // No PoE1-only table is in a list extracted for both games.
+        for (name, body) in lists
+            .iter()
+            .filter(|(n, _)| ["SPIKE_TABLES", "LOOKUP_TABLES"].contains(n))
+        {
+            for t in POE1_ONLY_TABLES {
+                assert!(
+                    !body.contains(&format!("\"{t}\"")),
+                    "{t} is in the shared {name}"
+                );
+            }
+        }
         let missing: Vec<&str> = POE1_ONLY_TABLES
             .into_iter()
             .filter(|t| !poe1_lists.iter().any(|l| l.contains(&format!("\"{t}\""))))

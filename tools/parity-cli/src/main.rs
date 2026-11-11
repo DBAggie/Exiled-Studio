@@ -138,7 +138,15 @@ impl loom_data::bundle::BundleSource for DirSource<'_> {
     fn list(&self) -> Result<Vec<String>, loom_data::bundle::SourceError> {
         fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) -> std::io::Result<()> {
             for entry in std::fs::read_dir(dir)? {
-                let path = entry?.path();
+                let entry = entry?;
+                let path = entry.path();
+                // A link could point out of the bundle: refused.
+                if entry.file_type()?.is_symlink() {
+                    return Err(std::io::Error::other(format!(
+                        "{}: a symbolic link",
+                        path.display()
+                    )));
+                }
                 if path.is_dir() {
                     walk(root, &path, out)?;
                 } else if let Ok(rel) = path.strip_prefix(root) {

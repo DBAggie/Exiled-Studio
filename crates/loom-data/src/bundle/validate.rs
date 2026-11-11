@@ -11,7 +11,12 @@
 //!   classes; base implicits are mods; graft gems are base items; client
 //!   texts the rules name exist;
 //! - **domain:** IDs are unique per kind; the item rules validate;
-//! - **smoke:** every stat-description scope the rules name builds.
+//! - **smoke:** every stat-description scope the rules name is one file,
+//!   builds, and renders a sample.
+//!
+//! The `poe1/` section is optional for a PoE1 bundle (an extract without
+//! its tables gives none; the PoE1 pipeline then resolves no graft or
+//! quality line); a PoE2 bundle must not have it (the loader refuses).
 //!
 //! Structural findings stop before the schema check (a file whose bytes
 //! are not the listed ones is not parsed); a schema finding stops the rest.
@@ -22,6 +27,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
+use crate::stat_desc::{StatValue, VariantFilter, render_description};
 
 /// One problem found.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -276,16 +282,35 @@ fn smoke(b: &Bundle, report: &mut Report) {
                 .map_or(name, |(s, _)| s)
                 .to_ascii_lowercase()
         };
-        let root = b
+        let roots: Vec<&str> = b
             .stat_descriptions
             .files()
             .map(|(_, f)| f.source.as_str())
-            .find(|s| stem(s) == scope.to_ascii_lowercase());
-        let built = root.map(|r| b.stat_descriptions.scope(r));
-        match built {
-            Some(Ok(_)) => {}
-            Some(Err(e)) => report.add("BUNDLE_SCOPE", scope, e.to_string()),
-            None => report.add("BUNDLE_SCOPE", scope, "no stat-description file"),
+            .filter(|s| stem(s) == scope.to_ascii_lowercase())
+            .collect();
+        let [root] = roots.as_slice() else {
+            let detail = if roots.is_empty() {
+                "no stat-description file".to_owned()
+            } else {
+                format!("{} files have the name", roots.len())
+            };
+            report.add("BUNDLE_SCOPE", scope, detail);
+            continue;
+        };
+        match b.stat_descriptions.scope(root) {
+            Ok(s) => {
+                // A sample renders: the first description that renders
+                // with every stat at 1.
+                let renders = s.descriptions().any(|(at, d)| {
+                    let values = vec![StatValue::exact(1); d.stats.len()];
+                    render_description(d, at.hand, &values, b, VariantFilter::default())
+                        .is_ok_and(|(_, lines)| !lines.is_empty())
+                });
+                if !renders {
+                    report.add("BUNDLE_SCOPE", scope, "no description renders");
+                }
+            }
+            Err(e) => report.add("BUNDLE_SCOPE", scope, e.to_string()),
         }
     }
 }
