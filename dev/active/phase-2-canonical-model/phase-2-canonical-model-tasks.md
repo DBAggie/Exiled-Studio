@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
+Last Updated: 2026-11-10 (PR P2-6b: `resolve_build`)
 
 # Phase 2: tasks
 
@@ -97,9 +97,12 @@ Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 - [x] Open PR (#52, base `feat/p2-5b-pob-xml-items`); write the PR number into the docs right after
 
 ## PR P2-6b: `resolve_build` (step 6, second half)
-- [ ] `loom_parser::import::resolve_build(&mut Build, &data)` over every item: lines to `LineResolution`s (stats, typed `kind`, or unresolved with a reason; `adapted`; `Continues`); completeness
-- [ ] The PoB base-name rules reach the core as a `BaseQuery` from the adapter (`loom-parser` cannot depend on `loom-serialization`)
-- [ ] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b), each outcome and `kind`; source lines in equal source lines out
+- [x] `loom_parser::import::resolve_build(&mut Build, &data, base_of)` and `Resolver` over every item: lines to `LineResolution`s (stats, typed `kind`, or unresolved with a reason; `adapted`; `Continues`); completeness; the bundle's `DataVersion` recorded; `ResolveError` codes
+- [x] The PoB base-name rules reach the core as an `ItemBaseName` from the adapter through a closure (`pob_item::item_base`); domain `UnresolvedReason::NoBase` (`LINE_NO_BASE`)
+- [x] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b), each outcome and `kind`; source lines in equal source lines out (`crates/loom-parser/tests/resolve_build.rs`; fixtures grown in `make_bundles.py`)
+- [x] `resolve-corpus --bundle` cross-check: 6,061 of 6,061 corpus modifier lines equal the harness; 12 fields and `report.json` unchanged (`docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`: no blockers; should-fix applied (context file)
+- [ ] Open PR (#NN, base `feat/p2-6-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-7: DTO v1 and generated schemas (step 7)
 - [ ] DTOs, deterministic conversion

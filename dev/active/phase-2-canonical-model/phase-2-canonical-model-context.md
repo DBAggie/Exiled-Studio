@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-5b: PoB XML items; stack #42 <- ... <- #50 <- P2-5b; session ended here at the maintainer's request)
+Last Updated: 2026-11-10 (PR P2-6b: `resolve_build`; stack #42 <- ... <- #52 <- P2-6b)
 
 # Phase 2: context
 
@@ -368,3 +368,37 @@ All applied as docs and tests; no behavior change. Nit 1: `text_spacing` stays o
 - **Nits applied:** a stale doc line in `main.rs`; the mod-type counter without `unwrap_or`; client texts looked up through a map; `COMPOSED_VALUE` named; `bundle-equal`'s exit codes in the usage text.
 - **For P2-6b:** call `indexes()` once and keep the map (it rebuilds every scope); consider returning the gem with the graft instead of a separate `granted_gem` lookup; wrap `IndexError` in `resolve_build`'s error type with a stable code; `resolve_build` should report `skipped_references` if nonzero, or take a validated-bundle type.
 
+
+## Decisions in P2-6b (`resolve_build`, 2026-11-10)
+- **API** (`loom-parser/src/import/build.rs`):
+  - `Resolver::new(&BundleData)` builds every scope's index once (P2-6a review note). It refuses a bundle with skipped references (`IMPORT_DATA_UNVALIDATED`; the P2-6a review asked for this or a report).
+  - `Resolver::resolve_build(&mut Build, base_of)` and `resolve_item(&mut ItemBody, Option<&ItemBaseName>)`. The free function `resolve_build(build, data, base_of)` builds a `Resolver` and runs it once.
+  - It takes `BundleData`, not a generic `ItemData`: it also needs mods, grafts, gems, properties, compositions, and indexes, which only `BundleData` has. So the P2-2b object-safety note does not apply.
+  - `ResolveError` codes: `IMPORT_GAME_MISMATCH`, `IMPORT_DATA_VERSION_MISMATCH`, `IMPORT_DATA_UNVALIDATED`, and `BUNDLE_SCOPE` (the wrapped `IndexError`). On an error the build is unchanged.
+- **Data version (ADR-010):** `resolve_build` records the bundle's `DataVersion` (game, data schema, Steam build) on a build that has none. It refuses a build that records another version. A PoB import records none.
+- **Base (the open question from the handoff):** the adapter hands the core an `ItemBaseName { name, fallback }` through a closure `FnMut(&ItemBody) -> Result<ItemBaseName, String>` (the error is the adapter's reason). A closure is used rather than a trait because the adapter needs the data's base names (PoB's magic-item rule), and a closure captures them. PoB's rules are now one function, `legacy::pob_item::item_base`, which returns `Result<(String, Option<String>), NoBaseName>`. `loom-serialization` cannot name the parser's type. The harness's `Bases::find` calls it.
+- **No base (domain change):** `UnresolvedReason::NoBase(NoBase::{Unnamed(reason), NotFound, ScopeConflict})`, with quarantine code `LINE_NO_BASE`. It is set on every pending modifier line of the item. `Unnamed` keeps the adapter's stable reason (PoB: `no-name`, `no-base-in-name`, `tie`), so `base_of` returns `Result<ItemBaseName, String>`.
+- **Mapping:**
+  - `Resolved` writes stats (from `RawValue` to `StatValue`), or a typed result: a granted skill (gem from `BundleData::granted_gem`), an item property, or a catalyst quality, as decided in P2-2d.
+  - A multi-line reading writes the result on the first line and `Continues` on the others.
+  - An ambiguous reading the filter keeps several candidates of is `Ambiguous` with the kept candidates' stats. A multi-line reading that does not resolve gives every line the reason, because `Continues` must point to a resolved line.
+  - Only `Pending` lines are touched. A second run changes nothing.
+- **Split-section (differs from the harness, on purpose):** a pair forms only when both halves have no template alone. The earlier line gets `Resolved { adapted: SplitSection }` and the later one `Continues`. The harness also pairs a line with a neighbour that resolved alone. Here a resolved line is never rewritten, so the link check always holds; a neighbour that resolved alone is skipped and the other neighbour tried (`tolerance::split_section_with`). Spike B's 4 split-section lines are 2 pairs of this kind, and the corpus check shows no difference.
+- **Fixtures:** `make_bundles.py` gained made-up rows, so the default scope has one description per outcome: an ambiguous pair a mod row narrows (`TestAccuracy1`), an ambiguous pair no row backs, a bounded condition, a shadowed description, a two-line description, the composition `TestPresence`, the granted-skill wrapper `TestGrantedSkill`, and the label `TestStrands`. Fixture counts were updated in `bundle_load`, `bundle_data`, and `bundle_equal` tests. The fixture loader moved to `loom-parser/tests/common/mod.rs`.
+- **Evidence:** gate 3b tests (`crates/loom-parser/tests/resolve_build.rs`, 9 tests). With `--bundle`, `resolve-corpus` compares the core with the harness per line (`resolve-build-check.json`): 6,061 of 6,061 lines are equal, and the 12 fields and `report.json` are unchanged (`docs/phase-2/lift-evidence.md`, P2-6b).
+
+## code-architecture-reviewer (P2-6b, 2026-11-10) summary
+- **No blockers.** Crate boundaries, ADR-001/010/014/015/016, the order of the steps against the harness, and the link invariants were checked.
+- **Should-fix, applied:**
+  - the adapter's reason for naming no base was lost: `NoBase::Unnamed` keeps it, and the cross-check now compares it;
+  - a split-section line whose earlier neighbour resolved alone never tried its later neighbour: `split_section_with` skips refused neighbours (test added);
+  - the granted gem lookup: documented as guaranteed by the validator (`validate.rs`, graft gems are base items), with a debug assertion;
+  - the docs listed below.
+- **Nits:**
+  - **Applied:** `resolve_item` documents that it checks neither the game nor the data version.
+  - **Not done:**
+    - links are checked only by a debug assertion in `resolve_item` (the tests check every item);
+    - a filter that keeps zero candidates gives `Ambiguous(vec![])`, as the harness does;
+    - `ItemBaseName` repeats `BaseQuery` as an owned type;
+    - `Resolver::new` now makes `resolve-corpus --bundle` fail on a bundle with skipped references, which is a behaviour change (a validated bundle has none);
+    - there is no code registry in `docs/` to add the new codes to; they are documented on the types.
