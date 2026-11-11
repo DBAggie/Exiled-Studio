@@ -16,10 +16,10 @@
 //! `indexing: 1`) and `InfluenceTypes` (`indexing: 0`).
 
 use loom_domain::ModSection;
-use loom_parser::import::ItemRules;
 use loom_parser::import::mods::{
     DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, Unflagged,
 };
+use loom_parser::import::{ItemRules, TextRules};
 
 /// The PoE1 item rules.
 #[must_use]
@@ -31,8 +31,50 @@ pub fn item_rules() -> ItemRules {
             (38, "graft_stat_descriptions".to_owned()),
         ],
         mods: mod_rules(),
+        text: TextRules {
+            compositions: COMPOSITIONS
+                .iter()
+                .map(|(id, stat)| ((*id).to_owned(), (*stat).to_owned()))
+                .collect(),
+            property_ids: PROPERTY_IDS.iter().map(|i| (*i).to_owned()).collect(),
+            label_ids: LABEL_IDS.iter().map(|i| (*i).to_owned()).collect(),
+            granted_skill_wrapper: Some(GRAFT_WRAPPER_ID.to_owned()),
+        },
     }
 }
+
+/// `ClientStrings` ids of item-display property texts (the categorizer's
+/// `item-property` ids with numeric placeholders; Spike B PR B5d).
+pub const PROPERTY_IDS: [&str; 8] = [
+    "ItemDisplayFlaskBuffDuration1Second",
+    "ItemDisplayFlaskBuffDurationNSeconds",
+    "ItemDisplayChargesConsumptionOnUse1Charge",
+    "ItemDisplayChargesConsumptionOnUseNCharges",
+    "ItemDisplayCharges1Charge",
+    "ItemDisplayChargesNCharges",
+    "ItemDisplayChargesCurrentOfMax1",
+    "ItemDisplayChargesCurrentOfMaxN",
+];
+
+/// `ClientStrings` ids of property labels PoB writes as `<label>: <number>`.
+pub const LABEL_IDS: [&str; 1] = ["ZanaInfluencedItem"];
+
+/// The `ClientStrings` id of the graft skill wrapper (`Uses level {1} {0}`;
+/// Spike B PR B5g).
+pub const GRAFT_WRAPPER_ID: &str = "BrequelGraftSkillString";
+
+/// `ClientStrings` wrappers the resolver reads through (PR B5c): the id and
+/// the stat the wrapper stands for (moved from `categorize`).
+pub const COMPOSITIONS: [(&str, &str); 2] = [
+    (
+        "InfluenceStatConditionPresenceUniqueMonster",
+        "local_influence_mod_requires_unique_monster_presence",
+    ),
+    (
+        "InfluenceStatConditionPresenceCelestialBoss",
+        "local_influence_mod_requires_celestial_boss_presence",
+    ),
+];
 
 /// `ModDomains` values used by the fit rules.
 pub mod domain {
@@ -248,6 +290,9 @@ fn mod_rules() -> ModRules {
             flags: eldritch_flags,
         },
         no_spawn_flags: vec!["crafted".to_owned()],
+        sections: ["scourge", "crucible", "class-requirement"]
+            .map(str::to_owned)
+            .to_vec(),
         local_carriers: LocalCarriers {
             weapon: "weapon".to_owned(),
             item: "armour".to_owned(),
@@ -264,6 +309,14 @@ mod tests {
     use loom_serialization::legacy::pob_item::{Section, domain_section};
 
     use super::*;
+
+    /// The PoE1 rules survive the bundle's JSON form (`data/item_rules.json`).
+    #[test]
+    fn item_rules_should_round_trip_through_bundle_json() {
+        let rules = item_rules();
+        let json = serde_json::to_string(&rules).unwrap();
+        assert_eq!(serde_json::from_str::<ItemRules>(&json).unwrap(), rules);
+    }
 
     #[test]
     fn mod_rules_should_validate() {

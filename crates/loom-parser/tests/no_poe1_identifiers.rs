@@ -32,7 +32,7 @@ const CORE_CRATES: [&str; 5] = [
     "loom-serialization",
 ];
 
-const POE1_ONLY: [&str; 23] = [
+const POE1_ONLY: [&str; 28] = [
     "Bandit",
     "bandit",
     "Pantheon",
@@ -43,6 +43,8 @@ const POE1_ONLY: [&str; 23] = [
     "IndexableNonActiveSupportGems",
     "IndexableSkillGems",
     "DOMAIN_SCOPES",
+    // Plan gate 3c: the `ModDomain` and generation-type numbers (P2-11).
+    "ModDomain",
     "ModGenerationType",
     "ESSENCE_COLUMNS",
     "INFLUENCE_TYPES",
@@ -57,6 +59,11 @@ const POE1_ONLY: [&str; 23] = [
     "UNVEILED",
     "DELVE",
     "ABYSS_JEWEL",
+    // P2-2d: PoE1 client-text ids the pipeline reads (now `poe1` data).
+    "InfluenceStatConditionPresence",
+    "ItemDisplayFlask",
+    "ItemDisplayCharges",
+    "ZanaInfluencedItem",
 ];
 
 fn allowed(path: &Path) -> bool {

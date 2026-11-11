@@ -71,6 +71,7 @@ fn rules() -> ModRules {
             flags: vec!["marked".to_owned()],
         },
         no_spawn_flags: vec!["bench".to_owned()],
+        sections: Vec::new(),
         local_carriers: LocalCarriers {
             weapon: "arm".to_owned(),
             item: "shell".to_owned(),
@@ -355,4 +356,14 @@ fn validate_should_refuse_a_rule_an_earlier_unflagged_rule_shadows() {
     let unflagged = r.fits[2].clone();
     r.fits.insert(1, unflagged);
     assert_eq!(r.validate(), Err(ModRulesError::Shadowed(2)));
+}
+
+#[test]
+fn validate_should_refuse_a_section_name_the_rules_do_not_list() {
+    let mut r = rules();
+    r.fits[0].section = ModSection::Other("implcit".to_owned());
+    assert_eq!(
+        r.validate(),
+        Err(ModRulesError::UnknownSection("implcit".to_owned()))
+    );
 }
