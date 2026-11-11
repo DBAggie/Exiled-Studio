@@ -138,6 +138,7 @@ No blockers. Applied: template cycle check; tree geometry check and required gra
 - **Unknown gems:** PoB v2.67.2 skips gems it cannot find (`SkillsTab.lua`); the survey reports them (`indeterminate`) instead.
 - **Slice fields** (`docs/phase-3/slice-fields.json`, revision 1, proposed): `AverageDamage` replaces `AverageHit` (no top-level `AverageHit` for attacks; the DPS line prints `AverageDamage`), `HitSpeed` added; all `exact`; the ten breakdowns with their PoB line formats and term groupings (`chain`, `slots`, `min-max-total`).
 - **Result:** public 1 of 29 in scope, corpus 0 of 21; the gate's minimum is not met (Q8).
+- **Review (code-architecture-reviewer):** no blockers. Applied: `--anonymous` reports keep aggregates only (ADR-007); `tree:unread-jewel` for an allocated socket whose jewel cannot be read (ADR-015); gems-only supports; a `confirmed` scope file names both skills. Not applied: re-checking supports after all types are added (PoB's second loop reconsiders only non-support entries; documented in `main_skill.rs`).
 
 ## code-architecture-reviewer (P3-2, 2026-11-11) summary
 No ADR or crate-boundary issue; deviations 1 (export instead of checkout) and 2 (`not-carried`) accepted. Applied:
