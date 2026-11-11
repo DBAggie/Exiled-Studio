@@ -1,0 +1,82 @@
+[
+ {
+  "active_skill": "test_bolt",
+  "cast_time": 750,
+  "id": "TestBolt",
+  "levels": [
+   {
+    "cost_multiplier": 100,
+    "costs": [
+     {
+      "amount": 6,
+      "resource": "Mana"
+     }
+    ],
+    "level": 1
+   },
+   {
+    "cost_multiplier": 100,
+    "costs": [
+     {
+      "amount": 7,
+      "resource": "Mana"
+     }
+    ],
+    "level": 2
+   }
+  ],
+  "quality": [
+   {
+    "per_mille": 500,
+    "stat": "test_quality_cast_speed"
+   }
+  ],
+  "stat_sets": [
+   "TestBolt"
+  ],
+  "support": false
+ },
+ {
+  "active_skill": "test_strike",
+  "cast_time": 1000,
+  "id": "TestStrike",
+  "levels": [
+   {
+    "attack_speed_multiplier": -10,
+    "cost_multiplier": 100,
+    "level": 1
+   }
+  ],
+  "stat_sets": [
+   "TestStrike"
+  ],
+  "support": false
+ },
+ {
+  "allowed_types": [
+   "TestSpell",
+   "TestAttack"
+  ],
+  "excluded_types": [
+   "TestTotem"
+  ],
+  "id": "SupportTestDamage",
+  "levels": [
+   {
+    "cost_multiplier": 130,
+    "level": 1,
+    "reservations": [
+     {
+      "amount": 2500,
+      "percent": true,
+      "resource": "mana"
+     }
+    ]
+   }
+  ],
+  "stat_sets": [
+   "SupportTestDamage"
+  ],
+  "support": true
+ }
+]

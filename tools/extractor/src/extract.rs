@@ -101,13 +101,45 @@ pub const ITEM_LINE_TABLES_POE1: [&str; 3] = [
     "BrequelGraftGrantedSkillLevels",
 ];
 
+/// Skill tables the calc bundle reads (Phase 3 plan, step 1a), in both
+/// games, besides `ActiveSkills` and `GrantedEffects` ([`SPIKE_TABLES`]):
+/// skill types, per-level effect rows, stat sets and their per-level values
+/// (`GrantedEffectStatSetsPerLevel`, which no other table references), quality
+/// stats (`GrantedEffectQualityStats`, likewise), gems, gem effects, and gem
+/// tags. Their references (`CostTypes`, `EffectivenessCostConstants`, ...)
+/// come with them.
+pub const SKILL_TABLES: [&str; 8] = [
+    "ActiveSkillType",
+    "GrantedEffectsPerLevel",
+    "GrantedEffectStatSets",
+    "GrantedEffectStatSetsPerLevel",
+    "GrantedEffectQualityStats",
+    "SkillGems",
+    "GemEffects",
+    "GemTags",
+];
+
+/// Character and passive tables the calc bundle reads (Phase 3 plan, step
+/// 1b), in both games, besides `PassiveSkills` and `PassiveSkillTrees`
+/// ([`SPIKE_TABLES`]). The per-level growth and caps of characters are not
+/// in a table: they are in the character object template
+/// ([`crate::itemtype::OBJECT_TEMPLATES`]).
+pub const PASSIVE_TABLES: [&str; 4] = [
+    "Characters",
+    "Ascendancy",
+    "PassiveSkillMasteryGroups",
+    "PassiveSkillMasteryEffects",
+];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
-/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
+/// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
     roots.extend(LOOKUP_TABLES);
+    roots.extend(SKILL_TABLES);
+    roots.extend(PASSIVE_TABLES);
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
@@ -120,7 +152,8 @@ pub fn roots(game: Game) -> Vec<&'static str> {
 /// 2: `stat_descriptions` added (PR A5).
 /// 3: `passive_skill_graphs` added (PR A6b).
 /// 4: `item_types` added (Spike B PR B4x).
-pub const MANIFEST_FORMAT: u32 = 4;
+/// 5: `object_templates` added (Phase 3 PR P3-1b).
+pub const MANIFEST_FORMAT: u32 = 5;
 
 /// Manifest file name inside the output directory.
 pub const MANIFEST_PATH: &str = "manifest.json";
@@ -355,6 +388,7 @@ pub struct Extraction<'s> {
     stat_descriptions: statdesc::Collection,
     graphs: psg::Collection,
     item_types: itemtype::Collection,
+    object_templates: itemtype::Collection,
 }
 
 impl<'s> Extraction<'s> {
@@ -368,7 +402,8 @@ impl<'s> Extraction<'s> {
             added: BTreeMap::new(),
             stat_descriptions: statdesc::Collection::new(game),
             graphs: psg::Collection::new(game),
-            item_types: itemtype::Collection::new(),
+            item_types: itemtype::Collection::new(itemtype::ITEM_TYPES),
+            object_templates: itemtype::Collection::new(itemtype::OBJECT_TEMPLATES),
         }
     }
 
@@ -389,6 +424,9 @@ impl<'s> Extraction<'s> {
         }
         if itemtype::is_item_type(path) {
             return self.item_types.add(path, bytes);
+        }
+        if itemtype::is_object_template(path) {
+            return self.object_templates.add(path, bytes);
         }
         let unplanned = || ExtractError::Unplanned {
             path: path.to_owned(),
@@ -442,6 +480,7 @@ impl<'s> Extraction<'s> {
             stat_descriptions,
             graphs,
             item_types,
+            object_templates,
         } = self;
         let rows_of: BTreeMap<String, usize> = added
             .iter()
@@ -589,6 +628,23 @@ impl<'s> Extraction<'s> {
         }
         files.extend(item_type_files);
 
+        let (template_files, object_templates) = object_templates.finish();
+        for entry in object_templates.files.values() {
+            if let Some(path) = &entry.output
+                && let Some(bytes) = template_files.get(path)
+            {
+                // Likewise, top-level blocks.
+                file_entries.insert(
+                    path.clone(),
+                    OutputFile {
+                        rows: entry.blocks.unwrap_or_default(),
+                        sha256: hex(&Sha256::digest(bytes)),
+                    },
+                );
+            }
+        }
+        files.extend(template_files);
+
         let manifest = Manifest {
             bundles: inputs
                 .bundles
@@ -605,6 +661,7 @@ impl<'s> Extraction<'s> {
                 sha256: hex(&inputs.index_sha256),
             },
             item_types,
+            object_templates,
             passive_skill_graphs,
             schema: SchemaInput {
                 commit: VENDORED_COMMIT,
@@ -900,6 +957,8 @@ pub struct Manifest {
     pub index: IndexInput,
     /// Item type files (`*.it`) and the `extends` chain checks.
     pub item_types: ItemTypeManifest,
+    /// Object templates (`*.ot`, [`itemtype::OBJECT_TEMPLATES`]), format 5.
+    pub object_templates: ItemTypeManifest,
     /// Passive skill graph files and their counts.
     pub passive_skill_graphs: GraphManifest,
     /// The vendored schema.
@@ -939,6 +998,7 @@ impl Manifest {
         let mut problems = self.stat_descriptions.problems();
         problems.extend(self.passive_skill_graphs.problems());
         problems.extend(self.item_types.problems());
+        problems.extend(self.object_templates.problems());
         for (name, table) in &self.tables {
             if table.status == Status::Failed || (table.root && table.status != Status::Ok) {
                 problems.push(format!("{name}: {:?}", table.status));
@@ -1182,9 +1242,21 @@ mod tests {
         text.encode_utf16().flat_map(u16::to_le_bytes).collect()
     }
 
-    /// Extracts `tables` plus [`stat_file`], [`GRAPH_FILE`], and
-    /// [`item_file`], so the run has the stat descriptions, the graph, and
-    /// the item type it needs.
+    const TEMPLATE_PATH: &str = "metadata/characters/character.ot";
+
+    /// The character object template (UTF-16LE with BOM): stat IDs with
+    /// `%` and `+` as keys, and a `Name { }` block.
+    fn template_file() -> Vec<u8> {
+        let text = "\u{feff}version 3\r\nabstract\r\nextends \"nothing\"\r\n\r\n\
+                    Stats\r\n{\r\n\tlife_per_level = 12\r\n\
+                    \tbase_maximum_all_resistances_% = 75\r\n\
+                    \tbase_attack_speed_+%_per_frenzy_charge = 4\r\n}\r\nLife { }\r\n";
+        text.encode_utf16().flat_map(u16::to_le_bytes).collect()
+    }
+
+    /// Extracts `tables` plus [`stat_file`], [`GRAPH_FILE`], [`item_file`],
+    /// and [`template_file`], so the run has the stat descriptions, the
+    /// graph, the item type, and the object template it needs.
     fn extract(schema: &Schema, tables: &[(&str, &[u8])]) -> Output {
         let mut extraction = Extraction::new(Plan::new(schema, Game::Poe1, &["root"]));
         for (path, bytes) in tables {
@@ -1193,6 +1265,7 @@ mod tests {
         extraction.add(STAT_PATH, &stat_file()).unwrap();
         extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
         extraction.add(ITEM_PATH, &item_file()).unwrap();
+        extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
         extraction.finish(inputs())
     }
 
@@ -1322,7 +1395,7 @@ mod tests {
                 (out.files, out.manifest.to_json().unwrap())
             })
             .collect();
-        assert_eq!(outputs[0].0.len(), 7);
+        assert_eq!(outputs[0].0.len(), 8);
         let manifest = String::from_utf8(outputs[0].1.clone()).unwrap();
         assert!(manifest.contains("\"stat_descriptions/b/other.txt.json\""));
         assert!(!manifest.contains("missing-include"));
@@ -1457,6 +1530,23 @@ mod tests {
 }
 "
         );
+        let ot_json = &out.files["object_templates/metadata/characters/character.ot.json"];
+        assert_eq!(
+            ot_json.as_slice(),
+            b"{
+\"abstract\": true,
+\"blocks\": [
+{\"blocks\":[],\"entries\":[{\"key\":\"life_per_level\",\"quoted\":false,\"value\":\"12\"},\
+{\"key\":\"base_maximum_all_resistances_%\",\"quoted\":false,\"value\":\"75\"},\
+{\"key\":\"base_attack_speed_+%_per_frenzy_charge\",\"quoted\":false,\"value\":\"4\"}],\"name\":\"Stats\"},
+{\"blocks\":[],\"entries\":[],\"name\":\"Life\"}
+],
+\"comments\": 0,
+\"extends\": \"nothing\",
+\"version\": 3
+}
+"
+        );
         let graph_json = &out.files["passive_skill_graphs/metadata/passiveskillgraph.psg.json"];
         assert_eq!(
             graph_json.as_slice(),
@@ -1472,6 +1562,8 @@ mod tests {
         let expected = GOLDEN
             .replace("{item_sha}", &hex(&Sha256::digest(item_json)))
             .replace("{item_src}", &hex(&Sha256::digest(item_file())))
+            .replace("{ot_sha}", &hex(&Sha256::digest(ot_json)))
+            .replace("{ot_src}", &hex(&Sha256::digest(template_file())))
             .replace("{graph_sha}", &hex(&Sha256::digest(graph_json)))
             .replace("{graph_src}", &hex(&Sha256::digest(GRAPH_FILE)))
             .replace("{root_sha}", &root_sha)
@@ -1507,6 +1599,10 @@ mod tests {
       "rows": 1,
       "sha256": "{item_sha}"
     },
+    "object_templates/metadata/characters/character.ot.json": {
+      "rows": 2,
+      "sha256": "{ot_sha}"
+    },
     "passive_skill_graphs/metadata/passiveskillgraph.psg.json": {
       "rows": 0,
       "sha256": "{graph_sha}"
@@ -1524,7 +1620,7 @@ mod tests {
       "sha256": "{root_sha}"
     }
   },
-  "format": 4,
+  "format": 5,
   "game": "poe1",
   "index": {
     "path": "Bundles2/_.index.bin",
@@ -1543,6 +1639,23 @@ mod tests {
         "output": "item_types/metadata/items/item.it.json",
         "source": "metadata/items/item.it",
         "source_sha256": "{item_src}",
+        "status": "ok"
+      }
+    }
+  },
+  "object_templates": {
+    "cycles": [],
+    "dangling_extends": {},
+    "dir": "object_templates",
+    "files": {
+      "metadata/characters/character.ot": {
+        "abstract": true,
+        "blocks": 2,
+        "error": null,
+        "extends": "nothing",
+        "output": "object_templates/metadata/characters/character.ot.json",
+        "source": "metadata/characters/character.ot",
+        "source_sha256": "{ot_src}",
         "status": "ok"
       }
     }
@@ -1748,6 +1861,7 @@ mod tests {
             out.files.keys().collect::<Vec<_>>(),
             [
                 "item_types/metadata/items/item.it.json",
+                "object_templates/metadata/characters/character.ot.json",
                 "passive_skill_graphs/metadata/passiveskillgraph.psg.json",
                 "stat_descriptions/stat_descriptions.txt.json",
                 "tables/Child.json"
@@ -1764,6 +1878,7 @@ mod tests {
         extraction.add(STAT_PATH, &stat_file()).unwrap();
         extraction.add(GRAPH_PATH, &GRAPH_FILE[..10]).unwrap();
         extraction.add(ITEM_PATH, &item_file()).unwrap();
+        extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
         let out = extraction.finish(inputs());
         assert_eq!(out.manifest.problems(), [format!("{GRAPH_PATH}: Failed")]);
         assert!(
@@ -1781,6 +1896,7 @@ mod tests {
             extraction.add("data/child.datc64", &child_dat()).unwrap();
             extraction.add(STAT_PATH, &stat_file()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
+            extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
             for (path, bytes) in extra {
                 extraction.add(path, bytes).unwrap();
             }
@@ -1829,6 +1945,8 @@ mod tests {
         }
         let poe2 = roots(Game::Poe2);
         assert!(LOOKUP_TABLES.iter().all(|t| poe2.contains(t)));
+        assert!(SKILL_TABLES.iter().all(|t| poe2.contains(t)));
+        assert!(PASSIVE_TABLES.iter().all(|t| poe2.contains(t)));
         assert!(LOOKUP_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
         assert!(
             LOOKUP_TABLES_POE1
@@ -1873,6 +1991,7 @@ mod tests {
             extraction.add(STAT_PATH, &stat_file()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             extraction.add(ITEM_PATH, &item_file()).unwrap();
+            extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
             let problems = extraction.finish(inputs()).manifest.problems();
             // Child's keys point into Missing, which has no schema: unchecked.
             assert_eq!(problems, expected);
@@ -1887,6 +2006,7 @@ mod tests {
             extraction.add("data/child.datc64", &child_dat()).unwrap();
             extraction.add(GRAPH_PATH, &GRAPH_FILE).unwrap();
             extraction.add(ITEM_PATH, &item_file()).unwrap();
+            extraction.add(TEMPLATE_PATH, &template_file()).unwrap();
             for (path, bytes) in files {
                 extraction.add(path, bytes).unwrap();
             }

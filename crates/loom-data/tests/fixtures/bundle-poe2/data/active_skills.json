@@ -1,0 +1,22 @@
+[
+ {
+  "id": "test_bolt",
+  "manually_cast": true,
+  "minion_types": [],
+  "name": "Test Bolt",
+  "types": [
+   "TestSpell"
+  ],
+  "weapon_classes": []
+ },
+ {
+  "id": "test_strike",
+  "manually_cast": true,
+  "minion_types": [],
+  "name": "Test Strike",
+  "types": [
+   "TestAttack"
+  ],
+  "weapon_classes": []
+ }
+]

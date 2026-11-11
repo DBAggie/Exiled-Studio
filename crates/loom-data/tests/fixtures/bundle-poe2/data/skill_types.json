@@ -1,0 +1,13 @@
+[
+ {
+  "flag_stat": "test_spell_flag",
+  "id": "TestSpell"
+ },
+ {
+  "flag_stat": "test_attack_flag",
+  "id": "TestAttack"
+ },
+ {
+  "id": "TestTotem"
+ }
+]

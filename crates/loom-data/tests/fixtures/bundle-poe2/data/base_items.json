@@ -22,5 +22,25 @@
    "charm",
    "default"
   ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Gems/Bolt",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Test Bolt",
+  "tags": [
+   "gem"
+  ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Gems/SupportDamage",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Test Damage Support",
+  "tags": [
+   "gem"
+  ]
  }
 ]

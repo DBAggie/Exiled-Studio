@@ -1,0 +1,71 @@
+{
+ "graph": "Metadata/PassiveSkillGraph",
+ "groups": [
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 101,
+       "orbit": null
+      }
+     ],
+     "node": 100,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 102,
+       "orbit": -2
+      },
+      {
+       "node": 103,
+       "orbit": null
+      }
+     ],
+     "node": 101,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [],
+     "node": 102,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [],
+     "node": 103,
+     "orbit": 1,
+     "orbit_index": 4
+    }
+   ],
+   "x": -1.5,
+   "y": 2.25
+  },
+  {
+   "flags": 1,
+   "nodes": [
+    {
+     "connections": [],
+     "node": 200,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 0.0,
+   "y": 0.0
+  }
+ ],
+ "orbit_slots": [
+  1,
+  6
+ ],
+ "roots": [
+  100
+ ],
+ "tree": "Default"
+}

@@ -1,0 +1,40 @@
+[
+ {
+  "characters": [
+   "Test/Chars/Str"
+  ],
+  "id": "test_start",
+  "name": "Test Start",
+  "node": 100
+ },
+ {
+  "id": "test_life",
+  "name": "Test Life",
+  "node": 101,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 10
+   }
+  ]
+ },
+ {
+  "id": "test_keystone",
+  "keystone": true,
+  "name": "Test Keystone",
+  "node": 102
+ },
+ {
+  "id": "test_mastery",
+  "mastery_group": "TestLifeMastery",
+  "name": "Test Mastery",
+  "node": 103
+ },
+ {
+  "ascendancy": "TestChampion",
+  "ascendancy_start": true,
+  "id": "test_champion_start",
+  "name": "Test Champion",
+  "node": 200
+ }
+]

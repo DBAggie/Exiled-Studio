@@ -1,7 +1,12 @@
-//! Data bundle format v1 (Phase 2 plan, step 3 and decision 8): the
-//! canonical game data the app reads, in our own schema. A bundle is a set
-//! of files read through a [`BundleSource`] (ADR-016: core reads bytes,
-//! hosts read files):
+//! Data bundle formats 1 and 2 (Phase 2 plan, step 3 and decision 8; Phase 3
+//! plan, step 1): the canonical game data the app reads, in our own schema.
+//! A bundle is a set of files read through a [`BundleSource`] (ADR-016: core
+//! reads bytes, hosts read files). Format 1 holds what item import reads;
+//! format 2 adds the calc tables (step 1a: [`skills`]; step 1b:
+//! [`passives`]). Item import reads
+//! both; the calc needs format 2. Format 2 grows by whole sections until
+//! Phase 3 step 1c is done, so a format-2 bundle is remade, never kept,
+//! across those steps.
 //!
 //! | Path | Content |
 //! |---|---|
@@ -15,26 +20,58 @@
 //! | `data/item_rules.json` | the game's [`ItemRules`] |
 //! | `stat_descriptions/*.json` | stat-description files (the extractor's format, [`StatDescFile`]) |
 //! | `poe1/*.json` | the Path of Exile only section ([`poe1::Poe1Section`]); never in a PoE2 bundle |
+//! | `data/skill_types.json`, ... | format 2: the skill tables ([`skills`]) |
+//! | `data/characters.json`, ... | format 2: the character and passive tables ([`passives`]) |
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
 //! rules is the validator's job (`validate`, plan step 4). The compressed distribution
 //! container and real signatures come in Phase 5 (ADR-010).
 
+pub mod passives;
 pub mod poe1;
+pub mod skills;
 mod source;
 pub mod validate;
 
 use loom_domain::Game;
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 
 pub use self::source::{BundleSource, MemorySource, SourceError};
 use crate::rules::ItemRules;
 use crate::stat_desc::{LoadError, Lookup, LookupHandler, StatDescFile, StatDescriptions};
 
 /// The bundle formats this loader reads.
-pub const SUPPORTED_FORMATS: [u32; 1] = [1];
+pub const SUPPORTED_FORMATS: [u32; 2] = [1, 2];
+
+/// The format with the calc tables.
+pub const CALC_FORMAT: u32 = 2;
+
+/// Every file the calc sections add in [`CALC_FORMAT`].
+pub fn calc_files() -> impl Iterator<Item = &'static str> {
+    skills::FILES.into_iter().chain(passives::FILES)
+}
+
+/// Writes an `f32` as its shortest text (`2.921`, not the widened
+/// `2.9210000038146973`), so the bundle shows the extract's value; it reads
+/// back to the same `f32`.
+pub(crate) fn short_f32<S: Serializer>(v: &f32, s: S) -> Result<S::Ok, S::Error> {
+    let wide: f64 = v.to_string().parse().map_err(serde::ser::Error::custom)?;
+    s.serialize_f64(wide)
+}
+
+/// [`short_f32`] for an optional value.
+#[expect(
+    clippy::ref_option,
+    reason = "serde's `serialize_with` passes the field by reference"
+)]
+pub(crate) fn short_f32_opt<S: Serializer>(v: &Option<f32>, s: S) -> Result<S::Ok, S::Error> {
+    match v {
+        Some(v) => short_f32(v, s),
+        None => s.serialize_none(),
+    }
+}
 
 /// The manifest's path.
 pub const MANIFEST: &str = "bundle.json";
@@ -80,7 +117,7 @@ pub struct Manifest {
     pub source: Provenance,
     /// Every file of the bundle but this one, sorted by path.
     pub files: Vec<FileEntry>,
-    /// Reserved for signatures (Phase 5); empty in format 1.
+    /// Reserved for signatures (Phase 5); empty in formats 1 and 2.
     pub signatures: Vec<serde_json::Value>,
 }
 
@@ -257,6 +294,10 @@ pub struct Bundle {
     pub stat_descriptions: StatDescriptions,
     /// The Path of Exile only section, when present.
     pub poe1: Option<poe1::Poe1Section>,
+    /// The skill tables (format 2; `None` in format 1).
+    pub skills: Option<skills::SkillTables>,
+    /// The character and passive tables (format 2; `None` in format 1).
+    pub passives: Option<passives::PassiveTables>,
 }
 
 /// Why a bundle did not load.
@@ -292,6 +333,9 @@ pub enum BundleError {
     /// A section of another game (a `poe1/` file in a PoE2 bundle).
     #[error("{0}: a {1} bundle has no such section")]
     GameSection(String, &'static str),
+    /// A file of a later format (a calc table in a format-1 bundle).
+    #[error("{0}: a format-{1} bundle has no such file")]
+    FormatFile(String, u32),
     /// A stat-description file does not load.
     #[error("{path}: {error}")]
     StatDescription {
@@ -315,6 +359,7 @@ impl BundleError {
             Self::BadPath(_) => "BUNDLE_BAD_PATH",
             Self::DuplicatePath(_) => "BUNDLE_DUPLICATE_PATH",
             Self::GameSection(..) => "BUNDLE_GAME_SECTION",
+            Self::FormatFile(..) => "BUNDLE_FORMAT_FILE",
             Self::StatDescription { .. } => "BUNDLE_STAT_DESCRIPTION",
         }
     }
@@ -374,9 +419,17 @@ impl Bundle {
             if game != Game::Poe1 && f.path.starts_with(poe1::DIR) {
                 return Err(BundleError::GameSection(f.path.clone(), game.name()));
             }
+            if format < CALC_FORMAT && calc_files().any(|c| c == f.path) {
+                return Err(BundleError::FormatFile(f.path.clone(), format));
+            }
         }
         let listed = |path: &str| manifest.files.iter().any(|f| f.path == path);
-        if let Some(missing) = REQUIRED_FILES.iter().find(|p| !listed(p)) {
+        let calc: Vec<&str> = if format >= CALC_FORMAT {
+            calc_files().collect()
+        } else {
+            Vec::new()
+        };
+        if let Some(missing) = REQUIRED_FILES.iter().chain(&calc).find(|p| !listed(p)) {
             return Err(BundleError::MissingFile((*missing).to_owned()));
         }
         let mut stat_descriptions = StatDescriptions::new();
@@ -398,6 +451,14 @@ impl Bundle {
         } else {
             None
         };
+        let (skills, passives) = if format >= CALC_FORMAT {
+            (
+                Some(skills::SkillTables::load(source)?),
+                Some(passives::PassiveTables::load(source)?),
+            )
+        } else {
+            (None, None)
+        };
         Ok(Self {
             stats: json(source, STATS)?,
             mods: json(source, MODS)?,
@@ -408,6 +469,8 @@ impl Bundle {
             item_rules: json(source, ITEM_RULES)?,
             stat_descriptions,
             poe1,
+            skills,
+            passives,
             game,
             manifest,
         })
