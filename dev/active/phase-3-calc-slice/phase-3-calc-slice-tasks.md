@@ -24,7 +24,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P3-1c: item property and monster tables
 - [x] Weapon, armour, shield properties; default monster stats (same checklist as 1a); game constants
 - [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-items-monsters.md`)
-- [x] Open PR: #PR_NUMBER (base `docs/ui-draft-v1`, #62)
+- [x] Open PR: #63 (base `docs/ui-draft-v1`, #62)
 
 ## P3-2: data parity
 - [ ] `data-parity` (PoB data read by a script in `tools/oracle/data/`, outside the adapter protocol)
