@@ -32,7 +32,7 @@ const CORE_CRATES: [&str; 5] = [
     "loom-serialization",
 ];
 
-const POE1_ONLY: [&str; 28] = [
+const POE1_ONLY: [&str; 32] = [
     "Bandit",
     "bandit",
     "Pantheon",
@@ -64,6 +64,12 @@ const POE1_ONLY: [&str; 28] = [
     "ItemDisplayFlask",
     "ItemDisplayCharges",
     "ZanaInfluencedItem",
+    // P3-4: the calc's PoE1-only quantities and fields (in `loom_calc::poe1`),
+    // as identifiers and as their stable names.
+    "SpellSuppression",
+    "SpellBlock",
+    "spell-suppression",
+    "spell-block",
 ];
 
 fn allowed(path: &Path) -> bool {

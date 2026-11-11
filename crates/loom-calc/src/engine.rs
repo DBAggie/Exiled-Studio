@@ -1,0 +1,209 @@
+//! The calculation (ADR-003, ADR-016; Phase 3 plan, decision 7): a pure
+//! function over an immutable snapshot.
+//!
+//! [`calculate_with`] checks the data version, lets the game's
+//! [`Ruleset`] collect the build's content into the modifier store, then
+//! runs the ruleset's phases in order. Each phase reads the store and
+//! writes fields with their graph nodes. Between steps it polls the host's
+//! cancellation hook. No threads, clocks, or I/O; nothing iterates a hash
+//! map, so two runs give the same result to the bit.
+
+use std::collections::BTreeMap;
+
+use loom_domain::Game;
+
+use crate::condition::QueryContext;
+use crate::error::CalcError;
+use crate::graph::Graph;
+use crate::ingest::{Ingest, StatMapping};
+use crate::input::CalcInput;
+use crate::poe1;
+use crate::quantity::Quantity;
+use crate::result::{CalcResult, Field, FieldResult};
+use crate::state::{Reasons, UnsupportedReason};
+use crate::store::{ModStore, Query};
+
+/// One step of a game's calculation.
+#[derive(Clone, Copy)]
+pub struct Phase {
+    /// Its name.
+    pub name: &'static str,
+    /// What it does.
+    pub run: fn(&mut Calc<'_>) -> Result<(), CalcError>,
+}
+
+impl core::fmt::Debug for Phase {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Phase").field("name", &self.name).finish()
+    }
+}
+
+/// A game's calculation rules. Game-specific rules live in the game's
+/// module (`loom_calc::poe1`); the core only runs them (ADR-001).
+pub trait Ruleset {
+    /// The game.
+    fn game(&self) -> Game;
+
+    /// The fields the game's slice has. Each one a phase does not write is
+    /// reported `Unsupported` with `NotComputed`.
+    fn slice(&self) -> &[Field];
+
+    /// The stat-to-effect mapping.
+    fn mapping(&self) -> &dyn StatMapping;
+
+    /// Adds the build's content (items, passives, gems, the character's
+    /// base values) to `ingest`.
+    ///
+    /// # Errors
+    /// A [`CalcError`] that stops the calculation (for example a missing
+    /// data row).
+    fn collect(&self, input: &CalcInput<'_>, ingest: &mut Ingest<'_>) -> Result<(), CalcError>;
+
+    /// The phases, in order.
+    fn phases(&self) -> &[Phase];
+}
+
+/// The state phases work on.
+#[derive(Debug)]
+pub struct Calc<'a> {
+    input: &'a CalcInput<'a>,
+    store: ModStore,
+    graph: Graph,
+    global: Reasons,
+    fields: BTreeMap<Field, FieldResult>,
+}
+
+impl<'a> Calc<'a> {
+    /// The input.
+    #[must_use]
+    pub const fn input(&self) -> &CalcInput<'a> {
+        self.input
+    }
+
+    /// The modifier store.
+    #[must_use]
+    pub const fn store(&self) -> &ModStore {
+        &self.store
+    }
+
+    /// The graph, to combine query results.
+    pub const fn graph_mut(&mut self) -> &mut Graph {
+        &mut self.graph
+    }
+
+    /// A field written by an earlier phase.
+    #[must_use]
+    pub fn field(&self, field: Field) -> Option<&FieldResult> {
+        self.fields.get(&field)
+    }
+
+    /// `base * increased * more` on `quantity` (or its override); see
+    /// [`ModStore::chain`].
+    ///
+    /// # Errors
+    /// [`CalcError::Graph`].
+    pub fn chain(&mut self, quantity: Quantity, cx: &QueryContext) -> Result<Query, CalcError> {
+        Ok(self.store.chain(&mut self.graph, quantity, cx)?)
+    }
+
+    /// Writes a field from a query: its value and node, and its state from
+    /// the query's reasons and the reasons that apply to every field. A
+    /// later phase may replace the field.
+    pub fn set(&mut self, field: Field, query: Query) {
+        let mut reasons = query.reasons;
+        reasons.extend(&self.global);
+        self.fields.insert(
+            field,
+            FieldResult {
+                value: Some(query.value),
+                node: Some(query.node),
+                state: reasons.into_state(),
+            },
+        );
+    }
+}
+
+/// Fails with [`CalcError::Cancelled`] when the hook says so.
+fn poll(cancel: &dyn Fn() -> bool) -> Result<(), CalcError> {
+    if cancel() {
+        Err(CalcError::Cancelled)
+    } else {
+        Ok(())
+    }
+}
+
+/// Calculates `input` with `rules`, polling `cancel` before collecting,
+/// after collecting, and after each phase.
+///
+/// # Errors
+/// [`CalcError::NoDataVersion`] or [`CalcError::DataVersionMismatch`]
+/// first; [`CalcError::Cancelled`] when the hook returns `true`; any error
+/// of the rules.
+pub fn calculate_with(
+    input: &CalcInput<'_>,
+    rules: &dyn Ruleset,
+    cancel: &dyn Fn() -> bool,
+) -> Result<CalcResult, CalcError> {
+    input.check_data_version()?;
+    let game = input.build.game();
+    if rules.game() != game {
+        return Ok(CalcResult::game_unsupported(game));
+    }
+    poll(cancel)?;
+    let mut ingest = Ingest::new(rules.mapping());
+    rules.collect(input, &mut ingest)?;
+    let (store, global) = ingest.finish();
+    poll(cancel)?;
+    let mut calc = Calc {
+        input,
+        store,
+        graph: Graph::new(),
+        global,
+        fields: BTreeMap::new(),
+    };
+    for phase in rules.phases() {
+        (phase.run)(&mut calc)?;
+        poll(cancel)?;
+    }
+    let Calc {
+        graph, mut fields, ..
+    } = calc;
+    for field in rules.slice() {
+        fields
+            .entry(*field)
+            .or_insert_with(|| FieldResult::unsupported(UnsupportedReason::NotComputed));
+    }
+    let state = CalcResult::worst(&fields);
+    Ok(CalcResult {
+        game,
+        fields,
+        graph,
+        state,
+    })
+}
+
+/// Calculates `input` with its game's rules. A game without rules gives
+/// an `Unsupported` result, never another game's calculation (ADR-001).
+///
+/// # Errors
+/// As [`calculate_with`].
+pub fn calculate_cancellable(
+    input: &CalcInput<'_>,
+    cancel: &dyn Fn() -> bool,
+) -> Result<CalcResult, CalcError> {
+    match input.build.game() {
+        Game::Poe1 => calculate_with(input, &poe1::Poe1Rules, cancel),
+        Game::Poe2 => {
+            input.check_data_version()?;
+            Ok(CalcResult::game_unsupported(Game::Poe2))
+        }
+    }
+}
+
+/// [`calculate_cancellable`] without cancellation.
+///
+/// # Errors
+/// As [`calculate_with`].
+pub fn calculate(input: &CalcInput<'_>) -> Result<CalcResult, CalcError> {
+    calculate_cancellable(input, &|| false)
+}

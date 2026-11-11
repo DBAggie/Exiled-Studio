@@ -11,6 +11,7 @@ publish.workspace = true
 [dependencies]
 loom-domain.workspace = true
 loom-data.workspace = true
+thiserror.workspace = true
 
 [lints]
 workspace = true
