@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-3b: bundle converter; stack #42 <- ... <- #47 <- P2-3b)
+Last Updated: 2026-11-10 (PR P2-4: bundle validator; stack #42 <- ... <- #48 <- P2-4)
 
 # Phase 2: context
 
@@ -264,3 +264,27 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
 - **Nits, not done:**
   - Nothing in the manifest marks the PoE2 rules as unmeasured (the module docs say so);
   - there is no end-to-end converter fixture test (the in-session runs on both real extracts are the evidence; P2-6's equality test will be one).
+
+## Decisions in P2-4 (bundle validator, 2026-11-10)
+- **`loom_data::bundle::validate`** returns a `Report` of `Finding { code, at, detail }`. It runs these checks in order:
+  - structural: SHA-256 and size per listed file, unlisted files, empty `signatures`;
+  - schema: the `Bundle::load` error code;
+  - referential: `BUNDLE_DANGLING_REF`, and `BUNDLE_MISSING_CLIENT_TEXT`;
+  - domain: `BUNDLE_DUPLICATE_ID`, and `BUNDLE_ITEM_RULES`;
+  - smoke: `BUNDLE_SCOPE`. Each rule scope is exactly one file, found by stem (PoE1 `.txt`, PoE2 `.csd` sources); it builds; and one description renders with every stat at 1.
+  
+  Structural findings stop before the schema check, and a schema finding stops the rest. An unknown format or a malformed manifest falls through to the loader's code.
+- **`sha2` is in `loom-data`** (pure Rust; `cargo deny` and wasm32 ok).
+- **The `poe1/` section is optional for PoE1** (an extract without its tables gives none). PoE2 must not have it (the loader refuses).
+- **Gate 3d** is a parity-cli test. It reads `tools/extractor/src/extract.rs` as text (tools cannot depend on each other) and checks two things: each converter PoE1-only table (`POE1_ONLY_TABLES`) is in a `*_POE1` list, and none is in `SPIKE_TABLES` or `LOOKUP_TABLES`.
+- **`bundle-check <dir>`** uses a folder source that refuses non-plain paths and symbolic links.
+- **Evidence:** the 13-case mutation set (each case gives exactly its code). 0 findings on the real PoE1 26530219 and PoE2 26476662 bundles and on both fixtures (`docs/phase-2/bundle-check-*.json`).
+
+## code-architecture-reviewer (P2-4, 2026-11-10) summary
+- **No blockers.** The order of the stop and continue checks is correct, and an unknown format gives exactly `BUNDLE_FORMAT`.
+- **Should-fix, applied:** the sample render and the unique scope file; the optional `poe1/` section documented; the gate 3d scan hardened; symbolic links refused.
+- **Nits, not done:**
+  - a non-plain manifest path gives the source's `NOT_FOUND` before the loader's `BAD_PATH`;
+  - a changed file size gives two codes (hash and size);
+  - the hash comparison is case-sensitive, and the converter writes lowercase;
+  - `list()` failures have an empty `at`.

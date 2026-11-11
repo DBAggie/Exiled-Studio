@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-3b: bundle converter)
+Last Updated: 2026-11-10 (PR P2-4: bundle validator)
 
 # Phase 2: tasks
 
@@ -65,10 +65,13 @@ Last Updated: 2026-11-10 (PR P2-3b: bundle converter)
 - [x] Open PR (#48, base `feat/p2-3a-bundle-model`); write the PR number into the docs right after
 
 ## PR P2-4: bundle validator (step 4)
-- [ ] Structural, schema, referential, domain, smoke checks with `BUNDLE_*` codes
-- [ ] `loom-parity-cli bundle-check`
-- [ ] Mutation set in CI
-- [ ] Maintainer-run: real PoE1 and PoE2 bundles, 0 errors
+- [x] Structural, schema, referential, domain, smoke checks with `BUNDLE_*` codes (`loom_data::bundle::validate`; `sha2` in `loom-data`, `cargo deny` ok)
+- [x] `loom-parity-cli bundle-check`
+- [x] Mutation set in CI (`crates/loom-data/tests/bundle_validate.rs`, 13 cases, each its one code)
+- [x] Gate 3d: the converter's PoE1-only tables are in the extractor's `*_POE1` lists (parity-cli test)
+- [x] Real PoE1 and PoE2 bundles, 0 findings (in-session; `docs/phase-2/bundle-check-*.json`)
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-3b-bundle-converter`); write the PR number into the docs right after
 
 ## PR P2-5: PoB XML import and semantic export (step 5; may split 5a/5b)
 - [ ] Typed sections, opaque rest, item lines as source text
