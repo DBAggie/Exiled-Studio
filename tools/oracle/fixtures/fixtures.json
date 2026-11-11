@@ -291,6 +291,76 @@
       "expect": "ok",
       "tags": ["timeless-jewel"],
       "description": "goratha (Maxroll), Essence Drain Contagion Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Chaos damage over time (Essence Drain, Blight of Contagion), Chaos Inoculation."
+    },
+    {
+      "id": "ice-nova-elementalist-campaign-lab1.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-campaign-lab1.xml",
+      "sha256": "d6bf11eaa98a91d22a121f3326257981275da5c9c3441dbba1766795f497e48d",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Campaign (lab 1) setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell, early Elementalist."
+    },
+    {
+      "id": "ice-nova-elementalist-campaign.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-campaign.xml",
+      "sha256": "ffbd3a4867c7f7416b2cdb8972297aa767bbad03d4f89d4d4b2a84bc2886f409",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Campaign setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell."
+    },
+    {
+      "id": "ice-nova-elementalist-mapping.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-mapping.xml",
+      "sha256": "bdbc5ac3d446a7a3a7da46818b8a08a0bf50bdd0ea12ed90560cd604b28cd0e4",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Mapping setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell, critical strikes, mapping gear."
+    },
+    {
+      "id": "smite-inquisitor-act1.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act1.xml",
+      "sha256": "b236499a59949d20ed0cb49083552a810272f875023031778822b6882e912ec4",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 1 setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, campaign start."
+    },
+    {
+      "id": "smite-inquisitor-act2.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act2.xml",
+      "sha256": "dbcc2e59a1428f2558d34f9a7b4978d3345312df295ee27e529212df6d5574bc",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 2 setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack."
+    },
+    {
+      "id": "smite-inquisitor-act5.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act5.xml",
+      "sha256": "75b037cfbce11831a3d605cbf6a1ee63a7fdc6facad0c45dc6c8ea087be6bef1",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 5 setup made active, Smite selected in its group with Leap Slam (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, supports."
+    },
+    {
+      "id": "smite-inquisitor-act10.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act10.xml",
+      "sha256": "e0506b151a0991372a5abb1ccaf0905e61037c78e25f74e029b01bb4f7a86bec",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 10 setup made active, Smite selected in its group with Leap Slam (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, Inquisitor ascendancy."
     }
   ]
 }
