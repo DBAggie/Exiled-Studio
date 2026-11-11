@@ -1821,7 +1821,6 @@ version = "0.0.0"
 dependencies = [
  "loom-data",
  "loom-domain",
- "loom-serialization",
  "thiserror 2.0.21",
 ]
 

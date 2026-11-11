@@ -125,6 +125,61 @@ jobs:
             exit 1
           fi
 
+  # Phase 2 step 8 (gates 1a, 2, 3b, 3c): build-round-trip on the public
+  # fixtures (no bundle; malformed.xml must not import) and on the synthetic
+  # PoE1 and PoE2 builds with their synthetic bundles, then the scan for
+  # PoE1-only identifiers in shared code. Exit codes: build-round-trip in
+  # tools/parity-cli/src/main.rs (USAGE).
+  round-trip:
+    name: build round-trip
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      # Release: the mutation set runs thousands of import and export cycles.
+      - name: Build loom-parity-cli
+        run: cargo build --release --locked -p loom-parity-cli
+      - name: Public fixtures (no bundle)
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/oracle/fixtures tools/oracle/fixtures/community
+          --expect-import-error malformed.xml --out out/round-trip/public
+      - name: Synthetic PoE1 build with the synthetic PoE1 bundle
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml
+          --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/poe1
+      - name: Synthetic PoE2 build with the synthetic PoE2 bundle (gate 3b)
+        run: >-
+          target/release/loom-parity-cli build-round-trip
+          tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json
+          --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/poe2
+      - name: Every public fixture ran; the synthetic builds resolved
+        run: |
+          jq -e '.builds >= 25 and .failed == 0' out/round-trip/public/summary.json
+          for game in poe1 poe2; do
+            jq -e '.failed == 0 and .modifier_lines.resolved > 0 and (.modifier_lines.pending // 0) == 0' "out/round-trip/$game/summary.json"
+          done
+      - name: No PoE1-only identifiers in shared code (gate 3c)
+        run: cargo test --locked -p loom-parser --test no_poe1_identifiers
+      - name: Summary
+        if: always()
+        run: |
+          for f in out/round-trip/*/summary.json; do
+            [ -f "$f" ] || continue
+            echo "### $f" >> "$GITHUB_STEP_SUMMARY"
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            jq '{builds, passed, failed, checks, modifier_lines, mutations}' "$f" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: round-trip
+          path: out/round-trip
+          if-no-files-found: ignore
+
   # Spike C step 4: the PoB oracle on the public fixtures (tools/oracle/fixtures/
   # fixtures.json), 3 runs each. Required through ci-ok since C5, after 10
   # consecutive green runs on both runners (maintainer, 2026-11-10;
@@ -290,7 +345,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, oracle, oracle-compare, wasm, deny, frontend]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs
