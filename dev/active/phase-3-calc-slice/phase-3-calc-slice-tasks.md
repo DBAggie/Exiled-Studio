@@ -29,7 +29,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P3-2: data parity
 - [x] `data-parity` (PoB data read by a script in `tools/oracle/data/`, outside the adapter protocol)
 - [x] Categories with cited evidence and tests; overlay file; report with `uncategorized` 0 (`docs/phase-3/data-parity.md`)
-- [ ] Open PR
+- [x] Open PR: #64 (base `feat/p3-1c-bundle-v2-items-monsters`, #63)
 
 ## P3-3: survey and slice
 - [ ] `calc-survey`: archetype classifier, tree-version rule, excluded-mechanics rules (tests each), mechanic inventory
