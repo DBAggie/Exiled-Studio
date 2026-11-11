@@ -17,7 +17,7 @@ crates/
   loom-data           core   canonical game-data model, abstract bundle source
   loom-parser         core   text -> stat-ID resolution, import parsing
   loom-calc           core   calculations over immutable snapshots
-  loom-serialization  core   versioned DTOs, migrations, legacy XML adapters
+  loom-serialization  core   versioned DTOs (build, calc result), migrations, legacy XML adapters
   loom-persistence    host   files, autosave, SQLite indexes
   loom-app            host   command/query/event API, single-writer build task
   loom-integrations   host   network adapters, MCP addon transport
@@ -27,7 +27,7 @@ tools/
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
-schemas/              generated JSON Schemas of the successor documents (do not edit; CI checks freshness)
+schemas/              generated JSON Schemas of the successor documents, build and calc result (do not edit; CI checks freshness)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -36,6 +36,7 @@ docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence
 Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-data` <- `loom-parser`, `loom-calc`
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
+- `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
@@ -59,7 +60,7 @@ cargo test --workspace --all-features --locked
 cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
-# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto, regenerate both;
+# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto (build v1, calc::v1), regenerate both;
 # CI (schema freshness) fails on any difference:
 cargo run -p loom-schema-gen            # writes schemas/*.schema.json (--check: exit 1 if stale)
 (cd ui && pnpm generate:schema)       # writes ui/src/generated/*.ts from the schema

@@ -8,7 +8,11 @@
 //!
 //! [`read`] and [`write`] are the entry points for any host: they read a
 //! document of any supported version and write the current one.
+//!
+//! [`calc`] holds the calc result document (Phase 3 plan, step 13), by
+//! version.
 
+pub mod calc;
 pub mod v1;
 
 use loom_domain::Build;

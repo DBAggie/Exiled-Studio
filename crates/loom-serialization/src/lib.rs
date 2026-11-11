@@ -6,7 +6,8 @@
 //! environment, or network access.
 //!
 //! - [`dto`]: the successor JSON build document, by version (ADR-005;
-//!   Phase 2 plan, step 7).
+//!   Phase 2 plan, step 7), and the calc result document [`dto::calc`]
+//!   (Phase 3 plan, step 13).
 //! - [`legacy`]: Path of Building's formats (ADR-005). Today the item-text
 //!   reader [`legacy::pob_item`] with its mapping onto the domain item,
 //!   the build XML adapter [`legacy::pob_xml`], and share codes

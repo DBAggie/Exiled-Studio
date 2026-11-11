@@ -14,6 +14,9 @@ publish.workspace = true
 schema = ["dep:schemars"]
 
 [dependencies]
+# The calc result document (Phase 3 step 13): serialization reads the engine's
+# result; loom-calc never depends on serialization (AGENTS.md, crate boundaries).
+loom-calc.workspace = true
 loom-domain.workspace = true
 # zlib for PoB share codes (plan decision 16); MIT, Zlib, or Apache-2.0; pure Rust.
 miniz_oxide = { version = "0.9", default-features = false, features = ["with-alloc"] }

@@ -1,0 +1,132 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe1",
+    "state": "unsupported",
+    "reasons": {},
+    "fields": [
+      {
+        "field": "strength",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "dexterity",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "intelligence",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "life",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "mana",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "energy-shield",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "armour",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "evasion",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "resistance.fire",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "resistance.cold",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "resistance.lightning",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "resistance.chaos",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "block-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "life-unreserved",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "mana-unreserved",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "average-damage",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-multiplier",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-dps",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "poe1.spell-suppression-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "poe1.spell-block-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      }
+    ],
+    "graph": []
+  }
+}
