@@ -38,7 +38,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
     - all 24 public fixtures round-trip with every section typed, items present in the community builds, and nothing kept whole;
     - 5 new unit tests;
     - in-session: the corpus 21/21 (1,055 items, 0 kept whole) and PoB 3.13 5/5 (100 items).
-  - **Review still to do:** the session ended (maintainer request) before the `code-architecture-reviewer` findings for P2-5b were read. The next session runs it again first (Next action, step 1).
+  - **Review:** `code-architecture-reviewer` found no blockers; the text reconstruction is exact. The should-fix items are **not yet applied**: the session ended at the maintainer's request. They are listed in the context file under "P2-5b review findings, to apply" (Next action, step 1).
 - **PR P2-5a: PoB XML import and semantic export, structure (PR #50, open, in review, branch `feat/p2-5a-pob-xml-structure`, base `feat/p2-4-bundle-validator`).** Plan step 5a.
   - **What:** `loom_serialization::legacy::pob_xml` (`import`, `export`, `xml_equal`, `NORMALIZATIONS`; `roxmltree` added to `loom-serialization`).
     - Typed, with source text kept:
@@ -272,7 +272,7 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Finish P2-5b's review:** check out `feat/p2-5b-pob-xml-items` and run `code-architecture-reviewer` on its code commit (`60550e4`). Apply the findings on that branch, rerun the fixture and corpus round-trips, and update the context file with a "Decisions in P2-5b" section and the review summary. Then continue with P2-6 on a branch from it.
+1. **Apply P2-5b's review findings:** check out `feat/p2-5b-pob-xml-items` and apply the should-fix list in the context file ("P2-5b review findings, to apply"). Rerun the fixture and corpus round-trips (`LOOM_XML_DIR`), push to the same PR, and update the docs. Then continue with P2-6 on a branch from it.
 2. **Stack check** (`gh pr list --state all --limit 13`): if the maintainer merged or asked for changes on #42 to #50 or P2-5b, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
 3. **P2-6: `resolve_build`** (plan step 6). Branch from `feat/p2-5b-pob-xml-items` and target it as base:
    - a bundle-backed `ItemData` in `loom-parser`. It builds `Mods` from a validated `Bundle` (split `(0, 0)` stats into `unset`; map class, mod-type, and implicit IDs onto rows), `BaseRow`s, `Grafts` (from `poe1/grafts.json`), `Properties` (client texts and quality types), and compositions;

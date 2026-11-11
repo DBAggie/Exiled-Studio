@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure; stack #42 <- ... <- #49 <- P2-5a)
+Last Updated: 2026-11-10 (PR P2-5b: PoB XML items; stack #42 <- ... <- #50 <- P2-5b; session ended here at the maintainer's request)
 
 # Phase 2: context
 
@@ -306,7 +306,9 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
 - **Whitespace:** whitespace-only text between elements is layout and is dropped. In mixed content (an element with text), every text child is kept, the export writes no layout there, and `xml_equal` compares it exactly. This matters for P2-5b's item text around `<ModRange>`.
 - **`xml_equal`:** compares parsed trees with two normalizations, attribute order and whitespace between elements (not in mixed content). The parser already reads CRLF as LF and resolves entities, so no line-ending rule is needed.
 - **Writer:** writes typed attributes first, then the kept ones in order. An empty list attribute without source text is omitted (a source `nodes=""` is written back). Escaping: `& < > "`, and `
- 	 ` in attributes; `` in text.
+ 	 
+` in attributes; `
+` in text.
 - **Domain:** `Character.level` is optional (PoB may omit it; a consumer defaults it to 1). `Build` gained `attributes`, `prolog`, and `epilog`.
 - **Known non-goals:** namespaces, DOCTYPE, and the declaration's encoding and standalone attributes are not kept. PoB writes none.
 
@@ -323,3 +325,24 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - `children()` clones nodes just to test them;
   - `set_game_specific(..).ok()`: it is always PoE1, so it cannot fail;
   - for duplicate sections, the first typed one wins, and an earlier one that does not read is kept whole.
+
+## Decisions in P2-5b (PoB XML items, 2026-11-10)
+- **Items:** `<Items>` is typed (`legacy/pob_xml/items.rs`).
+  - An `<Item>` reads its body from the last non-blank text child (PoB's rule), through `pob_item::read` and `to_domain`.
+  - Every other child (texts, including whitespace-only ones; `<ModRange>`; anything else) stays in place around `ItemPart::Body`.
+  - Item sets and slots are typed (`itemId="0"`: empty). `<SocketIdURL>` and anything else stay in place.
+- **Item text export:** the text is generated from the lines' sources plus `Item::text_spacing` (a new domain field: the whitespace before, between, and after the lines as read). If `spacing()` cannot rebuild the text, the item is kept whole. If the spacing does not fit, the export joins the lines with `
+`.
+- **`mainActiveSkill="nil"`** (PoB's unset value) stays an untyped attribute, and the group is typed.
+- **Evidence:** all 24 fixtures pass with every section typed and nothing kept whole. In-session: the corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items).
+
+## P2-5b review findings, to apply (code-architecture-reviewer, 2026-11-10; no blockers)
+1. **The `spacing()` invariant needs a comment** in `items.rs`. The reader trims each line and drops empty ones, so a line starts and ends with non-whitespace, and `find` cannot match inside a whitespace gap. Add tests for a non-breaking-space gap and a CRLF body.
+2. **Stale `text_spacing`:** document on `Item::text_spacing` that any edit to an item's lines must clear it, because the writer checks only the length. Add a test.
+3. **The `
+` join fallback drops blank lines and indentation.** Document it.
+4. **Nits:**
+   - Consider moving `text_spacing` into the layout (`ItemPart::Body { spacing }`), or document it as legacy-XML formatting only, which canonical JSON may ignore.
+   - Phase 3 needs an index of item IDs and slots, with diagnostics for dangling or duplicate IDs. `itemId="0"` collides with a real item 0.
+   - Missing tests: an item with no body text but a `<ModRange>`; a non-numeric item id (kept whole); a `<Slot>` with children (opaque).
+   - Rust's `trim` is Unicode-aware, but PoB's `%s` is ASCII-only, so a line of only non-breaking spaces may differ from PoB. This comes from Spike B; note it.
