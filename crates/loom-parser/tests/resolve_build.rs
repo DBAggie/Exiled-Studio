@@ -87,11 +87,14 @@ fn build(game: Game, items: Vec<Item>) -> Build {
 }
 
 /// The test adapter's base name: the item's base line, as written.
-fn base_line(body: &ItemBody) -> Option<ItemBaseName> {
-    body.base.as_ref().map(|name| ItemBaseName {
-        name: name.clone(),
-        fallback: None,
-    })
+fn base_line(body: &ItemBody) -> Result<ItemBaseName, String> {
+    body.base
+        .as_ref()
+        .map(|name| ItemBaseName {
+            name: name.clone(),
+            fallback: None,
+        })
+        .ok_or_else(|| "no-base-line".to_owned())
 }
 
 /// Every line's resolution of item `id` (`None` for a line that is not a
@@ -305,7 +308,9 @@ fn poe1_should_give_each_outcome_and_kind() {
     );
     assert_eq!(
         resolutions(&build, 4),
-        vec![unresolved(UnresolvedReason::NoBase(NoBase::Unnamed))]
+        vec![unresolved(UnresolvedReason::NoBase(NoBase::Unnamed(
+            "no-base-line".to_owned()
+        )))]
     );
 }
 
@@ -398,9 +403,9 @@ fn the_adapters_fallback_name_should_be_looked_up() {
         )],
     );
     resolve_build(&mut build, &data, |body| {
-        let name = body.base.clone()?;
+        let name = body.base.clone().ok_or_else(String::new)?;
         let fallback = name.strip_suffix(" (Old)").map(str::to_owned);
-        Some(ItemBaseName { name, fallback })
+        Ok(ItemBaseName { name, fallback })
     })
     .unwrap();
     assert_eq!(

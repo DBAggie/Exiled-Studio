@@ -23,13 +23,14 @@
 //!    candidates' stats.
 //! 4. **Split section.** A line with no template whose adjacent line of
 //!    another section also has none, and which resolves with it as one
-//!    two-line description ([`tolerance::split_section`]), takes the
+//!    two-line description ([`tolerance::split_section_with`]), takes the
 //!    pair's reading: the earlier line is resolved with
 //!    [`Adapted::SplitSection`], the later one continues it. The harness
 //!    also pairs a line with a neighbour that resolved alone; here both
-//!    halves must lack a template, so a resolved line is never rewritten
-//!    and the link is always valid (Spike B's 4 split-section lines are
-//!    2 such pairs).
+//!    halves must lack a template (a neighbour that resolved alone is
+//!    skipped and the other neighbour tried), so a resolved line is never
+//!    rewritten and the link is always valid (Spike B's 4 split-section
+//!    lines are 2 such pairs).
 //! 5. **Typed kinds.** A line still without a template is tried as a
 //!    granted skill ([`Grafts::resolve`], with the gem from the bundle),
 //!    then as an item property or catalyst quality
@@ -159,8 +160,8 @@ impl<'d, 'b> Resolver<'d, 'b> {
 
     /// Resolves the pending modifier lines of every item of `build`
     /// (module docs) and records the bundle's data version on it.
-    /// `base_of` is the import adapter's base name of an item; `None` when
-    /// it names none.
+    /// `base_of` is the import adapter's base name of an item, or its
+    /// stable reason for naming none ([`NoBase::Unnamed`]).
     ///
     /// # Errors
     /// [`ResolveError::GameMismatch`] and
@@ -168,7 +169,7 @@ impl<'d, 'b> Resolver<'d, 'b> {
     pub fn resolve_build(
         &self,
         build: &mut Build,
-        mut base_of: impl FnMut(&ItemBody) -> Option<ItemBaseName>,
+        mut base_of: impl FnMut(&ItemBody) -> Result<ItemBaseName, String>,
     ) -> Result<Completeness, ResolveError> {
         let version = data_version(self.data);
         if build.game() != version.game {
@@ -190,17 +191,21 @@ impl<'d, 'b> Resolver<'d, 'b> {
         for entry in build.items.entries.typed_mut() {
             if let ItemsEntry::Item(item) = entry {
                 let base = base_of(&item.body);
-                self.resolve_item(&mut item.body, base.as_ref());
+                self.resolve_item(&mut item.body, base.as_ref().map_err(String::as_str));
             }
         }
         Ok(build.completeness())
     }
 
-    /// Resolves the pending modifier lines of one item (module docs).
-    pub fn resolve_item(&self, body: &mut ItemBody, base: Option<&ItemBaseName>) {
+    /// Resolves the pending modifier lines of one item (module docs), with
+    /// the adapter's base name or its reason for naming none. Unlike
+    /// [`Resolver::resolve_build`], it checks neither the game nor the data
+    /// version, and records nothing on a build: the caller vouches that the
+    /// item belongs to a build of the bundle's game.
+    pub fn resolve_item(&self, body: &mut ItemBody, base: Result<&ItemBaseName, &str>) {
         let found = match base {
-            None => Err(NoBase::Unnamed),
-            Some(b) => find_base(
+            Err(reason) => Err(NoBase::Unnamed(reason.to_owned())),
+            Ok(b) => find_base(
                 self.data,
                 BaseQuery {
                     name: &b.name,
@@ -219,7 +224,7 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 .map(|(n, _)| {
                     (
                         n,
-                        LineResolution::Unresolved(UnresolvedReason::NoBase(reason)),
+                        LineResolution::Unresolved(UnresolvedReason::NoBase(reason.clone())),
                     )
                 })
                 .collect(),
@@ -353,7 +358,12 @@ impl<'d, 'b> Resolver<'d, 'b> {
             .iter()
             .filter_map(|(n, text)| {
                 let skill = data.grafts().resolve(base, text).and_then(|g| {
-                    let gem = data.granted_gem(&g.graft.id)?;
+                    // The validator checks every graft's gem
+                    // (`BUNDLE_DANGLING_REF`), and `BundleData` maps every
+                    // graft it reads, so a resolved graft always has one.
+                    let gem = data.granted_gem(&g.graft.id);
+                    debug_assert!(gem.is_some(), "graft {} has no gem", g.graft.id);
+                    let gem = gem?;
                     Some(TypedResolution::GrantedSkill {
                         source: g.graft.id,
                         gem: GemId::new(gem),
@@ -379,7 +389,7 @@ impl<'d, 'b> Resolver<'d, 'b> {
 pub fn resolve_build(
     build: &mut Build,
     data: &BundleData<'_>,
-    base_of: impl FnMut(&ItemBody) -> Option<ItemBaseName>,
+    base_of: impl FnMut(&ItemBody) -> Result<ItemBaseName, String>,
 ) -> Result<Completeness, ResolveError> {
     Resolver::new(data)?.resolve_build(build, base_of)
 }
@@ -416,11 +426,11 @@ impl Lines {
             if !self.no_template.contains_key(&n) {
                 continue; // Taken by an earlier pair.
             }
-            let Some((other, r)) = tolerance::split_section(index, body, n) else {
+            let pairs = |o: usize| self.no_template.contains_key(&o);
+            let Some((other, r)) = tolerance::split_section_with(index, body, n, pairs) else {
                 continue;
             };
-            let (Outcome::Resolved(c), true) = (&r.outcome, self.no_template.contains_key(&other))
-            else {
+            let Outcome::Resolved(c) = &r.outcome else {
                 continue;
             };
             self.no_template.remove(&n);

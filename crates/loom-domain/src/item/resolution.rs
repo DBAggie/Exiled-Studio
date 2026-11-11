@@ -150,11 +150,12 @@ pub enum UnresolvedReason {
 }
 
 /// Why an item has no base.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NoBase {
     /// The import adapter named no base (no base line, or a name that
-    /// holds no base name, or several equally).
-    Unnamed,
+    /// holds no base name, or several equally); the adapter's stable
+    /// reason (PoB: `no-name`, `no-base-in-name`, `tie`).
+    Unnamed(String),
     /// The named base is not in the game data.
     NotFound,
     /// The base's data rows give more than one stat-description scope.
@@ -164,9 +165,9 @@ pub enum NoBase {
 impl NoBase {
     /// Stable name.
     #[must_use]
-    pub const fn name(self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
-            Self::Unnamed => "unnamed",
+            Self::Unnamed(_) => "unnamed",
             Self::NotFound => "not-found",
             Self::ScopeConflict => "scope-conflict",
         }

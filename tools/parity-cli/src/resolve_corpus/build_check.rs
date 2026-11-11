@@ -4,7 +4,8 @@
 //! compared with the harness's outcome before the categories (which are
 //! tool-only evidence). Written to `resolve-build-check.json`.
 //!
-//! A line is compared by a key: the outcome, plus the stats and values of
+//! A line is compared by a key: the outcome (an item without a base by
+//! the harness's reason), plus the stats and values of
 //! a stat resolution (as the report writes them), the `kind` of a typed
 //! one, the kept candidates of an ambiguous one, and the tolerance. A
 //! continuation takes the key of the line it continues, as the harness
@@ -17,7 +18,7 @@
 use std::collections::BTreeMap;
 
 use loom_domain::{
-    ItemBody, LineKind, LineResolution, Resolved, StatLine, StatValue, UnresolvedReason,
+    ItemBody, LineKind, LineResolution, NoBase, Resolved, StatLine, StatValue, UnresolvedReason,
 };
 use serde::Serialize;
 
@@ -94,7 +95,7 @@ fn harness_key(r: &LineRecord) -> String {
                 .collect();
             format!("ambiguous|{}", kept.join(" "))
         }
-        o if o.starts_with("unknown-base/") => "no-base".to_owned(),
+        o if o.starts_with("unknown-base/") => o.to_owned(),
         o if o.starts_with("excluded/") => "excluded".to_owned(),
         "internal/not-covered" => "pending".to_owned(),
         o => o.to_owned(),
@@ -137,7 +138,12 @@ fn domain_key(body: &ItemBody, n: usize) -> Option<String> {
                 .collect();
             format!("ambiguous|{}", kept.join(" "))
         }
-        LineResolution::Unresolved(UnresolvedReason::NoBase(_)) => "no-base".to_owned(),
+        // The harness's names for the reasons (`Bases::find`).
+        LineResolution::Unresolved(UnresolvedReason::NoBase(b)) => match b {
+            NoBase::Unnamed(reason) => format!("unknown-base/{reason}"),
+            NoBase::NotFound => "unknown-base/not-in-base-item-types".to_owned(),
+            NoBase::ScopeConflict => "unknown-base/scope-conflict".to_owned(),
+        },
         LineResolution::Unresolved(r) => format!("unresolved/{}", r.name()),
         LineResolution::Excluded(_) => "excluded".to_owned(),
         LineResolution::Pending => "pending".to_owned(),

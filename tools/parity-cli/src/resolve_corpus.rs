@@ -1463,9 +1463,9 @@ fn count_item(
     if let (Some((check, build)), Some(resolver)) = (check, corpus.resolver) {
         let mut body = item.clone();
         let base = pob_item::item_base(item, bases.base_names())
-            .ok()
-            .map(|(name, fallback)| ItemBaseName { name, fallback });
-        resolver.resolve_item(&mut body, base.as_ref());
+            .map(|(name, fallback)| ItemBaseName { name, fallback })
+            .map_err(pob_item::NoBaseName::name);
+        resolver.resolve_item(&mut body, base.as_ref().map_err(|e| *e));
         let lines: Vec<LineRecord> = records.iter().map(|(r, _)| r.clone()).collect();
         check.compare(build, n, &body, &lines);
     }
