@@ -9,6 +9,7 @@
 //! `oracle-compare`, and `divergence-check` (the divergence register,
 //! `docs/parity/`).
 
+mod bundle;
 mod categorize;
 mod divergence;
 mod extract;
@@ -25,6 +26,7 @@ mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
 mod poe1;
+mod poe2;
 mod properties;
 mod render_check;
 mod resolve_corpus;
@@ -36,6 +38,11 @@ use std::process::ExitCode;
 use serde::Serialize;
 
 const USAGE: &str = "usage:
+  loom-parity-cli bundle <extract-dir> --out <dir>
+      Convert a `loom-extractor extract` output (PoE1 or PoE2) into a data
+      bundle of format v1 (loom_data::bundle) in <dir>, which must not
+      exist; load it back with Bundle::load; print a summary (row counts,
+      hashes) as JSON. Two runs on one extract give the same bytes.
   loom-parity-cli load-statdesc <extract-dir>
       Load every stat-description file of a `loom-extractor extract` output
       through loom-data; print counts as JSON. Exit 1 if a check fails.
@@ -118,6 +125,30 @@ fn reader(dir: &Path) -> impl Fn(&str) -> Result<Vec<u8>, String> + '_ {
         let path = dir.join(relative);
         std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))
     }
+}
+
+/// `bundle`: converts, writes, loads back, prints the summary.
+fn bundle_cmd(extract: &Path, out: &Path) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let read = reader(extract);
+    let loaded = extract::load(&read)?;
+    let (files, summary) = bundle::convert(&read, &loaded)?;
+    let mut source = loom_data::bundle::MemorySource::new();
+    for (path, bytes) in &files {
+        let target = out.join(path);
+        if let Some(parent) = target.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        std::fs::write(&target, bytes).map_err(|e| format!("{}: {e}", target.display()))?;
+        source.insert(path.clone(), bytes.clone());
+    }
+    let back = loom_data::bundle::Bundle::load(&source)
+        .map_err(|e| format!("the written bundle does not load: {} ({e})", e.code()))?;
+    let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(back.game.name() == summary.game)
 }
 
 fn load_statdesc(extract: &Path) -> Result<bool, String> {
@@ -522,6 +553,9 @@ fn main() -> ExitCode {
         return divergence_check(Path::new(register));
     }
     let result = match args.as_slice() {
+        [cmd, extract, flag, out] if cmd == "bundle" && flag == "--out" => {
+            bundle_cmd(Path::new(extract), Path::new(out))
+        }
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))

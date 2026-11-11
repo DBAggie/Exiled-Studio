@@ -59,8 +59,40 @@ pub fn inputs(grafts: &Grafts) -> Inputs {
 /// # Errors
 /// A message when a table or column the others need is missing.
 pub fn load(read: Read<'_>) -> Result<Grafts, String> {
-    let Some(grafts) = Table::read(read, "BrequelGrafts")? else {
+    let Some(raw) = rows(read)? else {
         return Ok(Grafts::default());
+    };
+    let bases = raw.bases.into_iter().map(|b| {
+        (
+            b.base,
+            Graft {
+                id: b.graft,
+                skill: b.skill,
+            },
+        )
+    });
+    Ok(Grafts::new(bases, raw.wrapper.as_deref(), &raw.levels))
+}
+
+/// The graft rows as read, for the bundle converter and [`load`]: each
+/// graft base with its graft, the granted gem (its base item's `Id`) and
+/// skill name; the allowed levels; the wrapper text.
+pub struct GraftRows {
+    /// Graft bases, in `BaseItemTypes` order.
+    pub bases: Vec<loom_data::bundle::poe1::GraftBase>,
+    /// `BrequelGraftGrantedSkillLevels.SkillLevel`.
+    pub levels: Vec<u32>,
+    /// The `ClientStrings` wrapper text.
+    pub wrapper: Option<String>,
+}
+
+/// Reads the graft tables; `None` without `BrequelGrafts`.
+///
+/// # Errors
+/// A message when a table or column the others need is missing.
+pub fn rows(read: Read<'_>) -> Result<Option<GraftRows>, String> {
+    let Some(grafts) = Table::read(read, "BrequelGrafts")? else {
+        return Ok(None);
     };
     let bases = Table::require(read, "BaseItemTypes")?;
     let gems = Table::require(read, "SkillGems")?;
@@ -71,14 +103,19 @@ pub fn load(read: Read<'_>) -> Result<Grafts, String> {
         n.and_then(|n| usize::try_from(n).ok())
             .and_then(|n| rows.get(n).cloned())
     };
-    let mut skill_of: BTreeMap<String, String> = BTreeMap::new();
+    let mut skill_of: BTreeMap<String, (String, String)> = BTreeMap::new();
     for g in &grafts.rows {
         let Some(id) = Table::text(g, graft_id) else {
             continue;
         };
         let skill = row_at(&gems.rows, Table::int(g, graft_gem))
             .and_then(|gem| row_at(&bases.rows, Table::int(&gem, gem_base)))
-            .and_then(|b| Table::text(&b, base_name).map(str::to_owned));
+            .and_then(|b| {
+                Some((
+                    Table::text(&b, base_name)?.to_owned(),
+                    Table::text(&b, base_id)?.to_owned(),
+                ))
+            });
         if let Some(skill) = skill {
             skill_of.insert(id.to_owned(), skill);
         }
@@ -89,14 +126,13 @@ pub fn load(read: Read<'_>) -> Result<Grafts, String> {
             continue;
         };
         let segment = id.rsplit('/').next().unwrap_or(id);
-        if let Some(skill) = skill_of.get(segment) {
-            graft_bases.push((
-                name.to_owned(),
-                Graft {
-                    id: segment.to_owned(),
-                    skill: skill.clone(),
-                },
-            ));
+        if let Some((skill, gem)) = skill_of.get(segment) {
+            graft_bases.push(loom_data::bundle::poe1::GraftBase {
+                base: name.to_owned(),
+                graft: segment.to_owned(),
+                gem: gem.clone(),
+                skill: skill.clone(),
+            });
         }
     }
     let mut levels = Vec::new();
@@ -118,7 +154,11 @@ pub fn load(read: Read<'_>) -> Result<Grafts, String> {
             .and_then(|r| Table::text(r, text))
             .map(str::to_owned);
     }
-    Ok(Grafts::new(graft_bases, wrapper.as_deref(), &levels))
+    Ok(Some(GraftRows {
+        bases: graft_bases,
+        levels,
+        wrapper,
+    }))
 }
 
 /// One graft base with the standard wrapper and levels 1..30 (tests of
