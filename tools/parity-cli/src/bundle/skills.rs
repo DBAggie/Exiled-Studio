@@ -75,7 +75,7 @@ fn bump(cell: &mut usize) {
     clippy::cast_possible_truncation,
     reason = "the extract wrote an f32 as its shortest text; it reads back to the same f32"
 )]
-fn to_f32(v: f64) -> f32 {
+pub(super) fn to_f32(v: f64) -> f32 {
     v as f32
 }
 

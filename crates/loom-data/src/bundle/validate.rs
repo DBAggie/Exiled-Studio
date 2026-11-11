@@ -11,9 +11,13 @@
 //!   classes; base implicits are mods; graft gems are base items; client
 //!   texts the rules name exist; in the skill tables (format 2), every
 //!   stat, skill type, item class, active skill, granted effect, stat set,
-//!   base item, gem effect, gem tag, and cost type a row names exists;
-//! - **domain:** IDs are unique per kind, and in the skill tables not empty
-//!   (`BUNDLE_EMPTY_ID`); the item rules validate; the
+//!   base item, gem effect, gem tag, and cost type a row names exists; in
+//!   the character and passive tables, every stat, character, ascendancy,
+//!   object template, mastery group, and mastery effect, every passive of a
+//!   tree node, and every tree node of a connection or root;
+//! - **domain:** IDs are unique per kind, and in the calc tables not empty
+//!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, and mastery
+//!   effect hashes are unique; the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
 //!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
@@ -31,6 +35,7 @@ use std::collections::BTreeSet;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use super::passives::{self, PassiveTables};
 use super::skills::{self, SkillTables};
 use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
 use crate::stat_desc::{StatValue, VariantFilter, render_description};
@@ -231,6 +236,9 @@ fn referential(b: &Bundle, report: &mut Report) {
     if let Some(sk) = &b.skills {
         skill_refs(sk, &stats, &classes, &bases, report);
     }
+    if let Some(p) = &b.passives {
+        passive_refs(p, &stats, report);
+    }
     let texts: BTreeSet<&str> = b.client_texts.iter().map(|t| t.id.as_str()).collect();
     let t = &b.item_rules.text;
     let named = t
@@ -420,6 +428,175 @@ fn skill_domain(sk: &SkillTables, report: &mut Report) {
     }
 }
 
+/// The character and passive tables' references (module docs).
+fn passive_refs(p: &PassiveTables, stats: &BTreeSet<&str>, report: &mut Report) {
+    fn ids<'a>(it: impl Iterator<Item = &'a str>) -> BTreeSet<&'a str> {
+        it.collect()
+    }
+    let characters = ids(p.characters.iter().map(|c| c.id.as_str()));
+    let ascendancies = ids(p.ascendancies.iter().map(|a| a.id.as_str()));
+    let templates = ids(p.object_templates.iter().map(|t| t.id.as_str()));
+    let groups = ids(p.mastery_groups.iter().map(|g| g.id.as_str()));
+    let effects = ids(p.mastery_effects.iter().map(|e| e.id.as_str()));
+    let passive_nodes: BTreeSet<i64> = p.passives.iter().map(|x| x.node).collect();
+    let tree_nodes: BTreeSet<i64> = p
+        .tree
+        .groups
+        .iter()
+        .flat_map(|g| &g.nodes)
+        .map(|n| n.node)
+        .collect();
+    let mut check = |known: &BTreeSet<&str>, at: &dyn Fn() -> String, what: &str, id: &str| {
+        if !known.contains(id) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                at(),
+                format!("{what} {id:?} does not exist"),
+            );
+        }
+    };
+    for c in &p.characters {
+        let at = || format!("characters:{}", c.id);
+        if let Some(t) = &c.template {
+            check(&templates, &at, "object template", t);
+        }
+    }
+    for a in &p.ascendancies {
+        let at = || format!("ascendancies:{}", a.id);
+        if let Some(c) = &a.character {
+            check(&characters, &at, "character", c);
+        }
+    }
+    for t in &p.object_templates {
+        let at = || format!("object_templates:{}", t.id);
+        if let Some(e) = &t.extends {
+            check(&templates, &at, "object template", e);
+        }
+        for s in &t.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+    }
+    for x in &p.passives {
+        let at = || format!("passives:{}", x.id);
+        for s in &x.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+        if let Some(g) = &x.mastery_group {
+            check(&groups, &at, "mastery group", g);
+        }
+        if let Some(a) = &x.ascendancy {
+            check(&ascendancies, &at, "ascendancy", a);
+        }
+        for c in &x.characters {
+            check(&characters, &at, "character", c);
+        }
+    }
+    for g in &p.mastery_groups {
+        let at = || format!("mastery_groups:{}", g.id);
+        for e in &g.effects {
+            check(&effects, &at, "mastery effect", e);
+        }
+    }
+    for e in &p.mastery_effects {
+        let at = || format!("mastery_effects:{}", e.id);
+        for s in &e.stats {
+            check(stats, &at, "stat", &s.stat);
+        }
+    }
+    // Every tree node is a passive; every connection and root a tree node.
+    let mut node = |known: &BTreeSet<i64>, what: &str, n: i64| {
+        if !known.contains(&n) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("passive_tree:{n}"),
+                format!("{what} {n} does not exist"),
+            );
+        }
+    };
+    for n in p.tree.groups.iter().flat_map(|g| &g.nodes) {
+        node(&passive_nodes, "passive node", n.node);
+        for c in &n.connections {
+            node(&tree_nodes, "tree node", c.node);
+        }
+    }
+    for r in &p.tree.roots {
+        node(&tree_nodes, "tree node", *r);
+    }
+}
+
+/// The character and passive tables' domain checks: IDs not empty and
+/// unique per file; passive node numbers, tree nodes, and mastery effect
+/// hashes unique.
+fn passive_domain(p: &PassiveTables, report: &mut Report) {
+    let files: [(&str, Vec<&str>); 6] = [
+        (
+            passives::CHARACTERS,
+            p.characters.iter().map(|c| c.id.as_str()).collect(),
+        ),
+        (
+            passives::ASCENDANCIES,
+            p.ascendancies.iter().map(|a| a.id.as_str()).collect(),
+        ),
+        (
+            passives::OBJECT_TEMPLATES,
+            p.object_templates.iter().map(|t| t.id.as_str()).collect(),
+        ),
+        (
+            passives::PASSIVES,
+            p.passives.iter().map(|x| x.id.as_str()).collect(),
+        ),
+        (
+            passives::MASTERY_GROUPS,
+            p.mastery_groups.iter().map(|g| g.id.as_str()).collect(),
+        ),
+        (
+            passives::MASTERY_EFFECTS,
+            p.mastery_effects.iter().map(|e| e.id.as_str()).collect(),
+        ),
+    ];
+    for (file, ids) in files {
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+    }
+    let numbers: [(&str, &str, Vec<i64>); 3] = [
+        (
+            passives::PASSIVES,
+            "node",
+            p.passives.iter().map(|x| x.node).collect(),
+        ),
+        (
+            passives::PASSIVE_TREE,
+            "node",
+            p.tree
+                .groups
+                .iter()
+                .flat_map(|g| &g.nodes)
+                .map(|n| n.node)
+                .collect(),
+        ),
+        (
+            passives::MASTERY_EFFECTS,
+            "hash",
+            p.mastery_effects.iter().map(|e| e.hash).collect(),
+        ),
+    ];
+    for (file, what, values) in numbers {
+        let mut seen = BTreeSet::new();
+        for v in values {
+            if !seen.insert(v) {
+                report.add(
+                    "BUNDLE_DUPLICATE_ID",
+                    file,
+                    format!("{what} {v} is on two rows"),
+                );
+            }
+        }
+    }
+}
+
 fn duplicates<'a>(report: &mut Report, file: &str, ids: impl Iterator<Item = &'a str>) {
     let mut seen = BTreeSet::new();
     for id in ids {
@@ -451,6 +628,9 @@ fn domain(b: &Bundle, report: &mut Report) {
     }
     if let Some(sk) = &b.skills {
         skill_domain(sk, report);
+    }
+    if let Some(p) = &b.passives {
+        passive_domain(p, report);
     }
 }
 

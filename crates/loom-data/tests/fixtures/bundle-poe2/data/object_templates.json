@@ -1,0 +1,17 @@
+[
+ {
+  "id": "test/chars/character",
+  "stats": [
+   {
+    "stat": "test_life_per_level",
+    "value": 12
+   }
+  ],
+  "values": [
+   {
+    "key": "enable_weapon_sets",
+    "value": "true"
+   }
+  ]
+ }
+]

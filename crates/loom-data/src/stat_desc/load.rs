@@ -18,8 +18,9 @@ use super::template::{Template, TemplateError};
 use super::{Condition, Description, Handler, StatDescFile, Variant};
 
 /// Manifest formats this loader reads. Format 4 (Spike B PR B4x) adds the
-/// `item_types` section; its stat-description section is the same as 3.
-pub const SUPPORTED_MANIFEST_FORMATS: [u64; 2] = [3, 4];
+/// `item_types` section, format 5 (P3-1b) `object_templates`; their
+/// stat-description section is the same as 3.
+pub const SUPPORTED_MANIFEST_FORMATS: [u64; 3] = [3, 4, 5];
 
 /// Why a manifest or file did not load.
 #[derive(Debug, thiserror::Error)]
@@ -461,7 +462,7 @@ mod tests {
     }
 
     #[test]
-    fn manifest_should_read_format_4_with_item_types_and_refuse_5() {
+    fn manifest_should_read_formats_4_and_5_and_refuse_6() {
         let json = |format: u32| {
             format!(
                 r#"{{"format": {format}, "game": "poe1", "item_types": {{"cycles": [],
@@ -469,9 +470,11 @@ mod tests {
                 "stat_descriptions": {{"dir": "x", "files": {{}}, "handlers": {{}}}}}}"#
             )
         };
-        let m = StatDescManifest::from_json(json(4).as_bytes()).unwrap();
-        assert_eq!(m.format, 4);
-        let err = StatDescManifest::from_json(json(5).as_bytes()).unwrap_err();
+        for format in [4, 5] {
+            let m = StatDescManifest::from_json(json(format).as_bytes()).unwrap();
+            assert_eq!(m.format, u64::from(format));
+        }
+        let err = StatDescManifest::from_json(json(6).as_bytes()).unwrap_err();
         assert_eq!(err.code(), "DATA_STATDESC_FORMAT");
     }
 
