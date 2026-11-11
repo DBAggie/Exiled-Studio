@@ -313,6 +313,26 @@ fn changed_source_lines_should_fail_check_d() {
     );
 }
 
+/// A lossy export fails the mutation check; the adapter's passes.
+#[test]
+fn lossy_export_should_fail_a_mutation() {
+    let set = mutations(POE1_XML).unwrap();
+    let m = set
+        .iter()
+        .find(|m| m.kind == Kind::Attribute && m.path == "PathOfBuilding/Items/Item")
+        .unwrap();
+    assert_eq!(survives(&m.xml, export), Ok(()));
+    let lossy = |b: &Build| export(b).replace(&format!(" {}=", mutate::ATTRIBUTE), " dropped=");
+    assert_eq!(
+        survives(&m.xml, lossy),
+        Err("lost or changed in the export".to_owned())
+    );
+    assert_eq!(
+        survives(&m.xml, |_| "<a>".to_owned()).map_err(|e| e.starts_with("export is not XML")),
+        Err(true)
+    );
+}
+
 #[test]
 fn mutation_writer_should_reproduce_the_document() {
     let set = mutations(POE1_XML).unwrap();

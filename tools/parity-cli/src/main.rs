@@ -136,6 +136,7 @@ const USAGE: &str = "usage:
       (every *.xml directly in it, in name order), a PoB build *.xml, or a
       v1 build document *.json; identical files count once. A file named
       by --expect-import-error must not import, and then passes.
+      A name that is no input's file name stops the run (exit 3).
       --anonymous names builds by SHA-256. Write summary.json (scrubbed)
       and report.json (failures) to <dir>, which must not exist. Exit 0
       when every build passes, 1 when one fails (or no build was given),
@@ -829,6 +830,13 @@ fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
         return Err(format!("{}: already exists", out.display()));
     }
     let inputs = round_trip_inputs(&args.inputs)?;
+    if let Some(missing) = args
+        .expect_import_error
+        .iter()
+        .find(|name| !inputs.iter().any(|i| &i.file == *name))
+    {
+        return Err(format!("--expect-import-error {missing}: no such input"));
+    }
     let bundle = args
         .bundle
         .as_deref()

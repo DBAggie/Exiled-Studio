@@ -22,7 +22,9 @@
 //! **Writer:** the document is written back from its parsed tree, with
 //! every text node as read (whitespace too) and the mutation added. The
 //! unmutated copy must be [`xml_equal`] to the source; [`mutations`]
-//! refuses the document otherwise.
+//! refuses the document otherwise (a build failure). It writes no DOCTYPE
+//! and no CDATA markup (CDATA text is escaped instead), which PoB never
+//! writes.
 
 use std::collections::BTreeSet;
 

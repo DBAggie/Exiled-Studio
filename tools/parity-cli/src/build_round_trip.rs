@@ -16,12 +16,16 @@
 //! - **(a) `xml-equal`:** `xml_equal(export(B), original)`, for PoB input;
 //! - **(b) `builds-equal`:** B and C equal A, resolutions included (C was
 //!   resolved again, so resolution is compared too);
-//! - **(c) `json-stable`:** steps 1 to 3 run twice give the same bytes;
+//! - **(c) `json-stable`:** steps 1 to 3 run twice give the same bytes
+//!   (in one process; across processes and OSes, CI compares the
+//!   summaries' `json_sha256` from Windows and Linux);
 //! - **(d) `source-lines`:** every typed item's source lines equal the
 //!   lines of its text in the input (PoB input: the `<Item>`'s last
 //!   non-blank text child split into non-blank trimmed lines, as
 //!   `pob_item::read` does; a document: A's lines before resolution), in
-//!   A after resolution, in B, and in C.
+//!   A after resolution, in B, and in C. (d) looks from the typed items
+//!   out: an input item that is not typed in the output (kept whole, or
+//!   lost) is (a)'s and (b)'s to catch.
 //!
 //! Each check is `pass`, `fail`, `not-applicable`, or `not-run` (an
 //! earlier step failed). PoB input also runs the mutation set ([`mutate`]):
@@ -698,7 +702,7 @@ fn mutations(row: &mut BuildRow, failures: &mut Vec<String>, text: &str) {
     for m in set {
         let count = row.mutations.entry(m.kind.name()).or_default();
         count.tried += 1;
-        match survives(&m.xml) {
+        match survives(&m.xml, export) {
             Ok(()) => count.survived += 1,
             Err(problem) => failures.push(format!(
                 "mutation {} at {}: {problem}",
@@ -709,8 +713,9 @@ fn mutations(row: &mut BuildRow, failures: &mut Vec<String>, text: &str) {
     }
 }
 
-/// Whether a mutated document survives XML to JSON to XML.
-fn survives(xml: &str) -> Result<(), String> {
+/// Whether a mutated document survives XML to JSON to XML through
+/// `export` (the adapter's; a test passes a lossy one).
+fn survives(xml: &str, export: impl Fn(&Build) -> String) -> Result<(), String> {
     let a = import(xml).map_err(|e| format!("import: {}", e.code()))?;
     let json = to_json(&a).map_err(|e| format!("write: {}", e.code()))?;
     let b = from_json(&json).map_err(|e| format!("read: {}", e.code()))?;

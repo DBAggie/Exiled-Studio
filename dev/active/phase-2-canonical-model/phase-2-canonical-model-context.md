@@ -449,4 +449,10 @@ The first run stopped on an API rate limit; it was resumed on the committed bran
 - **Expected import errors:** `--expect-import-error malformed.xml`. The fixture manifest's `ORACLE_IMPORT` expectation was not reused because the manifest also lists PoB-checkout fixtures that the CI job does not have.
 - **Exit codes:** 0 every build passes; 1 a build fails, or no build was given; 2 usage; 3 the run cannot start (an input or the bundle unreadable or invalid, `--out` exists).
 - **Scrubbing:** the summary has counts and build names (path, or `sha256:<hex>` with `--anonymous`). Failures name checks, item IDs, line numbers, codes, and element paths, never text.
-- **CI:** job `round-trip` (`build round-trip`, Ubuntu, release build), required in `ci-ok`; `jq` requires 25 or more public inputs with no failures, and resolved lines with none pending for the synthetic builds; then `no_poe1_identifiers`. Cross-platform bytes stay with `dto cross-platform`.
+- **CI:** job `round-trip` (`build round-trip`, Ubuntu, release build), required in `ci-ok`; `jq` requires 25 or more public inputs with no failures, and resolved lines with none pending for the synthetic builds; then `no_poe1_identifiers` (Linux). It runs on Windows and Linux; `dto cross-platform` diffs each run's `[name, json_sha256]` lists, so the resolved synthetic documents are compared across OSes too.
+
+## code-architecture-reviewer (P2-8, 2026-11-10) summary
+- **No blockers;** each check was shown able to fail.
+- **Should-fix, applied:** resolved documents across OSes in CI (matrix and `dto-compare`); P2-7's handoff entry pointed at the removed test; `survives` takes the export function and a test injects a lossy one; the job also requires `checks.d_source_lines.pass >= 24`.
+- **Nits, applied:** an `--expect-import-error` name that is no input exits 3; module docs on (c) in one process, (d) from the typed items out, the writer's DOCTYPE and CDATA; `timeout-minutes: 30`.
+- **Nits, not done:** `--expect-import-error` takes any read code, not an exact one (the test checks `IMPORT_XML`); `xml_item_lines` on an unparsable input gives "not in the input" (A cannot have read then).

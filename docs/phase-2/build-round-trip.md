@@ -19,10 +19,11 @@ PoB input also runs the **unknown-content mutation set** (`build_round_trip/muta
 
 **Exit codes:** 0 when every build passes; 1 when a build fails, or when no build was given; 2 on a usage error; 3 when the run cannot start (an input or the bundle does not read or validate, or `--out` exists).
 
-## CI (`build round-trip` job, required through `ci-ok`)
+## CI (`build round-trip` job on Windows and Linux, required through `ci-ok`)
 - the 24 public fixtures (`tools/oracle/fixtures`, `tools/oracle/fixtures/community`), with no bundle. `malformed.xml` must not import (`--expect-import-error`), so 25 inputs;
 - the synthetic PoE1 PoB build (`tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml`) with `bundle-poe1`, and the synthetic PoE2 build document (`synthetic-poe2.json`, made from the PoE1 build's items) with `bundle-poe2`. This is gate 3b: a PoE2 bundle with no PoE1 tables drives `resolve_build` over a PoE2 build, and that build round-trips through the JSON document. The job also requires resolved lines and no pending ones;
-- the PoE1-identifier scan (gate 3c, `cargo test -p loom-parser --test no_poe1_identifiers`).
+- the PoE1-identifier scan (gate 3c, `cargo test -p loom-parser --test no_poe1_identifiers`, Linux);
+- `dto cross-platform` diffs every document's SHA-256 from these runs between Windows and Linux.
 
 In-session, 2026-11-10, at `d1aa9b7`, on Windows and on WSL Ubuntu 24.04 (the job's commands, with the `jq` conditions checked in Python because WSL had no `jq`):
 - public fixtures: 25 inputs, 25 pass: (a) to (d) pass for 24 and `malformed.xml` gives `IMPORT_XML` as expected. 4,492 mutations, all survived;

@@ -79,7 +79,7 @@ jobs:
   # then fails itself: a run is missing), but not when the run was cancelled.
   dto-compare:
     name: dto cross-platform
-    needs: [rust]
+    needs: [rust, round-trip]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -92,6 +92,19 @@ jobs:
           [ -f out/dto-Windows/dto-hashes.json ] && [ -f out/dto-Linux/dto-hashes.json ] || { echo "a dto-hashes run is missing" >&2; exit 1; }
           sha256sum out/dto-*/dto-hashes.json | tee -a "$GITHUB_STEP_SUMMARY"
           diff out/dto-Windows/dto-hashes.json out/dto-Linux/dto-hashes.json
+      # Phase 2 step 8: the resolved synthetic builds and the public fixtures
+      # through build-round-trip (documents' SHA-256 per build).
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: round-trip-*
+          path: out
+      - name: Compare build-round-trip documents, Windows with Linux
+        run: |
+          for set in public poe1 poe2; do
+            w="out/round-trip-Windows/$set-hashes.json"; l="out/round-trip-Linux/$set-hashes.json"
+            [ -f "$w" ] && [ -f "$l" ] || { echo "a build-round-trip run is missing ($set)" >&2; exit 1; }
+            diff "$w" "$l"
+          done
 
   # Phase 2 decision 11: the committed JSON Schema and TypeScript are what
   # the DTOs generate. Regenerates both and fails on any difference.
@@ -127,12 +140,21 @@ jobs:
 
   # Phase 2 step 8 (gates 1a, 2, 3b, 3c): build-round-trip on the public
   # fixtures (no bundle; malformed.xml must not import) and on the synthetic
-  # PoE1 and PoE2 builds with their synthetic bundles, then the scan for
-  # PoE1-only identifiers in shared code. Exit codes: build-round-trip in
-  # tools/parity-cli/src/main.rs (USAGE).
+  # PoE1 and PoE2 builds with their synthetic bundles, on Windows and Linux;
+  # dto-compare diffs the documents' SHA-256 between the two. Then the scan
+  # for PoE1-only identifiers in shared code. Exit codes: build-round-trip
+  # in tools/parity-cli/src/main.rs (USAGE).
   round-trip:
-    name: build round-trip
-    runs-on: ubuntu-latest
+    name: build round-trip (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install # reads rust-toolchain.toml
@@ -157,12 +179,18 @@ jobs:
           --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/poe2
       - name: Every public fixture ran; the synthetic builds resolved
         run: |
-          jq -e '.builds >= 25 and .failed == 0' out/round-trip/public/summary.json
+          jq -e '.builds >= 25 and .failed == 0 and .checks.d_source_lines.pass >= 24' out/round-trip/public/summary.json
           for game in poe1 poe2; do
             jq -e '.failed == 0 and .modifier_lines.resolved > 0 and (.modifier_lines.pending // 0) == 0' "out/round-trip/$game/summary.json"
           done
       - name: No PoE1-only identifiers in shared code (gate 3c)
+        if: runner.os == 'Linux'
         run: cargo test --locked -p loom-parser --test no_poe1_identifiers
+      - name: Document hashes (for dto-compare)
+        run: |
+          for set in public poe1 poe2; do
+            jq '[.per_build[] | {name, json_sha256}]' "out/round-trip/$set/summary.json" > "out/round-trip/$set-hashes.json"
+          done
       - name: Summary
         if: always()
         run: |
@@ -176,7 +204,7 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: round-trip
+          name: round-trip-${{ runner.os }}
           path: out/round-trip
           if-no-files-found: ignore
 
