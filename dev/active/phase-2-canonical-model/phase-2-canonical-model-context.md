@@ -433,3 +433,7 @@ The first run stopped on an API rate limit; it was resumed on the committed bran
     - `u64` and `i64` become TypeScript `number` (exact up to 2^53; the values are line indices, Steam builds, and stat values);
     - an untagged `Number` gives a generic `DTO_JSON` message for a malformed config number;
     - `usize as u64` is commented.
+
+## Maintainer decision on P2-7's open points (2026-11-10; to apply in P2-8)
+- **`DTO_*` codes:** keep them. Add the prefix to plan decision 15 with the layers: `MIGRATE_*` (the version is read first on load: too new gives `MIGRATE_TOO_NEW`), `PERSIST_*` (file I/O, atomic write), `DTO_*` (a malformed document, from any source). No layer wraps or renames another's code.
+- **Test-only dependency:** keep `loom-parser`'s dev-dependency on `loom-serialization` for now, and narrow the AGENTS.md line: a test-only dependency may point only to another core crate, never from a crate to one that depends on it. When the P2-8 harness's CI job covers gate 3b on the synthetic bundles, move the test there, drop the dev-dependency, and remove the exception.
