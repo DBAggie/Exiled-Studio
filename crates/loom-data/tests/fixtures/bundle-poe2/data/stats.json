@@ -1,0 +1,36 @@
+[
+ {
+  "id": "test_maximum_life"
+ },
+ {
+  "id": "test_local_armour",
+  "local": true
+ },
+ {
+  "id": "test_accuracy_a"
+ },
+ {
+  "id": "test_accuracy_b"
+ },
+ {
+  "id": "test_evasion_a"
+ },
+ {
+  "id": "test_evasion_b"
+ },
+ {
+  "id": "test_strength"
+ },
+ {
+  "id": "test_shadow"
+ },
+ {
+  "id": "test_first_half"
+ },
+ {
+  "id": "test_second_half"
+ },
+ {
+  "id": "test_presence"
+ }
+]

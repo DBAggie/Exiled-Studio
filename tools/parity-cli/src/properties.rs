@@ -1,15 +1,18 @@
 //! Item property lines (Spike B, PR B5d; area 4 of the B4b verdict,
-//! `docs/spikes/spike-b-resolution.md` section 7a).
+//! `docs/spikes/spike-b-resolution.md` section 7a). Since P2-2d the reading
+//! is `loom_parser::import::properties` and the named ids are PoE1 data in
+//! `crate::poe1`; this module loads the tables and formats the report's
+//! `detail`.
 //!
 //! PoB items sometimes carry lines of the game's item display that are
 //! properties, not modifiers. Each is read from game data and resolved as
 //! a typed property (kind `item-property` or `catalyst-quality`):
 //! - a `ClientStrings` property text with numeric placeholders
-//!   ([`PROPERTY_IDS`]: `Lasts {0} Seconds`, `Currently has {0} Charges`,
+//!   ([`crate::poe1::PROPERTY_IDS`]: `Lasts {0} Seconds`, `Currently has {0} Charges`,
 //!   `Consumes {0} of {1} Charges on use`, ...): detail `property=<id>` and
 //!   each placeholder's value;
 //! - a `ClientStrings` label in PoB's spec form `<label>: <number>`
-//!   ([`LABEL_IDS`]: `Memory Strands: 63`): detail `property=<id>`, `value`;
+//!   ([`crate::poe1::LABEL_IDS`]: `Memory Strands: 63`): detail `property=<id>`, `value`;
 //! - catalyst quality `<AlternateQualityTypes.Description>: +N%`
 //!   (`Quality (Attribute Modifiers): +20%`): the stats of the type's
 //!   `CatalystMod` row (`jewellery_attribute_quality=1`, a stat ID) and
@@ -19,89 +22,13 @@
 //! charges are not extracted). A line that matches nothing keeps its
 //! category.
 
-use std::collections::BTreeMap;
-
+use loom_parser::import::properties::{Missing, Properties, PropertyMatch, QualityType};
 use serde_json::Value;
 
 use crate::extract::{Read, Table};
+use crate::poe1;
 
-/// `ClientStrings` ids of item-display property texts (the categorizer's
-/// `item-property` ids with numeric placeholders).
-pub const PROPERTY_IDS: [&str; 8] = [
-    "ItemDisplayFlaskBuffDuration1Second",
-    "ItemDisplayFlaskBuffDurationNSeconds",
-    "ItemDisplayChargesConsumptionOnUse1Charge",
-    "ItemDisplayChargesConsumptionOnUseNCharges",
-    "ItemDisplayCharges1Charge",
-    "ItemDisplayChargesNCharges",
-    "ItemDisplayChargesCurrentOfMax1",
-    "ItemDisplayChargesCurrentOfMaxN",
-];
-
-/// `ClientStrings` ids of property labels PoB writes as `<label>: <number>`.
-pub const LABEL_IDS: [&str; 1] = ["ZanaInfluencedItem"];
-
-/// A text split at its placeholders: literal parts and placeholder numbers.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct Template {
-    /// `parts.len() == slots.len() + 1`.
-    parts: Vec<String>,
-    slots: Vec<u8>,
-}
-
-impl Template {
-    /// `None` when a placeholder is not `{0}`..`{9}` or two are adjacent.
-    fn new(text: &str) -> Option<Self> {
-        let (mut parts, mut slots) = (vec![String::new()], Vec::new());
-        let mut rest = text;
-        while let Some((before, after)) = rest.split_once('{') {
-            parts.last_mut()?.push_str(before);
-            let (slot, tail) = after.split_once('}')?;
-            let [d @ b'0'..=b'9'] = slot.as_bytes() else {
-                return None;
-            };
-            slots.push(d - b'0');
-            parts.push(String::new());
-            rest = tail;
-        }
-        parts.last_mut()?.push_str(rest);
-        // A literal must separate two values.
-        if parts.iter().skip(1).rev().skip(1).any(String::is_empty) {
-            return None;
-        }
-        Some(Self { parts, slots })
-    }
-
-    /// The numeric values of a line, by placeholder, in text order.
-    fn read(&self, line: &str) -> Option<Vec<(u8, String)>> {
-        let mut rest = line.trim().strip_prefix(self.parts.first()?.as_str())?;
-        let mut out = Vec::new();
-        for (slot, next) in self.slots.iter().zip(self.parts.iter().skip(1)) {
-            let (value, tail) = if next.is_empty() {
-                (rest, "")
-            } else {
-                rest.split_once(next.as_str())?
-            };
-            if !number(value) {
-                return None;
-            }
-            out.push((*slot, value.to_owned()));
-            rest = tail;
-        }
-        rest.is_empty().then_some(out)
-    }
-}
-
-/// A plain number: digits with an optional decimal part.
-fn number(v: &str) -> bool {
-    let (whole, frac) = v.split_once('.').unwrap_or((v, "0"));
-    !whole.is_empty()
-        && !frac.is_empty()
-        && whole.bytes().all(|b| b.is_ascii_digit())
-        && frac.bytes().all(|b| b.is_ascii_digit())
-}
-
-/// A resolved property line.
+/// A resolved property line, as the report writes it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Property {
     /// `item-property` or `catalyst-quality`.
@@ -110,170 +37,134 @@ pub struct Property {
     pub detail: Vec<String>,
 }
 
-/// Property texts and catalyst quality types read from the extract.
-#[derive(Debug, Clone, Default)]
-pub struct Properties {
-    templates: Vec<(String, Template)>,
-    labels: Vec<(String, String)>,
-    /// `AlternateQualityTypes.Description` to its `Id` and the fixed stats
-    /// of its `CatalystMod` row.
-    qualities: BTreeMap<String, (String, Vec<(String, i64)>)>,
-    /// Named ids not read (missing from `ClientStrings`, or a text of
-    /// another shape) and quality descriptions dropped because two rows
-    /// share them with different stats, recorded for the summary.
-    missing: Vec<String>,
+/// The report form of a property match.
+#[must_use]
+pub fn property(m: &PropertyMatch) -> Property {
+    let detail = match m {
+        PropertyMatch::Template { property, values } => {
+            let mut d = vec![format!("property={property}")];
+            d.extend(values.iter().map(|(slot, v)| format!("{{{slot}}}={v}")));
+            d
+        }
+        PropertyMatch::Label { property, value } => {
+            vec![format!("property={property}"), format!("value={value}")]
+        }
+        PropertyMatch::Quality {
+            quality_type,
+            stats,
+            quality,
+        } => {
+            let mut d: Vec<String> = stats.iter().map(|(s, v)| format!("{s}={v}")).collect();
+            d.push(format!("quality_type={quality_type}"));
+            d.push(format!("quality={quality}"));
+            d
+        }
+    };
+    Property {
+        kind: m.kind(),
+        detail,
+    }
 }
 
-impl Properties {
-    /// Reads `ClientStrings` and, when present, `AlternateQualityTypes`
-    /// with `Mods` and `Stats`. A missing `ClientStrings` gives no rules.
-    ///
-    /// # Errors
-    /// A message when a table or column the others need is missing.
-    pub fn load(read: Read<'_>) -> Result<Self, String> {
-        let mut out = Self::default();
-        if let Some(cs) = Table::read(read, "ClientStrings")? {
-            let (id, text) = (cs.column("Id")?, cs.column("Text")?);
-            for r in &cs.rows {
-                let (Some(i), Some(t)) = (Table::text(r, id), Table::text(r, text)) else {
+/// The property a line shows, in the report's form.
+#[must_use]
+pub fn resolve(properties: &Properties, line: &str) -> Option<Property> {
+    properties.resolve(line).map(|m| property(&m))
+}
+
+/// Named ids not read and duplicate quality descriptions dropped, as the
+/// Spike B summary names them (`AlternateQualityTypes:<description>`).
+#[must_use]
+pub fn missing(properties: &Properties) -> Vec<String> {
+    properties
+        .missing()
+        .iter()
+        .map(|m| match m {
+            Missing::Text(id) => id.clone(),
+            Missing::QualityType(d) => format!("AlternateQualityTypes:{d}"),
+        })
+        .collect()
+}
+
+/// Reads `ClientStrings` and, when present, `AlternateQualityTypes` with
+/// `Mods` and `Stats`. A missing `ClientStrings` gives no rules.
+///
+/// # Errors
+/// A message when a table or column the others need is missing.
+pub fn load(read: Read<'_>) -> Result<Properties, String> {
+    let rules = poe1::item_rules().text;
+    let mut texts: Vec<(String, String)> = Vec::new();
+    if let Some(cs) = Table::read(read, "ClientStrings")? {
+        let (id, text) = (cs.column("Id")?, cs.column("Text")?);
+        for r in &cs.rows {
+            if let (Some(i), Some(t)) = (Table::text(r, id), Table::text(r, text)) {
+                texts.push((i.to_owned(), t.to_owned()));
+            }
+        }
+    }
+    let pairs = texts.iter().map(|(i, t)| (i.as_str(), t.as_str()));
+    Ok(Properties::new(&rules, pairs, quality_types(read)?))
+}
+
+/// `AlternateQualityTypes` with each catalyst mod's fixed stats, in table
+/// order; `None` without the table.
+///
+/// # Errors
+/// A message when a table or column the others need is missing.
+pub fn quality_types(read: Read<'_>) -> Result<Option<Vec<QualityType>>, String> {
+    let Some(aq) = Table::read(read, "AlternateQualityTypes")? else {
+        return Ok(None);
+    };
+    let mods = Table::require(read, "Mods")?;
+    let stats = Table::require(read, "Stats")?;
+    let stat_id = stats.column("Id")?;
+    let (aq_id, desc, catalyst) = (
+        aq.column("Id")?,
+        aq.column("Description")?,
+        aq.column("CatalystMod")?,
+    );
+    let mut slots = Vec::new();
+    for n in 1..=8 {
+        slots.push((
+            mods.column(&format!("StatsKey{n}"))?,
+            mods.column(&format!("Stat{n}Min"))?,
+            mods.column(&format!("Stat{n}Max"))?,
+        ));
+    }
+    let at = |rows: &[Vec<Value>], n: Option<i64>| {
+        n.and_then(|n| usize::try_from(n).ok())
+            .and_then(|n| rows.get(n).cloned())
+    };
+    let mut qualities = Vec::new();
+    for r in &aq.rows {
+        let (Some(qid), Some(d)) = (Table::text(r, aq_id), Table::text(r, desc)) else {
+            continue;
+        };
+        let mut list = Vec::new();
+        if let Some(m) = at(&mods.rows, Table::int(r, catalyst)) {
+            for &(k, lo, hi) in &slots {
+                let Some(s) = at(&stats.rows, Table::int(&m, k))
+                    .and_then(|s| Table::text(&s, stat_id).map(str::to_owned))
+                else {
                     continue;
                 };
-                if PROPERTY_IDS.contains(&i) {
-                    if let Some(tpl) = Template::new(t) {
-                        out.templates.push((i.to_owned(), tpl));
-                    }
-                } else if LABEL_IDS.contains(&i) && !t.contains('{') {
-                    out.labels.push((i.to_owned(), t.to_owned()));
-                }
-            }
-            out.templates.sort_by(|a, b| a.0.cmp(&b.0));
-            out.labels.sort();
-        }
-        for id in PROPERTY_IDS.iter().chain(&LABEL_IDS) {
-            let read_ = out.templates.iter().any(|(i, _)| i == id)
-                || out.labels.iter().any(|(i, _)| i == id);
-            if !read_ {
-                out.missing.push((*id).to_owned());
-            }
-        }
-        let Some(aq) = Table::read(read, "AlternateQualityTypes")? else {
-            return Ok(out);
-        };
-        let mods = Table::require(read, "Mods")?;
-        let stats = Table::require(read, "Stats")?;
-        let stat_id = stats.column("Id")?;
-        let (aq_id, desc, catalyst) = (
-            aq.column("Id")?,
-            aq.column("Description")?,
-            aq.column("CatalystMod")?,
-        );
-        let mut duplicates = Vec::new();
-        let mut slots = Vec::new();
-        for n in 1..=8 {
-            slots.push((
-                mods.column(&format!("StatsKey{n}"))?,
-                mods.column(&format!("Stat{n}Min"))?,
-                mods.column(&format!("Stat{n}Max"))?,
-            ));
-        }
-        let at = |rows: &[Vec<Value>], n: Option<i64>| {
-            n.and_then(|n| usize::try_from(n).ok())
-                .and_then(|n| rows.get(n).cloned())
-        };
-        for r in &aq.rows {
-            let (Some(qid), Some(d)) = (Table::text(r, aq_id), Table::text(r, desc)) else {
-                continue;
-            };
-            let mut list = Vec::new();
-            if let Some(m) = at(&mods.rows, Table::int(r, catalyst)) {
-                for &(k, lo, hi) in &slots {
-                    let Some(s) = at(&stats.rows, Table::int(&m, k))
-                        .and_then(|s| Table::text(&s, stat_id).map(str::to_owned))
-                    else {
-                        continue;
-                    };
-                    // A fixed value on the row (`(1, 1)`); a range is not a
-                    // value the line shows, so it is left out.
-                    if let (Some(a), Some(b)) = (Table::int(&m, lo), Table::int(&m, hi))
-                        && a == b
-                        && a != 0
-                    {
-                        list.push((s, a));
-                    }
-                }
-            }
-            match out.qualities.get(d) {
-                Some((_, old)) if *old != list => duplicates.push(d.to_owned()),
-                Some(_) => {}
-                None => {
-                    out.qualities.insert(d.to_owned(), (qid.to_owned(), list));
+                // A fixed value on the row (`(1, 1)`); a range is not a
+                // value the line shows, so it is left out.
+                if let (Some(a), Some(b)) = (Table::int(&m, lo), Table::int(&m, hi))
+                    && a == b
+                    && a != 0
+                {
+                    list.push((s, a));
                 }
             }
         }
-        duplicates.sort();
-        duplicates.dedup();
-        for d in duplicates {
-            out.qualities.remove(&d);
-            out.missing.push(format!("AlternateQualityTypes:{d}"));
-        }
-        Ok(out)
+        qualities.push(QualityType {
+            id: qid.to_owned(),
+            description: d.to_owned(),
+            stats: list,
+        });
     }
-
-    /// Named ids not read and duplicate quality descriptions dropped.
-    #[must_use]
-    pub fn missing(&self) -> &[String] {
-        &self.missing
-    }
-
-    /// What was read, for the summary: `(templates, labels, quality types)`.
-    #[must_use]
-    pub fn inputs(&self) -> (usize, usize, usize) {
-        (
-            self.templates.len(),
-            self.labels.len(),
-            self.qualities.len(),
-        )
-    }
-
-    /// The property a line shows, if any (module docs).
-    #[must_use]
-    pub fn resolve(&self, line: &str) -> Option<Property> {
-        let line = line.trim();
-        for (id, tpl) in &self.templates {
-            if let Some(values) = tpl.read(line) {
-                let mut detail = vec![format!("property={id}")];
-                detail.extend(values.iter().map(|(slot, v)| format!("{{{slot}}}={v}")));
-                return Some(Property {
-                    kind: "item-property",
-                    detail,
-                });
-            }
-        }
-        let (label, value) = line.split_once(": ")?;
-        if let Some((id, _)) = self.labels.iter().find(|(_, t)| t == label)
-            && number(value)
-        {
-            return Some(Property {
-                kind: "item-property",
-                detail: vec![format!("property={id}"), format!("value={value}")],
-            });
-        }
-        let (qid, stats) = self.qualities.get(label)?;
-        let n = value.strip_prefix('+')?.strip_suffix('%')?;
-        if !number(n) {
-            return None;
-        }
-        let mut detail: Vec<String> = stats.iter().map(|(s, v)| format!("{s}={v}")).collect();
-        detail.push(format!("quality_type={qid}"));
-        detail.push(format!("quality={n}"));
-        // A type without a catalyst stat (map quality) is a property only.
-        let kind = if stats.is_empty() {
-            "item-property"
-        } else {
-            "catalyst-quality"
-        };
-        Some(Property { kind, detail })
-    }
+    Ok(Some(qualities))
 }
 
 #[cfg(test)]
@@ -281,37 +172,38 @@ mod tests {
     use super::*;
 
     fn props() -> Properties {
-        let tpl = |id: &str, t: &str| (id.to_owned(), Template::new(t).unwrap());
-        Properties {
-            templates: vec![
-                tpl("ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"),
-                tpl(
+        Properties::new(
+            &poe1::item_rules().text,
+            [
+                ("ItemDisplayFlaskBuffDurationNSeconds", "Lasts {0} Seconds"),
+                (
                     "ItemDisplayChargesConsumptionOnUseNCharges",
                     "Consumes {0} of {1} Charges on use",
                 ),
-            ],
-            labels: vec![("ZanaInfluencedItem".to_owned(), "Memory Strands".to_owned())],
-            qualities: [(
-                "Quality (Attribute Modifiers)".to_owned(),
+                ("ItemDisplayFlaskBuffDuration1Second", "Lasts {0} Second"),
                 (
-                    "JewelleryAttributeQuality".to_owned(),
-                    vec![("jewellery_attribute_quality".to_owned(), 1)],
+                    "ItemDisplayChargesCurrentOfMaxN",
+                    "Currently has {0} of {1} Charges",
                 ),
-            )]
-            .into(),
-            missing: Vec::new(),
-        }
+                ("ZanaInfluencedItem", "Memory Strands"),
+            ],
+            Some(vec![QualityType {
+                id: "JewelleryAttributeQuality".to_owned(),
+                description: "Quality (Attribute Modifiers)".to_owned(),
+                stats: vec![("jewellery_attribute_quality".to_owned(), 1)],
+            }]),
+        )
     }
 
     #[test]
     fn resolve_should_read_property_templates_with_numbers() {
         let p = props();
         assert_eq!(
-            p.resolve("Lasts 3.70 Seconds").unwrap().detail,
+            resolve(&p, "Lasts 3.70 Seconds").unwrap().detail,
             ["property=ItemDisplayFlaskBuffDurationNSeconds", "{0}=3.70"]
         );
         assert_eq!(
-            p.resolve("Consumes 20 of 40 Charges on use")
+            resolve(&p, "Consumes 20 of 40 Charges on use")
                 .unwrap()
                 .detail,
             [
@@ -320,18 +212,18 @@ mod tests {
                 "{1}=40"
             ]
         );
-        assert_eq!(p.resolve("Lasts many Seconds"), None);
-        assert_eq!(p.resolve("Lasts 3 Seconds longer"), None);
+        assert_eq!(resolve(&p, "Lasts many Seconds"), None);
+        assert_eq!(resolve(&p, "Lasts 3 Seconds longer"), None);
     }
 
     #[test]
     fn resolve_should_read_labels_and_catalyst_quality() {
         let p = props();
         assert_eq!(
-            p.resolve("Memory Strands: 63").unwrap().detail,
+            resolve(&p, "Memory Strands: 63").unwrap().detail,
             ["property=ZanaInfluencedItem", "value=63"]
         );
-        let q = p.resolve("Quality (Attribute Modifiers): +20%").unwrap();
+        let q = resolve(&p, "Quality (Attribute Modifiers): +20%").unwrap();
         assert_eq!(q.kind, "catalyst-quality");
         assert_eq!(
             q.detail,
@@ -341,8 +233,27 @@ mod tests {
                 "quality=20"
             ]
         );
-        assert_eq!(p.resolve("Quality (Unknown): +20%"), None);
-        assert_eq!(p.resolve("Memory Strands: many"), None);
+        assert_eq!(resolve(&p, "Quality (Unknown): +20%"), None);
+        assert_eq!(resolve(&p, "Memory Strands: many"), None);
+    }
+
+    #[test]
+    fn resolve_should_read_singular_and_current_of_max_templates() {
+        let p = props();
+        assert_eq!(
+            resolve(&p, "Lasts 1 Second").unwrap().detail,
+            ["property=ItemDisplayFlaskBuffDuration1Second", "{0}=1"]
+        );
+        assert_eq!(
+            resolve(&p, "Currently has 20 of 40 Charges")
+                .unwrap()
+                .detail,
+            [
+                "property=ItemDisplayChargesCurrentOfMaxN",
+                "{0}=20",
+                "{1}=40"
+            ]
+        );
     }
 
     fn table(name: &str, columns: &[&str], rows: &str) -> String {
@@ -399,9 +310,9 @@ mod tests {
 
     #[test]
     fn load_should_read_named_texts_and_catalyst_stats() {
-        let p = Properties::load(&read).unwrap();
+        let p = load(&read).unwrap();
         assert_eq!(p.inputs(), (1, 1, 2));
-        let q = p.resolve("Quality (Attribute Modifiers): +20%").unwrap();
+        let q = resolve(&p, "Quality (Attribute Modifiers): +20%").unwrap();
         assert_eq!(
             (q.kind, q.detail.as_slice()),
             (
@@ -416,7 +327,7 @@ mod tests {
             )
         );
         // No catalyst stat: a property with the type's identity.
-        let r = p.resolve("Quality (Rarity): +10%").unwrap();
+        let r = resolve(&p, "Quality (Rarity): +10%").unwrap();
         assert_eq!(
             (r.kind, r.detail.as_slice()),
             (
@@ -427,62 +338,12 @@ mod tests {
             )
         );
         // Two rows with one description and different stats: dropped, recorded.
-        assert_eq!(p.resolve("Quality (Twin): +5%"), None);
-        assert!(
-            p.missing()
-                .contains(&"AlternateQualityTypes:Quality (Twin)".to_owned())
-        );
+        assert_eq!(resolve(&p, "Quality (Twin): +5%"), None);
+        assert!(missing(&p).contains(&"AlternateQualityTypes:Quality (Twin)".to_owned()));
         // Named ids absent from the fixture's `ClientStrings` are recorded.
-        assert!(
-            p.missing()
-                .contains(&"ItemDisplayChargesNCharges".to_owned())
-        );
-        assert!(p.resolve("Lasts 2 Seconds").is_some());
+        assert!(missing(&p).contains(&"ItemDisplayChargesNCharges".to_owned()));
+        assert!(resolve(&p, "Lasts 2 Seconds").is_some());
         let none = |_: &str| -> Result<Vec<u8>, String> { Err("absent".to_owned()) };
-        assert_eq!(Properties::load(&none).unwrap().inputs(), (0, 0, 0));
-    }
-
-    #[test]
-    fn resolve_should_read_singular_and_current_of_max_templates() {
-        let tpl = |id: &str, t: &str| (id.to_owned(), Template::new(t).unwrap());
-        let p = Properties {
-            templates: vec![
-                tpl("ItemDisplayFlaskBuffDuration1Second", "Lasts {0} Second"),
-                tpl(
-                    "ItemDisplayChargesCurrentOfMaxN",
-                    "Currently has {0} of {1} Charges",
-                ),
-            ],
-            ..Properties::default()
-        };
-        assert_eq!(
-            p.resolve("Lasts 1 Second").unwrap().detail,
-            ["property=ItemDisplayFlaskBuffDuration1Second", "{0}=1"]
-        );
-        assert_eq!(
-            p.resolve("Currently has 20 of 40 Charges").unwrap().detail,
-            [
-                "property=ItemDisplayChargesCurrentOfMaxN",
-                "{0}=20",
-                "{1}=40"
-            ]
-        );
-    }
-
-    #[test]
-    fn number_should_take_plain_digits_with_an_optional_decimal_part() {
-        for ok in ["0", "40", "3.70"] {
-            assert!(number(ok), "{ok}");
-        }
-        for bad in ["", "3.", ".5", "1,000", "-1", "+1", "x"] {
-            assert!(!number(bad), "{bad}");
-        }
-    }
-
-    #[test]
-    fn template_should_refuse_adjacent_or_odd_placeholders() {
-        assert!(Template::new("{0}{1}").is_none());
-        assert!(Template::new("Has {x}").is_none());
-        assert!(Template::new("Has {0}").is_some());
+        assert_eq!(load(&none).unwrap().inputs(), (0, 0, 0));
     }
 }

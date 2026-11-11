@@ -37,6 +37,23 @@ fn data(rows: &[(&str, i64)]) -> Data {
         rules: ItemRules {
             default_scope: "main".to_owned(),
             domain_scopes: vec![(7, "special".to_owned()), (9, "special".to_owned())],
+            mods: crate::import::mods::ModRules {
+                fits: Vec::new(),
+                spawn_exclusion: crate::import::mods::Unflagged {
+                    section: loom_domain::ModSection::Implicit,
+                    flags: Vec::new(),
+                },
+                spawn_excluded_generations: Vec::new(),
+                base_implicit: crate::import::mods::Unflagged {
+                    section: loom_domain::ModSection::Implicit,
+                    flags: Vec::new(),
+                },
+                no_spawn_flags: Vec::new(),
+                sections: Vec::new(),
+                local_carriers: crate::import::mods::LocalCarriers::default(),
+                influences: Vec::new(),
+            },
+            text: TextRules::default(),
         },
         bases,
     }

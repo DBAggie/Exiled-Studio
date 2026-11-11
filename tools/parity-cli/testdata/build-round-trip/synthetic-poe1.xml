@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic build (loom, Phase 2 step 8): items on the synthetic bundles'
+     made-up bases (crates/loom-data/tests/fixtures/make_bundles.py), with a
+     line for each outcome of the default scope, for build-round-trip with
+     bundle-poe1. Original; not from PoB or the game. synthetic-poe2.json is
+     made from it (build_round_trip tests, write_synthetic_poe2). -->
+<PathOfBuilding>
+	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="0" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1" useSecondWeaponSet="false">
+		<Item id="1">
+Rarity: RARE
+Loom Test Band
+Plain Test Ring
+Implicits: 1
++3 first half
++4 second half
++15 to maximum Life
++15 TO MAXIMUM LIFE
++12 to Accuracy
++12 to Evasion
++50 to Strength
++5 to Shadowed Text
+Nothing like this
++1 first half
++2 second half
+While a Test Enemy is near, +15 to maximum Life
+{custom}+15 to maximum Life
+Lasts 4 Seconds
+Test Strands: 5
+Quality (Test Modifiers): +20%
+Corrupted
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Trinket
+Plain Test Charm
+Implicits: 0
+Grants Level 5 Test Bolt Skill
++15 to maximum Life
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Mystery
+Not A Test Base
+Implicits: 0
++15 to maximum Life
+		</Item>
+		<Item id="4">
+Rarity: MAGIC
+Shiny Thing of Testing
+Implicits: 0
++15 to maximum Life
+		</Item>
+		<ItemSet id="1" useSecondWeaponSet="false">
+			<Slot name="Ring 1" itemId="1"/>
+			<Slot name="Ring 2" itemId="0"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>
