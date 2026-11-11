@@ -22,3 +22,8 @@ The script compares `non_unique`, `unique`, `rate`, `resolved_kinds`, `adapted`,
 - Before: the P2-2a baseline above (`c7bbffa`; P2-2a left the result unchanged).
 - After: `814a896`, and again at `591aa43` (review fixes), each clean with exit 0.
 - All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical.
+
+## P2-2c: Mods filter (`import::mods`, `ModRules`), 2026-11-10
+- Before: the P2-2a baseline above (`c7bbffa`).
+- After: `f03a92c`, and again at `54d6fb6` (review fixes), each clean with exit 0.
+- All 12 fields are equal. The only other key that differs is `inputs` (`tool.commit`). `report.json` is byte-identical.

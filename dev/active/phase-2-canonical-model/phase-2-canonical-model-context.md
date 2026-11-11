@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2b: scope and bases; stack #42 <- #43 <- P2-2b)
+Last Updated: 2026-11-10 (PR P2-2c: Mods filter; stack #42 <- #43 <- #44 <- P2-2c)
 
 # Phase 2: context
 
@@ -152,3 +152,31 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - **P2-2c:** mod rows, item tags, grafts, and properties come through a separate `ModData` trait (or sibling traits) next to `ItemData`, so `find_base`'s bound stays minimal.
   - **P2-6:** `ItemData` uses `impl Iterator` in a trait method, so it is not object-safe. `resolve_build` takes it as a generic. If the app layer needs `dyn`, decide before P2-6 (for example, `base_names` returning a `Vec` or a boxed iterator).
   - **P2-3/P2-6:** `BaseRow::implicits` are row indices into `Mods`. The bundle's canonical model should use stable mod IDs and interned tags.
+
+## Decisions in P2-2c (Mods filter, 2026-11-10)
+- **`loom-parser::import::mods`** holds the Spike B filter logic: `ModRow`, `Mods` (an index filled by `from_rows`, plus `locality`), `Context` (with `rules`), `LineContext { section: ModSection, flags }`, `fits`, `filter`, `numbered_stat`, `unnumbered`, `backing`.
+  - The Spike B module docs, with the evidence for each step, stay on the tool's `mod_filter.rs`.
+  - `numbered_stat`, `type_spawns_on`, and `essence_unknown` are public for the tool's tests.
+- **`ModRules` (in `ItemRules.mods`)** holds every PoE1 number and name the filter used, as data:
+  - `fits: Vec<FitRule>`. Each rule has a `ModSection`, an optional line flag, and an optional rarity. For a line, the first matching rule is the only one used, and the row fits when one of its `FitClause`s holds (generation types, `DomainMatch { own, fixed, related }`, `craft_class`, `essence_class`).
+  - The gates `spawn_exclusion` (with `spawn_excluded_generations`) and `base_implicit` are `Unflagged { section, flags }`.
+  - `no_spawn_flags`, `local_carriers`, and `influences` (keyed by the domain `InfluenceId`).
+  - `ModRules::validate` refuses empty rules, empty clauses, and shadowed rules, with `IMPORT_MOD_RULES_*` codes.
+  - The PoE1 rules are `tools/parity-cli/src/poe1.rs::mod_rules()`. The `domain` and `generation` constant modules and `NO_INFLUENCE` moved there.
+- **Kept in the tool, by decision:**
+  - `item_tags.rs` and the essence-column map (`ESSENCE_COLUMNS`). They load from extractor JSON, and `loom-parser` must not gain `serde_json`. The step 3 converter must precompute base tags (`BaseRow.tags`) and essence classes (`ModRow.essence_classes`) into the bundle.
+  - Loading `Mods`, `Stats`, and `Tags` rows (`mod_filter::load`), `eldritch_share`, and PoB section naming.
+- **No `ModData` trait** (this replaces P2-2b's design note). `Mods` is a concrete core index, so any loader (extract today, bundle in P2-6) fills it with `from_rows`.
+- **Tool tests:** the 253 Spike B tests were kept. A test-local `LineContext` with the old bool shape converts to the core context, and the `fits`, `filter`, and `backing` wrappers keep the call sites.
+- **Gate 3c list** gained the moved constant names (`NO_INFLUENCE`, `FLASK_ENCHANTMENT`, `WEAPON_TREE`, `SCOURGE`, `EXARCH`, `UNVEILED`, `DELVE`, `ABYSS_JEWEL`).
+
+## code-architecture-reviewer (P2-2c, 2026-11-10) summary
+- **No blockers.** The reviewer checked the old `fits` against `mod_rules()` case by case, and the gates are equivalent.
+- **Should-fix, applied:**
+  - sections are typed `ModSection` (a typo can no longer drop content silently);
+  - `validate`, plus the PoE1 test that every PoB section except class requirement has a rule;
+  - rule order documented.
+- **Open, for P2-3 and P2-6:**
+  - `ModRow`'s crafting-class and essence fields, and the `craft_class`/`essence_class` clause flags, are PoE1-shaped. The bundle model may need them optional, or PoE2 may need other clause predicates. Decide when the PoE2 bundle is built (P2-3).
+  - `mods.rs` has a large public surface (open-field structs). Consider `#[non_exhaustive]` and constructors once the bundle loader (P2-6) is the only builder.
+  - An influence the rules do not name gives no value. The item's other influences still count, as in Spike B.

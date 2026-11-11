@@ -24,8 +24,25 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-2b scope and bases PR #44 open, in review, branch `feat/p2-2b-scope-bases`, stacked on P2-2a)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`).
+## Current state (updated 2026-11-10, P2-2c Mods filter open, in review, branch `feat/p2-2c-mods-filter`, stacked on P2-2b)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- P2-2c (base `feat/p2-2b-scope-bases`).
+- **PR P2-2c: Mods filter (open, in review, branch `feat/p2-2c-mods-filter`, base `feat/p2-2b-scope-bases`).** Plan step 2c. CI on #43: all 13 checks green (2026-11-10).
+  - **What:** the Spike B `Mods` filter logic moved to the new `crates/loom-parser/src/import/mods.rs`, with 13 tests on made-up rules. That logic is fit, backing, the filter steps, `local-stat`, `numbered-stat`, and `mod-backed`. Every PoE1 number and name the filter used is now `ModRules` data in `ItemRules.mods`:
+    - `fits: Vec<FitRule>` (section, flag, rarity, then clauses of generation types and a `DomainMatch`);
+    - the spawn exclusion and base-implicit gates;
+    - the no-spawn flags;
+    - the local-stat carrier tags;
+    - influences, read from the domain `InfluenceId`.
+  - **parity-cli:** the PoE1 rules are written in `tools/parity-cli/src/poe1.rs::mod_rules()`, with the `domain` and `generation` constants moved there. `mod_filter.rs` keeps loading from the extract (`load`, the spawn pairs, the essence-column map, `Stats` locality), `eldritch_share`, and PoB section naming. Its tests run against the core through a test-local shim.
+  - **Deviations, recorded in the context file:**
+    - `item_tags` and the essence-column map stay in the tool, because they are extract loading and `loom-parser` must not gain `serde_json`. The step 3 converter precomputes base tags and essence classes.
+    - No `ModData` trait: `Mods` is a concrete core index that any loader fills with `from_rows`.
+  - **Evidence:** `resolve-corpus` from a clean tree at `f03a92c` and `54d6fb6`: all fields are equal and `report.json` is byte-identical (`docs/phase-2/lift-evidence.md`). The gate 3c list gained the moved constant names. Workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. It checked the data-driven `fits` against the old `match` case by case. Applied:
+    - rules name their section as a `ModSection`;
+    - `ModRules::validate` (`IMPORT_MOD_RULES_*`) refuses empty or shadowed rules;
+    - the PoE1 rules are tested to validate and to cover every PoB section except class requirement;
+    - rule order is documented.
 - **PR P2-2b: scope and bases (PR #44, open, in review, branch `feat/p2-2b-scope-bases`, base `feat/p2-2a-item-input`).** Plan step 2b.
   - **What:** new `crates/loom-parser/src/import/`:
     - `ItemRules`, the per-game rules: a default stat-description scope plus mod domains with their own scope;
@@ -138,15 +155,13 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 6`): if the maintainer merged or asked for changes on #42, #43, or #44, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-2. **P2-2c: Mods filter and item tags** (plan step 2c). Branch from `feat/p2-2b-scope-bases` and target it as base:
-   - move `tools/parity-cli/src/mod_filter.rs` (with its tests) and `item_tags.rs` to `loom-parser::import`;
-   - read generation types, mod domains, influences, and essence columns through `ItemRules` and `ItemData`, extending them and moving their PoE1 values into `tools/parity-cli/src/poe1.rs`, so no constant stays in shared code;
-   - read the `Mods` rows and tags through `ItemData`, not `Table`;
-   - make `LineContext` take `ModSection`, mapping PoB's sections by name in `item_rules`;
-   - make `influence_type` read the domain `InfluenceId` (P2-2a review note);
-   - extend the gate 3c list if new constant names appear;
-   - evidence: `resolve-corpus` before and after, with the docs stashed, appended to `docs/phase-2/lift-evidence.md`.
+1. **Stack check** (`gh pr list --state all --limit 7`): if the maintainer merged or asked for changes on #42 to #44 or P2-2c, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+2. **P2-2d: compositions, grafts, properties, tolerances** (plan step 2d). Branch from `feat/p2-2c-mods-filter` and target it as base:
+   - move `grafts.rs`, `properties.rs`, the case-fold tolerance, and the split-section marking (`mark_split_lines`) to `loom-parser::import`, with the `ClientStrings`, graft, and quality data they read coming through plain core types filled by the tool (as `Mods` is);
+   - `COMPOSITIONS` (`categorize.rs`, `ClientStrings` wrapper keys) becomes per-game data in `ItemRules`, with the PoE1 list moving to `tools/parity-cli/src/poe1.rs`;
+   - the categories and the PoB legacy-text evidence stay in the tool;
+   - extend the gate 3c list (`BrequelGraftSkillString` and similar wrapper IDs);
+   - evidence: `resolve-corpus` before and after, with the docs stashed.
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2b: scope and bases)
+Last Updated: 2026-11-10 (PR P2-2c: Mods filter)
 
 # Phase 2: tasks
 
@@ -35,8 +35,11 @@ Last Updated: 2026-11-10 (PR P2-2b: scope and bases)
 - [x] Open PR (#44, base `feat/p2-2a-item-input`); write the PR number into the docs right after
 
 ## PR P2-2c: Mods filter and item tags (step 2c)
-- [ ] Move `mod_filter` and `item_tags`; generation types, influences, and essence columns through `item_rules`
-- [ ] Maintainer-run: Spike B field list equal
+- [x] Move the `mod_filter` logic to `loom-parser::import::mods`; mod domains, generation types, line flags, carrier tags, and influences become `ModRules` data in `item_rules`
+- [x] Decided: `item_tags` and the essence-column map stay in the tool (extract loading; no `serde_json` in `loom-parser`; the step 3 converter precomputes base tags and essence classes)
+- [x] Spike B field list equal (run in the session; `docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-2b-scope-bases`); write the PR number into the docs right after
 
 ## PR P2-2d: compositions, grafts, properties, tolerances (step 2d)
 - [ ] Move grafts, properties, case-fold, split-section; `COMPOSITIONS` as per-game data
