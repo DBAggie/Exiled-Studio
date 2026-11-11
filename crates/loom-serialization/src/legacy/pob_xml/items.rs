@@ -11,7 +11,12 @@
 //!   sources (decision 6). An item whose text the spacing cannot rebuild is
 //!   kept whole.
 //! - **Item set:** `id`, `title`; `<Slot>` with `name` and `itemId`
-//!   (`"0"`: empty); other children (`<SocketIdURL>`) in place.
+//!   (`"0"`: empty); other children (`<SocketIdURL>`) in place. A `<Slot>`
+//!   with children stays opaque.
+//!
+//! IDs are read, not checked: dangling or duplicate item IDs, and a real
+//! item with `id="0"` (which a slot cannot then name), are left to the
+//! item-and-slot index Phase 3 builds, with its diagnostics.
 
 use loom_domain::{
     Item, ItemId, ItemPart, ItemSet, ItemSetId, Items, ItemsEntry, Ordered, SlotEntry, SlotId,
@@ -43,6 +48,19 @@ pub(super) fn items_of(n: Node<'_, '_>) -> Option<Items> {
 
 /// The whitespace before, between, and after `lines` in `text`; `None`
 /// when the text is not exactly those lines with whitespace around them.
+///
+/// Invariant: `lines` come from [`pob_item::read`], which splits on `\n`,
+/// trims each line, and drops empty ones. So each line starts and ends
+/// with non-whitespace, and `find` cannot match a line inside a whitespace
+/// gap: the first match after `at` is the line itself. A `\r` before `\n`
+/// (a CRLF body, `&#13;` in the XML) is trimmed from the line and kept in
+/// the gap.
+///
+/// Rust's `trim` is Unicode-aware (it trims U+00A0, for one), but PoB's
+/// `%s` is ASCII-only. A line of only non-breaking spaces is dropped here
+/// and kept as a line by PoB; an edge carried over from Spike B's reader,
+/// not seen in the corpus. The round trip is exact either way: the
+/// non-breaking spaces stay in the gap.
 fn spacing(text: &str, lines: &[&str]) -> Option<Vec<String>> {
     let mut out = Vec::with_capacity(lines.len() + 1);
     let mut at = 0;

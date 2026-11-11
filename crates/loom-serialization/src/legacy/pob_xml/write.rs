@@ -373,7 +373,12 @@ fn items(w: &mut Writer, items: &Items) {
 }
 
 /// An item's text from its lines' sources and the whitespace as read
-/// (decision 6); without it, one line per line.
+/// (decision 6).
+///
+/// Without that whitespace (`text_spacing` empty, or not `lines + 1`
+/// entries), the lines are joined with `\n`: blank lines and indentation
+/// are not written. PoB reads such a text the same way (it trims each line
+/// and skips blank ones), so only the layout of the text changes.
 fn item_text(item: &Item) -> String {
     let lines = &item.body.lines;
     let spacing = &item.text_spacing;
@@ -382,10 +387,7 @@ fn item_text(item: &Item) -> String {
             .iter()
             .map(|l| l.source.as_str())
             .collect::<Vec<_>>()
-            .join(
-                "
-",
-            );
+            .join("\n");
     }
     let mut out = String::new();
     for (gap, line) in spacing.iter().zip(lines) {

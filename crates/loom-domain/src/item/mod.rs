@@ -107,6 +107,15 @@ pub struct Item {
     /// (`lines + 1` entries). Empty: the lines are written one per line.
     /// The text itself always comes from the lines' sources (Phase 2 plan,
     /// decision 6).
+    ///
+    /// Legacy-XML formatting only: it lets the PoB XML export write an
+    /// item's text as it was read. It carries no meaning, and the canonical
+    /// format may leave it out.
+    ///
+    /// **Any edit that adds, removes, or reorders lines must clear it.**
+    /// The writer checks only its length, so a stale value with the right
+    /// length puts the old gaps (blank lines among them) between the new
+    /// lines. Changing a line's source in place keeps it valid.
     pub text_spacing: Vec<String>,
     /// Attributes not typed.
     pub attributes: Attributes,

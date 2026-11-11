@@ -336,7 +336,9 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
 - **`mainActiveSkill="nil"`** (PoB's unset value) stays an untyped attribute, and the group is typed.
 - **Evidence:** all 24 fixtures pass with every section typed and nothing kept whole. In-session: the corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items).
 
-## P2-5b review findings, to apply (code-architecture-reviewer, 2026-11-10; no blockers)
+## P2-5b review findings, applied (code-architecture-reviewer, 2026-11-10; no blockers; applied 2026-11-10 on PR #51)
+All applied as docs and tests; no behavior change. Nit 1: `text_spacing` stays on `Item`, documented as legacy-XML formatting only. Nit 2: documented in `items.rs` for Phase 3. Nit 4: documented on `spacing()`.
+
 1. **The `spacing()` invariant needs a comment** in `items.rs`. The reader trims each line and drops empty ones, so a line starts and ends with non-whitespace, and `find` cannot match inside a whitespace gap. Add tests for a non-breaking-space gap and a CRLF body.
 2. **Stale `text_spacing`:** document on `Item::text_spacing` that any edit to an item's lines must clear it, because the writer checks only the length. Add a test.
 3. **The `

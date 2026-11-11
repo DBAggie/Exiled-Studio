@@ -36,9 +36,10 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
   - **Found and fixed:** PoB writes `mainActiveSkill="nil"` for an unset main skill. Such a group was kept whole in P2-5a, unseen until the fixture test started requiring `kept_whole` to be empty. A non-numeric value now stays an untyped attribute.
   - **Evidence:**
     - all 24 public fixtures round-trip with every section typed, items present in the community builds, and nothing kept whole;
-    - 5 new unit tests;
+    - 11 new unit tests (6 from the review: a non-breaking-space gap, a CRLF body, cleared spacing, an item with only a `<ModRange>`, a non-numeric item id, a `<Slot>` with children);
     - in-session: the corpus 21/21 (1,055 items, 0 kept whole) and PoB 3.13 5/5 (100 items).
-  - **Review:** `code-architecture-reviewer` found no blockers; the text reconstruction is exact. The should-fix items are **not yet applied**: the session ended at the maintainer's request. They are listed in the context file under "P2-5b review findings, to apply" (Next action, step 1).
+  - **Review:** `code-architecture-reviewer` found no blockers; the text reconstruction is exact. The findings are applied (context file, "P2-5b review findings, applied"): the `spacing()` invariant and the Unicode-`trim` edge are documented; `Item::text_spacing` is documented as legacy-XML formatting only that any line add, remove, or reorder must clear; the `
+` join fallback is documented; the item and slot ID checks are left to Phase 3's index. The corpus and 3.13 round-trips were rerun after: 21/21 (1,055 items) and 5/5 (100 items), 0 kept whole.
 - **PR P2-5a: PoB XML import and semantic export, structure (PR #50, open, in review, branch `feat/p2-5a-pob-xml-structure`, base `feat/p2-4-bundle-validator`).** Plan step 5a.
   - **What:** `loom_serialization::legacy::pob_xml` (`import`, `export`, `xml_equal`, `NORMALIZATIONS`; `roxmltree` added to `loom-serialization`).
     - Typed, with source text kept:
@@ -272,9 +273,8 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Apply P2-5b's review findings:** check out `feat/p2-5b-pob-xml-items` (PR #51) and apply the should-fix list in the context file ("P2-5b review findings, to apply"). Rerun the fixture and corpus round-trips (`LOOM_XML_DIR`), push to the same PR, and update the docs. Then continue with P2-6 on a branch from it.
-2. **Stack check** (`gh pr list --state all --limit 13`): if the maintainer merged or asked for changes on #42 to #51, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-3. **P2-6: `resolve_build`** (plan step 6). Branch from `feat/p2-5b-pob-xml-items` and target it as base:
+1. **Stack check** (`gh pr list --state all --limit 13`): if the maintainer merged or asked for changes on #42 to #51, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+2. **P2-6: `resolve_build`** (plan step 6). Branch from `feat/p2-5b-pob-xml-items` and target it as base:
    - a bundle-backed `ItemData` in `loom-parser`. It builds `Mods` from a validated `Bundle` (split `(0, 0)` stats into `unset`; map class, mod-type, and implicit IDs onto rows), `BaseRow`s, `Grafts` (from `poe1/grafts.json`), `Properties` (client texts and quality types), and compositions;
    - `loom_parser::import::resolve_build(&mut Build, &data)`. It runs the lifted pipeline (index per scope, `resolve_lines_composed`, the mods filter, case-fold, granted skills, properties, split-section; call `split_section` before writing results, see "Decisions in P2-2d") over every item, and writes `LineResolution`s (stats, a typed `kind`, or unresolved with a reason; `adapted`; `Continues`) and completeness;
    - map onto the domain: `PropertyMatch` and `GrantedSkill` to `TypedResolution` (the context file, "Decisions in P2-2d"); `RawValue` to `StatValue`;
