@@ -38,6 +38,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Open PR: #66 (base `dev`)
 - [x] Maintainer: Q2 (Ice Nova, Smite), Q7 (three exclusions), Q8 (derived setups; minimum 3), 2026-11-11
 - [x] P3-3b: chosen skills in the scope file (`confirmed`); seven credited derived fixtures; Ice Nova 3, Smite 4 in scope; public `calc-survey` exit 0
+- [x] Open PR: #67 (base `dev`)
 
 ## P3-4: engine core
 - [ ] `CalcInput`, `CalcData`, options, `DataVersion` check
