@@ -73,7 +73,15 @@ fn bases_should_map_classes_and_implicits_to_row_numbers() {
         )
     );
     let names: Vec<&str> = data.base_names().collect();
-    assert_eq!(names, ["Plain Test Charm", "Plain Test Ring", "Test Bolt"]);
+    assert_eq!(
+        names,
+        [
+            "Plain Test Charm",
+            "Plain Test Ring",
+            "Test Bolt",
+            "Test Damage Support"
+        ]
+    );
 }
 
 #[test]

@@ -32,5 +32,15 @@
   "tags": [
    "gem"
   ]
+ },
+ {
+  "domain": 1,
+  "id": "Test/Gems/SupportDamage",
+  "implicits": [],
+  "item_class": "TestRing",
+  "name": "Test Damage Support",
+  "tags": [
+   "gem"
+  ]
  }
 ]

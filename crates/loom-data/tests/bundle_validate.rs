@@ -15,7 +15,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use loom_data::bundle::validate::validate;
-use loom_data::bundle::{BundleSource, MANIFEST, MemorySource};
+use loom_data::bundle::{BundleSource, MANIFEST, MemorySource, skills};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
@@ -206,4 +206,148 @@ fn item_rules_that_do_not_validate_should_give_their_code() {
     put(&mut src, "data/item_rules.json", &rules);
     rehash(&mut src);
     assert_eq!(codes(&src), ["BUNDLE_ITEM_RULES"]);
+}
+
+/// `src` with `edit` applied to the JSON of `path`, rehashed.
+fn edited(name: &str, path: &str, edit: impl FnOnce(&mut Value)) -> MemorySource {
+    let mut src = source(name);
+    let mut v = json_of(&src, path);
+    edit(&mut v);
+    put(&mut src, path, &v);
+    rehash(&mut src);
+    src
+}
+
+/// Each reference the skill tables hold, pointed at nothing, gives
+/// `BUNDLE_DANGLING_REF` alone (Phase 3 plan, step 1a).
+#[test]
+fn dangling_skill_references_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, &str, Edit); 17] = [
+        ("flag stat", "data/skill_types.json", |v| {
+            v[0]["flag_stat"] = "nope".into();
+        }),
+        ("active skill type", "data/active_skills.json", |v| {
+            v[0]["types"] = json!(["Nope"]);
+        }),
+        ("minion type", "data/active_skills.json", |v| {
+            v[0]["minion_types"] = json!(["Nope"]);
+        }),
+        ("weapon class", "data/active_skills.json", |v| {
+            v[0]["weapon_classes"] = json!(["Nope"]);
+        }),
+        ("active skill", "data/granted_effects.json", |v| {
+            v[0]["active_skill"] = "nope".into();
+        }),
+        ("support type", "data/granted_effects.json", |v| {
+            v[2]["allowed_types"] = json!(["Nope"]);
+        }),
+        ("stat set", "data/granted_effects.json", |v| {
+            v[0]["stat_sets"] = json!(["Nope"]);
+        }),
+        ("quality stat", "data/granted_effects.json", |v| {
+            v[0]["quality"][0]["stat"] = "nope".into();
+        }),
+        ("implicit stat", "data/stat_sets.json", |v| {
+            v[0]["implicit_stats"] = json!(["nope"]);
+        }),
+        ("constant stat", "data/stat_sets.json", |v| {
+            v[0]["constant_stats"][0][0] = "nope".into();
+        }),
+        ("float stat", "data/stat_sets.json", |v| {
+            v[0]["levels"][0]["float_stats"][0]["stat"] = "nope".into();
+        }),
+        ("level stat", "data/stat_sets.json", |v| {
+            v[0]["levels"][0]["stats"][0]["stat"] = "nope".into();
+        }),
+        ("level flag", "data/stat_sets.json", |v| {
+            v[0]["levels"][0]["flags"] = json!(["nope"]);
+        }),
+        ("level effect", "data/stat_sets.json", |v| {
+            v[0]["levels"][0]["granted_effects"] = json!(["Nope"]);
+        }),
+        ("gem base", "data/gems.json", |v| {
+            v[0]["base_item"] = "Nope".into();
+        }),
+        ("gem effect", "data/gems.json", |v| {
+            v[0]["effects"] = json!(["Nope"]);
+        }),
+        ("effect tag", "data/gem_effects.json", |v| {
+            v[0]["tags"] = json!(["nope"]);
+        }),
+    ];
+    for (what, path, edit) in cases {
+        let src = edited("bundle-poe1", path, edit);
+        assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "{what}");
+    }
+    let src = edited("bundle-poe1", "data/gem_effects.json", |v| {
+        v[0]["additional_granted_effects"] = json!(["Nope"]);
+    });
+    assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "additional effect");
+}
+
+#[test]
+fn duplicate_skill_ids_should_give_their_code() {
+    for path in [
+        "data/skill_types.json",
+        "data/active_skills.json",
+        "data/granted_effects.json",
+        "data/stat_sets.json",
+        "data/gems.json",
+        "data/gem_effects.json",
+        "data/gem_tags.json",
+    ] {
+        let src = edited("bundle-poe2", path, |v| {
+            let first = v[0].clone();
+            v.as_array_mut().unwrap().push(first);
+        });
+        assert_eq!(codes(&src), ["BUNDLE_DUPLICATE_ID"], "{path}");
+    }
+}
+
+#[test]
+fn skill_levels_out_of_order_should_give_their_code() {
+    for path in ["data/granted_effects.json", "data/stat_sets.json"] {
+        let src = edited("bundle-poe2", path, |v| {
+            v[0]["levels"].as_array_mut().unwrap().reverse();
+        });
+        assert_eq!(codes(&src), ["BUNDLE_SKILL_LEVELS"], "{path} reversed");
+        let src = edited("bundle-poe2", path, |v| {
+            let levels = v[0]["levels"].as_array_mut().unwrap();
+            levels[1]["level"] = levels[0]["level"].clone();
+        });
+        assert_eq!(codes(&src), ["BUNDLE_SKILL_LEVELS"], "{path} repeated");
+    }
+}
+
+/// The bundle as format 1 (no skill files), rehashed.
+fn format_1(name: &str) -> MemorySource {
+    let mut src = source(name);
+    for p in skills::FILES {
+        src.remove(p);
+    }
+    let mut m = json_of(&src, MANIFEST);
+    m["format"] = 1.into();
+    m["files"]
+        .as_array_mut()
+        .unwrap()
+        .retain(|f| !skills::FILES.contains(&f["path"].as_str().unwrap()));
+    put(&mut src, MANIFEST, &m);
+    src
+}
+
+#[test]
+fn format_1_bundles_should_still_be_valid() {
+    for name in ["bundle-poe1", "bundle-poe2"] {
+        assert_eq!(validate(&format_1(name)).findings, [], "{name}");
+    }
+}
+
+#[test]
+fn skill_file_in_a_format_1_bundle_should_be_refused() {
+    let mut src = format_1("bundle-poe2");
+    src.insert("data/gem_tags.json", "[]");
+    list(&mut src, "data/gem_tags.json");
+    rehash(&mut src);
+    assert_eq!(codes(&src), ["BUNDLE_FORMAT_FILE"]);
 }

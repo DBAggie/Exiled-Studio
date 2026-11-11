@@ -89,10 +89,10 @@ tools/extractor/scripts/check-determinism.sh "<game folder>" poe1|poe2
 # Cross-check an extract output against a PoB checkout cloned into local/ (never the legacy repo);
 # writes report.json and summary.json, exits 1 while the gate is not met:
 cargo run --release -p loom-extractor -- cross-check local/extract/<game>/<build> local/pob/<checkout> --game poe1|poe2 --out local/cross-check/<game>/<build>
-# Convert an extract (PoE1 or PoE2) into a data bundle of format v1 (loom_data::bundle; <dir> must not exist);
+# Convert an extract (PoE1 or PoE2) into a data bundle of format 2 (loom_data::bundle, with the skill tables; <dir> must not exist);
 # loads it back and prints a scrubbed summary (row counts, hashes). Two runs give byte-identical output (P2-3b):
 cargo run --release -p loom-parity-cli -- bundle local/extract/<game>/<build> --out <dir>
-# Validate a bundle (hashes, sizes, unlisted files, schema, references, unique IDs, item rules, scopes; P2-4);
+# Validate a bundle, format 1 or 2 (hashes, sizes, unlisted files, schema, references, unique IDs, item rules, scopes, skill levels; P2-4, P3-1a);
 # prints the findings as JSON; exit 0 valid, 1 not:
 cargo run --release -p loom-parity-cli -- bundle-check <bundle-dir>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:

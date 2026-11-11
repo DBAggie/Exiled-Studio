@@ -101,13 +101,32 @@ pub const ITEM_LINE_TABLES_POE1: [&str; 3] = [
     "BrequelGraftGrantedSkillLevels",
 ];
 
+/// Skill tables the calc bundle reads (Phase 3 plan, step 1a), in both
+/// games, besides `ActiveSkills` and `GrantedEffects` ([`SPIKE_TABLES`]):
+/// skill types, per-level effect rows, stat sets and their per-level values
+/// (`GrantedEffectStatSetsPerLevel`, which no other table references), quality
+/// stats (`GrantedEffectQualityStats`, likewise), gems, gem effects, and gem
+/// tags. Their references (`CostTypes`, `EffectivenessCostConstants`, ...)
+/// come with them.
+pub const SKILL_TABLES: [&str; 8] = [
+    "ActiveSkillType",
+    "GrantedEffectsPerLevel",
+    "GrantedEffectStatSets",
+    "GrantedEffectStatSetsPerLevel",
+    "GrantedEffectQualityStats",
+    "SkillGems",
+    "GemEffects",
+    "GemTags",
+];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
-/// [`LOOKUP_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
+/// [`LOOKUP_TABLES`], [`SKILL_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
     roots.extend(LOOKUP_TABLES);
+    roots.extend(SKILL_TABLES);
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
@@ -1829,6 +1848,7 @@ mod tests {
         }
         let poe2 = roots(Game::Poe2);
         assert!(LOOKUP_TABLES.iter().all(|t| poe2.contains(t)));
+        assert!(SKILL_TABLES.iter().all(|t| poe2.contains(t)));
         assert!(LOOKUP_TABLES_POE1.iter().all(|t| !poe2.contains(t)));
         assert!(
             LOOKUP_TABLES_POE1

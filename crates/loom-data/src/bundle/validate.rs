@@ -3,14 +3,18 @@
 //! exists). Five kinds of check, each finding with a stable code (ADR-014):
 //!
 //! - **structural:** every listed file exists with its SHA-256 and size; no
-//!   file is unlisted; `signatures` is empty in format 1;
+//!   file is unlisted; `signatures` is empty (formats 1 and 2);
 //! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
 //!   required files, every file parses);
 //! - **referential:** mod stats, quality stats, and the stats of the
 //!   rules' compositions are stats; mod classes and base classes are item
 //!   classes; base implicits are mods; graft gems are base items; client
-//!   texts the rules name exist;
-//! - **domain:** IDs are unique per kind; the item rules validate;
+//!   texts the rules name exist; in the skill tables (format 2), every
+//!   stat, skill type, item class, active skill, granted effect, stat set,
+//!   base item, gem effect, and gem tag a row names exists;
+//! - **domain:** IDs are unique per kind; the item rules validate; the
+//!   per-level rows of a granted effect or stat set have strictly
+//!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
 //!   builds, and renders a sample.
 //!
@@ -26,6 +30,7 @@ use std::collections::BTreeSet;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
+use super::skills::{self, SkillTables};
 use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
 use crate::stat_desc::{StatValue, VariantFilter, render_description};
 
@@ -100,7 +105,8 @@ fn at_of(e: &BundleError) -> String {
         BundleError::MissingFile(p)
         | BundleError::BadPath(p)
         | BundleError::DuplicatePath(p)
-        | BundleError::GameSection(p, _) => p.clone(),
+        | BundleError::GameSection(p, _)
+        | BundleError::FormatFile(p, _) => p.clone(),
         _ => MANIFEST.to_owned(),
     }
 }
@@ -115,7 +121,7 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
             return false;
         }
     };
-    // An unknown format is the loader's finding; this check needs format 1.
+    // An unknown format is the loader's finding; this check needs a known one.
     let manifest: Manifest = match serde_json::from_slice(&bytes) {
         Ok(m) => m,
         Err(_) => return true,
@@ -128,7 +134,7 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         report.add(
             "BUNDLE_SIGNATURES",
             MANIFEST,
-            "signatures are reserved and empty in format 1",
+            "signatures are reserved and empty in formats 1 and 2",
         );
     }
     for f in &manifest.files {
@@ -221,6 +227,9 @@ fn referential(b: &Bundle, report: &mut Report) {
             }
         }
     }
+    if let Some(sk) = &b.skills {
+        skill_refs(sk, &stats, &classes, &bases, report);
+    }
     let texts: BTreeSet<&str> = b.client_texts.iter().map(|t| t.id.as_str()).collect();
     let t = &b.item_rules.text;
     let named = t
@@ -236,6 +245,164 @@ fn referential(b: &Bundle, report: &mut Report) {
                 "BUNDLE_MISSING_CLIENT_TEXT",
                 "data/client_texts.json",
                 format!("the item rules name {id:?}"),
+            );
+        }
+    }
+}
+
+/// The skill tables' references (module docs).
+fn skill_refs(
+    sk: &SkillTables,
+    stats: &BTreeSet<&str>,
+    classes: &BTreeSet<&str>,
+    bases: &BTreeSet<&str>,
+    report: &mut Report,
+) {
+    fn ids<'a>(it: impl Iterator<Item = &'a str>) -> BTreeSet<&'a str> {
+        it.collect()
+    }
+    let types = ids(sk.skill_types.iter().map(|t| t.id.as_str()));
+    let actives = ids(sk.active_skills.iter().map(|a| a.id.as_str()));
+    let effects = ids(sk.granted_effects.iter().map(|e| e.id.as_str()));
+    let sets = ids(sk.stat_sets.iter().map(|s| s.id.as_str()));
+    let gem_effects = ids(sk.gem_effects.iter().map(|e| e.id.as_str()));
+    let tags = ids(sk.gem_tags.iter().map(|t| t.id.as_str()));
+    let mut check = |known: &BTreeSet<&str>, at: &dyn Fn() -> String, what: &str, id: &str| {
+        if !known.contains(id) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                at(),
+                format!("{what} {id:?} does not exist"),
+            );
+        }
+    };
+    for t in &sk.skill_types {
+        let at = || format!("skill_types:{}", t.id);
+        if let Some(s) = &t.flag_stat {
+            check(stats, &at, "stat", s);
+        }
+    }
+    for a in &sk.active_skills {
+        let at = || format!("active_skills:{}", a.id);
+        for t in a.types.iter().chain(&a.minion_types) {
+            check(&types, &at, "skill type", t);
+        }
+        for c in &a.weapon_classes {
+            check(classes, &at, "item class", c);
+        }
+    }
+    for e in &sk.granted_effects {
+        let at = || format!("granted_effects:{}", e.id);
+        if let Some(a) = &e.active_skill {
+            check(&actives, &at, "active skill", a);
+        }
+        for t in e
+            .allowed_types
+            .iter()
+            .chain(&e.added_types)
+            .chain(&e.excluded_types)
+            .chain(&e.added_minion_types)
+        {
+            check(&types, &at, "skill type", t);
+        }
+        for s in &e.stat_sets {
+            check(&sets, &at, "stat set", s);
+        }
+        for q in &e.quality {
+            check(stats, &at, "stat", &q.stat);
+        }
+    }
+    for set in &sk.stat_sets {
+        let at = || format!("stat_sets:{}", set.id);
+        let set_stats = set
+            .implicit_stats
+            .iter()
+            .chain(set.constant_stats.iter().map(|(s, _)| s));
+        let level_stats = set.levels.iter().flat_map(|l| {
+            l.float_stats
+                .iter()
+                .map(|f| &f.stat)
+                .chain(l.stats.iter().map(|s| &s.stat))
+                .chain(&l.flags)
+        });
+        for s in set_stats.chain(level_stats) {
+            check(stats, &at, "stat", s);
+        }
+        for e in set.levels.iter().flat_map(|l| &l.granted_effects) {
+            check(&effects, &at, "granted effect", e);
+        }
+    }
+    for g in &sk.gems {
+        let at = || format!("gems:{}", g.base_item);
+        check(bases, &at, "base item", &g.base_item);
+        for e in &g.effects {
+            check(&gem_effects, &at, "gem effect", e);
+        }
+    }
+    for e in &sk.gem_effects {
+        let at = || format!("gem_effects:{}", e.id);
+        for g in e.granted_effect.iter().chain(&e.additional_granted_effects) {
+            check(&effects, &at, "granted effect", g);
+        }
+        for t in &e.tags {
+            check(&tags, &at, "gem tag", t);
+        }
+    }
+}
+
+/// The skill tables' domain checks: unique IDs, ascending levels.
+fn skill_domain(sk: &SkillTables, report: &mut Report) {
+    duplicates(
+        report,
+        skills::SKILL_TYPES,
+        sk.skill_types.iter().map(|t| t.id.as_str()),
+    );
+    duplicates(
+        report,
+        skills::ACTIVE_SKILLS,
+        sk.active_skills.iter().map(|a| a.id.as_str()),
+    );
+    duplicates(
+        report,
+        skills::GRANTED_EFFECTS,
+        sk.granted_effects.iter().map(|e| e.id.as_str()),
+    );
+    duplicates(
+        report,
+        skills::STAT_SETS,
+        sk.stat_sets.iter().map(|s| s.id.as_str()),
+    );
+    duplicates(
+        report,
+        skills::GEMS,
+        sk.gems.iter().map(|g| g.base_item.as_str()),
+    );
+    duplicates(
+        report,
+        skills::GEM_EFFECTS,
+        sk.gem_effects.iter().map(|e| e.id.as_str()),
+    );
+    duplicates(
+        report,
+        skills::GEM_TAGS,
+        sk.gem_tags.iter().map(|t| t.id.as_str()),
+    );
+    let ascending = |levels: Vec<i64>| levels.iter().zip(levels.iter().skip(1)).all(|(a, b)| a < b);
+    for e in &sk.granted_effects {
+        if !ascending(e.levels.iter().map(|l| l.level).collect()) {
+            report.add(
+                "BUNDLE_SKILL_LEVELS",
+                format!("granted_effects:{}", e.id),
+                "levels are not strictly ascending",
+            );
+        }
+    }
+    for s in &sk.stat_sets {
+        if !ascending(s.levels.iter().map(|l| l.level).collect()) {
+            report.add(
+                "BUNDLE_SKILL_LEVELS",
+                format!("stat_sets:{}", s.id),
+                "levels are not strictly ascending",
             );
         }
     }
@@ -269,6 +436,9 @@ fn domain(b: &Bundle, report: &mut Report) {
     );
     if let Err(e) = b.item_rules.mods.validate() {
         report.add("BUNDLE_ITEM_RULES", super::ITEM_RULES, e.code());
+    }
+    if let Some(sk) = &b.skills {
+        skill_domain(sk, report);
     }
 }
 

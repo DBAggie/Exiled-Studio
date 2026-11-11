@@ -1,0 +1,109 @@
+[
+ {
+  "base_effectiveness": 1.5,
+  "constant_stats": [
+   [
+    "test_damage_per_level",
+    5
+   ]
+  ],
+  "id": "TestBolt",
+  "implicit_stats": [
+   "test_spell_flag"
+  ],
+  "incremental_effectiveness": 0.03,
+  "levels": [
+   {
+    "attack_crit_chance": 0,
+    "base_multiplier": 0,
+    "damage_effectiveness": 0,
+    "flags": [
+     "test_flag_stat"
+    ],
+    "float_stats": [
+     {
+      "interpolation": 3,
+      "interpolation_base": 1.0,
+      "resolved": 4,
+      "stat": "test_base_damage_min",
+      "value": 4.5
+     },
+     {
+      "interpolation": 3,
+      "interpolation_base": 1.0,
+      "resolved": 9,
+      "stat": "test_base_damage_max",
+      "value": 9.0
+     }
+    ],
+    "granted_effects": [],
+    "level": 1,
+    "spell_crit_chance": 600,
+    "stats": [
+     {
+      "interpolation": 1,
+      "stat": "test_damage_per_level",
+      "value": 1
+     }
+    ]
+   },
+   {
+    "attack_crit_chance": 0,
+    "base_multiplier": 0,
+    "damage_effectiveness": 0,
+    "flags": [
+     "test_flag_stat"
+    ],
+    "float_stats": [
+     {
+      "interpolation": 3,
+      "interpolation_base": 1.0,
+      "resolved": 6,
+      "stat": "test_base_damage_min",
+      "value": 6.25
+     },
+     {
+      "interpolation": 3,
+      "interpolation_base": 1.0,
+      "resolved": 12,
+      "stat": "test_base_damage_max",
+      "value": 12.5
+     }
+    ],
+    "granted_effects": [],
+    "level": 2,
+    "spell_crit_chance": 600,
+    "stats": [
+     {
+      "interpolation": 1,
+      "stat": "test_damage_per_level",
+      "value": 2
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "base_effectiveness": 1.0,
+  "id": "TestStrike",
+  "incremental_effectiveness": 0.0,
+  "levels": []
+ },
+ {
+  "base_effectiveness": 1.0,
+  "id": "SupportTestDamage",
+  "incremental_effectiveness": 0.0,
+  "levels": [
+   {
+    "granted_effects": [],
+    "level": 1,
+    "stats": [
+     {
+      "stat": "test_support_more_damage",
+      "value": 20
+     }
+    ]
+   }
+  ]
+ }
+]

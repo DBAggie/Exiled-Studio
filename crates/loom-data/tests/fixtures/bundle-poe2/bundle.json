@@ -1,15 +1,40 @@
 {
- "data_schema": 1,
+ "data_schema": 2,
  "files": [
   {
+   "path": "data/active_skills.json",
+   "sha256": "599d36ef53a34e0173b0a31284a6820a5e25b7e5e96544d92f0db293d445a928",
+   "size": 316
+  },
+  {
    "path": "data/base_items.json",
-   "sha256": "61fa1015b762463ac9f074706b165df40640db5e65a19b34c60ea12476b1b8ee",
-   "size": 357
+   "sha256": "95a30c32c61c8edf7fc591c49e171ead95b0aee446a48b5288c55acf757a655b",
+   "size": 662
   },
   {
    "path": "data/client_texts.json",
    "sha256": "b6d01b6162e9962074bc7371d61341c938c62787eb034ff91ebf652464b15a59",
    "size": 275
+  },
+  {
+   "path": "data/gem_effects.json",
+   "sha256": "bb146b4f6af0c171f28e7fcd6d31bac5110bf9a96d2e15ceda4014f14105cf56",
+   "size": 261
+  },
+  {
+   "path": "data/gem_tags.json",
+   "sha256": "6b57d090325246b0b4c8c42bb8d5f465176a83200e2b58a4e2c1adca74697bfc",
+   "size": 101
+  },
+  {
+   "path": "data/gems.json",
+   "sha256": "e37fc293a1b2c8dc6c29072788dc6abca04a77b2778e2fc9da6de31e05d380b8",
+   "size": 227
+  },
+  {
+   "path": "data/granted_effects.json",
+   "sha256": "3b72c489407296e14852827445bf2b01e444e9ee04c8cfe73ea166d9b6097859",
+   "size": 1145
   },
   {
    "path": "data/item_classes.json",
@@ -32,9 +57,19 @@
    "size": 663
   },
   {
+   "path": "data/skill_types.json",
+   "sha256": "4cc0a305ece4a9859306ae4196fb47da9a1b9151c94817ad77d82febe4d383da",
+   "size": 154
+  },
+  {
+   "path": "data/stat_sets.json",
+   "sha256": "13539b1bf0041a914d2ccf2d27db94672244eb0c80fab753a6d6277a87906529",
+   "size": 1918
+  },
+  {
    "path": "data/stats.json",
-   "sha256": "39ae37f644c9fbe9a01587a26467a41310f0364551a12b8348c6c4e53ed3e1bb",
-   "size": 378
+   "sha256": "ff65a848d32d76cb6fee0cc4e7dd0884914abefbc74c2bdd081dcfc512ddd81f",
+   "size": 675
   },
   {
    "path": "stat_descriptions/charm_stat_descriptions.json",
@@ -47,7 +82,7 @@
    "size": 4380
   }
  ],
- "format": 1,
+ "format": 2,
  "game": "poe2",
  "signatures": [],
  "source": {

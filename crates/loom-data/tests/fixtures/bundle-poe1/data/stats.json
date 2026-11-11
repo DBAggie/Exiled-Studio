@@ -32,5 +32,29 @@
  },
  {
   "id": "test_presence"
+ },
+ {
+  "id": "test_spell_flag"
+ },
+ {
+  "id": "test_attack_flag"
+ },
+ {
+  "id": "test_base_damage_min"
+ },
+ {
+  "id": "test_base_damage_max"
+ },
+ {
+  "id": "test_damage_per_level"
+ },
+ {
+  "id": "test_quality_cast_speed"
+ },
+ {
+  "id": "test_support_more_damage"
+ },
+ {
+  "id": "test_flag_stat"
  }
 ]

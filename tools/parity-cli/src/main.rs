@@ -43,7 +43,7 @@ use serde::Serialize;
 const USAGE: &str = "usage:
   loom-parity-cli bundle <extract-dir> --out <dir>
       Convert a `loom-extractor extract` output (PoE1 or PoE2) into a data
-      bundle of format v1 (loom_data::bundle) in <dir>, which must not
+      bundle of format 2 (loom_data::bundle) in <dir>, which must not
       exist; load it back with Bundle::load; print a summary (row counts,
       hashes) as JSON. Two runs on one extract give the same bytes.
   loom-parity-cli bundle-check <bundle-dir>
