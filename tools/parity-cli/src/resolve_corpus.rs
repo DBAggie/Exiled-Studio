@@ -58,11 +58,12 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Hand, Scope};
-use loom_parser::pob_item::{self, BaseMatch, Item, LineKind, Modifier, Rarity, Section};
+use loom_domain::{ItemBody as Item, LineKind, LineResolution, ModifierLine as Modifier, Rarity};
 use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
 };
+use loom_serialization::legacy::pob_item::{self, BaseMatch};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 
@@ -235,7 +236,9 @@ impl Bases {
     fn find(&self, item: &Item) -> Result<Found<'_>, String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
-            (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
+            (Some(base), _) if !matches!(rarity, Rarity::Normal | Rarity::Magic) => {
+                pob_item::base_name(base).to_owned()
+            }
             (_, Some(name)) => {
                 match pob_item::magic_base(name, self.scopes.keys().map(String::as_str)) {
                     BaseMatch::One(base) => base,
@@ -793,7 +796,10 @@ impl<'i> Lines<'i, '_> {
             return;
         }
         let run = std::mem::take(&mut self.run);
-        let section = |i: usize| run.get(i).map(|(_, m)| m.section.name());
+        let section = |i: usize| {
+            run.get(i)
+                .map(|(_, m)| mod_filter::section_name(&m.section))
+        };
         match (index, scope_err) {
             (Some(index), None) => {
                 let texts: Vec<&str> = run.iter().map(|(_, m)| m.text.as_str()).collect();
@@ -883,7 +889,7 @@ impl<'i> Lines<'i, '_> {
             detail: detail(&resolution.outcome),
             ..LineRecord::default()
         };
-        let line = run.get(at).map(|(_, m)| LineContext::of(m));
+        let line = run.get(at).and_then(|(_, m)| LineContext::of(m));
         let mut resolved = match &resolution.outcome {
             Outcome::Resolved(c) => Some(c),
             _ => None,
@@ -992,29 +998,35 @@ fn item_lines(
         let record = match &line.kind {
             LineKind::Modifier(m) if !m.selected => excluded(
                 n,
-                Some(m.section.name()),
+                Some(mod_filter::section_name(&m.section)),
                 "not-selected-variant",
                 m.text.clone(),
             ),
-            LineKind::Modifier(m) if m.has("custom") => {
-                excluded(n, Some(m.section.name()), "pob-custom", scrub(&m.text))
-            }
+            LineKind::Modifier(m) if m.has("custom") => excluded(
+                n,
+                Some(mod_filter::section_name(&m.section)),
+                "pob-custom",
+                scrub(&m.text),
+            ),
             // Class requirement (plan step 4b, maintainer decision
             // 2026-11-09): `v2.67.2:src/Classes/Item.lua` keeps these lines
             // in `classRequirementModLines` and sets `classRestriction`;
             // they are not modifiers. The class is kept on the item record.
-            LineKind::Modifier(m) => {
-                excluded(n, Some(m.section.name()), "not-a-modifier", m.text.clone())
-            }
-            LineKind::Flag | LineKind::Influence => {
-                excluded(n, None, "not-a-modifier", line.raw.clone())
+            LineKind::Modifier(m) => excluded(
+                n,
+                Some(mod_filter::section_name(&m.section)),
+                "not-a-modifier",
+                m.text.clone(),
+            ),
+            LineKind::Flag | LineKind::Influence(_) => {
+                excluded(n, None, "not-a-modifier", line.source.clone())
             }
             LineKind::Unrecognized => (
                 LineRecord {
                     line: n,
                     section: None,
                     outcome: "unrecognized-line".to_owned(),
-                    text: scrub(&line.raw),
+                    text: scrub(&line.source),
                     joined: 1,
                     detail: Vec::new(),
                     ..LineRecord::default()
@@ -1034,9 +1046,10 @@ fn item_lines(
 }
 
 /// A modifier line the harness resolves: selected, not `{custom}`, not a
-/// class requirement.
+/// class requirement (the domain item marks the others
+/// [`LineResolution::Excluded`], `pob_item::to_domain`).
 fn resolvable(m: &Modifier) -> bool {
-    m.selected && !m.has("custom") && m.section != Section::ClassRequirement
+    matches!(m.resolution, LineResolution::Pending)
 }
 
 /// Sets `split_with` on a `no-template` line when it and the adjacent
@@ -1233,7 +1246,11 @@ pub fn run(
                 .children()
                 .filter(|c| c.has_tag_name("ModRange"))
                 .count();
-            let item = pob_item::read(text);
+            let pob = pob_item::read(text);
+            for (feature, n) in pob_item::unsupported_features(&pob) {
+                *s.unsupported_features.entry(feature).or_default() += n;
+            }
+            let item = pob_item::to_domain(&pob);
             let record = count_item(&mut s, &mut distinct, (n, &item, ranges), &corpus);
             items.push(record);
         }
@@ -1338,14 +1355,11 @@ fn count_item(
         s.mod_range_items += 1;
         s.mod_range_elements += ranges;
     }
-    for (feature, n) in pob_item::unsupported_features(item) {
-        *s.unsupported_features.entry(feature).or_default() += n;
-    }
     let mut catalyst = false;
     for line in &item.lines {
         *s.line_kinds.entry(line.kind.name()).or_default() += 1;
         match &line.kind {
-            LineKind::Spec { key, known } => {
+            LineKind::Spec { key, known, .. } => {
                 catalyst |= key == "Catalyst";
                 if !known {
                     *s.unknown_spec_keys.entry(safe_key(key)).or_default() += 1;
@@ -1355,8 +1369,12 @@ fn count_item(
                 for p in &m.prefixes {
                     *s.prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
                 }
-                for k in m.unknown_prefixes() {
-                    *s.unknown_prefix_keys.entry(safe_key(k)).or_default() += 1;
+                for p in m
+                    .prefixes
+                    .iter()
+                    .filter(|p| !pob_item::is_known_prefix(&p.key))
+                {
+                    *s.unknown_prefix_keys.entry(safe_key(&p.key)).or_default() += 1;
                 }
             }
             _ => {}
@@ -1385,8 +1403,8 @@ fn count_item(
         influences: item
             .lines
             .iter()
-            .filter(|l| l.kind == LineKind::Influence)
-            .filter_map(|l| mod_filter::influence_type(&l.raw))
+            .filter(|l| matches!(l.kind, LineKind::Influence(_)))
+            .filter_map(|l| mod_filter::influence_type(&l.source))
             .collect(),
     });
     let mut records = item_lines(
@@ -1415,7 +1433,8 @@ fn count_item(
     }
     let class_requirement: Vec<String> = item
         .modifiers()
-        .filter(|m| m.section == Section::ClassRequirement)
+        .map(|(_, m)| m)
+        .filter(|m| mod_filter::section_name(&m.section) == "class-requirement")
         .map(|m| {
             m.text
                 .split_once("Requires Class ")

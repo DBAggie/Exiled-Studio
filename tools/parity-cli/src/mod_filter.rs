@@ -103,8 +103,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::Condition;
-use loom_parser::pob_item::{Modifier, Section};
+use loom_domain::{ModSection, ModifierLine};
 use loom_parser::resolve::{Candidate, RawValue, ResolvedStat};
+use loom_serialization::legacy::pob_item::Section;
 use serde_json::Value;
 
 use crate::extract::{Read, Table};
@@ -748,16 +749,40 @@ pub struct LineContext {
 }
 
 impl LineContext {
-    /// The context of a modifier line.
+    /// The context of a modifier line; `None` for a section PoB does not
+    /// write.
     #[must_use]
-    pub fn of(m: &Modifier) -> Self {
-        Self {
-            section: m.section,
+    pub fn of(m: &ModifierLine) -> Option<Self> {
+        Some(Self {
+            section: pob_section(&m.section)?,
             crafted: m.has("crafted"),
             exarch: m.has("exarch"),
             eater: m.has("eater"),
-        }
+        })
     }
+}
+
+/// PoB's section of a domain section (the inverse of
+/// `pob_item::domain_section`); `None` for a name PoB does not write.
+#[must_use]
+pub fn pob_section(section: &ModSection) -> Option<Section> {
+    [
+        Section::Enchant,
+        Section::Scourge,
+        Section::ClassRequirement,
+        Section::Implicit,
+        Section::Crucible,
+        Section::Explicit,
+    ]
+    .into_iter()
+    .find(|s| s.name() == section.name())
+}
+
+/// A domain section's name as a static string, for the report; `other`
+/// for a name PoB does not write.
+#[must_use]
+pub fn section_name(section: &ModSection) -> &'static str {
+    pob_section(section).map_or("other", Section::name)
 }
 
 fn explicit_domain(row: i64, base: i64) -> bool {

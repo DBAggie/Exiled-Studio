@@ -68,8 +68,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Handler, Segment, StatDescriptions};
-use loom_parser::pob_item;
 use loom_parser::resolve::compose::Composition;
+use loom_serialization::legacy::pob_item;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 

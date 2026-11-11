@@ -366,7 +366,7 @@ fn run_should_be_deterministic_and_record_unreadable_builds() {
 #[test]
 fn bases_scope_should_follow_the_mod_domain() {
     let b = bases();
-    let item = |t: &str| pob_item::read(t);
+    let item = |t: &str| pob_item::to_domain(&pob_item::read(t));
     assert_eq!(
         b.scope(&item(
             "Rarity: RARE\nN\nSuperior Fleshgraft\nImplicits: 0\n"

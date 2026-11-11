@@ -4,3 +4,13 @@
 //! Held to the core-crate rules (ADR-016) so any host, including a future web
 //! host, can read and write builds: no filesystem, thread, clock,
 //! environment, or network access.
+//!
+//! - [`legacy`]: Path of Building's formats (ADR-005). Today the item-text
+//!   reader [`legacy::pob_item`] and its mapping onto the domain item; the
+//!   XML adapter and share codes follow (Phase 2 plan, steps 5 and 10).
+//!
+//! Legacy input is untrusted: indexing that can panic is linted.
+
+#![warn(clippy::indexing_slicing)]
+
+pub mod legacy;

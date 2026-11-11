@@ -3,7 +3,9 @@
 //! `ItemClass:BuildRaw` writes and `ItemClass:ParseRaw` reads back. Import
 //! parsing per ADR-015: every non-blank line of the text ends in exactly one
 //! [`LineKind`]; nothing is dropped. The XML around the text is the host's
-//! job (`loom-serialization` in Phase 2; the corpus harness in Spike B).
+//! job (the corpus harness in Spike B; the XML adapter in Phase 2).
+//! [`to_domain`] maps a read item onto the domain item (Phase 2, P2-2a;
+//! moved here from `loom-parser`).
 //!
 //! What is read, with the `ParseRaw` snippet each rule follows:
 //! - Lines: `raw:gmatch("%s*([^\n]*%S)")`, so lines are trimmed and blank
@@ -55,12 +57,15 @@
 //! influence, spec, and line-flag lists are that version's; PoB for PoE2
 //! differs and would need its own lists.
 
+mod domain;
 #[cfg(test)]
 #[expect(
     clippy::indexing_slicing,
     reason = "tests index fixed synthetic data; a bad index should panic"
 )]
 mod tests;
+
+pub use domain::{rarity as domain_rarity, section as domain_section, to_domain};
 
 /// Item rarity, as `Rarity:` names it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
