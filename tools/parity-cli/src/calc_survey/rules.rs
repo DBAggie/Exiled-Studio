@@ -251,6 +251,13 @@ impl Scope {
         if !matches!(scope.status.as_str(), "proposed" | "confirmed") {
             return Err(format!("scope file: status {}", scope.status));
         }
+        // A confirmed scope names both skills, so the gate's minimum cannot
+        // pass with nothing chosen.
+        if scope.status == "confirmed"
+            && (scope.skills.spell.is_none() || scope.skills.attack.is_none())
+        {
+            return Err("scope file: confirmed without a chosen spell and attack".to_owned());
+        }
         if scope.minimum_per_skill == 0 {
             return Err("scope file: minimum_per_skill is 0".to_owned());
         }
@@ -295,6 +302,10 @@ pub enum Reason {
     TreeVersion,
     /// An allocated node or mastery effect is not in the bundle.
     UnknownPassive,
+    /// An allocated socket holds an item whose base the survey cannot
+    /// read, or an untyped socket entry, so the jewel exclusions cannot be
+    /// decided.
+    UnreadJewel,
     /// An excluded mechanic.
     Excluded(Exclusion),
 }
@@ -312,6 +323,7 @@ impl Reason {
             Self::UntypedSpec => "tree:untyped-spec".to_owned(),
             Self::TreeVersion => "tree:version".to_owned(),
             Self::UnknownPassive => "tree:unknown-passive".to_owned(),
+            Self::UnreadJewel => "tree:unread-jewel".to_owned(),
             Self::Excluded(e) => format!("excluded:{}", e.name()),
         }
     }
@@ -323,7 +335,9 @@ impl Reason {
     #[must_use]
     pub const fn state(&self) -> &'static str {
         match self {
-            Self::TreeVersion | Self::UnknownPassive | Self::MainSkill(_) => "indeterminate",
+            Self::TreeVersion | Self::UnknownPassive | Self::UnreadJewel | Self::MainSkill(_) => {
+                "indeterminate"
+            }
             _ => "out-of-scope",
         }
     }

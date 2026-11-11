@@ -304,7 +304,7 @@ pub struct Report {
     pub reach_in_scope: Reach,
     /// Reach over every build whose main skill passes the archetype rules.
     pub reach_archetype: Reach,
-    /// Every build's inventory.
+    /// Every build's inventory; empty with `--anonymous` (ADR-007).
     pub inventories: Vec<BuildInventory>,
 }
 
@@ -426,18 +426,25 @@ pub fn verdict(
         reasons.push(Reason::Excluded(Exclusion::NotCarriedPassive));
     }
     let mut jewels = BTreeSet::new();
+    // A socket entry the import kept untyped may hold a jewel.
+    let mut unread = spec.jewel_sockets.opaque().next().is_some();
     for socket in spec.jewel_sockets.typed() {
         let Some(id) = socket.item else { continue };
         if !allocated.contains(&i64::from(socket.node.0)) {
             continue;
         }
-        let Some(item) = build.items.item(id) else {
+        // An item the survey cannot name a base row for could be either
+        // jewel: never treated as neither (ADR-015).
+        let rows = build
+            .items
+            .item(id)
+            .and_then(|item| pob_item::item_base(&item.body, base_names.iter().copied()).ok())
+            .and_then(|(name, _)| t.bases.get(name.as_str()));
+        let Some(rows) = rows else {
+            unread = true;
             continue;
         };
-        let Ok((name, _)) = pob_item::item_base(&item.body, base_names.iter().copied()) else {
-            continue;
-        };
-        for row in t.bases.get(name.as_str()).into_iter().flatten() {
+        for row in rows {
             if row.id == rules::TIMELESS_JEWEL_BASE {
                 jewels.insert(Exclusion::TimelessJewel);
             }
@@ -455,6 +462,11 @@ pub fn verdict(
         if scope.excludes(e) {
             reasons.push(Reason::Excluded(e));
         }
+    }
+    if unread
+        && (scope.excludes(Exclusion::TimelessJewel) || scope.excludes(Exclusion::ClusterJewel))
+    {
+        reasons.push(Reason::UnreadJewel);
     }
     reasons.sort();
     reasons.dedup();
@@ -695,10 +707,16 @@ fn summarize(
         pass,
         per_build: rows,
     };
+    // ADR-007: a corpus build's full inventory works as a fingerprint of a
+    // real build, so `--anonymous` keeps only the aggregates.
     let report = Report {
         reach_in_scope,
         reach_archetype,
-        inventories,
+        inventories: if req.anonymous {
+            Vec::new()
+        } else {
+            inventories
+        },
     };
     (summary, report)
 }

@@ -1,0 +1,532 @@
+{
+  "format": 1,
+  "inputs": {
+    "tool": {
+      "commit": "f061f18ca6e637625caab77462e067a6361c5467",
+      "dirty": false
+    },
+    "bundle": {
+      "game": "poe1",
+      "steam_build": 26530219,
+      "index_sha256": "d23c78997206716586041a3e47a89dde0eb516f1488df4a1ccf39b0d51be54d0"
+    },
+    "scope_sha256": "97e95a8cc2363ccbe56722671bf5772d87da791c56fadd101de2028b06b6268e",
+    "data_rules_sha256": "b3562c6a130d8676e9b1cbdf3db372c25ac330710a7ba826cf4a16a50533a7e6",
+    "anonymous": true
+  },
+  "scope": {
+    "format": 1,
+    "game": "poe1",
+    "steam_build": 26530219,
+    "status": "proposed",
+    "tree_version": "3_29",
+    "tree_evidence": "P3-2 (docs/phase-3/data-parity.md): data-parity compared every passive and mastery effect of this bundle with PoB v2.67.2's TreeData/3_29/tree.lua (latestTreeVersion, tools/oracle/data/pob_data.lua); every difference is categorized (none uncategorized), and none is a node or mastery the tree file lacks. 3_29_ruthless is the Ruthless tree, another game mode. PoB computes a build of another tree version with that version's tree file (Classes/PassiveSpec.lua Init: main:LoadTree(treeVersion); it converts only when the user asks), which the bundle does not hold.",
+    "minimum_per_skill": 3,
+    "skills": {
+      "spell": null,
+      "attack": null
+    },
+    "excluded_mechanics": [
+      {
+        "id": "timeless-jewel",
+        "reason": "A timeless jewel changes the nodes in its radius by seed and conqueror, from the timeless jewel tables (LegionPassives and the per-jewel lookup files), which the bundle does not carry; PoB reads its own copies of them (Data/TimelessJewelData)."
+      },
+      {
+        "id": "cluster-jewel",
+        "reason": "A cluster jewel adds passive nodes that are not in the tree (PassiveTreeExpansionJewels, PassiveTreeExpansionSkills, PassiveTreeExpansionSpecialSkills), which the bundle does not carry; PoB numbers them from 65536 up, so the survey also sees them as unknown passives."
+      },
+      {
+        "id": "not-carried-passive",
+        "reason": "P3-2's not-carried rules: passives that grant a buff or a skill (PassiveSkillBuffs, GrantedEffectsPerLevel) and bloodline passives (DescendancyKey), whose effect or link the bundle does not carry."
+      }
+    ]
+  },
+  "builds": 21,
+  "duplicates": 0,
+  "in_scope": 0,
+  "reasons": {
+    "archetype:brand": 3,
+    "archetype:trap": 2,
+    "excluded:cluster-jewel": 7,
+    "excluded:not-carried-passive": 6,
+    "excluded:timeless-jewel": 3,
+    "main-skill:no-active-skill": 2,
+    "main-skill:no-skill-set": 2,
+    "main-skill:unknown-gem": 7,
+    "tree:unknown-passive": 8,
+    "tree:version": 21
+  },
+  "states": {
+    "indeterminate": 21
+  },
+  "candidates": {
+    "attack": [
+      {
+        "skill": "ShieldCrush",
+        "name": "Shield Crush",
+        "archetype_builds": 4,
+        "in_scope": [],
+        "mean_inventory": 151
+      },
+      {
+        "skill": "Frenzy",
+        "name": "Frenzy",
+        "archetype_builds": 1,
+        "in_scope": [],
+        "mean_inventory": 157
+      }
+    ]
+  },
+  "chosen": {},
+  "pass": true,
+  "per_build": [
+    {
+      "name": "sha256:33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed",
+      "tree_version": "3_23",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 97
+    },
+    {
+      "name": "sha256:d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 4,
+        "skill": "PenanceBrand",
+        "name": "Penance Brand",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Brand",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Mineable",
+          "Multicastable",
+          "Physical",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:brand",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 148
+    },
+    {
+      "name": "sha256:9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171",
+      "tree_version": "3_28",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 120
+    },
+    {
+      "name": "sha256:a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "ShieldCrush",
+        "name": "Shield Crush",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Melee",
+          "Multistrikeable",
+          "NeverExertable",
+          "Physical",
+          "RequiresShield"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 142
+    },
+    {
+      "name": "sha256:2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b",
+      "tree_version": "3_15",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-active-skill",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 66
+    },
+    {
+      "name": "sha256:2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e",
+      "tree_version": "3_22",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 105
+    },
+    {
+      "name": "sha256:da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb",
+      "tree_version": "3_22",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 126
+    },
+    {
+      "name": "sha256:e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 2,
+        "skill": "PenanceBrand",
+        "name": "Penance Brand",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Brand",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Mineable",
+          "Multicastable",
+          "Physical",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:brand",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 154
+    },
+    {
+      "name": "sha256:8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3",
+      "tree_version": "3_26_alternate",
+      "main_skill": {
+        "group": 1,
+        "skill": "ShieldCrush",
+        "name": "Shield Crush",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Melee",
+          "Multistrikeable",
+          "NeverExertable",
+          "Physical",
+          "RequiresShield"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 106
+    },
+    {
+      "name": "sha256:978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143",
+      "tree_version": "3_23",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 109
+    },
+    {
+      "name": "sha256:ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870",
+      "tree_version": "3_22",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 121
+    },
+    {
+      "name": "sha256:a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 1,
+        "skill": "PenanceBrand",
+        "name": "Penance Brand",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "Brand",
+          "Damage",
+          "Duration",
+          "Lightning",
+          "Mineable",
+          "Multicastable",
+          "Physical",
+          "Spell",
+          "Totemable",
+          "Trappable",
+          "Triggerable"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:brand",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 185
+    },
+    {
+      "name": "sha256:6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b",
+      "tree_version": "3_28",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-active-skill",
+        "tree:version",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 86
+    },
+    {
+      "name": "sha256:7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f",
+      "tree_version": "3_26",
+      "main_skill": {
+        "group": 17,
+        "skill": "FireTrap",
+        "name": "Fire Trap",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CausesBurning",
+          "Damage",
+          "DamageOverTime",
+          "Duration",
+          "Fire",
+          "Mineable",
+          "Spell",
+          "Trapped"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:trap",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 98
+    },
+    {
+      "name": "sha256:b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a",
+      "tree_version": "3_27",
+      "main_skill": {
+        "group": 5,
+        "skill": "FireTrap",
+        "name": "Fire Trap",
+        "kind": "spell",
+        "types": [
+          "Area",
+          "AreaSpell",
+          "CausesBurning",
+          "Damage",
+          "DamageOverTime",
+          "Duration",
+          "Fire",
+          "Mineable",
+          "Spell",
+          "Trapped"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "archetype:trap",
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel",
+        "excluded:not-carried-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 118
+    },
+    {
+      "name": "sha256:5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 5,
+        "skill": "ShieldCrush",
+        "name": "Shield Crush",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Melee",
+          "Multistrikeable",
+          "NeverExertable",
+          "Physical",
+          "RequiresShield"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 177
+    },
+    {
+      "name": "sha256:d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c",
+      "tree_version": "3_28",
+      "main_skill": {
+        "group": 3,
+        "skill": "ShieldCrush",
+        "name": "Shield Crush",
+        "kind": "attack",
+        "types": [
+          "Area",
+          "Attack",
+          "Melee",
+          "Multistrikeable",
+          "NeverExertable",
+          "Physical",
+          "RequiresShield"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:timeless-jewel",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 181
+    },
+    {
+      "name": "sha256:59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575",
+      "tree_version": "3_15",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version",
+        "tree:unknown-passive"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 52
+    },
+    {
+      "name": "sha256:e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c",
+      "tree_version": "3_15",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:no-skill-set",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 65
+    },
+    {
+      "name": "sha256:4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853",
+      "tree_version": "3_23",
+      "in_scope": false,
+      "archetype_ok": false,
+      "reasons": [
+        "main-skill:unknown-gem",
+        "tree:version"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 60
+    },
+    {
+      "name": "sha256:34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a",
+      "tree_version": "3_27",
+      "main_skill": {
+        "group": 3,
+        "skill": "Frenzy",
+        "name": "Frenzy",
+        "kind": "attack",
+        "types": [
+          "Attack",
+          "Mineable",
+          "MirageArcherCanUse",
+          "Projectile",
+          "ProjectilesFromUser",
+          "RangedAttack",
+          "Totemable",
+          "Trappable",
+          "Triggerable",
+          "WandAttack"
+        ]
+      },
+      "in_scope": false,
+      "archetype_ok": true,
+      "reasons": [
+        "tree:version",
+        "tree:unknown-passive",
+        "excluded:cluster-jewel"
+      ],
+      "state": "indeterminate",
+      "inventory_size": 157
+    }
+  ]
+}

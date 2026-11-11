@@ -27,9 +27,13 @@
 //!
 //! Supports apply as `calcLib.canGrantedEffectSupportActiveSkill` decides,
 //! in group order, each adding its types once it applies
-//! (`Modules/CalcActiveSkill.lua`, "Pass 1"): a support applies when the
-//! active effect can be supported, the support's excluded types do not
-//! match, and its allowed types match (or are empty). The type lists are
+//! (`Modules/CalcActiveSkill.lua`, "Pass 1"; its "loop over rejected
+//! supports" reconsiders only entries that are not supports, because pass 1
+//! queues only those, so each support is decided once, in order): a
+//! support applies when the active effect can be supported, a
+//! gems-only support supports a skill from a gem (not one an item
+//! grants), the support's excluded types do not match, and its allowed
+//! types match (or are empty). The type lists are
 //! postfix expressions over `AND`, `OR`, and `NOT`
 //! (`calcLib.doesTypeExpressionMatch`). Not modelled: supports' weapon
 //! types, supports items add (`ExtraSupport`), supports from other groups
@@ -194,10 +198,11 @@ pub fn type_expression(expr: &[String], types: &BTreeSet<String>, minion: &[Stri
 fn supports(
     support: &GrantedEffect,
     active: &GrantedEffect,
+    from_gem: bool,
     types: &BTreeSet<String>,
     minion: &[String],
 ) -> bool {
-    if active.cannot_be_supported {
+    if active.cannot_be_supported || (support.supports_gems_only && !from_gem) {
         return false;
     }
     if !support.excluded_types.is_empty() && type_expression(&support.excluded_types, types, &[]) {
@@ -217,6 +222,7 @@ fn choose<'b>(
     wanted: usize,
 ) -> Result<&'b GrantedEffect, Problem> {
     let optional = actives.iter().filter(|(_, o)| *o).count();
+    // Beyond the cap the combinations are not tried: uncertain.
     if optional > MAX_OPTIONAL {
         return Err(Problem::Uncertain);
     }
@@ -264,6 +270,7 @@ pub fn main_skill<'b>(build: &Build, t: &Tables<'b>) -> Result<MainSkill<'b>, Pr
     // has no global effect (module docs).
     let mut actives: Vec<(&'b GrantedEffect, bool)> = Vec::new();
     let mut group_supports: Vec<&'b GrantedEffect> = Vec::new();
+    let mut gem_sourced: BTreeSet<&'b str> = BTreeSet::new();
     for gem in group.gems.typed().filter(|g| g.enabled) {
         let effects = gem_effects(gem, t).ok_or_else(|| Problem::UnknownGem {
             gem: gem
@@ -277,6 +284,9 @@ pub fn main_skill<'b>(build: &Build, t: &Tables<'b>) -> Result<MainSkill<'b>, Pr
             if effect.support {
                 group_supports.push(effect);
             } else {
+                if gem.gem.is_some() {
+                    gem_sourced.insert(effect.id.as_str());
+                }
                 actives.push((effect, !global_enabled(gem, n + 1)));
             }
         }
@@ -286,6 +296,9 @@ pub fn main_skill<'b>(build: &Build, t: &Tables<'b>) -> Result<MainSkill<'b>, Pr
         .as_ref()
         .map_or(1, |s| *s.value() as usize);
     let effect = choose(&actives, wanted)?;
+    // PoB's `activeEffect.gemData`: the skill comes from a gem, not from an
+    // item (a gem entry without `gemId`).
+    let from_gem = gem_sourced.contains(effect.id.as_str());
     let active = effect
         .active_skill
         .as_deref()
@@ -296,7 +309,7 @@ pub fn main_skill<'b>(build: &Build, t: &Tables<'b>) -> Result<MainSkill<'b>, Pr
         .unwrap_or_default();
     let (mut applied, mut unapplied) = (Vec::new(), Vec::new());
     for s in group_supports {
-        if supports(s, effect, &types, minion) {
+        if supports(s, effect, from_gem, &types, minion) {
             types.extend(s.added_types.iter().cloned());
             applied.push(s);
         } else {

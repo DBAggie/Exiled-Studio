@@ -541,6 +541,63 @@ fn each_excluded_mechanic_when_allocated_and_listed() {
 }
 
 #[test]
+fn a_jewel_the_survey_cannot_read_is_never_taken_as_neither() {
+    let b = bundle();
+    let g = group(&["Bolt"]);
+    let all = scope(&["timeless-jewel", "cluster-jewel"]);
+    let items = format!(
+        "{}<ItemSet id=\"1\"/>",
+        jewel(1, "Mystery", "Unknown Jewel")
+    );
+    let spec = |item: u32| {
+        format!(
+            r#"<Spec treeVersion="3_29" nodes="300,400"><Sockets><Socket nodeId="400" itemId="{item}"/></Sockets></Spec>"#
+        )
+    };
+    // A base the bundle does not have, and an item ID with no item.
+    assert_eq!(
+        reasons(&b, &xml(1, &g, &spec(1), &items), &all),
+        vec![Reason::UnreadJewel]
+    );
+    assert_eq!(
+        reasons(&b, &xml(1, &g, &spec(9), &items), &all),
+        vec![Reason::UnreadJewel]
+    );
+    // No jewel exclusion listed: nothing to decide.
+    assert_eq!(
+        reasons(&b, &xml(1, &g, &spec(1), &items), &scope(&[])),
+        vec![]
+    );
+    assert_eq!(Reason::UnreadJewel.state(), "indeterminate");
+}
+
+#[test]
+fn a_gems_only_support_does_not_support_an_item_granted_skill() {
+    let mut b = bundle();
+    add_support(&mut b, "SupportGemsOnly", &["Spell"], &["Trapped"], &[]);
+    b.skills
+        .as_mut()
+        .unwrap()
+        .granted_effects
+        .iter_mut()
+        .find(|g| g.id == "SupportGemsOnly")
+        .unwrap()
+        .supports_gems_only = true;
+    let item_bolt = r#"<Skill enabled="true" source="Item:1:Wand"><Gem skillId="Bolt" level="1" quality="0" enabled="true"/>"#
+        .to_owned()
+        + &gem("SupportGemsOnly")
+        + "</Skill>";
+    assert_eq!(
+        reasons(&b, &xml(1, &item_bolt, SPEC, ""), &scope(&[])),
+        vec![]
+    );
+    assert_eq!(
+        reasons_of(&b, &["Bolt", "SupportGemsOnly"]),
+        vec![Reason::Archetype(Archetype::Trap)]
+    );
+}
+
+#[test]
 fn scope_file_checks() {
     let base = || {
         json!({
@@ -586,6 +643,12 @@ fn scope_file_checks() {
         .is_err()
     );
     assert!(with("extra", json!(1)).is_err());
+    // Confirmed needs both skills.
+    assert!(with("status", json!("confirmed")).is_err());
+    let mut both = base();
+    both["status"] = json!("confirmed");
+    both["skills"]["spell"] = json!("Bolt");
+    assert!(read(both).is_ok());
 }
 
 #[test]
@@ -838,4 +901,16 @@ fn run_ranks_candidates_and_checks_the_chosen_minimum() {
         serde_json::to_string(&summary).unwrap(),
         serde_json::to_string(&again.0).unwrap()
     );
+    // --anonymous: hashed names and no per-build inventories (ADR-007).
+    let mut anon = request(&resolver, &data, &t, &s, &not_carried);
+    anon.anonymous = true;
+    let (summary, report) = run(&inputs, &anon);
+    assert!(
+        summary
+            .per_build
+            .iter()
+            .all(|r| r.name.starts_with("sha256:"))
+    );
+    assert!(report.inventories.is_empty());
+    assert_eq!(report.reach_archetype.builds, 4);
 }

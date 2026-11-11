@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (PR #59, P3-0: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-11 (P3-3: scope survey, slice fields)
 
 # Phase 3: calc slice (plan)
 
@@ -99,6 +99,7 @@ Each sub-PR adds whole sections, end to end: canonical types and loader in `loom
 - Picks the two skills (Q2): the self-cast spell and the non-triggered attack with the most in-scope builds across corpus and public fixtures, ties broken by the smaller inventory. Adds credited public builds of a chosen skill if it has fewer than 3 in-scope builds (decision 3). The plan is updated with the choice and the in-scope list, and the slice field list (decision 4) is committed with its comparison rules and breakdown term groupings.
 - **Accept:** the classifier's rules and each excluded-mechanic rule have a test on synthetic builds; the survey summary is committed (scrubbed for the corpus); the chosen skills, the in-scope builds (corpus by SHA-256; at least 3 per skill), the excluded-mechanics list, and `docs/phase-3/slice-fields.json` are in the PR; the maintainer confirms the choice and the exclusions (Q2, Q7) before any engine PR (P3-6).
 - **Depends on:** 1a, 1b (skills, passives and tree version; item jewel kinds come from v1 base items).
+- **Done in P3-3** (`docs/phase-3/calc-survey.md`; context file, "Decisions in P3-3"): `calc-survey` takes a committed scope file (`docs/phase-3/calc-scope-poe1.json`: tree version `3_29` with evidence, the proposed excluded mechanics, the chosen skills, the minimum) and the data-parity rules (for `not-carried` passives). Result: 1 of 50 builds in scope (Winter Orb), no attack, so the minimum of 3 per skill is not met; the skill choice (Q2), the exclusions (Q7), and how to reach 3 builds (Q8) wait for the maintainer, and the top-up with public builds is a follow-up PR (P3-3b) once the skills are chosen. `slice-fields.json` is committed (revision 1, proposed): `AverageDamage` replaces `AverageHit`, `HitSpeed` added.
 
 ### 4. Engine core (M-L)
 In `loom-calc`, game-neutral:
@@ -218,6 +219,7 @@ Each PR is one session, small and single-purpose, and fills in the evidence sect
 | P3-1c | Step 1c, item property and monster tables | Same |
 | P3-2 | Step 2, `data-parity` and the overlay file | Category and overlay tests; scrubbed report with `uncategorized` 0 and evidence per category (maintainer-run) |
 | P3-3 | Step 3, `calc-survey`, exclusions, skill choice, slice fields | Classifier and exclusion tests; survey summary; `slice-fields.json` |
+| P3-3b | Step 3, after the maintainer's Q2/Q7/Q8: the chosen skills in the scope file, credited public builds until each has 3 in scope | Survey summary with `pass` true |
 | P3-4 | Step 4, engine core | Unit and property tests; wasm32; identifier list |
 | P3-13 | Step 13, calc result document v1 | Golden bytes; cross-platform job; schema freshness |
 | P3-5 | Step 5, `calc-run`, `calc-parity`, `mechanic` tier | Scripted-document tests per outcome; breakdown parser tests on the public fixtures |

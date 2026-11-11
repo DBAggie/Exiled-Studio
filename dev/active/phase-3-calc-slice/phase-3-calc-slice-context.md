@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (after P3-2: stack merged, `dev` branch)
+Last Updated: 2026-11-11 (P3-3: scope survey, slice fields)
 
 # Phase 3: calc slice (context)
 
@@ -62,7 +62,8 @@ No ADR needs an amendment for this plan.
 - **Q4** Application task, history, and jobs in Phase 4, not Phase 3. Default: yes (ACTION-PLAN order).
 - **Q5** Keep the oracle at PoB v2.67.2 and register data differences as `data-version`. Default: yes; moving the pin needs ADR-001's process.
 - **Q6** Default comparison per field: `exact` for values PoB rounds (life, mana, resistances, attributes), `rel` with a written reason (summation order) only where the survey shows non-rounded floats differ in the last bits. Default: yes, each written in `slice-fields.json`.
-- **Q7** The excluded-mechanics list (plan decision 3), written in P3-3 from game data. Default: what P3-3 proposes, at least timeless and cluster jewels in allocated sockets if the survey shows they reach slice fields; the maintainer confirms before P3-6.
+- **Q7** The excluded-mechanics list (plan decision 3), written in P3-3 from game data. Default: what P3-3 proposes, at least timeless and cluster jewels in allocated sockets if the survey shows they reach slice fields; the maintainer confirms before P3-6. P3-3 proposes `timeless-jewel`, `cluster-jewel`, `not-carried-passive` (`docs/phase-3/calc-scope-poe1.json`).
+- **Q8** (P3-3) How to reach 3 in-scope builds per chosen skill: the survey finds 1 (Winter Orb) and no attack. Options in `docs/phase-3/calc-survey.md`: (a) credited public builds of the chosen skills on the 3_29 tree without the excluded jewels (recommended), (b) derived fixtures with a guide's earlier 3_29 spec active, (c) a lower minimum. No default: P3-3b waits for the answer and for Q2.
 
 ## plan-reviewer (2026-11-11) summary
 Verdict: proceed, with changes. No ADR contradicted; decision 12 (WP1, WP2, WP6 to Phase 4) endorsed; Q1 "yes before P3-6" called sound. All findings applied:
@@ -128,6 +129,15 @@ No blockers. Applied: template cycle check; tree geometry check and required gra
 - **For the maintainer:** the Vaal transfigured gem tags (8) are classed `patch-delta` without a patch-note line (PoB copies `GemEffects.Tags` verbatim, so only the game can have changed them); confirm or reclassify. The PoB `dev` branch in the read-only legacy repo (`3dbca44`, 2026-10-29) is cited as corroboration (`pob@`).
 - **For P3-3/P3-8:** 15 ascendancy nodes grant buffs or skills whose stats the bundle does not carry (`passives-buff-text`); bloodline nodes have no ascendancy link. A build allocating one gets `Partial`, or the bundle gains the buff tables (a format change).
 - **For P3-11:** monster armour: PoB derives it (`monster-armour-derived`); the overlay carries PoB's table.
+
+## Decisions in P3-3 (scope survey; evidence `docs/phase-3/calc-survey.md`)
+- **A committed scope file** (`docs/phase-3/calc-scope-poe1.json`, `calc_survey::rules::Scope`): Steam build, `status` (`proposed` until the maintainer confirms), tree version `3_29` with evidence, `minimum_per_skill` 3, the chosen skills by granted effect ID (`null` until chosen), and which excluded mechanics apply (a closed list in code: `timeless-jewel`, `cluster-jewel`, `not-carried-passive`). The tool refuses a bundle of another Steam build.
+- **Main skill as PoB finds it**, from the bundle: gems by `gemId` + `variantId` (or `skillId`); PoB's `GlobalEffect` mark is not game data, so every combination of `enableGlobal`-off effects is tried and a disagreement is `main-skill-uncertain`. Supports by PoB's type expressions, in group order.
+- **Archetype rules** read the types after supports: `not-hit` (PoB's hit flag; auras and summons), `not-manually-cast`, `triggered`, `totem`, `trap`, `mine`, `brand`, `minion`, `mirage` (a support requiring exactly `MirageArcherCanUse`). Channelling is not excluded (the plan names no such rule; Q2 notes Winter Orb is channelled).
+- **Tree version strict:** PoB computes each build with its own version's tree; 17 of 18 builds on 3_28 allocate nodes that changed in 3_29 (PoB's own tree files), so a per-node equality rule would not help.
+- **Unknown gems:** PoB v2.67.2 skips gems it cannot find (`SkillsTab.lua`); the survey reports them (`indeterminate`) instead.
+- **Slice fields** (`docs/phase-3/slice-fields.json`, revision 1, proposed): `AverageDamage` replaces `AverageHit` (no top-level `AverageHit` for attacks; the DPS line prints `AverageDamage`), `HitSpeed` added; all `exact`; the ten breakdowns with their PoB line formats and term groupings (`chain`, `slots`, `min-max-total`).
+- **Result:** public 1 of 29 in scope, corpus 0 of 21; the gate's minimum is not met (Q8).
 
 ## code-architecture-reviewer (P3-2, 2026-11-11) summary
 No ADR or crate-boundary issue; deviations 1 (export instead of checkout) and 2 (`not-carried`) accepted. Applied:

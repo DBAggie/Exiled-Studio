@@ -157,6 +157,11 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# Calc scope survey (P3-3; maintainer-run, not in CI): main skill, archetype rules, tree version, excluded mechanics
+# (docs/phase-3/calc-scope-poe1.json), and mechanic inventory per build; writes summary.json and report.json
+# (<dir> must not exist; --anonymous for the corpus); exit 0 when every chosen skill has the minimum of in-scope
+# builds (or none is chosen yet), 1 otherwise, 3 when an input does not read (docs/phase-3/calc-survey.md):
+cargo run --release -p loom-parity-cli -- calc-survey <builds>... --bundle <bundle-dir> --scope docs/phase-3/calc-scope-poe1.json --data-rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
