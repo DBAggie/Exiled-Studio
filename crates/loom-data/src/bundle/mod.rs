@@ -3,10 +3,11 @@
 //! A bundle is a set of files read through a [`BundleSource`] (ADR-016: core
 //! reads bytes, hosts read files). Format 1 holds what item import reads;
 //! format 2 adds the calc tables (step 1a: [`skills`]; step 1b:
-//! [`passives`]). Item import reads
-//! both; the calc needs format 2. Format 2 grows by whole sections until
-//! Phase 3 step 1c is done, so a format-2 bundle is remade, never kept,
-//! across those steps.
+//! [`passives`]; step 1c: [`properties`]). Item import reads
+//! both; the calc needs format 2. Format 2 grew by whole sections in
+//! Phase 3 steps 1a to 1c (bundles made before 1c do not load); its
+//! sections are complete with 1c, and a later change to them is a new
+//! format.
 //!
 //! | Path | Content |
 //! |---|---|
@@ -22,6 +23,7 @@
 //! | `poe1/*.json` | the Path of Exile only section ([`poe1::Poe1Section`]); never in a PoE2 bundle |
 //! | `data/skill_types.json`, ... | format 2: the skill tables ([`skills`]) |
 //! | `data/characters.json`, ... | format 2: the character and passive tables ([`passives`]) |
+//! | `data/weapon_types.json`, ... | format 2: the item property and monster tables ([`properties`]) |
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
@@ -30,6 +32,7 @@
 
 pub mod passives;
 pub mod poe1;
+pub mod properties;
 pub mod skills;
 mod source;
 pub mod validate;
@@ -50,7 +53,10 @@ pub const CALC_FORMAT: u32 = 2;
 
 /// Every file the calc sections add in [`CALC_FORMAT`].
 pub fn calc_files() -> impl Iterator<Item = &'static str> {
-    skills::FILES.into_iter().chain(passives::FILES)
+    skills::FILES
+        .into_iter()
+        .chain(passives::FILES)
+        .chain(properties::FILES)
 }
 
 /// Writes an `f32` as its shortest text (`2.921`, not the widened
@@ -298,6 +304,8 @@ pub struct Bundle {
     pub skills: Option<skills::SkillTables>,
     /// The character and passive tables (format 2; `None` in format 1).
     pub passives: Option<passives::PassiveTables>,
+    /// The item property and monster tables (format 2; `None` in format 1).
+    pub properties: Option<properties::PropertyTables>,
 }
 
 /// Why a bundle did not load.
@@ -451,13 +459,14 @@ impl Bundle {
         } else {
             None
         };
-        let (skills, passives) = if format >= CALC_FORMAT {
+        let (skills, passives, properties) = if format >= CALC_FORMAT {
             (
                 Some(skills::SkillTables::load(source)?),
                 Some(passives::PassiveTables::load(source)?),
+                Some(properties::PropertyTables::load(source)?),
             )
         } else {
-            (None, None)
+            (None, None, None)
         };
         Ok(Self {
             stats: json(source, STATS)?,
@@ -471,6 +480,7 @@ impl Bundle {
             poe1,
             skills,
             passives,
+            properties,
             game,
             manifest,
         })

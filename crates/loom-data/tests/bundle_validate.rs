@@ -522,3 +522,124 @@ fn tree_node_outside_its_orbit_should_give_its_code() {
         assert_eq!(codes(&src), ["BUNDLE_TREE_GEOMETRY"], "{what}");
     }
 }
+
+/// The item property and monster tables' checks (Phase 3 plan, step 1c):
+/// each mutation gives exactly its code.
+#[test]
+fn property_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, &str, Edit, &str); 13] = [
+        (
+            "data/weapon_types.json",
+            "weapon base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/armour_types.json",
+            "armour base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/shield_types.json",
+            "shield base",
+            |v| {
+                v[0]["base_item"] = "Nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "data/weapon_types.json",
+            "weapon twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/armour_types.json",
+            "armour twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/shield_types.json",
+            "shield twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/game_constants.json",
+            "constant twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/game_constants.json",
+            "constant without ID",
+            |v| {
+                v[0]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "data/monster_levels.json",
+            "levels reversed",
+            |v| {
+                v.as_array_mut().unwrap().reverse();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "data/monster_levels.json",
+            "level repeated",
+            |v| {
+                v[1]["level"] = 1.into();
+            },
+            "BUNDLE_MONSTER_LEVELS",
+        ),
+        (
+            "data/armour_types.json",
+            "armour range upside down",
+            |v| {
+                v[0]["evasion"] = json!({"min": 5, "max": 4});
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "data/weapon_types.json",
+            "damage range upside down",
+            |v| {
+                v[0]["damage_min"] = 10.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "data/game_constants.json",
+            "divisor 0",
+            |v| {
+                v[0]["divisor"] = 0.into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (path, what, edit, code) in cases {
+        let src = edited("bundle-poe1", path, edit);
+        assert_eq!(codes(&src), [code], "{what}");
+    }
+}

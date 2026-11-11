@@ -81,7 +81,7 @@ pub(super) fn to_f32(v: f64) -> f32 {
 
 /// A float cell; a non-finite or missing value is an error (the extract
 /// writes non-finite floats as strings).
-fn float(t: &Table, row: &[Value], col: usize) -> Result<f32, String> {
+pub(super) fn float(t: &Table, row: &[Value], col: usize) -> Result<f32, String> {
     row.get(col)
         .and_then(Value::as_f64)
         .map(to_f32)
@@ -117,7 +117,10 @@ fn int_or_0(row: &[Value], col: Option<usize>) -> i64 {
 ///
 /// # Errors
 /// A message when no set is complete.
-fn one_of<const N: usize>(t: &Table, alternatives: &[[&str; N]]) -> Result<[usize; N], String> {
+pub(super) fn one_of<const N: usize>(
+    t: &Table,
+    alternatives: &[[&str; N]],
+) -> Result<[usize; N], String> {
     alternatives
         .iter()
         .find_map(|set| {

@@ -16,11 +16,15 @@
 //!   object template, mastery group, and mastery effect, every passive of a
 //!   tree node, and every tree node of a connection or root; no object
 //!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
-//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`);
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`); the
+//!   weapon, armour, and shield types' base items exist;
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
 //!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
 //!   mastery effect hashes, class numbers, and ascendancy numbers within a
-//!   class are unique; the item rules validate; the
+//!   class are unique; a base item has at most one row per property file;
+//!   monster levels are strictly ascending (`BUNDLE_MONSTER_LEVELS`);
+//!   a range's minimum is not above its maximum, and a game constant's
+//!   divisor is not 0 (`BUNDLE_VALUE_RANGE`); the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
 //!   ascending levels (`BUNDLE_SKILL_LEVELS`);
 //! - **smoke:** every stat-description scope the rules name is one file,
@@ -39,6 +43,7 @@ use serde::Serialize;
 use sha2::{Digest, Sha256};
 
 use super::passives::{self, PassiveTables};
+use super::properties::{self, PropertyTables};
 use super::skills::{self, SkillTables};
 use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
 use crate::stat_desc::{StatValue, VariantFilter, render_description};
@@ -241,6 +246,9 @@ fn referential(b: &Bundle, report: &mut Report) {
     }
     if let Some(p) = &b.passives {
         passive_refs(p, &stats, report);
+    }
+    if let Some(p) = &b.properties {
+        property_refs(p, &bases, report);
     }
     let texts: BTreeSet<&str> = b.client_texts.iter().map(|t| t.id.as_str()).collect();
     let t = &b.item_rules.text;
@@ -659,6 +667,116 @@ fn passive_domain(p: &PassiveTables, report: &mut Report) {
     }
 }
 
+/// The item property tables' references: every base item exists.
+fn property_refs(p: &PropertyTables, bases: &BTreeSet<&str>, report: &mut Report) {
+    let rows = p
+        .weapon_types
+        .iter()
+        .map(|w| ("weapon_types", w.base_item.as_str()))
+        .chain(
+            p.armour_types
+                .iter()
+                .map(|a| ("armour_types", a.base_item.as_str())),
+        )
+        .chain(
+            p.shield_types
+                .iter()
+                .map(|s| ("shield_types", s.base_item.as_str())),
+        );
+    for (file, base) in rows {
+        if !bases.contains(base) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{file}:{base}"),
+                format!("base item {base:?} does not exist"),
+            );
+        }
+    }
+}
+
+/// The item property and monster tables' domain checks (module docs).
+fn property_domain(p: &PropertyTables, report: &mut Report) {
+    let files: [(&str, Vec<&str>); 4] = [
+        (
+            properties::WEAPON_TYPES,
+            p.weapon_types
+                .iter()
+                .map(|w| w.base_item.as_str())
+                .collect(),
+        ),
+        (
+            properties::ARMOUR_TYPES,
+            p.armour_types
+                .iter()
+                .map(|a| a.base_item.as_str())
+                .collect(),
+        ),
+        (
+            properties::SHIELD_TYPES,
+            p.shield_types
+                .iter()
+                .map(|s| s.base_item.as_str())
+                .collect(),
+        ),
+        (
+            properties::GAME_CONSTANTS,
+            p.game_constants.iter().map(|c| c.id.as_str()).collect(),
+        ),
+    ];
+    for (file, ids) in files {
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+    }
+    let levels: Vec<i64> = p.monster_levels.iter().map(|l| l.level).collect();
+    if !levels.iter().zip(levels.iter().skip(1)).all(|(a, b)| a < b) {
+        report.add(
+            "BUNDLE_MONSTER_LEVELS",
+            properties::MONSTER_LEVELS,
+            "levels are not strictly ascending",
+        );
+    }
+    for a in &p.armour_types {
+        for (what, r) in [
+            ("armour", a.armour),
+            ("evasion", a.evasion),
+            ("energy shield", a.energy_shield),
+            ("ward", a.ward),
+        ] {
+            if r.min > r.max {
+                report.add(
+                    "BUNDLE_VALUE_RANGE",
+                    format!("armour_types:{}", a.base_item),
+                    format!("{what} minimum {} is above its maximum {}", r.min, r.max),
+                );
+            }
+        }
+    }
+    for w in &p.weapon_types {
+        if w.damage_min > w.damage_max {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("weapon_types:{}", w.base_item),
+                format!(
+                    "damage minimum {} is above its maximum {}",
+                    w.damage_min, w.damage_max
+                ),
+            );
+        }
+    }
+    for c in &p.game_constants {
+        if c.divisor == 0 {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("game_constants:{}", c.id),
+                "the divisor is 0",
+            );
+        }
+    }
+}
+
 fn duplicates<'a>(report: &mut Report, file: &str, ids: impl Iterator<Item = &'a str>) {
     let mut seen = BTreeSet::new();
     for id in ids {
@@ -693,6 +811,9 @@ fn domain(b: &Bundle, report: &mut Report) {
     }
     if let Some(p) = &b.passives {
         passive_domain(p, report);
+    }
+    if let Some(p) = &b.properties {
+        property_domain(p, report);
     }
 }
 

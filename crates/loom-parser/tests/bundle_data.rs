@@ -78,6 +78,8 @@ fn bases_should_map_classes_and_implicits_to_row_numbers() {
         [
             "Plain Test Charm",
             "Plain Test Ring",
+            "Plain Test Shield",
+            "Plain Test Wand",
             "Test Bolt",
             "Test Damage Support"
         ]

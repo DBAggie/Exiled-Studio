@@ -43,7 +43,7 @@ fn bundle_data_should_equal_itself() {
     );
     assert_eq!(
         (report.equal(), report.mod_rows, report.base_names),
-        (true, 3, 4)
+        (true, 3, 6)
     );
 }
 
@@ -113,7 +113,7 @@ fn a_changed_row_or_base_should_be_a_mismatch() {
         report.listed,
         [
             "mods[0] TestLife1: fields differ",
-            "bases: 1 names in the extract, 4 in the bundle, or another order",
+            "bases: 1 names in the extract, 6 in the bundle, or another order",
             "bases[Plain Test Ring]: rows differ",
             "granted skills differ",
             "properties differ",

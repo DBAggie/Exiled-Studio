@@ -20,7 +20,8 @@
 //!   `poe1/grafts.json` (`grafts::rows`);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
-//!   and passive tables ([`passives`]; the extract's manifest format 5).
+//!   and passive tables ([`passives`]; the extract's manifest format 5), and
+//!   the item property and monster tables ([`base_properties`]).
 //!
 //! JSON is written with sorted keys and two-space indentation, rows in
 //! table order, so two runs on one extract give the same bytes.
@@ -30,6 +31,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::passives as bundle_passives;
 use loom_data::bundle::poe1::{self as bundle_poe1, Grafts as BundleGrafts};
+use loom_data::bundle::properties as bundle_properties;
 use loom_data::bundle::skills as bundle_skills;
 use loom_data::bundle::{
     self, BaseItem, ClientText, FileEntry, LookupTable, Manifest, ModEntry, ModStat, Provenance,
@@ -46,6 +48,7 @@ use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
 use crate::{grafts, mod_filter, poe1, poe2, properties};
 
+mod base_properties;
 mod passives;
 mod skills;
 
@@ -99,6 +102,8 @@ pub struct Summary {
     pub skills: skills::SkillSummary,
     /// The character and passive tables (format 2).
     pub passives: passives::PassiveSummary,
+    /// The item property and monster tables (format 2).
+    pub properties: base_properties::PropertySummary,
 }
 
 /// Counters the readers fill (see [`Summary`]).
@@ -484,6 +489,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     let (bases, tags_unknown, nameless) = base_items(read, &classes, &mod_rows, &counts)?;
     let (skill_tables, skill_summary) = skills::convert(read, &classes, &counts)?;
     let (passive_tables, passive_summary) = passives::convert(read, &raw, &counts)?;
+    let (property_tables, property_summary) = base_properties::convert(read, &counts)?;
 
     let mut files: Files = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
@@ -628,6 +634,39 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     for (path, bytes, n) in passive_files {
         put(&mut files, &mut rows, path, bytes, Some(n));
     }
+    let pr = &property_tables;
+    // Every file of `bundle_properties::FILES`; the load-back refuses a
+    // bundle that lacks one.
+    let property_files: [(&str, Vec<u8>, usize); 5] = [
+        (
+            bundle_properties::WEAPON_TYPES,
+            to_json(&pr.weapon_types)?,
+            pr.weapon_types.len(),
+        ),
+        (
+            bundle_properties::ARMOUR_TYPES,
+            to_json(&pr.armour_types)?,
+            pr.armour_types.len(),
+        ),
+        (
+            bundle_properties::SHIELD_TYPES,
+            to_json(&pr.shield_types)?,
+            pr.shield_types.len(),
+        ),
+        (
+            bundle_properties::MONSTER_LEVELS,
+            to_json(&pr.monster_levels)?,
+            pr.monster_levels.len(),
+        ),
+        (
+            bundle_properties::GAME_CONSTANTS,
+            to_json(&pr.game_constants)?,
+            pr.game_constants.len(),
+        ),
+    ];
+    for (path, bytes, n) in property_files {
+        put(&mut files, &mut rows, path, bytes, Some(n));
+    }
 
     let statdesc = StatDescManifest::from_json(&manifest_bytes).map_err(|e| e.to_string())?;
     for path in &extract.files {
@@ -729,6 +768,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         lookup: lookup_report,
         skills: skill_summary,
         passives: passive_summary,
+        properties: property_summary,
     };
     files.insert(bundle::MANIFEST.to_owned(), manifest_json);
     Ok((files, summary))
@@ -776,6 +816,7 @@ mod tests {
                 "LOOKUP_TABLES",
                 "SKILL_TABLES",
                 "PASSIVE_TABLES",
+                "ITEM_PROPERTY_TABLES",
             ]
             .contains(n)
         }) {
