@@ -120,13 +120,24 @@ fn derived(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         of: sum,
     })?;
     let value = g.value(node).unwrap_or(f64::NAN);
-    calc.set(
+    calc.set_derived(
         Field::HitDps,
         loom_calc::Query {
             value,
             node,
             reasons: loom_calc::Reasons::new(),
         },
+        &[Field::Life, Field::Mana],
+    );
+    // From a field no phase writes: not computed.
+    calc.set_derived(
+        Field::CritChance,
+        loom_calc::Query {
+            value,
+            node,
+            reasons: loom_calc::Reasons::new(),
+        },
+        &[Field::Evasion],
     );
     Ok(())
 }
@@ -345,6 +356,73 @@ fn an_unmapped_stat_should_make_fields_partial_never_a_silent_zero() {
     }
     assert_eq!(r.fields[&Field::Life].value, Some(100.0));
     assert_eq!(r.state, StateKind::Unsupported, "Evasion is not computed");
+    assert!(
+        r.reasons.partial.contains(&expected),
+        "kept on the result as well"
+    );
+}
+
+#[test]
+fn reasons_should_show_on_the_result_when_no_field_is_computed() {
+    struct Nothing;
+    impl Ruleset for Nothing {
+        fn game(&self) -> Game {
+            Game::Poe1
+        }
+        fn slice(&self) -> &[Field] {
+            &[Field::Life]
+        }
+        fn mapping(&self) -> &dyn StatMapping {
+            &Mapping
+        }
+        fn collect(&self, _: &CalcInput<'_>, ingest: &mut Ingest<'_>) -> Result<(), CalcError> {
+            ingest.stats(&Source::Character, &[stat("mystery", 1)]);
+            Ok(())
+        }
+        fn phases(&self) -> &[Phase] {
+            &[]
+        }
+    }
+    let b = build(Game::Poe1);
+    let data = Data(version(Game::Poe1));
+    let options = CalcOptions::default();
+    let input = CalcInput {
+        build: &b,
+        data: &data,
+        options: &options,
+    };
+    let r = calculate_with(&input, &Nothing, &|| false).unwrap();
+    assert_eq!(
+        r.fields[&Field::Life].state,
+        FieldState::Unsupported(UnsupportedReason::NotComputed)
+    );
+    assert_eq!(r.reasons.partial.len(), 1);
+}
+
+#[test]
+fn a_derived_field_should_carry_its_dependencies_reasons() {
+    let effects = vec![Effect {
+        quantity: Quantity::Life,
+        op: Op::Base,
+        value: 5.0,
+        conditions: Conditions::none().with_state(ConditionKey::new("c"), true),
+        source: Source::Passive { node: NodeId(7) },
+    }];
+    let r = run(&build(Game::Poe1), &Rules::new(vec![], effects)).unwrap();
+    assert_eq!(r.fields[&Field::Life].state.kind(), StateKind::Partial);
+    assert_eq!(
+        r.fields[&Field::HitDps].state,
+        r.fields[&Field::Life].state,
+        "HitDps reads Life"
+    );
+    let crit = &r.fields[&Field::CritChance];
+    assert_eq!(crit.value, None);
+    assert_eq!(
+        crit.state,
+        FieldState::Unsupported(UnsupportedReason::DependsOnNotComputed {
+            field: Field::Evasion
+        })
+    );
 }
 
 #[test]
@@ -430,6 +508,9 @@ impl Rng {
         let whole = self.below(400) as i32 - 100;
         let frac = f64::from(self.below(1000) as u32) / 997.0;
         let scale = self.pick(&[1.0, 1.0, 1.0, 1e-3, 1e9]);
+        if self.below(25) == 0 {
+            return -0.0;
+        }
         (f64::from(whole) + frac) * scale
     }
 

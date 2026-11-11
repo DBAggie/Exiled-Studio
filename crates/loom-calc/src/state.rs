@@ -11,6 +11,7 @@ use loom_domain::StatId;
 
 use crate::condition::ConditionKey;
 use crate::quantity::Quantity;
+use crate::result::Field;
 use crate::source::Source;
 
 /// Why a field is not `Complete`, or not computed (a closed list).
@@ -59,6 +60,15 @@ pub enum UnsupportedReason {
     UnmodelledCondition {
         /// The condition.
         condition: ConditionKey,
+        /// The quantity of the effect left out.
+        quantity: Quantity,
+        /// The source of the effect left out.
+        source: Source,
+    },
+    /// A field derived from another field that is not computed.
+    DependsOnNotComputed {
+        /// The field it needs.
+        field: Field,
     },
     /// The engine does not compute this field yet.
     NotComputed,
@@ -75,6 +85,7 @@ impl UnsupportedReason {
             Self::PendingLine { .. } => "pending-line",
             Self::UnhandledKind { .. } => "unhandled-kind",
             Self::UnmodelledCondition { .. } => "unmodelled-condition",
+            Self::DependsOnNotComputed { .. } => "depends-on-not-computed",
             Self::NotComputed => "not-computed",
         }
     }

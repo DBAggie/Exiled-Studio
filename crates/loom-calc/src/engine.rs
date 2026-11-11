@@ -20,7 +20,7 @@ use crate::input::CalcInput;
 use crate::poe1;
 use crate::quantity::Quantity;
 use crate::result::{CalcResult, Field, FieldResult};
-use crate::state::{Reasons, UnsupportedReason};
+use crate::state::{FieldState, Reasons, UnsupportedReason};
 use crate::store::{ModStore, Query};
 
 /// One step of a game's calculation.
@@ -121,6 +121,46 @@ impl<'a> Calc<'a> {
             },
         );
     }
+
+    /// Writes a field computed from other fields (`deps`): its state also
+    /// carries every reason of each dependency, so a derived field is never
+    /// `Complete` when what it reads is not. A dependency that is not
+    /// computed (absent or `Unsupported`) makes the field `Unsupported`
+    /// with `DependsOnNotComputed`, without a value.
+    pub fn set_derived(&mut self, field: Field, query: Query, deps: &[Field]) {
+        let mut reasons = query.reasons;
+        reasons.extend(&self.global);
+        for dep in deps {
+            match self.fields.get(dep).map(|f| &f.state) {
+                None | Some(FieldState::Unsupported(_)) => {
+                    self.fields.insert(
+                        field,
+                        FieldResult::unsupported(UnsupportedReason::DependsOnNotComputed {
+                            field: *dep,
+                        }),
+                    );
+                    return;
+                }
+                Some(FieldState::Complete) => {}
+                Some(FieldState::Partial(p)) => reasons.partial.extend(p.iter().cloned()),
+                Some(FieldState::Indeterminate {
+                    reasons: i,
+                    partial: p,
+                }) => {
+                    reasons.indeterminate.extend(i.iter().cloned());
+                    reasons.partial.extend(p.iter().cloned());
+                }
+            }
+        }
+        self.fields.insert(
+            field,
+            FieldResult {
+                value: Some(query.value),
+                node: Some(query.node),
+                state: reasons.into_state(),
+            },
+        );
+    }
 }
 
 /// Fails with [`CalcError::Cancelled`] when the hook says so.
@@ -166,7 +206,10 @@ pub fn calculate_with(
         poll(cancel)?;
     }
     let Calc {
-        graph, mut fields, ..
+        graph,
+        mut fields,
+        global,
+        ..
     } = calc;
     for field in rules.slice() {
         fields
@@ -179,6 +222,7 @@ pub fn calculate_with(
         fields,
         graph,
         state,
+        reasons: global,
     })
 }
 
@@ -195,6 +239,7 @@ pub fn calculate_cancellable(
         Game::Poe1 => calculate_with(input, &poe1::Poe1Rules, cancel),
         Game::Poe2 => {
             input.check_data_version()?;
+            poll(cancel)?;
             Ok(CalcResult::game_unsupported(Game::Poe2))
         }
     }

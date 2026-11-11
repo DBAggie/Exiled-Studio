@@ -78,6 +78,11 @@ pub trait StatMapping {
 
 /// A stat value as one number: an exact value shown as itself, or the
 /// assumed value of a hidden one. `None` otherwise.
+///
+/// A hidden value's assumption is accepted as the value on purpose: the
+/// resolver records it only when the description's condition makes it
+/// clear (`StatValue::Hidden`), so the field stays `Complete`. If a later
+/// step finds assumptions that are guesses, they get their own reason.
 #[must_use]
 pub fn settle(value: &StatValue) -> Option<f64> {
     let raw = match value {

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-3b: skills chosen, in-scope builds)
+Last Updated: 2026-11-11 (P3-4: engine core)
 
 # Phase 3: calc slice (plan)
 
@@ -110,6 +110,7 @@ In `loom-calc`, game-neutral:
 - `CalcResult`: slice fields with value, state, reasons, and graph.
 - **Accept:** unit tests for each query and condition; property tests: every output equals its graph's evaluation, results are byte-identical across two runs, effect order in the store does not change results; a stat with no mapping gives `Partial` with `UnmappedStat`, never a silent zero; the wasm32 build; no new dependency outside the pure set; the PoE1-identifier scan (which already covers `loom-calc`) gets the calc's PoE1-only names.
 - **Depends on:** nothing (synthetic data); it uses step 1's types once they exist.
+- **Done in P3-4** (branch `feat/p3-4-engine-core`; context file, "Decisions in P3-4"): the game-neutral core (`input`, `quantity`, `condition`, `store`, `graph`, `state`, `ingest`, `engine`, `math`, `result`) and `poe1` with the 24-field slice, an empty mapping, and no phases, so every PoE1 field is `not-computed` until P3-6; 57 tests including three fixed-seed property tests; `Calc::set_derived` carries dependencies' reasons.
 
 ### 5. Parity harness (M)
 - `calc-run <builds...> --bundle <dir> --out <dir> [--anonymous] [--data-overlay <file>]`: import, resolve, calculate, and write each build's result as the calc result document v1 (step 13) plus a scrubbed summary (states and reasons by count, and calculation time per build as a baseline for ADR-013's performance budgets in Phase 4; not gated).

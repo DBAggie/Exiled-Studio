@@ -9,7 +9,7 @@ use loom_domain::Game;
 use crate::graph::{Graph, NodeIndex};
 use crate::poe1::Poe1Field;
 use crate::quantity::DamageType;
-use crate::state::{FieldState, StateKind};
+use crate::state::{FieldState, Reasons, StateKind};
 
 /// A computed output (our own names; the parity tool maps them to PoB's,
 /// `docs/phase-3/slice-fields.json`).
@@ -124,6 +124,10 @@ pub struct CalcResult {
     /// The worst state of the fields; `Unsupported` when the game has no
     /// calculation (ADR-001).
     pub state: StateKind,
+    /// The reasons that apply to every computed field (from collecting
+    /// the build: unmapped stats, quarantined lines, unhandled kinds),
+    /// kept here as well so they show even when no field is computed.
+    pub reasons: Reasons,
 }
 
 impl CalcResult {
@@ -135,6 +139,7 @@ impl CalcResult {
             fields: BTreeMap::new(),
             graph: Graph::new(),
             state: StateKind::Unsupported,
+            reasons: Reasons::new(),
         }
     }
 

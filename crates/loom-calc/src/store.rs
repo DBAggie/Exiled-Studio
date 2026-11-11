@@ -110,7 +110,11 @@ impl ModStore {
                     for condition in keys {
                         reasons
                             .partial
-                            .insert(UnsupportedReason::UnmodelledCondition { condition });
+                            .insert(UnsupportedReason::UnmodelledCondition {
+                                condition,
+                                quantity,
+                                source: e.source.clone(),
+                            });
                     }
                 }
             }
@@ -303,7 +307,9 @@ impl ModStore {
                 .indeterminate
                 .insert(IndeterminateReason::ConflictingOverride { quantity });
         }
-        let value = first.value;
+        // The node is a sum from `0`, so record the value as the sum gives
+        // it: `0 + -0.0` is `+0.0`.
+        let value = 0.0 + first.value;
         let leaves = Self::leaves(graph, &effects[..1])?;
         let node = graph.push(
             Node::Sum {
@@ -603,7 +609,9 @@ mod tests {
             q.reasons
                 .partial
                 .contains(&UnsupportedReason::UnmodelledCondition {
-                    condition: key.clone()
+                    condition: key.clone(),
+                    quantity: Quantity::Life,
+                    source: rule("b"),
                 })
         );
         let settled = QueryContext::default().with_state(key, true);
@@ -654,5 +662,28 @@ mod tests {
         assert_eq!(a.len(), 6);
         assert!(!a.is_empty());
         assert_eq!(a.effects().len(), 6);
+    }
+}
+
+#[cfg(test)]
+mod negative_zero {
+    use super::*;
+
+    #[test]
+    fn an_override_of_negative_zero_should_match_its_graph() {
+        let mut s = ModStore::new();
+        s.add(Effect {
+            quantity: Quantity::Life,
+            op: Op::Override,
+            value: -0.0,
+            conditions: Conditions::none(),
+            source: Source::Character,
+        });
+        let mut g = Graph::new();
+        let q = s
+            .chain(&mut g, Quantity::Life, &QueryContext::default())
+            .unwrap();
+        assert_eq!(q.value.to_bits(), 0.0_f64.to_bits());
+        g.check().unwrap();
     }
 }
