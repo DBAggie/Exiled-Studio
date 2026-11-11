@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2d: compositions, grafts, properties, tolerances)
+Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader)
 
 # Phase 2: tasks
 
@@ -47,11 +47,19 @@ Last Updated: 2026-11-10 (PR P2-2d: compositions, grafts, properties, tolerances
 - [x] `code-architecture-reviewer`; findings in the context file
 - [x] Open PR (#46, base `feat/p2-2c-mods-filter`); write the PR number into the docs right after
 
-## PR P2-3: canonical data model, bundle v1, converter (step 3; may split 3a/3b)
-- [ ] Canonical types (our schema) for what import and validation read; `item_rules`; `poe1` section; game-specific table list and its test
-- [ ] `bundle.json` (reserved `signatures`), `BundleSource` (`list`, `read`), loader errors; `sha2` with `cargo deny`
-- [ ] `loom-extractor bundle`; synthetic PoE1 and PoE2 bundles
-- [ ] Maintainer-run: two-run determinism on PoE1 and PoE2; scrubbed summaries
+## PR P2-3a: canonical data model, bundle v1, loader (step 3a)
+- [x] Canonical types (our schema, IDs not row indices) for what import reads: stats, mods, base items (precomputed tags), item classes, client texts, lookup tables, stat-description files; `item_rules` (the rule types moved to `loom-data::rules`); `poe1` section (quality types, grafts with gem IDs)
+- [x] `bundle.json` (reserved `signatures`), `BundleSource` (`list`, `read`) and `MemorySource`, loader with `BUNDLE_*` codes
+- [x] Synthetic PoE1 and PoE2 bundles (`crates/loom-data/tests/fixtures/`, `make_bundles.py`) and loader tests
+- [x] Decided: `sha2` and hash checks move to the validator (P2-4), which is the first code that hashes
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-2d-compositions-tolerances`); write the PR number into the docs right after
+
+## PR P2-3b: `loom-extractor bundle` (step 3b)
+- [ ] Map the extract's dat-schema rows to the canonical types; write `item_rules` (the PoE1 values now in `tools/parity-cli/src/poe1.rs`; PoE2 values from its schema enums)
+- [ ] Precompute base tags (item types), essence classes, lookup tables, graft gems
+- [ ] Game-specific table list agrees with the extractor's lists (gate 3d)
+- [ ] Two `bundle` runs per game byte-identical (in-session); scrubbed summaries committed
 
 ## PR P2-4: bundle validator (step 4)
 - [ ] Structural, schema, referential, domain, smoke checks with `BUNDLE_*` codes

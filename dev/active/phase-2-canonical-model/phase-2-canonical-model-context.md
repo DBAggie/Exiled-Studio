@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-2d: compositions, grafts, properties, tolerances; stack #42 <- #43 <- #44 <- #45 <- P2-2d)
+Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader; stack #42 <- #43 <- #44 <- #45 <- #46 <- P2-3a)
 
 # Phase 2: context
 
@@ -209,3 +209,36 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
   - the `composed: bool` argument;
   - the graft-named types and the fixed `{1}`/`{0}` wrapper shape are PoE1-flavoured. They are game-data shaped, the IDs are data, and "Graft" is not in the gate 3c list. Rename when PoE2 data shows the general form;
   - `categorize::compositions()` rebuilds the rules on each call (tool only).
+
+## Decisions in P2-3a (bundle model and loader, 2026-11-10)
+- **Rule types moved down.** The rule types (`ItemRules`, `TextRules`, `ModRules`, `FitRule`, `FitClause`, `DomainMatch`, `Unflagged`, `LocalCarriers`, `ModRulesError`) live in `loom-data::rules`, with serde. `loom-parser` re-exports them under their old paths, and `Unflagged` matching is a parser-private function. Reason: `loom-data` sits below `loom-parser`, and a bundle carries its rules (`data/item_rules.json`).
+- **`ModSection` in JSON is its name.** `enchant`, `implicit`, and `explicit` are the shared sections; any other name is `Other`. `ModRules.sections` lists a game's non-shared names, so `validate` catches typos (PoE1: `scourge`, `crucible`, `class-requirement`).
+- **Bundle v1 layout.** The layout table is in `loom-data/src/bundle/mod.rs`:
+  - `bundle.json` holds format 1, `data_schema` 1, the game, `Provenance` (Steam build, index SHA-256, extractor commit, decoder, dat schema), every other file with its SHA-256 and size, and `signatures` (reserved; the validator refuses a non-empty one in format 1).
+  - `data/*.json` holds the canonical types, keyed by ID with no row indices.
+  - `stat_descriptions/*.json` uses the extractor's own format.
+  - `poe1/*.json` holds quality types and grafts (with gem IDs and levels). Essences need no file, because their classes are precomputed into `ModEntry.essence_classes`.
+  - JSON has sorted keys and a stable row order.
+- **Loader.** `Bundle::load(&dyn BundleSource)`:
+  - checks the format, then the game, then the manifest paths (plain relative paths, unique, no `poe1/` in a PoE2 bundle), then the required files;
+  - parses every listed file, with `BUNDLE_*` codes;
+  - does not verify anything: hashes, sizes, references, and unlisted files are P2-4's validator. The app uses a bundle only after the validator accepts it (a gate for P2-6).
+  - `sha2` enters with the validator.
+- **Deriving `ModRow` in P2-6.** `ModRow.unset` comes from a mod's `(0, 0)` stats, and `type_spawn` is computed by `Mods::from_rows` (it already is). The converter does not precompute them. P2-6 maps class and mod-type IDs onto the parser's row numbers, or the parser moves to IDs.
+- **Fixtures.** Synthetic bundles live in `crates/loom-data/tests/fixtures/bundle-{poe1,poe2}/`, written by `make_bundles.py` (made-up rows), and `.gitattributes` keeps their bytes exact.
+
+## code-architecture-reviewer (P2-3a, 2026-11-10) summary
+- **No blockers.** Rules in `loom-data` are the right home, the ADRs are conformant, and the design is not over-engineered.
+- **Should-fix, applied:**
+  - path safety and duplicate paths in the loader;
+  - the "unverified" doc warning and the P2-6 gate;
+  - `type_spawn` and `unset` derivation decided (above);
+  - section names checked by `validate`.
+- **Nits:**
+  - **Applied:** a `poe1/` file in a PoE2 bundle is refused in the loader.
+  - **Not done:**
+    - the `Lookup` linear scans (index them when P2-6 calls them per line);
+    - the double parse of `bundle.json` (it lets the format check come first);
+    - the tuple-shaped JSON entries;
+    - a `BUNDLE_SOURCE_UNREADABLE` test (the code exists);
+    - the duplicated game field.
