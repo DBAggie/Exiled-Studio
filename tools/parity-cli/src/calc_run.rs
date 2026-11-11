@@ -530,7 +530,11 @@ pub fn write(out: &Path, outputs: &Outputs) -> Result<(), String> {
     if out.exists() {
         return Err(format!("{}: already exists", out.display()));
     }
-    let partial: PathBuf = out.with_extension("partial");
+    let partial: PathBuf = {
+        let mut name = out.file_name().unwrap_or_default().to_os_string();
+        name.push(".partial");
+        out.with_file_name(name)
+    };
     if partial.exists() {
         return Err(format!(
             "{}: already exists (an earlier run?)",

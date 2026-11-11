@@ -173,7 +173,8 @@ cargo run --release -p loom-parity-cli -- calc-run <builds>... --bundle <bundle-
 # their rule, the ten breakdowns term by term at their printed decimals; partial and not-computed fields
 # listed, never passed; register as oracle-compare, a data-version entry only when --overlay-run matches;
 # --manifest checks mechanic fixtures' targets. Exit 0, 19, 20, or a failure class (17: an unknown breakdown
-# line), 2 usage, 3 an input does not read (docs/phase-3/calc-parity.md):
+# line); 5 when a build is incomplete (nothing complete, or a complete field's breakdown not compared): not a
+# pass; 2 usage, 3 an input does not read (docs/phase-3/calc-parity.md):
 cargo run --release -p loom-parity-cli -- calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json --out <dir> [--register docs/parity/divergence-register.json] [--overlay-run <calc-run-dir>] [--manifest tools/oracle/fixtures/fixtures.json]
 
 # Frontend (in ui/)

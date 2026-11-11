@@ -205,12 +205,17 @@ const USAGE: &str = "usage:
       differ). Differences are classified with the divergence register; a
       data-version entry covers one only when the --overlay-run (calc-run
       --data-overlay) matches the oracle there. --manifest: each mechanic
-      fixture's targets must match or be registered. Write report.json and
-      summary.md to <dir>, which must not exist. Exit 0 without
-      difference, 19 when every difference is registered, 20 otherwise,
-      the class of a build without output on a side (10 to 18; 17 for a
-      breakdown line the reader does not know) when that is smaller, 2 on
-      a usage error, 3 when an input does not read.
+      fixture's targets must match or be registered, and each must be in
+      both runs. The overlay run must hold the same builds (ids, SHA-256)
+      and tool commit; a build whose bytes differ between the two runs is
+      not compared (ORACLE_PROTOCOL). Write report.json and summary.md to
+      <dir>, which must not exist. Exit: the class of a build without
+      output on a side (10 to 18; 17 for a breakdown line the reader does
+      not know); else 20 for an unregistered difference; else 5 when a
+      build is incomplete (no complete field, or a complete field's
+      breakdown not compared): not a pass; else 19 when every difference
+      is registered; else 0. 2 on a usage error, 3 when an input does not
+      read.
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -1384,7 +1389,7 @@ fn calc_parity_cmd(args: &[String]) -> ExitCode {
     match calc_parity::run(&request) {
         Ok(report) => {
             print!("{}", report.summary_markdown());
-            ExitCode::from(report.class.map_or(0, oracle::FailureClass::exit_code))
+            ExitCode::from(report.exit_code())
         }
         Err(message) => {
             eprintln!("calc-parity: {message}");

@@ -739,7 +739,13 @@ fn breakdowns_should_not_be_compared_when_pobs_views_differ() {
         Some("PoB's CALCS and main views differ")
     );
     assert_eq!(report.counts.views_differ, 1);
-    assert_eq!(report.status, "no_difference");
+    assert_eq!(report.status, "incomplete");
+    assert_eq!(report.exit_code(), INCOMPLETE_EXIT);
+    assert!(
+        b_incomplete(&report)
+            .iter()
+            .any(|i| i.starts_with("breakdown Life not compared"))
+    );
 }
 
 #[test]
@@ -848,7 +854,9 @@ fn a_poe2_result_should_list_every_field_as_not_computed() {
     let report = c.compare();
     assert_eq!(report.counts.fields["not-computed"], 24);
     assert_eq!(field(&report, "Life").reasons, ["not-in-result"]);
-    assert_eq!(report.status, "no_difference");
+    assert_eq!(report.status, "incomplete");
+    assert_eq!(b_incomplete(&report), ["no slice field is complete"]);
+    assert_eq!(report.exit_code(), INCOMPLETE_EXIT);
 }
 
 #[test]
@@ -947,4 +955,207 @@ fn every_public_fixture_breakdown_should_read() {
     assert!(rows > 20, "{rows}");
     // A null breakdown is recorded for the chain fields PoB leaves out.
     assert_eq!(data["breakdowns"]["Life"]["null"], true);
+}
+
+/// The first build's `incomplete` list.
+fn b_incomplete(r: &Report) -> Vec<&str> {
+    r.builds[0].incomplete.iter().map(String::as_str).collect()
+}
+
+/// Sets a build's SHA-256 in a calc-run report.
+fn set_build_sha(dir: &Path, id: &str, sha: &str) {
+    let path = dir.join("report.json");
+    let mut v: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    for b in v["builds"].as_array_mut().unwrap() {
+        if b["id"] == id {
+            b["sha256"] = sha.into();
+        }
+    }
+    std::fs::write(&path, v.to_string()).unwrap();
+}
+
+#[test]
+fn builds_read_from_different_bytes_should_not_be_compared() {
+    let (r, life) = result(2000.0, 35.0);
+    let c = case(
+        "input-differs",
+        &[OracleFixture::ok(
+            "a.xml",
+            life_output(json!(life), life_lines("2700")),
+        )],
+        vec![("a.xml", Ok(r))],
+    );
+    set_build_sha(&c.request.successor, "a.xml", &"b".repeat(64));
+    let report = c.compare();
+    let b = &report.builds[0];
+    assert!(b.input_differs);
+    assert_eq!(b.status, "not_compared");
+    assert_eq!(b.class, Some(FailureClass::Protocol));
+    assert!(b.fields.is_empty());
+    assert_eq!(report.status, "failed");
+}
+
+#[test]
+fn an_overlay_run_of_other_builds_should_be_refused() {
+    let (r, life) = result(2000.0, 35.0);
+    let c = case(
+        "overlay-bytes",
+        &[OracleFixture::ok(
+            "a.xml",
+            life_output(json!(life), life_lines("2700")),
+        )],
+        vec![("a.xml", Ok(r.clone()))],
+    )
+    .with_overlay(vec![("a.xml", Ok(r))]);
+    let overlay = c.request.overlay_run.clone().unwrap();
+    // The same ids from other bytes.
+    set_build_sha(&overlay, "a.xml", &"b".repeat(64));
+    let err = compare(&c.request).unwrap_err();
+    assert!(err.contains("not the same builds"), "{err}");
+    // Another tool commit.
+    set_build_sha(&overlay, "a.xml", SHA);
+    let path = overlay.join("report.json");
+    let mut v: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    v["tool"]["commit"] = "other".into();
+    std::fs::write(&path, v.to_string()).unwrap();
+    assert!(compare(&c.request).unwrap_err().contains("tool commit"));
+}
+
+#[test]
+fn a_mechanic_fixture_missing_from_the_runs_should_fail() {
+    let (r, life) = result(2000.0, 35.0);
+    let c = case(
+        "mechanic-missing",
+        &[OracleFixture::ok(
+            "a.xml",
+            life_output(json!(life), life_lines("2700")),
+        )],
+        vec![("a.xml", Ok(r))],
+    );
+    let manifest = c.dir.join("fixtures.json");
+    let m = json!({"format": 1, "fixtures": [{
+        "id": "m.xml", "tier": "mechanic", "source": "local", "path": "mechanic/m.xml",
+        "sha256": SHA, "expect": "ok", "targets": ["Life"], "description": "test"
+    }]});
+    std::fs::write(&manifest, m.to_string()).unwrap();
+    let mut request = c.request.clone();
+    request.manifest = Some(manifest);
+    let report = compare(&request).unwrap();
+    assert_eq!(report.missing_mechanic, ["m.xml"]);
+    assert_eq!(report.class, Some(FailureClass::UnexpectedDifference));
+}
+
+#[test]
+fn a_required_term_missing_on_both_sides_should_differ() {
+    // Our Life without a base node, PoB without a base line: not a pass.
+    let mut graph = Graph::new();
+    let c0 = graph
+        .push(
+            Node::Constant {
+                label: "flat",
+                value: 2000.0,
+            },
+            2000.0,
+        )
+        .unwrap();
+    let r = graph
+        .derive(Node::Product {
+            term: Term::Result,
+            factors: vec![c0],
+        })
+        .unwrap();
+    let mut fields: BTreeMap<Field, FieldResult> = loom_calc::poe1::SLICE
+        .iter()
+        .map(|f| (*f, FieldResult::unsupported(UnsupportedReason::NotComputed)))
+        .collect();
+    fields.insert(
+        Field::Life,
+        FieldResult {
+            value: Some(2000.0),
+            node: Some(r),
+            state: FieldState::Complete,
+        },
+    );
+    let state = CalcResult::worst(&fields);
+    let result = CalcResult {
+        game: Game::Poe1,
+        fields,
+        graph,
+        state,
+        reasons: Reasons::new(),
+    };
+    let c = case(
+        "required-term",
+        &[OracleFixture::ok(
+            "a.xml",
+            life_output(
+                json!(2000),
+                json!(["x 1.00 ^8(increased/reduced)", "= 2000"]),
+            ),
+        )],
+        vec![("a.xml", Ok(result))],
+    );
+    let report = c.compare();
+    let b = life_breakdown(&report);
+    let base = b.terms.iter().find(|t| t.term == "base").unwrap();
+    assert!(base.oracle.is_none() && base.successor.is_none());
+    assert!(!base.equal);
+    assert_eq!(b.outcome, BreakdownOutcome::Difference);
+}
+
+#[test]
+fn a_term_search_should_not_enter_another_fields_result() {
+    // Mana derived from Life's result: Mana's own base is the one found.
+    let mut graph = Graph::new();
+    let (life, _) = chain(&mut graph, Quantity::Life, 2000.0, 35.0);
+    let c = graph
+        .push(
+            Node::Constant {
+                label: "half",
+                value: 0.5,
+            },
+            0.5,
+        )
+        .unwrap();
+    let mana = graph
+        .derive(Node::Product {
+            term: Term::Result,
+            factors: vec![life, c],
+        })
+        .unwrap();
+    let doc = {
+        let mut fields: BTreeMap<Field, FieldResult> = BTreeMap::new();
+        for (f, n) in [(Field::Life, life), (Field::Mana, mana)] {
+            fields.insert(
+                f,
+                FieldResult {
+                    value: graph.value(n),
+                    node: Some(n),
+                    state: FieldState::Complete,
+                },
+            );
+        }
+        let result = CalcResult {
+            game: Game::Poe1,
+            state: CalcResult::worst(&fields),
+            fields,
+            graph,
+            reasons: Reasons::new(),
+        };
+        calc_dto::from_json(&calc_dto::to_json(&result).unwrap()).unwrap()
+    };
+    let ours = Ours { doc: &doc };
+    let mana_node = u32::try_from(mana.get()).unwrap();
+    assert_eq!(ours.find(mana_node, "base"), None);
+    let life_node = u32::try_from(life.get()).unwrap();
+    assert!(ours.find(life_node, "base").is_some());
+}
+
+#[test]
+fn fixed_decimals_should_round_exact_ties_to_even() {
+    // Rust's formatting rounds the exact binary value, ties to even, as
+    // glibc's printf does; 0.125 and 2.5 are exact ties.
+    assert_eq!(Format::Fixed(2).print(0.125), "0.12");
+    assert_eq!(Format::Fixed(0).print(2.5), "2");
+    assert_eq!(Format::Fixed(0).print(3.5), "4");
 }

@@ -33,7 +33,7 @@ impl Format {
         let bytes = line.as_bytes();
         let mut i = 0;
         while i < bytes.len() {
-            if line[i..].starts_with("..") {
+            if bytes[i..].starts_with(b"..") {
                 return Some(Self::ToString);
             }
             if bytes[i] == b'%' {

@@ -225,6 +225,11 @@ pub struct BuildComparison {
     /// A mechanic fixture's targets.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub targets: Vec<Target>,
+    /// What was not compared although both sides have output: no complete
+    /// field, or a complete field's breakdown not compared. Such a build
+    /// is not a pass (the report is `incomplete`).
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub incomplete: Vec<String>,
 }
 
 /// Counts.
@@ -250,6 +255,8 @@ pub struct Counts {
     pub breakdowns: BTreeMap<String, usize>,
     /// Builds whose views differ.
     pub views_differ: usize,
+    /// Builds with something not compared (see `incomplete`).
+    pub incomplete: usize,
     /// Expected differences (fields and terms).
     pub expected_differences: usize,
     /// Unexpected differences.
@@ -294,8 +301,27 @@ pub struct Report {
     pub builds: Vec<BuildComparison>,
     /// Builds on one side only, as `(id, side)`.
     pub unpaired: Vec<(String, &'static str)>,
+    /// Mechanic fixtures of the manifest not compared in both runs.
+    pub missing_mechanic: Vec<String>,
     /// Accepted entries for a compared build that covered nothing.
     pub unused_entries: Vec<String>,
+}
+
+/// The exit code when nothing failed and no difference is unregistered,
+/// but something was not compared (`incomplete`): not a pass.
+pub const INCOMPLETE_EXIT: u8 = 5;
+
+impl Report {
+    /// The process exit code: a failure class's (10 to 18), else 20 for an
+    /// unregistered difference, else [`INCOMPLETE_EXIT`] when a build is
+    /// incomplete, else 19 when every difference is registered, else 0.
+    pub fn exit_code(&self) -> u8 {
+        if self.status == "incomplete" {
+            INCOMPLETE_EXIT
+        } else {
+            self.class.map_or(0, FailureClass::exit_code)
+        }
+    }
 }
 
 /// What `calc-parity` is asked to do.
@@ -361,7 +387,9 @@ impl<'d> Ours<'d> {
     }
 
     /// The nodes below `root` (and `root`), nearest first, children in
-    /// order, each once.
+    /// order, each once. The search does not enter another field's
+    /// `result` node (a field derived from another links to it), so a
+    /// term is always the field's own.
     fn below(&self, root: u32) -> Vec<u32> {
         let graph = &self.doc.result.graph;
         let mut seen = BTreeSet::new();
@@ -371,10 +399,14 @@ impl<'d> Ours<'d> {
             if !seen.insert(i) {
                 continue;
             }
-            out.push(i);
-            if let Some(n) = usize::try_from(i).ok().and_then(|u| graph.get(u)) {
-                queue.extend(n.children.iter().copied());
+            let Some(n) = usize::try_from(i).ok().and_then(|u| graph.get(u)) else {
+                continue;
+            };
+            if i != root && n.term.as_deref() == Some("result") {
+                continue;
             }
+            out.push(i);
+            queue.extend(n.children.iter().copied());
         }
         out
     }
@@ -504,8 +536,11 @@ fn compare_raw(oracle: &Value, ours: &calc_dto::Document, slice: &SliceFile) -> 
                 parsed.insert(f.id.as_str(), p);
             }
             Err(e) => {
-                raw.normalization
-                    .get_or_insert_with(|| format!("breakdown {}: {e}", spec.pob_key));
+                let why = format!("breakdown {}: {e}", spec.pob_key);
+                raw.normalization = Some(match raw.normalization.take() {
+                    Some(earlier) => format!("{earlier}; {why}"),
+                    None => why,
+                });
             }
         }
     }
@@ -655,7 +690,7 @@ fn compare_breakdown(
                 let successor = ours.resolve(node, &t.graph).map(|v| format.print(v));
                 let equal = match (&oracle, &successor) {
                     (Some(a), Some(b)) => a == b,
-                    (None, None) => true,
+                    (None, None) => t.optional.is_some(),
                     (None, Some(b)) => t.optional.is_some() && *b == format.print(1.0),
                     (Some(_), None) => false,
                 };
@@ -692,7 +727,7 @@ fn compare_breakdown(
                                     neutral: Option<String>| {
                         let equal = match (&oracle, &successor) {
                             (Some(a), Some(b)) => a == b,
-                            (None, None) => true,
+                            (None, None) => neutral.is_some(),
                             (None, Some(b)) => neutral.as_ref() == Some(b),
                             (Some(_), None) => false,
                         };
@@ -968,6 +1003,23 @@ fn read_inputs(request: &Request) -> Result<Inputs, String> {
                     request.successor.display()
                 ));
             }
+            // The same builds, by the same tool: otherwise the overlay run
+            // could vouch for a data-version entry with other inputs.
+            let builds = |r: &calc_run::Report| -> Vec<(String, String)> {
+                r.builds
+                    .iter()
+                    .map(|b| (b.id.clone(), b.sha256.clone()))
+                    .collect()
+            };
+            if builds(&run.report) != builds(&successor.report)
+                || run.report.tool.commit != successor.report.tool.commit
+            {
+                return Err(format!(
+                    "{}: not the same builds (ids, SHA-256) and tool commit as {}",
+                    dir.display(),
+                    request.successor.display()
+                ));
+            }
             Some(run)
         }
         None => None,
@@ -1049,7 +1101,17 @@ pub fn compare(request: &Request) -> Result<Report, String> {
             fields: Vec::new(),
             breakdowns: Vec::new(),
             targets: Vec::new(),
+            incomplete: Vec::new(),
         };
+        if b.input_differs && o.sha256.is_some() {
+            // The two runs read different bytes for this id: comparing
+            // them could pass a build neither side ran as the other did.
+            b.status = "not_compared";
+            b.class = Some(FailureClass::Protocol);
+            b.reason = Some("the oracle and the successor read different bytes".to_owned());
+            builds.push(b);
+            continue;
+        }
         let oracle_has = matches!(o.status.as_str(), "ok" | "partial");
         let successor_has = s.status == "ok";
         if !(oracle_has && successor_has) {
@@ -1114,6 +1176,33 @@ pub fn compare(request: &Request) -> Result<Report, String> {
             b.class = Some(FailureClass::Normalization);
             b.reason = Some(why);
         }
+        // What was not compared, so a run that compared nothing is not
+        // read as a pass.
+        if !raw.fields.iter().any(|f| {
+            matches!(
+                f.outcome,
+                Outcome::Match | Outcome::WithinTolerance | Outcome::Difference
+            )
+        }) {
+            b.incomplete.push("no slice field is complete".to_owned());
+        }
+        for d in raw
+            .breakdowns
+            .iter()
+            .filter(|d| d.outcome == BreakdownOutcome::NotCompared)
+        {
+            let ours_complete = raw
+                .fields
+                .iter()
+                .any(|f| f.field == d.field && f.state.as_deref() == Some("complete"));
+            if ours_complete {
+                b.incomplete.push(format!(
+                    "breakdown {} not compared: {}",
+                    d.pob_key,
+                    d.reason.as_deref().unwrap_or("")
+                ));
+            }
+        }
         b.views_differ = raw.views_differ;
         b.fields = raw.fields;
         b.breakdowns = raw.breakdowns;
@@ -1124,6 +1213,13 @@ pub fn compare(request: &Request) -> Result<Report, String> {
             unpaired.push((s.id.clone(), "successor"));
         }
     }
+    // Every mechanic fixture of the manifest must have been compared.
+    let missing_mechanic: Vec<String> = inputs
+        .mechanic
+        .keys()
+        .filter(|id| !builds.iter().any(|b| &b.id == *id && !b.targets.is_empty()))
+        .cloned()
+        .collect();
     let mut report = Report {
         format: FORMAT,
         status: "no_difference",
@@ -1137,6 +1233,7 @@ pub fn compare(request: &Request) -> Result<Report, String> {
         counts: Counts::default(),
         builds,
         unpaired,
+        missing_mechanic,
         unused_entries: Vec::new(),
     };
     finish(
@@ -1242,10 +1339,21 @@ fn finish(report: &mut Report, register: Option<&Register>, used: &BTreeSet<Stri
         .builds
         .iter()
         .filter_map(|b| b.class)
-        .chain((!report.unpaired.is_empty()).then_some(FailureClass::UnexpectedDifference))
+        .chain(
+            (!report.unpaired.is_empty() || !report.missing_mechanic.is_empty())
+                .then_some(FailureClass::UnexpectedDifference),
+        )
         .collect();
     report.class = report_class(&classes);
+    report.counts.incomplete = report
+        .builds
+        .iter()
+        .filter(|b| !b.incomplete.is_empty())
+        .count();
     report.status = match report.class {
+        None | Some(FailureClass::ExpectedDifference) if report.counts.incomplete > 0 => {
+            "incomplete"
+        }
         None => "no_difference",
         Some(FailureClass::ExpectedDifference) => "expected",
         Some(FailureClass::UnexpectedDifference) => "unexpected",
@@ -1279,8 +1387,9 @@ impl Report {
         let c = &self.counts;
         let mut text = format!(
             "# calc-parity\n\nStatus: **{}**{}. {} builds: {} without difference, {} expected, {} \
-             unexpected, {} failed, {} expected failures, {} not compared; {} with PoB's views \
-             differing. Differences: {} expected, {} unexpected.\n\nFields: {}.\n\nBreakdowns: {}.\n",
+             unexpected, {} failed, {} expected failures, {} not compared; {} incomplete \
+             (something not compared, see report.json); {} with PoB's views differing. \
+             Differences: {} expected, {} unexpected.\n\nFields: {}.\n\nBreakdowns: {}.\n",
             self.status,
             self.class
                 .map(|c| format!(" ({})", c.name()))
@@ -1292,6 +1401,7 @@ impl Report {
             c.failed,
             c.expected_failures,
             c.not_compared,
+            c.incomplete,
             c.views_differ,
             c.expected_differences,
             c.unexpected_differences,
@@ -1335,7 +1445,7 @@ impl Report {
             }
             text.push_str(&format!(
                 "\n## {} ({})\n\n",
-                b.id.replace(['\r', '\n'], " "),
+                b.id.replace(['\r', '\n', '`', '|', '#', '*', '_'], " "),
                 b.status
             ));
             if let Some(reason) = &b.reason {
@@ -1359,6 +1469,12 @@ impl Report {
             for (id, side) in &self.unpaired {
                 text.push_str(&format!("- {id} ({side})\n"));
             }
+        }
+        if !self.missing_mechanic.is_empty() {
+            text.push_str(&format!(
+                "\nMechanic fixtures not compared: {}\n",
+                self.missing_mechanic.join(", ")
+            ));
         }
         if !self.unused_entries.is_empty() {
             text.push_str(&format!(
