@@ -94,7 +94,7 @@ Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 - [x] `bundle-equal`: the bundle-built data equal `mod_filter::load` and `Bases::load` on the PoE1 extract (40,355 mod rows, 4,309 base names, 0 mismatches). PoE2: the harness's extract readers are PoE1-only, so the PoE2 check is the ignored real-bundle test (builds, every scope indexes, counts match)
 - [x] `resolve-corpus --bundle`: the 12 step 2 fields equal Spike B, `report.json` byte-identical (`docs/phase-2/lift-evidence.md`)
 - [x] `code-architecture-reviewer`: no blockers; should-fix and nits applied (context file)
-- [ ] Open PR (base `feat/p2-5b-pob-xml-items`); write the PR number into the docs right after
+- [x] Open PR (#52, base `feat/p2-5b-pob-xml-items`); write the PR number into the docs right after
 
 ## PR P2-6b: `resolve_build` (step 6, second half)
 - [ ] `loom_parser::import::resolve_build(&mut Build, &data)` over every item: lines to `LineResolution`s (stats, typed `kind`, or unresolved with a reason; `adapted`; `Continues`); completeness
