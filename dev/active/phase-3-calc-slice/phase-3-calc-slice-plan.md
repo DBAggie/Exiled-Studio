@@ -91,6 +91,7 @@ Each sub-PR adds whole sections, end to end: canonical types and loader in `loom
 - The tool writes the overlay file `calc-run --data-overlay` reads (decision 5).
 - **Accept:** a scrubbed report committed (`docs/phase-3/data-parity-poe1-<build>.json`); `uncategorized` 0, and every other category with its evidence; tests on synthetic rows for each category and for the overlay.
 - **Depends on:** 1.
+- **Done in P3-2** (context file, "Decisions in P3-2"): the command takes the export `tools/oracle/data/pob_data.lua` writes instead of a checkout, and a fifth category `not-carried` marks game columns the bundle does not carry (kept out of the overlay).
 
 ### 3. Scope survey and slice definition (S-M)
 `loom-parity-cli calc-survey <builds...> --bundle <dir> --out <dir> [--anonymous]` applies decision 3 to every public fixture and corpus build, and writes per build: the main skill and its types, the archetype verdict with the rule that decided it, and the mechanic inventory the slice fields would need (stat IDs by source, typed kinds, unresolved and excluded lines, supports, config inputs, buffs). It also counts, across builds, which stats and mechanics are reached most.
