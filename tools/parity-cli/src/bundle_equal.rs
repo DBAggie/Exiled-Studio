@@ -12,8 +12,12 @@
 //!   equality of types is read);
 //! - the local stats;
 //! - every base name and its rows (domain, class, tags, implicits);
-//! - the count of rows with unknown tags, the granted skills, and the
-//!   property texts and quality types.
+//! - the count of rows with unknown tags, the essence rows (with known and
+//!   unknown classes), the granted skills, the property texts and quality
+//!   types, and the composition wrappers (the extract side from
+//!   `categorize::GameText`);
+//! - that no bundle reference was skipped
+//!   (`BundleData::skipped_references`).
 //!
 //! The report names mismatches by row ID or base name only (game data, no
 //! build content).
@@ -22,6 +26,7 @@ use std::collections::BTreeMap;
 
 use loom_parser::import::mods::{ModRow, Mods};
 use loom_parser::import::{BundleData, ItemData};
+use loom_parser::resolve::compose::Composition;
 use serde::Serialize;
 
 use crate::resolve_corpus::Bases;
@@ -69,8 +74,19 @@ fn comparable(row: &ModRow) -> ModRow {
 
 /// Compares the bundle's data with the extract's (module docs).
 #[must_use]
-pub fn compare(bases: &Bases, mods: &Mods, data: &BundleData<'_>) -> Report {
+pub fn compare(
+    bases: &Bases,
+    mods: &Mods,
+    compositions: &[Composition],
+    data: &BundleData<'_>,
+) -> Report {
     let mut report = Report::default();
+    if data.skipped_references() > 0 {
+        report.add(format!(
+            "bundle: {} references skipped",
+            data.skipped_references()
+        ));
+    }
     let bundle_mods = data.mods();
     report.mod_rows = mods.row_count().max(bundle_mods.row_count());
     if mods.row_count() != bundle_mods.row_count() {
@@ -96,6 +112,12 @@ pub fn compare(bases: &Bases, mods: &Mods, data: &BundleData<'_>) -> Report {
         if f != b.mod_type || r != a.mod_type {
             report.add(format!("mods[{n}] {}: mod type grouping differs", a.id));
         }
+    }
+    if mods.essence_rows() != bundle_mods.essence_rows() {
+        report.add("mods: essence rows differ".to_owned());
+    }
+    if compositions != data.compositions() {
+        report.add("compositions differ".to_owned());
     }
     if mods.locality != bundle_mods.locality {
         report.add("stats: local stats differ".to_owned());

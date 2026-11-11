@@ -344,3 +344,28 @@ fn real_bundle_should_build() {
         data.compositions_missing().len(),
     );
 }
+
+#[test]
+fn dangling_references_should_be_skipped_and_counted() {
+    let mut b = bundle("bundle-poe1");
+    b.base_items[0].implicits.push("AbsentMod".to_owned());
+    b.base_items[0].item_class = Some("AbsentClass".to_owned());
+    b.mods[0].craft_classes = vec!["AbsentClass".to_owned(), "TestRing".to_owned()];
+    let data = BundleData::new(&b);
+    let row = data
+        .base("Plain Test Ring")
+        .unwrap()
+        .1
+        .first()
+        .unwrap()
+        .clone();
+    assert_eq!(
+        (
+            data.skipped_references(),
+            row.implicits,
+            row.class,
+            data.mods().row(0).unwrap().craft_classes.clone(),
+        ),
+        (3, vec![0], None, vec![1])
+    );
+}

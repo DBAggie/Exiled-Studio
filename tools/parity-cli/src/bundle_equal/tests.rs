@@ -3,6 +3,7 @@ use std::path::Path;
 use loom_data::bundle::Bundle;
 use loom_parser::import::mods::{ModRow, Mods};
 use loom_parser::import::{BaseRow, BundleData};
+use loom_parser::resolve::compose::Composition;
 
 use super::compare;
 use crate::resolve_corpus::Bases;
@@ -37,6 +38,7 @@ fn bundle_data_should_equal_itself() {
     let report = compare(
         &Bases::from_bundle(&data),
         &mods_of(&data, |_, _| {}),
+        data.compositions(),
         &data,
     );
     assert_eq!(
@@ -59,7 +61,12 @@ fn craft_class_order_and_repeats_and_type_numbers_should_not_count() {
         m.mod_type = Some(format!("T{n}"));
     }
     let data = BundleData::new(&bundle_side);
-    let report = compare(&Bases::from_bundle(&data), &mods, &data);
+    let report = compare(
+        &Bases::from_bundle(&data),
+        &mods,
+        data.compositions(),
+        &data,
+    );
     assert!(report.equal(), "{:?}", report.listed);
 }
 
@@ -73,7 +80,12 @@ fn a_merged_mod_type_should_be_a_mismatch() {
     let data = BundleData::new(&split);
     // The extract side puts both rows in one type.
     let mods = mods_of(&data, |_, r| r.mod_type = Some(7));
-    let report = compare(&Bases::from_bundle(&data), &mods, &data);
+    let report = compare(
+        &Bases::from_bundle(&data),
+        &mods,
+        data.compositions(),
+        &data,
+    );
     assert_eq!(
         (report.mismatches, report.listed),
         (
@@ -93,7 +105,7 @@ fn a_changed_row_or_base_should_be_a_mismatch() {
         }
     });
     let bases = Bases::from_rows(vec![("Plain Test Ring", BaseRow::default())]);
-    let report = compare(&bases, &mods, &data);
+    let report = compare(&bases, &mods, data.compositions(), &data);
     assert_eq!(
         report.listed,
         [
@@ -103,5 +115,23 @@ fn a_changed_row_or_base_should_be_a_mismatch() {
             "granted skills differ",
             "properties differ",
         ]
+    );
+}
+
+#[test]
+fn a_skipped_reference_or_other_compositions_should_be_a_mismatch() {
+    let mut b = fixture();
+    b.base_items[0].implicits.push("Absent".to_owned());
+    let data = BundleData::new(&b);
+    let wrap = Composition::new("W", "Wrapped: {0}", "test_maximum_life", 1).unwrap();
+    let report = compare(
+        &Bases::from_bundle(&data),
+        &mods_of(&data, |_, _| {}),
+        &[wrap],
+        &data,
+    );
+    assert_eq!(
+        report.listed,
+        ["bundle: 1 references skipped", "compositions differ"]
     );
 }

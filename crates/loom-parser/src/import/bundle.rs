@@ -4,7 +4,11 @@
 //! Built from a loaded [`Bundle`] that the validator accepted
 //! (`loom_data::bundle::validate`): every reference resolves and every ID
 //! is unique, so building cannot fail. A reference that does not resolve
-//! anyway (an unvalidated bundle) is skipped, never guessed.
+//! anyway (an unvalidated bundle: an implicit, a crafting, essence, or base
+//! class) is skipped, never guessed, and counted
+//! ([`BundleData::skipped_references`]); with duplicate IDs the first row
+//! wins. Callers load bundles through the validator, and a nonzero count
+//! means one was not.
 //!
 //! The bundle names rows by ID; the pipeline's types number them. The
 //! mapping:
@@ -14,7 +18,16 @@
 //! - **item classes:** class `n` is `item_classes[n]` (craft classes,
 //!   essence classes, and a base's class, each sorted by number);
 //! - **mod types:** each distinct `mod_type` ID gets a number, in order of
-//!   first use. Only equality of mod types is read (`type_spawn`);
+//!   first use. Only equality of mod types is read (`type_spawn`). The
+//!   bundle names a type by its name, so two game types that share a name
+//!   are one type here; the converter counts such names
+//!   (`mod_type_duplicate_names`: 0 on PoE1 26530219), and a nonzero count
+//!   would change `type_spawn` grouping;
+//! - **rows without spawn weights:** [`Mods::bad_spawn_rows`] stays 0. The
+//!   converter reads a `Mods` row whose tag and weight lists differ in
+//!   length with no spawn weights and counts it in its own summary
+//!   (`mods_bad_spawn_rows`: 0 on PoE1 26530219); the bundle keeps no
+//!   record of it;
 //! - **local stats:** from each stat's `local` and `weapon_local`;
 //! - **bases:** the base items by name, in bundle order;
 //! - **granted skills, quality types:** from the `poe1` section when the
@@ -35,12 +48,17 @@ use super::properties::{Properties, QualityType};
 use crate::resolve::Index;
 use crate::resolve::compose::Composition;
 
+/// The raw value of the stat a composition wrapper stands for: the
+/// wrapper shows the stat is present.
+pub const COMPOSED_VALUE: i64 = 1;
+
 /// A bundle's game data, as the item pipeline reads it (module docs).
 #[derive(Debug)]
 pub struct BundleData<'b> {
     bundle: &'b Bundle,
     bases: BTreeMap<String, Vec<BaseRow>>,
     tags_unknown: usize,
+    skipped: usize,
     mods: Mods,
     grafts: Grafts,
     gems: BTreeMap<String, String>,
@@ -82,8 +100,9 @@ impl<'b> BundleData<'b> {
     /// Builds the pipeline's data from a validated bundle (module docs).
     #[must_use]
     pub fn new(bundle: &'b Bundle) -> Self {
-        let mods = mods(bundle);
-        let (bases, tags_unknown) = bases(bundle);
+        let mut skipped = 0;
+        let mods = mods(bundle, &mut skipped);
+        let (bases, tags_unknown) = bases(bundle, &mut skipped);
         let text = &bundle.item_rules.text;
         let texts = || {
             bundle
@@ -91,7 +110,8 @@ impl<'b> BundleData<'b> {
                 .iter()
                 .map(|t| (t.id.as_str(), t.text.as_str()))
         };
-        let text_of = |id: &str| texts().find(|(i, _)| *i == id).map(|(_, t)| t);
+        let by_id: BTreeMap<&str, &str> = texts().collect();
+        let text_of = |id: &str| by_id.get(id).copied();
         let poe1 = bundle.poe1.as_ref();
         let (grafts, gems) = poe1
             .and_then(|p| p.grafts.as_ref())
@@ -127,12 +147,13 @@ impl<'b> BundleData<'b> {
         let compositions = text
             .compositions
             .iter()
-            .filter_map(|(id, stat)| Composition::new(id, text_of(id)?, stat, 1))
+            .filter_map(|(id, stat)| Composition::new(id, text_of(id)?, stat, COMPOSED_VALUE))
             .collect();
         Self {
             bundle,
             bases,
             tags_unknown,
+            skipped,
             mods,
             grafts,
             gems,
@@ -189,6 +210,13 @@ impl<'b> BundleData<'b> {
             .map(|(id, _)| id.as_str())
             .filter(|id| self.compositions.iter().all(|c| c.id != *id))
             .collect()
+    }
+
+    /// References that did not resolve and were skipped (module docs); 0
+    /// for a validated bundle.
+    #[must_use]
+    pub const fn skipped_references(&self) -> usize {
+        self.skipped
     }
 
     /// Base rows whose tags are unknown.
@@ -248,28 +276,37 @@ fn numbers<'a>(ids: impl Iterator<Item = &'a str>) -> BTreeMap<&'a str, usize> {
     out
 }
 
-/// The class numbers of `ids`, sorted, without repeats or unknown IDs.
-fn class_numbers(classes: &BTreeMap<&str, usize>, ids: &[String]) -> Vec<i64> {
+/// The number of `id` in `numbers`; an unknown ID is counted in
+/// `skipped`.
+fn number_of(numbers: &BTreeMap<&str, usize>, id: &str, skipped: &mut usize) -> Option<usize> {
+    let n = numbers.get(id).copied();
+    *skipped += usize::from(n.is_none());
+    n
+}
+
+/// The class numbers of `ids`, sorted, without repeats; unknown IDs are
+/// counted in `skipped`.
+fn class_numbers(classes: &BTreeMap<&str, usize>, ids: &[String], skipped: &mut usize) -> Vec<i64> {
     let mut out: Vec<i64> = ids
         .iter()
-        .filter_map(|c| classes.get(c.as_str()))
-        .filter_map(|n| i64::try_from(*n).ok())
+        .filter_map(|c| number_of(classes, c, skipped))
+        .filter_map(|n| i64::try_from(n).ok())
         .collect();
     out.sort_unstable();
     out.dedup();
     out
 }
 
-fn mods(b: &Bundle) -> Mods {
+fn mods(b: &Bundle, skipped: &mut usize) -> Mods {
     let classes = numbers(b.item_classes.iter().map(String::as_str));
     let mut types: BTreeMap<&str, i64> = BTreeMap::new();
+    let mut next_type: i64 = 0;
     let rows = b
         .mods
         .iter()
         .map(|m| {
             let (unset, stats): (Vec<_>, Vec<_>) =
                 m.stats.iter().partition(|s| s.min == 0 && s.max == 0);
-            let next = i64::try_from(types.len()).unwrap_or(i64::MAX);
             ModRow {
                 id: m.id.clone(),
                 domain: m.domain,
@@ -281,16 +318,18 @@ fn mods(b: &Bundle) -> Mods {
                 unset: unset.into_iter().map(|s| s.stat.clone()).collect(),
                 spawn: m.spawn.iter().map(|s| (s.tag.clone(), s.weight)).collect(),
                 influence: m.influence,
-                craft_classes: class_numbers(&classes, &m.craft_classes),
+                craft_classes: class_numbers(&classes, &m.craft_classes, skipped),
                 essence_only: m.essence_only,
                 essence_classes: m
                     .essence_classes
                     .as_ref()
-                    .map(|c| class_numbers(&classes, c)),
-                mod_type: m
-                    .mod_type
-                    .as_deref()
-                    .map(|t| *types.entry(t).or_insert(next)),
+                    .map(|c| class_numbers(&classes, c, skipped)),
+                mod_type: m.mod_type.as_deref().map(|t| {
+                    *types.entry(t).or_insert_with(|| {
+                        next_type += 1;
+                        next_type - 1
+                    })
+                }),
                 type_spawn: None,
             }
         })
@@ -314,7 +353,7 @@ fn mods(b: &Bundle) -> Mods {
 }
 
 /// Base rows by name, and the count whose tags are unknown.
-fn bases(b: &Bundle) -> (BTreeMap<String, Vec<BaseRow>>, usize) {
+fn bases(b: &Bundle, skipped: &mut usize) -> (BTreeMap<String, Vec<BaseRow>>, usize) {
     let classes = numbers(b.item_classes.iter().map(String::as_str));
     let mod_rows = numbers(b.mods.iter().map(|m| m.id.as_str()));
     let mut out: BTreeMap<String, Vec<BaseRow>> = BTreeMap::new();
@@ -326,13 +365,13 @@ fn bases(b: &Bundle) -> (BTreeMap<String, Vec<BaseRow>>, usize) {
             class: x
                 .item_class
                 .as_deref()
-                .and_then(|c| classes.get(c))
-                .and_then(|n| i64::try_from(*n).ok()),
+                .and_then(|c| number_of(&classes, c, skipped))
+                .and_then(|n| i64::try_from(n).ok()),
             tags: x.tags.clone(),
             implicits: x
                 .implicits
                 .iter()
-                .filter_map(|i| mod_rows.get(i.as_str()).copied())
+                .filter_map(|i| number_of(&mod_rows, i, skipped))
                 .collect(),
         });
     }

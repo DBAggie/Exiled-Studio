@@ -64,7 +64,8 @@ const USAGE: &str = "usage:
       Check that the item pipeline's data built from the bundle (validated
       first) equal those the corpus harness reads from the extract: mod
       rows, local stats, base rows, granted skills, properties (plan
-      step 6). Print a JSON report; exit 1 on any mismatch.
+      step 6). Print a JSON report; exit 1 on any mismatch, or with a
+      message when the extract or the bundle does not load or validate.
   loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--bundle <dir>] [--pob <tag>=<dir>]...
       Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
       subfolders are not read; identical files count once), resolve
@@ -344,7 +345,6 @@ fn lua_tree(dir: &Path) -> Result<Vec<(String, String)>, String> {
     Ok(out)
 }
 
-/// `<tag>=<dir>` arguments to PoB text sources.
 /// `--pob <tag>=<dir>` sources, and the `--bundle <dir>`, if given.
 fn corpus_args(args: &[String]) -> Result<(Vec<categorize::PobText>, Option<&Path>), String> {
     let mut out = Vec::new();
@@ -391,11 +391,13 @@ fn load_bundle(dir: &Path) -> Result<loom_data::bundle::Bundle, String> {
 /// extract's (`bundle_equal`).
 fn bundle_equal(extract: &Path, bundle_dir: &Path) -> Result<bool, String> {
     let read = reader(extract);
+    let loaded = extract::load(&read)?;
     let bases = resolve_corpus::Bases::load(&read)?;
     let mods = mod_filter::load(&read)?;
+    let game = categorize::GameText::load(&loaded.set, &read, Vec::new())?;
     let bundle = load_bundle(bundle_dir)?;
     let data = loom_parser::import::BundleData::new(&bundle);
-    let report = bundle_equal::compare(&bases, &mods, &data);
+    let report = bundle_equal::compare(&bases, &mods, &game.compositions, &data);
     let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
     println!("{json}");
     Ok(report.equal())
