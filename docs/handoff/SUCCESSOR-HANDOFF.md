@@ -24,7 +24,19 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-1 domain model PR #42 open, in review, branch `feat/p2-1-domain-model`)
+## Current state (updated 2026-11-10, P2-2a item input open, in review, branch `feat/p2-2a-item-input`, stacked on P2-1)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- P2-2a (base `feat/p2-1-domain-model`).
+- **PR P2-2a: item input (open, in review, branch `feat/p2-2a-item-input`, base `feat/p2-1-domain-model`).** Plan step 2a.
+  - **What:** `pob_item` moved by `git mv` from `loom-parser` to `crates/loom-serialization/src/legacy/pob_item/`, with its 20 tests unchanged. `loom-serialization` gains `pub mod legacy` and the `clippy::indexing_slicing` warning. New `legacy::pob_item::to_domain` maps a read item onto `loom_domain::ItemBody`, with 8 tests:
+    - every line is kept;
+    - spec values use `after_key`;
+    - influences are named by their display;
+    - only the alternate variants the item has are kept;
+    - sections and exclusions follow "Decisions in P2-1".
+  - **parity-cli:** `resolve_corpus.rs` and `mod_filter.rs` now take the domain item. `resolvable` reads `LineResolution::Pending`. `mod_filter::pob_section` and `section_name` map a `ModSection` back to PoB's `Section`; the PoE1 constants stay until P2-2c. PoB-reader diagnostics (`unsupported_features`, unknown prefixes) still read PoB's item or rules. Crate graph unchanged: `loom-parser` no longer has `pob_item`, and `loom-serialization` depends only on `loom-domain`.
+  - **Evidence:** `resolve-corpus` on Spike B's inputs, before (`c7bbffa`) and after (`916640a`, and again at `e7ffda1` after the review fixes), all from a clean tree with exit 0. All 12 step 2 fields are equal, and `report.json` is byte-identical. The run also equals the committed Spike B summary. Recorded in `docs/phase-2/lift-evidence.md`, compared with the new `tools/parity-cli/scripts/compare-spike-b.py`. Workspace tests, clippy, and wasm32 pass.
+  - **Review:** `code-architecture-reviewer` found no blockers. Three should-fix items were applied (spec values from the reader's `spec_value`; `Rarity::names_base_in_name` on the domain; `pob_section` matching by variant). Details in the context file.
+  - **Tip for later lift PRs:** run `resolve-corpus` with the docs stashed. A dirty tree makes it exit 1 (`inputs_recorded` false).
 - **PR P2-1: domain model (PR #42, open, in review, branch `feat/p2-1-domain-model`).** Session start: PR #41 (P2-0, the Phase 2 plan) merged 2026-11-10 as `fc4513d`, main CI run 42926701060 green; PR #40's main CI run 42922016104 green. No comments on #41, so plan questions Q1 to Q6 stand at their defaults.
   - **What:** the Build aggregate in `crates/loom-domain` (plan step 1), no dependencies, wasm32 builds. `Build` (game, `GameSpecific`, `DataVersion`, character, passives, skills, items, config, layout); PoE1-only choices only in `loom_domain::poe1::Poe1Choices`; `Ordered<T>` and `OpaqueNode` keep untyped content in place between typed siblings, layout markers place single typed children; `Sourced<T>` keeps source text, `Number` has bitwise equality; items keep every source line typed by kind; modifier lines carry `LineResolution` (pending, excluded, resolved as stats or a typed `kind` with `adapted`, `Continues` for multi-line and split-section, unresolved with a reason); `ItemBody::check_links`; quarantine and completeness derived from the lines with `LINE_*` codes; `DomainError` with `DOMAIN_*` codes.
   - **Mapping notes for P2-2a:** PoB's scourge, crucible, and class-requirement sections become `ModSection::Other(..)`; class-requirement lines are `Excluded(Section)`; filter, mod-backing, and composed details are report-only. Full list: context file, "Decisions in P2-1".
@@ -115,12 +127,13 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Merge check for P2-1, PR #42** (`gh pr view 42`). Record the squash commit and the main CI run in the next PR's Current state. If the maintainer asked for changes, make them on the same branch first.
-2. **P2-2a: item input** (plan step 2a, `dev/active/phase-2-canonical-model/`):
-   - move `crates/loom-parser/src/pob_item/` to `loom-serialization::legacy::pob_item`, tests unchanged (`loom-serialization` stays on `loom-domain` only);
-   - add `legacy::pob_item::to_domain`, mapping a read item onto `loom_domain::ItemBody` (sections per "Decisions in P2-1": scourge, crucible, class-requirement to `ModSection::Other`; every line kept; resolution `Pending` or `Excluded`);
-   - switch the parity-cli pipeline (`resolve_corpus.rs`, `mod_filter.rs`) to the domain item;
-   - maintainer-run: `resolve-corpus` on Spike B's inputs, the plan's step 2 field list equal.
+1. **Stack check** (`gh pr list --state all --limit 5`): if the maintainer merged or asked for changes on P2-1 (#42) or P2-2a, record it and make the changes on that PR's branch first (then merge them up the stack with `git merge`, never force-push).
+2. **P2-2b: scope and bases** (plan step 2b), branch from `feat/p2-2a-item-input` and target it as base:
+   - add the `ItemData` trait in `loom-parser::import`, starting with bases and `item_rules`;
+   - move base lookup and scope (`resolve_corpus.rs` `Bases`, `Found`, `DOMAIN_SCOPES`) to `loom-parser::import`. `POB_SUFFIXED_BASES` and `magic_base`/`base_name` stay PoB rules in `legacy` or the tool;
+   - parity-cli implements `ItemData` over the extract, with its `item_rules` in a `poe1` constant module in parity-cli until step 3;
+   - start the PoE1-identifier scan test (gate 3c) over `loom-parser`;
+   - evidence: `resolve-corpus` before and after, appended to `docs/phase-2/lift-evidence.md`.
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

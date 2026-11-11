@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-1: domain model; P2-0 #41 merged as `fc4513d`)
+Last Updated: 2026-11-10 (PR P2-2a: item input; PR stack P2-1 #42 <- P2-2a)
 
 # Phase 2: context
 
@@ -95,3 +95,34 @@ Verdict: proceed with changes. All findings were applied to the plan.
 - **Blocking 1, applied:** a same-section multi-line description had no valid form (`Continues` was accepted only after a split-section line). `Continues` now follows any resolved line; three tests added.
 - **Should-fix, applied:** filter evidence declared report-only (above); `source` declared the export authority (no drift: edits replace the line); `Spec` has `value` and `ItemBody` has `item_class`; the class-requirement mapping documented on `ModSection::Other` and a test shows excluded lines are not quarantined.
 - **Nits:** report-only fields documented on `Resolved`; `Number`'s signed zero documented. Not done: a range check on `AltVariant::index` (the adapter writes 0 to 4; nothing reads it yet).
+
+## PR stack (maintainer decision 2026-11-10)
+The maintainer asked for the Phase 2 PRs to be done unattended, one after another. Each PR branches from the previous PR's branch and targets it as its base. The maintainer merges the stack from the newest PR down to the oldest, then into `main`. Every PR keeps its own evidence and handoff update. If a maintainer decision comes up, the plan's default is taken and recorded. Work stops only for a failed gate, an ADR amendment, or a hard rule.
+
+## Decisions in P2-2a (item input, 2026-11-10)
+- **Move.** `pob_item` moved by `git mv` to `crates/loom-serialization/src/legacy/pob_item/`, with its tests unchanged. `loom-serialization` warns on `clippy::indexing_slicing`, as `loom-parser` does, because legacy text is untrusted.
+- **`to_domain`** (`legacy/pob_item/domain.rs`):
+  - re-exported with `domain_section` and `domain_rarity`;
+  - spec and item-class values come from the reader's own `spec_value`, so they are parsed once, the same way;
+  - the influence ID is the display name (`Shaper Item` becomes `Shaper`);
+  - only the alternate variants the item has are kept.
+- **Pipeline on the domain item.**
+  - `resolvable` is now `LineResolution::Pending`, which equals the old `selected && !custom && !class-requirement` (`to_domain` sets the exclusions in that order).
+  - `mod_filter::pob_section` maps `ModSection` back to PoB's `Section` by variant, with `Other` matched by name. An unknown `Other` name gives no filter context, so the line stays ambiguous and visible.
+  - `section_name` gives the report's static name.
+- **PoB-reader diagnostics** stay on PoB's reader. `unsupported_features` is counted at the call site from the read item, and unknown prefixes use `pob_item::is_known_prefix`.
+- **`Rarity::names_base_in_name`** moved onto `loom_domain::Rarity` (review should-fix 2).
+- **Evidence tooling.** `tools/parity-cli/scripts/compare-spike-b.py` compares the step 2 field list. `docs/phase-2/lift-evidence.md` collects the before-and-after runs of P2-2a to P2-2d.
+
+## code-architecture-reviewer (P2-2a, 2026-11-10) summary
+- **No blockers.** The crate graph is correct, and no PoB logic is in `loom-domain` or `loom-parser`.
+- **Should-fix:**
+  - `after_key` stripped every leading colon: replaced by the reader's `spec_value`;
+  - the base-line rule was written twice: now `Rarity::names_base_in_name`;
+  - `pob_section` matched by string: now matches by variant, with the `None` case documented.
+- **Not changed:** the "stale comment" names the `domain_section` re-export, which exists.
+- **Notes for 2b to 2d:**
+  - `Spec { known }` and the `Custom`/`Section` exclusions are PoB concepts in the domain (accepted in P2-1);
+  - `influence_type` still parses the source line, so switch it to the `InfluenceId` in 2c;
+  - a `From` impl could replace `to_domain` when the XML adapter arrives;
+  - the spec test now finds its line by key.

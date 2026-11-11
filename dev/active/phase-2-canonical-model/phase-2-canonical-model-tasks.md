@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-1: domain model)
+Last Updated: 2026-11-10 (PR P2-2a: item input)
 
 # Phase 2: tasks
 
@@ -21,9 +21,11 @@ Last Updated: 2026-11-10 (PR P2-1: domain model)
 - [x] Open PR (#42); write the PR number into the docs right after
 
 ## PR P2-2a: item input (step 2a)
-- [ ] Move `pob_item` to `loom-serialization::legacy::pob_item` (tests unchanged)
-- [ ] `to_domain` mapping (PoB-only rules stay in `legacy`); parity-cli pipeline on the domain item
-- [ ] Maintainer-run: Spike B field list equal
+- [x] Move `pob_item` to `loom-serialization::legacy::pob_item` (tests unchanged)
+- [x] `to_domain` mapping (PoB-only rules stay in `legacy`); parity-cli pipeline on the domain item
+- [x] Spike B field list equal (run in the session: all 12 fields, `report.json` byte-identical; `docs/phase-2/lift-evidence.md`)
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-1-domain-model`); write the PR number into the docs right after
 
 ## PR P2-2b: scope and bases (step 2b)
 - [ ] `ItemData` trait (bases, `item_rules`); move base lookup and scope to `loom-parser::import`
