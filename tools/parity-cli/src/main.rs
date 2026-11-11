@@ -135,9 +135,18 @@ fn bundle_cmd(extract: &Path, out: &Path) -> Result<bool, String> {
     let read = reader(extract);
     let loaded = extract::load(&read)?;
     let (files, summary) = bundle::convert(&read, &loaded)?;
+    // Written to a sibling folder and renamed at the end, so a failed run
+    // leaves no partial <dir>.
+    let partial = out.with_extension("partial");
+    if partial.exists() {
+        return Err(format!(
+            "{}: already exists (an earlier run?)",
+            partial.display()
+        ));
+    }
     let mut source = loom_data::bundle::MemorySource::new();
     for (path, bytes) in &files {
-        let target = out.join(path);
+        let target = partial.join(path);
         if let Some(parent) = target.parent() {
             std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
         }
@@ -146,6 +155,7 @@ fn bundle_cmd(extract: &Path, out: &Path) -> Result<bool, String> {
     }
     let back = loom_data::bundle::Bundle::load(&source)
         .map_err(|e| format!("the written bundle does not load: {} ({e})", e.code()))?;
+    std::fs::rename(&partial, out).map_err(|e| format!("{}: {e}", out.display()))?;
     let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
     println!("{json}");
     Ok(back.game.name() == summary.game)

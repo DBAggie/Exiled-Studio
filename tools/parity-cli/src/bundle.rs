@@ -22,6 +22,7 @@
 //! JSON is written with sorted keys and two-space indentation, rows in
 //! table order, so two runs on one extract give the same bytes.
 
+use std::cell::Cell;
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::poe1::{self as bundle_poe1, Grafts as BundleGrafts};
@@ -37,7 +38,7 @@ use sha2::{Digest, Sha256};
 
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::ItemTags;
-use crate::lookup::TableLookup;
+use crate::lookup::{LookupReport, TableLookup};
 use crate::{grafts, mod_filter, poe1, poe2, properties};
 
 /// The bundle's files by path (the manifest included).
@@ -70,6 +71,29 @@ pub struct Summary {
     pub mods_bad_spawn_rows: usize,
     /// Named base rows whose tags are unknown.
     pub bases_tags_unknown: usize,
+    /// Row references (an index into another table) that point past the
+    /// table's end, dropped: craft and essence classes, implicits, spawn
+    /// and base tags, item classes, mod types, stats.
+    pub dangling_references: usize,
+    /// `BaseItemTypes` rows without a name (not base items; skipped).
+    pub nameless_bases_skipped: usize,
+    /// Stat slots with a stat and no value range (dropped, as the corpus
+    /// reader drops them).
+    pub stat_slots_without_range: usize,
+    /// Client text IDs the rules name that `ClientStrings` lacks.
+    pub client_texts_missing: Vec<String>,
+    /// `ModType.Name` values shared by more than one row (their mods'
+    /// types merge in the bundle).
+    pub mod_type_duplicate_names: usize,
+    /// The lookup tables as `lookup` built them.
+    pub lookup: LookupReport,
+}
+
+/// Counters the readers fill (see [`Summary`]).
+#[derive(Default)]
+struct Counts {
+    dangling: Cell<usize>,
+    stat_slots_without_range: Cell<usize>,
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -139,10 +163,25 @@ impl StatSlot {
     }
 }
 
-fn at(list: &[String], n: Option<i64>) -> Option<String> {
-    n.and_then(|n| usize::try_from(n).ok())
-        .and_then(|n| list.get(n))
-        .cloned()
+/// Row `n` of `list`; a reference past the end is counted as dangling.
+fn at(list: &[String], n: Option<i64>, counts: &Counts) -> Option<String> {
+    let n = n?;
+    let found = usize::try_from(n).ok().and_then(|n| list.get(n)).cloned();
+    if found.is_none() {
+        counts.dangling.set(counts.dangling.get() + 1);
+    }
+    found
+}
+
+/// Fails on an ID that two rows share.
+fn unique_ids<'a>(table: &str, ids: impl Iterator<Item = &'a str>) -> Result<(), String> {
+    let mut seen = BTreeSet::new();
+    for id in ids {
+        if !seen.insert(id) {
+            return Err(format!("{table}: the ID {id:?} is on two rows"));
+        }
+    }
+    Ok(())
 }
 
 fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
@@ -166,7 +205,11 @@ fn stats(read: Read<'_>) -> Result<Vec<Stat>, String> {
 }
 
 /// Mod rows by ID, and the count of rows read without spawn weights.
-fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), String> {
+fn mods(
+    read: Read<'_>,
+    classes: &[String],
+    counts: &Counts,
+) -> Result<(Vec<ModEntry>, usize, usize), String> {
     let stat_ids = text_column(read, "Stats", "Id")?;
     let tags = mod_filter::tag_ids(read)?;
     let mod_types = text_column(read, "ModType", "Name")?;
@@ -187,7 +230,9 @@ fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), St
     }
     let essence_of = mod_filter::essence_classes(read)?.unwrap_or_default();
     let class_ids = |rows: &BTreeSet<i64>| -> Vec<String> {
-        rows.iter().filter_map(|n| at(classes, Some(*n))).collect()
+        rows.iter()
+            .filter_map(|n| at(classes, Some(*n), counts))
+            .collect()
     };
     let mut out = Vec::with_capacity(t.rows.len());
     let mut bad_spawn = 0;
@@ -195,7 +240,7 @@ fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), St
         let mut row_stats = Vec::new();
         for slot in &slots {
             let (key, range) = slot.read(r);
-            let Some(stat) = at(&stat_ids, key) else {
+            let Some(stat) = at(&stat_ids, key, counts) else {
                 continue;
             };
             if let Some((a, b)) = range {
@@ -204,6 +249,10 @@ fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), St
                     min: a.min(b),
                     max: a.max(b),
                 });
+            } else {
+                counts
+                    .stat_slots_without_range
+                    .set(counts.stat_slots_without_range.get() + 1);
             }
         }
         let spawn = mod_filter::spawn_pairs(r, spawn_tags, spawn_values, &tags)
@@ -219,7 +268,7 @@ fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), St
             id: Table::text(r, id).unwrap_or("").to_owned(),
             domain: Table::int(r, dom).unwrap_or(0),
             generation: Table::int(r, gen_).unwrap_or(0),
-            mod_type: at(&mod_types, Table::int(r, mod_type)),
+            mod_type: at(&mod_types, Table::int(r, mod_type), counts),
             stats: row_stats,
             spawn,
             influence: Table::int(r, influence).filter(|v| *v != poe1::NO_INFLUENCE),
@@ -228,7 +277,9 @@ fn mods(read: Read<'_>, classes: &[String]) -> Result<(Vec<ModEntry>, usize), St
             essence_classes: essence_of.get(&n).map(class_ids),
         });
     }
-    Ok((out, bad_spawn))
+    let names: BTreeSet<&str> = mod_types.iter().map(String::as_str).collect();
+    let duplicate_types = mod_types.len() - names.len();
+    Ok((out, bad_spawn, duplicate_types))
 }
 
 /// Named base items, and the count whose tags are unknown.
@@ -236,7 +287,8 @@ fn base_items(
     read: Read<'_>,
     classes: &[String],
     mods: &[ModEntry],
-) -> Result<(Vec<BaseItem>, usize), String> {
+    counts: &Counts,
+) -> Result<(Vec<BaseItem>, usize, usize), String> {
     let tag_ids = mod_filter::tag_ids(read)?;
     let t = Table::require(read, "BaseItemTypes")?;
     let col = |n: &str| t.column(n);
@@ -252,13 +304,14 @@ fn base_items(
         column(&t, &["Implicit_ModsKeys", "Implicit_Mods"])?,
     );
     let mut item_tags = ItemTags::default();
-    let mut unknown = 0;
+    let (mut unknown, mut nameless) = (0, 0);
     let mut out = Vec::new();
     for r in &t.rows {
         let (Some(i), Some(n)) = (Table::text(r, id), Table::text(r, name)) else {
             continue;
         };
         if n.is_empty() {
+            nameless += 1;
             continue;
         }
         let row_tags = Table::text(r, inherits)
@@ -267,7 +320,7 @@ fn base_items(
                 t.extend(
                     mod_filter::ints(r, tags)
                         .into_iter()
-                        .filter_map(|k| at(&tag_ids, Some(k))),
+                        .filter_map(|k| at(&tag_ids, Some(k), counts)),
                 );
                 t
             });
@@ -278,22 +331,32 @@ fn base_items(
             id: i.to_owned(),
             name: n.to_owned(),
             domain: Table::int(r, domain).unwrap_or(0),
-            item_class: at(classes, Table::int(r, class)),
+            item_class: at(classes, Table::int(r, class), counts),
             tags: row_tags,
             implicits: mod_filter::ints(r, implicits)
                 .into_iter()
                 .filter_map(|k| {
-                    let n = usize::try_from(k).ok()?;
-                    mods.get(n).map(|m| m.id.clone())
+                    let found = usize::try_from(k)
+                        .ok()
+                        .and_then(|n| mods.get(n))
+                        .map(|m| m.id.clone());
+                    if found.is_none() {
+                        counts.dangling.set(counts.dangling.get() + 1);
+                    }
+                    found
                 })
                 .collect(),
         });
     }
-    Ok((out, unknown))
+    Ok((out, unknown, nameless))
 }
 
 /// The `ClientStrings` rows the rules name, sorted by ID.
-fn client_texts(read: Read<'_>, rules: &ItemRules) -> Result<Vec<ClientText>, String> {
+/// Also the named IDs `ClientStrings` lacks.
+fn client_texts(
+    read: Read<'_>,
+    rules: &ItemRules,
+) -> Result<(Vec<ClientText>, Vec<String>), String> {
     let t = &rules.text;
     let named: BTreeSet<&str> = t
         .compositions
@@ -319,12 +382,17 @@ fn client_texts(read: Read<'_>, rules: &ItemRules) -> Result<Vec<ClientText>, St
     }
     out.sort_by(|a, b| a.id.cmp(&b.id));
     out.dedup_by(|a, b| a.id == b.id);
-    Ok(out)
+    let missing = named
+        .iter()
+        .filter(|id| out.iter().all(|c| c.id != **id))
+        .map(|id| (*id).to_owned())
+        .collect();
+    Ok((out, missing))
 }
 
-fn lookups(read: Read<'_>, extract: &Extract) -> Result<Vec<LookupTable>, String> {
-    let (lookup, _) = TableLookup::load(read, extract)?;
-    Ok(LookupHandler::ALL
+fn lookups(read: Read<'_>, extract: &Extract) -> Result<(Vec<LookupTable>, LookupReport), String> {
+    let (lookup, report) = TableLookup::load(read, extract)?;
+    let tables = LookupHandler::ALL
         .iter()
         .filter_map(|h| {
             let entries = lookup.entries(*h);
@@ -333,7 +401,8 @@ fn lookups(read: Read<'_>, extract: &Extract) -> Result<Vec<LookupTable>, String
                 entries,
             })
         })
-        .collect())
+        .collect();
+    Ok((tables, report))
 }
 
 /// `bundle.json`'s provenance from the extract's `manifest.json`.
@@ -395,13 +464,17 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         .mods
         .validate()
         .map_err(|e| format!("item rules: {}", e.code()))?;
+    let counts = Counts::default();
     let classes = text_column(read, "ItemClasses", "Id")?;
-    let (mod_rows, bad_spawn) = mods(read, &classes)?;
-    let (bases, tags_unknown) = base_items(read, &classes, &mod_rows)?;
+    unique_ids("ItemClasses", classes.iter().map(String::as_str))?;
+    let (mod_rows, bad_spawn, duplicate_types) = mods(read, &classes, &counts)?;
+    unique_ids("Mods", mod_rows.iter().map(|m| m.id.as_str()))?;
+    let (bases, tags_unknown, nameless) = base_items(read, &classes, &mod_rows, &counts)?;
 
     let mut files: Files = BTreeMap::new();
     let mut rows: BTreeMap<String, usize> = BTreeMap::new();
     let st = stats(read)?;
+    unique_ids("Stats", st.iter().map(|x| x.id.as_str()))?;
     put(
         &mut files,
         &mut rows,
@@ -430,7 +503,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         to_json(&classes)?,
         Some(classes.len()),
     );
-    let ct = client_texts(read, &rules)?;
+    let (ct, client_missing) = client_texts(read, &rules)?;
     put(
         &mut files,
         &mut rows,
@@ -438,7 +511,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         to_json(&ct)?,
         Some(ct.len()),
     );
-    let lk = lookups(read, extract)?;
+    let (lk, lookup_report) = lookups(read, extract)?;
     put(
         &mut files,
         &mut rows,
@@ -546,6 +619,12 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
             .collect(),
         mods_bad_spawn_rows: bad_spawn,
         bases_tags_unknown: tags_unknown,
+        dangling_references: counts.dangling.get(),
+        nameless_bases_skipped: nameless,
+        stat_slots_without_range: counts.stat_slots_without_range.get(),
+        client_texts_missing: client_missing,
+        mod_type_duplicate_names: duplicate_types,
+        lookup: lookup_report,
     };
     files.insert(bundle::MANIFEST.to_owned(), manifest_json);
     Ok((files, summary))
