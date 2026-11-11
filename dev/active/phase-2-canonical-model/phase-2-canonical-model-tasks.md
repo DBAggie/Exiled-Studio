@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader)
+Last Updated: 2026-11-10 (PR P2-3b: bundle converter)
 
 # Phase 2: tasks
 
@@ -55,11 +55,14 @@ Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader)
 - [x] `code-architecture-reviewer`; findings in the context file
 - [x] Open PR (#47, base `feat/p2-2d-compositions-tolerances`); write the PR number into the docs right after
 
-## PR P2-3b: `loom-extractor bundle` (step 3b)
-- [ ] Map the extract's dat-schema rows to the canonical types; write `item_rules` (the PoE1 values now in `tools/parity-cli/src/poe1.rs`; PoE2 values from its schema enums)
-- [ ] Precompute base tags (item types), essence classes, lookup tables, graft gems
-- [ ] Game-specific table list agrees with the extractor's lists (gate 3d)
-- [ ] Two `bundle` runs per game byte-identical (in-session); scrubbed summaries committed
+## PR P2-3b: bundle converter (step 3b)
+- [x] Decided: the converter is `loom-parity-cli bundle`, not `loom-extractor bundle` (the extract readers it needs are in parity-cli; tools depend only on core crates)
+- [x] Map the extract's dat-schema rows to the canonical types, for both schemas' column names; write `item_rules` (PoE1 `poe1.rs`; PoE2 `poe2.rs`, a recorded hypothesis)
+- [x] Precompute base tags (item types), essence classes, lookup tables, graft gems
+- [ ] Gate 3d (the game-specific table list agrees with the extractor's lists): moved to P2-4, with the validator's domain checks
+- [x] Two `bundle` runs per game byte-identical (in-session, also from a clean tree); scrubbed summaries `docs/phase-2/bundle-*.json`
+- [x] `code-architecture-reviewer`; findings in the context file
+- [ ] Open PR (base `feat/p2-3a-bundle-model`); write the PR number into the docs right after
 
 ## PR P2-4: bundle validator (step 4)
 - [ ] Structural, schema, referential, domain, smoke checks with `BUNDLE_*` codes
@@ -75,6 +78,7 @@ Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader)
 
 ## PR P2-6: `resolve_build` (step 6)
 - [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness
+- [ ] Rebuilding `Mods` (split `(0, 0)` stats into `unset`; class, mod-type, and implicit IDs onto rows) and `BaseRow` from a bundle equals `mod_filter::load` and `Bases::load` on the extract, for both games (P2-3b review)
 - [ ] Outcome tests on synthetic PoE1 and PoE2 bundles (gate 3b); maintainer-run corpus fields equal Spike B
 
 ## PR P2-7: DTO v1 and generated schemas (step 7)

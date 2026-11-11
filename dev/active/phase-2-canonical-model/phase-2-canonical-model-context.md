@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-3a: bundle model and loader; stack #42 <- #43 <- #44 <- #45 <- #46 <- P2-3a)
+Last Updated: 2026-11-10 (PR P2-3b: bundle converter; stack #42 <- ... <- #47 <- P2-3b)
 
 # Phase 2: context
 
@@ -242,3 +242,25 @@ The maintainer asked for the Phase 2 PRs to be done unattended, one after anothe
     - the tuple-shaped JSON entries;
     - a `BUNDLE_SOURCE_UNREADABLE` test (the code exists);
     - the duplicated game field.
+
+## Decisions in P2-3b (bundle converter, 2026-11-10)
+- **Where the converter lives:** `loom-parity-cli bundle <extract> --out <dir>` (`tools/parity-cli/src/bundle.rs`), not `loom-extractor bundle` as the plan said. Every extract reader it needs is in parity-cli: tables, `item_tags`, `lookup`, the essence-column map, the graft and quality loaders, and the PoE1 rules. Tools depend only on core crates, so the extractor cannot use them. The extractor stays the dat-to-extract step.
+- **Mapping:**
+  - IDs replace row indices: mod types by `ModType.Name` (the table has no `Id`), classes by `ItemClasses.Id`, implicits by `Mods.Id`, and tags by `Tags.Id`.
+  - `(0, 0)` stats are kept in `ModEntry.stats`.
+  - Stat-description files keep their path relative to the extract below `stat_descriptions/`, because PoE2 has files of one name in several folders.
+  - Both schemas' column names are read through `column()` and `StatSlot` (PoE2 `Stat<n>` with a `Stat<n>Value` `[min, max]` pair).
+- **Checks and counts:**
+  - The converter fails on a duplicate `Mods`, `Stats`, or `ItemClasses` ID.
+  - The summary counts dangling references, skipped nameless bases, stat slots without a range, missing client texts, and duplicate `ModType` names, and carries the lookup report.
+  - On 26530219 and 26476662, everything counts 0 except the nameless bases (PoE1 420, PoE2 421).
+- **Output:** written to `<dir>.partial`, loaded back with `Bundle::load`, then renamed.
+- **PoE2 item rules (`poe2.rs`) are a hypothesis.** They use the schema enums both games share and only the fit rules both games have. There are no domain scopes, client texts, or sections. Measure them when PoE2 item import starts (backlog, ADR-005). A PoE2 bundle with 0 client texts is expected, not an error.
+
+## code-architecture-reviewer (P2-3b, 2026-11-10) summary
+- **No blockers.** The deviation is justified, the summaries are scrubbed, and the output is deterministic by construction.
+- **Should-fix, applied:** fail on duplicate IDs; count dangling references, skipped nameless bases, stat slots without a range, and missing client texts; keep the lookup report; write to a partial directory and rename.
+- **Recorded for P2-6:** rebuilding `Mods` and `BaseRow` from a bundle must equal the extract readers for both games (tasks file). `(0, 0)` stats go back to `unset`.
+- **Nits, not done:**
+  - Nothing in the manifest marks the PoE2 rules as unmeasured (the module docs say so);
+  - there is no end-to-end converter fixture test (the in-session runs on both real extracts are the evidence; P2-6's equality test will be one).

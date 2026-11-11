@@ -24,8 +24,35 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-3a bundle model PR #47 open, in review, branch `feat/p2-3a-bundle-model`, stacked on P2-2d)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`).
+## Current state (updated 2026-11-10, P2-3b bundle converter open, in review, branch `feat/p2-3b-bundle-converter`, stacked on P2-3a)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- P2-3b (base `feat/p2-3a-bundle-model`).
+- **PR P2-3b: bundle converter (open, in review, branch `feat/p2-3b-bundle-converter`, base `feat/p2-3a-bundle-model`).** Plan step 3b.
+  - **What:** `loom-parity-cli bundle <extract> --out <dir>` (`tools/parity-cli/src/bundle.rs`) converts a PoE1 or PoE2 extract to bundle v1:
+    - stats;
+    - mods by ID (stats including `(0, 0)`; spawn weights by tag; influence without `NONE`; crafting and essence classes by `ItemClasses.Id`; mod type by `ModType.Name`);
+    - named base items, with derived tags and implicits by mod ID;
+    - item classes, the named `ClientStrings` rows, and the lookup tables;
+    - the stat-description files, at their path relative to the extract;
+    - item rules;
+    - for PoE1, `poe1/quality_types.json` and `poe1/grafts.json` (with gem IDs).
+
+    It writes sorted-key JSON and `bundle.json`, loads the result back, and prints a scrubbed summary. It reads both schemas' column names: PoE2 says `ModType`, `ItemClass`, `Tags`, `Implicit_Mods`, `SpawnWeight_Tags`, `InfluenceType`, and `Stat<n>` with a `Stat<n>Value` `[min, max]` pair.
+  - **Deviation, by decision:** the converter is in parity-cli, not `loom-extractor`. Every extract reader it needs is there, and tools depend only on core crates.
+  - **PoE2 rules:** the new `tools/parity-cli/src/poe2.rs` writes PoE2 item rules from the schema enums both games share. It is a **hypothesis**: PoE2 item import is backlog (ADR-005), so nothing measures them yet.
+  - **Evidence (in-session, the real extracts):**
+    - PoE1 26530219: 23,362 stats, 40,355 mods, 5,041 bases, 103 classes, 12 client texts, 5 lookup tables, 44 stat-description files, 18 quality types, 16 grafts.
+    - PoE2 26476662: 27,299 stats, 16,911 mods, 5,075 bases, 118 classes, 1 lookup table, 589 stat-description files, and no `poe1/`.
+    - For each game, two runs (also from a clean tree at `2ac5507` and `508cb85`) are byte-identical, and the bundle loads back.
+    - At `508cb85`: 0 dangling row references, 0 duplicate `ModType` names, 0 stat slots without a range, and no missing client texts in both games. Nameless `BaseItemTypes` rows skipped: 420 for PoE1, 421 for PoE2.
+    - Summaries: `docs/phase-2/bundle-poe1-26530219.json` and `bundle-poe2-26476662.json`.
+    - The corpus `report.json` is still byte-identical. The graft and quality loaders now expose raw rows (`grafts::rows`, `properties::quality_types`).
+  - **Gate 3d** (the game-specific table list agrees with the extractor's lists) moved to P2-4.
+  - **Review:** `code-architecture-reviewer` found no blockers; the deviation is justified and the summaries are scrubbed. Applied:
+    - the converter fails on a duplicate `Mods`, `Stats`, or `ItemClasses` ID;
+    - the summary counts dangling references, skipped nameless bases, stat slots without a range, missing client texts, and duplicate `ModType` names, and carries the lookup report;
+    - output is written to `<dir>.partial` and renamed only once it loads.
+
+    Still open, for P2-6: rebuilding `Mods` from a bundle must equal `mod_filter::load` on the extract, for both games. The bundle keeps `(0, 0)` stats in `stats`; the parser's `ModRow` keeps them in `unset`.
 - **PR P2-3a: bundle format v1 model and loader (PR #47, open, in review, branch `feat/p2-3a-bundle-model`, base `feat/p2-2d-compositions-tolerances`).** Plan step 3a.
   - **Rules moved down:** `ItemRules`, `TextRules`, `ModRules` and their parts moved from `loom-parser` to `crates/loom-data/src/rules.rs`, with serde. `loom-parser` re-exports them. Reason: `loom-data` sits below `loom-parser`, and a bundle carries its game's rules (`data/item_rules.json`). `ModSection` is written by name, so `loom-domain` gains no dependency.
   - **Bundle:** `crates/loom-data/src/bundle/` defines the v1 layout (the table in `mod.rs`):
@@ -188,13 +215,18 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 9`): if the maintainer merged or asked for changes on #42 to #47, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-2. **P2-3b: `loom-extractor bundle <extract-dir> --out <bundle-dir>`** (plan step 3b). Branch from `feat/p2-3a-bundle-model` and target it as base:
-   - map the extract's tables to `loom_data::bundle` types: `Stats`; `Mods`, with stats and spawn weights by ID and `(0, 0)` stats kept; `BaseItemTypes`, with tags precomputed from `item_types/` (the logic of `tools/parity-cli/src/item_tags.rs`) and implicits by mod ID; `ItemClasses`; the `ClientStrings` rows the rules name; lookup tables (the logic of `tools/parity-cli/src/lookup.rs`); stat-description files copied;
-   - for PoE1, the `poe1/` section: `AlternateQualityTypes` with catalyst stats, and the grafts with gem IDs and levels. Essence classes go into `ModEntry.essence_classes` (the logic of `mod_filter.rs` `ESSENCE_COLUMNS`);
-   - `item_rules` per game. The PoE1 values are those in `tools/parity-cli/src/poe1.rs`, which the extractor cannot depend on, so move them to a place both tools can use, or a data file the extractor reads. PoE2 needs its own values from its schema enums; record any that cannot be derived;
-   - sorted keys, stable order; `bundle.json` with hashes (`sha2` is already a workspace dependency used by the tools);
-   - evidence, in-session: two runs per game, byte-identical; the PoE2 bundle loads with `Bundle::load` and has no `poe1/`; commit scrubbed summaries (row counts per file, hashes) under `docs/phase-2/`.
+1. **Stack check** (`gh pr list --state all --limit 10`): if the maintainer merged or asked for changes on #42 to #47 or P2-3b, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+2. **P2-4: bundle validator** (plan step 4). Branch from `feat/p2-3b-bundle-converter` and target it as base:
+   - `loom-data::validate` with five kinds of check:
+     - structural: the format is known; every listed file exists with matching SHA-256 (`sha2` joins `loom-data`; run `cargo deny`) and size; there is no unlisted file (`BundleSource::list`); `signatures` is empty in format 1;
+     - schema: every file parses (reuse `Bundle::load`);
+     - referential: mod stats exist in stats, base implicits in mods, item classes in classes, client texts the rules name, and graft gems;
+     - domain: the game tag matches the sections present; IDs are unique; the item rules validate and name only that game's sections;
+     - smoke: each stat-description scope the rules name builds.
+   - Gate 3d: the PoE1-only table list (the files of `poe1/`) agrees with the extractor's lists.
+   - `loom-parity-cli bundle-check <dir>`: a JSON report, exit 0 or 1.
+   - A mutation set in CI over the synthetic bundles, one expected code per case: missing file, changed byte, extra file, dangling reference, duplicate ID, wrong game tag, a `poe1/` section in a PoE2 bundle, unknown format.
+   - In-session: `bundle-check` on the real PoE1 and PoE2 bundles (`loom-parity-cli bundle` into `local/`) with 0 errors.
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.

@@ -2985,5 +2985,31 @@
     }
   },
   "mods_bad_spawn_rows": 0,
-  "bases_tags_unknown": 0
+  "bases_tags_unknown": 0,
+  "dangling_references": 0,
+  "nameless_bases_skipped": 421,
+  "stat_slots_without_range": 0,
+  "client_texts_missing": [],
+  "mod_type_duplicate_names": 0,
+  "lookup": {
+    "keys": {
+      "display_indexable_support": 0,
+      "passive_hash": 9731
+    },
+    "duplicate_keys": {},
+    "skipped_rows": {},
+    "unavailable": {
+      "affliction_reward_type": "no supported key form (see parity-cli lookup.rs)",
+      "display_indexable_non_active_support": "IndexableNonActiveSupportGems is not in the extract",
+      "display_indexable_skill": "IndexableSkillGems is not in the extract",
+      "mages_legacy_index": "no supported key form (see parity-cli lookup.rs)",
+      "mod_value_to_item_class": "no supported key form (see parity-cli lookup.rs)",
+      "passive_keystone_index": "no supported key form (see parity-cli lookup.rs)",
+      "specific_skill": "no supported key form (see parity-cli lookup.rs)",
+      "tempest_mod_text": "no supported key form (see parity-cli lookup.rs)",
+      "tree_expansion_jewel_passive": "passive_skill_stat_descriptions.txt is not in the extract",
+      "ultimatum_wager_type_hash": "no supported key form (see parity-cli lookup.rs)",
+      "weapon_tree_unique_base_type_name": "no supported key form (see parity-cli lookup.rs)"
+    }
+  }
 }
