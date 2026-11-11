@@ -32,7 +32,7 @@ Last Updated: 2026-11-10 (PR P2-2b: scope and bases)
 - [x] parity-cli `ItemData` over the extract, with a `poe1` rules module; start the PoE1-identifier scan test
 - [x] Spike B field list equal (run in the session; `docs/phase-2/lift-evidence.md`)
 - [x] `code-architecture-reviewer`; findings in the context file
-- [ ] Open PR (base `feat/p2-2a-item-input`); write the PR number into the docs right after
+- [x] Open PR (#44, base `feat/p2-2a-item-input`); write the PR number into the docs right after
 
 ## PR P2-2c: Mods filter and item tags (step 2c)
 - [ ] Move `mod_filter` and `item_tags`; generation types, influences, and essence columns through `item_rules`
