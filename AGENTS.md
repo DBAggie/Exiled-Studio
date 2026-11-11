@@ -149,6 +149,8 @@ LOOM_ORACLE_DIR="$PWD/local/oracle" cargo test -p loom-parity-cli -- --ignored
 
 # PoB XML round-trip on a local folder of builds (P2-5; the corpus stays local, ADR-007; LOOM_XML_DIR absolute):
 LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixtures -- --ignored --nocapture
+# Make a share code with PoB itself on the oracle runtime (P2-10; maintainer-run, not in CI): the command and why runs differ
+# are in tools/oracle/fixtures/share-codes/README.md; the committed codes are checked by the share_code_fixtures test.
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
