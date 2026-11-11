@@ -58,9 +58,22 @@ fn pending(body: &ItemBody, n: usize) -> Option<&ModifierLine> {
 /// import adapter left it (excluded lines never pair).
 #[must_use]
 pub fn split_section(index: &Index<'_>, body: &ItemBody, n: usize) -> Option<(usize, Resolution)> {
+    split_section_with(index, body, n, |_| true)
+}
+
+/// [`split_section`] with only the neighbours `pairs` accepts tried (for
+/// example, neighbours that have no template alone either); a refused
+/// neighbour is skipped and the other one tried.
+#[must_use]
+pub fn split_section_with(
+    index: &Index<'_>,
+    body: &ItemBody,
+    n: usize,
+    pairs: impl Fn(usize) -> bool,
+) -> Option<(usize, Resolution)> {
     let this = pending(body, n)?;
     let neighbours = [n.checked_sub(1), n.checked_add(1)];
-    for other in neighbours.into_iter().flatten() {
+    for other in neighbours.into_iter().flatten().filter(|o| pairs(*o)) {
         let Some(m) = pending(body, other).filter(|m| m.section != this.section) else {
             continue;
         };
@@ -207,6 +220,25 @@ mod tests {
             split_section(&index, &b, 1).map(|(other, _)| other),
             Some(0)
         );
+    }
+
+    #[test]
+    fn split_section_with_should_skip_a_refused_neighbour() {
+        let set = set();
+        let scope = set.scope("a.txt").unwrap();
+        let index = Index::build(&scope);
+        let b = body(vec![
+            modifier("3 first half", ModSection::Implicit),
+            modifier("4 second half", ModSection::Explicit),
+            modifier("3 first half", ModSection::Implicit),
+        ]);
+        let other = |n, pairs: fn(usize) -> bool| {
+            split_section_with(&index, &b, n, pairs).map(|(other, _)| other)
+        };
+        // Line 1 pairs only with line 0; refused, nothing else pairs.
+        assert_eq!((other(1, |_| true), other(1, |o| o != 0)), (Some(0), None));
+        // Line 2 (a first half) pairs with nothing after it.
+        assert_eq!(other(2, |_| true), None);
     }
 
     #[test]
