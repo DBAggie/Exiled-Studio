@@ -1,6 +1,6 @@
 # Phase 2 report: canonical model and data
 
-Phase 2 of `docs/plan/ACTION-PLAN.md` ("Canonical model and data"), planned in `dev/completed/phase-2-canonical-model/` (plan, context, tasks; PR #41, merged 2026-11-10). Report written 2026-11-11 (P2-11).
+Phase 2 of `docs/plan/ACTION-PLAN.md` ("Canonical model and data"), planned in `dev/completed/phase-2-canonical-model/` (plan, context, tasks; PR #41, merged 2026-11-10). Report written 2026-11-11 (P2-11, PR #58).
 
 **Verdict: the gate is met.** Every gate item below holds on the recorded inputs. CI checks items 1a, 2a, 3b, 3c, 3d, 4, 5 (DTO), and 6 on every PR (3c on Linux; the rest on Windows and Linux); at the stack's tip, CI on #57 at `3982838` (run 43031816939) is green, every job. The maintainer-run items (1b, 2b, 2c, 3a, 5 (bundles)) were re-run at `3982838`, the tip of the PR stack (P2-10), from a clean tree on 2026-11-11, and each equals the record its PR committed. The maintainer confirms the verdict by merging the stack.
 
@@ -94,7 +94,7 @@ In `docs/phase-2/`: `build-round-trip-poe1-26530219.json` (corpus, builds by SHA
 ## 6. Open for the maintainer
 - Plan questions Q1 to Q6 were taken on their defaults (context file); confirm or change them.
 - Post the PoB issue (`local/upstream-issue-pob-vaal-variant.md`, workstation only).
-- Merge the stack #57 down to #42, then into `main`.
+- Merge the stack #58 down to #42, then into `main`.
 - Next: Phase 3 (calculations) per `docs/plan/ACTION-PLAN.md`, which needs its own plan PR.
 
 ## 7. Reproduce
