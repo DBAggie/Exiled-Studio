@@ -710,18 +710,9 @@ impl Mods {
     }
 }
 
-/// One `BaseItemTypes` row of the item's base.
-#[derive(Debug, Clone, Default)]
-pub struct BaseRow {
-    /// `ModDomain`.
-    pub domain: i64,
-    /// `ItemClassesKey`.
-    pub class: Option<i64>,
-    /// Tags (item type chain plus `TagsKeys`), `None` when unknown.
-    pub tags: Option<Vec<String>>,
-    /// `Implicit_ModsKeys` (`Mods` rows).
-    pub implicits: Vec<usize>,
-}
+/// One `BaseItemTypes` row of the item's base (moved to
+/// `loom_parser::import` in P2-2b).
+pub use loom_parser::import::BaseRow;
 
 /// What the filter knows about an item.
 pub struct Context<'a> {

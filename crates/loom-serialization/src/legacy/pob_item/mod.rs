@@ -889,6 +889,36 @@ pub fn base_name(line: &str) -> &str {
     line.strip_prefix("Vestigial ").unwrap_or(line)
 }
 
+/// Every PoB base name with a ` (...)` suffix (`itemBases["... (...)"]` in
+/// `v2.67.2:src/Data/Bases/*.lua`, listed 2026-11-09): PoB splits one game
+/// base name over several rows (`BaseItemTypes` has three `Two-Stone Ring`
+/// rows, for example) and tells them apart by the suffix.
+pub const SUFFIXED_BASES: [&str; 13] = [
+    "Avian Twins Talisman (Cold-To-Fire)",
+    "Avian Twins Talisman (Cold-To-Lightning)",
+    "Avian Twins Talisman (Fire-To-Cold)",
+    "Avian Twins Talisman (Fire-To-Lightning)",
+    "Avian Twins Talisman (Lightning-To-Cold)",
+    "Monkey Paw Talisman (Frenzy)",
+    "Monkey Paw Talisman (Power)",
+    "Two-Stone Ring (Cold/Lightning)",
+    "Two-Stone Ring (Fire/Cold)",
+    "Two-Stone Ring (Fire/Lightning)",
+    "Two-Toned Boots (Armour/Energy Shield)",
+    "Two-Toned Boots (Armour/Evasion)",
+    "Two-Toned Boots (Evasion/Energy Shield)",
+];
+
+/// The game base name of one of PoB's [`SUFFIXED_BASES`] (the name before
+/// ` (`); `None` for any other name, which is looked up as written.
+#[must_use]
+pub fn suffix_removed(name: &str) -> Option<&str> {
+    SUFFIXED_BASES
+        .contains(&name)
+        .then(|| name.rsplit_once(" (").map(|(n, _)| n))
+        .flatten()
+}
+
 /// Result of [`magic_base`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BaseMatch {

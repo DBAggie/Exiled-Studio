@@ -2,6 +2,8 @@
 //! stat-description tables (ADR-015). Lines that cannot be resolved are
 //! quarantined and reported, never silently dropped.
 //!
+//! - [`import`]: the item import pipeline over a domain item and the
+//!   game data it reads through [`import::ItemData`] (Phase 2, step 2).
 //! - [`resolve`]: the reverse matcher, one item line to stat IDs and raw
 //!   values through one stat-description scope (Spike B, PR B2a).
 //!
@@ -16,4 +18,5 @@
 
 #![warn(clippy::indexing_slicing)]
 
+pub mod import;
 pub mod resolve;

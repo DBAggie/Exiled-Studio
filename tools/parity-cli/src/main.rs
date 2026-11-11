@@ -24,6 +24,7 @@ mod oracle_output;
 mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
+mod poe1;
 mod properties;
 mod render_check;
 mod resolve_corpus;
