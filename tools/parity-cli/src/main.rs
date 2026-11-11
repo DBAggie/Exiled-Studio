@@ -10,6 +10,7 @@
 //! `docs/parity/`).
 
 mod bundle;
+mod bundle_equal;
 mod categorize;
 mod divergence;
 mod extract;
@@ -59,7 +60,12 @@ const USAGE: &str = "usage:
       Render every PoE1 Mods row and compare with PoB's exported mod text
       (<pob-dir>/src/Data/Mod*.lua); write summary.json and report.json to
       <dir>, which must not exist. Exit 1 if a difference is uncategorized.
-  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--pob <tag>=<dir>]...
+  loom-parity-cli bundle-equal <extract-dir> <bundle-dir>
+      Check that the item pipeline's data built from the bundle (validated
+      first) equal those the corpus harness reads from the extract: mod
+      rows, local stats, base rows, granted skills, properties (plan
+      step 6). Print a JSON report; exit 1 on any mismatch.
+  loom-parity-cli resolve-corpus <builds-dir> <extract-dir> --out <dir> [--bundle <dir>] [--pob <tag>=<dir>]...
       Read every <Item> of the PoB builds (*.xml directly in <builds-dir>;
       subfolders are not read; identical files count once), resolve
       each modifier line in its item's scope (PoE1 extract), and
@@ -67,7 +73,11 @@ const USAGE: &str = "usage:
       report.json (builds by content hash, no item names) to <dir>, which
       must not exist. Each --pob names a `git archive` of a PoB tag's
       src/Data (<dir>/src/Data), the legacy-text evidence. Exit 1 while
-      the Spike B gate is not met or a build is unreadable.
+      the Spike B gate is not met or a build is unreadable. With
+      --bundle, the bases, mod rows, granted skills, properties,
+      compositions, and stat-description indexes come from that data
+      bundle (validated first; plan step 6) instead of the extract; the
+      categories still read the extract.
   loom-parity-cli oracle-verify <manifest> <oracle-dir>
       Check an oracle directory written by tools/oracle/acquire.ps1 or
       acquire.sh against the manifest (tools/oracle/manifest.json): PoB
@@ -335,10 +345,17 @@ fn lua_tree(dir: &Path) -> Result<Vec<(String, String)>, String> {
 }
 
 /// `<tag>=<dir>` arguments to PoB text sources.
-fn pob_sources(args: &[String]) -> Result<Vec<categorize::PobText>, String> {
+/// `--pob <tag>=<dir>` sources, and the `--bundle <dir>`, if given.
+fn corpus_args(args: &[String]) -> Result<(Vec<categorize::PobText>, Option<&Path>), String> {
     let mut out = Vec::new();
+    let mut bundle = None;
     let mut rest = args;
     while let [flag, value, tail @ ..] = rest {
+        if flag == "--bundle" && bundle.is_none() {
+            bundle = Some(Path::new(value.as_str()));
+            rest = tail;
+            continue;
+        }
         if flag != "--pob" {
             return Err(format!("unknown argument {flag}"));
         }
@@ -352,7 +369,36 @@ fn pob_sources(args: &[String]) -> Result<Vec<categorize::PobText>, String> {
     if !rest.is_empty() {
         return Err(format!("unexpected argument {}", rest.join(" ")));
     }
-    Ok(out)
+    Ok((out, bundle))
+}
+
+/// Loads a bundle folder after the validator accepts it.
+fn load_bundle(dir: &Path) -> Result<loom_data::bundle::Bundle, String> {
+    let source = DirSource(dir);
+    let report = loom_data::bundle::validate::validate(&source);
+    if !report.is_valid() {
+        return Err(format!(
+            "{}: the bundle is not valid ({})",
+            dir.display(),
+            report.codes().join(", ")
+        ));
+    }
+    loom_data::bundle::Bundle::load(&source)
+        .map_err(|e| format!("{}: {} ({e})", dir.display(), e.code()))
+}
+
+/// `bundle-equal`: the pipeline's data from a bundle against the
+/// extract's (`bundle_equal`).
+fn bundle_equal(extract: &Path, bundle_dir: &Path) -> Result<bool, String> {
+    let read = reader(extract);
+    let bases = resolve_corpus::Bases::load(&read)?;
+    let mods = mod_filter::load(&read)?;
+    let bundle = load_bundle(bundle_dir)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let report = bundle_equal::compare(&bases, &mods, &data);
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(report.equal())
 }
 
 fn resolve_corpus(
@@ -361,12 +407,26 @@ fn resolve_corpus(
     out: &Path,
     pob: &[String],
 ) -> Result<bool, String> {
-    let pob = pob_sources(pob)?;
+    let (pob, bundle_dir) = corpus_args(pob)?;
     let read = reader(extract);
     let loaded = extract::load(&read)?;
     let (lookup, lookup_report) = lookup::TableLookup::load(&read, &loaded)?;
-    let bases = resolve_corpus::Bases::load(&read)?;
-    let mods = mod_filter::load(&read)?;
+    // `--bundle`: the pipeline's data come from the bundle (plan step 6);
+    // the extract still gives the categories' evidence.
+    let bundle = bundle_dir.map(load_bundle).transpose()?;
+    let data = bundle.as_ref().map(loom_parser::import::BundleData::new);
+    let (bases, extract_mods) = match &data {
+        Some(d) => (resolve_corpus::Bases::from_bundle(d), None),
+        None => (
+            resolve_corpus::Bases::load(&read)?,
+            Some(mod_filter::load(&read)?),
+        ),
+    };
+    let mods = match (&data, &extract_mods) {
+        (Some(d), _) => d.mods(),
+        (None, Some(m)) => m,
+        (None, None) => return Err("no mod rows".to_owned()),
+    };
     let game = categorize::GameText::load(&loaded.set, &read, pob)?;
     let mut builds = Vec::new();
     for entry in
@@ -390,10 +450,11 @@ fn resolve_corpus(
         &lookup,
         lookup_report,
         &bases,
-        &mods,
+        mods,
         &game,
         &builds,
         tool,
+        data.as_ref(),
     )?;
     write_out(out, &summary, &report)?;
     let json =
@@ -638,6 +699,9 @@ fn main() -> ExitCode {
         }
         [cmd, extract, pob, flag, out] if cmd == "render-check" && flag == "--out" => {
             render_check(Path::new(extract), Path::new(pob), Path::new(out))
+        }
+        [cmd, extract, bundle] if cmd == "bundle-equal" => {
+            bundle_equal(Path::new(extract), Path::new(bundle))
         }
         [cmd, builds, extract, flag, out, pob @ ..]
             if cmd == "resolve-corpus" && flag == "--out" =>

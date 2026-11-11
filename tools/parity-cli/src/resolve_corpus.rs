@@ -58,7 +58,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use loom_data::stat_desc::{Hand, Scope};
 use loom_domain::{ItemBody as Item, LineKind, LineResolution, ModifierLine as Modifier, Rarity};
 use loom_parser::import::{
-    BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, find_base,
+    BaseError, BaseQuery, BaseRow, BundleData, FoundBase, ItemData, ItemRules, find_base,
 };
 use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
@@ -177,6 +177,22 @@ impl Bases {
             bases.rows.entry(n.to_owned()).or_default().push(row);
         }
         bases
+    }
+
+    /// The bases, granted skills, and properties of a bundle (`--bundle`,
+    /// plan step 6), with the bundle's item rules.
+    pub fn from_bundle(data: &BundleData<'_>) -> Self {
+        Self {
+            rules: data.item_rules().clone(),
+            rows: data
+                .base_names()
+                .filter_map(|n| data.base(n))
+                .map(|(n, rows)| (n.to_owned(), rows.to_vec()))
+                .collect(),
+            tags_unknown: data.tags_unknown(),
+            grafts: data.grafts().clone(),
+            properties: data.properties().clone(),
+        }
     }
 
     /// No rows, with the PoE1 item rules.
@@ -301,12 +317,26 @@ pub struct Tool {
 pub struct RunInputs {
     /// The extract.
     pub extract: Inputs,
+    /// The data bundle the pipeline read (`--bundle`), if any.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bundle: Option<BundleInputs>,
     /// The tool.
     pub tool: Tool,
     /// Content hash of every build, sorted.
     pub builds: Vec<String>,
     /// PoB text sources for `data-gap/legacy-text` (B4b).
     pub pob: Vec<categorize::PobSource>,
+}
+
+/// The bundle a `--bundle` run read.
+#[derive(Debug, Clone, Serialize)]
+pub struct BundleInputs {
+    /// `poe1` or `poe2`.
+    pub game: String,
+    /// The bundle's Steam build.
+    pub steam_build: Option<u64>,
+    /// SHA-256 of the install's bundle index, as the manifest records it.
+    pub index_sha256: String,
 }
 
 /// Counts of one group of lines.
@@ -1051,6 +1081,7 @@ pub fn run(
     game: &GameText,
     builds: &[Build],
     tool: Tool,
+    bundle: Option<&BundleData<'_>>,
 ) -> Result<(Summary, Report), String> {
     if extract.inputs.game != "poe1" {
         return Err(format!(
@@ -1058,42 +1089,16 @@ pub fn run(
             extract.inputs.game
         ));
     }
-    let mut scopes: BTreeMap<&str, Scope<'_>> = BTreeMap::new();
-    for name in bases.item_rules().scopes() {
-        let file = format!("{name}.txt");
-        let path = extract
-            .files
-            .iter()
-            .find(|p| {
-                p.rsplit('/')
-                    .next()
-                    .is_some_and(|f| f.eq_ignore_ascii_case(&file))
-            })
-            .ok_or_else(|| format!("{file}: not in the extract"))?;
-        let scope = extract
-            .set
-            .scope(path)
-            .map_err(|e| format!("{path}: {} ({e})", e.code()))?;
-        scopes.insert(name, scope);
-    }
-    let indexes: BTreeMap<&str, Index<'_>> = scopes
-        .iter()
-        .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
-        .collect();
-    let chains: BTreeMap<&str, BTreeSet<String>> = scopes
-        .iter()
-        .map(|(name, scope)| {
-            (
-                *name,
-                scope.chain().iter().map(|f| f.source.clone()).collect(),
-            )
-        })
-        .collect();
+    let (indexes, chains, compositions, compositions_missing) = match bundle {
+        Some(data) => bundle_inputs(data)?,
+        None => extract_inputs(extract, lookup, bases, game)?,
+    };
     let corpus = Corpus {
         bases,
         mods,
         indexes: &indexes,
         chains: &chains,
+        compositions: &compositions,
         game,
     };
 
@@ -1110,20 +1115,18 @@ pub fn run(
         essence_rows_unknown,
         bases_with_unknown_tags: bases.tags_unknown,
         colour_code_in_game_text: game.colour_code_in_game_text,
-        compositions: game
-            .compositions
+        compositions: compositions
             .iter()
             .map(|c| (c.id.clone(), c.stat.clone()))
             .collect(),
-        compositions_missing: game.compositions_missing.clone(),
+        compositions_missing,
         graft_bases: bases.grafts.len(),
         graft_inputs: grafts::inputs(&bases.grafts),
         property_inputs: bases.properties.inputs(),
         property_missing: properties::missing(&bases.properties),
         resolved_kinds: BTreeMap::new(),
         adapted: BTreeMap::new(),
-        composition_rows: game
-            .compositions
+        composition_rows: compositions
             .iter()
             .map(|c| (c.stat.clone(), mod_filter::eldritch_share(mods, &c.stat)))
             .collect(),
@@ -1186,9 +1189,99 @@ pub fn run(
     }
     s.inputs.tool = tool;
     s.inputs.extract = extract.inputs.clone();
+    s.inputs.bundle = bundle.map(|d| {
+        let m = &d.bundle().manifest;
+        BundleInputs {
+            game: m.game.clone(),
+            steam_build: m.source.steam_build,
+            index_sha256: m.source.index_sha256.clone(),
+        }
+    });
     s.inputs.pob = game.pob_sources();
     finish_rate(&mut s, &distinct);
     Ok((s, report))
+}
+
+/// Scope name to index, scope name to its chain's sources, the
+/// compositions, and the composition IDs not read.
+type PipelineInputs<'i> = (
+    BTreeMap<&'i str, Index<'i>>,
+    BTreeMap<&'i str, BTreeSet<String>>,
+    Vec<Composition>,
+    Vec<String>,
+);
+
+/// The pipeline's indexes and texts from the extract (Spike B's inputs).
+fn extract_inputs<'i>(
+    extract: &'i Extract,
+    lookup: &TableLookup,
+    bases: &'i Bases,
+    game: &GameText,
+) -> Result<PipelineInputs<'i>, String> {
+    let mut scopes: BTreeMap<&str, Scope<'_>> = BTreeMap::new();
+    for name in bases.item_rules().scopes() {
+        let file = format!("{name}.txt");
+        let path = extract
+            .files
+            .iter()
+            .find(|p| {
+                p.rsplit('/')
+                    .next()
+                    .is_some_and(|f| f.eq_ignore_ascii_case(&file))
+            })
+            .ok_or_else(|| format!("{file}: not in the extract"))?;
+        let scope = extract
+            .set
+            .scope(path)
+            .map_err(|e| format!("{path}: {} ({e})", e.code()))?;
+        scopes.insert(name, scope);
+    }
+    let indexes = scopes
+        .iter()
+        .map(|(name, scope)| (*name, Index::build_with(scope, lookup)))
+        .collect();
+    let chains = scopes
+        .iter()
+        .map(|(name, scope)| {
+            (
+                *name,
+                scope.chain().iter().map(|f| f.source.clone()).collect(),
+            )
+        })
+        .collect();
+    Ok((
+        indexes,
+        chains,
+        game.compositions.clone(),
+        game.compositions_missing.clone(),
+    ))
+}
+
+/// The pipeline's indexes and texts from a bundle (`--bundle`).
+fn bundle_inputs<'i>(data: &BundleData<'i>) -> Result<PipelineInputs<'i>, String> {
+    let b = data.bundle();
+    let indexes = data.indexes().map_err(|e| format!("{} ({e})", e.code()))?;
+    let mut chains = BTreeMap::new();
+    for name in b.item_rules.scopes() {
+        let chain = b
+            .scope_root(name)
+            .ok()
+            .and_then(|root| b.stat_descriptions.scope(root).ok())
+            .ok_or_else(|| format!("{name}: no scope chain"))?;
+        chains.insert(
+            name,
+            chain.chain().iter().map(|f| f.source.clone()).collect(),
+        );
+    }
+    Ok((
+        indexes,
+        chains,
+        data.compositions().to_vec(),
+        data.compositions_missing()
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+    ))
 }
 
 /// What every item of the run is resolved and categorized with.
@@ -1198,6 +1291,8 @@ struct Corpus<'c, 'i> {
     indexes: &'c BTreeMap<&'c str, Index<'i>>,
     /// Scope name to the sources of its chain's files.
     chains: &'c BTreeMap<&'c str, BTreeSet<String>>,
+    /// The composition wrappers the pipeline reads.
+    compositions: &'c [Composition],
     game: &'c GameText,
 }
 
@@ -1343,7 +1438,7 @@ fn count_item(
         index,
         found.as_ref().err().map(String::as_str),
         ctx.as_ref(),
-        &corpus.game.compositions,
+        corpus.compositions,
     );
     if let Ok(f) = &found {
         for (record, _) in &mut records {

@@ -135,6 +135,7 @@ fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
         &game,
         builds,
         Tool::default(),
+        None,
     )
     .unwrap()
 }
@@ -594,6 +595,7 @@ fn run_should_meet_the_gate_when_every_input_is_recorded_and_lines_resolve() {
         &game,
         &[Build::new(xml.as_bytes().to_vec())],
         tool,
+        None,
     )
     .unwrap();
     assert_eq!((s.rate.resolved, s.rate.denominator), (1, 1));

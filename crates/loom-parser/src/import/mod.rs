@@ -16,8 +16,11 @@
 //!   (`granted-skill`, `item-property`, `catalyst-quality`; P2-2d).
 //! - [`tolerance`]: the `case-folded` and `split-section` import
 //!   tolerances (P2-2d).
+//! - [`bundle`]: [`BundleData`], the pipeline's data from a validated
+//!   data bundle (P2-6a).
 
 pub mod base;
+pub mod bundle;
 pub mod grafts;
 pub mod mods;
 pub mod properties;
@@ -26,3 +29,4 @@ pub mod tolerance;
 pub use base::{
     BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, TextRules, find_base,
 };
+pub use bundle::BundleData;
