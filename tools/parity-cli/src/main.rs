@@ -447,7 +447,7 @@ fn resolve_corpus(
         commit: git(&["rev-parse", "HEAD"]),
         dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
     };
-    let (summary, report) = resolve_corpus::run(
+    let (summary, report, check) = resolve_corpus::run(
         &loaded,
         &lookup,
         lookup_report,
@@ -462,7 +462,22 @@ fn resolve_corpus(
     let json =
         serde_json::to_string_pretty(&(&summary.rate, &summary.gate)).map_err(|e| e.to_string())?;
     println!("{json}");
-    Ok(summary.gate.met && summary.unreadable_builds.is_empty())
+    // `--bundle`: the core's `resolve_build` against the harness, per line.
+    let check_equal = match &check {
+        Some(c) => {
+            let path = out.join("resolve-build-check.json");
+            let mut text = serde_json::to_string_pretty(c).map_err(|e| e.to_string())?;
+            text.push('\n');
+            std::fs::write(&path, text).map_err(|e| format!("{}: {e}", path.display()))?;
+            println!(
+                "resolve_build: {} of {} modifier lines equal the harness",
+                c.equal, c.lines
+            );
+            c.differences.is_empty()
+        }
+        None => true,
+    };
+    Ok(summary.gate.met && summary.unreadable_builds.is_empty() && check_equal)
 }
 
 fn oracle_verify(manifest: &Path, oracle_dir: &Path) -> ExitCode {

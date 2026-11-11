@@ -9,7 +9,7 @@
 mod resolution;
 
 pub use resolution::{
-    Adapted, Exclusion, LineResolution, PropertyValue, Resolved, StatLine, StatValue,
+    Adapted, Exclusion, LineResolution, NoBase, PropertyValue, Resolved, StatLine, StatValue,
     TypedResolution, UnresolvedReason,
 };
 

@@ -144,6 +144,33 @@ pub enum UnresolvedReason {
     /// More than one description fits, and the item cannot choose; the
     /// candidates' stats, in description order.
     Ambiguous(Vec<Vec<StatId>>),
+    /// The item has no base in the game data, so the line has no
+    /// stat-description scope to resolve in.
+    NoBase(NoBase),
+}
+
+/// Why an item has no base.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NoBase {
+    /// The import adapter named no base (no base line, or a name that
+    /// holds no base name, or several equally).
+    Unnamed,
+    /// The named base is not in the game data.
+    NotFound,
+    /// The base's data rows give more than one stat-description scope.
+    ScopeConflict,
+}
+
+impl NoBase {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Unnamed => "unnamed",
+            Self::NotFound => "not-found",
+            Self::ScopeConflict => "scope-conflict",
+        }
+    }
 }
 
 impl UnresolvedReason {
@@ -155,6 +182,7 @@ impl UnresolvedReason {
             Self::NoVariantFits => "no-variant-fits",
             Self::OnlyShadowed => "only-shadowed",
             Self::Ambiguous(_) => "ambiguous",
+            Self::NoBase(_) => "no-base",
         }
     }
 }

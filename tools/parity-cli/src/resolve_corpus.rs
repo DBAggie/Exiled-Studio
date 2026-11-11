@@ -58,15 +58,20 @@ use std::collections::{BTreeMap, BTreeSet};
 use loom_data::stat_desc::{Hand, Scope};
 use loom_domain::{ItemBody as Item, LineKind, LineResolution, ModifierLine as Modifier, Rarity};
 use loom_parser::import::{
-    BaseError, BaseQuery, BaseRow, BundleData, FoundBase, ItemData, ItemRules, find_base,
+    BaseError, BaseQuery, BaseRow, BundleData, FoundBase, ItemBaseName, ItemData, ItemRules,
+    Resolver, find_base,
 };
 use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
 };
-use loom_serialization::legacy::pob_item::{self, BaseMatch};
+use loom_serialization::legacy::pob_item;
 use serde::Serialize;
 use sha2::{Digest, Sha256};
+
+mod build_check;
+
+pub use build_check::BuildCheck;
 
 use crate::categorize::{self, GameText, LineFacts};
 use crate::extract::{Extract, Inputs, Read, Table};
@@ -217,19 +222,11 @@ impl Bases {
     /// The item's base: its rows and scope, or why there is none. The name
     /// follows PoB's rules (`pob_item`); the lookup is the shared one.
     fn find(&self, item: &Item) -> Result<FoundBase<'_>, String> {
-        let rarity = item.rarity.unwrap_or(Rarity::Unique);
-        let name = match (&item.base, &item.name) {
-            (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
-            (_, Some(name)) => match pob_item::magic_base(name, self.base_names()) {
-                BaseMatch::One(base) => base,
-                BaseMatch::None => return Err("no-base-in-name".to_owned()),
-                BaseMatch::Tie(_) => return Err("tie".to_owned()),
-            },
-            _ => return Err("no-name".to_owned()),
-        };
+        let (name, fallback) =
+            pob_item::item_base(item, self.base_names()).map_err(|e| e.name().to_owned())?;
         let query = BaseQuery {
             name: &name,
-            fallback: pob_item::suffix_removed(&name),
+            fallback: fallback.as_deref(),
         };
         find_base(self, query).map_err(|e| {
             // The Spike B report's names for the shared lookup's errors.
@@ -1082,7 +1079,7 @@ pub fn run(
     builds: &[Build],
     tool: Tool,
     bundle: Option<&BundleData<'_>>,
-) -> Result<(Summary, Report), String> {
+) -> Result<(Summary, Report, Option<BuildCheck>), String> {
     if extract.inputs.game != "poe1" {
         return Err(format!(
             "resolve-corpus reads PoE1 builds; the extract is {}",
@@ -1093,6 +1090,11 @@ pub fn run(
         Some(data) => bundle_inputs(data)?,
         None => extract_inputs(extract, lookup, bases, game)?,
     };
+    let resolver = bundle
+        .map(Resolver::new)
+        .transpose()
+        .map_err(|e| format!("{} ({e})", e.code()))?;
+    let mut check = resolver.as_ref().map(|_| BuildCheck::default());
     let corpus = Corpus {
         bases,
         mods,
@@ -1100,6 +1102,7 @@ pub fn run(
         chains: &chains,
         compositions: &compositions,
         game,
+        resolver: resolver.as_ref(),
     };
 
     let (essence_rows_known, essence_rows_unknown) = mods.essence_rows();
@@ -1182,7 +1185,13 @@ pub fn run(
                 *s.unsupported_features.entry(feature).or_default() += n;
             }
             let item = pob_item::to_domain(&pob);
-            let record = count_item(&mut s, &mut distinct, (n, &item, ranges), &corpus);
+            let record = count_item(
+                &mut s,
+                &mut distinct,
+                (n, &item, ranges),
+                &corpus,
+                check.as_mut().map(|c| (c, build.hash.as_str())),
+            );
             items.push(record);
         }
         report.builds.insert(build.hash.clone(), items);
@@ -1199,7 +1208,7 @@ pub fn run(
     });
     s.inputs.pob = game.pob_sources();
     finish_rate(&mut s, &distinct);
-    Ok((s, report))
+    Ok((s, report, check))
 }
 
 /// Scope name to index, scope name to its chain's sources, the
@@ -1294,6 +1303,8 @@ struct Corpus<'c, 'i> {
     /// The composition wrappers the pipeline reads.
     compositions: &'c [Composition],
     game: &'c GameText,
+    /// The core pipeline, for the cross-check (`--bundle` only).
+    resolver: Option<&'c Resolver<'c, 'i>>,
 }
 
 /// Resolves a graft's `Uses level {1} {0}` line as a granted skill
@@ -1369,6 +1380,7 @@ fn count_item(
     distinct: &mut BTreeMap<(String, String), BTreeSet<String>>,
     (n, item, ranges): (usize, &Item, usize),
     corpus: &Corpus<'_, '_>,
+    check: Option<(&mut BuildCheck, &str)>,
 ) -> ItemRecord {
     let (bases, mods, indexes) = (corpus.bases, corpus.mods, corpus.indexes);
     s.items += 1;
@@ -1447,6 +1459,15 @@ fn count_item(
     }
     for (record, _) in &mut records {
         item_property(record, &bases.properties);
+    }
+    if let (Some((check, build)), Some(resolver)) = (check, corpus.resolver) {
+        let mut body = item.clone();
+        let base = pob_item::item_base(item, bases.base_names())
+            .ok()
+            .map(|(name, fallback)| ItemBaseName { name, fallback });
+        resolver.resolve_item(&mut body, base.as_ref());
+        let lines: Vec<LineRecord> = records.iter().map(|(r, _)| r.clone()).collect();
+        check.compare(build, n, &body, &lines);
     }
     let empty = BTreeSet::new();
     let chain = found

@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 2, 2, 3, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 11, 3, 3, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
@@ -84,7 +84,7 @@ fn poe2_bundle_should_load_into_the_same_types_without_a_poe1_section() {
     let b = load(&source("bundle-poe2").unwrap()).unwrap();
     assert_eq!(
         (b.game, b.poe1.is_none(), b.mods.len()),
-        (Game::Poe2, true, 2)
+        (Game::Poe2, true, 3)
     );
 }
 

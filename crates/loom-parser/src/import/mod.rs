@@ -20,6 +20,7 @@
 //!   data bundle (P2-6a).
 
 pub mod base;
+pub mod build;
 pub mod bundle;
 pub mod grafts;
 pub mod mods;
@@ -29,4 +30,5 @@ pub mod tolerance;
 pub use base::{
     BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, TextRules, find_base,
 };
+pub use build::{ItemBaseName, ResolveError, Resolver, data_version, resolve_build};
 pub use bundle::BundleData;
