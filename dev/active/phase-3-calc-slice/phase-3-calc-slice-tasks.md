@@ -46,7 +46,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Field states, `UnsupportedReason`, `CALC_*`, cancellation hook, `math`
 - [x] Property tests; calc PoE1-only names in `POE1_ONLY`; wasm32
 - [x] `code-architecture-reviewer` run; findings applied (context file)
-- [ ] Open PR
+- [x] Open PR: #68 (base `dev`)
 
 ## P3-13: calc result document v1 (right after P3-4)
 - [ ] DTO, golden bytes, schema and TypeScript, cross-platform job
