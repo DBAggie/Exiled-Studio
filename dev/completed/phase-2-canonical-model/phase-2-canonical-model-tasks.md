@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
+Last Updated: 2026-11-11 (PR P2-11: Phase 2 report and gate verdict; Phase 2 complete)
 
 # Phase 2: tasks
 
@@ -132,5 +132,7 @@ Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
 - [x] Open PR (#57, base `feat/p2-9-migrations-persistence`); write the PR number into the docs right after
 
 ## PR P2-11: report and gate (step 11)
-- [ ] `docs/phase-2/phase-2-report.md`, scrubbed summaries, gate verdict
-- [ ] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `docs/phase-2/phase-2-report.md`, gate verdict: met; maintainer-run evidence re-run at `3982838`, equal to the committed summaries (none replaced)
+- [x] Handoff, CLAUDE.md, ACTION-PLAN; move the folder to `dev/completed/`
+- [x] `code-architecture-reviewer`: no blockers; report precision, `ModDomain` in the gate 3c scan, CI run recorded (context file)
+- [ ] Open PR (base `feat/p2-10-share-codes`); write the PR number into the docs right after

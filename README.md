@@ -4,7 +4,7 @@ An independent, open-source build planner for Path of Exile, written in Rust wit
 
 > **Not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.** Exiled Studio is a separate project with its own governance. Path of Building is used only as a pinned regression reference.
 
-**Status: pre-release scaffold.** The repository has a workspace, CI, and contributor rules, but no build-planning features yet. The three spikes (game-data extraction, text-to-stat-ID resolution, and the legacy PoB oracle harness) have met their gates; next is Phase 2, the canonical build model and data (see `docs/plan/ACTION-PLAN.md`). The name gets a final trademark check before the first release.
+**Status: pre-release scaffold.** The repository has a workspace, CI, and contributor rules, but no build-planning features yet. The three spikes (game-data extraction, text-to-stat-ID resolution, and the legacy PoB oracle harness) have met their gates, and so has Phase 2, the canonical build model and data (import and export of PoB builds and share codes, the successor's JSON build document, game-data bundles; no calculations yet; `docs/phase-2/phase-2-report.md`). Next is Phase 3, the first calculations (see `docs/plan/ACTION-PLAN.md`). The name gets a final trademark check before the first release.
 
 ## Principles
 - The game is the source of truth. Path of Building v2.67.2 is a pinned regression oracle; every intentional difference is recorded with evidence.
