@@ -110,7 +110,7 @@ Last Updated: 2026-11-10 (PR P2-7: DTO v1 and generated schemas)
 - [x] `dto-hashes` and CI `dto cross-platform` (in-session: Windows and WSL Linux identical); `cargo deny` ok
 - [x] Gate 3b: resolved synthetic builds round-trip through JSON
 - [x] `code-architecture-reviewer` (resumed after an API rate limit): 1 blocker (the banner's backticks under `sh`) and 2 should-fix (read the header before the strict parse, with `from_value`; `DTO_TOO_DEEP`) applied, plus nits; context file
-- [ ] Open PR (base `feat/p2-6b-resolve-build`); write the PR number into the docs right after
+- [x] Open PR (#54, base `feat/p2-6b-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-8: `build-round-trip` and CI gate job (step 8)
 - [ ] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; PoE1-identifier scan in the gate job
