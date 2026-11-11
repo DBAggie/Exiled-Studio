@@ -1,6 +1,6 @@
 # Phase 2, step 8: the round-trip gate (`build-round-trip`)
 
-Plan step 8 and gates 1, 2, and 3b (`dev/active/phase-2-canonical-model/phase-2-canonical-model-plan.md`). The command and its checks are documented in `tools/parity-cli/src/build_round_trip.rs` (module docs) and in `loom-parity-cli`'s usage text.
+Plan step 8 and gates 1, 2, and 3b (`dev/completed/phase-2-canonical-model/phase-2-canonical-model-plan.md`). The command and its checks are documented in `tools/parity-cli/src/build_round_trip.rs` (module docs) and in `loom-parity-cli`'s usage text.
 
 ## What runs
 For each build, `loom-parity-cli build-round-trip`:

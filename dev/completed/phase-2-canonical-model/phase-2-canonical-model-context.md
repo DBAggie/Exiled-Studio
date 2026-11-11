@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
+Last Updated: 2026-11-11 (PR P2-11: Phase 2 report and gate verdict; Phase 2 complete)
 
 # Phase 2: context
 
@@ -477,3 +477,26 @@ The first run stopped on an API rate limit; it was resumed on the committed bran
 - **Should-fix, not applied:** finding 5 (`read_with`'s non-header branch): kept, see "Decisions in P2-9".
 - **Nits, applied:** `Migrations::new` documents that a loaded chain ends at `CURRENT`; `skip_while` and `saturating_add` in `run`; docs on links at the target, permissions, Windows folder flush; tests for a missing folder and all temporary names taken.
 - **Nits, not done:** a step changing `format` (the v1 reader refuses it anyway); `save` returning a hash for lost-update checks, stale `.loom-tmp` sweeping, Windows rename retries (Phase 4, with autosave and the single-writer task); the cross-crate `include_str!` of the v1 golden file in `loom-persistence`'s tests (fine inside the workspace); a Unix symlink test.
+
+## Decisions in P2-10 (share codes, 2026-11-11)
+- **Format, from PoB v2.67.2:** `Classes/ImportTab.lua` line 504 writes `common.base64.encode(Deflate(xml)):gsub("+","-"):gsub("/","_")` (standard base64 with `=` padding, then the URL-safe swap); the readers (ImportTab line 631 and others) swap back and `Inflate`. `Deflate` is a zlib stream.
+- **Module:** `loom_serialization::legacy::share_code`, through `pob_xml::import`/`export`, so a code imports to exactly what its XML imports to. `encode` compresses at level 9 (deterministic with `miniz_oxide`); any level reads.
+- **Base64 is ours, not a crate:** the plan names only `miniz_oxide`. The codec is about 60 lines, linted for indexing, with RFC 4648 vectors and every-length round-trip tests. Reading is lenient where PoB is (both alphabets, ASCII whitespace, missing padding); a wrong padding length, data after padding, or a character outside both alphabets gives `IMPORT_SHARE_CODE_BASE64`. Non-zero bits after the last whole byte are ignored, as common decoders do.
+- **`miniz_oxide`:** 0.9 with `default-features = false, features = ["with-alloc"]` (no `simd-adler32`); 0.9.1 (with `adler2`) was already in `Cargo.lock` through another crate, as was 0.8.9 (`deny.toml` only warns on duplicates), so the lock file gains one dependency line and no package; MIT, Zlib, or Apache-2.0; builds for wasm32.
+- **Limits:** the code may be at most `MAX_CODE_BYTES` (`MAX_XML_BYTES / 3 * 4` plus 1 MiB, about 44 MiB: room for an incompressible 32 MiB document, tested) and is decoded in one pass straight into bytes; the inflated document may be at most `MAX_XML_BYTES` (32 MiB; the corpus and fixtures are under 2 MiB). Neither a long code nor a small one can allocate without bound (`IMPORT_SHARE_CODE_TOO_LARGE`). Bytes after the zlib stream are ignored, as zlib's one-shot reader ignores them.
+- **Codes:** `IMPORT_SHARE_CODE_BASE64`, `IMPORT_SHARE_CODE_ZLIB`, `IMPORT_SHARE_CODE_TOO_LARGE`, `IMPORT_SHARE_CODE_UTF8`, then `pob_xml`'s `IMPORT_XML`/`IMPORT_ROOT` unchanged (`ShareCodeError::code`).
+- **PoB-made codes:** `tools/oracle/adapter/share_code.lua` evaluates PoB's own expression on the pinned oracle runtime. Headless PoB stubs `Deflate` (returns `""`), so the script supplies zlib `compress2` (default level) from PoB's own `zlib1.dll`; the code's content (XML, base64, alphabet) is PoB's, the compressed bytes are zlib's. Recorded in the fixture README.
+- **PoB's `SaveDB` is not deterministic:** attribute order and the order of some children (`Calcs` `Section` and `Input`) follow Lua `pairs`; five runs of `minimal-level1` gave five different codes, 3,540 to 3,588 characters, from 15,806-byte XML. Each code is committed with its exact XML (`.gitattributes` `-text`), and the test compares the two, not a fresh run. Not a parity matter: semantic XML equality (decision 12) compares attributes as maps, and PoB's own reader does not depend on that order.
+- **Fixtures:** `minimal-level1` (ours) and `boneshatter-juggernaut` (credited community build; many items; not one of the three builds with ambiguous Vaal gems; loads Glorious Vanity, whose `.bin` cache write is refused as in Spike C). `SOURCES.md` says removing the build removes its share-code files.
+
+## code-architecture-reviewer (P2-10, 2026-11-11) summary
+- **No blockers.**
+- **Should-fix, applied:** the decoder had no length cap and kept a `u32` per character (a 100 MB paste cost about 400 MB before inflating): now `MAX_CODE_BYTES` and one-pass decoding; the fixture tests hard-coded 2 codes and 24 builds, which a removal on request (`SOURCES.md`, ADR-007 Amendment 1) would break: counts now follow the files present.
+- **Nits, applied:** the item check compares with the source fixture instead of exempting `minimal` by name; spare-bit leniency documented and tested (`Zh==`); comments on the truncating casts; the limit named in the `TOO_LARGE` message.
+- **Noted, not done:** showing that PoB's own reader accepts our codes (not in the Accept; possible with the oracle runtime later). The reviewer's "adds `adler2`" was checked: the lock file diff is one dependency line, no package.
+
+## P2-11: report and gate verdict (2026-11-11)
+- **Verdict: met** (`docs/phase-2/phase-2-report.md`, per item with its command).
+- **Re-run, not replaced:** the maintainer-run items were run again at `3982838` (the stack's tip) from a clean tree; each equals its committed record except the tool commit, so the committed summaries stay as they are and the report names the re-run. Outputs in `local/p2/p2-11/`.
+- **Review (code-architecture-reviewer):** no blockers; all numbers checked against the re-run. Applied: the CI run at the tip recorded; gate 3c's list gained `ModDomain` (the plan names it; the test lacked it), and the report says what the scan can and cannot catch; the public-fixture CI run has no bundle (said in the report and limitations); the 4,492 count is dated; Spike B's rate against the 397 unresolved lines explained; signing deferral against the IMPLEMENTATION-PLAN wording; doc headers.
+- **The cascade stops after P2-11:** Phase 3 needs its own plan PR, and the stack waits for the maintainer's merge.
