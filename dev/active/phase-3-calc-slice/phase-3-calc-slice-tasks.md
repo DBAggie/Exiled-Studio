@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (PR P3-0: plan written, plan-reviewer findings applied)
+Last Updated: 2026-11-11 (PR #59, P3-0: plan written, plan-reviewer findings applied)
 
 # Phase 3: calc slice (tasks)
 
@@ -8,7 +8,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] Plan, context, tasks in `dev/active/phase-3-calc-slice/`
 - [x] plan-reviewer run; all findings applied (context file)
 - [x] Handoff, CLAUDE.md Status, ACTION-PLAN Next action updated
-- [ ] Open PR (base `feat/p2-1-domain-model`, per the maintainer's 2026-11-11 instruction); record its number
+- [x] Open PR: #59 (base `feat/p2-1-domain-model`, per the maintainer's 2026-11-11 instruction)
 
 ## P3-1a: bundle v2 manifest and skill tables
 - [ ] v2 manifest (v1 still loads for import)
