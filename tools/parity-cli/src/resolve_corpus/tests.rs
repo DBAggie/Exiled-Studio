@@ -137,6 +137,7 @@ fn run_with(builds: &[Build], mods: &Mods) -> (Summary, Report) {
         Tool::default(),
         None,
     )
+    .map(|(s, r, _)| (s, r))
     .unwrap()
 }
 
@@ -586,7 +587,7 @@ fn run_should_meet_the_gate_when_every_input_is_recorded_and_lines_resolve() {
         commit: Some("abc".to_owned()),
         dirty: Some(false),
     };
-    let (s, _) = run(
+    let (s, _, _) = run(
         &extract,
         &lookup,
         lookup_report,

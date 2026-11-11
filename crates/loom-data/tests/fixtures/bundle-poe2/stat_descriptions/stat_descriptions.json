@@ -29,6 +29,256 @@
      "text": "{0:+d} to maximum Life"
     }
    ]
+  },
+  {
+   "handed": false,
+   "line": 3,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_accuracy_a"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 4,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Accuracy"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 5,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_accuracy_b"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 6,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Accuracy"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 7,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_evasion_a"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 8,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Evasion"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 9,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_evasion_b"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 10,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Evasion"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 11,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_strength"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": 5,
+       "min": 1
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 12,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Strength"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 13,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_shadow"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 14,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Shadow Test"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 15,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_shadow"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 16,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to Shadowed Text"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 17,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_first_half",
+    "test_second_half"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      },
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 18,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      },
+      {
+       "format": "+d",
+       "index": 1
+      }
+     ],
+     "text": "{0:+d} first half\n{1:+d} second half"
+    }
+   ]
   }
  ],
  "file_flags": [],

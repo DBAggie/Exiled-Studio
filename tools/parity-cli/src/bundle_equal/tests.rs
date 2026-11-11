@@ -43,7 +43,7 @@ fn bundle_data_should_equal_itself() {
     );
     assert_eq!(
         (report.equal(), report.mod_rows, report.base_names),
-        (true, 2, 3)
+        (true, 3, 3)
     );
 }
 
@@ -78,7 +78,7 @@ fn a_merged_mod_type_should_be_a_mismatch() {
         m.mod_type = Some(format!("T{n}"));
     }
     let data = BundleData::new(&split);
-    // The extract side puts both rows in one type.
+    // The extract side puts every row in one type.
     let mods = mods_of(&data, |_, r| r.mod_type = Some(7));
     let report = compare(
         &Bases::from_bundle(&data),
@@ -89,8 +89,11 @@ fn a_merged_mod_type_should_be_a_mismatch() {
     assert_eq!(
         (report.mismatches, report.listed),
         (
-            1,
-            vec!["mods[1] TestArmour1: mod type grouping differs".to_owned()]
+            2,
+            vec![
+                "mods[1] TestArmour1: mod type grouping differs".to_owned(),
+                "mods[2] TestAccuracy1: mod type grouping differs".to_owned(),
+            ]
         )
     );
 }

@@ -32,7 +32,7 @@ const CORE_CRATES: [&str; 5] = [
     "loom-serialization",
 ];
 
-const POE1_ONLY: [&str; 27] = [
+const POE1_ONLY: [&str; 28] = [
     "Bandit",
     "bandit",
     "Pantheon",
@@ -43,6 +43,8 @@ const POE1_ONLY: [&str; 27] = [
     "IndexableNonActiveSupportGems",
     "IndexableSkillGems",
     "DOMAIN_SCOPES",
+    // Plan gate 3c: the `ModDomain` and generation-type numbers (P2-11).
+    "ModDomain",
     "ModGenerationType",
     "ESSENCE_COLUMNS",
     "INFLUENCE_TYPES",

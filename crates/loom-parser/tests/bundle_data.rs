@@ -13,53 +13,16 @@
     reason = "a test over fixed fixtures; a failure should panic"
 )]
 
-use std::fs;
-use std::path::{Path, PathBuf};
+mod common;
 
+use std::path::PathBuf;
+
+use common::{bundle, source};
 use loom_data::bundle::poe1::{GraftBase, Grafts as BundleGrafts};
-use loom_data::bundle::{Bundle, ClientText, MemorySource, ModEntry, ModStat, validate};
+use loom_data::bundle::{Bundle, ClientText, ModEntry, ModStat, validate};
 use loom_parser::import::mods::Locality;
 use loom_parser::import::{BaseQuery, BundleData, ItemData, find_base};
 use loom_parser::resolve::Outcome;
-
-fn files(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.is_dir() {
-            files(&path, out);
-        } else {
-            out.push(path);
-        }
-    }
-}
-
-/// The bundle folder `root` as a memory source.
-fn source(root: &Path) -> MemorySource {
-    let mut paths = Vec::new();
-    files(root, &mut paths);
-    let mut src = MemorySource::new();
-    for p in paths {
-        let rel = p
-            .strip_prefix(root)
-            .unwrap()
-            .to_string_lossy()
-            .replace('\\', "/");
-        src.insert(rel, fs::read(&p).unwrap());
-    }
-    src
-}
-
-/// The validated fixture bundle `name`.
-fn bundle(name: &str) -> Bundle {
-    let src = source(
-        &Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../loom-data/tests/fixtures")
-            .join(name),
-    );
-    let report = validate::validate(&src);
-    assert!(report.is_valid(), "{name}: {:?}", report.codes());
-    Bundle::load(&src).unwrap()
-}
 
 fn mod_entry(id: &str, mod_type: Option<&str>, stats: &[(&str, i64, i64)]) -> ModEntry {
     ModEntry {
@@ -147,7 +110,8 @@ fn mods_should_split_unset_stats_and_number_types_and_classes() {
     let data = BundleData::new(&b);
     let mods = data.mods();
     let row = |n: usize| mods.row(n).unwrap();
-    let a = row(2);
+    // The fixture has 3 rows; the pushed ones are rows 3 to 5.
+    let a = row(3);
     assert_eq!(
         (
             mods.row_count(),
@@ -157,15 +121,15 @@ fn mods_should_split_unset_stats_and_number_types_and_classes() {
             a.essence_classes.clone(),
         ),
         (
-            5,
+            6,
             vec![("test_maximum_life".to_owned(), 1, 5)],
             vec!["test_local_armour".to_owned()],
             vec![0, 1],
             Some(vec![1]),
         )
     );
-    assert_eq!(a.mod_type, row(4).mod_type);
-    assert_ne!(a.mod_type, row(3).mod_type);
+    assert_eq!(a.mod_type, row(5).mod_type);
+    assert_ne!(a.mod_type, row(4).mod_type);
     assert_eq!(row(0).mod_type, None);
     assert_eq!(
         mods.locality.get("test_local_armour"),
@@ -194,7 +158,7 @@ fn poe1_section_should_give_grafts_gems_and_quality_types() {
             data.granted_gem("TestGraft1"),
             data.properties().inputs(),
         ),
-        ("TestGraft1", 5, Some("Test/Gems/Bolt"), (1, 0, 1))
+        ("TestGraft1", 5, Some("Test/Gems/Bolt"), (1, 1, 1))
     );
 }
 
