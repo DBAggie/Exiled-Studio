@@ -27,7 +27,8 @@ cd ui && pnpm install && pnpm build
 ## Repository map
 ```
 crates/        Rust workspace: core crates (domain, data, parser, calc, serialization) and host crates (persistence, app, integrations, tauri)
-tools/         maintainer tools: game-data extractor, parity (oracle) CLI
+tools/         maintainer tools: game-data extractor, parity (oracle) CLI, schema generator
+schemas/       generated JSON Schemas of the successor build document
 ui/            React + TypeScript + Vite frontend
 docs/adr/      Architecture Decision Records (authoritative) + index
 docs/plan/     ACTION-PLAN.md (authoritative sequence), IMPLEMENTATION-PLAN.md (detail)

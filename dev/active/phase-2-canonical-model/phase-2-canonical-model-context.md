@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-6b: `resolve_build`; stack #42 <- ... <- #52 <- P2-6b)
+Last Updated: 2026-11-10 (PR P2-7: DTO v1 and generated schemas)
 
 # Phase 2: context
 
@@ -402,3 +402,19 @@ All applied as docs and tests; no behavior change. Nit 1: `text_spacing` stays o
     - `ItemBaseName` repeats `BaseQuery` as an owned type;
     - `Resolver::new` now makes `resolve-corpus --bundle` fail on a bundle with skipped references, which is a behaviour change (a validated bundle has none);
     - there is no code registry in `docs/` to add the new codes to; they are documented on the types.
+
+## Decisions in P2-7 (DTO v1 and generated schemas, 2026-11-10)
+- **Module:** `loom_serialization::dto::v1` (`types.rs` DTOs, `convert.rs` both directions, `poe1.rs` the PoE1 choices, so the PoE1-identifier scan stays clean). `to_json(&Build)` and `from_json(&str)`; `Document { format: "loom-build", version: 1, build }`. DTO type names are the domain's (in their own module); the domain may change without changing them.
+- **Shape:** fields snake_case in declaration order; enums externally tagged with kebab-case names (a unit variant is a string, any other a one-key object); every list an array in model order; no maps. `Ordered<T>` is an array of `{"typed": T}` / `{"opaque": node}`; `Sourced<T>` is `{value, source?}`. An absent optional, and an empty `attributes`, `children`, `prolog`, `epilog`, `prefixes`, `text_spacing`, or `alternates`, is left out. `deny_unknown_fields` everywhere: a newer document's content is refused, never dropped (ADR-015).
+- **Numbers:** a finite `f64` is a JSON number in its shortest round-trip form; `serde_json`'s `float_roundtrip` feature makes it read back to the same bits (without it a rare value can be off by one ULP). A non-finite one is `{"f64_bits": "<16 lowercase hex>"}`, so NaN payloads and signs survive; a finite value written that way is refused (one form each). `usize` indices (`Continues.line`, `implicits`) are `u64` in the document and checked on read (`DTO_OUT_OF_RANGE`, reachable on 32-bit targets only).
+- **Errors (ADR-014):** `DTO_JSON` (not JSON or not the shape, unknown field), `DTO_FORMAT`, `DTO_VERSION`, `DTO_DOMAIN` (game-specific choices of another game), `DTO_ITEM_LINKS`, `DTO_OUT_OF_RANGE`, `DTO_NUMBER`. A new prefix next to decision 15's list: these are the document's own codes, below persistence (P2-9's `PERSIST_*` and `MIGRATE_*` wrap or precede them). `DTO_VERSION` is what a v1 parse says; P2-9's migration step decides `MIGRATE_TOO_NEW` before parsing.
+- **Links both ways:** reading checks every item's `check_links` (the file is untrusted). Writing checks them too and refuses (`DTO_ITEM_LINKS`), because a document that cannot be read back must not be saved. A build from the pipeline always passes.
+- **Schema:** `schemars` 1.2 behind the `schema` feature (only `tools/schema-gen` enables it; `cargo test --all-features` builds it too). Draft 2020-12. Generic types get stable names from their parameter (`PassiveSpecEntry`, `Sourced_uint32`) instead of schemars' numbered `Entry2`. No `$id` (no URL is ours yet). `schemas/build.v1.schema.json` is committed.
+- **TypeScript:** `json-schema-to-typescript` 16.0.0 (MIT, exact pin) in `ui/`; `pnpm generate:schema` writes `ui/src/generated/build.v1.ts` and runs prettier on it, so `format:check`, `lint`, and `tsc -b` pass on it unchanged.
+- **Validation test:** `boon` 0.6 (MIT or Apache-2.0; a dev-dependency of `tools/schema-gen` only) validates the golden synthetic documents, empty builds, and all 24 public fixture documents, and refuses 6 broken ones (unknown field, format, version, unknown variant, bad bits, missing required field).
+- **Determinism evidence:**
+  - golden files `crates/loom-serialization/src/dto/v1/testdata/poe1.json` and `poe2.json`: the exact bytes, checked by `cargo test` on every CI OS (`.gitattributes` keeps them LF). Regenerate with the ignored `write_golden_files` test;
+  - `loom-parity-cli dto-hashes <dir>...`: SHA-256 per public fixture document, also checking a second run and the read-back. CI's `rust` job runs it on Windows and Linux and the new `dto cross-platform` job diffs the two; in-session, Windows and WSL Ubuntu 24.04 gave identical output for all 24 documents.
+- **CI:** `dto-compare` (`dto cross-platform`) and `schema` (`schema freshness`: regenerates both and fails on any `git status` change) are in `ci-ok`. The Rust side is also checked by the `committed_schemas_should_be_fresh` test.
+- **Gate 3b:** `crates/loom-parser/tests/resolve_build.rs` `resolved_builds_should_round_trip_through_json`: the resolved synthetic PoE1 and PoE2 builds round-trip with the same bytes twice. `loom-parser` has `loom-serialization` as a dev-dependency for it (AGENTS.md notes that test-only edges may cross).
+- **For P2-8/P2-9:** `build-round-trip` can call `to_json`/`from_json` directly; migrations run on `serde_json::Value` before `Document` is parsed, keyed on `format` and `version`.

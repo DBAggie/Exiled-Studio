@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-6b: `resolve_build`)
+Last Updated: 2026-11-10 (PR P2-7: DTO v1 and generated schemas)
 
 # Phase 2: tasks
 
@@ -105,9 +105,12 @@ Last Updated: 2026-11-10 (PR P2-6b: `resolve_build`)
 - [x] Open PR (#53, base `feat/p2-6-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-7: DTO v1 and generated schemas (step 7)
-- [ ] DTOs, deterministic conversion
-- [ ] `tools/schema-gen`, JSON Schema, TypeScript; CI freshness check
-- [ ] Cross-OS hash comparison job in CI; `cargo deny`
+- [x] `loom_serialization::dto::v1` DTOs, deterministic conversion both ways (`to_json`, `from_json`, `DTO_*` codes); golden synthetic PoE1 and PoE2 documents; all 24 public fixtures round-trip
+- [x] `tools/schema-gen`, `schemas/build.v1.schema.json`, TypeScript (`pnpm generate:schema`); schema validation test (`boon`); CI `schema freshness`
+- [x] `dto-hashes` and CI `dto cross-platform` (in-session: Windows and WSL Linux identical); `cargo deny` ok
+- [x] Gate 3b: resolved synthetic builds round-trip through JSON
+- [ ] `code-architecture-reviewer` (first run stopped on an API rate limit; rerun before opening the PR)
+- [ ] Open PR (base `feat/p2-6b-resolve-build`); write the PR number into the docs right after
 
 ## PR P2-8: `build-round-trip` and CI gate job (step 8)
 - [ ] Harness: import, resolve, JSON, export, re-import, re-resolve; checks (a) to (d); mutation set; PoE1-identifier scan in the gate job

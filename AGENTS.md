@@ -25,7 +25,9 @@ crates/
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
+  schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
+schemas/              generated JSON Schemas of the successor documents (do not edit; CI checks freshness)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -36,6 +38,7 @@ Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
+- Dev-dependencies (tests only) may point across: `loom-parser`'s tests use `loom-serialization` to round-trip a resolved build through JSON (P2-7, gate 3b).
 
 **Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization) must:
 - build for `wasm32-unknown-unknown` (CI checks every PR; ADR-016);
@@ -56,6 +59,13 @@ cargo test --workspace --all-features --locked
 cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
+# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto, regenerate both;
+# CI (schema freshness) fails on any difference:
+cargo run -p loom-schema-gen            # writes schemas/*.schema.json (--check: exit 1 if stale)
+(cd ui && pnpm generate:schema)       # writes ui/src/generated/*.ts from the schema
+# The v1 build document of every PoB build in some folders: SHA-256 per document, checks a second run
+# and the read-back; CI compares Windows with Linux (dto cross-platform):
+cargo run -p loom-parity-cli -- dto-hashes tools/oracle/fixtures tools/oracle/fixtures/community
 
 # Maintainer only: extractor tests against a local game install (not in CI).
 # Needs the Oodle decoder installed separately (never a dependency; docs/spikes/spike-a-extraction.md):
