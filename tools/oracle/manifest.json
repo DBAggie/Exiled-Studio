@@ -21,7 +21,7 @@
     "module": "lua-utf8"
   },
   "adapter": {
-    "protocol": 3,
+    "protocol": 4,
     "breakdowns": [
       "Armour",
       "ChaosResist",

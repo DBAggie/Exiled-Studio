@@ -33,7 +33,7 @@ fn temp(name: &str) -> PathBuf {
 /// A canonical oracle output document.
 fn oracle_doc(main: Value, breakdowns: Value) -> Value {
     json!({
-        "protocol": 3, "stage": "done", "error": null, "partial": false,
+        "protocol": 4, "stage": "done", "error": null, "partial": false,
         "modules": {}, "settings": {}, "shims": [], "probe": {},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": breakdowns, "main_output": main
