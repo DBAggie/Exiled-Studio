@@ -18,11 +18,12 @@
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
-//! rules is the validator's job (plan step 4). The compressed distribution
+//! rules is the validator's job (`validate`, plan step 4). The compressed distribution
 //! container and real signatures come in Phase 5 (ADR-010).
 
 pub mod poe1;
 mod source;
+pub mod validate;
 
 use loom_domain::Game;
 use serde::de::DeserializeOwned;
@@ -410,6 +411,46 @@ impl Bundle {
             game,
             manifest,
         })
+    }
+}
+
+/// Why a scope of the item rules has no root file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum ScopeRootError {
+    /// No stat-description file has the scope's name.
+    #[error("no stat-description file")]
+    None,
+    /// Several files have it.
+    #[error("{0} files have the name")]
+    Several(usize),
+}
+
+impl Bundle {
+    /// The source path of the stat-description file whose name, without
+    /// folder or extension, is `scope` in any case (PoE1 writes `.txt`
+    /// sources, PoE2 `.csd`): the root of the scope's chain.
+    ///
+    /// # Errors
+    /// [`ScopeRootError`] unless exactly one file has the name.
+    pub fn scope_root(&self, scope: &str) -> Result<&str, ScopeRootError> {
+        let stem = |source: &str| -> String {
+            let name = source.rsplit('/').next().unwrap_or(source);
+            name.split_once('.')
+                .map_or(name, |(s, _)| s)
+                .to_ascii_lowercase()
+        };
+        let want = scope.to_ascii_lowercase();
+        let roots: Vec<&str> = self
+            .stat_descriptions
+            .files()
+            .map(|(_, f)| f.source.as_str())
+            .filter(|s| stem(s) == want)
+            .collect();
+        match roots.as_slice() {
+            [root] => Ok(root),
+            [] => Err(ScopeRootError::None),
+            more => Err(ScopeRootError::Several(more.len())),
+        }
     }
 }
 

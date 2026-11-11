@@ -630,9 +630,59 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     Ok((files, summary))
 }
 
+/// The tables `convert` reads for PoE1 only (the `poe1/` section and the
+/// essence classes), for gate 3d.
+#[cfg(test)]
+const POE1_ONLY_TABLES: [&str; 4] = [
+    "AlternateQualityTypes",
+    "BrequelGrafts",
+    "BrequelGraftGrantedSkillLevels",
+    "Essences",
+];
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Phase 2 gate 3d: the game-specific tables the bundle reads are the
+    /// ones the extractor extracts for PoE1 only (`tools/extractor/src/
+    /// extract.rs`, the `*_POE1` lists; the tools cannot depend on each
+    /// other, so the list is read as text).
+    #[test]
+    fn poe1_only_tables_should_be_in_the_extractor_poe1_lists() {
+        let source = include_str!("../../extractor/src/extract.rs");
+        // Each `pub const NAME: [&str; n] = [...];`, cut at its `];`.
+        let lists: Vec<(&str, &str)> = source
+            .split("pub const ")
+            .skip(1)
+            .filter_map(|c| {
+                let (name, rest) = c.split_once(':')?;
+                Some((name.trim(), rest.split_once("];")?.0))
+            })
+            .collect();
+        let poe1_lists: Vec<&str> = lists
+            .iter()
+            .filter(|(n, _)| n.ends_with("_POE1"))
+            .map(|(_, body)| *body)
+            .collect();
+        // No PoE1-only table is in a list extracted for both games.
+        for (name, body) in lists
+            .iter()
+            .filter(|(n, _)| ["SPIKE_TABLES", "LOOKUP_TABLES"].contains(n))
+        {
+            for t in POE1_ONLY_TABLES {
+                assert!(
+                    !body.contains(&format!("\"{t}\"")),
+                    "{t} is in the shared {name}"
+                );
+            }
+        }
+        let missing: Vec<&str> = POE1_ONLY_TABLES
+            .into_iter()
+            .filter(|t| !poe1_lists.iter().any(|l| l.contains(&format!("\"{t}\""))))
+            .collect();
+        assert_eq!(missing, [] as [&str; 0]);
+    }
 
     fn table(columns: &[&str]) -> Table {
         Table {
