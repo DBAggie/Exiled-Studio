@@ -57,7 +57,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::{Hand, Scope};
 use loom_domain::{ItemBody as Item, LineKind, LineResolution, ModifierLine as Modifier, Rarity};
-use loom_parser::import::{BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, find_base};
+use loom_parser::import::{
+    BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, find_base,
+};
 use loom_parser::resolve::compose::Composition;
 use loom_parser::resolve::{
     Candidate, Index, IndexStats, Outcome, RawValue, Resolution, Unresolved,
@@ -211,7 +213,14 @@ impl Bases {
             name: &name,
             fallback: pob_item::suffix_removed(&name),
         };
-        find_base(self, query).map_err(|e| e.name().to_owned())
+        find_base(self, query).map_err(|e| {
+            // The Spike B report's names for the shared lookup's errors.
+            match e {
+                BaseError::NotABase => "not-in-base-item-types",
+                BaseError::ScopeConflict => "scope-conflict",
+            }
+            .to_owned()
+        })
     }
 }
 

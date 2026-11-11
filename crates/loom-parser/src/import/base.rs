@@ -16,8 +16,8 @@ pub struct ItemRules {
     /// The stat-description scope root of every domain not listed in
     /// `domain_scopes` (for example `stat_descriptions`).
     pub default_scope: String,
-    /// Mod domains with their own scope root, in the order they are
-    /// tested.
+    /// Mod domains with their own scope root; the first entry of a domain
+    /// wins.
     pub domain_scopes: Vec<(i64, String)>,
 }
 
@@ -66,8 +66,9 @@ pub trait ItemData {
     /// Every base name, sorted, without repeats.
     fn base_names(&self) -> impl Iterator<Item = &str>;
 
-    /// A base name as the data stores it, with its rows in data order;
-    /// `None` when no row has the name.
+    /// A base name as the data stores it, with its rows in data order
+    /// (never empty); `None` when no row has the name. An empty slice is
+    /// read as no base.
     fn base(&self, name: &str) -> Option<(&str, &[BaseRow])>;
 }
 
@@ -91,12 +92,12 @@ pub enum BaseError {
 }
 
 impl BaseError {
-    /// Stable name (the corpus report's `unknown-base/<name>`).
+    /// Stable code (ADR-014).
     #[must_use]
-    pub const fn name(self) -> &'static str {
+    pub const fn code(self) -> &'static str {
         match self {
-            Self::NotABase => "not-in-base-item-types",
-            Self::ScopeConflict => "scope-conflict",
+            Self::NotABase => "IMPORT_BASE_NOT_FOUND",
+            Self::ScopeConflict => "IMPORT_BASE_SCOPE_CONFLICT",
         }
     }
 }
@@ -127,6 +128,9 @@ pub fn find_base<'d, D: ItemData>(
         (None, Some(f)) => (data.base(f).ok_or(BaseError::NotABase)?, true),
         (None, None) => return Err(BaseError::NotABase),
     };
+    if rows.is_empty() {
+        return Err(BaseError::NotABase);
+    }
     let rules = data.item_rules();
     let scopes: BTreeSet<&str> = rows
         .iter()

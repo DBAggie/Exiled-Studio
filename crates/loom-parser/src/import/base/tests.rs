@@ -124,9 +124,16 @@ fn item_rules_scopes_should_list_the_default_then_each_scope_once() {
 }
 
 #[test]
-fn base_error_names_should_match_the_corpus_report() {
+fn base_error_codes_should_be_stable() {
     assert_eq!(
-        [BaseError::NotABase.name(), BaseError::ScopeConflict.name()],
-        ["not-in-base-item-types", "scope-conflict"]
+        [BaseError::NotABase.code(), BaseError::ScopeConflict.code()],
+        ["IMPORT_BASE_NOT_FOUND", "IMPORT_BASE_SCOPE_CONFLICT"]
     );
+}
+
+#[test]
+fn find_base_should_read_a_name_without_rows_as_no_base() {
+    let mut d = data(&[]);
+    d.bases.insert("Empty".to_owned(), Vec::new());
+    assert_eq!(find_base(&d, query("Empty")), Err(BaseError::NotABase));
 }

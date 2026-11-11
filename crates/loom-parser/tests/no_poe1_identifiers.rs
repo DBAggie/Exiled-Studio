@@ -1,11 +1,15 @@
 //! Phase 2 gate 3c (plan, "Gate"): shared core crates name no PoE1-only
 //! identifier outside the places allowed to (ADR-001; plan decision 5).
 //!
-//! Scanned: the `src/` trees of every core crate, test files excluded
-//! (`tests.rs` and `*/tests/*`, which may build PoE1 data on purpose).
-//! Allowed: `loom-domain/src/poe1.rs` (the PoE1-only choices) and
-//! `loom-serialization/src/legacy/` (PoB's formats). A `poe1` module of a
-//! shared crate is allowed too, when one exists.
+//! Scanned: the `src/` trees of every core crate, except unit-test files
+//! named `tests.rs` (which may build PoE1 data on purpose). Allowed by
+//! design: any `poe1` module (`poe1.rs` or `poe1/`) of a core crate, which
+//! is where PoE1-only content belongs (today `loom-domain/src/poe1.rs`),
+//! and `loom-serialization/src/legacy/` (PoB's formats).
+//!
+//! A heuristic: it matches substrings, so it cannot see a renamed
+//! constant, and prose naming a listed word fails it too (rephrase, or
+//! move the text to a `poe1` module). The list grows with each lift PR.
 //!
 //! The list: PoE1-only build choices, PoE1-only table names, and the names
 //! the Spike B harness gave to PoE1 data constants (mod domains,
@@ -48,12 +52,10 @@ const POE1_ONLY: [&str; 15] = [
 
 fn allowed(path: &Path) -> bool {
     let p = path.to_string_lossy().replace('\\', "/");
-    p.ends_with("/loom-domain/src/poe1.rs")
-        || p.contains("/loom-serialization/src/legacy/")
+    p.contains("/loom-serialization/src/legacy/")
         || p.ends_with("/poe1.rs")
         || p.contains("/poe1/")
         || p.ends_with("/tests.rs")
-        || p.contains("/tests/")
 }
 
 fn rust_files(dir: &Path, out: &mut Vec<PathBuf>) -> std::io::Result<()> {
