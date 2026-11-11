@@ -1,0 +1,38 @@
+[
+ {
+  "domain": 1,
+  "generation": 1,
+  "id": "TestLife1",
+  "spawn": [
+   {
+    "tag": "default",
+    "weight": 1000
+   }
+  ],
+  "stats": [
+   {
+    "max": 19,
+    "min": 10,
+    "stat": "test_maximum_life"
+   }
+  ]
+ },
+ {
+  "domain": 1,
+  "generation": 2,
+  "id": "TestArmour1",
+  "spawn": [
+   {
+    "tag": "armour",
+    "weight": 500
+   }
+  ],
+  "stats": [
+   {
+    "max": 9,
+    "min": 5,
+    "stat": "test_local_armour"
+   }
+  ]
+ }
+]

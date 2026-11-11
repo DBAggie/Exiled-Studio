@@ -1,0 +1,9 @@
+[
+ {
+  "id": "test_maximum_life"
+ },
+ {
+  "id": "test_local_armour",
+  "local": true
+ }
+]

@@ -307,6 +307,14 @@ mod tests {
 
     use super::*;
 
+    /// The PoE1 rules survive the bundle's JSON form (`data/item_rules.json`).
+    #[test]
+    fn item_rules_should_round_trip_through_bundle_json() {
+        let rules = item_rules();
+        let json = serde_json::to_string(&rules).unwrap();
+        assert_eq!(serde_json::from_str::<ItemRules>(&json).unwrap(), rules);
+    }
+
     #[test]
     fn mod_rules_should_validate() {
         assert_eq!(item_rules().mods.validate(), Ok(()));

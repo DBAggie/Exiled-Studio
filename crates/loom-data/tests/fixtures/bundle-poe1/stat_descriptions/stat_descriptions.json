@@ -1,0 +1,39 @@
+{
+ "descriptions": [
+  {
+   "handed": false,
+   "line": 1,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "test_maximum_life"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 2,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} to maximum Life"
+    }
+   ]
+  }
+ ],
+ "file_flags": [],
+ "includes": [],
+ "languages": {},
+ "no_description": [],
+ "source": "Metadata/StatDescriptions/stat_descriptions.txt"
+}

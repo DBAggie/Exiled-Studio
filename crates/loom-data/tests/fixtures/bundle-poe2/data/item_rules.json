@@ -1,0 +1,98 @@
+{
+ "default_scope": "stat_descriptions",
+ "domain_scopes": [
+  [
+   7,
+   "charm_stat_descriptions"
+  ]
+ ],
+ "mods": {
+  "base_implicit": {
+   "flags": [],
+   "section": "implicit"
+  },
+  "fits": [
+   {
+    "clauses": [
+     {
+      "craft_class": false,
+      "domains": {
+       "fixed": [],
+       "own": true,
+       "related": []
+      },
+      "essence_class": false,
+      "generations": [
+       1,
+       2
+      ]
+     }
+    ],
+    "flag": null,
+    "section": "explicit",
+    "unique": null
+   },
+   {
+    "clauses": [
+     {
+      "craft_class": false,
+      "domains": {
+       "fixed": [],
+       "own": true,
+       "related": []
+      },
+      "essence_class": false,
+      "generations": [
+       3
+      ]
+     }
+    ],
+    "flag": null,
+    "section": "implicit",
+    "unique": null
+   },
+   {
+    "clauses": [
+     {
+      "craft_class": false,
+      "domains": {
+       "fixed": [
+        1
+       ],
+       "own": true,
+       "related": []
+      },
+      "essence_class": false,
+      "generations": [
+       10
+      ]
+     }
+    ],
+    "flag": null,
+    "section": "enchant",
+    "unique": null
+   }
+  ],
+  "influences": [],
+  "local_carriers": {
+   "item": "armour",
+   "weapon": "weapon"
+  },
+  "no_spawn_flags": [
+   "crafted"
+  ],
+  "spawn_excluded_generations": [],
+  "spawn_exclusion": {
+   "flags": [],
+   "section": "implicit"
+  }
+ },
+ "text": {
+  "compositions": [],
+  "granted_skill_wrapper": null,
+  "label_ids": [],
+  "property_ids": [
+   "DisplayLastsSeconds"
+  ]
+ }
+}

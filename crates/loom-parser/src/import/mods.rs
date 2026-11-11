@@ -28,172 +28,19 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::stat_desc::Condition;
-use loom_domain::{InfluenceId, ModSection, ModifierLine};
+use loom_domain::{ModSection, ModifierLine};
 
 use super::base::BaseRow;
 use crate::resolve::{Candidate, RawValue, ResolvedStat};
 
-/// Which mod domains a row may have, relative to a base row's domain.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct DomainMatch {
-    /// The base's own domain.
-    pub own: bool,
-    /// These domains, whatever the base's.
-    pub fixed: Vec<i64>,
-    /// `(row domain, base domains)`: the row domain on bases of these
-    /// domains.
-    pub related: Vec<(i64, Vec<i64>)>,
-}
+pub use loom_data::rules::{
+    DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, ModRulesError, Unflagged,
+};
 
-impl DomainMatch {
-    fn admits(&self, row: i64, base: i64) -> bool {
-        (self.own && row == base)
-            || self.fixed.contains(&row)
-            || self
-                .related
-                .iter()
-                .any(|(r, bases)| *r == row && bases.contains(&base))
-    }
-}
-
-/// One way a row fits a line.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct FitClause {
-    /// Generation types the row may have.
-    pub generations: Vec<i64>,
-    /// Domains the row may have.
-    pub domains: DomainMatch,
-    /// The row's crafting class restriction must be empty or name the
-    /// base's item class.
-    pub craft_class: bool,
-    /// An essence-only row needs the base's class among the classes an
-    /// essence puts it on, when known.
-    pub essence_class: bool,
-}
-
-/// The fit rule of the lines of one section (and flag, and rarity).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct FitRule {
-    /// The section.
-    pub section: ModSection,
-    /// A line flag (prefix key) the line must carry, if any.
-    pub flag: Option<String>,
-    /// Only for unique items (`Some(true)`), only for others
-    /// (`Some(false)`), or both.
-    pub unique: Option<bool>,
-    /// The row fits when one clause holds.
-    pub clauses: Vec<FitClause>,
-}
-
-/// Lines of one section that carry none of some flags.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Unflagged {
-    /// The section.
-    pub section: ModSection,
-    /// The flags.
-    pub flags: Vec<String>,
-}
-
-impl Unflagged {
-    fn matches(&self, line: &LineContext) -> bool {
-        line.section == self.section && !self.flags.iter().any(|f| line.has(f))
-    }
-}
-
-/// The base tags that carry the properties local stats change.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct LocalCarriers {
-    /// The tag of bases with weapon properties ([`Locality::Weapon`]).
-    pub weapon: String,
-    /// The tag of bases with the defence properties other local stats
-    /// change ([`Locality::Item`]).
-    pub item: String,
-}
-
-/// Per-game rules of the filter (part of [`super::ItemRules`]). Check a
-/// game's rules with [`ModRules::validate`]: rules with no fit rule would
-/// let no row fit any line.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ModRules {
-    /// Fit rules. Order matters: for a line, the first rule whose section,
-    /// flag, and rarity match is the only one used.
-    pub fits: Vec<FitRule>,
-    /// On these lines, rows of `generations` do not count as spawning
-    /// (they have spawn weights where the rows the lines usually carry
-    /// have none, so counting them would favour them by construction).
-    pub spawn_exclusion: Unflagged,
-    /// Their generation types.
-    pub spawn_excluded_generations: Vec<i64>,
-    /// Lines whose candidates the base's own implicit rows may decide
-    /// (`base-implicit`).
-    pub base_implicit: Unflagged,
-    /// Line flags of lines that do not spawn (`spawn-tags` is skipped).
-    pub no_spawn_flags: Vec<String>,
-    /// Carrier tags for `local-stat`.
-    pub local_carriers: LocalCarriers,
-    /// Influence names (the domain's [`InfluenceId`]) to the rows'
-    /// influence values.
-    pub influences: Vec<(String, i64)>,
-}
-
-/// Why a game's [`ModRules`] cannot be used.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ModRulesError {
-    /// No fit rule: no row would fit any line.
-    NoFitRules,
-    /// A fit rule (by index) has no clause, so its lines fit no row.
-    EmptyRule(usize),
-    /// A rule (by index) can never apply: an earlier rule of the same
-    /// section has no flag and covers the same rarity.
-    Shadowed(usize),
-}
-
-impl ModRulesError {
-    /// Stable code (ADR-014).
-    #[must_use]
-    pub const fn code(&self) -> &'static str {
-        match self {
-            Self::NoFitRules => "IMPORT_MOD_RULES_EMPTY",
-            Self::EmptyRule(_) => "IMPORT_MOD_RULES_EMPTY_RULE",
-            Self::Shadowed(_) => "IMPORT_MOD_RULES_SHADOWED",
-        }
-    }
-}
-
-impl ModRules {
-    /// Checks the rules (see [`ModRulesError`]).
-    ///
-    /// # Errors
-    /// The first problem found.
-    pub fn validate(&self) -> Result<(), ModRulesError> {
-        if self.fits.is_empty() {
-            return Err(ModRulesError::NoFitRules);
-        }
-        for (n, rule) in self.fits.iter().enumerate() {
-            if rule.clauses.is_empty() {
-                return Err(ModRulesError::EmptyRule(n));
-            }
-            let shadowed = self.fits.iter().take(n).any(|earlier| {
-                earlier.section == rule.section
-                    && earlier.flag.is_none()
-                    && earlier.unique.is_none_or(|u| rule.unique == Some(u))
-            });
-            if shadowed {
-                return Err(ModRulesError::Shadowed(n));
-            }
-        }
-        Ok(())
-    }
-
-    /// The rows' influence value of an influence; `None` for an influence
-    /// the rows do not name (the item's other influences still count).
-    #[must_use]
-    pub fn influence_value(&self, id: &InfluenceId) -> Option<i64> {
-        self.influences
-            .iter()
-            .find(|(n, _)| n == id.as_str())
-            .map(|(_, v)| *v)
-    }
+/// Whether `line` is one of the lines `u` names: its section, and none of
+/// its flags.
+fn unflagged(u: &Unflagged, line: &LineContext) -> bool {
+    line.section == u.section && !u.flags.iter().any(|f| line.has(f))
 }
 
 /// One mod row, as the filter needs it.
@@ -604,7 +451,7 @@ impl Context<'_> {
     /// ([`Self::spawns`]). A legacy essence row counts where its mod type
     /// spawns.
     fn row_spawns(&self, line: &LineContext, row: &ModRow) -> bool {
-        let excluded = self.rules.spawn_exclusion.matches(line)
+        let excluded = unflagged(&self.rules.spawn_exclusion, line)
             && self
                 .rules
                 .spawn_excluded_generations
@@ -722,7 +569,7 @@ pub fn filter(ctx: &Context<'_>, line: &LineContext, candidates: &[Candidate]) -
     let has_fit = |i: usize| fit.get(i).is_some_and(|f| !f.is_empty());
     narrow(&mut d.kept, &mut d.rules, "mods", has_fit);
 
-    if d.kept.len() > 1 && ctx.rules.base_implicit.matches(line) {
+    if d.kept.len() > 1 && unflagged(&ctx.rules.base_implicit, line) {
         narrow(&mut d.kept, &mut d.rules, "base-implicit", |i| {
             candidates
                 .get(i)
