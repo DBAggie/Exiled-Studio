@@ -3,8 +3,8 @@
  "files": [
   {
    "path": "data/base_items.json",
-   "sha256": "3608d45d78f93430c55d21b79d103d88993afe36aea4b40ca34aad6b67d534e2",
-   "size": 358
+   "sha256": "96ec1e2c021128cafded82f65af51e292e05bd708a1841b68e07cf2f0137765e",
+   "size": 501
   },
   {
    "path": "data/client_texts.json",

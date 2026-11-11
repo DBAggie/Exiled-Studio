@@ -178,6 +178,9 @@ def write(name, game, files):
 
 
 poe1 = common("poe1", 34, "charm_stat_descriptions")
+poe1["data/base_items.json"].append(
+    {"id": "Test/Gems/Bolt", "name": "Test Bolt", "domain": 1, "item_class": "TestRing", "tags": ["gem"], "implicits": []}
+)
 poe1["poe1/quality_types.json"] = [
     {"id": "TestQuality", "description": "Quality (Test Modifiers)", "stats": [["test_maximum_life", 1]]}
 ]

@@ -18,11 +18,12 @@
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
-//! rules is the validator's job (plan step 4). The compressed distribution
+//! rules is the validator's job (`validate`, plan step 4). The compressed distribution
 //! container and real signatures come in Phase 5 (ADR-010).
 
 pub mod poe1;
 mod source;
+pub mod validate;
 
 use loom_domain::Game;
 use serde::de::DeserializeOwned;

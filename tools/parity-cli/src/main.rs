@@ -43,6 +43,10 @@ const USAGE: &str = "usage:
       bundle of format v1 (loom_data::bundle) in <dir>, which must not
       exist; load it back with Bundle::load; print a summary (row counts,
       hashes) as JSON. Two runs on one extract give the same bytes.
+  loom-parity-cli bundle-check <bundle-dir>
+      Validate a data bundle (loom_data::bundle::validate: hashes, sizes,
+      unlisted files, schema, references, unique IDs, item rules, scopes);
+      print the findings as JSON. Exit 0 when valid, 1 when not.
   loom-parity-cli load-statdesc <extract-dir>
       Load every stat-description file of a `loom-extractor extract` output
       through loom-data; print counts as JSON. Exit 1 if a check fails.
@@ -125,6 +129,59 @@ fn reader(dir: &Path) -> impl Fn(&str) -> Result<Vec<u8>, String> + '_ {
         let path = dir.join(relative);
         std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))
     }
+}
+
+/// A bundle in a folder, for the validator.
+struct DirSource<'d>(&'d Path);
+
+impl loom_data::bundle::BundleSource for DirSource<'_> {
+    fn list(&self) -> Result<Vec<String>, loom_data::bundle::SourceError> {
+        fn walk(root: &Path, dir: &Path, out: &mut Vec<String>) -> std::io::Result<()> {
+            for entry in std::fs::read_dir(dir)? {
+                let path = entry?.path();
+                if path.is_dir() {
+                    walk(root, &path, out)?;
+                } else if let Ok(rel) = path.strip_prefix(root) {
+                    out.push(rel.to_string_lossy().replace('\\', "/"));
+                }
+            }
+            Ok(())
+        }
+        let mut out = Vec::new();
+        walk(self.0, self.0, &mut out).map_err(|e| loom_data::bundle::SourceError::Unreadable {
+            path: self.0.display().to_string(),
+            message: e.to_string(),
+        })?;
+        out.sort();
+        Ok(out)
+    }
+
+    fn read(&self, path: &str) -> Result<Vec<u8>, loom_data::bundle::SourceError> {
+        // The loader refuses paths that leave the bundle before reading;
+        // this source refuses them again.
+        if path.split('/').any(|s| s.is_empty() || s == "..") || path.contains(['\\', ':']) {
+            return Err(loom_data::bundle::SourceError::NotFound(path.to_owned()));
+        }
+        let full = self.0.join(path);
+        match std::fs::read(&full) {
+            Ok(b) => Ok(b),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                Err(loom_data::bundle::SourceError::NotFound(path.to_owned()))
+            }
+            Err(e) => Err(loom_data::bundle::SourceError::Unreadable {
+                path: path.to_owned(),
+                message: e.to_string(),
+            }),
+        }
+    }
+}
+
+/// `bundle-check`: validates a bundle folder, prints the findings.
+fn bundle_check(dir: &Path) -> Result<bool, String> {
+    let report = loom_data::bundle::validate::validate(&DirSource(dir));
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(report.is_valid())
 }
 
 /// `bundle`: converts, writes, loads back, prints the summary.
@@ -566,6 +623,7 @@ fn main() -> ExitCode {
         [cmd, extract, flag, out] if cmd == "bundle" && flag == "--out" => {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
+        [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))

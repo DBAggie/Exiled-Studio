@@ -1,0 +1,291 @@
+//! The bundle validator (Phase 2 plan, step 4): a bundle is used only after
+//! it passes (gate item 4: invalid bundles are rejected before any signing
+//! exists). Five kinds of check, each finding with a stable code (ADR-014):
+//!
+//! - **structural:** every listed file exists with its SHA-256 and size; no
+//!   file is unlisted; `signatures` is empty in format 1;
+//! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
+//!   required files, every file parses);
+//! - **referential:** mod stats, quality stats, and the stats of the
+//!   rules' compositions are stats; mod classes and base classes are item
+//!   classes; base implicits are mods; graft gems are base items; client
+//!   texts the rules name exist;
+//! - **domain:** IDs are unique per kind; the item rules validate;
+//! - **smoke:** every stat-description scope the rules name builds.
+//!
+//! Structural findings stop before the schema check (a file whose bytes
+//! are not the listed ones is not parsed); a schema finding stops the rest.
+
+use std::collections::BTreeSet;
+
+use serde::Serialize;
+use sha2::{Digest, Sha256};
+
+use super::{Bundle, BundleError, BundleSource, MANIFEST, Manifest, SUPPORTED_FORMATS};
+
+/// One problem found.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Finding {
+    /// Stable code.
+    pub code: &'static str,
+    /// The file or row the finding is about.
+    pub at: String,
+    /// What is wrong.
+    pub detail: String,
+}
+
+/// The validator's result.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct Report {
+    /// Every finding, in check order.
+    pub findings: Vec<Finding>,
+}
+
+impl Report {
+    /// Whether the bundle passed.
+    #[must_use]
+    pub fn is_valid(&self) -> bool {
+        self.findings.is_empty()
+    }
+
+    /// The distinct codes found, sorted.
+    #[must_use]
+    pub fn codes(&self) -> Vec<&'static str> {
+        let set: BTreeSet<&'static str> = self.findings.iter().map(|f| f.code).collect();
+        set.into_iter().collect()
+    }
+
+    fn add(&mut self, code: &'static str, at: impl Into<String>, detail: impl Into<String>) {
+        self.findings.push(Finding {
+            code,
+            at: at.into(),
+            detail: detail.into(),
+        });
+    }
+}
+
+fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// Validates the bundle `source` holds (module docs).
+#[must_use]
+pub fn validate(source: &dyn BundleSource) -> Report {
+    let mut report = Report::default();
+    if !structural(source, &mut report) {
+        return report;
+    }
+    let bundle = match Bundle::load(source) {
+        Ok(b) => b,
+        Err(e) => {
+            report.add(e.code(), at_of(&e), e.to_string());
+            return report;
+        }
+    };
+    referential(&bundle, &mut report);
+    domain(&bundle, &mut report);
+    smoke(&bundle, &mut report);
+    report
+}
+
+fn at_of(e: &BundleError) -> String {
+    match e {
+        BundleError::Json { path, .. } | BundleError::StatDescription { path, .. } => path.clone(),
+        BundleError::MissingFile(p)
+        | BundleError::BadPath(p)
+        | BundleError::DuplicatePath(p)
+        | BundleError::GameSection(p, _) => p.clone(),
+        _ => MANIFEST.to_owned(),
+    }
+}
+
+/// Hashes, sizes, unlisted files, signatures; `false` when the schema check
+/// must not run.
+fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
+    let bytes = match source.read(MANIFEST) {
+        Ok(b) => b,
+        Err(e) => {
+            report.add(e.code(), MANIFEST, e.to_string());
+            return false;
+        }
+    };
+    // An unknown format is the loader's finding; this check needs format 1.
+    let manifest: Manifest = match serde_json::from_slice(&bytes) {
+        Ok(m) => m,
+        Err(_) => return true,
+    };
+    if !SUPPORTED_FORMATS.contains(&manifest.format) {
+        return true;
+    }
+    let before = report.findings.len();
+    if !manifest.signatures.is_empty() {
+        report.add(
+            "BUNDLE_SIGNATURES",
+            MANIFEST,
+            "signatures are reserved and empty in format 1",
+        );
+    }
+    for f in &manifest.files {
+        match source.read(&f.path) {
+            Err(e) => report.add(e.code(), &f.path, e.to_string()),
+            Ok(b) => {
+                if b.len() as u64 != f.size {
+                    report.add(
+                        "BUNDLE_SIZE_MISMATCH",
+                        &f.path,
+                        format!("listed {} bytes, found {}", f.size, b.len()),
+                    );
+                }
+                let sha = hex(&Sha256::digest(&b));
+                if sha != f.sha256 {
+                    report.add("BUNDLE_HASH_MISMATCH", &f.path, format!("SHA-256 {sha}"));
+                }
+            }
+        }
+    }
+    match source.list() {
+        Err(e) => report.add(e.code(), "", e.to_string()),
+        Ok(paths) => {
+            for p in paths {
+                if p != MANIFEST && manifest.files.iter().all(|f| f.path != p) {
+                    report.add("BUNDLE_UNLISTED_FILE", &p, "not in the manifest");
+                }
+            }
+        }
+    }
+    report.findings.len() == before
+}
+
+fn referential(b: &Bundle, report: &mut Report) {
+    let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
+    let classes: BTreeSet<&str> = b.item_classes.iter().map(String::as_str).collect();
+    let mods: BTreeSet<&str> = b.mods.iter().map(|m| m.id.as_str()).collect();
+    let bases: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();
+    let mut dangling = |at: String, what: &str, id: &str| {
+        report.add(
+            "BUNDLE_DANGLING_REF",
+            at,
+            format!("{what} {id:?} does not exist"),
+        );
+    };
+    for m in &b.mods {
+        for s in &m.stats {
+            if !stats.contains(s.stat.as_str()) {
+                dangling(format!("mods:{}", m.id), "stat", &s.stat);
+            }
+        }
+        for c in m
+            .craft_classes
+            .iter()
+            .chain(m.essence_classes.iter().flatten())
+        {
+            if !classes.contains(c.as_str()) {
+                dangling(format!("mods:{}", m.id), "item class", c);
+            }
+        }
+    }
+    for x in &b.base_items {
+        if let Some(c) = &x.item_class
+            && !classes.contains(c.as_str())
+        {
+            dangling(format!("base_items:{}", x.id), "item class", c);
+        }
+        for i in &x.implicits {
+            if !mods.contains(i.as_str()) {
+                dangling(format!("base_items:{}", x.id), "mod", i);
+            }
+        }
+    }
+    for (id, stat) in &b.item_rules.text.compositions {
+        if !stats.contains(stat.as_str()) {
+            dangling(format!("item_rules:{id}"), "stat", stat);
+        }
+    }
+    if let Some(p) = &b.poe1 {
+        for q in p.quality_types.iter().flatten() {
+            for (s, _) in &q.stats {
+                if !stats.contains(s.as_str()) {
+                    dangling(format!("poe1/quality_types:{}", q.id), "stat", s);
+                }
+            }
+        }
+        for g in p.grafts.iter().flat_map(|g| &g.bases) {
+            if !bases.contains(g.gem.as_str()) {
+                dangling(format!("poe1/grafts:{}", g.graft), "gem", &g.gem);
+            }
+        }
+    }
+    let texts: BTreeSet<&str> = b.client_texts.iter().map(|t| t.id.as_str()).collect();
+    let t = &b.item_rules.text;
+    let named = t
+        .compositions
+        .iter()
+        .map(|(id, _)| id)
+        .chain(&t.property_ids)
+        .chain(&t.label_ids)
+        .chain(&t.granted_skill_wrapper);
+    for id in named {
+        if !texts.contains(id.as_str()) {
+            report.add(
+                "BUNDLE_MISSING_CLIENT_TEXT",
+                "data/client_texts.json",
+                format!("the item rules name {id:?}"),
+            );
+        }
+    }
+}
+
+fn duplicates<'a>(report: &mut Report, file: &str, ids: impl Iterator<Item = &'a str>) {
+    let mut seen = BTreeSet::new();
+    for id in ids {
+        if !seen.insert(id) {
+            report.add(
+                "BUNDLE_DUPLICATE_ID",
+                file,
+                format!("{id:?} is on two rows"),
+            );
+        }
+    }
+}
+
+fn domain(b: &Bundle, report: &mut Report) {
+    duplicates(report, super::STATS, b.stats.iter().map(|s| s.id.as_str()));
+    duplicates(report, super::MODS, b.mods.iter().map(|m| m.id.as_str()));
+    duplicates(
+        report,
+        super::BASE_ITEMS,
+        b.base_items.iter().map(|x| x.id.as_str()),
+    );
+    duplicates(
+        report,
+        super::ITEM_CLASSES,
+        b.item_classes.iter().map(String::as_str),
+    );
+    if let Err(e) = b.item_rules.mods.validate() {
+        report.add("BUNDLE_ITEM_RULES", super::ITEM_RULES, e.code());
+    }
+}
+
+fn smoke(b: &Bundle, report: &mut Report) {
+    for scope in b.item_rules.scopes() {
+        // The file whose name, without folder or extension, is the scope
+        // (PoE1 writes `.txt` sources, PoE2 `.csd`).
+        let stem = |source: &str| -> String {
+            let name = source.rsplit('/').next().unwrap_or(source);
+            name.split_once('.')
+                .map_or(name, |(s, _)| s)
+                .to_ascii_lowercase()
+        };
+        let root = b
+            .stat_descriptions
+            .files()
+            .map(|(_, f)| f.source.as_str())
+            .find(|s| stem(s) == scope.to_ascii_lowercase());
+        let built = root.map(|r| b.stat_descriptions.scope(r));
+        match built {
+            Some(Ok(_)) => {}
+            Some(Err(e)) => report.add("BUNDLE_SCOPE", scope, e.to_string()),
+            None => report.add("BUNDLE_SCOPE", scope, "no stat-description file"),
+        }
+    }
+}

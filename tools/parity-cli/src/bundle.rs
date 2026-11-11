@@ -630,9 +630,41 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     Ok((files, summary))
 }
 
+/// The tables `convert` reads for PoE1 only (the `poe1/` section and the
+/// essence classes), for gate 3d.
+#[cfg(test)]
+const POE1_ONLY_TABLES: [&str; 4] = [
+    "AlternateQualityTypes",
+    "BrequelGrafts",
+    "BrequelGraftGrantedSkillLevels",
+    "Essences",
+];
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Phase 2 gate 3d: the game-specific tables the bundle reads are the
+    /// ones the extractor extracts for PoE1 only (`tools/extractor/src/
+    /// extract.rs`, the `*_POE1` lists; the tools cannot depend on each
+    /// other, so the list is read as text).
+    #[test]
+    fn poe1_only_tables_should_be_in_the_extractor_poe1_lists() {
+        let source = include_str!("../../extractor/src/extract.rs");
+        let poe1_lists: Vec<&str> = source
+            .split("pub const ")
+            .filter(|c| {
+                c.split(':')
+                    .next()
+                    .is_some_and(|name| name.ends_with("_POE1"))
+            })
+            .collect();
+        let missing: Vec<&str> = POE1_ONLY_TABLES
+            .into_iter()
+            .filter(|t| !poe1_lists.iter().any(|l| l.contains(&format!("\"{t}\""))))
+            .collect();
+        assert_eq!(missing, [] as [&str; 0]);
+    }
 
     fn table(columns: &[&str]) -> Table {
         Table {

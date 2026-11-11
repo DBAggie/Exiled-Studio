@@ -75,7 +75,7 @@ fn poe1_bundle_should_load_with_its_poe1_section() {
             poe1.grafts.as_ref().map(|g| g.bases[0].gem.as_str()),
             poe1.quality_types.as_ref().map(Vec::len),
         ),
-        (Game::Poe1, 2, 2, 2, Some("Test/Gems/Bolt"), Some(1))
+        (Game::Poe1, 2, 2, 3, Some("Test/Gems/Bolt"), Some(1))
     );
 }
 
