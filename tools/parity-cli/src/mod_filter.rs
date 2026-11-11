@@ -763,19 +763,23 @@ impl LineContext {
 }
 
 /// PoB's section of a domain section (the inverse of
-/// `pob_item::domain_section`); `None` for a name PoB does not write.
+/// `pob_item::domain_section`); `None` for an `Other` name PoB does not
+/// write. Such a line gets no filter context, so an ambiguous line stays
+/// ambiguous in the report (never resolved silently).
 #[must_use]
 pub fn pob_section(section: &ModSection) -> Option<Section> {
-    [
-        Section::Enchant,
-        Section::Scourge,
-        Section::ClassRequirement,
-        Section::Implicit,
-        Section::Crucible,
-        Section::Explicit,
-    ]
-    .into_iter()
-    .find(|s| s.name() == section.name())
+    match section {
+        ModSection::Enchant => Some(Section::Enchant),
+        ModSection::Implicit => Some(Section::Implicit),
+        ModSection::Explicit => Some(Section::Explicit),
+        ModSection::Other(name) => [
+            Section::Scourge,
+            Section::Crucible,
+            Section::ClassRequirement,
+        ]
+        .into_iter()
+        .find(|s| s.name() == name),
+    }
 }
 
 /// A domain section's name as a static string, for the report; `other`

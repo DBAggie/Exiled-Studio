@@ -236,9 +236,7 @@ impl Bases {
     fn find(&self, item: &Item) -> Result<Found<'_>, String> {
         let rarity = item.rarity.unwrap_or(Rarity::Unique);
         let name = match (&item.base, &item.name) {
-            (Some(base), _) if !matches!(rarity, Rarity::Normal | Rarity::Magic) => {
-                pob_item::base_name(base).to_owned()
-            }
+            (Some(base), _) if !rarity.names_base_in_name() => pob_item::base_name(base).to_owned(),
             (_, Some(name)) => {
                 match pob_item::magic_base(name, self.scopes.keys().map(String::as_str)) {
                     BaseMatch::One(base) => base,

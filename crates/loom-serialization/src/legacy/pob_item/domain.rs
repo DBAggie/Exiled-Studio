@@ -18,7 +18,7 @@ use loom_domain::{
     VariantSelection,
 };
 
-use super::{Item, Line, LineKind, Modifier, Rarity, Section};
+use super::{Item, Line, LineKind, Modifier, Rarity, Section, spec_value};
 
 /// The domain section of a PoB section.
 #[must_use]
@@ -50,7 +50,7 @@ pub const fn rarity(rarity: Rarity) -> DomainRarity {
 pub fn to_domain(item: &Item) -> ItemBody {
     ItemBody {
         item_class: item.lines.iter().find_map(|l| match l.kind {
-            LineKind::ItemClass => Some(after_key(&l.raw, "Item Class").to_owned()),
+            LineKind::ItemClass => Some(spec_value(&l.raw, "Item Class").to_owned()),
             _ => None,
         }),
         rarity: item.rarity.map(rarity),
@@ -82,7 +82,7 @@ fn line(line: &Line) -> ItemLine {
         LineKind::Base => DomainKind::Header(HeaderLine::Base),
         LineKind::Spec { key, known } => DomainKind::Spec {
             key: key.clone(),
-            value: after_key(&line.raw, key).to_owned(),
+            value: spec_value(&line.raw, key).to_owned(),
             known: *known,
         },
         LineKind::VariantBase { base, selected } => DomainKind::VariantBase {
@@ -123,14 +123,6 @@ fn modifier(m: &Modifier) -> ModifierLine {
         selected: m.selected,
         resolution,
     }
-}
-
-/// The value of a `Key: value` or `Key value` line: the text after `key`
-/// and any `:` and spaces; the whole line when it does not start with
-/// `key`.
-fn after_key<'a>(raw: &'a str, key: &str) -> &'a str {
-    raw.strip_prefix(key)
-        .map_or(raw, |rest| rest.trim_start_matches(':').trim_start())
 }
 
 #[cfg(test)]
@@ -208,8 +200,13 @@ Corrupted";
     #[test]
     fn to_domain_should_keep_spec_values() {
         let b = body();
+        let spec = b
+            .lines
+            .iter()
+            .find(|l| l.source.starts_with("Item Level"))
+            .unwrap();
         assert_eq!(
-            b.lines[5].kind,
+            spec.kind,
             LineKind::Spec {
                 key: "Item Level".to_owned(),
                 value: "84".to_owned(),

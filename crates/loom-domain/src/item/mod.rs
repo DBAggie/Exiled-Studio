@@ -139,6 +139,13 @@ impl Rarity {
     pub const fn is_unique(self) -> bool {
         matches!(self, Self::Unique | Self::Relic)
     }
+
+    /// Normal and magic items name their base in the name; the others have
+    /// a separate base line.
+    #[must_use]
+    pub const fn names_base_in_name(self) -> bool {
+        matches!(self, Self::Normal | Self::Magic)
+    }
 }
 
 /// Which modifier list a line belongs to. Sections all games share are
