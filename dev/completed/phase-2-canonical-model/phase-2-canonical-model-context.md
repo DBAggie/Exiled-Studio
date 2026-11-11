@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-8: `build-round-trip` and CI gate job)
+Last Updated: 2026-11-11 (PR P2-11: Phase 2 report and gate verdict; Phase 2 complete)
 
 # Phase 2: context
 
@@ -494,3 +494,9 @@ The first run stopped on an API rate limit; it was resumed on the committed bran
 - **Should-fix, applied:** the decoder had no length cap and kept a `u32` per character (a 100 MB paste cost about 400 MB before inflating): now `MAX_CODE_BYTES` and one-pass decoding; the fixture tests hard-coded 2 codes and 24 builds, which a removal on request (`SOURCES.md`, ADR-007 Amendment 1) would break: counts now follow the files present.
 - **Nits, applied:** the item check compares with the source fixture instead of exempting `minimal` by name; spare-bit leniency documented and tested (`Zh==`); comments on the truncating casts; the limit named in the `TOO_LARGE` message.
 - **Noted, not done:** showing that PoB's own reader accepts our codes (not in the Accept; possible with the oracle runtime later). The reviewer's "adds `adler2`" was checked: the lock file diff is one dependency line, no package.
+
+## P2-11: report and gate verdict (2026-11-11)
+- **Verdict: met** (`docs/phase-2/phase-2-report.md`, per item with its command).
+- **Re-run, not replaced:** the maintainer-run items were run again at `3982838` (the stack's tip) from a clean tree; each equals its committed record except the tool commit, so the committed summaries stay as they are and the report names the re-run. Outputs in `local/p2/p2-11/`.
+- **Review (code-architecture-reviewer):** no blockers; all numbers checked against the re-run. Applied: the CI run at the tip recorded; gate 3c's list gained `ModDomain` (the plan names it; the test lacked it), and the report says what the scan can and cannot catch; the public-fixture CI run has no bundle (said in the report and limitations); the 4,492 count is dated; Spike B's rate against the 397 unresolved lines explained; signing deferral against the IMPLEMENTATION-PLAN wording; doc headers.
+- **The cascade stops after P2-11:** Phase 3 needs its own plan PR, and the stack waits for the maintainer's merge.
