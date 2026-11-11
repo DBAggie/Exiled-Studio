@@ -1,4 +1,4 @@
-Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure)
+Last Updated: 2026-11-10 (PR P2-5b: PoB XML items)
 
 # Phase 2: tasks
 
@@ -82,8 +82,10 @@ Last Updated: 2026-11-10 (PR P2-5a: PoB XML structure)
 - [x] Open PR (#50, base `feat/p2-4-bundle-validator`); write the PR number into the docs right after
 
 ## PR P2-5b: PoB XML items, item sets, slots (step 5b)
-- [ ] `<Items>`: items (every `<Item>` text child kept; the last non-blank one read with `pob_item::to_domain`; `ModRange` and other children opaque in place), item sets, slots; export generated from the item model (decision 6)
-- [ ] Item round-trip and mutation tests (several item texts, comments); corpus in-session
+- [x] `<Items>`: items (every `<Item>` child kept; the last non-blank text read with `pob_item::to_domain`; `ModRange` and other children opaque in place), item sets, slots; export generated from the item lines plus `Item::text_spacing` (decision 6)
+- [x] Item round-trip and mutation tests (several item texts, comment between items, unknown slot attribute, empty slot, export from the lines); all 24 fixtures with every section typed and nothing kept whole; corpus 21/21 (1,055 items) and PoB 3.13 5/5 (100 items) in-session
+- [ ] `code-architecture-reviewer`: launched, but the session ended before the findings were read. Run it again on the PR branch and apply the findings on the same branch.
+- [ ] Open PR (base `feat/p2-5a-pob-xml-structure`); write the PR number into the docs right after
 
 ## PR P2-6: `resolve_build` (step 6)
 - [ ] Bundle `ItemData`; map outcomes onto domain lines; completeness

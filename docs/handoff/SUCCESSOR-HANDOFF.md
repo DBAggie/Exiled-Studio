@@ -24,8 +24,21 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-10, P2-5a PoB XML structure PR #50 open, in review, branch `feat/p2-5a-pob-xml-structure`, stacked on P2-4)
-- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`) <- #49 P2-4 (base `feat/p2-3b-bundle-converter`) <- #50 P2-5a (base `feat/p2-4-bundle-validator`).
+## Current state (updated 2026-11-10, P2-5b PoB XML items open, in review, branch `feat/p2-5b-pob-xml-items`, stacked on P2-5a)
+- **PR stack (maintainer decision 2026-11-10).** The maintainer asked for Phase 2 PRs to be done one after another, unattended, as a stack. Each new PR branches from the previous PR's branch and targets it as its base. Open PRs stay open, and the maintainer merges the stack from the newest PR into its base, down to the oldest, then into `main`. Each PR still carries its own evidence and handoff update. "Merge check" in Next action means: check the stack's state (`gh pr list --state all`). Stack so far: #42 P2-1 (base `main`) <- #43 P2-2a (base `feat/p2-1-domain-model`). <- #44 P2-2b (base `feat/p2-2a-item-input`). <- #45 P2-2c (base `feat/p2-2b-scope-bases`) <- #46 P2-2d (base `feat/p2-2c-mods-filter`) <- #47 P2-3a (base `feat/p2-2d-compositions-tolerances`) <- #48 P2-3b (base `feat/p2-3a-bundle-model`) <- #49 P2-4 (base `feat/p2-3b-bundle-converter`) <- #50 P2-5a (base `feat/p2-4-bundle-validator`) <- P2-5b (base `feat/p2-5a-pob-xml-structure`).
+- **PR P2-5b: PoB XML items, item sets, and slots (open, in review, branch `feat/p2-5b-pob-xml-items`, base `feat/p2-5a-pob-xml-structure`).** Plan step 5b; step 5 complete.
+  - **What:** `<Items>` is typed (`legacy/pob_xml/items.rs`):
+    - each `<Item>` reads its body from the last non-blank text child (PoB's rule), through `pob_item::read` and `to_domain`;
+    - every other child (other texts, `<ModRange>`) stays in place around `ItemPart::Body`;
+    - item sets and slots are typed (`itemId="0"`: empty).
+
+    The export writes each item's text from its lines' sources plus the whitespace as read: the new domain field `Item::text_spacing` (decision 6).
+  - **Found and fixed:** PoB writes `mainActiveSkill="nil"` for an unset main skill. Such a group was kept whole in P2-5a, unseen until the fixture test started requiring `kept_whole` to be empty. A non-numeric value now stays an untyped attribute.
+  - **Evidence:**
+    - all 24 public fixtures round-trip with every section typed, items present in the community builds, and nothing kept whole;
+    - 5 new unit tests;
+    - in-session: the corpus 21/21 (1,055 items, 0 kept whole) and PoB 3.13 5/5 (100 items).
+  - **Review still to do:** the session ended (maintainer request) before the `code-architecture-reviewer` findings for P2-5b were read. The next session runs it again first (Next action, step 1).
 - **PR P2-5a: PoB XML import and semantic export, structure (PR #50, open, in review, branch `feat/p2-5a-pob-xml-structure`, base `feat/p2-4-bundle-validator`).** Plan step 5a.
   - **What:** `loom_serialization::legacy::pob_xml` (`import`, `export`, `xml_equal`, `NORMALIZATIONS`; `roxmltree` added to `loom-serialization`).
     - Typed, with source text kept:
@@ -259,16 +272,13 @@ Each PR is done in its own fresh session; the repository is the only memory. Eve
 - LuaJIT for the oracle is built from source into `local/oracle/` by `tools/oracle/acquire.ps1` (Spike C, C1); WSL holds a Linux build in `~/loom-oracle`.
 
 ## Next action
-1. **Stack check** (`gh pr list --state all --limit 12`): if the maintainer merged or asked for changes on #42 to #50, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
-2. **P2-5b: PoB XML items, item sets, slots** (plan step 5b). Branch from `feat/p2-5a-pob-xml-structure` and target it as base:
-   - type `<Items>` into `loom_domain::Items`:
-     - each `<Item>` gets its id and `ItemBody` from the last non-blank text child, through `pob_item::read` and `to_domain`;
-     - every other text child, `<ModRange>`, and anything else stays opaque around `ItemPart::Body`;
-     - `<ItemSet>` and `<Slot>` (name, `itemId`) are typed;
-     - the rest stays opaque;
-   - export each item's text from the model (decision 6): every line's source in order, with the original text's surrounding whitespace kept so `xml_equal` holds. Record the rule;
-   - the `BuildPart::Items` marker replaces the whole-`<Items>` fallback;
-   - tests: items round-trip on the public fixtures and in-session on the corpus; mutations (several item texts, comments between items, an unknown slot attribute).
+1. **Finish P2-5b's review:** check out `feat/p2-5b-pob-xml-items` and run `code-architecture-reviewer` on its code commit (`60550e4`). Apply the findings on that branch, rerun the fixture and corpus round-trips, and update the context file with a "Decisions in P2-5b" section and the review summary. Then continue with P2-6 on a branch from it.
+2. **Stack check** (`gh pr list --state all --limit 13`): if the maintainer merged or asked for changes on #42 to #50 or P2-5b, record it and make the changes on that PR's branch first (merge them up the stack with `git merge`, never force-push).
+3. **P2-6: `resolve_build`** (plan step 6). Branch from `feat/p2-5b-pob-xml-items` and target it as base:
+   - a bundle-backed `ItemData` in `loom-parser`. It builds `Mods` from a validated `Bundle` (split `(0, 0)` stats into `unset`; map class, mod-type, and implicit IDs onto rows), `BaseRow`s, `Grafts` (from `poe1/grafts.json`), `Properties` (client texts and quality types), and compositions;
+   - `loom_parser::import::resolve_build(&mut Build, &data)`. It runs the lifted pipeline (index per scope, `resolve_lines_composed`, the mods filter, case-fold, granted skills, properties, split-section; call `split_section` before writing results, see "Decisions in P2-2d") over every item, and writes `LineResolution`s (stats, a typed `kind`, or unresolved with a reason; `adapted`; `Continues`) and completeness;
+   - map onto the domain: `PropertyMatch` and `GrantedSkill` to `TypedResolution` (the context file, "Decisions in P2-2d"); `RawValue` to `StatValue`;
+   - tests: outcome tests on the synthetic PoE1 and PoE2 bundles (gate 3b); the equality test from P2-3b (rebuilding `Mods` and `BaseRow` from the bundle equals the extract readers for both games, in-session); a corpus run through the bundle with the step 2 field list equal to Spike B (in-session; this likely needs a `resolve-corpus --bundle` mode); source lines in equal source lines out.
 Open for the maintainer: plan questions Q1 to Q6 (context file); post the PoB issue (draft `local/upstream-issue-pob-vaal-variant.md`, on the workstation only); community builds stay credited with removal on request, no outreach for now (decision 2026-11-10).
 Still open for the maintainer from Spike B: the per-PR assumptions (Spike B context file). The ADR-015 clarification was accepted 2026-11-10 and is written as Amendment 1 (step 1).
 Not scheduled (Spike C follow-ups, report section 9): packaged-artifact check; a real PoB startup error test; real-runtime tests in CI.
