@@ -170,6 +170,15 @@ impl CalcData for Data {
     fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
         None
     }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
+        None
+    }
 }
 
 fn witch(level: u32) -> Build {
@@ -1056,6 +1065,43 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
                 key: "Nothing".to_owned()
             })
     );
+}
+
+#[test]
+fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
+    let with = |inputs: Vec<(&str, ConfigValue)>| {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            config.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let r = with(vec![
+        ("enemyLevel", n(80.0)),
+        ("enemyFireResist", n(0.0)),
+        ("enemyArmour", n(1000.0)),
+    ]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    // The boss kind stays a reason: its other modifiers are not ingested.
+    let r = with(vec![(
+        "enemyIsBoss",
+        ConfigValue::String("Uber".to_owned()),
+    )]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
+    let r = with(vec![("enemyLevel", ConfigValue::Boolean(true))]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
 }
 
 #[test]

@@ -74,6 +74,34 @@ pub trait CalcData {
 
     /// A stat set by ID.
     fn stat_set(&self, id: &str) -> Option<&StatSet>;
+
+    /// The game's monster stats at a level (`DefaultMonsterStats`).
+    fn monster_level(&self, level: i64) -> Option<MonsterStats>;
+
+    /// A monster type's armour and evasion multipliers, percent.
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences>;
+
+    /// A game constant as `(value, divisor)`.
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)>;
+}
+
+/// The game's monster stats at one level ([`CalcData::monster_level`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MonsterStats {
+    /// Evasion rating.
+    pub evasion: i64,
+    /// Accuracy rating.
+    pub accuracy: i64,
+}
+
+/// A monster type's defence multipliers, percent
+/// ([`CalcData::monster_type`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MonsterDefences {
+    /// Armour multiplier.
+    pub armour: i64,
+    /// Evasion multiplier.
+    pub evasion: i64,
 }
 
 /// What an item base is, for its properties ([`CalcData::item_base`]).
@@ -311,6 +339,41 @@ impl CalcData for Bundle {
 
     fn stat_set(&self, id: &str) -> Option<&StatSet> {
         self.skills.as_ref()?.stat_sets.iter().find(|s| s.id == id)
+    }
+
+    fn monster_level(&self, level: i64) -> Option<MonsterStats> {
+        // Levels run 1, 2, 3, ... without gaps (validated): level n is row
+        // n - 1.
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(MonsterStats {
+            evasion: row.evasion,
+            accuracy: row.accuracy,
+        })
+    }
+
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences> {
+        self.properties
+            .as_ref()?
+            .monster_types
+            .iter()
+            .find(|m| m.id == id)
+            .map(|m| MonsterDefences {
+                armour: m.armour,
+                evasion: m.evasion,
+            })
+    }
+
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)> {
+        self.properties
+            .as_ref()?
+            .game_constants
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| (c.value, c.divisor))
     }
 }
 
