@@ -12,6 +12,7 @@
 //! with `NotComputed`; each later engine PR adds what it models.
 
 pub mod collect;
+pub mod enemy;
 pub mod mapping;
 pub mod phases;
 pub mod skill;

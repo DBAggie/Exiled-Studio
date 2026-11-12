@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 1,
+        "format": 2,
         "pob": {"version": "2.67.2"},
         "tree_version": "3_29",
         "skill_types": {},
@@ -103,6 +103,10 @@ fn equal_export() -> Value {
         "game_constants": {"MonsterDamageReductionImprovement": 6.7},
         "character_constants": {},
         "monster_constants": {},
+        "bosses": {
+            "Armoured": {"armourMult": 50, "evasionMult": 0, "isUber": true},
+            "Evasive": {"armourMult": 0, "evasionMult": 100, "isUber": false}
+        },
         "tree": {
             "classes": [
                 {"name": "Test Brute", "base_str": 32, "base_dex": 14, "base_int": 14, "ascendancies": ["TestChampion"]},
@@ -121,9 +125,23 @@ fn equal_export() -> Value {
     })
 }
 
+/// The synthetic bundle's bosses (`make_bundles.py`).
+const BOSSES: [loom_calc::poe1::enemy::Boss; 2] = [
+    loom_calc::poe1::enemy::Boss {
+        name: "Armoured",
+        monster_type: "TestBossArmoured",
+        uber: true,
+    },
+    loom_calc::poe1::enemy::Boss {
+        name: "Evasive",
+        monster_type: "TestBossEvasive",
+        uber: false,
+    },
+];
+
 fn differences(export: &Value) -> Vec<Difference> {
     let export = pob::parse(&serde_json::to_vec(export).unwrap()).unwrap();
-    compare::compare(&bundle("bundle-poe1"), &export, SCOPE)
+    compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES)
         .unwrap()
         .differences
 }
@@ -138,7 +156,7 @@ fn fields(found: &[Difference]) -> Vec<(&str, &str, &str)> {
 #[test]
 fn equal_export_should_have_no_difference() {
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
     assert_eq!(comparison.differences, []);
     // Every table compared something; bundle rows PoB lacks are counted.
     for table in super::TABLES {
@@ -257,7 +275,7 @@ fn rows_on_one_side_should_be_listed() {
         .unwrap()
         .remove("2");
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [("skills", "PobOnly", "row")]
@@ -315,7 +333,7 @@ fn crit_chance_should_prefer_the_second_column() {
     export["skills"]["TestBolt"]["levels"]["1"]["critChance"] = json!(7.5);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
@@ -390,7 +408,7 @@ fn bases_should_match_one_base_by_name() {
     weapon.base_item = twin.id.clone();
     properties.weapon_types.push(weapon.clone());
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let found = compare::compare(&bundle, &export, SCOPE)
+    let found = compare::compare(&bundle, &export, SCOPE, &BOSSES)
         .unwrap()
         .differences;
     assert_eq!(fields(&found), [("bases", "Plain Test Wand", "row")]);
@@ -406,7 +424,7 @@ fn bases_should_match_one_base_by_name() {
         .unwrap()
         .base_item = royale.to_owned();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
@@ -433,7 +451,7 @@ fn passive_text_should_render_as_the_game_shows_it() {
     export["tree"]["nodes"]["101"]["stats"] = json!(["+10 to maximum Life"]);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
@@ -611,6 +629,7 @@ fn run_with(export: &Value, rules: &Value, bundle_name: &str) -> Result<super::O
         export: &export,
         rules: &rules,
         passive_scope: SCOPE,
+        bosses: &BOSSES,
         tool: Tool::default(),
     })
 }
@@ -788,11 +807,11 @@ fn bad_inputs_should_not_start() {
     );
     // Another export format, and an unknown field.
     let mut export = equal_export();
-    export["format"] = json!(2);
+    export["format"] = json!(1);
     assert!(
         run_with(&export, &json!([]), "bundle-poe1")
             .unwrap_err()
-            .contains("format 2")
+            .contains("format 1")
     );
     let mut export = equal_export();
     export["extra"] = json!(1);
@@ -822,8 +841,32 @@ fn rules_should_be_for_the_bundles_build() {
         export: &export,
         rules: &rules,
         passive_scope: SCOPE,
+        bosses: &BOSSES,
         tool: Tool::default(),
     })
     .unwrap_err();
     assert!(error.contains("Steam build 1"), "{error}");
+}
+
+#[test]
+fn bosses_should_compare_their_multipliers_and_uber_mark() {
+    assert!(differences(&equal_export()).is_empty());
+    let mut export = equal_export();
+    export["bosses"]["Armoured"]["armourMult"] = json!(40);
+    let found = differences(&export);
+    assert_eq!(found.len(), 1);
+    assert_eq!(
+        (
+            found[0].table,
+            found[0].key.as_str(),
+            found[0].field.as_str()
+        ),
+        ("bosses", "Armoured", "armour")
+    );
+    // A boss PoB lists and the engine does not, and the other way.
+    let mut export = equal_export();
+    export["bosses"]["Extra"] = json!({"armourMult": 0, "evasionMult": 0, "isUber": false});
+    export["bosses"].as_object_mut().unwrap().remove("Evasive");
+    let keys: Vec<_> = differences(&export).iter().map(|d| d.key.clone()).collect();
+    assert!(keys.contains(&"Extra".to_owned()) && keys.contains(&"Evasive".to_owned()));
 }
