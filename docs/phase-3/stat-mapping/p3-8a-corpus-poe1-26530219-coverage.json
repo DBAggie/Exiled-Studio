@@ -1,0 +1,44 @@
+{
+  "format": 1,
+  "label": "P3-8a, corpus, anonymous (before: P3-7 50a2b02; after: 8b11a17)",
+  "groups": {
+    "all": {
+      "builds": 21,
+      "before": {
+        "distinct_stats": 559,
+        "occurrences": 2491
+      },
+      "after": {
+        "distinct_stats": 535,
+        "occurrences": 2305
+      },
+      "no_longer_unmapped": [
+        "avoid_interruption_while_casting_%",
+        "base_energy_shield_leech_from_spell_damage_permyriad",
+        "base_movement_velocity_+%",
+        "base_stun_duration_+%",
+        "cannot_have_life_leeched_from",
+        "chance_to_fortify_on_melee_hit_+%",
+        "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
+        "golem_immunity_to_elemental_damage",
+        "golem_maximum_life_+%",
+        "item_generation_can_have_multiple_crafted_mods",
+        "life_regeneration_per_minute_%_per_fortification",
+        "life_regeneration_rate_per_minute_%",
+        "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        "local_has_X_abyss_sockets",
+        "mana_regeneration_rate_+%",
+        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        "minion_life_regeneration_rate_per_minute_%",
+        "minion_maximum_life_+%",
+        "physical_damage_taken_%_as_fire",
+        "physical_damage_taken_%_as_lightning",
+        "rage_loss_delay_ms",
+        "regenerate_energy_shield_instead_of_life",
+        "revive_golems_if_killed_by_enemies_ms"
+      ],
+      "new_unmapped": []
+    }
+  }
+}
