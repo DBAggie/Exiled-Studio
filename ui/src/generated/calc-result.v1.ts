@@ -1042,6 +1042,7 @@ export interface Node {
     | 'max'
     | 'difference'
     | 'quotient'
+    | 'power'
   /**
    * The breakdown term (`base`, `increased`, `more`, `override`,
    * `result`, or `step.<name>`); absent for leaves and overrides.

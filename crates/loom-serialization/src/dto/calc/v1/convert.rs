@@ -256,6 +256,7 @@ fn node_kind_to(n: &c::Node) -> (NodeKind, Option<c::Term>) {
         c::Node::Max { term, .. } => (NodeKind::Max, Some(*term)),
         c::Node::Difference { term, .. } => (NodeKind::Difference, Some(*term)),
         c::Node::Quotient { term, .. } => (NodeKind::Quotient, Some(*term)),
+        c::Node::Power { term, .. } => (NodeKind::Power, Some(*term)),
     }
 }
 

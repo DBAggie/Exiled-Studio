@@ -620,6 +620,15 @@
           21
         ],
         "value": 0.5226666666666668
+      },
+      {
+        "kind": "power",
+        "term": "step.evasion-power",
+        "children": [
+          8,
+          21
+        ],
+        "value": 8.806412253246078
       }
     ]
   }

@@ -427,6 +427,11 @@
           "description": "The first child divided by the second.",
           "type": "string",
           "const": "quotient"
+        },
+        {
+          "description": "The first child to the power of the second.",
+          "type": "string",
+          "const": "power"
         }
       ]
     },

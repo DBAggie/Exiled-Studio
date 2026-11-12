@@ -85,9 +85,38 @@ pub fn pow_int(base: f64, n: u32) -> f64 {
     out
 }
 
+/// `base` to the power `exponent` (C's `pow`, which PoB's Lua `^` calls),
+/// by the `libm` crate: musl's algorithm in pure Rust, using only
+/// IEEE-exact operations, so Windows, Linux, and wasm32 give the same bits
+/// (a test checks them). musl's `pow` is within 1 ulp of the exact power
+/// (in practice correctly rounded), as glibc's and the MSVC runtime's are;
+/// a caller that rounds the result (the attack hit chance, P3-10) checks
+/// its values against PoB's.
+#[must_use]
+pub fn pow(base: f64, exponent: f64) -> f64 {
+    libm::pow(base, exponent)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Bits of `pow` written once (CI runs this on Windows and Linux).
+    #[test]
+    fn pow_should_give_the_written_bits() {
+        let cases: [(f64, f64, u64); 4] = [
+            (2.0, 10.0, 1024.0_f64.to_bits()),
+            (9.0, 0.5, 3.0_f64.to_bits()),
+            // PoB's hit chance: `(evasion / 5) ^ 0.9`, the default enemy's.
+            // The MSVC runtime gives the same bits (CPython's `**`).
+            (2028.6, 0.9, 0x408D_9A36_576C_22D4),
+            (0.0, 0.9, 0.0_f64.to_bits()),
+        ];
+        for (i, (base, exponent, bits)) in cases.into_iter().enumerate() {
+            let value = pow(base, exponent);
+            assert_eq!(value.to_bits(), bits, "case {i}: {value}");
+        }
+    }
 
     /// Bits written once; CI runs this on Windows and Linux, so a platform
     /// that rounds differently fails here.

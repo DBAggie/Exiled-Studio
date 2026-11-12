@@ -6,7 +6,7 @@
 mod common;
 
 use common::bundle;
-use loom_calc::{ArmourBase, CalcData, ItemBase, Range};
+use loom_calc::{ArmourBase, CalcData, ItemBase, Range, WeaponBase};
 use loom_data::bundle::BaseItem;
 use loom_data::bundle::properties::{ArmourType, ShieldType, ValueRange};
 
@@ -21,7 +21,15 @@ fn bases_should_join_their_property_tables() {
             ..ArmourBase::default()
         }))
     );
-    assert_eq!(b.item_base("Plain Test Wand"), Some(ItemBase::Weapon));
+    assert_eq!(
+        b.item_base("Plain Test Wand"),
+        Some(ItemBase::Weapon(WeaponBase {
+            class: "TestRing".to_owned(),
+            physical: Range { min: 5, max: 9 },
+            attack_time: 714,
+            crit_chance: 700,
+        }))
+    );
     assert_eq!(b.item_base("Plain Test Ring"), Some(ItemBase::Other));
     assert_eq!(b.item_base("No Such Base"), None);
 }

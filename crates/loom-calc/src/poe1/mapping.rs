@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 use crate::condition::{Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping};
-use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity};
+use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
@@ -75,10 +75,99 @@ const CHAOS_T: DamageType = DamageType::Chaos;
 ///   `ModFlag.Cast`);
 /// - `base_reduce_enemy_<cold|fire|lightning>_resistance_%`: "Damage
 ///   Penetrates #% Cold Resistance" (`ColdPenetration` BASE).
+///
+/// P3-10 adds the stats of an attack's hit (`Data/SkillStatMap.lua` unless
+/// named):
+/// - `accuracy_rating`, `accuracy_rating_+%`: "+# to Accuracy Rating",
+///   "#% increased Global Accuracy Rating" (`Accuracy` BASE, INC);
+/// - `attack_minimum_added_<type>_damage`, `..._maximum_...`: "Adds # to #
+///   Physical Damage to Attacks" (`PhysicalMin` BASE, `KeywordFlag.Attack`);
+/// - `attack_damage_+%`, `melee_damage_+%`, `physical_damage_+%`:
+///   increased attack, melee, and physical damage (`Damage` INC with
+///   `ModFlag.Attack`, `ModFlag.Melee`; `PhysicalDamage` INC);
+/// - `attack_speed_+%`: "#% increased Attack Speed" (`Speed` INC,
+///   `ModFlag.Attack`);
+/// - `active_skill_area_damage_+%_final`: a skill's more or less area
+///   damage (`Damage` MORE, `ModFlag.Area`: Smite's Area Hit only);
+/// - `minimum_added_lightning_damage_from_skill`, `maximum_...`: Smite's
+///   aura (`Data/Skills/act_str.lua`: `LightningMin` BASE as a
+///   `GlobalEffect` aura buff on the character, scaled by aura and buff
+///   effect, whose stats are unmapped, so the buff is its value);
+/// - `skill_physical_damage_%_to_convert_to_lightning`: the skill's
+///   conversion (`SkillPhysicalDamageConvertToLightning` BASE);
+/// - supports' own `statMap` rows (`Data/Skills/sup_*.lua`):
+///   `support_attack_skills_elemental_damage_+%_final`
+///   (`ElementalDamage` MORE, `KeywordFlag.Attack`),
+///   `support_melee_physical_damage_+%_final` (`PhysicalDamage` MORE,
+///   `ModFlag.Melee`), `support_melee_physical_damage_attack_speed_+%_final`
+///   (`Speed` MORE, `ModFlag.Attack`).
+///
+/// PoB tells `ModFlag.Attack` from `KeywordFlag.Attack`; both are the
+/// `ATTACK` flag here, which every attack hit has and nothing else does.
 pub const HIT_ROWS: &[HitRow] = &[
+    (
+        "accuracy_rating",
+        &[(Quantity::Accuracy, Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "accuracy_rating_+%",
+        &[(Quantity::Accuracy, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    (
+        "active_skill_area_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::AREA, NONE)],
+    ),
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    (
+        "attack_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_maximum_added_chaos_damage",
+        &[(added(CHAOS_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_maximum_added_cold_damage",
+        &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_maximum_added_fire_damage",
+        &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_maximum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_maximum_added_physical_damage",
+        &[(added(PHYS, MAX), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_minimum_added_chaos_damage",
+        &[(added(CHAOS_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_minimum_added_cold_damage",
+        &[(added(COLD_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_minimum_added_fire_damage",
+        &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_minimum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_minimum_added_physical_damage",
+        &[(added(PHYS, MIN), Op::Base, 1.0, Flags::ATTACK, NONE)],
+    ),
+    (
+        "attack_speed_+%",
+        &[(Quantity::Speed, Op::Increased, 1.0, Flags::ATTACK, NONE)],
     ),
     (
         "base_cast_speed_+%",
@@ -145,6 +234,32 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "lightning_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::LIGHTNING, NONE)],
+    ),
+    (
+        "maximum_added_lightning_damage_from_skill",
+        &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "melee_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::MELEE, NONE)],
+    ),
+    (
+        "minimum_added_lightning_damage_from_skill",
+        &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "physical_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::PHYSICAL, NONE)],
+    ),
+    (
+        "skill_physical_damage_%_to_convert_to_lightning",
+        &[(
+            Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, LIGHTNING_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
     ),
     (
         "spell_critical_strike_chance_+%",
@@ -219,12 +334,36 @@ pub const HIT_ROWS: &[HitRow] = &[
         &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
     (
+        "support_attack_skills_elemental_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::ATTACK,
+            Flags::ELEMENTAL,
+        )],
+    ),
+    (
         "support_controlled_destruction_critical_strike_chance_+%_final",
         &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
     ),
     (
         "support_controlled_destruction_spell_damage_+%_final",
         &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "support_melee_physical_damage_+%_final",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            1.0,
+            Flags::MELEE.union(Flags::PHYSICAL),
+            NONE,
+        )],
+    ),
+    (
+        "support_melee_physical_damage_attack_speed_+%_final",
+        &[(Quantity::Speed, Op::More, 1.0, Flags::ATTACK, NONE)],
     ),
 ];
 
@@ -243,7 +382,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Accuracy
             | Quantity::AddedDamage(..)
             | Quantity::Penetration(..)
-            | Quantity::Poe1(Poe1Quantity::SkillBaseDamage(..))
+            | Quantity::Poe1(Poe1Quantity::SkillBaseDamage(..) | Poe1Quantity::SkillConversion(..))
     )
 }
 
@@ -581,14 +720,33 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // PoB shows, which no slice field reads (P3-9b). Increased area stays
     // unmapped, as above.
     ("active_skill_base_area_of_effect_radius", "skill-radius"),
+    (
+        "active_skill_base_secondary_area_of_effect_radius",
+        "skill-radius",
+    ),
+    // How the game describes a skill's areas, its visuals, its targeting:
+    // nothing PoB computes from (P3-10, Smite).
+    (
+        "active_skill_secondary_area_of_effect_description_mode",
+        "display",
+    ),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("base_chance_to_freeze_%", "freeze"),
+    // A skill's chance to shock: PoB shocks the enemy only from its config
+    // or a guaranteed source (`ShockBase`, `ShockOverride`,
+    // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
+    // ailments), never from a chance (P3-10, Smite).
+    ("base_chance_to_shock_%_from_skill", "ailment-chance"),
     (
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
     ),
     ("base_movement_velocity_+%", "movement-speed"),
+    // A skill's effect duration (Smite's aura lasts this long after a hit;
+    // PoB keeps the aura up).
+    ("base_skill_effect_duration", "skill-duration"),
+    ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
     (
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -609,6 +767,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
     ),
+    ("console_skill_dont_chase", "display"),
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
@@ -659,9 +818,22 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("minion_maximum_life_+%", "minion-defence"),
     ("physical_damage_taken_%_as_fire", "damage-taken"),
     ("physical_damage_taken_%_as_lightning", "damage-taken"),
+    ("quality_display_active_skill_area_damage_is_gem", "display"),
+    (
+        "quality_display_active_skill_area_damage_quality_negated_from_gem",
+        "display",
+    ),
     ("rage_loss_delay_ms", "rage-duration"),
     ("regenerate_energy_shield_instead_of_life", "regeneration"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
+    ("smite_lightning_target_range", "targeting"),
+    // Melee Physical Damage's more damage with poison and bleeding: no
+    // ailment is in the slice.
+    (
+        "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
+        "ailment-damage",
+    ),
+    ("visual_hit_effect_elemental_is_holy", "display"),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
@@ -802,6 +974,117 @@ impl StatMapping for PieceMapping {
                 .iter()
                 .map(|&(value, op)| EffectTemplate {
                     quantity: Quantity::Poe1(Poe1Quantity::Piece(self.slot, value)),
+                    op,
+                    scale: 1.0,
+                    divisor: 1.0,
+                    conditions: Conditions::none(),
+                })
+                .collect(),
+        )
+    }
+}
+
+/// What a weapon's local stat changes: `(stat, [(quantity, op)])`, sorted
+/// by stat ID. PoB reads the same lines as local mods that `calcLocal`
+/// takes for the weapon's own values (`Classes/Item.lua`, the weapon
+/// branch): `PhysicalMin` ... BASE ("Adds # to # Physical Damage"),
+/// `PhysicalDamage` INC ("#% increased Physical Damage"), `Speed` INC with
+/// `ModFlag.Attack` ("#% increased Attack Speed"), `CritChance` INC ("#%
+/// increased Critical Strike Chance"); "No Physical Damage" (the game's
+/// `local_weapon_no_physical_damage`, 0 on the canonical increased physical
+/// damage line; not 0 is a reason, `hit::weapon_data`); and "+# to
+/// Accuracy Rating" as the
+/// character's `Accuracy` BASE for main-hand attacks (its
+/// `MainHandAttack` condition holds for every attack the engine computes,
+/// which use the main hand alone).
+type WeaponRow = (&'static str, &'static [(Quantity, Op)]);
+
+const fn weapon(value: WeaponValue) -> Quantity {
+    Quantity::Poe1(Poe1Quantity::Weapon(value))
+}
+
+/// The local stats of weapons (`stat_descriptions.txt`, each with `local`
+/// set in the stats table).
+pub const WEAPON_ROWS: &[WeaponRow] = &[
+    ("local_accuracy_rating", &[(Quantity::Accuracy, Op::Base)]),
+    (
+        "local_attack_speed_+%",
+        &[(weapon(WeaponValue::AttackSpeed), Op::Increased)],
+    ),
+    (
+        "local_critical_strike_chance_+%",
+        &[(weapon(WeaponValue::CritChance), Op::Increased)],
+    ),
+    (
+        "local_maximum_added_chaos_damage",
+        &[(weapon(WeaponValue::Damage(CHAOS_T, MAX)), Op::Base)],
+    ),
+    (
+        "local_maximum_added_cold_damage",
+        &[(weapon(WeaponValue::Damage(COLD_T, MAX)), Op::Base)],
+    ),
+    (
+        "local_maximum_added_fire_damage",
+        &[(weapon(WeaponValue::Damage(FIRE_T, MAX)), Op::Base)],
+    ),
+    (
+        "local_maximum_added_lightning_damage",
+        &[(weapon(WeaponValue::Damage(LIGHTNING_T, MAX)), Op::Base)],
+    ),
+    (
+        "local_maximum_added_physical_damage",
+        &[(weapon(WeaponValue::Damage(PHYS, MAX)), Op::Base)],
+    ),
+    (
+        "local_minimum_added_chaos_damage",
+        &[(weapon(WeaponValue::Damage(CHAOS_T, MIN)), Op::Base)],
+    ),
+    (
+        "local_minimum_added_cold_damage",
+        &[(weapon(WeaponValue::Damage(COLD_T, MIN)), Op::Base)],
+    ),
+    (
+        "local_minimum_added_fire_damage",
+        &[(weapon(WeaponValue::Damage(FIRE_T, MIN)), Op::Base)],
+    ),
+    (
+        "local_minimum_added_lightning_damage",
+        &[(weapon(WeaponValue::Damage(LIGHTNING_T, MIN)), Op::Base)],
+    ),
+    (
+        "local_minimum_added_physical_damage",
+        &[(weapon(WeaponValue::Damage(PHYS, MIN)), Op::Base)],
+    ),
+    (
+        "local_physical_damage_+%",
+        &[
+            (weapon(WeaponValue::Damage(PHYS, MIN)), Op::Increased),
+            (weapon(WeaponValue::Damage(PHYS, MAX)), Op::Increased),
+        ],
+    ),
+    (
+        "local_weapon_no_physical_damage",
+        &[(weapon(WeaponValue::NoPhysicalDamage), Op::Base)],
+    ),
+];
+
+/// The mapping of the main-hand weapon's lines: its local stats act on
+/// the weapon ([`WEAPON_ROWS`]); every other stat is the game's
+/// ([`Poe1Mapping`]).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct WeaponMapping;
+
+impl StatMapping for WeaponMapping {
+    fn map(&self, stat: &StatId) -> StatMap {
+        let Ok(i) = WEAPON_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) else {
+            return Poe1Mapping.map(stat);
+        };
+        StatMap::Effects(
+            WEAPON_ROWS[i]
+                .1
+                .iter()
+                .map(|&(quantity, op)| EffectTemplate {
+                    quantity,
                     op,
                     scale: 1.0,
                     divisor: 1.0,
@@ -1265,6 +1548,140 @@ mod tests {
                 (DEX, Op::Increased, 1.0),
                 (INT, Op::Increased, 1.0)
             ]
+        );
+    }
+
+    #[test]
+    fn attack_stats_should_map_as_pob_reads_them() {
+        let none = Conditions::none;
+        let all = |f| Conditions::none().with_all(f);
+        assert_eq!(
+            hit("accuracy_rating"),
+            [(Quantity::Accuracy, Op::Base, 1.0, none())]
+        );
+        assert_eq!(
+            hit("accuracy_rating_+%"),
+            [(Quantity::Accuracy, Op::Increased, 1.0, none())]
+        );
+        assert_eq!(
+            hit("attack_minimum_added_physical_damage"),
+            [(added(PHYS, MIN), Op::Base, 1.0, all(Flags::ATTACK))]
+        );
+        assert_eq!(
+            hit("attack_speed_+%"),
+            [(Quantity::Speed, Op::Increased, 1.0, all(Flags::ATTACK))]
+        );
+        assert_eq!(
+            hit("melee_damage_+%"),
+            [(Quantity::Damage, Op::Increased, 1.0, all(Flags::MELEE))]
+        );
+        assert_eq!(
+            hit("physical_damage_+%"),
+            [(Quantity::Damage, Op::Increased, 1.0, all(Flags::PHYSICAL))]
+        );
+        assert_eq!(
+            hit("active_skill_area_damage_+%_final"),
+            [(Quantity::Damage, Op::More, 1.0, all(Flags::AREA))]
+        );
+        assert_eq!(
+            hit("support_attack_skills_elemental_damage_+%_final"),
+            [(
+                Quantity::Damage,
+                Op::More,
+                1.0,
+                all(Flags::ATTACK).with_any(Flags::ELEMENTAL)
+            )]
+        );
+        assert_eq!(
+            hit("support_melee_physical_damage_+%_final"),
+            [(
+                Quantity::Damage,
+                Op::More,
+                1.0,
+                all(Flags::MELEE | Flags::PHYSICAL)
+            )]
+        );
+        assert_eq!(
+            hit("support_melee_physical_damage_attack_speed_+%_final"),
+            [(Quantity::Speed, Op::More, 1.0, all(Flags::ATTACK))]
+        );
+        // Smite's aura adds lightning damage to every hit.
+        assert_eq!(
+            hit("minimum_added_lightning_damage_from_skill"),
+            [(added(LIGHTNING_T, MIN), Op::Base, 1.0, none())]
+        );
+        assert_eq!(
+            hit("skill_physical_damage_%_to_convert_to_lightning"),
+            [(
+                Quantity::Poe1(Poe1Quantity::SkillConversion(PHYS, LIGHTNING_T)),
+                Op::Base,
+                1.0,
+                none()
+            )]
+        );
+        // A gem's conversion acts on its skill.
+        assert!(matches!(
+            SkillMapping.map(&StatId::new(
+                "skill_physical_damage_%_to_convert_to_lightning"
+            )),
+            StatMap::Effects(_)
+        ));
+        // Left unmapped: area of effect (it can change a hit's count).
+        assert_eq!(
+            Poe1Mapping.map(&StatId::new(
+                "support_concentrated_effect_skill_area_of_effect_+%_final"
+            )),
+            StatMap::Unmapped
+        );
+    }
+
+    #[test]
+    fn weapon_local_stats_should_act_on_the_weapon() {
+        assert!(WEAPON_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        let local = |stat: &str| match WeaponMapping.map(&StatId::new(stat)) {
+            StatMap::Effects(e) => e
+                .into_iter()
+                .map(|t| (t.quantity, t.op, t.scale))
+                .collect::<Vec<_>>(),
+            other => panic!("{stat}: {other:?}"),
+        };
+        let weapon = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+        assert_eq!(
+            local("local_physical_damage_+%"),
+            [
+                (weapon(WeaponValue::Damage(PHYS, MIN)), Op::Increased, 1.0),
+                (weapon(WeaponValue::Damage(PHYS, MAX)), Op::Increased, 1.0)
+            ]
+        );
+        assert_eq!(
+            local("local_maximum_added_lightning_damage"),
+            [(weapon(WeaponValue::Damage(LIGHTNING_T, MAX)), Op::Base, 1.0)]
+        );
+        assert_eq!(
+            local("local_attack_speed_+%"),
+            [(weapon(WeaponValue::AttackSpeed), Op::Increased, 1.0)]
+        );
+        assert_eq!(
+            local("local_critical_strike_chance_+%"),
+            [(weapon(WeaponValue::CritChance), Op::Increased, 1.0)]
+        );
+        assert_eq!(
+            local("local_weapon_no_physical_damage"),
+            [(weapon(WeaponValue::NoPhysicalDamage), Op::Base, 1.0)]
+        );
+        assert_eq!(
+            local("local_accuracy_rating"),
+            [(Quantity::Accuracy, Op::Base, 1.0)]
+        );
+        // Other lines are the game's.
+        assert_eq!(
+            WeaponMapping.map(&StatId::new("maximum_life_+%")),
+            Poe1Mapping.map(&StatId::new("maximum_life_+%"))
+        );
+        // The global mapping does not know the weapon's local stats.
+        assert_eq!(
+            Poe1Mapping.map(&StatId::new("local_attack_speed_+%")),
+            StatMap::Unmapped
         );
     }
 }
