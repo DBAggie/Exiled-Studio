@@ -793,6 +793,21 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
             continue;
         }
+        // The enemy model's inputs (`poe1::enemy`), when of the type it
+        // reads: no computed field reads the enemy yet, and the hit fields
+        // will take its problems as their reasons (P3-9b).
+        if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str()) {
+            let modelled = match &input.value {
+                ConfigValue::String(s) => {
+                    input.name == "enemyIsBoss" && super::enemy::BossKind::of(s).is_some()
+                }
+                ConfigValue::Number(_) => input.name != "enemyIsBoss",
+                ConfigValue::Boolean(_) => false,
+            };
+            if modelled {
+                continue;
+            }
+        }
         ingest.reason(UnsupportedReason::UnmodelledConfig {
             input: input.name.clone(),
         });
