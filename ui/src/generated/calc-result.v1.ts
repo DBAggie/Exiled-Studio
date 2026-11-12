@@ -771,6 +771,76 @@ export type UnsupportedReason =
             }
       }
     }
+  | {
+      'scaled-line': {
+        /**
+         * The scaling (`catalyst`, `corrupted-range`,
+         * `modifier-magnitude`).
+         */
+        scaling: string
+        /**
+         * The line.
+         */
+        source:
+          | 'character'
+          | {
+              item: {
+                /**
+                 * The import tolerance the line needed, if any.
+                 */
+                adapted?: Adapted | null
+                /**
+                 * The item's ID.
+                 */
+                item: number
+                /**
+                 * The line's index among the item's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
+              passive: {
+                /**
+                 * The node's ID.
+                 */
+                node: number
+              }
+            }
+          | {
+              gem: {
+                /**
+                 * The gem's index in the group.
+                 */
+                gem: number
+                /**
+                 * The socket group's index.
+                 */
+                group: number
+              }
+            }
+          | {
+              config: {
+                /**
+                 * The input's name.
+                 */
+                input: string
+              }
+            }
+          | 'enemy'
+          | {
+              rule: string
+            }
+      }
+    }
   | 'unchecked-tree-version'
   | {
       'unmodelled-skill': {

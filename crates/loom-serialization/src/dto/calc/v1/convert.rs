@@ -147,6 +147,10 @@ pub(super) fn unsupported_to(r: &c::UnsupportedReason) -> UnsupportedReason {
         c::UnsupportedReason::UnreadLine { source } => UnsupportedReason::UnreadLine {
             source: source_to(source),
         },
+        c::UnsupportedReason::ScaledLine { source, scaling } => UnsupportedReason::ScaledLine {
+            source: source_to(source),
+            scaling: (*scaling).to_owned(),
+        },
         c::UnsupportedReason::UncheckedTreeVersion => UnsupportedReason::UncheckedTreeVersion,
         c::UnsupportedReason::UnmodelledSkill { source, what } => {
             UnsupportedReason::UnmodelledSkill {

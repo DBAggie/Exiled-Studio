@@ -64,8 +64,10 @@ mod domain;
     reason = "tests index fixed synthetic data; a bad index should panic"
 )]
 mod tests;
+mod values;
 
 pub use domain::{rarity as domain_rarity, section as domain_section, to_domain};
+pub use values::{LineEnds, line_values};
 
 /// Item rarity, as `Rarity:` names it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

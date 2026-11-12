@@ -115,6 +115,16 @@ pub enum UnsupportedReason {
         /// The line.
         source: Source,
     },
+    /// An item line whose values the import format scales in a way the
+    /// engine does not model (a catalyst's quality, a corrupted range, an
+    /// item's modifier magnitudes): the line gives no effect.
+    ScaledLine {
+        /// The line.
+        source: Source,
+        /// The scaling (`catalyst`, `corrupted-range`,
+        /// `modifier-magnitude`).
+        scaling: &'static str,
+    },
     /// The build allocates passives, but the tree version of the data was
     /// not given, so the build's tree version was not checked.
     UncheckedTreeVersion,
@@ -148,6 +158,7 @@ impl UnsupportedReason {
             Self::UnmodelledItem { .. } => "unmodelled-item",
             Self::UnmodelledPassive { .. } => "unmodelled-passive",
             Self::UnreadLine { .. } => "unread-line",
+            Self::ScaledLine { .. } => "scaled-line",
             Self::UncheckedTreeVersion => "unchecked-tree-version",
             Self::UnmodelledSkill { .. } => "unmodelled-skill",
         }

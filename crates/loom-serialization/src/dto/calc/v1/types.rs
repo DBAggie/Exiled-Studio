@@ -212,6 +212,15 @@ dto! {
             /// The line.
             source: Source,
         },
+        /// An item line whose values the import format scales in a way the
+        /// engine does not model; it gives no effect.
+        ScaledLine {
+            /// The line.
+            source: Source,
+            /// The scaling (`catalyst`, `corrupted-range`,
+            /// `modifier-magnitude`).
+            scaling: String,
+        },
         /// Passives are allocated, but the data's tree version was not
         /// given, so the build's was not checked.
         UncheckedTreeVersion,

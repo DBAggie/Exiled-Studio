@@ -16,11 +16,14 @@
 //! applies to every computed field (the conservative reading of decision
 //! 1); later steps may narrow a reason to the fields it reaches.
 
+use std::collections::BTreeMap;
+
 use loom_domain::{
     Exclusion, ItemId, LineResolution, Resolved, StatId, StatLine, StatValue, TypedResolution,
 };
 
 use crate::condition::Conditions;
+use crate::input::LineValues;
 use crate::quantity::{Op, Quantity};
 use crate::source::Source;
 use crate::state::{IndeterminateReason, Reasons, UnsupportedReason};
@@ -108,9 +111,38 @@ pub fn settle(value: &StatValue) -> Option<f64> {
     Some(raw as f64)
 }
 
+/// The host's settled values of item lines, by item and line index
+/// ([`CalcOptions::item_lines`](crate::CalcOptions::item_lines)).
+pub type ItemLines = BTreeMap<ItemId, BTreeMap<usize, LineValues>>;
+
+/// A line's stats with the host's rolled values in place of its ranged
+/// ones; `None` (the line keeps its own values, so a ranged one stays
+/// unsettled) when the host gives another number of stats or rolls a stat
+/// that is not ranged or a value outside its range.
+fn rolled(stats: &[StatLine], values: &[Option<i64>]) -> Option<Vec<StatLine>> {
+    if stats.len() != values.len() {
+        return None;
+    }
+    stats
+        .iter()
+        .zip(values)
+        .map(|(s, v)| match (&s.value, v) {
+            (_, None) => Some(s.clone()),
+            (StatValue::Ranged { min, max }, Some(v)) if (*min..=*max).contains(v) => {
+                Some(StatLine {
+                    stat: s.stat.clone(),
+                    value: StatValue::Exact { min: *v, max: *v },
+                })
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 /// Builds the modifier store from a build's content.
 pub struct Ingest<'m> {
     mapping: &'m dyn StatMapping,
+    item_lines: Option<&'m ItemLines>,
     store: ModStore,
     reasons: Reasons,
 }
@@ -130,9 +162,19 @@ impl<'m> Ingest<'m> {
     pub fn new(mapping: &'m dyn StatMapping) -> Self {
         Self {
             mapping,
+            item_lines: None,
             store: ModStore::new(),
             reasons: Reasons::new(),
         }
+    }
+
+    /// Takes the host's settled values of item lines ([`ItemLines`]):
+    /// a `Rolled` line's ranged stats take the rolled values, a `Scaled`
+    /// line gives `ScaledLine` and no effect.
+    #[must_use]
+    pub fn with_item_lines(mut self, item_lines: &'m ItemLines) -> Self {
+        self.item_lines = Some(item_lines);
+        self
     }
 
     /// Adds an effect the rules give directly (a character base value, an
@@ -251,9 +293,24 @@ impl<'m> Ingest<'m> {
             }
             LineResolution::Resolved { result, adapted } => {
                 let source = at(*adapted);
+                let host = self
+                    .item_lines
+                    .and_then(|lines| lines.get(&item))
+                    .and_then(|lines| lines.get(&line));
+                if let Some(LineValues::Scaled(scaling)) = host {
+                    self.reason(UnsupportedReason::ScaledLine {
+                        source,
+                        scaling: scaling.name(),
+                    });
+                    return;
+                }
                 match result {
                     Resolved::Stats(stats) => {
-                        for s in stats {
+                        let rolled = match host {
+                            Some(LineValues::Rolled(values)) => rolled(stats, values),
+                            _ => None,
+                        };
+                        for s in rolled.as_deref().unwrap_or(stats) {
                             self.stat_with(mapping, &source, s);
                         }
                     }
@@ -458,6 +515,59 @@ mod tests {
             ]
         );
         assert!(reasons.indeterminate.is_empty());
+    }
+
+    fn ranged_line(stats: Vec<StatLine>) -> LineResolution {
+        LineResolution::Resolved {
+            result: Resolved::Stats(stats),
+            adapted: None,
+        }
+    }
+
+    #[test]
+    fn the_hosts_rolled_values_should_settle_ranged_stats() {
+        let item = ItemId(5);
+        let lines: ItemLines = BTreeMap::from([(
+            item,
+            BTreeMap::from([
+                // Rolled: the ranged stat takes 14, the exact one its own.
+                (0, LineValues::Rolled(vec![None, Some(14)])),
+                // Another number of stats: ignored, stays unsettled.
+                (1, LineValues::Rolled(vec![Some(14)])),
+                // Outside the range: ignored.
+                (2, LineValues::Rolled(vec![None, Some(30)])),
+                (3, LineValues::Scaled(crate::input::Scaling::Catalyst)),
+            ]),
+        )]);
+        let pair = || {
+            vec![
+                line("life", exact(3)),
+                line("life", StatValue::Ranged { min: 10, max: 20 }),
+            ]
+        };
+        let mut i = Ingest::new(&Map).with_item_lines(&lines);
+        i.item_line(item, 0, &ranged_line(pair()));
+        i.item_line(item, 1, &ranged_line(pair()));
+        i.item_line(item, 2, &ranged_line(pair()));
+        i.item_line(item, 3, &ranged_line(pair()));
+        // A line the host does not list keeps its values.
+        i.item_line(item, 4, &ranged_line(vec![line("life", exact(2))]));
+        let (store, reasons) = i.finish();
+        let values: Vec<f64> = store.effects().iter().map(|e| e.value).collect();
+        // Line 0 (3, 14); lines 1 and 2 their exact stat only; line 4.
+        assert_eq!(values, [3.0, 14.0, 3.0, 3.0, 2.0]);
+        assert_eq!(reasons.indeterminate.len(), 2, "lines 1 and 2 unsettled");
+        assert_eq!(
+            reasons.partial.into_iter().collect::<Vec<_>>(),
+            vec![UnsupportedReason::ScaledLine {
+                source: Source::Item {
+                    item,
+                    line: 3,
+                    adapted: None
+                },
+                scaling: "catalyst"
+            }]
+        );
     }
 
     #[test]

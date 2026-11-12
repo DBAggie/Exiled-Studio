@@ -40,12 +40,12 @@ pub use condition::{ConditionKey, Conditions, Flags, QueryContext};
 pub use engine::{Calc, Phase, Ruleset, calculate, calculate_cancellable, calculate_with};
 pub use error::CalcError;
 pub use graph::{Graph, GraphError, Node, NodeIndex, Term};
-pub use ingest::{EffectTemplate, Ingest, StatMap, StatMapping, TypedMap, settle};
+pub use ingest::{EffectTemplate, Ingest, ItemLines, StatMap, StatMapping, TypedMap, settle};
 pub use input::{
     ActiveSkill, ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions,
-    CharacterBase, EffectLevel, GemEffect, GrantedEffect, ItemBase, MONSTER_TEMPLATE,
-    MonsterDefences, MonsterStats, PassiveLinks, Range, SkillChoice, SkillGem, StatAmount, StatSet,
-    StatSetLevel, WeaponBase,
+    CharacterBase, EffectLevel, GemEffect, GrantedEffect, ItemBase, LineValues, MONSTER_TEMPLATE,
+    MonsterDefences, MonsterStats, PassiveLinks, Range, Scaling, SkillChoice, SkillGem, StatAmount,
+    StatSet, StatSetLevel, WeaponBase,
 };
 pub use quantity::{Bound, DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};

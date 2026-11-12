@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-9b: spell hits)
+Last Updated: 2026-11-12 (P3-8b: rolled values)
 
 # Phase 3: calc slice (plan)
 
@@ -138,6 +138,7 @@ Map every stat that step 3's inventory finds in the in-scope builds' passives, i
 - **Accept (each PR):** the inventory's unmapped count for the in-scope builds falls; no in-scope build gains an unregistered difference; the coverage summary is committed.
 - **Depends on:** 3, 4; runs alongside 6, 7, 9, 10.
 - **P3-8a done** (`docs/phase-3/stat-mapping.md`): 40 stats that reach no slice field (`NoEffect`, with categories and the stats left out on purpose); in-scope unmapped stats 153 to 113.
+- **P3-8b done** (`docs/phase-3/rolled-values.md`): PoB's rolled values of ranged lines (`{range:r}`) settled by the host (parser ends, PoB adapter, `CalcOptions::item_lines`); catalyst, corrupted-range, and modifier-magnitude lines are `scaled-line` reasons; the in-scope builds have no `indeterminate` reason left.
 
 ### 9. Skills and spell hits (L, split into 9a and 9b)
 - **9a, skill model (M):** active gem, supports in its group (links), gem level and quality, the per-level and per-quality stats, skill types, the skill's own effects, damage effectiveness, cast or attack time, base crit chance; support gems the engine does not model make the skill's fields `Partial`. Accept: unit tests over synthetic skills; mechanic fixtures for gem level and quality on a field the step can already compute (for example a gem's mana cost or a support's reservation multiplier, if in the slice) or, failing that, engine tests against values read from the oracle output.

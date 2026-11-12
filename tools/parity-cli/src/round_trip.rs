@@ -394,7 +394,7 @@ fn reads_back(c: &Candidate, values: &[StatValue]) -> bool {
 
 fn contains(read: &RawValue, v: StatValue) -> bool {
     match read {
-        RawValue::Exact(x) | RawValue::Ranged(x) => x.min <= v.min && v.max <= x.max,
+        RawValue::Exact(x) | RawValue::Ranged(x, _) => x.min <= v.min && v.max <= x.max,
         RawValue::Hidden { condition, .. } => condition.holds(v.min),
         RawValue::Lookup(keys) => v.min == v.max && keys.contains(&v.min),
     }

@@ -356,6 +356,49 @@ fn quarantine_should_name_every_unresolved_line() {
 }
 
 #[test]
+fn resolve_build_ranged_should_give_the_exact_ends_of_each_range() {
+    let b = bundle("bundle-poe1");
+    let data = BundleData::new(&b);
+    let mut build = build(
+        Game::Poe1,
+        vec![item(
+            1,
+            Some(RING),
+            vec![
+                explicit("+15 to maximum Life"),
+                explicit("+(10-20) to maximum Life"),
+            ],
+        )],
+    );
+    let resolver = Resolver::new(&data).unwrap();
+    let (_, ends) = resolver
+        .resolve_build_ranged(&mut build, base_line)
+        .unwrap();
+    // The ranged line only, its one stat with both ends in shown order.
+    let line = ends.get(&ItemId(1)).unwrap();
+    assert_eq!(line.keys().copied().collect::<Vec<_>>(), [1]);
+    assert_eq!(
+        line[&1],
+        [Some(loom_parser::resolve::RangeEnds { from: 10, to: 20 })]
+    );
+    assert_eq!(
+        resolutions(&build, 1)[1],
+        stats(
+            vec![StatLine {
+                stat: StatId::new("test_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }],
+            None
+        )
+    );
+    // Resolved lines are not read again: a second run gives no ends.
+    let (_, again) = resolver
+        .resolve_build_ranged(&mut build, base_line)
+        .unwrap();
+    assert!(again.is_empty());
+}
+
+#[test]
 fn a_second_run_should_change_nothing() {
     let b = bundle("bundle-poe1");
     let mut build = resolved(Game::Poe1, &b);

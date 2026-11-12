@@ -801,6 +801,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite against a configured enemy: level 70, 20000 armour, 3000 evasion, 40% lightning resistance (P3-10)."
+    },
+    {
+      "id": "rolled-jewellery-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/rolled-jewellery-witch.xml",
+      "sha256": "62dbdabfc2b46d98e580b7b75789d8c44ce52f02bb302130063df54c0804991a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with two rings, an amulet and a belt (rare, original) whose lines are ranges with PoB's roll: rolls between the ends, a tie on a reduced line, implicit rolls, and an agreeing ModRange (P3-8b)."
     }
   ]
 }

@@ -30,5 +30,8 @@ pub mod tolerance;
 pub use base::{
     BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, TextRules, find_base,
 };
-pub use build::{ItemBaseName, ResolveError, Resolver, data_version, resolve_build};
+pub use build::{
+    BuildRangeEnds, ItemBaseName, LineRangeEnds, ResolveError, Resolver, data_version,
+    resolve_build,
+};
 pub use bundle::BundleData;

@@ -448,6 +448,48 @@ pub struct CalcOptions {
     /// `resolve_build` its base names. An armour piece without one is
     /// `Partial` (`unmodelled-item`, `no-base-name`).
     pub item_bases: BTreeMap<ItemId, BaseName>,
+    /// What the import adapter settled about item lines' values, by item
+    /// and line index ([`LineValues`]): its format's rules (PoB's roll
+    /// `{range:r}`, catalyst quality), which the core does not know. A
+    /// line not listed takes its resolution's values; a ranged one stays
+    /// unsettled (`unsettled-value`).
+    pub item_lines: BTreeMap<ItemId, BTreeMap<usize, LineValues>>,
+}
+
+/// What an import adapter settled about one item line's values.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LineValues {
+    /// The rolled raw value of each stat of the line's resolution, in
+    /// order (`None`: the resolution's own value). The engine takes them
+    /// only when the line resolved to that many stats.
+    Rolled(Vec<Option<i64>>),
+    /// The format scales the line's values in a way the engine does not
+    /// model: the line gives no effect and the fields are `Partial`
+    /// (`scaled-line` with the scaling's name).
+    Scaled(Scaling),
+}
+
+/// A scaling of an item line's values the engine does not model.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Scaling {
+    /// A catalyst's quality.
+    Catalyst,
+    /// A corrupted implicit's range.
+    CorruptedRange,
+    /// An item's modifier magnitudes.
+    ModifierMagnitude,
+}
+
+impl Scaling {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Catalyst => "catalyst",
+            Self::CorruptedRange => "corrupted-range",
+            Self::ModifierMagnitude => "modifier-magnitude",
+        }
+    }
 }
 
 /// A calculation's input: an immutable snapshot.

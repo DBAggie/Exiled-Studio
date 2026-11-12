@@ -102,6 +102,10 @@ fn every_reason() -> Reasons {
         UnsupportedReason::UnreadLine {
             source: item(9, None),
         },
+        UnsupportedReason::ScaledLine {
+            source: item(10, None),
+            scaling: "catalyst",
+        },
         UnsupportedReason::UncheckedTreeVersion,
         UnsupportedReason::UnmodelledSkill {
             source: Source::Gem { group: 0, gem: 0 },
@@ -690,7 +694,7 @@ fn field_reasons_should_follow_the_state() {
     let life = by("life");
     assert!(life.unsupported.is_empty() && life.indeterminate.is_empty());
     assert!(life.value.is_some() && life.node.is_some());
-    assert_eq!(by("mana").unsupported.len(), 16);
+    assert_eq!(by("mana").unsupported.len(), 17);
     let es = by("energy-shield");
     assert!(es.unsupported.is_empty());
     assert!(matches!(
@@ -701,7 +705,7 @@ fn field_reasons_should_follow_the_state() {
     assert!(by("mana").reason.is_none());
     let fire = by("resistance.fire");
     assert_eq!((fire.unsupported.len(), fire.indeterminate.len()), (1, 4));
-    assert_eq!(doc.result.reasons.unsupported.len(), 16);
+    assert_eq!(doc.result.reasons.unsupported.len(), 17);
     assert_eq!(doc.result.reasons.indeterminate.len(), 4);
 }
 
