@@ -67,7 +67,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 
 ## P3-6 to P3-12: engine
 - [x] P3-6 character, attributes, life, mana, ES (PR #71; `docs/phase-3/character-fields.md`; 19 mechanic fixtures match on their targets)
-- [x] P3-7 core defences (PR #PRNUM; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
+- [x] P3-7 core defences (PR #72; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
 - [ ] P3-8 stat mappings (one or more PRs; coverage summary each)
 - [ ] P3-11 enemy model
 - [ ] P3-9a skill model
