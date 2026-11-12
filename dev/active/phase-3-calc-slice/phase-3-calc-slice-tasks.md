@@ -72,7 +72,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
 - [x] P3-1d monster types for the default enemy (PR #75; `docs/phase-3/monster-types.md`; 22 bosses equal PoB's)
 - [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
-- [x] P3-11 enemy model (PR #PRNUM11; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
+- [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
 - [ ] P3-9b spell hits
 - [ ] P3-10 attacks
 - [ ] P3-12 buffs and config (one or more PRs)
