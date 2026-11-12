@@ -80,7 +80,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
 - [ ] P3-12 buffs and config (one or more PRs)
   - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
-  - [x] P3-12b PoB's config placeholders (PR pending; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
+  - [x] P3-12b PoB's config placeholders (PR #84, open; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
   - [ ] Next: custom modifier blocks (`<untyped>` left), charges, rage, fortification, shock, exposure, other gems (auras, buffs)
 
 ## P3-14: corpus run and register

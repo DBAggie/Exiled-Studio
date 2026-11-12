@@ -303,7 +303,7 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
-## Decisions in P3-12b (PR pending; PoB's config placeholders; evidence `docs/phase-3/config-inputs.md`, "P3-12b")
+## Decisions in P3-12b (PR #84; PoB's config placeholders; evidence `docs/phase-3/config-inputs.md`, "P3-12b")
 - **Why next:** `<untyped>` was a config reason in all 7 in-scope builds, and in every build PoB saved with placeholders; PoB applies a numeric option's placeholder when its input is unset (`ConfigTab.lua` 1147), so the reason was right in principle but said nothing about which placeholder mattered.
 - **Typed in the domain, not read from opaque content:** `ConfigInput.kind` (`Input`, `Placeholder`), so the calc never knows PoB's element names. A string placeholder (PoB loads it as the input's value) and one without a number stay opaque.
 - **Build document v1, additive (for the maintainer to confirm):** an optional `kind` (left out for `input`), the first change to build v1 since Phase 2, on calc result v1's written rule (`dto/calc/v1/mod.rs`): additive until the Phase 3 gate, every reader in this repository, nothing released. Caveat: a reader from before the change refuses a document with a placeholder (`DTO_JSON`, not `MIGRATE_TOO_NEW`). The alternative is a v2 with a no-op migration.
