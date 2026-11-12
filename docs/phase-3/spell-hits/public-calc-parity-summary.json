@@ -1,0 +1,2809 @@
+{
+  "format": 1,
+  "status": "incomplete",
+  "class": null,
+  "oracle": {
+    "sha256": "4fb1a3529617adc204983abceabd91779dd203d814b5501b1a61828c2e5558b3",
+    "platform": "windows-x86_64",
+    "tool_commit": "d8a3681eca3bcef2e4428bfd7ca17e54692415ae"
+  },
+  "successor": {
+    "sha256": "aa8f1d8c8e01e40fa6678e5c85fb6a39a0512126f4920dc983ba09e68a72a774",
+    "platform": null,
+    "tool_commit": "a6b234b2a96945ec562e40432415ab3d40e4ebc2"
+  },
+  "overlay": {
+    "sha256": "8a8a9882e0dc188f719b460bc2dd8745575c16e85d010e7a75cb1c78b321a125",
+    "platform": null,
+    "tool_commit": "a6b234b2a96945ec562e40432415ab3d40e4ebc2"
+  },
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b"
+  },
+  "slice": {
+    "sha256": "6b120021dbe21ba7db2515fdb6571532ae938f7fa2c75800299e9c59f3a6c0bb",
+    "revision": 2,
+    "status": "proposed"
+  },
+  "register": {
+    "sha256": "da96b56c4f581639a17350da661cb980a73822b936a05bf24623bcaf7e7e5f10",
+    "entries": 0,
+    "accepted": 0
+  },
+  "counts": {
+    "builds": 71,
+    "no_difference": 70,
+    "expected": 0,
+    "unexpected": 0,
+    "failed": 0,
+    "expected_failures": 1,
+    "not_compared": 0,
+    "fields": {
+      "indeterminate": 530,
+      "match": 667,
+      "not-computed": 415,
+      "partial": 68
+    },
+    "breakdowns": {
+      "absent": 69,
+      "match": 266,
+      "not-compared": 365
+    },
+    "views_differ": 0,
+    "incomplete": 34,
+    "expected_differences": 0,
+    "unexpected_differences": 0
+  },
+  "unpaired": [],
+  "missing_mechanic": [],
+  "unused_entries": [],
+  "views_differ": [],
+  "not_no_difference": [
+    {
+      "id": "malformed.xml",
+      "status": "expected_failure",
+      "reason": "both sides failed to import, as the fixture manifest expects (oracle ORACLE_IMPORT, successor IMPORT_XML at read)"
+    }
+  ],
+  "mechanic": [
+    {
+      "id": "bare-scion-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-scion-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-marauder-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-marauder-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-ranger-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-ranger-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-witch-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-witch-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-duelist-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-duelist-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-templar-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-templar-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-shadow-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "bare-shadow-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "passives-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "passives-scion.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "masteries-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "jewellery-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "jewel-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "armour-pieces-marauder.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "shield-templar.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "resistances-duelist.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "evasion-es-shadow.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-level10-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-added-cold-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-controlled-destruction-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-increased-critical-strikes-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-cold-penetration-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-faster-casting-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-increased-critical-damage-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-added-damage-items-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-crit-items-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-enemy-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true
+        },
+        {
+          "field": "AverageDamage",
+          "met": true
+        },
+        {
+          "field": "BlockChance",
+          "met": true
+        },
+        {
+          "field": "ChaosResist",
+          "met": true
+        },
+        {
+          "field": "ColdResist",
+          "met": true
+        },
+        {
+          "field": "CritChance",
+          "met": true
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true
+        },
+        {
+          "field": "Dex",
+          "met": true
+        },
+        {
+          "field": "EnergyShield",
+          "met": true
+        },
+        {
+          "field": "Evasion",
+          "met": true
+        },
+        {
+          "field": "FireResist",
+          "met": true
+        },
+        {
+          "field": "Int",
+          "met": true
+        },
+        {
+          "field": "Life",
+          "met": true
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true
+        },
+        {
+          "field": "LightningResist",
+          "met": true
+        },
+        {
+          "field": "Mana",
+          "met": true
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true
+        },
+        {
+          "field": "Speed",
+          "met": true
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true
+        },
+        {
+          "field": "Str",
+          "met": true
+        },
+        {
+          "field": "TotalDPS",
+          "met": true
+        }
+      ]
+    }
+  ]
+}

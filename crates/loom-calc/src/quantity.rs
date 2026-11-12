@@ -48,6 +48,29 @@ impl DamageType {
     }
 }
 
+/// Which end of a damage range.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Bound {
+    /// The lowest roll.
+    Min,
+    /// The highest roll.
+    Max,
+}
+
+impl Bound {
+    /// Both ends, lowest first.
+    pub const ALL: [Self; 2] = [Self::Min, Self::Max];
+
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Min => "min",
+            Self::Max => "max",
+        }
+    }
+}
+
 /// What an effect changes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Quantity {
@@ -88,6 +111,12 @@ pub enum Quantity {
     CritMultiplier,
     /// Accuracy rating.
     Accuracy,
+    /// Damage of a type added to hits ("Adds # to # Cold Damage"); which
+    /// hits, by the effect's conditions. Scaled by the skill's damage
+    /// effectiveness.
+    AddedDamage(DamageType, Bound),
+    /// Penetration of the enemy's resistance to a damage type, percent.
+    Penetration(DamageType),
     /// A Path of Exile only quantity.
     Poe1(Poe1Quantity),
 }
@@ -112,6 +141,8 @@ impl fmt::Display for Quantity {
             Self::CritChance => f.write_str("crit-chance"),
             Self::CritMultiplier => f.write_str("crit-multiplier"),
             Self::Accuracy => f.write_str("accuracy"),
+            Self::AddedDamage(t, b) => write!(f, "added-damage.{}.{}", t.name(), b.name()),
+            Self::Penetration(t) => write!(f, "penetration.{}", t.name()),
             Self::Poe1(q) => write!(f, "poe1.{q}"),
         }
     }
@@ -160,6 +191,14 @@ mod tests {
             "maximum-resistance.fire"
         );
         assert_eq!(Op::More.name(), "more");
+        assert_eq!(
+            Quantity::AddedDamage(DamageType::Cold, Bound::Max).to_string(),
+            "added-damage.cold.max"
+        );
+        assert_eq!(
+            Quantity::Penetration(DamageType::Lightning).to_string(),
+            "penetration.lightning"
+        );
         assert_eq!(DamageType::ALL.len(), 5);
     }
 }

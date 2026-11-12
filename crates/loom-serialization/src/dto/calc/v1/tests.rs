@@ -103,6 +103,10 @@ fn every_reason() -> Reasons {
             source: item(9, None),
         },
         UnsupportedReason::UncheckedTreeVersion,
+        UnsupportedReason::UnmodelledSkill {
+            source: Source::Gem { group: 0, gem: 0 },
+            what: "physical-hit-armour",
+        },
     ]);
     r.indeterminate.extend([
         IndeterminateReason::ConflictingOverride {
@@ -269,6 +273,19 @@ fn every_kind_result() -> CalcResult {
         of: product,
     })
     .unwrap();
+    let share = g
+        .derive(Node::Quotient {
+            term: Term::Step("crit-share"),
+            a: sum,
+            b: cap,
+        })
+        .unwrap();
+    g.derive(Node::Difference {
+        term: Term::Step("non-crit-share"),
+        a: pct,
+        b: share,
+    })
+    .unwrap();
 
     let reasons = every_reason();
     let mut fields = BTreeMap::new();
@@ -340,6 +357,9 @@ impl CalcData for Data {
             _ => None,
         }
     }
+    fn monster_constant(&self, _: &str) -> Option<i64> {
+        None
+    }
     fn passive_stats(&self, _: u32) -> Option<&[StatAmount]> {
         None
     }
@@ -399,6 +419,7 @@ impl StatMapping for Mapping {
             quantity: Quantity::Life,
             op,
             scale: 1.0,
+            divisor: 1.0,
             conditions: Conditions::none(),
         }])
     }
@@ -634,6 +655,8 @@ fn every_node_kind_should_have_its_children_and_term() {
         "trunc",
         "min",
         "max",
+        "difference",
+        "quotient",
     ] {
         assert!(kinds.iter().any(|k| k == kind), "{kind} missing");
     }
@@ -661,7 +684,7 @@ fn field_reasons_should_follow_the_state() {
     let life = by("life");
     assert!(life.unsupported.is_empty() && life.indeterminate.is_empty());
     assert!(life.value.is_some() && life.node.is_some());
-    assert_eq!(by("mana").unsupported.len(), 15);
+    assert_eq!(by("mana").unsupported.len(), 16);
     let es = by("energy-shield");
     assert!(es.unsupported.is_empty());
     assert!(matches!(
@@ -672,7 +695,7 @@ fn field_reasons_should_follow_the_state() {
     assert!(by("mana").reason.is_none());
     let fire = by("resistance.fire");
     assert_eq!((fire.unsupported.len(), fire.indeterminate.len()), (1, 4));
-    assert_eq!(doc.result.reasons.unsupported.len(), 15);
+    assert_eq!(doc.result.reasons.unsupported.len(), 16);
     assert_eq!(doc.result.reasons.indeterminate.len(), 4);
 }
 

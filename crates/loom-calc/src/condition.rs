@@ -43,6 +43,9 @@ impl Flags {
     pub const LIGHTNING: Self = Self(1 << 9);
     /// Chaos damage.
     pub const CHAOS: Self = Self(1 << 10);
+    /// Not an attack: spells and other casts (PoB's `ModFlag.Cast`, which
+    /// "cast speed" needs).
+    pub const CAST: Self = Self(1 << 11);
     /// Fire, cold, or lightning (for an `any` condition).
     pub const ELEMENTAL: Self = Self(Self::FIRE.0 | Self::COLD.0 | Self::LIGHTNING.0);
 

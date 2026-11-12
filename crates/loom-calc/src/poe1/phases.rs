@@ -28,7 +28,7 @@ use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 6] = [
+pub const PHASES: [Phase; 7] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -53,13 +53,17 @@ pub const PHASES: [Phase; 6] = [
         name: "unreserved",
         run: unreserved,
     },
+    Phase {
+        name: "spell-hit",
+        run: super::hit::spell_hit,
+    },
 ];
 
 /// A node with its value.
 #[derive(Debug, Clone, Copy)]
-struct Valued {
-    node: NodeIndex,
-    value: f64,
+pub(super) struct Valued {
+    pub(super) node: NodeIndex,
+    pub(super) value: f64,
 }
 
 /// How a chain multiplies: PoB's life is `base * inc * more` (left to
@@ -168,7 +172,7 @@ fn chain(
 }
 
 /// `round(x)` (PoB's `m_floor(x + 0.5)`) with `term`.
-fn round(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+pub(super) fn round(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
     let value = math::round_half_up(x.value);
     let node = calc
         .graph_mut()
@@ -249,7 +253,7 @@ fn bonus(
     Ok(Some(Valued { node, value }))
 }
 
-fn query(v: Valued, reasons: Reasons) -> Query {
+pub(super) fn query(v: Valued, reasons: Reasons) -> Query {
     Query {
         value: v.value,
         node: v.node,
@@ -329,7 +333,11 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 }
 
 /// A constant of a rule.
-fn constant(calc: &mut Calc<'_>, label: &'static str, value: f64) -> Result<Valued, CalcError> {
+pub(super) fn constant(
+    calc: &mut Calc<'_>,
+    label: &'static str,
+    value: f64,
+) -> Result<Valued, CalcError> {
     let node = calc
         .graph_mut()
         .push(Node::Constant { label, value }, value)?;
@@ -337,7 +345,7 @@ fn constant(calc: &mut Calc<'_>, label: &'static str, value: f64) -> Result<Valu
 }
 
 /// The sum of `op` effects on `quantity`, with `term`.
-fn sum(
+pub(super) fn sum(
     calc: &mut Calc<'_>,
     quantity: Quantity,
     op: Op,
@@ -355,7 +363,7 @@ fn sum(
 }
 
 /// Whether the store holds any effect on `quantity`.
-fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
+pub(super) fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
     calc.store()
         .effects()
         .iter()
@@ -363,7 +371,7 @@ fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
 }
 
 /// `a op b` as a two-input node.
-fn pair(
+pub(super) fn pair(
     calc: &mut Calc<'_>,
     a: Valued,
     b: Valued,
@@ -403,7 +411,11 @@ fn trunc(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError
 }
 
 /// The product of `factors` from 1, left to right, with `term`.
-fn product(calc: &mut Calc<'_>, factors: &[Valued], term: Term) -> Result<Valued, CalcError> {
+pub(super) fn product(
+    calc: &mut Calc<'_>,
+    factors: &[Valued],
+    term: Term,
+) -> Result<Valued, CalcError> {
     let mut value = 1.0;
     for f in factors {
         value *= f.value;
@@ -419,7 +431,11 @@ fn product(calc: &mut Calc<'_>, factors: &[Valued], term: Term) -> Result<Valued
 }
 
 /// The sum of `terms` from 0, in order, with `term`.
-fn total(calc: &mut Calc<'_>, terms: &[Valued], term: Term) -> Result<Valued, CalcError> {
+pub(super) fn total(
+    calc: &mut Calc<'_>,
+    terms: &[Valued],
+    term: Term,
+) -> Result<Valued, CalcError> {
     let mut value = 0.0;
     for t in terms {
         value += t.value;
@@ -435,7 +451,7 @@ fn total(calc: &mut Calc<'_>, terms: &[Valued], term: Term) -> Result<Valued, Ca
 }
 
 /// `1 + x / 100` with `term`.
-fn factor(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+pub(super) fn factor(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
     let value = math::percent_factor(x.value);
     let node = calc
         .graph_mut()

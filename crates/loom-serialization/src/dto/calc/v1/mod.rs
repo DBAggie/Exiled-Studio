@@ -131,7 +131,7 @@ impl Document {
 impl Document {
     /// Checks the structure a reader relies on: each node's children are
     /// earlier nodes; leaves have no children and no term; `override`,
-    /// `min`, `max` have two children, `percent-factor`, `floor`,
+    /// `min`, `max`, `difference`, `quotient` have two children, `percent-factor`, `floor`,
     /// `round-half-up`, `trunc` one, and every composite but `override` a term;
     /// a field has a value and a node together, its node is in the graph
     /// with the same value bits; `reason` is present exactly for
@@ -150,9 +150,11 @@ impl Document {
             }
             let (arity, term) = match n.kind {
                 NodeKind::Contribution { .. } | NodeKind::Constant { .. } => (Some(0), false),
-                NodeKind::Override | NodeKind::Min | NodeKind::Max => {
-                    (Some(2), !matches!(n.kind, NodeKind::Override))
-                }
+                NodeKind::Override
+                | NodeKind::Min
+                | NodeKind::Max
+                | NodeKind::Difference
+                | NodeKind::Quotient => (Some(2), !matches!(n.kind, NodeKind::Override)),
                 NodeKind::PercentFactor
                 | NodeKind::Floor
                 | NodeKind::RoundHalfUp

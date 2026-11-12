@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-5: parity harness)
+Last Updated: 2026-11-12 (P3-9b: spell hits)
 
 # Phase 3: calc slice (tasks)
 
@@ -73,7 +73,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-1d monster types for the default enemy (PR #75; `docs/phase-3/monster-types.md`; 22 bosses equal PoB's)
 - [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
 - [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
-- [ ] P3-9b spell hits
+- [x] P3-9b spell hits (PR #77; `docs/phase-3/spell-hits.md`; 11 Ice Nova mechanic fixtures match PoB on every target)
 - [ ] P3-10 attacks
 - [ ] P3-12 buffs and config (one or more PRs)
 

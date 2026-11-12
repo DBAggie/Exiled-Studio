@@ -339,11 +339,12 @@ impl<'b> OverlayData<'b> {
 
 /// The overlay rows of tables the engine reads, by field: the integer
 /// fields it substitutes.
-const APPLIED: [(&str, &str); 11] = [
+const APPLIED: [(&str, &str); 12] = [
     ("characters", "strength"),
     ("characters", "dexterity"),
     ("characters", "intelligence"),
     ("character_constants", "value"),
+    ("monster_constants", "value"),
     ("bases", "armour_min"),
     ("bases", "armour_max"),
     ("bases", "evasion_min"),
@@ -402,6 +403,14 @@ impl CalcData for OverlayData<'_> {
     fn character_constant(&self, stat: &str) -> Option<i64> {
         let ours = self.bundle.character_constant(stat)?;
         Some(self.int("character_constants", stat, "value", ours))
+    }
+
+    /// PoB's monster constant when the overlay has a row for it (data
+    /// parity compares them; the enemy's base maximum resistance is 75 in
+    /// both, P3-9b).
+    fn monster_constant(&self, stat: &str) -> Option<i64> {
+        let ours = self.bundle.monster_constant(stat)?;
+        Some(self.int("monster_constants", stat, "value", ours))
     }
 
     fn passive_stats(&self, node: u32) -> Option<&[StatAmount]> {

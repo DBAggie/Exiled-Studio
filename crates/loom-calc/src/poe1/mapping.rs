@@ -3,7 +3,9 @@
 //!
 //! P3-6 maps the global stats of attributes, life, mana, and energy
 //! shield; P3-7 the global defences and armour pieces' local stats
-//! ([`PieceMapping`]). Each row names the stat's meaning as the game's stat
+//! ([`PieceMapping`]); P3-9b the stats of a spell's hit ([`HIT_ROWS`], with
+//! the skill flags they need) and the mapping of a gem's own stats
+//! ([`SkillMapping`]). Each row names the stat's meaning as the game's stat
 //! description writes it, and how PoB v2.67.2 reads the same line
 //! (`Modules/ModParser.lua`), so a difference in reading shows in review.
 //! Every other stat is `Unmapped`, which makes the computed fields
@@ -11,13 +13,268 @@
 
 use loom_domain::StatId;
 
-use crate::condition::Conditions;
+use crate::condition::{Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping};
 use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity};
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
 type Row = (&'static str, &'static [(Quantity, Op, f64)]);
+
+/// A mapped effect of a hit stat: what, how, the divisor of the stat's
+/// value, and the skill flags it needs (all of the first, one of the
+/// second when not empty).
+type HitEffect = (Quantity, Op, f64, Flags, Flags);
+
+/// One mapped hit stat.
+type HitRow = (&'static str, &'static [HitEffect]);
+
+const NONE: Flags = Flags::NONE;
+const fn skill_base(t: DamageType, b: Bound) -> Quantity {
+    Quantity::Poe1(Poe1Quantity::SkillBaseDamage(t, b))
+}
+const fn added(t: DamageType, b: Bound) -> Quantity {
+    Quantity::AddedDamage(t, b)
+}
+const MIN: Bound = Bound::Min;
+const MAX: Bound = Bound::Max;
+const PHYS: DamageType = DamageType::Physical;
+const FIRE_T: DamageType = DamageType::Fire;
+const COLD_T: DamageType = DamageType::Cold;
+const LIGHTNING_T: DamageType = DamageType::Lightning;
+const CHAOS_T: DamageType = DamageType::Chaos;
+
+/// The stats of hits P3-9b maps (a self-cast spell's), sorted by stat ID (a
+/// test checks the order), each read as PoB v2.67.2 reads it
+/// (`Data/SkillStatMap.lua`, a support's own `statMap` in `Data/Skills/`,
+/// and `Modules/ModParser.lua` for the same text on items):
+/// - `spell_minimum_base_<type>_damage`, `..._maximum_...`: the skill's own
+///   base damage (PoB `skill("ColdMin")`, ...);
+/// - `global_minimum_added_<cold|lightning>_damage`, `..._maximum_...`:
+///   "Adds # to # Cold Damage" of supports (`ColdMin` BASE, no flag); PoB
+///   has no row for the fire and physical ones; those and the chaos ones
+///   (which PoB reads) stay unmapped until a fixture needs them;
+/// - `spell_minimum_added_<cold|fire|lightning>_damage`, `..._maximum_...`:
+///   "Adds # to # Cold Damage to Spells" (`ColdMin` BASE, `KeywordFlag.Spell`;
+///   the physical and chaos ones, which PoB reads too, stay unmapped);
+/// - `damage_+%`, `spell_damage_+%`, `elemental_damage_+%`, `cold_damage_+%`,
+///   `fire_damage_+%`, `lightning_damage_+%`: increased damage (`Damage` INC;
+///   with `ModFlag.Spell`; `ElementalDamage`, `ColdDamage`, ... INC, which
+///   PoB reads for a hit of that type);
+/// - `support_controlled_destruction_spell_damage_+%_final`: "Supported
+///   Skills deal #% more Spell Damage" (`Damage` MORE, `ModFlag.Spell`);
+/// - `critical_strike_chance_+%`, `spell_critical_strike_chance_+%`:
+///   increased critical strike chance (`CritChance` INC; with
+///   `ModFlag.Spell`); `additional_base_critical_strike_chance`: "+#% to
+///   Critical Strike Chance" in hundredths (`CritChance` BASE, `div = 100`);
+///   `support_controlled_destruction_critical_strike_chance_+%_final`: less
+///   critical strike chance (`CritChance` MORE);
+/// - `base_critical_strike_multiplier_+`: "+#% to Global Critical Strike
+///   Multiplier" (`CritMultiplier` BASE);
+/// - `base_cast_speed_+%`: "#% increased Cast Speed" (`Speed` INC,
+///   `ModFlag.Cast`);
+/// - `base_reduce_enemy_<cold|fire|lightning>_resistance_%`: "Damage
+///   Penetrates #% Cold Resistance" (`ColdPenetration` BASE).
+pub const HIT_ROWS: &[HitRow] = &[
+    (
+        "additional_base_critical_strike_chance",
+        &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    (
+        "base_cast_speed_+%",
+        &[(Quantity::Speed, Op::Increased, 1.0, Flags::CAST, NONE)],
+    ),
+    (
+        "base_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "base_reduce_enemy_cold_resistance_%",
+        &[(Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "base_reduce_enemy_fire_resistance_%",
+        &[(Quantity::Penetration(FIRE_T), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "base_reduce_enemy_lightning_resistance_%",
+        &[(
+            Quantity::Penetration(LIGHTNING_T),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
+    (
+        "cold_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::COLD, NONE)],
+    ),
+    (
+        "critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    (
+        "damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, NONE, NONE)],
+    ),
+    (
+        "elemental_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, NONE, Flags::ELEMENTAL)],
+    ),
+    (
+        "fire_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::FIRE, NONE)],
+    ),
+    (
+        "global_maximum_added_cold_damage",
+        &[(added(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "global_maximum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "global_minimum_added_cold_damage",
+        &[(added(COLD_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "global_minimum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "lightning_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::LIGHTNING, NONE)],
+    ),
+    (
+        "spell_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_maximum_added_cold_damage",
+        &[(added(COLD_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_maximum_added_fire_damage",
+        &[(added(FIRE_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_maximum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_maximum_base_chaos_damage",
+        &[(skill_base(CHAOS_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_maximum_base_cold_damage",
+        &[(skill_base(COLD_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_maximum_base_fire_damage",
+        &[(skill_base(FIRE_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_maximum_base_lightning_damage",
+        &[(skill_base(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_maximum_base_physical_damage",
+        &[(skill_base(PHYS, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_added_cold_damage",
+        &[(added(COLD_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_minimum_added_fire_damage",
+        &[(added(FIRE_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_minimum_added_lightning_damage",
+        &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, Flags::SPELL, NONE)],
+    ),
+    (
+        "spell_minimum_base_chaos_damage",
+        &[(skill_base(CHAOS_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_base_cold_damage",
+        &[(skill_base(COLD_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_base_fire_damage",
+        &[(skill_base(FIRE_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_base_lightning_damage",
+        &[(skill_base(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "spell_minimum_base_physical_damage",
+        &[(skill_base(PHYS, MIN), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "support_controlled_destruction_critical_strike_chance_+%_final",
+        &[(Quantity::CritChance, Op::More, 1.0, NONE, NONE)],
+    ),
+    (
+        "support_controlled_destruction_spell_damage_+%_final",
+        &[(Quantity::Damage, Op::More, 1.0, Flags::SPELL, NONE)],
+    ),
+];
+
+/// Whether `quantity` is read only by the main skill's hit: an effect of
+/// a gem may change it, since the gem acts only on the skill it supports
+/// (PoB's `skillModList`); any other quantity it would change is the
+/// character's.
+#[must_use]
+pub const fn is_hit_quantity(quantity: Quantity) -> bool {
+    matches!(
+        quantity,
+        Quantity::Damage
+            | Quantity::Speed
+            | Quantity::CritChance
+            | Quantity::CritMultiplier
+            | Quantity::Accuracy
+            | Quantity::AddedDamage(..)
+            | Quantity::Penetration(..)
+            | Quantity::Poe1(Poe1Quantity::SkillBaseDamage(..))
+    )
+}
+
+/// Skill stats the hit phase reads from the gem instance itself (the
+/// skill's flags), so the mapping gives them no effect: `is_area_damage`
+/// makes the skill's hits area damage (PoB's hand-written `area` flag in
+/// its skill data; P3-9b reads the game's stat instead).
+pub const SKILL_FLAGS: &[&str] = &["is_area_damage"];
+
+/// The mapping of a gem's stats: the game's ([`Poe1Mapping`]), where every
+/// effect must be one only the skill's hit reads ([`is_hit_quantity`]);
+/// a stat with another effect is `Unmapped` (PoB applies a gem's stats to
+/// the skill alone, so a global reading would be wrong), and the skill's
+/// flags ([`SKILL_FLAGS`]) have no effect.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct SkillMapping;
+
+impl StatMapping for SkillMapping {
+    fn map(&self, stat: &StatId) -> StatMap {
+        if SKILL_FLAGS.contains(&stat.as_str()) {
+            return StatMap::NoEffect;
+        }
+        match Poe1Mapping.map(stat) {
+            StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
+                StatMap::Effects(e)
+            }
+            StatMap::Effects(_) => StatMap::Unmapped,
+            other => other,
+        }
+    }
+}
 
 const STR: Quantity = Quantity::Strength;
 const DEX: Quantity = Quantity::Dexterity;
@@ -296,7 +553,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field, whatever the build's config (40): `(stat,
+/// Stats that reach no slice field, whatever the build's config (41): `(stat,
 /// why)`, sorted by stat ID (P3-8a). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -320,6 +577,10 @@ pub struct Poe1Mapping;
 /// must revisit the rows it reaches; the guarantee holds only while it is
 /// unmapped.
 pub const NO_EFFECT: &[(&str, &str)] = &[
+    // A skill's own base radius (PoB `skill("radius")`): it sets the area
+    // PoB shows, which no slice field reads (P3-9b). Increased area stays
+    // unmapped, as above.
+    ("active_skill_base_area_of_effect_radius", "skill-radius"),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -415,6 +676,21 @@ impl StatMapping for Poe1Mapping {
         {
             return StatMap::NoEffect;
         }
+        if let Ok(i) = HIT_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                HIT_ROWS[i]
+                    .1
+                    .iter()
+                    .map(|&(quantity, op, divisor, all, any)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale: 1.0,
+                        divisor,
+                        conditions: Conditions::none().with_all(all).with_any(any),
+                    })
+                    .collect(),
+            );
+        }
         ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .map_or(StatMap::Unmapped, |i| {
                 StatMap::Effects(
@@ -425,6 +701,7 @@ impl StatMapping for Poe1Mapping {
                             quantity,
                             op,
                             scale,
+                            divisor: 1.0,
                             conditions: Conditions::none(),
                         })
                         .collect(),
@@ -527,6 +804,7 @@ impl StatMapping for PieceMapping {
                     quantity: Quantity::Poe1(Poe1Quantity::Piece(self.slot, value)),
                     op,
                     scale: 1.0,
+                    divisor: 1.0,
                     conditions: Conditions::none(),
                 })
                 .collect(),
@@ -548,8 +826,132 @@ mod tests {
     #[test]
     fn rows_should_be_sorted_and_unique() {
         assert!(ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(HIT_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(LOCAL_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(NO_EFFECT.windows(2).all(|w| w[0].0 < w[1].0));
+        for (stat, _) in HIT_ROWS {
+            assert!(
+                ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err()
+                    && NO_EFFECT.binary_search_by(|(id, _)| id.cmp(stat)).is_err(),
+                "{stat} is in two tables"
+            );
+        }
+    }
+
+    fn hit(stat: &str) -> Vec<(Quantity, Op, f64, Conditions)> {
+        match Poe1Mapping.map(&StatId::new(stat)) {
+            StatMap::Effects(e) => e
+                .into_iter()
+                .map(|t| (t.quantity, t.op, t.divisor, t.conditions))
+                .collect(),
+            other => panic!("{stat}: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn hit_stats_should_map_as_pob_reads_them() {
+        let none = Conditions::none;
+        let spell = || Conditions::none().with_all(Flags::SPELL);
+        assert_eq!(
+            hit("spell_minimum_base_cold_damage"),
+            [(skill_base(COLD_T, MIN), Op::Base, 1.0, none())]
+        );
+        assert_eq!(
+            hit("spell_maximum_added_cold_damage"),
+            [(added(COLD_T, MAX), Op::Base, 1.0, spell())]
+        );
+        assert_eq!(
+            hit("global_minimum_added_cold_damage"),
+            [(added(COLD_T, MIN), Op::Base, 1.0, none())]
+        );
+        assert_eq!(
+            hit("spell_damage_+%"),
+            [(Quantity::Damage, Op::Increased, 1.0, spell())]
+        );
+        assert_eq!(
+            hit("cold_damage_+%"),
+            [(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                Conditions::none().with_all(Flags::COLD)
+            )]
+        );
+        assert_eq!(
+            hit("elemental_damage_+%"),
+            [(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                Conditions::none().with_any(Flags::ELEMENTAL)
+            )]
+        );
+        assert_eq!(
+            hit("support_controlled_destruction_spell_damage_+%_final"),
+            [(Quantity::Damage, Op::More, 1.0, spell())]
+        );
+        assert_eq!(
+            hit("additional_base_critical_strike_chance"),
+            [(Quantity::CritChance, Op::Base, 100.0, none())]
+        );
+        assert_eq!(
+            hit("base_cast_speed_+%"),
+            [(
+                Quantity::Speed,
+                Op::Increased,
+                1.0,
+                Conditions::none().with_all(Flags::CAST)
+            )]
+        );
+        assert_eq!(
+            hit("base_reduce_enemy_cold_resistance_%"),
+            [(Quantity::Penetration(COLD_T), Op::Base, 1.0, none())]
+        );
+        // PoB has no row for these: they stay unmapped.
+        for stat in [
+            "global_minimum_added_fire_damage",
+            "global_minimum_added_physical_damage",
+        ] {
+            assert_eq!(
+                Poe1Mapping.map(&StatId::new(stat)),
+                StatMap::Unmapped,
+                "{stat}"
+            );
+        }
+        // No mapped stat reads a named condition, so the default enemy's
+        // conditions (rare or unique, Pinnacle boss) change no mapped value.
+        for stat in HIT_ROWS.iter().map(|r| r.0).chain(ROWS.iter().map(|r| r.0)) {
+            if let StatMap::Effects(e) = Poe1Mapping.map(&StatId::new(stat)) {
+                assert!(e.iter().all(|t| t.conditions.states.is_empty()), "{stat}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_gems_stats_should_act_only_on_its_skill() {
+        // A hit stat maps as the game's.
+        assert_eq!(
+            SkillMapping.map(&StatId::new("spell_damage_+%")),
+            Poe1Mapping.map(&StatId::new("spell_damage_+%"))
+        );
+        // A character stat on a gem would act on the character in PoB only
+        // through a buff, which is not modelled: unmapped, never global.
+        assert_eq!(
+            SkillMapping.map(&StatId::new("maximum_life_+%")),
+            StatMap::Unmapped
+        );
+        assert_eq!(
+            SkillMapping.map(&StatId::new("is_area_damage")),
+            StatMap::NoEffect
+        );
+        assert_eq!(
+            SkillMapping.map(&StatId::new("active_skill_base_area_of_effect_radius")),
+            StatMap::NoEffect
+        );
+        assert_eq!(
+            SkillMapping.map(&StatId::new("unknown_skill_stat")),
+            StatMap::Unmapped
+        );
     }
 
     #[test]

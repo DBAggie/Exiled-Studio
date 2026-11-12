@@ -772,6 +772,75 @@ export type UnsupportedReason =
       }
     }
   | 'unchecked-tree-version'
+  | {
+      'unmodelled-skill': {
+        /**
+         * The gem (or the rule) it comes from.
+         */
+        source:
+          | 'character'
+          | {
+              item: {
+                /**
+                 * The import tolerance the line needed, if any.
+                 */
+                adapted?: Adapted | null
+                /**
+                 * The item's ID.
+                 */
+                item: number
+                /**
+                 * The line's index among the item's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
+              passive: {
+                /**
+                 * The node's ID.
+                 */
+                node: number
+              }
+            }
+          | {
+              gem: {
+                /**
+                 * The gem's index in the group.
+                 */
+                gem: number
+                /**
+                 * The socket group's index.
+                 */
+                group: number
+              }
+            }
+          | {
+              config: {
+                /**
+                 * The input's name.
+                 */
+                input: string
+              }
+            }
+          | 'enemy'
+          | {
+              rule: string
+            }
+        /**
+         * What is not modelled.
+         */
+        what: string
+      }
+    }
 /**
  * A number: a JSON number when finite, otherwise its bit pattern (JSON
  * has no NaN or infinity). Finite values are written in the shortest
@@ -971,6 +1040,8 @@ export interface Node {
     | 'trunc'
     | 'min'
     | 'max'
+    | 'difference'
+    | 'quotient'
   /**
    * The breakdown term (`base`, `increased`, `more`, `override`,
    * `result`, or `step.<name>`); absent for leaves and overrides.

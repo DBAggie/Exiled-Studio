@@ -100,6 +100,9 @@ impl CalcData for Data {
             _ => None,
         }
     }
+    fn monster_constant(&self, _: &str) -> Option<i64> {
+        None
+    }
     fn item_base(&self, name: &str) -> Option<ItemBase> {
         let range = |min, max| Range { min, max };
         match name {

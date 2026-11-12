@@ -48,14 +48,17 @@
 //! stats, summed per stat, with the stat set's implicit stats as 1 each
 //! (PoB's `level[index] or 1`); only the first stat set counts, as PoB's
 //! exporter writes only it. Effectiveness-scaled float stats (base damage,
-//! `statInterpolation` 3) are the spell and attack hits' (P3-9b, P3-10);
-//! linear interpolation (code 2) is not modelled and is a reason.
+//! `statInterpolation` 3) are the game's resolved values
+//! (`BaseResolvedValues`, P3-9b): PoB computes them from the level
+//! requirement, and they equal PoB's on 12,016 of 12,144 rows, every Ice
+//! Nova level among them (`docs/phase-3/spell-hits.md`); linear
+//! interpolation (code 2) is not modelled and is a reason.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{Attributes, Build, Gem, SocketGroup};
 
-use crate::input::{ActiveSkill, CalcData, GrantedEffect, StatSet};
+use crate::input::{ActiveSkill, CalcData, EffectLevel, GrantedEffect, StatSet, StatSetLevel};
 
 /// Why a build has no main skill the engine can name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -395,6 +398,19 @@ pub enum InstanceProblem {
     },
 }
 
+impl InstanceProblem {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(&self) -> &'static str {
+        match self {
+            Self::NoLevel => "no-level",
+            Self::MissingStatSet { .. } => "missing-stat-set",
+            Self::SeveralStatSets => "several-stat-sets",
+            Self::Interpolated { .. } => "interpolated-stat",
+        }
+    }
+}
+
 /// A gem instance's stats at its level and quality (module docs).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Instance<'d> {
@@ -405,9 +421,11 @@ pub struct Instance<'d> {
     pub level: Option<i64>,
     /// The quality used.
     pub quality: i64,
-    /// The integer stats, summed per stat, sorted by stat ID; the stat
-    /// set's implicit stats (flags such as `is_area_damage`) count 1 each,
-    /// as PoB's `level[index] or 1` gives a stat without a level value.
+    /// The stats, summed per stat, sorted by stat ID: integer stats, and
+    /// the resolved values of effectiveness-scaled float stats (base
+    /// damage); the stat set's implicit stats (flags such as
+    /// `is_area_damage`) count 1 each, as PoB's `level[index] or 1` gives a
+    /// stat without a level value.
     pub stats: Vec<(String, i64)>,
     /// What is not known.
     pub problems: Vec<InstanceProblem>,
@@ -432,6 +450,28 @@ fn valid_level(effect: &GrantedEffect, level: i64) -> Option<i64> {
         clamped = clamped.min(count);
     }
     has(clamped).then_some(clamped)
+}
+
+/// The level row of `effect`'s first stat set at the level PoB uses for a
+/// gem of `level` (`calcLib.validateGemLevel`): its crit chance, damage
+/// effectiveness, base multiplier, and stats. `None` without one.
+#[must_use]
+pub fn stat_set_level<'d>(
+    effect: &GrantedEffect,
+    level: i64,
+    data: &'d dyn CalcData,
+) -> Option<&'d StatSetLevel> {
+    let level = valid_level(effect, level)?;
+    let set = data.stat_set(effect.stat_sets.first()?)?;
+    set.levels.iter().find(|r| r.level == level)
+}
+
+/// The granted effect's own level row (`GrantedEffectsPerLevel`: costs,
+/// cooldown, stored uses) at the level PoB uses for a gem of `level`.
+#[must_use]
+pub fn effect_level(effect: &GrantedEffect, level: i64) -> Option<&EffectLevel> {
+    let level = valid_level(effect, level)?;
+    effect.levels.iter().find(|r| r.level == level)
 }
 
 /// The stats of `effect` at `level` and `quality` (module docs).
@@ -499,6 +539,18 @@ fn set_stats(
         *stats.entry(s.clone()).or_default() += 1;
     }
     if let Some(row) = level.and_then(|l| set.levels.iter().find(|r| r.level == l)) {
+        for f in &row.float_stats {
+            // Effectiveness interpolation: the game's resolved value (module
+            // docs). Every float stat of the 3.29 data has it; another kind
+            // is not modelled.
+            if f.interpolation == 3 {
+                *stats.entry(f.stat.clone()).or_default() += f.resolved;
+            } else {
+                problems.push(InstanceProblem::Interpolated {
+                    stat: f.stat.clone(),
+                });
+            }
+        }
         for s in &row.stats {
             match s.interpolation {
                 None | Some(1) => *stats.entry(s.stat.clone()).or_default() += s.value,

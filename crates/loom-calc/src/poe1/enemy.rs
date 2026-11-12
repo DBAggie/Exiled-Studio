@@ -13,14 +13,17 @@
 //! (`src/Export/Enemies/Bosses.txt`), kept here as a rule with its source
 //! (maintainer decision Q10, 2026-11-12, option a).
 //!
-//! Not modelled yet, for the hit phases (P3-9b, P3-10): the boss kind's
-//! other modifiers (`Modules/ConfigOptions.lua`, `enemyIsBoss`): the
-//! player's `WarcryPower` and `Multiplier:EnemyPower` +20, the enemy's
-//! `Condition:RareOrUnique`, `Condition:PinnacleBoss`, `AilmentThreshold`
-//! MORE, and the Uber boss's `DamageTaken` MORE -70, which changes hit
-//! damage. So an `enemyIsBoss` input stays `unmodelled-config`, and the
-//! default kind's modifiers must be modelled before a hit field is
-//! `Complete`.
+//! The boss kind's other modifiers (`Modules/ConfigOptions.lua`,
+//! `enemyIsBoss`): the player's `WarcryPower` and `Multiplier:EnemyPower`
+//! +20, the enemy's `Condition:RareOrUnique`, `Condition:PinnacleBoss`,
+//! `AilmentThreshold` MORE, and the Uber boss's `DamageTaken` MORE -70. For
+//! the default kind (Pinnacle) none reaches a computed field (P3-9b): the
+//! conditions and multipliers change only modifiers that read them, and no
+//! mapped stat does (a test checks that no mapped row has a named
+//! condition), warcries and ailments are not in the slice, and only the
+//! Uber boss takes less damage. An `enemyIsBoss` input stays
+//! `unmodelled-config`, so the Uber boss's damage taken never gives a
+//! `Complete` hit.
 
 use loom_domain::{Build, ConfigValue};
 
@@ -157,6 +160,10 @@ pub struct Enemy {
     /// Fire, cold, lightning, and chaos resistance (`None`: no config value
     /// and no placeholder, as for a non-boss: PoB adds no modifier).
     pub resistances: [Option<f64>; 4],
+    /// The resistances the config sets itself (PoB's `env.configInput`,
+    /// not the placeholders): a hit reads them for the enemy's maximum
+    /// resistance (`calcResistForType`).
+    pub resistance_inputs: [Option<f64>; 4],
     /// Base armour.
     pub armour: Option<f64>,
     /// Base evasion.
@@ -316,8 +323,10 @@ pub fn enemy(build: &Build, data: &dyn CalcData) -> Enemy {
         "enemyChaosResist",
     ];
     let mut resistances = [None; 4];
+    let mut resistance_inputs = [None; 4];
     for (i, name) in names.into_iter().enumerate() {
-        resistances[i] = number(name, &mut problems).or(resist_placeholders[i]);
+        resistance_inputs[i] = number(name, &mut problems);
+        resistances[i] = resistance_inputs[i].or(resist_placeholders[i]);
     }
 
     let armour_table = monster_armour(data, table_level);
@@ -365,6 +374,7 @@ pub fn enemy(build: &Build, data: &dyn CalcData) -> Enemy {
         kind,
         level,
         resistances,
+        resistance_inputs,
         armour,
         evasion,
         problems,

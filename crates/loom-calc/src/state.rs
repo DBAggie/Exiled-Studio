@@ -118,6 +118,15 @@ pub enum UnsupportedReason {
     /// The build allocates passives, but the tree version of the data was
     /// not given, so the build's tree version was not checked.
     UncheckedTreeVersion,
+    /// Part of the main skill the engine does not model yet (a level stat
+    /// with another interpolation, several stat sets, physical hit damage
+    /// against the enemy's armour, ...).
+    UnmodelledSkill {
+        /// The gem (or the rule) it comes from.
+        source: Source,
+        /// What is not modelled.
+        what: &'static str,
+    },
 }
 
 impl UnsupportedReason {
@@ -140,6 +149,7 @@ impl UnsupportedReason {
             Self::UnmodelledPassive { .. } => "unmodelled-passive",
             Self::UnreadLine { .. } => "unread-line",
             Self::UncheckedTreeVersion => "unchecked-tree-version",
+            Self::UnmodelledSkill { .. } => "unmodelled-skill",
         }
     }
 }
