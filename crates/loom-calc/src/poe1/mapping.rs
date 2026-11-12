@@ -296,7 +296,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field, whatever the build's config: `(stat,
+/// Stats that reach no slice field, whatever the build's config (40): `(stat,
 /// why)`, sorted by stat ID (P3-8a). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -308,11 +308,17 @@ pub struct Poe1Mapping;
 /// (shock, chill, exposure, intimidate, consecrated ground's effect,
 /// curses), charges' counts, rage, area, gem levels, minion damage and
 /// speed (keystones redirect them to the player), and staff or shield
-/// conditioned block and damage. A stat that makes one of these rows
-/// matter (for example "life regeneration applies to energy shield
-/// recharge" style converters) is itself unmapped, so the fields stay
-/// `Partial` while it is in the build; mapping such a converter later
-/// must revisit the rows it redirects.
+/// conditioned block and damage, fortification's maximum (PoB scales
+/// suppression, armour, evasion, and attack speed per fortification), and
+/// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also
+/// reads it as the enemy's `SelfCritMultiplier`, which reaches the main
+/// skill's crit multiplier). A stat that makes one of these rows matter is
+/// itself unmapped, so the fields stay `Partial` while it is in the
+/// build: rage regenerated per life or mana regenerated (PoB
+/// `ModParser.lua` `RageRegen` per `LifeRegen`, then rage's damage),
+/// and any `PerStat` on a row's PoB mod. Mapping such a converter later
+/// must revisit the rows it reaches; the guarantee holds only while it is
+/// unmapped.
 pub const NO_EFFECT: &[(&str, &str)] = &[
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     ("avoid_interruption_while_casting_%", "interruption"),
@@ -321,9 +327,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
     ),
-    ("base_max_fortification", "fortification"),
     ("base_movement_velocity_+%", "movement-speed"),
-    ("base_self_critical_strike_multiplier_-%", "damage-taken"),
     ("base_stun_duration_+%", "stun"),
     (
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -561,6 +565,12 @@ mod tests {
                 ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err(),
                 "{stat} is both mapped and without effect"
             );
+            assert!(
+                LOCAL_ROWS
+                    .binary_search_by(|(id, _)| (*id).cmp(stat))
+                    .is_err(),
+                "{stat} is both a local piece stat and without effect"
+            );
             // An armour piece's lines see the same.
             let piece = PieceMapping {
                 slot: ArmourSlot::Helmet,
@@ -576,6 +586,8 @@ mod tests {
             "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
             "max_power_charges",
+            "base_max_fortification",
+            "base_self_critical_strike_multiplier_-%",
         ] {
             assert_eq!(
                 Poe1Mapping.map(&StatId::new(stat)),
