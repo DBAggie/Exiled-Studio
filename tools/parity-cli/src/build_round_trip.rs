@@ -74,7 +74,7 @@ pub enum Format {
 }
 
 /// One input file.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Input {
     /// The path as given (`/` separators).
     pub path: String,

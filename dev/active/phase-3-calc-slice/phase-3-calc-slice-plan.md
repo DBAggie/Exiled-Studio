@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-4: engine core)
+Last Updated: 2026-11-11 (P3-5: parity harness)
 
 # Phase 3: calc slice (plan)
 
@@ -118,6 +118,7 @@ In `loom-calc`, game-neutral:
 - `calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json [--register <file>] --out <dir>`: maps our fields to PoB's keys, compares `Complete` fields with their comparison rule, parses the ten oracle breakdowns into terms and compares them with our graph's terms, lists `Partial`, `Unsupported`, and not-computed fields, and classifies differences with the register. Exit codes as `oracle-compare` (0, 19, 20, failure classes); documented in AGENTS.md.
 - **Accept:** tests with scripted oracle and successor documents for each outcome (match, tolerance, registered, unregistered, partial not compared, breakdown term mismatch at the displayed decimals, a side failed, a `data-version` entry refused because the overlay run differs); the PoB breakdown-line parser tested on every line shape the 30 public fixtures produce for the ten breakdowns; a manifest test for the `mechanic` tier.
 - **Depends on:** 3 (slice fields), 4, 13 (result document).
+- **Done in P3-5** (PR #70; `docs/phase-3/calc-parity.md`; context file, "Decisions in P3-5"): `calc-run` and `calc-parity` as above; `slice-fields.json` revision 2 adds a `graph` reference per breakdown term (the contract P3-6 on build their graphs to); mechanic fixtures carry `targets`. Found: the oracle's breakdowns come from PoB's CALCS view, which builds keep apart from the main skill (in all 7 in-scope builds the `TotalDPS` breakdown was another skill's). The maintainer chose to fix it in the adapter (Q9 (a)): protocol 4 sets the CALCS selection to the main view's before PoB loads the build; `main_output` is unchanged and the views agree in every build.
 
 ### 6. Character, attributes, life, mana, energy shield (M)
 PoE1 base stats by class and level; attributes and their implicit effects (strength to life, intelligence to mana and energy shield, dexterity to evasion and accuracy); life, mana, and energy shield from bases, passives, items (with local armour-piece rules), and gems; reservation of the main aura set when it is a plain percentage of mana or life (anything else is `Partial`).

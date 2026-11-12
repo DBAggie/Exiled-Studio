@@ -12,6 +12,8 @@
 mod build_round_trip;
 mod bundle;
 mod bundle_equal;
+mod calc_parity;
+mod calc_run;
 mod calc_survey;
 mod categorize;
 mod data_parity;
@@ -37,6 +39,7 @@ mod render_check;
 mod resolve_corpus;
 mod round_trip;
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::process::ExitCode;
 
@@ -178,6 +181,41 @@ const USAGE: &str = "usage:
       has the scope file's minimum of in-scope builds (or none is chosen),
       1 when one has fewer, 2 on a usage error, 3 when the run cannot
       start.
+  loom-parity-cli calc-run <input>... --bundle <dir> --out <dir> [--anonymous] [--data-overlay <file>]
+      Calculate every build (Phase 3 plan, step 5): import (a folder: every
+      *.xml directly in it, in name order; a *.xml file; or a v1 build
+      document *.json), resolve with the bundle (validated first), and run
+      the engine; write each result as the calc result document v1
+      (documents/<id>.json), report.json (per build: outcome, error code,
+      document SHA-256, state counts), summary.json (counts of states,
+      reasons, failure codes; calculation time), and timing.json (time per
+      build) to <dir>, which must not exist. A build's id is its file
+      name, or its SHA-256 with --anonymous, as oracle-run names fixtures.
+      --data-overlay reads data-parity's overlay.json for this bundle and
+      calculates with PoB's values for its rows (for calc-parity
+      --overlay-run). Exit 0 when every build has a document, 1 when one
+      failed, 2 on a usage error, 3 when the run cannot start.
+  loom-parity-cli calc-parity <oracle-run-dir> <calc-run-dir> --slice <file> --out <dir>
+                  [--register <file>] [--overlay-run <dir>] [--manifest <file>]
+      Compare the successor's documents with the oracle's outputs, paired
+      by id, per slice field (docs/phase-3/slice-fields.json): complete
+      fields with their rule; partial, indeterminate, and not computed
+      fields listed, not compared; the ten breakdowns term by term at each
+      line's printed decimals (not when PoB's CALCS and main views
+      differ). Differences are classified with the divergence register; a
+      data-version entry covers one only when the --overlay-run (calc-run
+      --data-overlay) matches the oracle there. --manifest: each mechanic
+      fixture's targets must match or be registered, and each must be in
+      both runs. The overlay run must hold the same builds (ids, SHA-256)
+      and tool commit; a build whose bytes differ between the two runs is
+      not compared (ORACLE_PROTOCOL). Write report.json and summary.md to
+      <dir>, which must not exist. Exit: the class of a build without
+      output on a side (10 to 18; 17 for a breakdown line the reader does
+      not know); else 20 for an unregistered difference; else 5 when a
+      build is incomplete (no complete field, or a complete field's
+      breakdown not compared): not a pass; else 19 when every difference
+      is registered; else 0. 2 on a usage error, 3 when an input does not
+      read.
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -1170,8 +1208,208 @@ fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
     Ok(summary.pass)
 }
 
+/// Positional arguments, `--name value` options, and flags.
+type CliArgs = (Vec<String>, BTreeMap<String, String>, BTreeSet<String>);
+
+/// Options of the form `--name value`, plus positional arguments and the
+/// flags in `flags`; `None` on an unknown option or a repeated one.
+fn options(args: &[String], names: &[&str], flags: &[&str]) -> Option<CliArgs> {
+    let mut positional = Vec::new();
+    let mut values = BTreeMap::new();
+    let mut set = BTreeSet::new();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        if flags.contains(&arg.as_str()) {
+            if !set.insert(arg.clone()) {
+                return None;
+            }
+        } else if names.contains(&arg.as_str()) {
+            let [value, tail @ ..] = rest else {
+                return None;
+            };
+            rest = tail;
+            if values.insert(arg.clone(), value.clone()).is_some() {
+                return None;
+            }
+        } else if arg.starts_with("--") {
+            return None;
+        } else {
+            positional.push(arg.clone());
+        }
+    }
+    Some((positional, values, set))
+}
+
+/// `calc-run` (module `calc_run`).
+fn calc_run_cmd(args: &[String]) -> ExitCode {
+    let Some((inputs, values, flags)) = options(
+        args,
+        &["--bundle", "--out", "--data-overlay"],
+        &["--anonymous"],
+    ) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    let (Some(bundle), Some(out)) = (values.get("--bundle"), values.get("--out")) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    if inputs.is_empty() {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    }
+    let run = calc_run_run(
+        &inputs,
+        Path::new(bundle),
+        Path::new(out),
+        values.get("--data-overlay").map(Path::new),
+        flags.contains("--anonymous"),
+    );
+    match run {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("calc-run: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn calc_run_run(
+    inputs: &[String],
+    bundle_dir: &Path,
+    out: &Path,
+    overlay: Option<&Path>,
+    anonymous: bool,
+) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let inputs = round_trip_inputs(inputs)?;
+    let bundle = load_bundle(bundle_dir)?;
+    let manifest_path = bundle_dir.join("bundle.json");
+    let manifest_bytes =
+        std::fs::read(&manifest_path).map_err(|e| format!("{}: {e}", manifest_path.display()))?;
+    let manifest_sha256 = oracle::sha256_hex(&manifest_bytes);
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data)
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let overlay = match overlay {
+        Some(path) => {
+            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let data = calc_run::OverlayData::read(&bytes, &bundle, &manifest_sha256)
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            Some((data, oracle::sha256_hex(&bytes)))
+        }
+        None => None,
+    };
+    let request = calc_run::Request {
+        bundle: &bundle,
+        resolver: &resolver,
+        data: &data,
+        bundle_record: calc_run::BundleRecord {
+            game: bundle.game.name().to_owned(),
+            steam_build: bundle.manifest.source.steam_build,
+            data_schema: bundle.manifest.data_schema,
+            manifest_sha256,
+        },
+        overlay: overlay.as_ref().map(|(data, sha256)| {
+            (
+                data,
+                calc_run::OverlayRecord {
+                    sha256: sha256.clone(),
+                    rows: data.counts(),
+                },
+            )
+        }),
+        anonymous,
+        tool: calc_run::ToolRecord {
+            commit: git(&["rev-parse", "HEAD"]),
+            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+        },
+    };
+    let outputs = calc_run::run(&inputs, &request)?;
+    calc_run::write(out, &outputs)?;
+    let s = &outputs.summary;
+    println!(
+        "calc-run: {} builds, {} ok, {} failed; fields {} complete, {} partial, {} unsupported, {} indeterminate; calculation {} us total",
+        s.builds,
+        s.ok,
+        s.failed,
+        s.field_states.complete,
+        s.field_states.partial,
+        s.field_states.unsupported,
+        s.field_states.indeterminate,
+        s.timing.total_micros
+    );
+    for b in outputs.report.builds.iter().filter(|b| b.status != "ok") {
+        eprintln!(
+            "{}: {} at {}",
+            b.id,
+            b.code.as_deref().unwrap_or("?"),
+            b.step
+                .map_or_else(String::new, |step| calc_run::reason_kind(&step))
+        );
+    }
+    Ok(s.failed == 0 && s.builds > 0)
+}
+
+/// `calc-parity` (module `calc_parity`).
+fn calc_parity_cmd(args: &[String]) -> ExitCode {
+    let parsed = options(
+        args,
+        &[
+            "--slice",
+            "--out",
+            "--register",
+            "--overlay-run",
+            "--manifest",
+        ],
+        &[],
+    );
+    let request = parsed.and_then(|(positional, values, _)| {
+        let [oracle, successor] = positional.as_slice() else {
+            return None;
+        };
+        Some(calc_parity::Request {
+            oracle: oracle.into(),
+            successor: successor.into(),
+            slice: values.get("--slice")?.into(),
+            out: values.get("--out")?.into(),
+            register: values.get("--register").map(Into::into),
+            overlay_run: values.get("--overlay-run").map(Into::into),
+            manifest: values.get("--manifest").map(Into::into),
+        })
+    });
+    let Some(request) = request else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match calc_parity::run(&request) {
+        Ok(report) => {
+            print!("{}", report.summary_markdown());
+            ExitCode::from(report.exit_code())
+        }
+        Err(message) => {
+            eprintln!("calc-parity: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-run"
+    {
+        return calc_run_cmd(rest);
+    }
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-parity"
+    {
+        return calc_parity_cmd(rest);
+    }
     if let [cmd, rest @ ..] = args.as_slice()
         && cmd == "calc-survey"
     {

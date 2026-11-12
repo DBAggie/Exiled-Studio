@@ -34,14 +34,14 @@ fn done_document() -> Value {
         .map(|b| (b.clone(), Value::Null))
         .collect();
     json!({
-        "protocol": 3,
+        "protocol": 4,
         "stage": "done",
         "error": null,
         "partial": [],
         "modules": ["lua-utf8", "xml"],
         "settings": {"path": "/Settings.xml", "found": false},
         "shims": shims(),
-        "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
+        "probe": {"inflate": [], "variant_order": [], "writes_refused": [], "calcs_view": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": breakdowns,
         "main_output": {"Life": 60, "Mana": 40.5}
@@ -50,14 +50,14 @@ fn done_document() -> Value {
 
 fn failed_document(stage: &str, message: &str) -> Value {
     json!({
-        "protocol": 3,
+        "protocol": 4,
         "stage": stage,
         "error": {"source": "lua", "message": message},
         "partial": [],
         "modules": [],
         "settings": if stage == "startup" { Value::Null } else { json!({"path": "/Settings.xml", "found": false}) },
         "shims": shims(),
-        "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
+        "probe": {"inflate": [], "variant_order": [], "writes_refused": [], "calcs_view": []},
         "breakdown_source": "calcsTab.calcsEnv.player.breakdown",
         "breakdowns": null,
         "main_output": null
@@ -220,11 +220,16 @@ fn run_fixture_should_report_the_first_runs_probe() {
     document["probe"] = json!({
         "inflate": [{"input_bytes": 9, "output_bytes": 30, "adler32": 5, "trailing_bytes": 0, "error": null}],
         "variant_order": ["Metadata/Items/Gems/SkillGemVaalDetonateDead"],
-        "writes_refused": ["./Data/TimelessJewelData/MilitantFaith.bin"]
+        "writes_refused": ["./Data/TimelessJewelData/MilitantFaith.bin"],
+        "calcs_view": ["skill_number 1 -> 32", "mainActiveSkillCalcs 2 -> 1"]
     });
     let result = run_scripted("probe", &Scripted::same(Step::Write(document, 0)));
     assert_eq!(result.report.status, "ok");
     let probe = result.report.probe.as_ref().unwrap();
+    assert_eq!(
+        probe.calcs_view,
+        ["skill_number 1 -> 32", "mainActiveSkillCalcs 2 -> 1"]
+    );
     assert_eq!(
         (
             probe.inflate_calls,

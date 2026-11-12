@@ -121,7 +121,8 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
-# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 3, with the shims in
+# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 4: it sets PoB's CALCS view, the
+# breakdowns' source, to the main view before loading (probe.calcs_view; docs/phase-3/calc-parity.md), with the shims in
 # shims.lua: Inflate through zlib, variant_order (sorted pairs for PoB's ambiguous old-format Vaal gem
 # lookup; see docs/parity/README.md), io.open write guard) on the pinned runtime, 3 times each (offline;
 # verifies first; checks the checkout after each fixture). Writes report.json, summary.md, outputs/,
@@ -163,6 +164,19 @@ cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.j
 # (<dir> must not exist; --anonymous for the corpus); exit 0 when every chosen skill has the minimum of in-scope
 # builds (or none is chosen yet), 1 otherwise, 3 when an input does not read (docs/phase-3/calc-survey.md):
 cargo run --release -p loom-parity-cli -- calc-survey <builds>... --bundle <bundle-dir> --scope docs/phase-3/calc-scope-poe1.json --data-rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# Calc runs (P3-5): import, resolve, calculate; each build's calc result document v1 in <dir>/documents/,
+# report.json, summary.json (counts), timing.json (time per build); ids as oracle-run's (file name, or
+# SHA-256 with --anonymous); --data-overlay takes data-parity's overlay.json for this bundle (PoB's values).
+# Exit 0 every build has a document, 1 one failed (malformed.xml does), 2 usage, 3 the run cannot start.
+# CI (build round-trip) runs it on the synthetic builds; dto-compare diffs the documents' SHA-256:
+cargo run --release -p loom-parity-cli -- calc-run <builds>... --bundle <bundle-dir> --out <dir> [--anonymous] [--data-overlay <overlay.json>]
+# Compare a calc run with an oracle run per slice field (docs/phase-3/slice-fields.json): complete fields by
+# their rule, the ten breakdowns term by term at their printed decimals; partial and not-computed fields
+# listed, never passed; register as oracle-compare, a data-version entry only when --overlay-run matches;
+# --manifest checks mechanic fixtures' targets. Exit 0, 19, 20, or a failure class (17: an unknown breakdown
+# line); 5 when a build is incomplete (nothing complete, or a complete field's breakdown not compared): not a
+# pass; 2 usage, 3 an input does not read (docs/phase-3/calc-parity.md):
+cargo run --release -p loom-parity-cli -- calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json --out <dir> [--register docs/parity/divergence-register.json] [--overlay-run <calc-run-dir>] [--manifest tools/oracle/fixtures/fixtures.json]
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile

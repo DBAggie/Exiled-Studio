@@ -17,9 +17,11 @@
 //! input of its `pair`, for `oracle-compare`), `community` (public
 //! community builds in `community/`, credited in `community/SOURCES.md`
 //! under ADR-007 Amendment 1; a creator can have one removed, so nothing
-//! may depend on a community fixture by name outside this manifest). The
-//! maintainer's corpus is not listed: it stays on the workstation
-//! (ADR-007).
+//! may depend on a community fixture by name outside this manifest),
+//! `mechanic` (our own small builds in `mechanic/`, one per mechanic the
+//! engine supports, each naming the slice fields it `targets`; Phase 3
+//! plan, decision 10; the first come with P3-6). The maintainer's corpus
+//! is not listed: it stays on the workstation (ADR-007).
 
 use std::path::{Path, PathBuf};
 
@@ -114,6 +116,11 @@ pub struct Entry {
     /// Free tags (`old-tree`: PoB converts the tree on load).
     #[serde(default)]
     pub tags: Vec<String>,
+    /// For `mechanic`: the slice fields (`docs/phase-3/slice-fields.json`
+    /// ids) the fixture isolates; `calc-parity --manifest` requires each
+    /// to match or be registered (Phase 3 gate item 2).
+    #[serde(default)]
+    pub targets: Vec<String>,
     /// What the fixture is for.
     pub description: String,
 }
@@ -130,6 +137,10 @@ pub enum Tier {
     Discrepancy,
     /// A public community build in `community/` (ADR-007 Amendment 1).
     Community,
+    /// Our own small build in `mechanic/` isolating one mechanic the
+    /// engine supports, with the slice fields it targets (Phase 3 plan,
+    /// decision 10).
+    Mechanic,
 }
 
 /// Where a fixture's path is relative to.
@@ -246,6 +257,22 @@ impl Manifest {
                     "{at}: community fixtures, and only they, live in community/"
                 ));
             }
+            if (entry.tier == Tier::Mechanic) != entry.path.starts_with("mechanic/") {
+                return Err(format!(
+                    "{at}: mechanic fixtures, and only they, live in mechanic/"
+                ));
+            }
+            let unique = entry.targets.windows(2).all(|w| w[0] < w[1]);
+            match (entry.tier, entry.targets.is_empty()) {
+                (Tier::Mechanic, false) if unique => {}
+                (Tier::Mechanic, _) => {
+                    return Err(format!(
+                        "{at}: a mechanic fixture needs targets, sorted and unique"
+                    ));
+                }
+                (_, false) => return Err(format!("{at}: only mechanic fixtures have targets")),
+                (_, true) => {}
+            }
         }
         Ok(manifest)
     }
@@ -318,6 +345,8 @@ mod tests {
         assert!(tiers(Tier::Synthetic) >= 3);
         assert_eq!(tiers(Tier::Discrepancy), 1);
         assert!(tiers(Tier::Community) >= 1);
+        // The first mechanic fixtures come with P3-6.
+        let mechanic = tiers(Tier::Mechanic);
         // Local fixtures resolve without an oracle (their hashes are checked
         // here, in every cargo test); PoB's are checked by oracle-run.
         let local = Manifest {
@@ -346,6 +375,14 @@ mod tests {
         };
         let mut on_disk = xml_in(fixtures_dir());
         on_disk.extend(xml_in(fixtures_dir().join("community")));
+        let mechanic_dir = fixtures_dir().join("mechanic");
+        let mechanic_on_disk = if mechanic_dir.is_dir() {
+            xml_in(mechanic_dir)
+        } else {
+            Vec::new()
+        };
+        assert_eq!(mechanic_on_disk.len(), mechanic);
+        on_disk.extend(mechanic_on_disk);
         on_disk.sort();
         let mut listed: Vec<String> = resolved.iter().map(|r| r.id.clone()).collect();
         listed.sort();
@@ -484,6 +521,62 @@ mod tests {
         assert!(err.contains("live in community/"), "{err}");
     }
 
+    /// A mechanic entry appended to the committed manifest.
+    fn mechanic(change: impl FnOnce(&mut Value)) -> Result<Manifest, String> {
+        manifest_with(|v| {
+            let mut entry = json!({
+                "id": "bare-witch.xml",
+                "tier": "mechanic",
+                "source": "local",
+                "path": "mechanic/bare-witch.xml",
+                "sha256": "a".repeat(64),
+                "expect": "ok",
+                "targets": ["Int", "Life", "Mana"],
+                "description": "a level 1 Witch without items"
+            });
+            change(&mut entry);
+            v["fixtures"].as_array_mut().unwrap().push(entry);
+        })
+    }
+
+    #[test]
+    fn parse_should_take_mechanic_fixtures_with_targets() {
+        let manifest = mechanic(|_| {}).unwrap();
+        let last = manifest.fixtures.last().unwrap();
+        assert_eq!(last.tier, Tier::Mechanic);
+        assert_eq!(last.targets, ["Int", "Life", "Mana"]);
+        let cases: Vec<(Change, &str)> = vec![
+            (
+                Box::new(|e| e["path"] = "bare-witch.xml".into()),
+                "live in mechanic/",
+            ),
+            (
+                Box::new(|e| e["tier"] = "synthetic".into()),
+                "live in mechanic/",
+            ),
+            (Box::new(|e| e["targets"] = json!([])), "needs targets"),
+            (
+                Box::new(|e| e["targets"] = json!(["Life", "Int"])),
+                "sorted and unique",
+            ),
+            (
+                Box::new(|e| e["targets"] = json!(["Life", "Life"])),
+                "sorted and unique",
+            ),
+        ];
+        for (change, expected) in cases {
+            let err = mechanic(change).unwrap_err();
+            assert!(err.contains(expected), "{expected}: {err}");
+        }
+        // Targets on another tier.
+        let err = manifest_with(last_targets).unwrap_err();
+        assert!(err.contains("only mechanic fixtures"), "{err}");
+    }
+
+    fn last_targets(v: &mut Value) {
+        last(v)["targets"] = json!(["Life"]);
+    }
+
     #[test]
     fn resolve_should_refuse_changed_bytes() {
         let mut manifest = Manifest::parse(COMMITTED).unwrap();
@@ -513,6 +606,7 @@ mod tests {
                 expect: "ok".to_owned(),
                 pair: None,
                 tags: Vec::new(),
+                targets: Vec::new(),
                 description: "test".to_owned(),
             }],
         };

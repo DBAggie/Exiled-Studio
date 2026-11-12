@@ -1,6 +1,6 @@
 -- loom PoB data export (Phase 3 plan, step 2). Original code of this
 -- project (MIT); not part of Path of Building. Maintainer-run, not in CI,
--- and outside the oracle adapter and its protocol (protocol 3 unchanged).
+-- and outside the oracle adapter and its protocol (it reads no build).
 --
 -- Writes the game data PoB v2.67.2 holds after startup, for the values a
 -- calculation reads, as one JSON document that `loom-parity-cli

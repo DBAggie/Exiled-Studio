@@ -1,4 +1,5 @@
--- loom oracle adapter, protocol 3 (Spike C, dev/active/spike-c-oracle-harness/).
+-- loom oracle adapter, protocol 4 (Spike C, dev/completed/spike-c-oracle-harness/;
+-- protocol 4: Phase 3 P3-5, docs/phase-3/calc-parity.md).
 -- Original code of this project (MIT); not part of Path of Building.
 --
 -- Run by `loom-parity-cli oracle-run` with the pinned LuaJIT, the working
@@ -18,11 +19,15 @@
 -- and `io.open`), records them and what they did in the document, and
 -- records which modules `require` loads. The output contract is
 -- tools/oracle/schema/oracle-output.schema.json.
+--
+-- Protocol 4: after loading, the adapter sets PoB's CALCS view (which
+-- the breakdowns come from) to the main view (which main_output comes
+-- from), so both describe the main skill; see alignCalcsView.
 
 -- launch, build, common, loadBuildFromXML are PoB's globals.
 ---@diagnostic disable: undefined-global
 
-local PROTOCOL = 3
+local PROTOCOL = 4
 local BREAKDOWN_SOURCE = "calcsTab.calcsEnv.player.breakdown"
 
 -- PoB's startup replaces the global `arg`, so the arguments (and arg[0],
@@ -57,7 +62,7 @@ local result = {
 	breakdown_source = BREAKDOWN_SOURCE,
 	-- What the shims did: every Inflate call, every refused write, every
 	-- gem variant table iterated in sorted order (by gameId, once each).
-	probe = { inflate = {}, writes_refused = {}, variant_order = {} },
+	probe = { inflate = {}, writes_refused = {}, variant_order = {}, calcs_view = {} },
 }
 
 local partialSeen = {}
@@ -245,9 +250,122 @@ local function import()
 	return true
 end
 
+-- The breakdowns come from PoB's CALCS view (calcsTab.calcsEnv), which
+-- calculates the Calcs tab's socket group (the Calcs section's Input
+-- skill_number) with that group's mainActiveSkillCalcs and its gems'
+-- skillPartCalcs, skillStageCountCalcs, skillMineCountCalcs,
+-- skillMinionCalcs, skillMinionItemSetCalcs, skillMinionSkillCalcs;
+-- main_output comes from the main view (Build mainSocketGroup,
+-- mainActiveSkill, and the gems' attributes without "Calcs").
+-- Modules/CalcSetup.lua, Modules/CalcActiveSkill.lua, Classes/SkillsTab.lua
+-- (LoadSkill), Classes/CalcsTab.lua (Load) at the pinned tag. A build file
+-- keeps the Calcs tab's own selection, so the breakdowns can describe
+-- another skill than main_output (P3-5: 16 of 36 public fixtures).
+--
+-- Before PoB reads the build, the adapter copies each main-view value to
+-- its CALCS twin in the parsed XML and composes it again with PoB's own
+-- xml.ComposeXML (the function PoB saves builds with). PoB then loads and
+-- calculates once, in its usual order, as if the user had selected the
+-- main skill in the Calcs tab. Recalculating after loading is not an
+-- option: PoB's passes are not repeatable in one process (a second pass
+-- changed main_output in 11 and the CALCS view's Life in 7 public
+-- fixtures, P3-5). When no value differs (PoB reads an unset socket
+-- group, active skill, or skill part as 1), the original text is loaded
+-- unchanged. Each difference is recorded in probe.calcs_view.
+local GEM_CALCS = { "skillPart", "skillStageCount", "skillMineCount", "skillMinion", "skillMinionItemSet", "skillMinionSkill" }
+local DEFAULT_ONE = { skillPart = true, mainActiveSkill = true, skill_number = true }
+
+local function alignCalcsView(text)
+	local changes = result.probe.calcs_view
+	local root = common.xml.ParseXML(text)[1]
+	local function children(node, elem)
+		local list = {}
+		for _, c in ipairs(node) do
+			if type(c) == "table" and c.elem == elem then
+				list[#list + 1] = c
+			end
+		end
+		return list
+	end
+	-- The value PoB uses for an attribute (an unset one is 1 where PoB
+	-- defaults or clamps it from 1).
+	local function effective(name, value)
+		if DEFAULT_ONE[name] then
+			return tonumber(value) or 1
+		end
+		return value
+	end
+	local function copy(attrib, name, value, label)
+		local twin = name .. "Calcs"
+		if effective(name, attrib[twin]) ~= effective(name, value) then
+			changes[#changes + 1] = label .. " " .. twin .. " " .. tostring(attrib[twin]) .. " -> " .. tostring(value)
+		end
+		attrib[twin] = value
+	end
+	local build = children(root, "Build")[1]
+	local main = build and (tonumber(build.attrib.mainSkillIndex) or tonumber(build.attrib.mainSocketGroup)) or 1
+	local calcs = children(root, "Calcs")[1]
+	if not calcs then
+		calcs = { elem = "Calcs", attrib = {} }
+		root[#root + 1] = calcs
+	end
+	local input
+	for _, node in ipairs(children(calcs, "Input")) do
+		if node.attrib.name == "skill_number" then
+			input = node
+		end
+	end
+	if not input then
+		input = { elem = "Input", attrib = { name = "skill_number" } }
+		table.insert(calcs, 1, input)
+	end
+	if effective("skill_number", input.attrib.number) ~= main then
+		changes[#changes + 1] = "skill_number " .. tostring(input.attrib.number) .. " -> " .. main
+	end
+	input.attrib.number, input.attrib.string, input.attrib.boolean = tostring(main), nil, nil
+	-- Both views calculate every group of the active skill set (the other
+	-- groups' parts, stages, and minions give buffs, auras, and the like;
+	-- Modules/CalcActiveSkill.lua reads the CALCS twins in CALCS mode), so
+	-- every group of that set is copied; other sets are not calculated.
+	local skills = children(root, "Skills")[1]
+	local groups = {}
+	if skills then
+		local sets = children(skills, "SkillSet")
+		if #sets == 0 then
+			groups = children(skills, "Skill")
+		else
+			local active = skills.attrib.activeSkillSet or "1"
+			for _, set in ipairs(sets) do
+				if set.attrib.id == active then
+					groups = children(set, "Skill")
+				end
+			end
+		end
+	end
+	for index, skill in ipairs(groups) do
+		local label = "group " .. index
+		copy(skill.attrib, "mainActiveSkill", skill.attrib.mainActiveSkill, label)
+		for j, gem in ipairs(children(skill, "Gem")) do
+			for _, name in ipairs(GEM_CALCS) do
+				local value = gem.attrib[name]
+				-- An old-format group's skillPart is its first gem's
+				-- (SkillsTab:LoadSkill).
+				if name == "skillPart" and j == 1 and skill.attrib.skillPart then
+					value = skill.attrib.skillPart
+				end
+				copy(gem.attrib, name, value, label .. " gem " .. j)
+			end
+		end
+	end
+	if #changes == 0 then
+		return text
+	end
+	return common.xml.ComposeXML(root)
+end
+
 local function calculate()
 	local ok, err = xpcall(function()
-		loadBuildFromXML(xmlText, "fixture")
+		loadBuildFromXML(alignCalcsView(xmlText), "fixture")
 	end, traceback)
 	if not ok then
 		fail("lua", tostring(err))
@@ -357,7 +475,8 @@ local function probeJson()
 			.. ',"error":' .. stringOrNull(call.error) .. "}"
 	end
 	return '{"inflate":[' .. table.concat(calls, ",") .. '],"variant_order":' .. stringList(result.probe.variant_order)
-		.. ',"writes_refused":' .. stringList(result.probe.writes_refused) .. "}"
+		.. ',"writes_refused":' .. stringList(result.probe.writes_refused)
+		.. ',"calcs_view":' .. stringList(result.probe.calcs_view) .. "}"
 end
 
 local function document()

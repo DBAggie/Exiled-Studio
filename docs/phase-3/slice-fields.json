@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "revision": 1,
+  "revision": 2,
   "status": "proposed",
   "oracle": "PoB 2.67.2",
   "notes": [
@@ -10,6 +10,8 @@
     "Average hit: PoB has no top-level AverageHit for attacks (it is per hand); the hit DPS line names output.AverageDamage for both kinds (Modules/CalcOffence.lua, breakdown.TotalDPS), which is the average hit times the hit chance for attacks and the average hit for spells. The slice field is AverageDamage.",
     "Rate: TotalDPS multiplies AverageDamage by HitSpeed when the skill has one (for example Winter Orb's hit rate), else by Speed; HitSpeed is compared when the oracle has it.",
     "Breakdown decimals: each term is compared at the precision its line prints. Lua formats: %.2f and %.1f fixed decimals; %g 6 significant digits; concatenation (\"..\") prints the number as Lua's tostring (14 significant digits) of a value PoB has already cut to an integer with m_modf.",
+    "graph (revision 2): the node of our provenance graph each term is compared with (calc-parity, P3-5): base, increased, more (the first node with that term below the field's node, nearest first, children in order; the search does not enter another field's result node, so a term is the field's own), result (the field's value), step.<name> (a node the engine labels Term::Step(\"<name>\")), field:<id> (another slice field's value). A slots row is the node step.slot.<source> (PoB's source, lowercased, spaces as -, and .<sourceName> when PoB names one), its parts searched below it; row is that node's value. A term PoB prints and our graph lacks is a difference; an optional term our graph has but PoB does not print must be 1 at its decimals.",
+    "Line formats (revision 2): calc-parity compares each term at the first conversion of its line: %g and %.Nf as Lua's string.format, .. as Lua's tostring (%.14g), number as the exact JSON number.",
     "contributions name the parts of our provenance graph each term sums or multiplies (P3-4): base (Base effects and the values the character, items, and gems give), increased (1 + the sum of Increased / 100), more (the product of More), result (the field's value)."
   ],
   "fields": [
@@ -22,10 +24,10 @@
         "pob_key": "Life", "shape": "chain", "source": "Modules/CalcBreakdown.lua breakdown.simple",
         "absent_when": "no increased and no more (PoB writes no breakdown)",
         "terms": [
-          {"term": "base", "line": "%g ^8(base)", "contributions": ["base"], "note": "\"(%g + %g) ^8(base)\" when PoB adds an extra base to a non-zero base; compared as their sum"},
-          {"term": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
-          {"term": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
-          {"term": "total", "line": "= %g", "contributions": ["result"]}
+          {"term": "base", "graph": "base", "line": "%g ^8(base)", "contributions": ["base"], "note": "\"(%g + %g) ^8(base)\" when PoB adds an extra base to a non-zero base; compared as their sum"},
+          {"term": "increased", "graph": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
+          {"term": "more", "graph": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
+          {"term": "total", "graph": "result", "line": "= %g", "contributions": ["result"]}
         ]
       }
     },
@@ -35,10 +37,10 @@
         "pob_key": "Mana", "shape": "chain", "source": "Modules/CalcBreakdown.lua breakdown.simple",
         "absent_when": "no increased and no more (PoB writes no breakdown)",
         "terms": [
-          {"term": "base", "line": "%g ^8(base)", "contributions": ["base"]},
-          {"term": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
-          {"term": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
-          {"term": "total", "line": "= %g", "contributions": ["result"]}
+          {"term": "base", "graph": "base", "line": "%g ^8(base)", "contributions": ["base"]},
+          {"term": "increased", "graph": "increased", "line": "x %.2f ^8(increased/reduced)", "contributions": ["increased"], "optional": "the increased sum is 0"},
+          {"term": "more", "graph": "more", "line": "x %.2f ^8(more/less)", "contributions": ["more"], "optional": "the more product is 1"},
+          {"term": "total", "graph": "result", "line": "= %g", "contributions": ["result"]}
         ]
       }
     },
@@ -47,11 +49,12 @@
       "breakdown": {
         "pob_key": "EnergyShield", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
         "row": {
+          "node": "step.slot.<source>",
           "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
-          "base": {"line": "number", "contributions": ["base"]},
-          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
-          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
-          "total": {"line": "%.2f", "contributions": ["result"]}
+          "base": {"graph": "base", "line": "number", "contributions": ["base"]},
+          "inc": {"graph": "increased", "line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"graph": "more", "line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"graph": "row", "line": "%.2f", "contributions": ["result"]}
         }
       }
     },
@@ -60,11 +63,12 @@
       "breakdown": {
         "pob_key": "Armour", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
         "row": {
+          "node": "step.slot.<source>",
           "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
-          "base": {"line": "number", "contributions": ["base"]},
-          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
-          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
-          "total": {"line": "%.2f", "contributions": ["result"]}
+          "base": {"graph": "base", "line": "number", "contributions": ["base"]},
+          "inc": {"graph": "increased", "line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"graph": "more", "line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"graph": "row", "line": "%.2f", "contributions": ["result"]}
         }
       }
     },
@@ -73,11 +77,12 @@
       "breakdown": {
         "pob_key": "Evasion", "shape": "slots", "source": "Modules/CalcBreakdown.lua breakdown.slot; Modules/CalcDefence.lua",
         "row": {
+          "node": "step.slot.<source>",
           "source": "an item slot (its local value), Global (flat global additions), or Conversion (another defence converted; its sourceName names it)",
-          "base": {"line": "number", "contributions": ["base"]},
-          "inc": {"line": " x %.2f, or false", "contributions": ["increased"]},
-          "more": {"line": " x %.2f, or false", "contributions": ["more"]},
-          "total": {"line": "%.2f", "contributions": ["result"]}
+          "base": {"graph": "base", "line": "number", "contributions": ["base"]},
+          "inc": {"graph": "increased", "line": " x %.2f, or false", "contributions": ["increased"]},
+          "more": {"graph": "more", "line": " x %.2f, or false", "contributions": ["more"]},
+          "total": {"graph": "row", "line": "%.2f", "contributions": ["result"]}
         }
       }
     },
@@ -86,9 +91,9 @@
       "breakdown": {
         "pob_key": "FireResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
         "terms": [
-          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
-          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
-          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+          {"term": "min", "graph": "step.min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "graph": "step.max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "graph": "step.total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
         ]
       }
     },
@@ -97,9 +102,9 @@
       "breakdown": {
         "pob_key": "ColdResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
         "terms": [
-          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
-          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
-          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+          {"term": "min", "graph": "step.min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "graph": "step.max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "graph": "step.total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
         ]
       }
     },
@@ -108,9 +113,9 @@
       "breakdown": {
         "pob_key": "LightningResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
         "terms": [
-          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
-          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
-          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+          {"term": "min", "graph": "step.min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "graph": "step.max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "graph": "step.total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
         ]
       }
     },
@@ -119,9 +124,9 @@
       "breakdown": {
         "pob_key": "ChaosResist", "shape": "min-max-total", "source": "Modules/CalcDefence.lua resistances",
         "terms": [
-          {"term": "min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
-          {"term": "max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
-          {"term": "total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
+          {"term": "min", "graph": "step.min", "line": "Min: ..%", "contributions": ["minimum resistance"]},
+          {"term": "max", "graph": "step.max", "line": "Max: ..%", "contributions": ["maximum resistance (base and modifiers)"]},
+          {"term": "total", "graph": "step.total", "line": "Total: ..%", "contributions": ["the sum before the cap"]}
         ]
       }
     },
@@ -141,11 +146,11 @@
       "breakdown": {
         "pob_key": "TotalDPS", "shape": "chain", "source": "Modules/CalcOffence.lua breakdown.TotalDPS",
         "terms": [
-          {"term": "average", "line": "%.1f ^8(average damage) for attacks, %.1f ^8(average hit) for spells; both print output.AverageDamage", "contributions": ["AverageDamage"]},
-          {"term": "rate", "line": "x %.2f ^8(hit rate) when HitSpeed is set, else x %.2f ^8(attack rate | cast rate | trigger rate)", "contributions": ["HitSpeed or Speed"]},
-          {"term": "dps-multiplier", "line": "x %g ^8(DPS multiplier for this skill)", "contributions": ["the skill's DPS multiplier"], "optional": "the multiplier is 1"},
-          {"term": "quantity-multiplier", "line": "x %g ^8(quantity multiplier for this skill)", "contributions": ["the skill's quantity multiplier"], "optional": "the multiplier is 1"},
-          {"term": "total", "line": "= %.1f", "contributions": ["result"]}
+          {"term": "average", "graph": "field:AverageDamage", "line": "%.1f ^8(average damage) for attacks, %.1f ^8(average hit) for spells; both print output.AverageDamage", "contributions": ["AverageDamage"]},
+          {"term": "rate", "graph": "step.rate", "line": "x %.2f ^8(hit rate) when HitSpeed is set, else x %.2f ^8(attack rate | cast rate | trigger rate)", "contributions": ["HitSpeed or Speed"]},
+          {"term": "dps-multiplier", "graph": "step.dps-multiplier", "line": "x %g ^8(DPS multiplier for this skill)", "contributions": ["the skill's DPS multiplier"], "optional": "the multiplier is 1"},
+          {"term": "quantity-multiplier", "graph": "step.quantity-multiplier", "line": "x %g ^8(quantity multiplier for this skill)", "contributions": ["the skill's quantity multiplier"], "optional": "the multiplier is 1"},
+          {"term": "total", "graph": "result", "line": "= %.1f", "contributions": ["result"]}
         ]
       }
     }

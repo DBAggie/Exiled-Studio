@@ -1,0 +1,3270 @@
+{
+ "note": "Every distinct breakdown the oracle (PoB 2.67.2, adapter protocol 3) wrote for the public fixtures (tools/oracle/fixtures/fixtures.json), for calc_parity::breakdown's parser test. Regenerate from an oracle-run of the manifest when fixtures change (P3-5, docs/phase-3/calc-parity.md).",
+ "fixtures": [
+  "Dual Savior.xml",
+  "Dual Wield Cospris CoC.xml",
+  "Generals Perforate Zerker.xml",
+  "Mirage Archer Toxic Rain.xml",
+  "OccVortex.xml",
+  "animate-guardian-guardian.xml",
+  "arakaalis-raise-spider-occultist.xml",
+  "boneshatter-juggernaut.xml",
+  "cyclone-shockwave-slayer.xml",
+  "discrepancy-movement-speed.xml",
+  "elemental-hit-of-the-spectrum-deadeye.xml",
+  "essence-drain-contagion-occultist.xml",
+  "ethereal-knives-mines-assassin.xml",
+  "facebreaker-luminary.xml",
+  "flicker-strike-berserker.xml",
+  "forged-frostbearer-spectre-necromancer.xml",
+  "holy-flame-totem-hierophant.xml",
+  "ice-nova-elementalist-campaign-lab1.xml",
+  "ice-nova-elementalist-campaign.xml",
+  "ice-nova-elementalist-mapping.xml",
+  "kinetic-blast-of-clustering-necromancer.xml",
+  "kinetic-fusillade-ballista-hierophant.xml",
+  "lacerate-bleed-gladiator.xml",
+  "lightning-trap-of-sparking-elementalist.xml",
+  "minimal-level1.xml",
+  "penance-brand-ignite-elementalist.xml",
+  "poisonous-concoction-of-bouncing-pathfinder.xml",
+  "rf-chieftain-league-start.xml",
+  "rf-chieftain-life-stack.xml",
+  "shock-nova-archmage-hierophant.xml",
+  "smite-inquisitor-act1.xml",
+  "smite-inquisitor-act10.xml",
+  "smite-inquisitor-act2.xml",
+  "smite-inquisitor-act5.xml",
+  "timeless-militant-faith.xml",
+  "winter-orb-elementalist.xml"
+ ],
+ "breakdowns": {
+  "Life": {
+   "null": true,
+   "lines": [
+    "1282 ^8(base)",
+    "1291 ^8(base)",
+    "1355 ^8(base)",
+    "1569 ^8(base)",
+    "1640 ^8(base)",
+    "1734 ^8(base)",
+    "1735 ^8(base)",
+    "1815 ^8(base)",
+    "1879 ^8(base)",
+    "1892 ^8(base)",
+    "1913 ^8(base)",
+    "1928 ^8(base)",
+    "1941 ^8(base)",
+    "1947 ^8(base)",
+    "1957 ^8(base)",
+    "1961 ^8(base)",
+    "1962 ^8(base)",
+    "1969 ^8(base)",
+    "1982 ^8(base)",
+    "1997 ^8(base)",
+    "2017 ^8(base)",
+    "2032 ^8(base)",
+    "2074 ^8(base)",
+    "2109 ^8(base)",
+    "2130 ^8(base)",
+    "2145 ^8(base)",
+    "2212 ^8(base)",
+    "2326 ^8(base)",
+    "2383 ^8(base)",
+    "3645 ^8(base)",
+    "624 ^8(base)",
+    "= 1333",
+    "= 1743",
+    "= 20023",
+    "= 2168",
+    "= 2336",
+    "= 2583",
+    "= 2934",
+    "= 2977",
+    "= 2988",
+    "= 3072",
+    "= 3112",
+    "= 3542",
+    "= 3626",
+    "= 3628",
+    "= 3822",
+    "= 3834",
+    "= 3921",
+    "= 3974",
+    "= 4111",
+    "= 4258",
+    "= 4348",
+    "= 4478",
+    "= 4961",
+    "= 5234",
+    "= 5395",
+    "= 5486",
+    "= 5890",
+    "= 6339",
+    "= 6728",
+    "= 8418",
+    "= 930",
+    "x 1.04 ^8(increased/reduced)",
+    "x 1.10 ^8(more/less)",
+    "x 1.20 ^8(increased/reduced)",
+    "x 1.21 ^8(more/less)",
+    "x 1.35 ^8(increased/reduced)",
+    "x 1.49 ^8(increased/reduced)",
+    "x 1.55 ^8(increased/reduced)",
+    "x 1.57 ^8(increased/reduced)",
+    "x 1.60 ^8(increased/reduced)",
+    "x 1.64 ^8(increased/reduced)",
+    "x 1.85 ^8(increased/reduced)",
+    "x 1.87 ^8(increased/reduced)",
+    "x 1.93 ^8(increased/reduced)",
+    "x 1.99 ^8(increased/reduced)",
+    "x 2.01 ^8(increased/reduced)",
+    "x 2.02 ^8(increased/reduced)",
+    "x 2.09 ^8(increased/reduced)",
+    "x 2.14 ^8(increased/reduced)",
+    "x 2.16 ^8(increased/reduced)",
+    "x 2.17 ^8(increased/reduced)",
+    "x 2.22 ^8(increased/reduced)",
+    "x 2.44 ^8(increased/reduced)",
+    "x 2.48 ^8(increased/reduced)",
+    "x 2.64 ^8(increased/reduced)",
+    "x 2.66 ^8(increased/reduced)",
+    "x 2.74 ^8(increased/reduced)",
+    "x 2.84 ^8(increased/reduced)",
+    "x 3.19 ^8(increased/reduced)",
+    "x 3.29 ^8(increased/reduced)",
+    "x 4.54 ^8(increased/reduced)"
+   ]
+  },
+  "Mana": {
+   "null": true,
+   "lines": [
+    "1336 ^8(base)",
+    "1482 ^8(base)",
+    "526 ^8(base)",
+    "536 ^8(base)",
+    "640 ^8(base)",
+    "680 ^8(base)",
+    "683 ^8(base)",
+    "686 ^8(base)",
+    "693 ^8(base)",
+    "713 ^8(base)",
+    "730 ^8(base)",
+    "751 ^8(base)",
+    "756 ^8(base)",
+    "760 ^8(base)",
+    "768 ^8(base)",
+    "780 ^8(base)",
+    "786 ^8(base)",
+    "794 ^8(base)",
+    "801 ^8(base)",
+    "815 ^8(base)",
+    "82 ^8(base)",
+    "820 ^8(base)",
+    "870 ^8(base)",
+    "928 ^8(base)",
+    "973 ^8(base)",
+    "= 0",
+    "= 103",
+    "= 1038",
+    "= 1104",
+    "= 1125",
+    "= 1149",
+    "= 1314",
+    "= 1391",
+    "= 1407",
+    "= 3955",
+    "= 631",
+    "= 672",
+    "= 714",
+    "= 741",
+    "= 794",
+    "= 832",
+    "= 8373",
+    "= 856",
+    "= 865",
+    "= 874",
+    "= 922",
+    "= 939",
+    "= 971",
+    "= 974",
+    "= 983",
+    "x 0.00 ^8(more/less)",
+    "x 1.05 ^8(increased/reduced)",
+    "x 1.06 ^8(increased/reduced)",
+    "x 1.08 ^8(increased/reduced)",
+    "x 1.12 ^8(increased/reduced)",
+    "x 1.20 ^8(increased/reduced)",
+    "x 1.25 ^8(increased/reduced)",
+    "x 1.28 ^8(increased/reduced)",
+    "x 1.33 ^8(increased/reduced)",
+    "x 1.39 ^8(increased/reduced)",
+    "x 1.41 ^8(increased/reduced)",
+    "x 1.43 ^8(increased/reduced)",
+    "x 1.48 ^8(increased/reduced)",
+    "x 1.51 ^8(increased/reduced)",
+    "x 1.52 ^8(increased/reduced)",
+    "x 1.79 ^8(increased/reduced)",
+    "x 2.96 ^8(increased/reduced)",
+    "x 5.65 ^8(increased/reduced)"
+   ]
+  },
+  "EnergyShield": {
+   "slots": [
+    {
+     "slots": [
+      {
+       "base": 104,
+       "inc": " x 1.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "163.28"
+      },
+      {
+       "base": 34,
+       "inc": " x 1.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "53.38"
+      },
+      {
+       "base": 25,
+       "inc": " x 1.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "39.25"
+      },
+      {
+       "base": 475,
+       "inc": " x 1.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "745.75"
+      },
+      {
+       "base": 92,
+       "inc": " x 1.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "144.44"
+      },
+      {
+       "base": 71,
+       "inc": " x 1.57",
+       "more": false,
+       "source": "Global",
+       "total": "111.47"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 11,
+       "inc": " x 1.23",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "13.53"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 174,
+       "inc": " x 1.12",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "194.88"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 192,
+       "inc": " x 1.42",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 0.50",
+       "source": "Helmet",
+       "total": "136.32"
+      },
+      {
+       "base": 176,
+       "inc": " x 1.42",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 0.50",
+       "source": "Body Armour",
+       "total": "124.96"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 243,
+       "inc": " x 5.47",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "1329.21"
+      },
+      {
+       "base": 163,
+       "inc": " x 4.47",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "728.61"
+      },
+      {
+       "base": 16,
+       "inc": " x 4.47",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "71.52"
+      },
+      {
+       "base": 1277,
+       "inc": " x 5.47",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "6985.19"
+      },
+      {
+       "base": 235,
+       "inc": " x 4.47",
+       "more": false,
+       "source": "Global",
+       "total": "1050.45"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 247,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "634.79"
+      },
+      {
+       "base": 52,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "133.64"
+      },
+      {
+       "base": 62,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "159.34"
+      },
+      {
+       "base": 83,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "213.31"
+      },
+      {
+       "base": 183,
+       "inc": " x 2.57",
+       "more": false,
+       "source": "Global",
+       "total": "470.31"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 268,
+       "inc": " x 1.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "455.60"
+      },
+      {
+       "base": 136,
+       "inc": " x 1.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "231.20"
+      },
+      {
+       "base": 44,
+       "inc": " x 1.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "74.80"
+      },
+      {
+       "base": 636,
+       "inc": " x 1.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1081.20"
+      },
+      {
+       "base": 285,
+       "inc": " x 1.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "484.50"
+      },
+      {
+       "base": 46,
+       "inc": " x 1.70",
+       "more": false,
+       "source": "Global",
+       "total": "78.20"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 281,
+       "inc": " x 2.99",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "840.19"
+      },
+      {
+       "base": 107,
+       "inc": " x 2.99",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "319.93"
+      },
+      {
+       "base": 92,
+       "inc": " x 2.99",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "275.08"
+      },
+      {
+       "base": 553,
+       "inc": " x 2.99",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1653.47"
+      },
+      {
+       "base": 39,
+       "inc": " x 2.99",
+       "more": false,
+       "source": "Global",
+       "total": "116.61"
+      },
+      {
+       "base": 331.8,
+       "inc": " x 4.47",
+       "more": false,
+       "source": "Conversion",
+       "sourceName": "Life to Energy Shield",
+       "total": "1483.15"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 30,
+       "inc": " x 1.11",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "33.30"
+      },
+      {
+       "base": 18,
+       "inc": " x 1.11",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "19.98"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 30,
+       "inc": " x 1.93",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "57.90"
+      },
+      {
+       "base": 56,
+       "inc": " x 1.93",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "108.08"
+      },
+      {
+       "base": 56,
+       "inc": " x 1.93",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "108.08"
+      },
+      {
+       "base": 529,
+       "inc": " x 1.93",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1020.97"
+      },
+      {
+       "base": 20,
+       "inc": " x 1.93",
+       "more": false,
+       "source": "Global",
+       "total": "38.60"
+      },
+      {
+       "base": 518.7,
+       "inc": " x 6.58",
+       "more": false,
+       "source": "Conversion",
+       "sourceName": "Mana to Energy Shield",
+       "total": "3413.05"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 34,
+       "inc": " x 1.35",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "45.90"
+      },
+      {
+       "base": 364,
+       "inc": " x 1.35",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "491.40"
+      },
+      {
+       "base": 78,
+       "inc": " x 1.35",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "105.30"
+      },
+      {
+       "base": 12,
+       "inc": " x 1.35",
+       "more": false,
+       "source": "Global",
+       "total": "16.20"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 345,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "759.00"
+      },
+      {
+       "base": 185,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "407.00"
+      },
+      {
+       "base": 183,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "402.60"
+      },
+      {
+       "base": 312,
+       "inc": " x 2.20",
+       "more": false,
+       "source": "Global",
+       "total": "686.40"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 349,
+       "inc": " x 3.08",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "1074.92"
+      },
+      {
+       "base": 248,
+       "inc": " x 3.08",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "763.84"
+      },
+      {
+       "base": 83,
+       "inc": " x 3.08",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "255.64"
+      },
+      {
+       "base": 424,
+       "inc": " x 3.44",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1458.56"
+      },
+      {
+       "base": 573,
+       "inc": " x 3.08",
+       "more": false,
+       "source": "Global",
+       "total": "1764.84"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 35,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "42.00"
+      },
+      {
+       "base": 23,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "27.60"
+      },
+      {
+       "base": 22,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "26.40"
+      },
+      {
+       "base": 198,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "237.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 35,
+       "inc": " x 1.22",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "42.70"
+      },
+      {
+       "base": 23,
+       "inc": " x 1.22",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "28.06"
+      },
+      {
+       "base": 22,
+       "inc": " x 1.22",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "26.84"
+      },
+      {
+       "base": 198,
+       "inc": " x 1.22",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "241.56"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 35,
+       "inc": " x 1.43",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "50.05"
+      },
+      {
+       "base": 23,
+       "inc": " x 1.43",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "32.89"
+      },
+      {
+       "base": 22,
+       "inc": " x 1.43",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "31.46"
+      },
+      {
+       "base": 198,
+       "inc": " x 1.43",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "283.14"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 526,
+       "inc": " x 3.91",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "2056.66"
+      },
+      {
+       "base": 284,
+       "inc": " x 2.91",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "826.44"
+      },
+      {
+       "base": 304,
+       "inc": " x 2.91",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "884.64"
+      },
+      {
+       "base": 435,
+       "inc": " x 2.91",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1265.85"
+      },
+      {
+       "base": 92,
+       "inc": " x 3.81",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "350.52"
+      },
+      {
+       "base": 252,
+       "inc": " x 2.91",
+       "more": false,
+       "source": "Global",
+       "total": "733.32"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 58,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "85.84"
+      },
+      {
+       "base": 51,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "75.48"
+      },
+      {
+       "base": 36,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "53.28"
+      },
+      {
+       "base": 164,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "242.72"
+      },
+      {
+       "base": 46,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "68.08"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 58,
+       "inc": " x 1.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "99.18"
+      },
+      {
+       "base": 51,
+       "inc": " x 1.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "87.21"
+      },
+      {
+       "base": 36,
+       "inc": " x 1.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "61.56"
+      },
+      {
+       "base": 164,
+       "inc": " x 1.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "280.44"
+      },
+      {
+       "base": 46,
+       "inc": " x 1.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "78.66"
+      },
+      {
+       "base": 20,
+       "inc": " x 1.71",
+       "more": false,
+       "source": "Global",
+       "total": "34.20"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 58,
+       "inc": " x 1.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "103.82"
+      },
+      {
+       "base": 23,
+       "inc": " x 1.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "41.17"
+      },
+      {
+       "base": 22,
+       "inc": " x 1.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "39.38"
+      },
+      {
+       "base": 140,
+       "inc": " x 1.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "250.60"
+      },
+      {
+       "base": 58,
+       "inc": " x 1.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "103.82"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 6,
+       "inc": " x 1.10",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 0.70",
+       "source": "Gloves",
+       "total": "4.62"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 64,
+       "inc": " x 1.67",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "106.88"
+      },
+      {
+       "base": 25,
+       "inc": " x 1.67",
+       "more": false,
+       "source": "Global",
+       "total": "41.75"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 67,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "99.16"
+      },
+      {
+       "base": 79,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "116.92"
+      },
+      {
+       "base": 49,
+       "inc": " x 1.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "72.52"
+      },
+      {
+       "base": 680,
+       "inc": " x 2.48",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1686.40"
+      },
+      {
+       "base": 275,
+       "inc": " x 2.88",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "792.00"
+      },
+      {
+       "base": 6,
+       "inc": " x 1.48",
+       "more": false,
+       "source": "Global",
+       "total": "8.88"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 70,
+       "inc": " x 1.77",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "123.90"
+      },
+      {
+       "base": 34,
+       "inc": " x 1.77",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "60.18"
+      },
+      {
+       "base": 34,
+       "inc": " x 1.77",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "60.18"
+      },
+      {
+       "base": 249,
+       "inc": " x 1.77",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "440.73"
+      },
+      {
+       "base": 66,
+       "inc": " x 1.77",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "116.82"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 85,
+       "inc": " x 2.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "229.50"
+      },
+      {
+       "base": 83,
+       "inc": " x 2.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "224.10"
+      },
+      {
+       "base": 26,
+       "inc": " x 2.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "70.20"
+      },
+      {
+       "base": 610,
+       "inc": " x 3.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2257.00"
+      },
+      {
+       "base": 64,
+       "inc": " x 2.70",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "172.80"
+      },
+      {
+       "base": 98,
+       "inc": " x 2.70",
+       "more": false,
+       "source": "Global",
+       "total": "264.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 90,
+       "inc": " x 1.15",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "103.50"
+      }
+     ]
+    },
+    {
+     "slots": {}
+    }
+   ]
+  },
+  "Armour": {
+   "slots": [
+    {
+     "slots": [
+      {
+       "base": 1089,
+       "inc": " x 3.13",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "3408.57"
+      },
+      {
+       "base": 664,
+       "inc": " x 3.13",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "2078.32"
+      },
+      {
+       "base": 77,
+       "inc": " x 3.13",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "241.01"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 110,
+       "inc": " x 1.36",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "149.60"
+      },
+      {
+       "base": 104,
+       "inc": " x 1.36",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "141.44"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1155,
+       "inc": " x 1.58",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.55",
+       "source": "Helmet",
+       "total": "2828.60"
+      },
+      {
+       "base": 818,
+       "inc": " x 1.58",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.55",
+       "source": "Gloves",
+       "total": "2003.28"
+      },
+      {
+       "base": 784,
+       "inc": " x 1.58",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.55",
+       "source": "Boots",
+       "total": "1920.02"
+      },
+      {
+       "base": 721,
+       "inc": " x 1.58",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.55",
+       "source": "Weapon 2",
+       "total": "1765.73"
+      },
+      {
+       "base": 1184,
+       "inc": " x 1.58",
+       "more": " x 1.55",
+       "source": "Global",
+       "total": "2899.62"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1174,
+       "inc": " x 1.93",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2265.82"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1341,
+       "inc": " x 2.85",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "3821.85"
+      },
+      {
+       "base": 496,
+       "inc": " x 2.85",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1413.60"
+      },
+      {
+       "base": 496,
+       "inc": " x 2.85",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1413.60"
+      },
+      {
+       "base": 1550,
+       "inc": " x 2.85",
+       "more": false,
+       "source": "Global",
+       "total": "4417.50"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 138,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "165.60"
+      },
+      {
+       "base": 60,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "72.00"
+      },
+      {
+       "base": 50,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "60.00"
+      },
+      {
+       "base": 353,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "423.60"
+      },
+      {
+       "base": 30,
+       "inc": " x 1.20",
+       "more": false,
+       "source": "Global",
+       "total": "36.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1397,
+       "inc": " x 4.64",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "6482.08"
+      },
+      {
+       "base": 862,
+       "inc": " x 4.64",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "3999.68"
+      },
+      {
+       "base": 496,
+       "inc": " x 4.64",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "2301.44"
+      },
+      {
+       "base": 4313,
+       "inc": " x 4.64",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "20012.32"
+      },
+      {
+       "base": 200,
+       "inc": " x 4.64",
+       "more": false,
+       "source": "Global",
+       "total": "928.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 143,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "171.60"
+      },
+      {
+       "base": 283,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "339.60"
+      },
+      {
+       "base": 283,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "339.60"
+      },
+      {
+       "base": 2578,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "3093.60"
+      },
+      {
+       "base": 800,
+       "inc": " x 1.20",
+       "more": false,
+       "source": "Global",
+       "total": "960.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 164,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "196.80"
+      },
+      {
+       "base": 110,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "132.00"
+      },
+      {
+       "base": 104,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "124.80"
+      },
+      {
+       "base": 857,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1028.40"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 164,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "249.28"
+      },
+      {
+       "base": 110,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "167.20"
+      },
+      {
+       "base": 104,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "158.08"
+      },
+      {
+       "base": 857,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "1302.64"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 189,
+       "inc": false,
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "189.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 193,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "496.01"
+      },
+      {
+       "base": 167,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "429.19"
+      },
+      {
+       "base": 167,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "429.19"
+      },
+      {
+       "base": 1046,
+       "inc": " x 2.57",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2688.22"
+      },
+      {
+       "base": 1500,
+       "inc": " x 2.57",
+       "more": false,
+       "source": "Global",
+       "total": "3855.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 2016,
+       "inc": " x 3.18",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "6410.88"
+      },
+      {
+       "base": 496,
+       "inc": " x 3.18",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1577.28"
+      },
+      {
+       "base": 547,
+       "inc": " x 3.18",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1739.46"
+      },
+      {
+       "base": 3378,
+       "inc": " x 3.18",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "10742.04"
+      },
+      {
+       "base": 2480,
+       "inc": " x 3.18",
+       "more": false,
+       "source": "Global",
+       "total": "7886.40"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 215,
+       "inc": " x 1.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "258.00"
+      },
+      {
+       "base": 1817,
+       "inc": " x 1.20",
+       "more": false,
+       "source": "Global",
+       "total": "2180.40"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 259,
+       "inc": " x 1.24",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 0.50",
+       "source": "Boots",
+       "total": "160.58"
+      },
+      {
+       "base": 540,
+       "inc": " x 1.24",
+       "more": " x 0.50",
+       "source": "Global",
+       "total": "334.80"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 2925,
+       "inc": " x 2.08",
+       "more": false,
+       "source": "Global",
+       "total": "6084.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 332,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "926.28"
+      },
+      {
+       "base": 331,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "923.49"
+      },
+      {
+       "base": 242,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "675.18"
+      },
+      {
+       "base": 3314,
+       "inc": " x 3.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "12560.06"
+      },
+      {
+       "base": 1364,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "3805.56"
+      },
+      {
+       "base": 2321,
+       "inc": " x 2.79",
+       "more": false,
+       "source": "Global",
+       "total": "6475.59"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 362,
+       "inc": " x 3.32",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Boots",
+       "total": "1442.21"
+      },
+      {
+       "base": 2759,
+       "inc": " x 3.32",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Body Armour",
+       "total": "10991.86"
+      },
+      {
+       "base": 15,
+       "inc": " x 3.32",
+       "more": " x 1.44",
+       "source": "Conversion",
+       "sourceName": "Evasion to Armour",
+       "total": "71.71"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 411,
+       "inc": " x 2.67",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "1097.37"
+      },
+      {
+       "base": 356,
+       "inc": " x 2.67",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "950.52"
+      },
+      {
+       "base": 131,
+       "inc": " x 2.67",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "349.77"
+      },
+      {
+       "base": 2826,
+       "inc": " x 3.67",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "10371.42"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 491,
+       "inc": false,
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "491.00"
+      },
+      {
+       "base": 85,
+       "inc": false,
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "85.00"
+      },
+      {
+       "base": 524,
+       "inc": false,
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "524.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 512,
+       "inc": " x 1.60",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "819.20"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 535,
+       "inc": " x 2.56",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1369.60"
+      },
+      {
+       "base": 462,
+       "inc": " x 2.56",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1182.72"
+      },
+      {
+       "base": 2585,
+       "inc": " x 2.56",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "6617.60"
+      },
+      {
+       "base": 510,
+       "inc": " x 2.56",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "1305.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 547,
+       "inc": " x 3.44",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.85",
+       "source": "Gloves",
+       "total": "3481.11"
+      },
+      {
+       "base": 2988,
+       "inc": " x 3.44",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.85",
+       "source": "Body Armour",
+       "total": "19015.63"
+      },
+      {
+       "base": 1397,
+       "inc": " x 3.44",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.85",
+       "source": "Weapon 2",
+       "total": "8890.51"
+      },
+      {
+       "base": 4239,
+       "inc": " x 3.44",
+       "more": " x 1.85",
+       "source": "Global",
+       "total": "26977.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 722,
+       "inc": " x 3.01",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "2173.22"
+      },
+      {
+       "base": 358,
+       "inc": " x 3.01",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1077.58"
+      },
+      {
+       "base": 386,
+       "inc": " x 3.01",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1161.86"
+      },
+      {
+       "base": 943,
+       "inc": " x 3.01",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2838.43"
+      },
+      {
+       "base": 2930,
+       "inc": " x 3.01",
+       "more": false,
+       "source": "Global",
+       "total": "8819.30"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 803,
+       "inc": " x 2.84",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "2280.52"
+      },
+      {
+       "base": 424,
+       "inc": " x 2.84",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1204.16"
+      },
+      {
+       "base": 4442,
+       "inc": " x 2.84",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "12615.28"
+      },
+      {
+       "base": 212,
+       "inc": " x 2.84",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "602.08"
+      },
+      {
+       "base": 300,
+       "inc": " x 2.84",
+       "more": false,
+       "source": "Global",
+       "total": "852.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 933,
+       "inc": " x 3.14",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "2929.62"
+      },
+      {
+       "base": 445,
+       "inc": " x 3.14",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1397.30"
+      },
+      {
+       "base": 145,
+       "inc": " x 3.14",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "455.30"
+      },
+      {
+       "base": 782,
+       "inc": " x 3.14",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2455.48"
+      },
+      {
+       "base": 417,
+       "inc": " x 3.14",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "1309.38"
+      },
+      {
+       "base": 1905,
+       "inc": " x 3.14",
+       "more": false,
+       "source": "Global",
+       "total": "5981.70"
+      }
+     ]
+    },
+    {
+     "slots": {}
+    }
+   ]
+  },
+  "Evasion": {
+   "slots": [
+    {
+     "slots": [
+      {
+       "base": 1174,
+       "inc": " x 1.90",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2230.60"
+      },
+      {
+       "base": 15,
+       "inc": " x 1.90",
+       "more": false,
+       "source": "Global",
+       "total": "28.50"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1277,
+       "inc": " x 3.09",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.24",
+       "source": "Helmet",
+       "total": "4892.95"
+      },
+      {
+       "base": 18,
+       "inc": " x 3.09",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.24",
+       "source": "Gloves",
+       "total": "68.97"
+      },
+      {
+       "base": 2777,
+       "inc": " x 3.09",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.24",
+       "source": "Body Armour",
+       "total": "10640.35"
+      },
+      {
+       "base": 215,
+       "inc": " x 3.09",
+       "more": " x 1.24",
+       "source": "Global",
+       "total": "823.79"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1363,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Helmet",
+       "total": "3598.32"
+      },
+      {
+       "base": 528,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Gloves",
+       "total": "1393.92"
+      },
+      {
+       "base": 2860,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Body Armour",
+       "total": "7550.40"
+      },
+      {
+       "base": 384,
+       "inc": " x 2.20",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.20",
+       "source": "Weapon 2",
+       "total": "1013.76"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 145,
+       "inc": " x 1.68",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "243.60"
+      },
+      {
+       "base": 15,
+       "inc": " x 1.68",
+       "more": false,
+       "source": "Global",
+       "total": "25.20"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.02",
+       "more": false,
+       "source": "Global",
+       "total": "15.30"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.04",
+       "more": false,
+       "source": "Global",
+       "total": "15.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.06",
+       "more": false,
+       "source": "Global",
+       "total": "15.90"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.07",
+       "more": false,
+       "source": "Global",
+       "total": "16.05"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.10",
+       "more": false,
+       "source": "Global",
+       "total": "16.50"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.14",
+       "more": false,
+       "source": "Global",
+       "total": "17.10"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.16",
+       "more": false,
+       "source": "Global",
+       "total": "17.40"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.18",
+       "more": false,
+       "source": "Global",
+       "total": "17.70"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.20",
+       "more": false,
+       "source": "Global",
+       "total": "18.00"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.24",
+       "more": false,
+       "source": "Global",
+       "total": "18.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.31",
+       "more": false,
+       "source": "Global",
+       "total": "19.65"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.47",
+       "more": false,
+       "source": "Global",
+       "total": "22.05"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.55",
+       "more": false,
+       "source": "Global",
+       "total": "23.25"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.62",
+       "more": false,
+       "source": "Global",
+       "total": "24.30"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.64",
+       "more": false,
+       "source": "Global",
+       "total": "24.60"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.69",
+       "more": false,
+       "source": "Global",
+       "total": "25.35"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.82",
+       "more": false,
+       "source": "Global",
+       "total": "27.30"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 1.98",
+       "more": false,
+       "source": "Global",
+       "total": "29.70"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 15,
+       "inc": " x 2.92",
+       "more": false,
+       "source": "Global",
+       "total": "43.80"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 1766,
+       "inc": " x 2.24",
+       "more": " x 1.31",
+       "source": "Global",
+       "total": "5182.15"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 216,
+       "inc": " x 1.69",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "365.04"
+      },
+      {
+       "base": 87,
+       "inc": " x 1.69",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "147.03"
+      },
+      {
+       "base": 166,
+       "inc": " x 1.69",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "280.54"
+      },
+      {
+       "base": 1250,
+       "inc": " x 1.69",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2112.50"
+      },
+      {
+       "base": 15,
+       "inc": " x 1.69",
+       "more": false,
+       "source": "Global",
+       "total": "25.35"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 420,
+       "inc": " x 1.83",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "768.60"
+      },
+      {
+       "base": 167,
+       "inc": " x 1.83",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "305.61"
+      },
+      {
+       "base": 256,
+       "inc": " x 1.83",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "468.48"
+      },
+      {
+       "base": 1630,
+       "inc": " x 1.83",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "2982.90"
+      },
+      {
+       "base": 1765,
+       "inc": " x 1.83",
+       "more": false,
+       "source": "Global",
+       "total": "3229.95"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 47,
+       "inc": " x 1.50",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "70.50"
+      },
+      {
+       "base": 212,
+       "inc": " x 1.50",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "318.00"
+      },
+      {
+       "base": 15,
+       "inc": " x 1.50",
+       "more": false,
+       "source": "Global",
+       "total": "22.50"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 510,
+       "inc": " x 1.66",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Weapon 2",
+       "total": "846.60"
+      },
+      {
+       "base": 15,
+       "inc": " x 1.66",
+       "more": false,
+       "source": "Global",
+       "total": "24.90"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 512,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "1428.48"
+      },
+      {
+       "base": 496,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Gloves",
+       "total": "1383.84"
+      },
+      {
+       "base": 496,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "1383.84"
+      },
+      {
+       "base": 3300,
+       "inc": " x 2.79",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "9207.00"
+      },
+      {
+       "base": 15,
+       "inc": " x 2.79",
+       "more": false,
+       "source": "Global",
+       "total": "41.85"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 552,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Helmet",
+       "total": "839.04"
+      },
+      {
+       "base": 215,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Boots",
+       "total": "326.80"
+      },
+      {
+       "base": 298,
+       "inc": " x 1.52",
+       "item": {
+        "$object": "Item"
+       },
+       "more": false,
+       "source": "Body Armour",
+       "total": "452.96"
+      },
+      {
+       "base": 83,
+       "inc": " x 1.52",
+       "more": false,
+       "source": "Global",
+       "total": "126.16"
+      }
+     ]
+    },
+    {
+     "slots": [
+      {
+       "base": 605,
+       "inc": " x 3.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.31",
+       "source": "Helmet",
+       "total": "2940.36"
+      },
+      {
+       "base": 396,
+       "inc": " x 3.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.31",
+       "source": "Gloves",
+       "total": "1924.60"
+      },
+      {
+       "base": 1714,
+       "inc": " x 3.71",
+       "item": {
+        "$object": "Item"
+       },
+       "more": " x 1.31",
+       "source": "Body Armour",
+       "total": "8330.21"
+      },
+      {
+       "base": 2595,
+       "inc": " x 3.71",
+       "more": " x 1.31",
+       "source": "Global",
+       "total": "12611.96"
+      }
+     ]
+    }
+   ]
+  },
+  "FireResist": {
+   "lines": [
+    "Max: 75%",
+    "Max: 76%",
+    "Max: 77%",
+    "Max: 78%",
+    "Max: 79%",
+    "Max: 80%",
+    "Max: 82%",
+    "Max: 83%",
+    "Max: 84%",
+    "Max: 88%",
+    "Max: 90%",
+    "Min: -200%",
+    "Total: -26%",
+    "Total: -60%",
+    "Total: 102%",
+    "Total: 105%",
+    "Total: 106%",
+    "Total: 108%",
+    "Total: 110%",
+    "Total: 114%",
+    "Total: 120%",
+    "Total: 123%",
+    "Total: 125%",
+    "Total: 127%",
+    "Total: 131%",
+    "Total: 139%",
+    "Total: 140%",
+    "Total: 149%",
+    "Total: 157%",
+    "Total: 172%",
+    "Total: 181%",
+    "Total: 192%",
+    "Total: 230%",
+    "Total: 244%",
+    "Total: 37%",
+    "Total: 53%",
+    "Total: 64%",
+    "Total: 77%",
+    "Total: 84%",
+    "Total: 88%",
+    "Total: 92%",
+    "Total: 93%"
+   ]
+  },
+  "ColdResist": {
+   "lines": [
+    "Max: 75%",
+    "Max: 76%",
+    "Max: 77%",
+    "Max: 79%",
+    "Max: 80%",
+    "Max: 82%",
+    "Max: 86%",
+    "Max: 90%",
+    "Min: -200%",
+    "Total: -6%",
+    "Total: -60%",
+    "Total: 105%",
+    "Total: 107%",
+    "Total: 109%",
+    "Total: 111%",
+    "Total: 112%",
+    "Total: 114%",
+    "Total: 122%",
+    "Total: 124%",
+    "Total: 127%",
+    "Total: 134%",
+    "Total: 143%",
+    "Total: 166%",
+    "Total: 167%",
+    "Total: 194%",
+    "Total: 202%",
+    "Total: 45%",
+    "Total: 59%",
+    "Total: 62%",
+    "Total: 65%",
+    "Total: 72%",
+    "Total: 77%",
+    "Total: 80%",
+    "Total: 93%",
+    "Total: 97%"
+   ]
+  },
+  "LightningResist": {
+   "lines": [
+    "Max: 75%",
+    "Max: 76%",
+    "Max: 78%",
+    "Max: 80%",
+    "Max: 82%",
+    "Max: 83%",
+    "Max: 87%",
+    "Max: 90%",
+    "Min: -200%",
+    "Total: -25%",
+    "Total: -60%",
+    "Total: 103%",
+    "Total: 107%",
+    "Total: 119%",
+    "Total: 123%",
+    "Total: 124%",
+    "Total: 127%",
+    "Total: 132%",
+    "Total: 148%",
+    "Total: 159%",
+    "Total: 256%",
+    "Total: 55%",
+    "Total: 60%",
+    "Total: 68%",
+    "Total: 71%",
+    "Total: 77%",
+    "Total: 79%",
+    "Total: 86%",
+    "Total: 91%",
+    "Total: 92%",
+    "Total: 94%",
+    "Total: 96%",
+    "Total: 97%",
+    "Total: 98%"
+   ]
+  },
+  "ChaosResist": {
+   "lines": [
+    "Max: 75%",
+    "Max: 76%",
+    "Max: 77%",
+    "Min: -200%",
+    "Total: -14%",
+    "Total: -21%",
+    "Total: -25%",
+    "Total: -53%",
+    "Total: -60%",
+    "Total: 101%",
+    "Total: 11%",
+    "Total: 120%",
+    "Total: 121%",
+    "Total: 128%",
+    "Total: 168%",
+    "Total: 180%",
+    "Total: 21%",
+    "Total: 3%",
+    "Total: 45%",
+    "Total: 46%",
+    "Total: 51%",
+    "Total: 68%",
+    "Total: 74%",
+    "Total: 75%",
+    "Total: 77%",
+    "Total: 78%",
+    "Total: 79%",
+    "Total: 81%",
+    "Total: 85%",
+    "Total: 91%"
+   ]
+  },
+  "TotalDPS": {
+   "null": true,
+   "lines": [
+    "0.0 ^8(average damage)",
+    "0.0 ^8(average hit)",
+    "0.1 ^8(average damage)",
+    "1143403.7 ^8(average damage)",
+    "1346290.0 ^8(average damage)",
+    "142914.1 ^8(average hit)",
+    "15434.3 ^8(average damage)",
+    "16142950.1 ^8(average damage)",
+    "1699.0 ^8(average damage)",
+    "1980296.5 ^8(average hit)",
+    "198258.4 ^8(average damage)",
+    "204673.8 ^8(average damage)",
+    "2335701.4 ^8(average hit)",
+    "242015.8 ^8(average hit)",
+    "24757.0 ^8(average damage)",
+    "2774130.5 ^8(average hit)",
+    "2990.5 ^8(average damage)",
+    "3074565.8 ^8(average hit)",
+    "31434.0 ^8(average hit)",
+    "31851.9 ^8(average damage)",
+    "37942.0 ^8(average hit)",
+    "3889.8 ^8(average damage)",
+    "401241.2 ^8(average hit)",
+    "5548297.5 ^8(average damage)",
+    "56682.3 ^8(average damage)",
+    "582276.9 ^8(average damage)",
+    "604978.7 ^8(average damage)",
+    "65.1 ^8(average damage)",
+    "79335.2 ^8(average hit)",
+    "919.6 ^8(average damage)",
+    "= 0.0",
+    "= 0.1",
+    "= 1057055.3",
+    "= 11486312.2",
+    "= 115856.6",
+    "= 12240157.4",
+    "= 12358845.1",
+    "= 1466.6",
+    "= 16493623.8",
+    "= 1703055.0",
+    "= 19580644.0",
+    "= 211560.5",
+    "= 219114.9",
+    "= 22360012.5",
+    "= 257286.4",
+    "= 2709.5",
+    "= 31916148.6",
+    "= 35457667.0",
+    "= 37551.4",
+    "= 3920655.7",
+    "= 42416.9",
+    "= 4420953.1",
+    "= 458694.5",
+    "= 563489.9",
+    "= 57231724.5",
+    "= 6551466.4",
+    "= 91369.6",
+    "= 92213.6",
+    "= 99.8",
+    "x 0.00 ^8(cast rate)",
+    "x 0.47 ^8(trigger rate)",
+    "x 0.86 ^8(hit rate)",
+    "x 1.00 ^8(hit rate)",
+    "x 1.20 ^8(attack rate)",
+    "x 1.30 ^8(attack rate)",
+    "x 1.52 ^8(attack rate)",
+    "x 1.53 ^8(attack rate)",
+    "x 1.59 ^8(attack rate)",
+    "x 1.82 ^8(attack rate)",
+    "x 10.81 ^8(attack rate)",
+    "x 11 ^8(DPS multiplier for this skill)",
+    "x 14.54 ^8(attack rate)",
+    "x 16.20 ^8(cast rate)",
+    "x 18.61 ^8(cast rate)",
+    "x 2 ^8(DPS multiplier for this skill)",
+    "x 2.20 ^8(attack rate)",
+    "x 2.48 ^8(cast rate)",
+    "x 2.54 ^8(attack rate)",
+    "x 2.67 ^8(cast rate)",
+    "x 2.70 ^8(attack rate)",
+    "x 2.75 ^8(attack rate)",
+    "x 2.87 ^8(attack rate)",
+    "x 26 ^8(DPS multiplier for this skill)",
+    "x 3.69 ^8(cast rate)",
+    "x 3.94 ^8(cast rate)",
+    "x 4.41 ^8(cast rate)",
+    "x 4.92 ^8(cast rate)",
+    "x 5 ^8(DPS multiplier for this skill)",
+    "x 5.28 ^8(DPS multiplier for this skill)",
+    "x 5.48 ^8(cast rate)",
+    "x 5.75 ^8(attack rate)",
+    "x 5.78 ^8(hit rate)",
+    "x 6.17 ^8(attack rate)",
+    "x 7 ^8(quantity multiplier for this skill)",
+    "x 7.56 ^8(trigger rate)",
+    "x 8 ^8(DPS multiplier for this skill)",
+    "x 8.09 ^8(attack rate)",
+    "x 8.16 ^8(cast rate)"
+   ]
+  }
+ }
+}

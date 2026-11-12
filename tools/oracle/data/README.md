@@ -2,7 +2,7 @@
 
 `pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 1). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
 
-It is maintainer-run, not in CI, and outside the oracle adapter and its protocol (protocol 3 is unchanged). It runs on the pinned oracle runtime (`local/oracle/`, built by `tools/oracle/acquire.ps1` or `acquire.sh`, checked by `oracle-verify`), starts PoB with its own `HeadlessWrapper.lua`, and copies plain values from:
+It is maintainer-run, not in CI, and outside the oracle adapter and its protocol (it reads no build, so the adapter protocol does not apply). It runs on the pinned oracle runtime (`local/oracle/`, built by `tools/oracle/acquire.ps1` or `acquire.sh`, checked by `oracle-verify`), starts PoB with its own `HeadlessWrapper.lua`, and copies plain values from:
 
 | Export field | PoB source |
 |---|---|

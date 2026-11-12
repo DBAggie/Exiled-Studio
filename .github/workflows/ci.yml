@@ -107,6 +107,16 @@ jobs:
             [ -f "$w" ] && [ -f "$l" ] || { echo "a build-round-trip run is missing ($set)" >&2; exit 1; }
             diff <(hashes "$w") <(hashes "$l")
           done
+      # Phase 3 step 5: calc-run's calc result documents (SHA-256 per build).
+      - name: Compare calc result documents, Windows with Linux
+        run: |
+          docs() { jq '[.builds[] | {id, status, document_sha256}]' "$1"; }
+          for set in calc-poe1 calc-poe2; do
+            w="out/round-trip-Windows/$set/report.json"; l="out/round-trip-Linux/$set/report.json"
+            [ -f "$w" ] && [ -f "$l" ] || { echo "a calc-run is missing ($set)" >&2; exit 1; }
+            docs "$l" | tee -a "$GITHUB_STEP_SUMMARY"
+            diff <(docs "$w") <(docs "$l")
+          done
 
   # Phase 2 decision 11: the committed JSON Schema and TypeScript are what
   # the DTOs generate. Regenerates both and fails on any difference.
@@ -185,6 +195,15 @@ jobs:
           for game in poe1 poe2; do
             jq -e '.failed == 0 and .modifier_lines.resolved > 0 and (.modifier_lines.pending // 0) == 0' "out/round-trip/$game/summary.json"
           done
+      # Phase 3 step 5: the synthetic builds through calc-run (import,
+      # resolution, the engine, the calc result document v1); dto-compare
+      # compares the documents' SHA-256, Windows with Linux.
+      - name: Calc result documents of the synthetic builds (calc-run)
+        run: |
+          target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/calc-poe1
+          target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/calc-poe2
+          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 24' out/round-trip/calc-poe1/summary.json
+          jq -e '.builds == 1 and .ok == 1 and .build_states.unsupported == 1' out/round-trip/calc-poe2/summary.json
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'
         run: cargo test --locked -p loom-parser --test no_poe1_identifiers
@@ -208,7 +227,8 @@ jobs:
   # Spike C step 4: the PoB oracle on the public fixtures (tools/oracle/fixtures/
   # fixtures.json), 3 runs each. Required through ci-ok since C5, after 10
   # consecutive green runs on both runners (maintainer, 2026-11-10;
-  # docs/spikes/spike-c-oracle.md, section 7).
+  # docs/spikes/spike-c-oracle.md, section 7). Every tier of the manifest
+  # runs, the Phase 3 mechanic fixtures (tier mechanic, from P3-6) too.
   oracle:
     name: oracle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
