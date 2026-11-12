@@ -17,8 +17,9 @@ use loom_calc::{
 use loom_data::bundle::skills::{ConstantStat, LevelStat};
 use loom_domain::{
     Attribute, Build, ClassId, ConfigInput, ConfigSet, ConfigSetId, ConfigValue, DataVersion, Game,
-    Gem, GemId, Item, ItemBody, ItemId, ItemSet, ItemSetId, ItemsEntry, Ordered, SkillId, SkillSet,
-    SkillSetId, SlotEntry, SlotId, SocketGroup, Sourced,
+    Gem, GemId, Item, ItemBody, ItemId, ItemLine, ItemSet, ItemSetId, ItemsEntry, LineKind,
+    LineResolution, ModSection, ModifierLine, Ordered, Resolved, SkillId, SkillSet, SkillSetId,
+    SlotEntry, SlotId, SocketGroup, Sourced, StatId, StatLine, StatValue,
 };
 
 // ---------------------------------------------------------------- data
@@ -62,12 +63,14 @@ fn effect(id: &str, active: &str) -> GrantedEffect {
 /// Smite's shape: 50% of physical converted to lightning, 20% less area
 /// damage; base multiplier and effectiveness 100%.
 fn stat_set(id: &str) -> StatSet {
+    // `TestOverStrike` converts 150%, which PoB scales to 100%.
+    let conversion = if id == "TestOverStrike" { 150 } else { 50 };
     StatSet {
         id: id.to_owned(),
         implicit_stats: Vec::new(),
         constant_stats: vec![ConstantStat {
             stat: "skill_physical_damage_%_to_convert_to_lightning".to_owned(),
-            value: 50,
+            value: conversion,
         }],
         base_effectiveness: 1.0,
         incremental_effectiveness: 0.0,
@@ -139,13 +142,14 @@ struct Data {
 
 impl Data {
     fn new() -> Self {
-        let ids = ["Smite", "TestStrike", "TestMaceStrike"];
+        let ids = ["Smite", "TestStrike", "TestMaceStrike", "TestOverStrike"];
         let (gems, gem_effects) = ids.iter().map(|id| gem_row(id)).unzip();
         Self {
             effects: vec![
                 effect("Smite", "smite"),
                 effect("TestStrike", "smite"),
                 effect("TestMaceStrike", "mace-strike"),
+                effect("TestOverStrike", "smite"),
             ],
             sets: ids.iter().map(|id| stat_set(id)).collect(),
             actives: vec![
@@ -196,6 +200,18 @@ impl CalcData for Data {
                 class: "One Hand Axe".to_owned(),
                 physical: Range { min: 10, max: 20 },
                 attack_time: 800,
+                crit_chance: 500,
+            })),
+            "Test Mace" => Some(ItemBase::Weapon(WeaponBase {
+                class: "One Hand Mace".to_owned(),
+                physical: Range { min: 10, max: 20 },
+                attack_time: 800,
+                crit_chance: 500,
+            })),
+            "Broken Axe" => Some(ItemBase::Weapon(WeaponBase {
+                class: "One Hand Axe".to_owned(),
+                physical: Range { min: 10, max: 20 },
+                attack_time: 0,
                 crit_chance: 500,
             })),
             "Test Shield" => Some(ItemBase::Armour(loom_calc::ArmourBase {
@@ -315,6 +331,46 @@ fn build(skill: &str, part: Option<&str>, slots: &[(&str, &str)], enemy: &[(&str
         });
     }
     b.config.sets.push(config);
+    b
+}
+
+/// Gives item `n` (1-based) these resolved stat lines.
+fn with_lines(mut b: Build, n: u32, stats: &[(&str, i64)]) -> Build {
+    for entry in b.items.entries.typed_mut() {
+        if let ItemsEntry::Item(item) = entry
+            && item.id == ItemId(n)
+        {
+            for (stat, v) in stats {
+                item.body.lines.push(ItemLine {
+                    source: "a line".to_owned(),
+                    kind: LineKind::Modifier(ModifierLine {
+                        text: "a line".to_owned(),
+                        prefixes: Vec::new(),
+                        section: ModSection::Explicit,
+                        selected: true,
+                        resolution: LineResolution::Resolved {
+                            result: Resolved::Stats(vec![StatLine {
+                                stat: StatId::new(*stat),
+                                value: StatValue::Exact { min: *v, max: *v },
+                            }]),
+                            adapted: None,
+                        },
+                    }),
+                });
+            }
+        }
+    }
+    b
+}
+
+/// Sets the item set's second weapon set in use.
+fn second_weapon_set(mut b: Build) -> Build {
+    for entry in b.items.entries.typed_mut() {
+        if let ItemsEntry::Set(set) = entry {
+            set.attributes
+                .push(Attribute::new("useSecondWeaponSet", "true"));
+        }
+    }
     b
 }
 
@@ -519,4 +575,106 @@ fn an_attack_the_oracle_has_not_checked_should_be_partial() {
         value(&r, Field::AverageDamage),
         value(&smite, Field::AverageDamage)
     );
+}
+
+#[test]
+fn the_weapons_local_lines_should_act_on_it() {
+    // 50% increased physical damage (its "No Physical Damage" stat at 0, as
+    // the canonical line carries it): the weapon round(10 x 1.5) = 15,
+    // round(20 x 1.5) = 30; the hit with strength's 4%: round(15.6) = 16,
+    // round(31.2) = 31; half converted: round(8) = 8, round(15.5) = 16.
+    let lines = [
+        ("local_physical_damage_+%", 50),
+        ("local_weapon_no_physical_damage", 0),
+    ];
+    let b = with_lines(build("Smite", Some("1"), &AXE, &OPEN), 1, &lines);
+    let r = run(&b, &AXE);
+    assert!(partial(&r, Field::AverageDamage).is_empty());
+    let hit = pass(16.0, 31.0, 0.5) + pass(8.0, 16.0, 1.0);
+    let crit = pass(16.0, 31.0, 0.5 * 1.5) + pass(8.0, 16.0, 1.5);
+    let average = (hit * (1.0 - 5.0 / 100.0) + crit * 5.0 / 100.0) * 100.0 / 100.0;
+    assert_eq!(value(&r, Field::AverageDamage).to_bits(), average.to_bits());
+    // "No Physical Damage" itself is not modelled: a reason.
+    let b = with_lines(
+        build("Smite", Some("1"), &AXE, &OPEN),
+        1,
+        &[("local_weapon_no_physical_damage", 1)],
+    );
+    let r = run(&b, &AXE);
+    assert_eq!(partial(&r, Field::AverageDamage), ["unmodelled-item"]);
+    assert!(format!("{:?}", r.fields[&Field::AverageDamage].state).contains("no-physical-damage"));
+}
+
+#[test]
+fn the_weapon_set_in_use_should_hold_the_weapon() {
+    let swap = [("Weapon 1 Swap", "Test Axe")];
+    let open = run(&build("Smite", Some("1"), &AXE, &OPEN), &AXE);
+    let r = run(
+        &second_weapon_set(build("Smite", Some("1"), &swap, &OPEN)),
+        &swap,
+    );
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&open, Field::AverageDamage)
+    );
+    // The swap set not in use: no weapon.
+    let r = run(&build("Smite", Some("1"), &swap, &OPEN), &swap);
+    assert_eq!(
+        r.fields[&Field::AverageDamage].state.kind(),
+        StateKind::Unsupported
+    );
+}
+
+#[test]
+fn an_off_hand_of_unknown_base_or_a_bad_part_should_not_be_computed() {
+    let unknown = [("Weapon 1", "Test Axe"), ("Weapon 2", "Mystery")];
+    let r = run(&build("Smite", None, &unknown, &OPEN), &unknown);
+    assert_eq!(
+        r.fields[&Field::HitChance].state.kind(),
+        StateKind::Unsupported
+    );
+    // Part 0: PoB would index a part that does not exist.
+    let r = run(&build("Smite", Some("0"), &AXE, &OPEN), &AXE);
+    assert_eq!(
+        r.fields[&Field::HitChance].state.kind(),
+        StateKind::Unsupported
+    );
+    // Not a number: part 1, as PoB's `tonumber` gives nil.
+    let r = run(&build("Smite", Some("x"), &AXE, &OPEN), &AXE);
+    let melee = run(&build("Smite", Some("1"), &AXE, &OPEN), &AXE);
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&melee, Field::AverageDamage)
+    );
+}
+
+#[test]
+fn conversion_above_100_should_be_scaled_to_100() {
+    let r = run(&build("TestOverStrike", None, &AXE, &OPEN), &AXE);
+    // `skillConv x 100 / skillTotal`, then `/ 100`; physical keeps 0.
+    let share = 150.0 * (100.0 / 150.0) / 100.0;
+    let lightning = |m: f64| (m * share + 0.5).floor();
+    let (min, max) = (lightning(10.0), lightning(21.0));
+    let hit = pass(10.0, 21.0, 0.0) + pass(min, max, 1.0);
+    let crit = pass(10.0, 21.0, 0.0) + pass(min, max, 1.5);
+    let average = (hit * (1.0 - 5.0 / 100.0) + crit * 5.0 / 100.0) * 100.0 / 100.0;
+    assert_eq!(value(&r, Field::AverageDamage).to_bits(), average.to_bits());
+}
+
+#[test]
+fn another_weapon_class_and_a_base_without_attack_time() {
+    let mace = [("Weapon 1", "Test Mace")];
+    let r = run(&build("TestMaceStrike", None, &mace, &OPEN), &mace);
+    assert_eq!(partial(&r, Field::Speed), ["unmodelled-skill"]);
+    assert_eq!(value(&r, Field::Speed), 1.0);
+    // Smite cannot use the mace.
+    let r = run(&build("Smite", None, &mace, &OPEN), &mace);
+    assert_eq!(r.fields[&Field::Speed].state.kind(), StateKind::Unsupported);
+    // No attack time: missing data, never an infinite rate taken as known.
+    let broken = [("Weapon 1", "Broken Axe")];
+    let r = run(&build("Smite", None, &broken, &OPEN), &broken);
+    let FieldState::Indeterminate { reasons, .. } = &r.fields[&Field::Speed].state else {
+        panic!("not indeterminate");
+    };
+    assert!(format!("{reasons:?}").contains("attack_time"));
 }

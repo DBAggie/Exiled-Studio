@@ -34,7 +34,7 @@
 //!    physical damage `1 - reduction / 100`, the reduction its armour
 //!    gives against the pass's average hit, `armour / (armour + hit x 5)
 //!    x 100` (`calcs.armourReductionF`), at most the monster template's
-//!    `maximum_physical_damage_reduction_%` (90). Summed over the types in
+//!    `maximum_physical_damage_reduction_%` (75). Summed over the types in
 //!    PoB's order.
 //! 4. **Crit chance**: `min((base + added) x (1 + inc / 100) x more, 100)`,
 //!    at least 0, then times the accuracy hit chance / 100 (100 for
@@ -56,7 +56,9 @@
 //!    100))`, chaos the local flat; a type counts only when both bounds are
 //!    above 0. Attack rate `round(round(1000 / attack time, 2) x (1 + local
 //!    attack speed / 100), 2)`: PoB's exporter writes the base rate rounded
-//!    to two decimals (`AttackRateBase`). Crit `round((base + local) x (1 +
+//!    to two decimals (`AttackRateBase`); the engine follows PoB until the
+//!    game's own rounding is evidenced (open question Q11, context file).
+//!    Crit `round((base + local) x (1 +
 //!    local inc / 100), 2)`.
 //! 9. **Chance to hit** (attacks; `Calculate hit chance`): accuracy
 //!    `max(0, floor(base x (1 + inc / 100) x more))`, the base the level's
@@ -85,7 +87,13 @@
 //! the game's `is_area_damage` stat (PoB's hand-written `area` flag; equal
 //! for Ice Nova). An attack's melee and area flags are its skill part's
 //! ([`SKILL_PARTS`], PoB's hand-written parts; the gem's `skillPart`,
-//! default 1, at most the number of parts).
+//! default 1, at most the number of parts; 0 leaves the fields not
+//! computed, where PoB would index a part that does not exist). PoB also
+//! disables a skill whose supports exclude the weapon (`getWeaponFlags`
+//! over each support's `weaponTypes`); the bundle does not carry supports'
+//! weapon restrictions yet, and no support with one is mapped (its stats
+//! are unmapped, so the fields are `Partial`): a support with a weapon
+//! restriction must bring the data with its mapping.
 
 use std::collections::BTreeMap;
 
@@ -961,6 +969,15 @@ fn weapon_data(
         Term::Step("attack-time"),
         reasons,
     )?;
+    if time.value <= 0.0 {
+        // A base without an attack time would give an infinite rate.
+        reasons
+            .indeterminate
+            .insert(IndeterminateReason::MissingData {
+                table: "weapon_types",
+                key: "attack_time".to_owned(),
+            });
+    }
     let thousand = phases::constant(calc, "milliseconds", 1000.0)?;
     let base_rate = quotient(calc, thousand, time, Term::Step("base-rate-unrounded"))?;
     let base_rate = round_2(calc, base_rate, Term::Step("base-rate"))?;
@@ -1064,7 +1081,10 @@ fn accuracy_hit_chance(
     let evasion = phases::round(calc, evasion, Term::Step("enemy-evasion-rounded"))?;
     let zero = phases::constant(calc, "no-negative-evasion", 0.0)?;
     let evasion = phases::pair(calc, evasion, zero, Term::Step("enemy-evasion"), false)?;
-    // `accuracy / (accuracy + (evasion / 5) ^ 0.9) * 125`.
+    // `accuracy / (accuracy + (evasion / 5) ^ 0.9) * 125`. Accuracy 0
+    // against evasion 0 is 0 / 0 (NaN, as in PoB, whose result then rests
+    // on Lua's `math.min`); the level and dexterity give every character
+    // some accuracy, so it is not reached.
     let five = phases::constant(calc, "evasion-divisor", 5.0)?;
     let fifth = quotient(calc, evasion, five, Term::Step("evasion-fifth"))?;
     let exponent = phases::constant(calc, "evasion-exponent", 0.9)?;
