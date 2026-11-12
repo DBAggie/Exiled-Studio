@@ -760,7 +760,7 @@ dto! {
         pub attributes: Vec<Attribute>,
     }
 
-    /// One modifier line of a custom modifier block.
+    /// One modifier line of a custom modifier block or a config input.
     pub struct CustomModifierLine {
         /// The modifier text.
         pub text: String,
@@ -778,6 +778,11 @@ dto! {
         /// set value.
         #[serde(default, skip_serializing_if = "ConfigInputKind::is_input")]
         pub kind: ConfigInputKind,
+        /// The custom modifier lines read from a text value applied as
+        /// such (PoB's legacy `customMods`), with their resolutions; left
+        /// out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub lines: Vec<CustomModifierLine>,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,

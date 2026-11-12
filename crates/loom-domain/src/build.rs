@@ -162,21 +162,18 @@ impl Build {
 
     /// [`Completeness::Partial`] when anything is quarantined, or a custom
     /// modifier line of any config set is pending or did not resolve
-    /// (P3-12c; [`Build::quarantine`] lists item lines only).
+    /// (a block's or an input's; P3-12c, P3-12d; [`Build::quarantine`]
+    /// lists item lines only). It counts every line, whether a planner
+    /// applies it or not (a disabled block's, a legacy input PoB discards):
+    /// it says what the import read, not what the calculations use.
     #[must_use]
     pub fn completeness(&self) -> Completeness {
-        let custom_open = self
-            .config
-            .sets
-            .typed()
-            .flat_map(|s| &s.custom_modifiers)
-            .flat_map(|b| &b.lines)
-            .any(|l| {
-                matches!(
-                    l.resolution,
-                    LineResolution::Pending | LineResolution::Unresolved(_)
-                )
-            });
+        let custom_open = self.config.custom_lines().any(|l| {
+            matches!(
+                l.resolution,
+                LineResolution::Pending | LineResolution::Unresolved(_)
+            )
+        });
         if self.quarantine().is_empty() && !custom_open {
             Completeness::Complete
         } else {

@@ -57,4 +57,12 @@ pub enum Source {
         /// The line's index among the block's lines.
         line: usize,
     },
+    /// A custom modifier line of a config input of the active config set
+    /// (PoB v2.67.2's legacy `customMods`).
+    ConfigInputLine {
+        /// The input's name.
+        input: String,
+        /// The line's index among the input's lines.
+        line: usize,
+    },
 }

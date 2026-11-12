@@ -391,6 +391,7 @@ fn with_config(mut b: Build, inputs: &[(&str, f64)]) -> Build {
             name: (*name).to_owned(),
             value: ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
             kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
             attributes: Vec::new(),
         });
     }
@@ -683,6 +684,7 @@ fn enemy_inputs_of_another_type_and_missing_constants_should_be_reasons() {
         name: "enemyColdResist".to_owned(),
         value: ConfigValue::Boolean(true),
         kind: loom_domain::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Vec::new(),
     });
     b.config.sets.push(set);

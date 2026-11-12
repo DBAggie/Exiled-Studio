@@ -778,6 +778,7 @@ fn gems_config_and_choices_should_be_reasons() {
         name: "useFrenzyCharges".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Vec::new(),
     });
     b.config.sets.push(config);
@@ -881,6 +882,7 @@ fn the_resistance_penalty_should_follow_its_config_input() {
             name: "resistancePenalty".to_owned(),
             value: ConfigValue::Number(Sourced::new(loom_domain::Number(value))),
             kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
             attributes: Vec::new(),
         });
         b.config.sets.push(config);
@@ -1130,6 +1132,7 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
                 name: name.to_owned(),
                 value,
                 kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
                 attributes: Vec::new(),
             });
         }
@@ -1169,6 +1172,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
                 name: name.to_owned(),
                 value,
                 kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
                 attributes: Vec::new(),
             });
         }
@@ -1245,6 +1249,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
                 name: name.to_owned(),
                 value: ConfigValue::Number(Sourced::new(loom_domain::Number(value))),
                 kind,
+                lines: Vec::new(),
                 attributes: Vec::new(),
             });
         }
@@ -1411,6 +1416,213 @@ fn custom_modifier_lines_of_enabled_blocks_should_apply() {
     );
 }
 
+/// PoB's legacy `customMods` input (P3-12d): PoB's `Load` makes its text
+/// the set's only block when the set has no block or one block with empty
+/// text (even a disabled one), and discards it otherwise; the last input
+/// of the name counts (`ConfigTab.lua` 872 to 884).
+#[test]
+fn legacy_custom_mods_should_act_as_pob_migrates_them() {
+    use loom_domain::{
+        ConfigInput, ConfigInputKind, ConfigValue, CustomModifierBlock, CustomModifierLine,
+        OpaqueNode, UnresolvedReason,
+    };
+
+    let resolved = |v: i64| LineResolution::Resolved {
+        result: Resolved::Stats(vec![stat("base_maximum_life", v)]),
+        adapted: None,
+    };
+    let legacy = |value: ConfigValue, lines: Vec<LineResolution>| ConfigInput {
+        name: "customMods".to_owned(),
+        value,
+        kind: ConfigInputKind::Input,
+        lines: lines
+            .into_iter()
+            .map(|resolution| CustomModifierLine {
+                text: "line".to_owned(),
+                resolution,
+            })
+            .collect(),
+        attributes: Vec::new(),
+    };
+    let text = || ConfigValue::String("line".to_owned());
+    let block = |enabled: bool, text: &str, life: Option<i64>| CustomModifierBlock {
+        title: Some("Default".to_owned()),
+        enabled,
+        text: text.to_owned(),
+        lines: life
+            .map(|v| CustomModifierLine {
+                text: "line".to_owned(),
+                resolution: resolved(v),
+            })
+            .into_iter()
+            .collect(),
+        attributes: Vec::new(),
+    };
+    let set_of = |inputs: Vec<ConfigInput>, blocks: Vec<CustomModifierBlock>| {
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: blocks,
+            attributes: Vec::new(),
+        };
+        for i in inputs {
+            set.inputs.push(i);
+        }
+        set
+    };
+    let with = |inputs: Vec<ConfigInput>, blocks: Vec<CustomModifierBlock>| {
+        let mut b = witch(1);
+        b.config.sets.push(set_of(inputs, blocks));
+        run(&b)
+    };
+    let reasons = |r: &CalcResult| match &r.fields[&Field::Life].state {
+        FieldState::Partial(p) => p.iter().cloned().collect::<Vec<_>>(),
+        _ => Vec::new(),
+    };
+    let bare = run(&witch(1));
+    let life = value_of(&bare, Field::Life);
+
+    // No block: the lines act, with their input and line in the graph.
+    let r = with(vec![legacy(text(), vec![resolved(10)])], vec![]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    let top = r.fields[&Field::Life].node.unwrap();
+    assert!(
+        r.graph
+            .iter()
+            .filter(|(i, _, _)| i.get() <= top.get())
+            .any(|(_, n, _)| format!("{n:?}")
+                .contains("ConfigInputLine { input: \"customMods\", line: 0 }")),
+        "the graph names the line"
+    );
+    // One block with empty (whitespace) text, even disabled: replaced.
+    for enabled in [true, false] {
+        let r = with(
+            vec![legacy(text(), vec![resolved(10)])],
+            vec![block(enabled, "\n\t\t\t", None)],
+        );
+        assert_eq!(value_of(&r, Field::Life), life + 10.0, "{enabled}");
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    }
+    // A block with text (even one without a modifier line, or disabled),
+    // or two blocks: PoB discards the input, and it is no reason.
+    for blocks in [
+        vec![block(true, "x", Some(5))],
+        vec![block(false, "x", Some(5))],
+        vec![block(true, "^1", None)],
+        vec![block(true, "", None), block(true, "", None)],
+    ] {
+        let enabled_life: f64 = blocks
+            .iter()
+            .filter(|b| b.enabled)
+            .map(|b| 5.0 * b.lines.len() as f64)
+            .sum();
+        let r = with(vec![legacy(text(), vec![resolved(10)])], blocks);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+        assert_eq!(value_of(&r, Field::Life), life + enabled_life);
+    }
+    // The last input of the name counts.
+    let r = with(
+        vec![
+            legacy(text(), vec![resolved(50)]),
+            legacy(text(), vec![resolved(10)]),
+        ],
+        vec![],
+    );
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    // An empty text and `false` do nothing.
+    for value in [
+        ConfigValue::String(String::new()),
+        ConfigValue::Boolean(false),
+    ] {
+        let r = with(vec![legacy(value, vec![])], vec![]);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+        assert_eq!(value_of(&r, Field::Life), life);
+    }
+    // A line without a usable resolution is a reason under its input and
+    // line.
+    let r = with(
+        vec![legacy(
+            text(),
+            vec![
+                resolved(10),
+                LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            ],
+        )],
+        vec![],
+    );
+    assert_eq!(
+        reasons(&r),
+        [UnsupportedReason::UnresolvedLine {
+            source: Source::ConfigInputLine {
+                input: "customMods".to_owned(),
+                line: 1,
+            },
+            reason: "no-template",
+        }]
+    );
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+
+    // Not known, so the input is a reason and its lines do not act: a
+    // number or `true` (PoB fails on them), untyped content in the set,
+    // or outside any set when the set is set 1.
+    let unknown = UnsupportedReason::UnmodelledConfig {
+        input: "customMods".to_owned(),
+    };
+    for value in [
+        ConfigValue::Boolean(true),
+        ConfigValue::Number(Sourced::new(loom_domain::Number(5.0))),
+    ] {
+        let r = with(vec![legacy(value, vec![])], vec![]);
+        assert_eq!(reasons(&r), std::slice::from_ref(&unknown));
+    }
+    let mut set = set_of(vec![legacy(text(), vec![resolved(10)])], vec![]);
+    set.inputs
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    let mut b = witch(1);
+    b.config.sets.push(set);
+    let r = run(&b);
+    assert!(reasons(&r).contains(&unknown));
+    assert_eq!(value_of(&r, Field::Life), life);
+    let mut b = witch(1);
+    b.config
+        .sets
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    b.config
+        .sets
+        .push(set_of(vec![legacy(text(), vec![resolved(10)])], vec![]));
+    let r = run(&b);
+    assert!(reasons(&r).contains(&unknown));
+    assert_eq!(value_of(&r, Field::Life), life);
+
+    // Only the active set's input acts.
+    let mut b = witch(1);
+    b.config.active = Some(ConfigSetId(2));
+    b.config
+        .sets
+        .push(set_of(vec![legacy(text(), vec![resolved(10)])], vec![]));
+    let mut other = set_of(vec![], vec![]);
+    other.id = ConfigSetId(2);
+    b.config.sets.push(other);
+    let r = run(&b);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life);
+
+    // Lines on any other input (a build document can carry them) are a
+    // reason under its name, never ignored or applied.
+    let mut stray = legacy(text(), vec![resolved(10)]);
+    stray.name = "conditionStationary".to_owned();
+    let r = with(vec![stray], vec![]);
+    assert_eq!(
+        reasons(&r),
+        [UnsupportedReason::UnmodelledConfig {
+            input: "conditionStationary".to_owned(),
+        }]
+    );
+    assert_eq!(value_of(&r, Field::Life), life);
+}
+
 #[test]
 fn untyped_config_content_should_be_a_reason() {
     use loom_domain::OpaqueNode;
@@ -1504,6 +1716,7 @@ fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
         name: "resistancePenalty".to_owned(),
         value: ConfigValue::String("Act 5".to_owned()),
         kind: loom_domain::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Vec::new(),
     });
     b.config.sets.push(config);

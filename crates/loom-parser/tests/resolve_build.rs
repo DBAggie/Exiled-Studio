@@ -493,10 +493,14 @@ fn a_bundle_with_skipped_references_should_be_refused() {
 }
 
 /// Custom modifier lines (P3-12c): each read alone in the default scope,
-/// with no base, in every block of every set, enabled or not.
+/// with no base, in every block of every set, enabled or not, and in a
+/// config input (PoB's legacy `customMods`, P3-12d).
 #[test]
 fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
-    use loom_domain::{ConfigSet, ConfigSetId, CustomModifierBlock, CustomModifierLine};
+    use loom_domain::{
+        ConfigInput, ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock,
+        CustomModifierLine,
+    };
 
     let texts = [
         "+15 to maximum Life",
@@ -508,24 +512,38 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
         "Nothing like this",
         "+1 first half",
     ];
-    let block = |enabled: bool| CustomModifierBlock {
-        title: None,
-        enabled,
-        text: String::new(),
-        lines: texts
+    let pending = || -> Vec<_> {
+        texts
             .iter()
             .map(|t| CustomModifierLine {
                 text: (*t).to_owned(),
                 resolution: LineResolution::Pending,
             })
-            .collect(),
+            .collect()
+    };
+    let block = |enabled: bool| CustomModifierBlock {
+        title: None,
+        enabled,
+        text: String::new(),
+        lines: pending(),
         attributes: Vec::new(),
     };
+    let mut inputs = Ordered::new();
+    inputs.push(ConfigInput {
+        name: "customMods".to_owned(),
+        value: ConfigValue::String(texts.join(
+            "
+",
+        )),
+        kind: ConfigInputKind::Input,
+        lines: pending(),
+        attributes: Vec::new(),
+    });
     let mut b = build(Game::Poe1, Vec::new());
     b.config.sets.push(ConfigSet {
         id: ConfigSetId(1),
         title: None,
-        inputs: Ordered::new(),
+        inputs,
         custom_modifiers: vec![block(true), block(false)],
         attributes: Vec::new(),
     });
@@ -572,13 +590,26 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
             .collect();
         assert_eq!(got, expected);
     }
+    let input = set.inputs.typed().next().unwrap();
+    let got: Vec<_> = input
+        .lines
+        .iter()
+        .map(|l| Some(l.resolution.clone()))
+        .collect();
+    assert_eq!(got, expected);
     // Resolved lines are kept: a second run changes nothing.
     let before = b.clone();
     resolve_build(&mut b, &data, base_line).unwrap();
     assert_eq!(b, before);
     // Only resolved lines left: complete.
-    for blk in &mut b.config.sets.typed_mut().next().unwrap().custom_modifiers {
+    let set = b.config.sets.typed_mut().next().unwrap();
+    for blk in &mut set.custom_modifiers {
         blk.lines.truncate(3);
+    }
+    assert_eq!(b.completeness(), Completeness::Partial, "the input's lines");
+    let set = b.config.sets.typed_mut().next().unwrap();
+    for input in set.inputs.typed_mut() {
+        input.lines.truncate(3);
     }
     assert_eq!(b.completeness(), Completeness::Complete);
 }

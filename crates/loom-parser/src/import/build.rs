@@ -219,9 +219,10 @@ impl<'d, 'b> Resolver<'d, 'b> {
         Ok((build.completeness(), ends))
     }
 
-    /// Resolves the pending lines of every custom modifier block of every
-    /// config set (P3-12c). A planner applies such a line to the character,
-    /// as PoB adds the parsed line to the config's modifiers
+    /// Resolves the pending custom modifier lines of every config set: its
+    /// blocks' (P3-12c) and its inputs' (PoB's legacy `customMods`, P3-12d).
+    /// A planner applies such a line to the character, as PoB adds the
+    /// parsed line to the config's modifiers
     /// (`Classes/ConfigTab.lua`, `BuildModList`): each line is read alone
     /// in the default scope (no item base, so no mod row can settle an
     /// ambiguous line, which stays unresolved), with the case-folding
@@ -234,11 +235,13 @@ impl<'d, 'b> Resolver<'d, 'b> {
             return;
         };
         for set in build.config.sets.typed_mut() {
-            for block in &mut set.custom_modifiers {
-                for line in &mut block.lines {
-                    if line.resolution == LineResolution::Pending {
-                        line.resolution = self.resolve_custom_line(index, &line.text);
-                    }
+            let blocks = set.custom_modifiers.iter_mut().flat_map(|b| &mut b.lines);
+            // A config input's lines (PoB's legacy `customMods`, P3-12d)
+            // are read the same way.
+            let inputs = set.inputs.typed_mut().flat_map(|i| &mut i.lines);
+            for line in blocks.chain(inputs) {
+                if line.resolution == LineResolution::Pending {
+                    line.resolution = self.resolve_custom_line(index, &line.text);
                 }
             }
         }

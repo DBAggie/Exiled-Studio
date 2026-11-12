@@ -611,3 +611,148 @@ fn slot_with_children_should_stay_opaque() {
         (1, 3)
     );
 }
+
+/// `BASE` with the `choice` input replaced by `inputs`.
+fn with_inputs(inputs: &str) -> String {
+    BASE.replace(r#"<Input name="choice" string="Fire"/>"#, inputs)
+}
+
+fn first_input(b: &Build, name: &str) -> loom_domain::ConfigInput {
+    b.config
+        .sets
+        .typed()
+        .next()
+        .unwrap()
+        .inputs
+        .typed()
+        .find(|i| i.name == name)
+        .unwrap()
+        .clone()
+}
+
+fn input_lines(input: &loom_domain::ConfigInput) -> Vec<&str> {
+    input.lines.iter().map(|l| l.text.as_str()).collect()
+}
+
+/// PoB's legacy `customMods` input holds its lines in one attribute with
+/// raw line breaks (PoB's `xml.lua` keeps them; XML would make each a
+/// space). The reader keeps them and reads the lines as a block's; the
+/// writer writes them raw, where PoB reads them back.
+#[test]
+fn legacy_custom_mods_should_keep_their_line_breaks_and_lines() {
+    let xml = with_inputs(
+        "<Input string=\"+30% to Cold Resistance\n\n^2Ice Nova &amp; more\t\n  \n\" name=\"customMods\"/>",
+    );
+    let b = round_trip(&xml);
+    let input = first_input(&b, "customMods");
+    assert_eq!(
+        input.value,
+        ConfigValue::String("+30% to Cold Resistance\n\n^2Ice Nova & more\t\n  \n".to_owned())
+    );
+    assert_eq!(
+        input_lines(&input),
+        ["+30% to Cold Resistance", "Ice Nova & more"]
+    );
+    assert!(
+        input
+            .lines
+            .iter()
+            .all(|l| l.resolution == loom_domain::LineResolution::Pending)
+    );
+    let out = export(&b);
+    assert!(
+        out.contains("string=\"+30% to Cold Resistance\n\n^2Ice Nova &amp; more\t\n  \n\""),
+        "{out}"
+    );
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// Only `customMods` has lines; any other string keeps its raw line
+/// breaks too (PoB's reading of every attribute).
+#[test]
+fn other_string_inputs_should_have_no_lines() {
+    let b = round_trip(&with_inputs(
+        r#"<Input name="choice" string="a
+b"/>"#,
+    ));
+    let input = first_input(&b, "choice");
+    assert_eq!(input.value, ConfigValue::String("a\nb".to_owned()));
+    assert!(input.lines.is_empty());
+}
+
+/// PoB decodes the five named entities (`xml.lua`, `decodeContent`), in
+/// either quote (its pattern takes both); `&amp;#10;` is the text `&#10;`.
+#[test]
+fn named_entities_should_read_as_pob_reads_them() {
+    let b = round_trip(&with_inputs(
+        r#"<Input name='customMods' string='&apos;c&apos; &lt;d&gt; &quot;e&quot; &amp;#10;'/>"#,
+    ));
+    let input = first_input(&b, "customMods");
+    assert_eq!(
+        input.value,
+        ConfigValue::String("'c' <d> \"e\" &#10;".to_owned())
+    );
+    assert_eq!(input_lines(&input), ["'c' <d> \"e\" &#10;"]);
+}
+
+/// PoB reads any other reference as nothing (`&#10;` is no line break
+/// there): silent in PoB, so the element is kept whole (a reason). As with a raw `>`, the
+/// export writes the kept value as XML read it, so it need not re-import
+/// the same.
+#[test]
+fn another_reference_should_keep_the_input_whole() {
+    for value in ["a&#10;b", "&#39;c", "&#x41;"] {
+        let b = import(&with_inputs(&format!(
+            r#"<Input name="customMods" string="{value}"/>"#
+        )))
+        .unwrap();
+        let set = b.config.sets.typed().next().unwrap();
+        assert!(
+            set.inputs.typed().all(|i| i.name != "customMods"),
+            "{value}"
+        );
+        assert_eq!(kept_whole(&b), ["Config/ConfigSet/Input"], "{value}");
+    }
+}
+
+/// A carriage return stays in the value (PoB on Windows reads the file in
+/// text mode, elsewhere not); the lines lose it with Lua's `%s` trim.
+#[test]
+fn a_crlf_value_should_keep_its_carriage_returns_and_give_the_same_lines() {
+    // A whole file with CRLF line ends, the value's included.
+    let crlf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>").replace('\n', "\r\n");
+    let lf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>");
+    let (crlf, lf) = (import(&crlf).unwrap(), import(&lf).unwrap());
+    let (crlf_input, lf_input) = (
+        first_input(&crlf, "customMods"),
+        first_input(&lf, "customMods"),
+    );
+    assert_eq!(
+        crlf_input.value,
+        ConfigValue::String("a\r\nb\r\n".to_owned())
+    );
+    assert_eq!(lf_input.value, ConfigValue::String("a\nb\n".to_owned()));
+    assert_eq!(input_lines(&crlf_input), ["a", "b"]);
+    assert_eq!(input_lines(&crlf_input), input_lines(&lf_input));
+    assert_eq!(import(&export(&crlf)).unwrap(), crlf);
+}
+
+/// A raw `>` is XML, but PoB's tag pattern ends the tag there and the input
+/// has no value in PoB: the element is kept whole. The export writes every
+/// `>` as `&gt;` (an opaque attribute keeps no raw text), which PoB reads:
+/// the only case where export and re-import differ (`config-inputs.md`,
+/// "P3-12d").
+#[test]
+fn a_raw_greater_than_should_keep_the_input_whole() {
+    let b = import(&with_inputs(r#"<Input name="customMods" string="a > b"/>"#)).unwrap();
+    let set = b.config.sets.typed().next().unwrap();
+    assert!(set.inputs.typed().all(|i| i.name != "customMods"));
+    assert_eq!(kept_whole(&b), ["Config/ConfigSet/Input"]);
+}
+
+/// A legacy value that is not a string has no lines.
+#[test]
+fn a_numeric_legacy_value_should_have_no_lines() {
+    let b = round_trip(&with_inputs(r#"<Input name="customMods" number="5"/>"#));
+    assert!(first_input(&b, "customMods").lines.is_empty());
+}

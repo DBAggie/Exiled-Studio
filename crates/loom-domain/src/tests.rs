@@ -350,18 +350,21 @@ fn sample_build(game: Game, item: Item) -> Build {
         name: "flag".to_owned(),
         value: ConfigValue::Boolean(true),
         kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     inputs.push(ConfigInput {
         name: "count".to_owned(),
         value: ConfigValue::Number(Sourced::read(Number(10.0), "10")),
         kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     inputs.push(ConfigInput {
         name: "choice".to_owned(),
         value: ConfigValue::String("Fire".to_owned()),
         kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     build.config.active = Some(ConfigSetId(1));

@@ -31,6 +31,16 @@ pub enum DomainError {
         /// The line's index in the block.
         line: usize,
     },
+    /// A custom modifier line of a config input claims to continue another
+    /// line (as [`DomainError::ContinuedCustomLine`]).
+    ContinuedCustomInputLine {
+        /// The config set.
+        set: u32,
+        /// The input's name.
+        input: String,
+        /// The line's index among the input's lines.
+        line: usize,
+    },
 }
 
 impl DomainError {
@@ -40,7 +50,11 @@ impl DomainError {
         match self {
             Self::GameMismatch { .. } => "DOMAIN_GAME_MISMATCH",
             Self::BrokenContinuation { .. } => "DOMAIN_BROKEN_CONTINUATION",
-            Self::ContinuedCustomLine { .. } => "DOMAIN_CONTINUED_CUSTOM_LINE",
+            // One code for both: the same rule, on a block's line or an
+            // input's.
+            Self::ContinuedCustomLine { .. } | Self::ContinuedCustomInputLine { .. } => {
+                "DOMAIN_CONTINUED_CUSTOM_LINE"
+            }
         }
     }
 }
@@ -61,6 +75,11 @@ impl fmt::Display for DomainError {
             Self::ContinuedCustomLine { set, block, line } => write!(
                 f,
                 "{}: config set {set}, block {block}, line {line}",
+                self.code()
+            ),
+            Self::ContinuedCustomInputLine { set, input, line } => write!(
+                f,
+                "{}: config set {set}, input {input:?}, line {line}",
                 self.code()
             ),
         }

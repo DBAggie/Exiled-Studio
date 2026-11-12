@@ -40,8 +40,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{
-    Build, ConfigInputKind, ConfigSet, ConfigValue, GameSpecific, Item, ItemId, ItemSet, LineKind,
-    NodeId, PassiveSpec, StatId, StatLine, StatValue,
+    Build, ConfigInput, ConfigInputKind, ConfigSet, ConfigValue, GameSpecific, Item, ItemId,
+    ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
 use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
@@ -1017,6 +1017,8 @@ fn active_config(build: &Build) -> Option<&ConfigSet> {
 /// character-wide modifier through its resolution ([`Ingest::custom_line`]:
 /// a line that did not resolve is a reason); a disabled block changes
 /// nothing (P3-12c).
+/// The lines of PoB's legacy `customMods` input act the same way where
+/// PoB moves them into a block ([`legacy_custom_mods`], P3-12d).
 /// Untyped content (a block the reader kept whole, a placeholder PoB reads
 /// as an input, content outside a config set, which PoB loads into set 1)
 /// is one `<untyped>` reason.
@@ -1037,13 +1039,45 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
     for (b, block) in set.custom_modifiers.iter().enumerate() {
         if block.enabled {
             for (l, line) in block.lines.iter().enumerate() {
-                ingest.custom_line(b, l, &line.resolution);
+                ingest.custom_line(
+                    Source::CustomModifier { block: b, line: l },
+                    &line.resolution,
+                );
             }
         }
+    }
+    match legacy_custom_mods(build, set) {
+        Some(Legacy::Lines(input)) => {
+            for (l, line) in input.lines.iter().enumerate() {
+                ingest.custom_line(
+                    Source::ConfigInputLine {
+                        input: input.name.clone(),
+                        line: l,
+                    },
+                    &line.resolution,
+                );
+            }
+        }
+        Some(Legacy::Unknown) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: LEGACY_CUSTOM_MODS.to_owned(),
+        }),
+        Some(Legacy::Nothing) | None => {}
     }
     // Every input, whatever its value: some of PoB's options default to
     // on, so even `false` can change a result.
     for input in set.inputs.typed() {
+        // PoB's legacy custom modifiers, above.
+        if is_legacy_custom_mods(input) {
+            continue;
+        }
+        // Lines on any other input: no format applies them; a build
+        // document can carry them, so they are a reason, never ignored.
+        if !input.lines.is_empty() {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.name.clone(),
+            });
+            continue;
+        }
         // Named conditions, multipliers, and distances only modifiers
         // read, and the enemy's damage: no computed field changes, for an
         // input or a placeholder (`poe1::config`, P3-12a, P3-12b).
@@ -1078,6 +1112,66 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             input: input.name.clone(),
         });
     }
+}
+
+/// PoB's legacy custom modifier input (before custom modifier blocks).
+const LEGACY_CUSTOM_MODS: &str = "customMods";
+
+fn is_legacy_custom_mods(input: &ConfigInput) -> bool {
+    input.name == LEGACY_CUSTOM_MODS && input.kind == ConfigInputKind::Input
+}
+
+/// What the active set's legacy `customMods` input does.
+enum Legacy<'a> {
+    /// Its lines act, as a block's.
+    Lines(&'a ConfigInput),
+    /// Nothing: PoB discards it.
+    Nothing,
+    /// Not known: a reason.
+    Unknown,
+}
+
+/// PoB v2.67.2's migration (`Classes/ConfigTab.lua`, `Load`, 872 to 884):
+/// a set's `customMods` value, when not empty, becomes the set's only
+/// block (enabled) if the set has no block, or one block whose text is
+/// empty (PoB's XML reader trims text, so whitespace only), even a
+/// disabled one; otherwise PoB discards it. In every case PoB then clears
+/// the input, so `BuildModList`'s fallback for it never runs after a load.
+/// The last input of that name in the set is the one PoB keeps (its inputs
+/// are a table). `None` when the set has none.
+///
+/// Not known, so a reason: untyped content in the set, or outside any set
+/// when the set is set 1 (PoB loads it there), can hold another input or
+/// block of PoB's count; a value that is a number or `true` (PoB then
+/// fails on the block's text). `false` is PoB's empty text (`input and
+/// false or ""`): nothing.
+fn legacy_custom_mods<'a>(build: &Build, set: &'a ConfigSet) -> Option<Legacy<'a>> {
+    let input = set
+        .inputs
+        .typed()
+        .filter(|i| is_legacy_custom_mods(i))
+        .last()?;
+    let untyped = set.inputs.opaque().next().is_some()
+        || (set.id.0 == 1 && build.config.sets.opaque().next().is_some());
+    if untyped {
+        return Some(Legacy::Unknown);
+    }
+    let text = match &input.value {
+        ConfigValue::String(s) => s,
+        ConfigValue::Boolean(false) => return Some(Legacy::Nothing),
+        ConfigValue::Boolean(true) | ConfigValue::Number(_) => return Some(Legacy::Unknown),
+    };
+    let migrated = !text.is_empty()
+        && match set.custom_modifiers.as_slice() {
+            [] => true,
+            [only] => only.text.trim_ascii().is_empty(),
+            _ => false,
+        };
+    Some(if migrated {
+        Legacy::Lines(input)
+    } else {
+        Legacy::Nothing
+    })
 }
 
 #[cfg(test)]

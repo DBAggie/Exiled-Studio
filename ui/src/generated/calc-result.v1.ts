@@ -87,6 +87,18 @@ export type IndeterminateReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * The stat ID.
          */
@@ -200,6 +212,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * The stat ID.
          */
@@ -285,6 +309,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -366,6 +402,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -439,6 +487,18 @@ export type UnsupportedReason =
                 block: number
                 /**
                  * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
                  */
                 line: number
               }
@@ -520,6 +580,18 @@ export type UnsupportedReason =
                 block: number
                 /**
                  * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
                  */
                 line: number
               }
@@ -609,6 +681,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -691,6 +775,18 @@ export type UnsupportedReason =
                 block: number
                 /**
                  * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
                  */
                 line: number
               }
@@ -808,6 +904,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * What is not modelled.
          */
@@ -885,6 +993,18 @@ export type UnsupportedReason =
                 block: number
                 /**
                  * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
                  */
                 line: number
               }
@@ -971,6 +1091,18 @@ export type UnsupportedReason =
                 line: number
               }
             }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | 'unchecked-tree-version'
@@ -1045,6 +1177,18 @@ export type UnsupportedReason =
                 block: number
                 /**
                  * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              'config-input-line': {
+                /**
+                 * The input's name.
+                 */
+                input: string
+                /**
+                 * The line's index among the input's lines.
                  */
                 line: number
               }
@@ -1242,6 +1386,18 @@ export interface Node {
                   block: number
                   /**
                    * The line's index among the block's lines.
+                   */
+                  line: number
+                }
+              }
+            | {
+                'config-input-line': {
+                  /**
+                   * The input's name.
+                   */
+                  input: string
+                  /**
+                   * The line's index among the input's lines.
                    */
                   line: number
                 }

@@ -623,6 +623,16 @@
       "description": "ice-nova-witch.xml with three custom modifier blocks: an empty one; an enabled one of five game-text modifiers (cold resistance, life, critical strike multiplier, spell damage, cast speed) with colour codes and blank lines; a disabled one with three more. The enabled lines apply as character-wide modifiers, the disabled ones not (P3-12c)."
     },
     {
+      "id": "ice-nova-legacy-custom-mods-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-legacy-custom-mods-witch.xml",
+      "sha256": "8b93936c15085270511ac219f2be16fb2e03e8de4c363d95365eadb2cf2cc192",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with PoB's legacy customMods input twice (the last counts) and one empty disabled block: PoB moves the second input's five game-text lines (raw line breaks, colour codes, a tab, blank lines) into the block, and they apply as character-wide modifiers (P3-12d)."
+    },
+    {
       "id": "ice-nova-witch.xml",
       "tier": "mechanic",
       "source": "local",

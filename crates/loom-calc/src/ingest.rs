@@ -320,15 +320,14 @@ impl<'m> Ingest<'m> {
         }
     }
 
-    /// Adds the effects of line `line` of custom modifier block `block`
-    /// of the active config set: a character-wide modifier, through the
-    /// game's mapping (as PoB adds the parsed line to the config's
-    /// modifiers). A line without a usable resolution is a reason, as an
-    /// item line's is: nothing selects or continues a custom line, so an
-    /// exclusion is a reason too, and a continuation (which the build
-    /// document refuses) is an unread line.
-    pub fn custom_line(&mut self, block: usize, line: usize, resolution: &LineResolution) {
-        let source = Source::CustomModifier { block, line };
+    /// Adds the effects of a custom modifier line of the active config set
+    /// (`source`: a block's line or a config input's): a character-wide
+    /// modifier, through the game's mapping (as PoB adds the parsed line to
+    /// the config's modifiers). A line without a usable resolution is a
+    /// reason, as an item line's is: nothing selects or continues a custom
+    /// line, so an exclusion is a reason too, and a continuation (which the
+    /// build document refuses) is an unread line.
+    pub fn custom_line(&mut self, source: Source, resolution: &LineResolution) {
         match resolution {
             LineResolution::Excluded(e) => self.reason(UnsupportedReason::ExcludedLine {
                 source,
