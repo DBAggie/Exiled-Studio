@@ -432,12 +432,11 @@ mod tests {
     }
 
     #[test]
-    fn committed_register_should_be_valid_and_empty() {
+    fn committed_register_should_be_valid() {
         let register = Register::parse(COMMITTED).unwrap();
-        assert!(register.entries.is_empty());
         let report = Register::check(COMMITTED);
         assert_eq!(report.status, "ok");
-        assert_eq!(report.entries, Some(0));
+        assert_eq!(report.entries, Some(register.entries.len()));
     }
 
     #[test]

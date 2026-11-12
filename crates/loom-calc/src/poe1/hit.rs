@@ -54,10 +54,13 @@
 //!    damage `round((base + local flat) x (1 + local inc / 100) x (1 +
 //!    quality / 100))`, elemental `round(local flat x (1 + local inc /
 //!    100))`, chaos the local flat; a type counts only when both bounds are
-//!    above 0. Attack rate `round(round(1000 / attack time, 2) x (1 + local
-//!    attack speed / 100), 2)`: PoB's exporter writes the base rate rounded
-//!    to two decimals (`AttackRateBase`); the engine follows PoB until the
-//!    game's own rounding is evidenced (open question Q11, context file).
+//!    above 0. Attack rate, the game's model (Q11, confirmed in game
+//!    2026-11-12; a `game-truth` divergence from PoB): `1000 / floor(attack
+//!    time x 100 / (100 + local attack speed))`, the attack time in integer
+//!    milliseconds floored after the local increases. PoB instead computes
+//!    `round(round(1000 / attack time, 2) x (1 + local attack speed / 100),
+//!    2)`. Where the skill's attack speed multiplier and global increases
+//!    enter (step 6) stays PoB's (open question Q12).
 //!    Crit `round((base + local) x (1 +
 //!    local inc / 100), 2)`.
 //! 9. **Chance to hit** (attacks; `Calculate hit chance`): accuracy
@@ -959,8 +962,13 @@ fn weapon_data(
             *slot = Some([range[0], range[1]]);
         }
     }
-    // `AttackRate = round(AttackRateBase x (1 + AttackSpeedInc / 100), 2)`,
-    // `AttackRateBase = round(1000 / attack time, 2)` (PoB's exporter).
+    // The game's model (Q11, divergence from PoB): the attack time in
+    // integer milliseconds, floored after the local increases, `floor(time
+    // x 100 / (100 + inc))`; the rate `1000 / ms`. Computed from the integer
+    // sums so the floor is exact (`667 / (1 - 42 / 100)` is 1149.99... in
+    // doubles, `66700 / 58` is 1150). PoB instead rounds: `round(round(1000 /
+    // time, 2) x (1 + inc / 100), 2)`. A reduction of 100% or more gives a
+    // rate of 0 or below, as PoB's formula does; no reason is added.
     let time = sum_in(
         calc,
         weapon(WeaponValue::AttackTime),
@@ -978,12 +986,21 @@ fn weapon_data(
                 key: "attack_time".to_owned(),
             });
     }
+    let inc = sum_in(
+        calc,
+        weapon(WeaponValue::AttackSpeed),
+        Op::Increased,
+        &cx,
+        Term::Step("increased-sum"),
+        reasons,
+    )?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let scaled = phases::product(calc, &[time, hundred], Term::Step("attack-time-scaled"))?;
+    let divisor = phases::total(calc, &[hundred, inc], Term::Step("attack-speed-percent"))?;
+    let ms = quotient(calc, scaled, divisor, Term::Step("attack-time-unfloored"))?;
+    let ms = floor(calc, ms, Term::Step("attack-time-ms"))?;
     let thousand = phases::constant(calc, "milliseconds", 1000.0)?;
-    let base_rate = quotient(calc, thousand, time, Term::Step("base-rate-unrounded"))?;
-    let base_rate = round_2(calc, base_rate, Term::Step("base-rate"))?;
-    let inc = increased(calc, weapon(WeaponValue::AttackSpeed), &cx, reasons)?;
-    let rate = phases::product(calc, &[base_rate, inc], Term::Step("weapon-rate-unrounded"))?;
-    let rate = round_2(calc, rate, Term::Step("weapon-rate"))?;
+    let rate = quotient(calc, thousand, ms, Term::Step("weapon-rate"))?;
     // `CritChance = round((CritChanceBase + local) x (1 + local inc / 100),
     // 2)`.
     let crit = sum_in(

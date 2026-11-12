@@ -15,7 +15,7 @@ Six slice fields, with PoB v2.67.2's formulas, order of operations, and rounding
 | `Speed` | `min(1 / (1 / (weapon rate x (1 + attack speed multiplier / 100)) / round((1 + inc / 100) x more, 2)), 1 / 0.033)` |
 | `TotalDPS` (`HitDps`) | `AverageDamage x Speed x 1 x 1` |
 
-- **The weapon** (`Classes/Item.lua`, the weapon branch): its base's physical damage, attack time, and critical strike chance (`weapon_types`), its quality, and its local lines act on the weapon (`Poe1Quantity::Weapon`): physical `round((base + flat) x (1 + inc / 100) x (1 + quality / 100))`, elemental `round(flat x (1 + inc / 100))`, chaos the flat; attack rate `round(round(1000 / attack time, 2) x (1 + local attack speed / 100), 2)`; crit `round((base + local) x (1 + local inc / 100), 2)`. "+# to Accuracy Rating" on the weapon is the character's accuracy for its attacks.
+- **The weapon** (`Classes/Item.lua`, the weapon branch): its base's physical damage, attack time, and critical strike chance (`weapon_types`), its quality, and its local lines act on the weapon (`Poe1Quantity::Weapon`): physical `round((base + flat) x (1 + inc / 100) x (1 + quality / 100))`, elemental `round(flat x (1 + inc / 100))`, chaos the flat; attack rate, the game's model since the Q11 switch, `1000 / floor(attack time x 100 / (100 + local attack speed))` (PoB: `round(round(1000 / attack time, 2) x (1 + local attack speed / 100), 2)`; below); crit `round((base + local) x (1 + local inc / 100), 2)`. "+# to Accuracy Rating" on the weapon is the character's accuracy for its attacks.
 - **Skill parts** are PoB's (`hit::SKILL_PARTS`; the game data has none): Smite's Melee Hit is melee, its Area Hit area and not melee; the gem's `skillPart`, default 1, at most the number of parts.
 - **Strength** gives a melee hit's physical damage `floor(Str / 5)`% increased (`Modules/CalcPerform.lua`), also on the part converted to lightning.
 - **Conversion**: the skill's own (Smite: 50% of physical to lightning). The converted damage takes both types' modifiers and is rounded before the target type's own damage is added; the physical part keeps half.
@@ -28,7 +28,46 @@ New in calc result v1 (additive rule; schema and TypeScript regenerated): graph 
 
 ## Question Q11: a weapon's attack rate
 
-**Answered 2026-11-12 (maintainer, in-game tooltip): 1.72**. The Siege Axe with 15% increased attack speed shows the floored-milliseconds value, not PoB's 1.73: the game floors the attack time to integer ms after local increases, and attacks per second is `1000 / ms`. The engine still follows PoB; the next PR switches it.
+**Answered 2026-11-12 (maintainer, in-game tooltip): 1.72**. The Siege Axe with 15% increased attack speed shows the floored-milliseconds value, not PoB's 1.73: the game floors the attack time to integer ms after local increases, and attacks per second is `1000 / ms`. **Switched** in the Q11 switch PR (below).
+
+### The switch
+
+The weapon's own rate (`hit::weapon_data`) is now `1000 / floor(attack time x 100 / (100 + local attack speed))`. The floor works on the integer sums, so it is exact in doubles. Dividing by the factor is not: `667 / (1 - 42 / 100)` is 1149.99... in doubles and floors to 1149, while `66700 / 58` is exactly 1150. The test pins that case. Everything after the weapon's rate is unchanged and stays PoB's: the skill's attack speed multiplier, then global increases and more multipliers (`round((1 + inc / 100) x more, 2)`), then the server tick cap.
+
+What the evidence settles, and what it does not:
+- The tooltip's 1.72 rules out PoB's model, `round(1.50 x 1.15, 2)` = 1.73 (also in doubles), provided the tooltip rounds to nearest rather than truncating: 1.725 truncated would also show 1.72. Rounding for display is what the developer's statement says (1000 / 508 = 1.9685 shown as 1.97). So the point that the game does not round the base rate to 1.50 rests on the tooltip and that statement together.
+- What the tooltip shows is the weapon's own rate with local speed. The registered `Speed` and `TotalDPS` values also carry Smite's multiplier and the global modifiers in PoB's order, so they hold only if Q12 confirms that order. Eight of the nine fixtures have no local attack speed; for them the evidence is the base rate `1000 / ms`, not PoB's 1.50.
+- It does not separate a floored attack time (`1000 / 580` = 1.7241) from an unfloored one (`1000 / 667 x 1.15` = 1.7241). Both show 1.72. The floor rests on Mark_GGG's statement, quoted below; the engine follows it.
+- **Q12 (open): where the skill's multiplier and global modifiers enter.** They may come before the floor, and local and global speed may be floored separately. The test, when the maintainer can do it: the same Siege Axe plus a ring with increased attack speed, reading Smite's attacks per second on the character sheet. Until then, the engine keeps PoB's order for that part.
+
+Every fixture whose weapon's attack time does not divide 1000 exactly now differs from PoB. That is also true without local attack speed: PoB's base rate for the Siege Axe is `round(1000 / 667, 2)` = 1.50, the game's is 1000 / 667 = 1.4993. `smite-two-hand-level10-templar.xml` does not differ: its Double Axe is 800 ms, and 1.25 is exact in both models. Each difference has a `game-truth` entry in `docs/parity/divergence-register.json`, with the tooltip check and the developer's statement as evidence. The test that pins the value is `crates/loom-calc/tests/attack.rs`, `the_weapons_attack_time_should_be_floored_to_whole_milliseconds`. Oracle to successor:
+
+| Fixture | `Speed` | `TotalDPS` | `TotalDPS` breakdown, total line | Entries |
+|---|---|---|---|---|
+| `smite-templar.xml` | 1.2750 to 1.2744 | 109.0272 to 108.9727 | equal (109.0) | DIV-0001 to DIV-0002 |
+| `smite-area-hit-templar.xml` | 1.2750 to 1.2744 | 97.0756 to 97.0271 | 97.1 to 97.0 | DIV-0003 to DIV-0005 |
+| `smite-weapon-mods-templar.xml` | 1.4705 to 1.4655 | 358.6919 to 357.4765 | 358.7 to 357.5 | DIV-0006 to DIV-0008 |
+| `smite-melee-physical-templar.xml` | 1.1475 to 1.1469 | 110.8957 to 110.8403 | 110.9 to 110.8 | DIV-0009 to DIV-0011 |
+| `smite-melee-physical-area-hit-templar.xml` | 1.1475 to 1.1469 | 77.7222 to 77.6833 | equal (77.7) | DIV-0012 to DIV-0013 |
+| `smite-elemental-attacks-templar.xml` | 1.2750 to 1.2744 | 316.8221 to 316.6638 | 316.8 to 316.7 | DIV-0014 to DIV-0016 |
+| `smite-items-templar.xml` | 1.4025 to 1.4018 | 308.8014 to 308.6471 | 308.8 to 308.6 | DIV-0017 to DIV-0019 |
+| `smite-crit-items-templar.xml` | 1.2750 to 1.2744 | 109.5937 to 109.5389 | 109.6 to 109.5 | DIV-0020 to DIV-0022 |
+| `smite-enemy-templar.xml` | 1.2750 to 1.2744 | 289.0162 to 288.8717 | 289.0 to 288.9 | DIV-0023 to DIV-0025 |
+
+The `TotalDPS` breakdown's rate line prints two decimals (1.27, 1.47, ...), equal on both sides. `smite-weapon-mods-templar.xml` is the check's own weapon: the weapon is 1.7241 (PoB 1.73), and Smite's 15% less attack speed gives 1.4655.
+
+**Evidence (2026-11-12, Windows).** Runs on the P3-1d bundle against P3-8b's oracle run (`local/p3/p3-8b/evidence/oracle`; no fixture changed); outputs in `local/p3/q11/evidence/`; summaries in `docs/phase-3/attack-rate/`.
+
+| Run | Result |
+|---|---|
+| `calc-run`, public (82 builds), twice | The same field states as P3-8b: complete 914, partial 334, indeterminate 312, not computed 384. Documents and `report.json` are byte-identical across the two runs; only timing differs |
+| `calc-parity`, public, with the register | 25 differences (18 fields, 7 breakdown lines), all registered (`ORACLE_EXPECTED_DIFFERENCE`), 0 unexpected, no unused entry. Every mechanic target met (880 of 880, 45 fixtures; a registered difference counts as met). Exit 5 (`incomplete`), as before: 34 real builds have fields that are not `Complete` |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`) | All `indeterminate` (older trees), no difference |
+| `divergence-check` | 25 entries, all accepted, no problems |
+
+The commands are P3-8b's (`docs/phase-3/rolled-values.md`, "Commands"), with the oracle run reused.
+
+### Before the switch
 
 PoB rounds a weapon's base attack rate to two decimals in its data exporter (`AttackRateBase = round(1000 / attack time, 2)`: 1.45 for a 690 ms axe, against 1000 / 690 = 1.4493) and the rate with local attack speed again (`Classes/Item.lua`). The game data carries the attack time in milliseconds; the game's tooltip shows two decimals, which says nothing about its calculation. The engine follows PoB until the game's own rounding is settled (context file, Q11). No register entry: nothing differs from the oracle.
 

@@ -208,6 +208,13 @@ impl CalcData for Data {
                 attack_time: 800,
                 crit_chance: 500,
             })),
+            // The Q11 check's attack time (Siege Axe, 667 ms).
+            "Test Siege Axe" => Some(ItemBase::Weapon(WeaponBase {
+                class: "One Hand Axe".to_owned(),
+                physical: Range { min: 10, max: 20 },
+                attack_time: 667,
+                crit_chance: 500,
+            })),
             "Broken Axe" => Some(ItemBase::Weapon(WeaponBase {
                 class: "One Hand Axe".to_owned(),
                 physical: Range { min: 10, max: 20 },
@@ -458,7 +465,7 @@ fn a_melee_hit_should_convert_and_take_strengths_bonus() {
     let crit = pass(10.0, 21.0, 0.5 * 1.5) * 1.0 + pass(5.0, 11.0, 1.5) * 1.0;
     let average = (hit * (1.0 - 5.0 / 100.0) + crit * 5.0 / 100.0) * 100.0 / 100.0;
     assert_eq!(value(&r, Field::AverageDamage).to_bits(), average.to_bits());
-    // 1 / (1 / (round(1000 / 800, 2) x (1 - 20 / 100)) / 1) = 1.
+    // 1 / (1 / (1000 / floor(800 x 100 / 100) x (1 - 20 / 100)) / 1) = 1.
     assert_eq!(value(&r, Field::Speed), 1.0);
     assert_eq!(value(&r, Field::HitDps), average);
     for f in [
@@ -603,6 +610,55 @@ fn the_weapons_local_lines_should_act_on_it() {
     let r = run(&b, &AXE);
     assert_eq!(partial(&r, Field::AverageDamage), ["unmodelled-item"]);
     assert!(format!("{:?}", r.fields[&Field::AverageDamage].state).contains("no-physical-damage"));
+}
+
+#[test]
+fn the_weapons_attack_time_should_be_floored_to_whole_milliseconds() {
+    // The game's model (Q11, a `game-truth` divergence): 800 ms with 15%
+    // increased local attack speed is floor(80000 / 115) = floor(695.65) =
+    // 695 ms, 1000 / 695 = 1.4388 attacks per second. PoB's round(1.25 x
+    // 1.15, 2) = 1.44 is not taken.
+    let b = with_lines(
+        build("Smite", Some("1"), &AXE, &OPEN),
+        1,
+        &[("local_attack_speed_+%", 15)],
+    );
+    let r = run(&b, &AXE);
+    assert!(partial(&r, Field::Speed).is_empty());
+    let weapon: f64 = 1000.0 / 695.0;
+    // Smite's 20% less attack speed (its multiplier), then no global
+    // modifier: round(1 x 1, 2) = 1.
+    let speed = 1.0 / (1.0 / (weapon * (1.0 + -20.0 / 100.0)) / 1.0);
+    assert_eq!(value(&r, Field::Speed).to_bits(), speed.to_bits());
+    let pob = 1.0 / (1.0 / (1.44 * (1.0 + -20.0 / 100.0)) / 1.0);
+    assert!((value(&r, Field::Speed) - pob).abs() > 1e-4);
+    // An exact quotient stays exact: 800 ms with 25% is 640 ms.
+    let b = with_lines(
+        build("Smite", Some("1"), &AXE, &OPEN),
+        1,
+        &[("local_attack_speed_+%", 25)],
+    );
+    let r = run(&b, &AXE);
+    let speed: f64 = 1.0 / (1.0 / (1000.0 / 640.0 * (1.0 + -20.0 / 100.0)) / 1.0);
+    assert_eq!(value(&r, Field::Speed).to_bits(), speed.to_bits());
+
+    // The in-game check's weapon: 667 ms with 15% is 66700 / 115 = 580 ms,
+    // 1000 / 580 = 1.7241 (the tooltip's 1.72; PoB's 1.73).
+    let siege = [("Weapon 1", "Test Siege Axe")];
+    let at = |local: i64| {
+        let b = with_lines(
+            build("Smite", Some("1"), &siege, &OPEN),
+            1,
+            &[("local_attack_speed_+%", local)],
+        );
+        value(&run(&b, &siege), Field::Speed)
+    };
+    let smite = |ms: f64| -> f64 { 1.0 / (1.0 / (1000.0 / ms * (1.0 + -20.0 / 100.0)) / 1.0) };
+    assert_eq!(at(15).to_bits(), smite(580.0).to_bits());
+    // A reduction, where dividing by the factor would floor wrongly: 667 /
+    // (1 - 42 / 100) is 1149.99... in doubles, 66700 / 58 is exactly 1150.
+    assert!((667.0_f64 / (1.0 + -42.0 / 100.0)).floor() < 1150.0);
+    assert_eq!(at(-42).to_bits(), smite(1150.0).to_bits());
 }
 
 #[test]
