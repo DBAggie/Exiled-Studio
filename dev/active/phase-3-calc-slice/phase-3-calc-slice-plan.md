@@ -82,6 +82,7 @@ Each sub-PR adds whole sections, end to end: canonical types and loader in `loom
 - **1c, item properties and monsters:** weapon, armour, and shield properties of base items, default monster stats (the extractor adds these tables).
 - **Accept (each):** synthetic v2 bundles load and validate in CI; the mutation set gives each new code; `bundle` is byte-identical over two runs per game; `bundle-check` exits 0 on the real PoE1 and PoE2 v2 bundles; scrubbed summaries committed; wasm32 build; `cargo deny`.
 - **Depends on:** nothing; 1b and 1c follow 1a (manifest).
+- **1d (added 2026-11-12, Q10 option a):** `data/monster_types.json` (monster types' armour and evasion multipliers) for the default enemy, PoB's boss list as a cited rule (`loom_calc::poe1::enemy::BOSSES`), and its `data-parity` check (`docs/phase-3/monster-types.md`).
 
 ### 2. Data parity against the oracle's data (M; after 1c)
 `loom-parity-cli data-parity <bundle-dir> <pob-checkout>` compares, for every row the slice reads, the bundle's values with PoB v2.67.2's `src/Data` and the tree PoB loads for each tree version the fixtures use (`local/pob-v2.67.2` and the oracle checkout; read only). PoB's data is Lua; the tool reads it with the oracle runtime through a small adapter script, not with a Lua parser of our own.

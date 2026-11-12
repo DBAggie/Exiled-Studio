@@ -1,15 +1,15 @@
 {
   "format": 1,
   "tool": {
-    "commit": "92199cc00ab2bd22d7d8a73313bf30bae644767a",
+    "commit": "c4d6b40e79f8f4a1dbe489eb5fbf9eb3becb4ab8",
     "dirty": false
   },
   "inputs": {
     "game": "poe1",
     "steam_build": 26530219,
-    "bundle_manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba",
+    "bundle_manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b",
     "data_schema": 2,
-    "pob_export_sha256": "08a8c34ec0f50d3ad3bdfd83ea84d4dc3bc99b06709f8be0433833a2cee96fcf",
+    "pob_export_sha256": "efccd692a7b6171286d1b4bc0c3d3366a08ffb4bccfdb28359695404bf00cc1e",
     "pob_version": "2.67.2",
     "tree_version": "3_29",
     "pob_runtime": "LuaJIT 2.1.1784580905",
@@ -21,6 +21,12 @@
       "differences": 5,
       "pob_only_rows": 5,
       "bundle_only_rows": 10
+    },
+    "bosses": {
+      "compared": 66,
+      "differences": 0,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
     },
     "character_constants": {
       "compared": 89,
