@@ -613,6 +613,16 @@
       "description": "ice-nova-witch.xml with a saved placeholder for every input loom_calc::poe1::config classifies, at values PoB would show if it used them (the enemy's cold resistance 0 and level 1 among them), and two enemy damage inputs: PoB's values equal the bare fixture's, and no placeholder is a reason (P3-12b)."
     },
     {
+      "id": "ice-nova-custom-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-custom-modifiers-witch.xml",
+      "sha256": "8b48af0a52c2f6950401299f518877e7b74faf73933d39e30e8c063bff4c16b0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with three custom modifier blocks: an empty one, an enabled one of blank and colour-code-only lines, and a disabled one with three modifiers: PoB's values equal the bare fixture's, and no block is a reason (P3-12c)."
+    },
+    {
       "id": "ice-nova-witch.xml",
       "tier": "mechanic",
       "source": "local",

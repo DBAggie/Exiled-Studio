@@ -25,6 +25,24 @@ pub struct ConfigSet {
     pub title: Option<String>,
     /// Inputs, with untyped content in place.
     pub inputs: Ordered<ConfigInput>,
+    /// Custom modifier blocks, after the inputs (where PoB writes them).
+    /// A block anywhere else stays untyped content in `inputs`.
+    pub custom_modifiers: Vec<CustomModifierBlock>,
+    /// Attributes not typed.
+    pub attributes: Attributes,
+}
+
+/// A block of custom modifier lines, which a planner applies as if the
+/// character had them when the block is enabled. What a line changes is
+/// the calculations' concern.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomModifierBlock {
+    /// The title, if any.
+    pub title: Option<String>,
+    /// Whether the block applies.
+    pub enabled: bool,
+    /// The lines, as read (whitespace and line breaks included).
+    pub text: String,
     /// Attributes not typed.
     pub attributes: Attributes,
 }

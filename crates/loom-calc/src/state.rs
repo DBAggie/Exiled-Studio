@@ -137,6 +137,13 @@ pub enum UnsupportedReason {
         /// What is not modelled.
         what: &'static str,
     },
+    /// A line of an enabled custom modifier block in the active config
+    /// set, not modelled yet.
+    UnmodelledCustomModifier {
+        /// The line, as the planner reads it (colour codes removed,
+        /// trimmed).
+        line: String,
+    },
 }
 
 impl UnsupportedReason {
@@ -161,6 +168,7 @@ impl UnsupportedReason {
             Self::ScaledLine { .. } => "scaled-line",
             Self::UncheckedTreeVersion => "unchecked-tree-version",
             Self::UnmodelledSkill { .. } => "unmodelled-skill",
+            Self::UnmodelledCustomModifier { .. } => "unmodelled-custom-modifier",
         }
     }
 }

@@ -911,6 +911,14 @@ export type UnsupportedReason =
         what: string
       }
     }
+  | {
+      'unmodelled-custom-modifier': {
+        /**
+         * The line (colour codes removed, trimmed).
+         */
+        line: string
+      }
+    }
 /**
  * A number: a JSON number when finite, otherwise its bit pattern (JSON
  * has no NaN or infinity). Finite values are written in the shortest

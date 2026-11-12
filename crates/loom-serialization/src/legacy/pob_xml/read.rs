@@ -3,10 +3,10 @@
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     AscendancyId, Attribute, Attributes, Build, BuildPart, Character, ClassId, Config, ConfigInput,
-    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, Game, GameSpecific, Gem, GemId, ItemId,
-    JewelSocket, MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives,
-    SkillId, SkillSet, SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart,
-    TreeVersion,
+    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock, Game, GameSpecific,
+    Gem, GemId, ItemId, JewelSocket, MasteryEffect, NodeId, Number, OpaqueNode, Ordered,
+    PassiveSpec, Passives, SkillId, SkillSet, SkillSetId, Skills, SlotId, SocketGroup, Sourced,
+    SpecId, SpecPart, TreeVersion,
 };
 use roxmltree::{Node, NodeType};
 
@@ -422,8 +422,20 @@ fn config_of(n: Node<'_, '_>) -> Option<Config> {
 }
 
 fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
+    // The blocks after the last other child are typed (PoB writes them
+    // last); any other block stays opaque in place.
+    let all: Vec<_> = children(n).collect();
+    let first_block = all
+        .iter()
+        .rposition(|c| custom_modifier_block(*c).is_none())
+        .map_or(0, |i| i + 1);
+    let (others, blocks) = all.split_at_checked(first_block).unwrap_or((&all, &[]));
+    let custom_modifiers = blocks
+        .iter()
+        .filter_map(|c| custom_modifier_block(*c))
+        .collect();
     let mut inputs = Ordered::new();
-    for c in children(n) {
+    for &c in others {
         match (c.tag_name().name(), c.is_element()) {
             ("Input", true) => match input(c) {
                 Some(i) => inputs.push(i),
@@ -440,7 +452,32 @@ fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
         id: ConfigSetId(*required_u32(n, "id")?.value()),
         title: text(n, "title"),
         inputs,
+        custom_modifiers,
         attributes: rest(n, &["id", "title"]),
+    })
+}
+
+/// A `CustomModifierBlock` (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`
+/// and `Save`) with `enabled` written as `true` or `false` and only text
+/// inside. Any other form stays opaque (PoB reads a missing `enabled` as
+/// true and any other value as false).
+fn custom_modifier_block(n: Node<'_, '_>) -> Option<CustomModifierBlock> {
+    if !n.is_element() || n.tag_name().name() != "CustomModifierBlock" {
+        return None;
+    }
+    if n.children().any(|c| !c.is_text()) {
+        return None;
+    }
+    let enabled = match n.attribute("enabled")? {
+        "true" => true,
+        "false" => false,
+        _ => return None,
+    };
+    Some(CustomModifierBlock {
+        title: text(n, "title"),
+        enabled,
+        text: n.children().filter_map(|c| c.text()).collect(),
+        attributes: rest(n, &["title", "enabled"]),
     })
 }
 

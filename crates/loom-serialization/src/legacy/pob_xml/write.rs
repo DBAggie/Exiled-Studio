@@ -155,6 +155,21 @@ impl Writer {
             }
         }
     }
+
+    /// An element holding only text, written as kept (no layout inside);
+    /// self-closing when the text is empty.
+    fn text_element(&mut self, depth: usize, name: &str, attrs: &Attrs, text: &str) {
+        self.open(depth, name, attrs);
+        if text.is_empty() {
+            self.out.push_str("/>");
+            return;
+        }
+        self.out.push('>');
+        self.out.push_str(&escape(text, false));
+        self.out.push_str("</");
+        self.out.push_str(name);
+        self.out.push('>');
+    }
 }
 
 /// Writes the build as PoB XML.
@@ -342,6 +357,13 @@ fn config(w: &mut Writer, c: &Config) {
                     };
                     w.element(3, element, &a, |_| {});
                 });
+                for b in &set.custom_modifiers {
+                    let mut a = Attrs::new();
+                    put(&mut a, "title", b.title.as_deref());
+                    put(&mut a, "enabled", Some(bool_text(b.enabled)));
+                    kept(&mut a, &b.attributes);
+                    w.text_element(3, "CustomModifierBlock", &a, &b.text);
+                }
             });
         });
     });

@@ -406,6 +406,10 @@ export interface ConfigSet {
    */
   attributes?: Attribute[]
   /**
+   * Custom modifier blocks, after the inputs; left out when none.
+   */
+  custom_modifiers?: CustomModifierBlock[]
+  /**
    * The set's ID.
    */
   id: number
@@ -413,6 +417,27 @@ export interface ConfigSet {
    * Inputs.
    */
   inputs: ConfigInputEntry[]
+  /**
+   * The title, if any.
+   */
+  title?: string | null
+}
+/**
+ * A block of custom modifier lines.
+ */
+export interface CustomModifierBlock {
+  /**
+   * Untyped attributes.
+   */
+  attributes?: Attribute[]
+  /**
+   * Whether the block applies.
+   */
+  enabled: boolean
+  /**
+   * The lines, as read.
+   */
+  text: string
   /**
    * The title, if any.
    */

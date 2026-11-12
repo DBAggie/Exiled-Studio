@@ -982,6 +982,23 @@
                   }
                 }
               }
+            ],
+            "custom_modifiers": [
+              {
+                "title": "Default",
+                "enabled": true,
+                "text": "\n\t\t\t\tOnslaught\nCulling Strike\n\t\t\t"
+              },
+              {
+                "enabled": false,
+                "text": "",
+                "attributes": [
+                  {
+                    "name": "x",
+                    "value": "1"
+                  }
+                ]
+              }
             ]
           }
         }

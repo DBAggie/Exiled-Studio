@@ -49,6 +49,7 @@ fn build(level: u32, inputs: &[(&str, ConfigValue)]) -> Build {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     for (name, value) in inputs {

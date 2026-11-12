@@ -146,6 +146,11 @@
             },
             "what": "physical-hit-armour"
           }
+        },
+        {
+          "unmodelled-custom-modifier": {
+            "line": "Onslaught"
+          }
         }
       ],
       "indeterminate": [
@@ -332,6 +337,11 @@
                 }
               },
               "what": "physical-hit-armour"
+            }
+          },
+          {
+            "unmodelled-custom-modifier": {
+              "line": "Onslaught"
             }
           }
         ]

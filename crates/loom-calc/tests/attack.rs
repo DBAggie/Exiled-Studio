@@ -328,6 +328,7 @@ fn build(skill: &str, part: Option<&str>, slots: &[(&str, &str)], enemy: &[(&str
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     for (name, v) in enemy {

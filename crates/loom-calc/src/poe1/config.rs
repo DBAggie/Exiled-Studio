@@ -346,6 +346,51 @@ pub fn enemy_damage(input: &str) -> bool {
     ENEMY_DAMAGE.binary_search(&input).is_ok()
 }
 
+/// The lines of a custom modifier block that PoB parses as modifiers
+/// (P3-12c; PoB v2.67.2, `Classes/ConfigTab.lua`, `BuildModList`, lines
+/// 1106 to 1128): each line with its colour codes removed
+/// (`StripEscapes`, `HeadlessWrapper.lua` 75: `^` and a digit, then `^x`
+/// and six hex digits) and trimmed of Lua's `%s`. An empty line is left
+/// out: it is no modifier. PoB applies only an enabled block with text;
+/// the caller checks `enabled`, and a block with no text has no lines.
+pub fn custom_modifier_lines(text: &str) -> impl Iterator<Item = String> + '_ {
+    text.split('\n').filter_map(|line| {
+        let line = strip_escapes(line);
+        let line = line.trim_matches(is_lua_space);
+        (!line.is_empty()).then(|| line.to_owned())
+    })
+}
+
+/// Lua's `%s`: space, tab, line feed, vertical tab, form feed, carriage
+/// return.
+const fn is_lua_space(c: char) -> bool {
+    matches!(c, ' ' | '\t' | '\n' | '\u{b}' | '\u{c}' | '\r')
+}
+
+/// PoB's `StripEscapes`: every `^` and a digit removed, then every `^x`
+/// and six hex digits, in two passes as `gsub` does. Only ASCII is
+/// removed, so the rest stays valid UTF-8.
+fn strip_escapes(line: &str) -> String {
+    let pass = |text: &str, len: usize, matches: &dyn Fn(&[u8]) -> bool| {
+        let bytes = text.as_bytes();
+        let mut out = Vec::with_capacity(bytes.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes.len() - i >= len && matches(&bytes[i..i + len]) {
+                i += len;
+            } else {
+                out.push(bytes[i]);
+                i += 1;
+            }
+        }
+        String::from_utf8(out).unwrap_or_default()
+    };
+    let colour = pass(line, 2, &|b| b[0] == b'^' && b[1].is_ascii_digit());
+    pass(&colour, 8, &|b| {
+        b[0] == b'^' && b[1] == b'x' && b[2..].iter().all(u8::is_ascii_hexdigit)
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -434,5 +479,39 @@ mod tests {
         }
         assert!(!enemy_damage("enemyIsBoss"));
         assert!(!enemy_damage("enemyArmour"));
+    }
+
+    fn lines(text: &str) -> Vec<String> {
+        custom_modifier_lines(text).collect()
+    }
+
+    #[test]
+    fn custom_modifier_lines_should_be_trimmed_and_skip_empty_ones() {
+        // As PoB saves a block: the text indented, lines after the first not.
+        assert_eq!(
+            lines("\n\t\t\t\tPerfect Forest Warrior\nOnslaught\r\n  Culling Strike \n\t\t\t"),
+            ["Perfect Forest Warrior", "Onslaught", "Culling Strike"]
+        );
+        assert!(lines("").is_empty());
+        assert!(lines("\n\t\t\t\t\n\t\t\t").is_empty());
+        // Vertical tab and form feed are Lua spaces; a no-break space is not.
+        assert!(lines("\u{b}\u{c}").is_empty());
+        assert_eq!(lines("\u{a0}"), ["\u{a0}"]);
+    }
+
+    #[test]
+    fn custom_modifier_lines_should_lose_colour_codes() {
+        assert_eq!(
+            lines("^1=== CAP RES ===\n^xFF00aaOnslaught^7\n^1\n^xABCDEF"),
+            ["=== CAP RES ===", "Onslaught"]
+        );
+        // Not a code: too few hex digits, upper-case X, a caret alone.
+        assert_eq!(lines("^xFF00 a"), ["^xFF00 a"]);
+        assert_eq!(lines("^XFF00AA"), ["^XFF00AA"]);
+        assert_eq!(lines("a ^ b"), ["a ^ b"]);
+        // Two passes, as `gsub` twice: removing `^1` can make a `^x` code.
+        assert_eq!(lines("^^1xFF00AAz"), ["z"]);
+        // Other text is kept, whatever its script.
+        assert_eq!(lines("^2Gain Onslaught — 4s"), ["Gain Onslaught — 4s"]);
     }
 }

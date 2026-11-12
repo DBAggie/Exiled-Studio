@@ -771,6 +771,7 @@ fn gems_config_and_choices_should_be_reasons() {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
@@ -873,6 +874,7 @@ fn the_resistance_penalty_should_follow_its_config_input() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         config.inputs.push(ConfigInput {
@@ -1120,6 +1122,7 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value) in inputs {
@@ -1158,6 +1161,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value) in inputs {
@@ -1233,6 +1237,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value, kind) in entries {
@@ -1288,6 +1293,108 @@ fn placeholders_should_be_classified_as_their_inputs() {
 }
 
 #[test]
+fn custom_modifier_lines_of_enabled_blocks_should_be_reasons() {
+    use loom_domain::CustomModifierBlock;
+
+    let block = |enabled: bool, text: &str| CustomModifierBlock {
+        title: Some("Default".to_owned()),
+        enabled,
+        text: text.to_owned(),
+        attributes: Vec::new(),
+    };
+    let with = |blocks: Vec<CustomModifierBlock>| {
+        let mut b = witch(1);
+        b.config.sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: blocks,
+            attributes: Vec::new(),
+        });
+        run(&b)
+    };
+    let bare = run(&witch(1));
+    // No effect: an empty block, one of blank or colour-code-only lines,
+    // and a disabled block with modifiers (PoB applies only enabled
+    // blocks with text).
+    let r = with(vec![
+        block(true, ""),
+        block(true, "\n\t\t\t\t\n\t\t\t"),
+        block(true, "^1\n\n^xFF0000  "),
+        block(false, "100% more Damage\nOnslaught"),
+    ]);
+    for field in [Field::Life, Field::Mana, FIRE, Field::Armour] {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+        assert_eq!(value_of(&r, field), value_of(&bare, field), "{field}");
+    }
+    // Each line of an enabled block is a reason, once.
+    let r = with(vec![
+        block(true, "\n\t\t\t\tPerfect Forest Warrior\nOnslaught\n\t\t\t"),
+        block(false, "Culling Strike"),
+        block(true, "^2Onslaught"),
+    ]);
+    let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+        panic!("not partial");
+    };
+    assert_eq!(
+        p.iter().collect::<Vec<_>>(),
+        [
+            &UnsupportedReason::UnmodelledCustomModifier {
+                line: "Onslaught".to_owned()
+            },
+            &UnsupportedReason::UnmodelledCustomModifier {
+                line: "Perfect Forest Warrior".to_owned()
+            },
+        ]
+    );
+    assert_eq!(value_of(&r, Field::Life), value_of(&bare, Field::Life));
+}
+
+#[test]
+fn untyped_config_content_should_be_a_reason() {
+    use loom_domain::OpaqueNode;
+
+    let untyped = [&UnsupportedReason::UnmodelledConfig {
+        input: "<untyped>".to_owned(),
+    }];
+    let partial = |b: &loom_domain::Build| {
+        let r = run(b);
+        let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+            panic!("not partial");
+        };
+        p.iter().cloned().collect::<Vec<_>>()
+    };
+    // Content outside a config set (PoB loads it into set 1), with no set
+    // and beside one.
+    let mut b = witch(1);
+    b.config
+        .sets
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    });
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+    // A block kept whole in a set.
+    let mut b = witch(1);
+    let mut set = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    };
+    set.inputs
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    b.config.sets.push(set);
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+}
+
+#[test]
 fn the_last_spec_line_of_a_key_should_count() {
     // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
     let plate = item(
@@ -1329,6 +1436,7 @@ fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {

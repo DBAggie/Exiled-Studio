@@ -383,6 +383,7 @@ fn with_config(mut b: Build, inputs: &[(&str, f64)]) -> Build {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     for (name, v) in inputs {
@@ -675,6 +676,7 @@ fn enemy_inputs_of_another_type_and_missing_constants_should_be_reasons() {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     set.inputs.push(ConfigInput {

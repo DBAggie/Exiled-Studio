@@ -734,6 +734,23 @@ dto! {
         pub title: Option<String>,
         /// Inputs.
         pub inputs: Vec<Entry<ConfigInput>>,
+        /// Custom modifier blocks, after the inputs; left out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub custom_modifiers: Vec<CustomModifierBlock>,
+        /// Untyped attributes.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub attributes: Vec<Attribute>,
+    }
+
+    /// A block of custom modifier lines.
+    pub struct CustomModifierBlock {
+        /// The title, if any.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub title: Option<String>,
+        /// Whether the block applies.
+        pub enabled: bool,
+        /// The lines, as read.
+        pub text: String,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,

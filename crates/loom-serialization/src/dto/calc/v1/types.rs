@@ -231,6 +231,12 @@ dto! {
             /// What is not modelled.
             what: String,
         },
+        /// A line of an enabled custom modifier block in the active
+        /// config set, not modelled yet.
+        UnmodelledCustomModifier {
+            /// The line (colour codes removed, trimmed).
+            line: String,
+        },
     }
 
     /// Why a value cannot be settled.

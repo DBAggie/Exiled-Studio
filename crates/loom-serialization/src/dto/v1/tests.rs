@@ -474,6 +474,20 @@ pub(crate) fn poe1_build() -> Build {
         id: ConfigSetId(1),
         title: Some("Default".to_owned()),
         inputs,
+        custom_modifiers: vec![
+            loom_domain::CustomModifierBlock {
+                title: Some("Default".to_owned()),
+                enabled: true,
+                text: "\n\t\t\t\tOnslaught\nCulling Strike\n\t\t\t".to_owned(),
+                attributes: Vec::new(),
+            },
+            loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: false,
+                text: String::new(),
+                attributes: vec![attr("x", "1")],
+            },
+        ],
         attributes: Vec::new(),
     });
 

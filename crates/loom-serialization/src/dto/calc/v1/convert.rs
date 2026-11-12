@@ -158,6 +158,9 @@ pub(super) fn unsupported_to(r: &c::UnsupportedReason) -> UnsupportedReason {
                 what: (*what).to_owned(),
             }
         }
+        c::UnsupportedReason::UnmodelledCustomModifier { line } => {
+            UnsupportedReason::UnmodelledCustomModifier { line: line.clone() }
+        }
     }
 }
 

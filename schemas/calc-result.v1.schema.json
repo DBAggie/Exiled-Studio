@@ -1105,6 +1105,29 @@
           "required": [
             "unmodelled-skill"
           ]
+        },
+        {
+          "description": "A line of an enabled custom modifier block in the active\nconfig set, not modelled yet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-custom-modifier": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line (colour codes removed, trimmed).",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-custom-modifier"
+          ]
         }
       ]
     }
