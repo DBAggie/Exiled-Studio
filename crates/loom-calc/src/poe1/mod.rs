@@ -3,15 +3,23 @@
 //! Path of Exile has lives here: its quantities and fields, its
 //! stat-to-effect mapping (P3-8), and its phases (P3-6 on).
 //!
-//! Today the rules compute nothing: the mapping knows no stat and there is
-//! no phase, so every slice field is `Unsupported` with `NotComputed`.
-//! Each later engine PR adds what it models.
+//! P3-6 computes the character fields (attributes, life, mana, energy
+//! shield from global sources, unreserved life and mana): [`collect`]
+//! gathers the build, [`mapping`] maps the stats those fields read,
+//! [`phases`] computes them. Every other slice field is `Unsupported`
+//! with `NotComputed`; each later engine PR adds what it models.
 
-use loom_domain::{Game, StatId};
+pub mod collect;
+pub mod mapping;
+pub mod phases;
+
+pub use mapping::Poe1Mapping;
+
+use loom_domain::Game;
 
 use crate::engine::{Phase, Ruleset};
 use crate::error::CalcError;
-use crate::ingest::{Ingest, StatMap, StatMapping};
+use crate::ingest::{Ingest, StatMapping};
 use crate::input::CalcInput;
 use crate::quantity::DamageType;
 use crate::result::Field;
@@ -86,17 +94,6 @@ pub const SLICE: [Field; 24] = [
     Field::HitDps,
 ];
 
-/// The Path of Exile stat-to-effect mapping. It knows no stat yet (P3-8
-/// adds them, most frequent first), so each stat is `UnmappedStat`.
-#[derive(Debug, Clone, Copy, Default)]
-pub struct Poe1Mapping;
-
-impl StatMapping for Poe1Mapping {
-    fn map(&self, _stat: &StatId) -> StatMap {
-        StatMap::Unmapped
-    }
-}
-
 /// The Path of Exile rules.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Rules;
@@ -114,14 +111,13 @@ impl Ruleset for Poe1Rules {
         &Poe1Mapping
     }
 
-    fn collect(&self, _input: &CalcInput<'_>, _ingest: &mut Ingest<'_>) -> Result<(), CalcError> {
-        // P3-6 collects the character, P3-8 the items and passives, P3-9a
-        // the gems.
+    fn collect(&self, input: &CalcInput<'_>, ingest: &mut Ingest<'_>) -> Result<(), CalcError> {
+        collect::collect(input, ingest);
         Ok(())
     }
 
     fn phases(&self) -> &[Phase] {
-        &[]
+        &phases::PHASES
     }
 }
 
@@ -156,12 +152,12 @@ mod tests {
     }
 
     #[test]
-    fn the_mapping_should_know_no_stat_yet() {
-        assert_eq!(
-            Poe1Mapping.map(&StatId::new("base_maximum_life")),
-            StatMap::Unmapped
-        );
+    fn the_rules_should_run_the_phases_in_order() {
         assert_eq!(Poe1Rules.game(), Game::Poe1);
-        assert!(Poe1Rules.phases().is_empty());
+        let names: Vec<_> = Poe1Rules.phases().iter().map(|p| p.name).collect();
+        assert_eq!(
+            names,
+            ["attributes", "life-mana", "energy-shield", "unreserved"]
+        );
     }
 }

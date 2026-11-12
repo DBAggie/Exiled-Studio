@@ -22,17 +22,21 @@
 //! [`OverlayData`]: the bundle with PoB's values for the rows
 //! `data-parity` found different. A `data-version` register entry counts
 //! only when this run matches the oracle (`calc-parity --overlay-run`).
-//! The engine reads no table yet (P3-4: every field is `not-computed`), so
-//! the overlay changes no value until P3-6 adds the first `CalcData`
-//! reads; each read then consults [`OverlayData::pob_value`].
+//! Every `CalcData` read consults [`OverlayData::pob_value`]; an overlay
+//! row the engine reads but cannot apply refuses the run.
+//!
+//! **Tree version.** `--scope <file>` (`docs/phase-3/calc-scope-poe1.json`,
+//! for the bundle's Steam build) gives the data's passive tree version, so
+//! the engine checks each build's; without it a build that allocates
+//! passives is `Partial` (`unchecked-tree-version`).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use loom_calc::{CalcData, CalcInput, CalcOptions};
+use loom_calc::{CalcData, CalcInput, CalcOptions, CharacterBase, PassiveLinks, StatAmount};
 use loom_data::bundle::Bundle;
-use loom_domain::{Build, DataVersion};
+use loom_domain::{Build, DataVersion, TreeVersion};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
 use loom_serialization::dto::calc::v1 as calc_dto;
 use loom_serialization::legacy::{pob_item, pob_xml};
@@ -77,6 +81,16 @@ pub struct OverlayRecord {
     pub sha256: String,
     /// Rows per table.
     pub rows: BTreeMap<String, usize>,
+}
+
+/// The scope file a run took the data's tree version from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ScopeRecord {
+    /// SHA-256 of the scope file.
+    pub sha256: String,
+    /// The tree version it names for the bundle's Steam build.
+    pub tree_version: String,
 }
 
 /// Where a build stopped.
@@ -158,6 +172,8 @@ pub struct Report {
     pub bundle: BundleRecord,
     /// The overlay, when one was given.
     pub overlay: Option<OverlayRecord>,
+    /// The scope file, when one was given.
+    pub scope: Option<ScopeRecord>,
     /// Whether builds are named by SHA-256.
     pub anonymous: bool,
     /// Every build, in input order.
@@ -190,6 +206,8 @@ pub struct Summary {
     pub bundle: BundleRecord,
     /// The overlay.
     pub overlay: Option<OverlayRecord>,
+    /// The scope file.
+    pub scope: Option<ScopeRecord>,
     /// Builds read.
     pub builds: usize,
     /// Builds with a document.
@@ -275,6 +293,7 @@ impl<'b> OverlayData<'b> {
         let mut rows = BTreeMap::new();
         for row in overlay.rows {
             let key = (row.table, row.key, row.field);
+            check_applicable(&key, &row.pob)?;
             if rows.insert(key.clone(), row.pob).is_some() {
                 return Err(format!("overlay: row {key:?} twice"));
             }
@@ -282,15 +301,15 @@ impl<'b> OverlayData<'b> {
         Ok(Self { bundle, rows })
     }
 
+    /// PoB's integer for a field the engine reads, else `ours`.
+    fn int(&self, table: &str, key: &str, field: &str, ours: i64) -> i64 {
+        self.pob_value(table, key, field)
+            .and_then(Value::as_i64)
+            .unwrap_or(ours)
+    }
+
     /// PoB's value for a bundle row's field, in PoB's form, when the
-    /// overlay has one (the engine's reads consult it from P3-6 on).
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "the engine reads no table yet; P3-6's CalcData reads consult it"
-        )
-    )]
+    /// overlay has one (every `CalcData` read below consults it).
     pub fn pob_value(&self, table: &str, key: &str, field: &str) -> Option<&Value> {
         self.rows
             .get(&(table.to_owned(), key.to_owned(), field.to_owned()))
@@ -306,9 +325,70 @@ impl<'b> OverlayData<'b> {
     }
 }
 
+/// The overlay rows of tables the engine reads, by field: the integer
+/// fields it substitutes.
+const APPLIED: [(&str, &str); 4] = [
+    ("characters", "strength"),
+    ("characters", "dexterity"),
+    ("characters", "intelligence"),
+    ("character_constants", "value"),
+];
+
+/// Fields the engine reads but an overlay row cannot give: PoB's passive
+/// text is not stat IDs. Such a row refuses the overlay rather than
+/// calculate with the game's value under the overlay's name. Rows of
+/// fields the engine does not read (a passive's name or ascendancy)
+/// change nothing.
+const NOT_APPLICABLE: [(&str, &str); 2] = [("passives", "stats"), ("mastery_effects", "stats")];
+
+fn check_applicable(key: &(String, String, String), pob: &Value) -> Result<(), String> {
+    let (table, _, field) = key;
+    let at = (table.as_str(), field.as_str());
+    if NOT_APPLICABLE.contains(&at) {
+        return Err(format!(
+            "overlay: row {key:?} cannot be applied (PoB's text is not stat IDs)"
+        ));
+    }
+    if APPLIED.contains(&at) && !pob.is_i64() {
+        return Err(format!("overlay: row {key:?} is not an integer: {pob}"));
+    }
+    Ok(())
+}
+
+/// Each read takes the bundle's row with PoB's values for the overlay's
+/// rows ([`APPLIED`]): characters by class name, character constants by
+/// stat. Passive and mastery effect stats have no applicable row
+/// ([`NOT_APPLICABLE`] refuses them when the overlay is read).
 impl CalcData for OverlayData<'_> {
     fn data_version(&self) -> DataVersion {
         self.bundle.data_version()
+    }
+
+    fn character(&self, class: &str) -> Option<CharacterBase> {
+        let c = self.bundle.character(class)?;
+        Some(CharacterBase {
+            strength: self.int("characters", class, "strength", c.strength),
+            dexterity: self.int("characters", class, "dexterity", c.dexterity),
+            intelligence: self.int("characters", class, "intelligence", c.intelligence),
+            ..c
+        })
+    }
+
+    fn character_constant(&self, stat: &str) -> Option<i64> {
+        let ours = self.bundle.character_constant(stat)?;
+        Some(self.int("character_constants", stat, "value", ours))
+    }
+
+    fn passive_stats(&self, node: u32) -> Option<&[StatAmount]> {
+        self.bundle.passive_stats(node)
+    }
+
+    fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]> {
+        self.bundle.mastery_effect_stats(effect)
+    }
+
+    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
+        self.bundle.passive_links(node)
     }
 }
 
@@ -324,6 +404,9 @@ pub struct Request<'a> {
     pub bundle_record: BundleRecord,
     /// The overlay, if any.
     pub overlay: Option<(&'a OverlayData<'a>, OverlayRecord)>,
+    /// The scope file's record; its tree version is the data's
+    /// (`CalcOptions::tree_version`).
+    pub scope: Option<ScopeRecord>,
     /// Name builds by SHA-256.
     pub anonymous: bool,
     /// The tool.
@@ -362,7 +445,13 @@ fn one(
                 .map_err(|e| e.name().to_owned())
         })
         .map_err(|e| (Step::Resolve, e.code().to_owned()))?;
-    let options = CalcOptions::default();
+    let options = CalcOptions {
+        tree_version: request
+            .scope
+            .as_ref()
+            .map(|s| TreeVersion::new(s.tree_version.as_str())),
+        ..CalcOptions::default()
+    };
     let data: &dyn CalcData = match &request.overlay {
         Some((overlay, _)) => *overlay,
         None => request.bundle,
@@ -406,6 +495,7 @@ pub fn run(inputs: &[Input], request: &Request<'_>) -> Result<Outputs, String> {
         tool: request.tool.clone(),
         bundle: request.bundle_record.clone(),
         overlay: request.overlay.as_ref().map(|(_, r)| r.clone()),
+        scope: request.scope.clone(),
         builds: 0,
         ok: 0,
         failed: 0,
@@ -515,6 +605,7 @@ pub fn run(inputs: &[Input], request: &Request<'_>) -> Result<Outputs, String> {
             tool: request.tool.clone(),
             bundle: request.bundle_record.clone(),
             overlay: summary.overlay.clone(),
+            scope: request.scope.clone(),
             anonymous: request.anonymous,
             builds,
         },

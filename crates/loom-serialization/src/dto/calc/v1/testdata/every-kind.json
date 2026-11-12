@@ -75,7 +75,56 @@
             "field": "evasion"
           }
         },
-        "not-computed"
+        "not-computed",
+        {
+          "unmodelled-gem": {
+            "source": {
+              "gem": {
+                "group": 0,
+                "gem": 1
+              }
+            }
+          }
+        },
+        {
+          "unmodelled-config": {
+            "input": "made_up_input"
+          }
+        },
+        {
+          "unmodelled-choice": {
+            "choice": "made-up-choice",
+            "value": "Someone"
+          }
+        },
+        {
+          "unmodelled-item": {
+            "item": 8,
+            "slot": "Helmet",
+            "what": "base-properties"
+          }
+        },
+        {
+          "unmodelled-passive": {
+            "source": {
+              "passive": {
+                "node": 65552
+              }
+            },
+            "what": "cluster-jewel-node"
+          }
+        },
+        {
+          "unread-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 9
+              }
+            }
+          }
+        },
+        "unchecked-tree-version"
       ],
       "indeterminate": [
         {
@@ -93,6 +142,18 @@
                 "adapted": "split-section"
               }
             }
+          }
+        },
+        {
+          "missing-data": {
+            "table": "passives",
+            "key": "999"
+          }
+        },
+        {
+          "tree-version": {
+            "build": "3_28",
+            "data": "3_29"
           }
         }
       ]
@@ -179,7 +240,56 @@
               "field": "evasion"
             }
           },
-          "not-computed"
+          "not-computed",
+          {
+            "unmodelled-gem": {
+              "source": {
+                "gem": {
+                  "group": 0,
+                  "gem": 1
+                }
+              }
+            }
+          },
+          {
+            "unmodelled-config": {
+              "input": "made_up_input"
+            }
+          },
+          {
+            "unmodelled-choice": {
+              "choice": "made-up-choice",
+              "value": "Someone"
+            }
+          },
+          {
+            "unmodelled-item": {
+              "item": 8,
+              "slot": "Helmet",
+              "what": "base-properties"
+            }
+          },
+          {
+            "unmodelled-passive": {
+              "source": {
+                "passive": {
+                  "node": 65552
+                }
+              },
+              "what": "cluster-jewel-node"
+            }
+          },
+          {
+            "unread-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 9
+                }
+              }
+            }
+          },
+          "unchecked-tree-version"
         ]
       },
       {
@@ -219,6 +329,18 @@
                   "adapted": "split-section"
                 }
               }
+            }
+          },
+          {
+            "missing-data": {
+              "table": "passives",
+              "key": "999"
+            }
+          },
+          {
+            "tree-version": {
+              "build": "3_28",
+              "data": "3_29"
             }
           }
         ]

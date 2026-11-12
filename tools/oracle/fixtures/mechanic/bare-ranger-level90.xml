@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-6): a level 90 Ranger with nothing allocated or equipped:
+     the class's base attributes, life and mana.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Ranger" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="2" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items/>
+	<Config/>
+</PathOfBuilding>

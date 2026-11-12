@@ -41,7 +41,10 @@ pub use engine::{Calc, Phase, Ruleset, calculate, calculate_cancellable, calcula
 pub use error::CalcError;
 pub use graph::{Graph, GraphError, Node, NodeIndex, Term};
 pub use ingest::{EffectTemplate, Ingest, StatMap, StatMapping, TypedMap, settle};
-pub use input::{CalcData, CalcInput, CalcOptions, SkillChoice};
+pub use input::{
+    CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions, CharacterBase, PassiveLinks, SkillChoice,
+    StatAmount,
+};
 pub use quantity::{DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};
 pub use source::Source;

@@ -215,6 +215,62 @@
           "required": [
             "unsettled-value"
           ]
+        },
+        {
+          "description": "The build names something the game data does not have.",
+          "type": "object",
+          "properties": {
+            "missing-data": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "description": "The key the build gives.",
+                  "type": "string"
+                },
+                "table": {
+                  "description": "The table.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "table",
+                "key"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "missing-data"
+          ]
+        },
+        {
+          "description": "The build's passive tree is another version than the data's.",
+          "type": "object",
+          "properties": {
+            "tree-version": {
+              "type": "object",
+              "properties": {
+                "build": {
+                  "description": "The build's.",
+                  "type": "string"
+                },
+                "data": {
+                  "description": "The data's.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "build",
+                "data"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "tree-version"
+          ]
         }
       ]
     },
@@ -783,6 +839,171 @@
           "description": "The engine does not compute this field yet.",
           "type": "string",
           "const": "not-computed"
+        },
+        {
+          "description": "An enabled gem whose effects the engine does not model yet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-gem": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The gem.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-gem"
+          ]
+        },
+        {
+          "description": "A config input the engine does not model yet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-config": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "description": "The input's name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "input"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-config"
+          ]
+        },
+        {
+          "description": "A game-specific build choice the engine does not model.",
+          "type": "object",
+          "properties": {
+            "unmodelled-choice": {
+              "type": "object",
+              "properties": {
+                "choice": {
+                  "description": "Which choice.",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "Its value, as the build writes it.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "choice",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-choice"
+          ]
+        },
+        {
+          "description": "An item in use whose effect goes beyond its lines, not\nmodelled yet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-item": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "description": "The item's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "slot": {
+                  "description": "Its slot, as the build names it.",
+                  "type": "string"
+                },
+                "what": {
+                  "description": "What is not modelled.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "item",
+                "slot",
+                "what"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-item"
+          ]
+        },
+        {
+          "description": "An allocated passive whose stats the data does not hold, by a\nrule of the game (a node generated from a jewel), not modelled\nyet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-passive": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The passive.",
+                  "$ref": "#/$defs/Source"
+                },
+                "what": {
+                  "description": "What is not modelled.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "what"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-passive"
+          ]
+        },
+        {
+          "description": "An item line the import did not read.",
+          "type": "object",
+          "properties": {
+            "unread-line": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unread-line"
+          ]
+        },
+        {
+          "description": "Passives are allocated, but the data's tree version was not\ngiven, so the build's was not checked.",
+          "type": "string",
+          "const": "unchecked-tree-version"
         }
       ]
     }

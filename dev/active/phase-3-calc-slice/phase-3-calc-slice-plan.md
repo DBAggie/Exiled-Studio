@@ -124,6 +124,7 @@ In `loom-calc`, game-neutral:
 PoE1 base stats by class and level; attributes and their implicit effects (strength to life, intelligence to mana and energy shield, dexterity to evasion and accuracy); life, mana, and energy shield from bases, passives, items (with local armour-piece rules), and gems; reservation of the main aura set when it is a plain percentage of mana or life (anything else is `Partial`).
 - **Accept:** mechanic fixtures (a bare level 1 and level 90 character of each class; one per stat source) match the oracle on the fields of this step; their breakdowns match term by term; stat mappings added with a test each.
 - **Depends on:** 1b, 4, 5.
+- **Done in P3-6** (PR #71; `docs/phase-3/character-fields.md`; context file, "Decisions in P3-6"): the 8 character fields computed with PoB's formulas; 19 mechanic fixtures (each class at level 1 and 90, passives, a mastery, jewellery, a jewel) match the oracle on all 8 targets and on every breakdown PoB writes; 24 stat mappings with tests; passive connectivity checked. Reservation (a plain percentage aura) waits for the skill model (P3-9a): unreserved equals the pool, and enabled gems are `unmodelled-gem`. Armour-piece energy shield is P3-7's.
 
 ### 7. Core defences (M)
 Armour, evasion (with the armour and evasion items' local properties and quality), resistances (with maximum resistances, the PoE1 act penalty as the oracle's config sets it), block and spell block, spell suppression.

@@ -166,10 +166,13 @@ cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.j
 cargo run --release -p loom-parity-cli -- calc-survey <builds>... --bundle <bundle-dir> --scope docs/phase-3/calc-scope-poe1.json --data-rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
 # Calc runs (P3-5): import, resolve, calculate; each build's calc result document v1 in <dir>/documents/,
 # report.json, summary.json (counts), timing.json (time per build); ids as oracle-run's (file name, or
-# SHA-256 with --anonymous); --data-overlay takes data-parity's overlay.json for this bundle (PoB's values).
+# SHA-256 with --anonymous); --data-overlay takes data-parity's overlay.json for this bundle (PoB's values;
+# a row the engine reads but cannot apply refuses the run); --scope takes calc-survey's scope file for this
+# bundle's Steam build, whose tree_version the engine checks each build's against (P3-6; without it a build
+# with passives is partial, unchecked-tree-version; another tree version is indeterminate).
 # Exit 0 every build has a document, 1 one failed (malformed.xml does), 2 usage, 3 the run cannot start.
 # CI (build round-trip) runs it on the synthetic builds; dto-compare diffs the documents' SHA-256:
-cargo run --release -p loom-parity-cli -- calc-run <builds>... --bundle <bundle-dir> --out <dir> [--anonymous] [--data-overlay <overlay.json>]
+cargo run --release -p loom-parity-cli -- calc-run <builds>... --bundle <bundle-dir> --out <dir> [--anonymous] [--data-overlay <overlay.json>] [--scope docs/phase-3/calc-scope-poe1.json]
 # Compare a calc run with an oracle run per slice field (docs/phase-3/slice-fields.json): complete fields by
 # their rule, the ten breakdowns term by term at their printed decimals; partial and not-computed fields
 # listed, never passed; register as oracle-compare, a data-version entry only when --overlay-run matches;

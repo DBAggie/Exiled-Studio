@@ -361,6 +361,196 @@
       "expect": "ok",
       "tags": ["derived"],
       "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 10 setup made active, Smite selected in its group with Leap Slam (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, Inquisitor ascendancy."
+    },
+    {
+      "id": "bare-scion-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-scion-level1.xml",
+      "sha256": "bcee71c5bace607bab60dfa9a7a85b10fb58f213c0cbc62f1b20c3f9052a0fd0",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Scion with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-scion-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-scion-level90.xml",
+      "sha256": "6e03821b4fc23ef699af7dfe80b396b3a79e9eae38f1a975bb6827833fcc7443",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Scion with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-marauder-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-marauder-level1.xml",
+      "sha256": "f5c1e571e69b055adf9e1b0f63b044eac1beeac3515eb41ba231bc14c92b9324",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Marauder with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-marauder-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-marauder-level90.xml",
+      "sha256": "07ecdc6f515dacdf48d930d1c8940e978df864b4fbe567fe4070d108d72430b4",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Marauder with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-ranger-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-ranger-level1.xml",
+      "sha256": "66126dc066fe7c41531d79404e9e6f4f852129fe6bd22dd5fe203a78a33cbdb5",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Ranger with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-ranger-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-ranger-level90.xml",
+      "sha256": "2ad9d46ad9439973e5efafa7ee9e53101316632b69acb40380ae0fe7bc00536c",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Ranger with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-witch-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-witch-level1.xml",
+      "sha256": "2e6c73477fa1aade62f08191e6d36602e3e3048eb06762decbb9f4db28967450",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Witch with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-witch-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-witch-level90.xml",
+      "sha256": "1bd070b07b26fd419f66291bce0895e9310c6f9fbcf481bd294e715c856586db",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Witch with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-duelist-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-duelist-level1.xml",
+      "sha256": "85311a8ec778c756cc3f25fb04615491f78347f2a71d135d26e7aa6e6b808258",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Duelist with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-duelist-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-duelist-level90.xml",
+      "sha256": "604345926ccd193929262031859f18d9389a672a2a8ad6de7e6e2a539e08aaea",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Duelist with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-templar-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-templar-level1.xml",
+      "sha256": "df61417dbf14600bebad8d03ff547ad5b09448b65f57136c4ac799db00c9af56",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Templar with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-templar-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-templar-level90.xml",
+      "sha256": "f2a531dfcfcddbcf7c11584f0c688457bffff973a1ef1c3f91b4ca4cb6607129",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Templar with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-shadow-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-shadow-level1.xml",
+      "sha256": "06e813046223dbdb3c8b455dd80c32e1d6eb63984fcde8ba32a2703a91fae164",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 1 Shadow with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-shadow-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-shadow-level90.xml",
+      "sha256": "e13125be6097f2bd69b675e18b5153834ce4f697b6fd5b96e151c53cb96bd25a",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Shadow with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "passives-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/passives-witch.xml",
+      "sha256": "d11b78c855f6a0df42bfd60e58453906f7a33e9079434f0bb7196e7106cbbd11",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Witch with the path to Deep Wisdom and Heart and Soul: passive flat energy shield and mana, Intelligence (to mana and energy shield), increased life and mana (P3-6)."
+    },
+    {
+      "id": "passives-scion.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/passives-scion.xml",
+      "sha256": "557ae04184fb6af1dc46c07e12c26711317eb211f42016309df3101d6036b142",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Scion with the node next to the class start: flat life and Strength (to life) from a passive (P3-6)."
+    },
+    {
+      "id": "masteries-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/masteries-witch.xml",
+      "sha256": "dcde306d6a6b3974990ff8c2d865f11114064b0c2e36b76f9f47a246429fe1ae",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Witch with Utmost Intellect and its group's Attributes mastery (5% increased Attributes): a mastery effect, increased attributes (P3-6)."
+    },
+    {
+      "id": "jewellery-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/jewellery-witch.xml",
+      "sha256": "ca4e12f5ad56475df19da4d738107eab346b9e3d3207523d1083f7eb0a301acd",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Witch with two rings, an amulet and a belt (rare, original): flat life, mana, energy shield and attributes, increased energy shield from items (P3-6)."
+    },
+    {
+      "id": "jewel-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/jewel-witch.xml",
+      "sha256": "9047a2f4e00ec80c01113e2951fef711e1630a9bdc230e1a112dba66bfc6b1be",
+      "expect": "ok",
+      "targets": ["Dex", "EnergyShield", "Int", "Life", "LifeUnreserved", "Mana", "ManaUnreserved", "Str"],
+      "description": "A level 90 Witch with a Cobalt Jewel (rare, original) in an allocated socket: a jewel's attributes, increased energy shield and mana (P3-6)."
     }
   ]
 }

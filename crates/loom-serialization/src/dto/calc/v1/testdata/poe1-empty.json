@@ -8,33 +8,39 @@
     "fields": [
       {
         "field": "strength",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 14.0,
+        "node": 11,
+        "state": "complete"
       },
       {
         "field": "dexterity",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 14.0,
+        "node": 23,
+        "state": "complete"
       },
       {
         "field": "intelligence",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 32.0,
+        "node": 35,
+        "state": "complete"
       },
       {
         "field": "life",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 57.0,
+        "node": 50,
+        "state": "complete"
       },
       {
         "field": "mana",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 56.0,
+        "node": 64,
+        "state": "complete"
       },
       {
         "field": "energy-shield",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 0.0,
+        "node": 79,
+        "state": "complete"
       },
       {
         "field": "armour",
@@ -73,13 +79,15 @@
       },
       {
         "field": "life-unreserved",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 57.0,
+        "node": 80,
+        "state": "complete"
       },
       {
         "field": "mana-unreserved",
-        "state": "unsupported",
-        "reason": "not-computed"
+        "value": 56.0,
+        "node": 81,
+        "state": "complete"
       },
       {
         "field": "average-damage",
@@ -127,6 +135,664 @@
         "reason": "not-computed"
       }
     ],
-    "graph": []
+    "graph": [
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "strength",
+            "op": "base"
+          }
+        },
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          0
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          1
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          3
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          4
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          5,
+          6
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          2,
+          7
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          8
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          9,
+          10
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "dexterity",
+            "op": "base"
+          }
+        },
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          12
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          13
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          15
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          16
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          17,
+          18
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          14,
+          19
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          20
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          21,
+          22
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "intelligence",
+            "op": "base"
+          }
+        },
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          24
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          25
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          27
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          28
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          29,
+          30
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          26,
+          31
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          32
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          33,
+          34
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          11,
+          36
+        ],
+        "value": 7.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.life-from-strength",
+        "children": [
+          37
+        ],
+        "value": 7.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 38.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "life-per-level"
+            },
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 12.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          39,
+          40
+        ],
+        "value": 50.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          41,
+          38
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          43
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          44
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          42,
+          45,
+          46
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          47
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 1.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          48,
+          49
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          35,
+          51
+        ],
+        "value": 16.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.mana-from-intelligence",
+        "children": [
+          52
+        ],
+        "value": 16.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "mana",
+            "op": "base"
+          }
+        },
+        "value": 34.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "mana-per-level"
+            },
+            "quantity": "mana",
+            "op": "base"
+          }
+        },
+        "value": 6.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          54,
+          55
+        ],
+        "value": 40.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          56,
+          53
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          58
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          59
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          60,
+          61
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          57,
+          62
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "result",
+        "children": [
+          63
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "tenth"
+          }
+        },
+        "value": 0.1
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          35,
+          65
+        ],
+        "value": 3.2
+      },
+      {
+        "kind": "floor",
+        "term": "step.energy-shield-from-intelligence",
+        "children": [
+          66
+        ],
+        "value": 3.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          68
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          70,
+          67
+        ],
+        "value": 3.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          71
+        ],
+        "value": 1.03
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          72,
+          73
+        ],
+        "value": 1.03
+      },
+      {
+        "kind": "product",
+        "term": "step.slot.global",
+        "children": [
+          69,
+          74
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          76
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          77,
+          78
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          50
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          64
+        ],
+        "value": 56.0
+      }
+    ]
   }
 }

@@ -182,6 +182,7 @@ const USAGE: &str = "usage:
       1 when one has fewer, 2 on a usage error, 3 when the run cannot
       start.
   loom-parity-cli calc-run <input>... --bundle <dir> --out <dir> [--anonymous] [--data-overlay <file>]
+                  [--scope <file>]
       Calculate every build (Phase 3 plan, step 5): import (a folder: every
       *.xml directly in it, in name order; a *.xml file; or a v1 build
       document *.json), resolve with the bundle (validated first), and run
@@ -193,8 +194,12 @@ const USAGE: &str = "usage:
       name, or its SHA-256 with --anonymous, as oracle-run names fixtures.
       --data-overlay reads data-parity's overlay.json for this bundle and
       calculates with PoB's values for its rows (for calc-parity
-      --overlay-run). Exit 0 when every build has a document, 1 when one
-      failed, 2 on a usage error, 3 when the run cannot start.
+      --overlay-run). --scope reads calc-survey's scope file for this
+      bundle's Steam build; its tree_version is the data's passive tree
+      version, against which the engine checks each build's (without it,
+      a build that allocates passives is partial, unchecked-tree-version).
+      Exit 0 when every build has a document, 1 when one failed, 2 on a
+      usage error, 3 when the run cannot start.
   loom-parity-cli calc-parity <oracle-run-dir> <calc-run-dir> --slice <file> --out <dir>
                   [--register <file>] [--overlay-run <dir>] [--manifest <file>]
       Compare the successor's documents with the oracle's outputs, paired
@@ -1245,7 +1250,7 @@ fn options(args: &[String], names: &[&str], flags: &[&str]) -> Option<CliArgs> {
 fn calc_run_cmd(args: &[String]) -> ExitCode {
     let Some((inputs, values, flags)) = options(
         args,
-        &["--bundle", "--out", "--data-overlay"],
+        &["--bundle", "--out", "--data-overlay", "--scope"],
         &["--anonymous"],
     ) else {
         eprintln!("{USAGE}");
@@ -1264,6 +1269,7 @@ fn calc_run_cmd(args: &[String]) -> ExitCode {
         Path::new(bundle),
         Path::new(out),
         values.get("--data-overlay").map(Path::new),
+        values.get("--scope").map(Path::new),
         flags.contains("--anonymous"),
     );
     match run {
@@ -1281,6 +1287,7 @@ fn calc_run_run(
     bundle_dir: &Path,
     out: &Path,
     overlay: Option<&Path>,
+    scope: Option<&Path>,
     anonymous: bool,
 ) -> Result<bool, String> {
     if out.exists() {
@@ -1304,7 +1311,30 @@ fn calc_run_run(
         }
         None => None,
     };
+    let scope = match scope {
+        Some(path) => {
+            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let file = calc_survey::rules::Scope::read(&bytes)
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            if file.game != bundle.game.name()
+                || Some(file.steam_build) != bundle.manifest.source.steam_build
+            {
+                return Err(format!(
+                    "{}: for {} Steam build {}, not this bundle",
+                    path.display(),
+                    file.game,
+                    file.steam_build
+                ));
+            }
+            Some(calc_run::ScopeRecord {
+                sha256: oracle::sha256_hex(&bytes),
+                tree_version: file.tree_version,
+            })
+        }
+        None => None,
+    };
     let request = calc_run::Request {
+        scope,
         bundle: &bundle,
         resolver: &resolver,
         data: &data,
