@@ -182,7 +182,92 @@ Commands: as P3-12a's, with `<out>` = `local/p3/p3-12c/evidence` (script `local/
 
 ### Follow-ups
 
-- **The legacy `customMods` input** (the 3 in-scope Ice Nova builds, several community builds). PoB moves it into a block when the set has no block with text (`Load`, line 876). roxmltree normalises a line break in an attribute value to a space, so the lines cannot be split from the domain's value. The reader must read the attribute's raw text. Our writer also writes a line break in an attribute as `&#10;`, which PoB's reader turns into nothing (`xml.lua` decodes only five named entities). Both are needed before those lines can act; the input stays `unmodelled-config` meanwhile.
+- **The legacy `customMods` input** (done in P3-12d, below; the 3 in-scope Ice Nova builds, several community builds). PoB moves it into a block when the set has no block with text (`Load`, line 876). roxmltree normalises a line break in an attribute value to a space, so the lines cannot be split from the domain's value. The reader must read the attribute's raw text. Our writer also writes a line break in an attribute as `&#10;`, which PoB's reader turns into nothing (`xml.lua` decodes only five named entities). Both are needed before those lines can act; the input stays `unmodelled-config` meanwhile.
 - **The old config layout** (inputs directly under `<Config>`): type it as set 1, as PoB does, writing it back without a set.
 - **PoB's shorthand** ("Onslaught", "Culling Strike"): the in-scope Smite builds need Onslaught's buff and culling strike modelled, from the buff side (P3-12) rather than as text.
 - **Quarantine:** custom lines count in `completeness` but are not listed by `Build::quarantine` (per item line); a quarantine entry for config content would need a new shape.
+
+## P3-12d: the legacy `customMods` input
+
+**Why.** Before custom modifier blocks, PoB kept custom modifiers in one config input, `<Input name="customMods" string="...">`, its lines separated by raw line breaks inside the attribute. The 3 in-scope Ice Nova builds and 10 other community builds still hold them that way. PoB v2.67.2 still reads them (`Classes/ConfigTab.lua`, `Load`, 872 to 884): for each set, a non-empty `customMods` becomes the set's only block (title "Default", enabled, so PoB's modifier source is `Custom:Default`) when the set has no block, or one block whose text is empty, even a disabled one; otherwise PoB discards it. In every case PoB then clears the input, so `BuildModList`'s fallback for it (1129 on) never runs after a load. The input was `unmodelled-config customMods`.
+
+**Reading the value as PoB does.** PoB's XML reader (`runtime/lua/xml.lua`, `parseAttribs`, `decodeContent`) takes an attribute's raw text between the quotes, so line breaks, tabs, and carriage returns stay, and decodes `&lt;`, `&gt;`, `&amp;`, `&apos;`, `&quot;`; any other reference (`&#10;`) becomes nothing. XML (roxmltree) turns a raw line break into a space, which joined the lines. The PoB reader now reads every config input's `string` value from the raw text (`Attribute::range_value`), decoded as PoB does, guarded against roxmltree's value. It keeps the element whole, listed by `kept_whole`, in two cases:
+- A raw `>`. XML allows it, but PoB's tag pattern ends there, so PoB reads no value.
+- Any other reference. PoB drops it without a trace; here it stays a reason (ADR-015).
+
+The writer writes such a value as PoB does: only `& < > " '` escaped, line breaks, tabs, and carriage returns raw. Before, it wrote `&#10;`, which PoB reads as nothing. A carriage return stays in the value (a CRLF file gives `\r\n`; PoB on Windows reads files in text mode and sees `\n`); the lines are the same either way (Lua's `%s` trim). In the public fixtures and the corpus only `customMods` values change under this reading (23 inputs in 12 public builds, 14 in 5 corpus builds); no input holds another reference or a raw `>` (`local/p3/p3-12d/string_scan.py`). Known limit: an element kept whole for a raw `>` or a reference is written back as XML read it (`&gt;`, the decoded character), which PoB reads, so export and re-import of that one element differ.
+
+**The model.** `ConfigInput.lines` (build document v1: an input's optional `lines`, additive on P3-12b's rule): the PoB reader derives a `customMods` string's lines with P3-12c's rules (`StripEscapes`, the `%s` trim, empty lines left out); the resolver resolves them as a block's (default scope, no base). `Config::check_custom_lines` also refuses a continued input line (`DOMAIN_CONTINUED_CUSTOM_LINE`). `Build::completeness` counts them, whether they apply or not (as a disabled block's lines): it says what the import read.
+
+**The rule** (`loom_calc::poe1::collect::legacy_custom_mods`). The last `customMods` input of the active set (PoB's inputs are a table) acts as PoB's migration says: its lines act through `Ingest::custom_line` under the new calc result v1 source `config-input-line` (input, line; additive), when the set has no block or one block with whitespace-only text. Otherwise PoB discards the input: no effect, no reason. `false` is PoB's empty text (nothing). It stays `unmodelled-config customMods` when PoB's outcome is not known:
+- the value is a number or `true` (PoB then fails on the block's text);
+- the set has untyped content, which can hold another input or block;
+- content outside any set when the set is set 1 (PoB loads that content there).
+
+Lines on any other input (a build document can carry them) are `unmodelled-config` under its name.
+
+**What changes in the builds** (`p3-12d-public-vs-p3-12c.json`). In 13 public builds `unmodelled-config customMods` is gone and the lines that do not act are named instead (52 reasons: `unresolved-line` `no-template` or `ambiguous`, and `unmapped-stat`). The 3 in-scope Ice Nova builds: "+180% to all resistances" resolves and applies; "Ice Nova Buffs" and "Mana Infused Staff" (labels), "+1.5% to critical strike chance" and "20% more damage" (ambiguous without a base), the two "more block chance" lines (PoB's own grammar), and "30% less mana cost of skills" (Hierophant's `hierophant_mana_cost_+%_final`, unmapped) stay reasons. Their state stays `Partial`.
+
+**Values.** 5 builds' resistances change, through "+N% to all resistances" lines, all in `Partial` fields:
+- 19 of the 20 changed values now equal PoB's, against none before (cold resistance -7 became 75, PoB 75).
+- Shock Nova's lightning resistance is 76, PoB 82: a higher maximum from content the engine does not model (the field stays `Partial`).
+- No `Complete` field changes. The corpus: 3 builds, 3 `customMods` reasons gone, 19 line reasons added, no value or state change.
+
+`discrepancy-movement-speed.xml` (the old layout) stays `<untyped>` (next step).
+
+### Evidence
+
+2026-11-12, Windows; tool commit `565c890`, clean. Inputs as P3-12c's; a new oracle run for the new fixture. Summaries: `docs/phase-3/config-inputs/p3-12d-*`.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 88 | Every expectation met (87 `ok`, `malformed.xml` `ORACLE_IMPORT`), 3/3 identical runs each |
+| `calc-run`, public, twice | 88 | 87 documents; 1030 complete (+22, the new fixture), 351 partial, 395 unsupported, 312 indeterminate. Byte-identical twice |
+| Documents against P3-12c's run | 87 | No state change. Values: 5 builds' resistances (above). Reasons: 13 gone, 52 added in 13 builds |
+| `calc-run --data-overlay`, public | 88 | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 88 | 25 differences, all registered (DIV-0001 to DIV-0025, unchanged), 0 unexpected, no unused entry, no missing mechanic fixture; 1012 fields match (+22). **Every mechanic target met (1013 of 1013, 51 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | Byte-identical, no difference; no value or state change; reasons as above (`p3-12d-corpus-poe1-26530219-vs-p3-12c.json`: kinds, sources, and stat IDs only) |
+| `build-round-trip`, public (fixtures, community, mechanic) and corpus | 83, 21 | All pass |
+
+**The new fixture** (`mechanic/ice-nova-legacy-custom-mods-witch.xml`):
+- `ice-nova-witch.xml` with two `customMods` inputs. The first, `+100 to maximum Life`, is superseded. The second has five game-text lines with raw line breaks, colour codes, a tab, and blank lines.
+- The set's only block is empty and disabled.
+- PoB: life 1155 (+30, so the first input does not count), cold resistance -35, critical strike multiplier 1.65, `TotalDPS` 1647.38 (bare: 1039.35).
+- The engine's 22 compared fields are `Complete` and equal PoB's.
+
+**Negative controls** (local only, `local/p3/p3-12d/negative/`), the fixture changed three ways:
+- A block with text: PoB discards the input, and only the block's `+10 to maximum Life` acts (life 1135).
+- Two empty blocks: PoB discards it (life 1125, the bare value).
+- The second input's first line break written as `&#10;`: PoB joins the first two lines and applies neither.
+
+The engine matches PoB on all 44 fields of the first two. On the third its fields are `Partial`: the input is kept whole (`<untyped>`).
+
+Tests (1150 workspace tests, 9 new):
+- The PoB reader:
+  - raw line breaks kept, the lines read, written back raw;
+  - other strings without lines;
+  - the five entities in either quote, and `&amp;#10;`;
+  - another reference, or a raw `>`, keeps the element whole;
+  - CRLF and LF give the same lines;
+  - a numeric legacy value has no lines.
+- The DTO golden with an input's lines, and a continued input line refused both ways.
+- `resolve_build` resolves input lines.
+- `tests/poe1.rs`, every branch of the rule:
+  - no block, and one empty block (enabled or not), apply the lines;
+  - a block with text, or two blocks, give nothing;
+  - the last input counts;
+  - empty text and `false` do nothing;
+  - unresolved lines are reasons under `config-input-line`;
+  - a number, `true`, or untyped content are the reason;
+  - another set does not act;
+  - lines on another input are a reason.
+
+Clippy, fmt; schemas and TypeScript regenerated, UI type check.
+
+Commands: as P3-12c's, with `<out>` = `local/p3/p3-12d/evidence` (script `local/p3/p3-12d/evidence.sh`), plus `build-round-trip` of `mechanic`.
+
+### Follow-ups
+
+- **The old config layout** (inputs directly under `<Config>`, PoB's set 1; `discrepancy-movement-speed.xml`, PoB's 3.13 test builds). There, PoB's `NewConfigSet(1)` already holds one empty default block, so one block read in that layout makes two and the migration never applies (plan review).
+- **A block's text and references:** a block's text is element text, read by XML's rule (`&#10;` a line break), while PoB reads any reference other than the five as nothing; and the writer writes a carriage return in text as `&#13;`. Not reached by any fixture; align with PoB's reading (or keep such a block whole) with the old layout.
+- PoB's shorthand and grammar ("Onslaught", "more" lines, labels): reasons until the buffs are modelled.

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12c: custom modifier blocks in full)
+Last Updated: 2026-11-12 (P3-12d: the legacy `customMods` input)
 
 # Phase 3: calc slice (context)
 
@@ -302,6 +302,16 @@ The question as asked: where the default enemy's armour and evasion come from: P
 
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
+
+## Decisions in P3-12d (PR #TBD; the legacy `customMods` input; evidence `docs/phase-3/config-inputs.md`, "P3-12d")
+- **PoB's reading of a config string:** raw text between the quotes (`xml.lua`), the five named entities decoded; roxmltree's value is only a guard. Applied to every `<Input string>` (only `customMods` values change in the public fixtures and corpus). A raw `>` (PoB's tag pattern ends there) or any other reference (PoB reads it as nothing, silently) keeps the element whole: a reason, not a silent drop (review). The writer writes such a value raw, as PoB does.
+- **Lines on `ConfigInput`** (`lines`, derived by the adapter, empty for other inputs), not a synthetic block: export writes the input back unchanged. Build v1 optional `lines`, additive (P3-12b's rule).
+- **The migration rule lives in the calc** (`collect::legacy_custom_mods`, beside `poe1::config`'s PoB names), not the reader: the last input wins; no block or one whitespace-only block (even disabled) applies the lines; otherwise nothing, no reason (PoB discards it). Unknown (a number, `true`, untyped content in the set, or outside a set for set 1) stays `unmodelled-config customMods`. Lines on any other input are a reason.
+- **`completeness`** counts every custom line, applied or not, as P3-12c does for disabled blocks (documented).
+- **Source `config-input-line`** (input, line), appended last; PoB's source for the migrated block is `Custom:Default`.
+
+## Reviews (P3-12d, 2026-11-12) summary
+`plan-reviewer`: PoB claims confirmed; applied the raw `>` guard, last-wins, content outside a set, the string-value scan, CRLF. `code-architecture-reviewer`: no blockers; applied no silent reference drop, stray lines a reason, tests (single quotes, `&amp;#10;`, CRLF, other set), comments. Left: a block's text and references (follow-up with the old layout).
 
 ## Decisions in P3-12c (PR #85; custom modifier blocks in full; evidence `docs/phase-3/config-inputs.md`, "P3-12c")
 - **In full (maintainer, 2026-11-12, during the session):** the session first typed the blocks with each line a reason (reading the earlier MVP remark as "smallest step"); the maintainer corrected it: implement the blocks in full, the MVP remark does not cut a step short. The interim reason `unmodelled-custom-modifier` was removed before the PR.
