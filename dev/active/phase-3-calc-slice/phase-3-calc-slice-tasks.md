@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12a: config inputs that only set named conditions)
+Last Updated: 2026-11-12 (P3-8c: the Smite builds' global stats)
 
 # Phase 3: calc slice (tasks)
 
@@ -71,6 +71,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] P3-8 stat mappings (one or more PRs; coverage summary each)
   - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
   - [x] P3-8b rolled values of PoB's ranged lines, scaled lines as reasons (PR #80; `docs/phase-3/rolled-values.md`; in-scope builds no longer `indeterminate`)
+  - [x] P3-8c the Smite builds' global stats (PR open; `docs/phase-3/stat-mapping.md`; 3 hit rows, 2 `NoEffect` rows with `NO_EFFECT_DEPENDS_ON`; `smite-inquisitor-act1` has no `unmapped-stat`; in-scope unmapped 108 to 103; mechanic fixtures `smite-global-attack-stats-templar.xml`, `ice-nova-attack-and-cast-speed-witch.xml`)
 - [x] P3-1d monster types for the default enemy (PR #75; `docs/phase-3/monster-types.md`; 22 bosses equal PoB's)
 - [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
 - [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
@@ -78,7 +79,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
   - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
 - [ ] P3-12 buffs and config (one or more PRs)
-  - [x] P3-12a config inputs that only set named conditions (PR #82, open, cascade on #81; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
+  - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
   - [ ] Next: `<untyped>` (placeholders, custom modifiers), charges, rage, fortification, shock, exposure, other gems (auras, buffs)
 
 ## P3-14: corpus run and register

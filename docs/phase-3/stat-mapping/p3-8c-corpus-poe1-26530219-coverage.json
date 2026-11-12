@@ -1,0 +1,25 @@
+{
+  "format": 1,
+  "label": "P3-8c, corpus, anonymous (before: P3-12a 23a1a5c; after: 5287654)",
+  "groups": {
+    "all": {
+      "builds": 21,
+      "before": {
+        "distinct_stats": 509,
+        "occurrences": 1844
+      },
+      "after": {
+        "distinct_stats": 504,
+        "occurrences": 1738
+      },
+      "no_longer_unmapped": [
+        "attack_and_cast_speed_+%",
+        "chance_to_freeze_shock_ignite_%",
+        "elemental_damage_with_attack_skills_+%",
+        "melee_critical_strike_chance_+%",
+        "minion_damage_+%"
+      ],
+      "new_unmapped": []
+    }
+  }
+}
