@@ -124,6 +124,17 @@
             }
           }
         },
+        {
+          "scaled-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 10
+              }
+            },
+            "scaling": "catalyst"
+          }
+        },
         "unchecked-tree-version",
         {
           "unmodelled-skill": {
@@ -298,6 +309,17 @@
                   "line": 9
                 }
               }
+            }
+          },
+          {
+            "scaled-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 10
+                }
+              },
+              "scaling": "catalyst"
             }
           },
           "unchecked-tree-version",

@@ -540,9 +540,9 @@ fn one(
         Format::BuildDocument => loom_serialization::dto::v1::from_json(text)
             .map_err(|e| (Step::Read, e.code().to_owned()))?,
     };
-    request
+    let (_, ends) = request
         .resolver
-        .resolve_build(&mut build, |body| {
+        .resolve_build_ranged(&mut build, |body| {
             pob_item::item_base(body, request.data.base_names())
                 .map(|(name, fallback)| ItemBaseName { name, fallback })
                 .map_err(|e| e.name().to_owned())
@@ -559,12 +559,37 @@ fn one(
                 .map(|(name, fallback)| (item.id, BaseName { name, fallback }))
         })
         .collect();
+    // PoB's rules for values the text does not settle (rolls, scalings):
+    // the adapter's, from the ranges' exact ends the resolver read.
+    let item_lines = build
+        .items
+        .items()
+        .filter_map(|item| {
+            let item_ends: pob_item::LineEnds = ends
+                .get(&item.id)
+                .map(|lines| {
+                    lines
+                        .iter()
+                        .map(|(n, stats)| {
+                            (
+                                *n,
+                                stats.iter().map(|e| e.map(|e| (e.from, e.to))).collect(),
+                            )
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            let values = pob_item::line_values(item, &item_ends);
+            (!values.is_empty()).then_some((item.id, values))
+        })
+        .collect();
     let options = CalcOptions {
         tree_version: request
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
         item_bases,
+        item_lines,
         ..CalcOptions::default()
     };
     let data: &dyn CalcData = match &request.overlay {

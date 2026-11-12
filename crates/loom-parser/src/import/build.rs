@@ -55,7 +55,7 @@
 use std::collections::BTreeMap;
 
 use loom_domain::{
-    Adapted, Build, Completeness, DataVersion, Game, GemId, ItemBody, ItemsEntry, LineKind,
+    Adapted, Build, Completeness, DataVersion, Game, GemId, ItemBody, ItemId, ItemsEntry, LineKind,
     LineResolution, ModifierLine, NoBase, PropertyValue, Rarity, Resolved, StatId, StatLine,
     StatValue, TypedResolution, UnresolvedReason,
 };
@@ -65,7 +65,7 @@ use super::bundle::{BundleData, IndexError};
 use super::mods::{self, Context, LineContext};
 use super::properties::PropertyMatch;
 use super::tolerance;
-use crate::resolve::{Candidate, Index, Outcome, RawValue, ResolvedStat, Unresolved};
+use crate::resolve::{Candidate, Index, Outcome, RangeEnds, RawValue, ResolvedStat, Unresolved};
 
 /// The base name an import adapter found for an item (owned
 /// [`BaseQuery`]).
@@ -169,8 +169,24 @@ impl<'d, 'b> Resolver<'d, 'b> {
     pub fn resolve_build(
         &self,
         build: &mut Build,
-        mut base_of: impl FnMut(&ItemBody) -> Result<ItemBaseName, String>,
+        base_of: impl FnMut(&ItemBody) -> Result<ItemBaseName, String>,
     ) -> Result<Completeness, ResolveError> {
+        self.resolve_build_ranged(build, base_of)
+            .map(|(completeness, _)| completeness)
+    }
+
+    /// [`Resolver::resolve_build`], also giving the exact ends of every
+    /// range the call resolved ([`BuildRangeEnds`]), for a host that
+    /// settles rolled values (P3-8b). A line resolved before the call
+    /// (a build document read with its resolutions) has none.
+    ///
+    /// # Errors
+    /// As [`Resolver::resolve_build`].
+    pub fn resolve_build_ranged(
+        &self,
+        build: &mut Build,
+        mut base_of: impl FnMut(&ItemBody) -> Result<ItemBaseName, String>,
+    ) -> Result<(Completeness, BuildRangeEnds), ResolveError> {
         let version = data_version(self.data);
         if build.game() != version.game {
             return Err(ResolveError::GameMismatch {
@@ -188,13 +204,18 @@ impl<'d, 'b> Resolver<'d, 'b> {
             Some(_) => {}
             None => build.data = Some(version),
         }
+        let mut ends = BuildRangeEnds::new();
         for entry in build.items.entries.typed_mut() {
             if let ItemsEntry::Item(item) = entry {
                 let base = base_of(&item.body);
-                self.resolve_item(&mut item.body, base.as_ref().map_err(String::as_str));
+                let item_ends =
+                    self.resolve_item_ranged(&mut item.body, base.as_ref().map_err(String::as_str));
+                if !item_ends.is_empty() {
+                    ends.insert(item.id, item_ends);
+                }
             }
         }
-        Ok(build.completeness())
+        Ok((build.completeness(), ends))
     }
 
     /// Resolves the pending modifier lines of one item (module docs), with
@@ -203,6 +224,16 @@ impl<'d, 'b> Resolver<'d, 'b> {
     /// version, and records nothing on a build: the caller vouches that the
     /// item belongs to a build of the bundle's game.
     pub fn resolve_item(&self, body: &mut ItemBody, base: Result<&ItemBaseName, &str>) {
+        self.resolve_item_ranged(body, base);
+    }
+
+    /// [`Resolver::resolve_item`], also giving the exact ends of the
+    /// ranges it resolved ([`LineRangeEnds`]).
+    pub fn resolve_item_ranged(
+        &self,
+        body: &mut ItemBody,
+        base: Result<&ItemBaseName, &str>,
+    ) -> LineRangeEnds {
         let found = match base {
             Err(reason) => Err(NoBase::Unnamed(reason.to_owned())),
             Ok(b) => find_base(
@@ -217,22 +248,24 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 BaseError::ScopeConflict => NoBase::ScopeConflict,
             }),
         };
-        let written = match found {
-            Err(reason) => body
-                .modifiers()
-                .filter(|(_, m)| m.resolution == LineResolution::Pending)
-                .map(|(n, _)| {
-                    (
-                        n,
-                        LineResolution::Unresolved(UnresolvedReason::NoBase(reason.clone())),
-                    )
-                })
-                .collect(),
+        let (written, ends) = match found {
+            Err(reason) => (
+                body.modifiers()
+                    .filter(|(_, m)| m.resolution == LineResolution::Pending)
+                    .map(|(n, _)| {
+                        (
+                            n,
+                            LineResolution::Unresolved(UnresolvedReason::NoBase(reason.clone())),
+                        )
+                    })
+                    .collect(),
+                LineRangeEnds::new(),
+            ),
             Ok(found) => match self.indexes.get(found.scope) {
                 Some(index) => self.resolve_lines(body, &found, index),
                 // Every rule scope is indexed by `new`; were one not, the
                 // lines would stay pending, which is quarantined.
-                None => BTreeMap::new(),
+                None => (BTreeMap::new(), LineRangeEnds::new()),
             },
         };
         for (n, resolution) in written {
@@ -241,16 +274,18 @@ impl<'d, 'b> Resolver<'d, 'b> {
             }
         }
         debug_assert!(body.check_links().is_ok(), "resolve_item broke a link");
+        ends
     }
 
-    /// Every pending modifier line's resolution, by line index; reads the
-    /// body as read (`split_section` needs it so).
+    /// Every pending modifier line's resolution, by line index, and the
+    /// exact ends of their ranges; reads the body as read (`split_section`
+    /// needs it so).
     fn resolve_lines(
         &self,
         body: &ItemBody,
         found: &FoundBase<'_>,
         index: &Index<'_>,
-    ) -> BTreeMap<usize, LineResolution> {
+    ) -> (BTreeMap<usize, LineResolution>, LineRangeEnds) {
         let rules = &self.data.item_rules().mods;
         let ctx = Context {
             rules,
@@ -316,11 +351,11 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 .map(|(n, _)| *n)
                 .collect();
             let state = match &resolution.outcome {
-                Outcome::Resolved(c) => Ok(stats(&c.stats)),
+                Outcome::Resolved(c) => Ok(c.stats.as_slice()),
                 Outcome::Ambiguous(cs) => {
                     let kept = mods::filter(ctx, &LineContext::of(first_line), cs).kept;
                     match kept.as_slice() {
-                        [one] if let Some(c) = cs.get(*one) => Ok(stats(&c.stats)),
+                        [one] if let Some(c) = cs.get(*one) => Ok(c.stats.as_slice()),
                         _ => Err(UnresolvedReason::Ambiguous(
                             kept.iter()
                                 .filter_map(|i| cs.get(*i))
@@ -336,7 +371,7 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 Outcome::Unresolved(u) => Err(reason(u)),
             };
             match state {
-                Ok(result) => out.resolved(&covered, Resolved::Stats(result), adapted),
+                Ok(read) => out.resolved_stats(&covered, read, adapted),
                 Err(reason) => {
                     for n in covered {
                         out.done
@@ -394,6 +429,14 @@ pub fn resolve_build(
     Resolver::new(data)?.resolve_build(build, base_of)
 }
 
+/// The exact ends of a resolved line's ranges, one per stat of its
+/// resolution in order (`None`: not a range, or an end that is not one
+/// raw value), by line index; only lines with at least one.
+pub type LineRangeEnds = BTreeMap<usize, Vec<Option<RangeEnds>>>;
+
+/// [`LineRangeEnds`] by item; only items with at least one.
+pub type BuildRangeEnds = BTreeMap<ItemId, LineRangeEnds>;
+
 /// The resolutions of one item while they are worked out.
 #[derive(Debug, Default)]
 struct Lines {
@@ -402,9 +445,32 @@ struct Lines {
     /// Lines read alone with no template, with their normalized text;
     /// steps 4 and 5 may still resolve them.
     no_template: BTreeMap<usize, String>,
+    /// The ranges' exact ends of decided lines.
+    ends: LineRangeEnds,
 }
 
 impl Lines {
+    /// [`Lines::resolved`] with stats read from the line, keeping their
+    /// ranges' exact ends on the first line.
+    fn resolved_stats(
+        &mut self,
+        covered: &[usize],
+        read: &[ResolvedStat],
+        adapted: Option<Adapted>,
+    ) {
+        let ends: Vec<Option<RangeEnds>> = read
+            .iter()
+            .map(|s| match s.value {
+                RawValue::Ranged(_, ends) => ends,
+                _ => None,
+            })
+            .collect();
+        if let (Some(&first), true) = (covered.first(), ends.iter().any(Option::is_some)) {
+            self.ends.insert(first, ends);
+        }
+        self.resolved(covered, Resolved::Stats(stats(read)), adapted);
+    }
+
     /// `result` on the first line of `covered`, the others continuing it.
     fn resolved(&mut self, covered: &[usize], result: Resolved, adapted: Option<Adapted>) {
         let Some((&first, rest)) = covered.split_first() else {
@@ -436,21 +502,18 @@ impl Lines {
             self.no_template.remove(&n);
             self.no_template.remove(&other);
             let pair = [n.min(other), n.max(other)];
-            self.resolved(
-                &pair,
-                Resolved::Stats(stats(&c.stats)),
-                Some(Adapted::SplitSection),
-            );
+            self.resolved_stats(&pair, &c.stats, Some(Adapted::SplitSection));
         }
     }
 
-    /// Every decided line; the rest have no template.
-    fn finish(mut self) -> BTreeMap<usize, LineResolution> {
+    /// Every decided line, the rest having no template, and the ranges'
+    /// exact ends.
+    fn finish(mut self) -> (BTreeMap<usize, LineResolution>, LineRangeEnds) {
         for n in std::mem::take(&mut self.no_template).into_keys() {
             self.done
                 .insert(n, LineResolution::Unresolved(UnresolvedReason::NoTemplate));
         }
-        self.done
+        (self.done, self.ends)
     }
 }
 
@@ -482,7 +545,7 @@ fn value(v: &RawValue) -> StatValue {
             min: s.min,
             max: s.max,
         },
-        RawValue::Ranged(s) => StatValue::Ranged {
+        RawValue::Ranged(s, _) => StatValue::Ranged {
             min: s.min,
             max: s.max,
         },

@@ -196,7 +196,7 @@ pub fn calculate_with(
         return Ok(CalcResult::game_unsupported(game));
     }
     poll(cancel)?;
-    let mut ingest = Ingest::new(rules.mapping());
+    let mut ingest = Ingest::new(rules.mapping()).with_item_lines(&input.options.item_lines);
     rules.collect(input, &mut ingest)?;
     let (store, global) = ingest.finish();
     poll(cancel)?;

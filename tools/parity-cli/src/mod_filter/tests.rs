@@ -203,7 +203,7 @@ fn values_overlap_should_test_each_kind_of_value() {
     let r = row(ITEM, PRE, &[("a", 10, 20)], &[]);
     let ranged = ResolvedStat {
         stat: "a".to_owned(),
-        value: RawValue::Ranged(StatValue { min: 18, max: 25 }),
+        value: RawValue::Ranged(StatValue { min: 18, max: 25 }, None),
     };
     let lookup = ResolvedStat {
         stat: "a".to_owned(),

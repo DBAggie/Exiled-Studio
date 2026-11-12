@@ -159,7 +159,7 @@ impl ModRow {
 /// Whether a value read from a line allows some raw value in `[lo, hi]`.
 fn admits(value: &RawValue, lo: i64, hi: i64) -> bool {
     match value {
-        RawValue::Exact(s) | RawValue::Ranged(s) => s.min <= hi && lo <= s.max,
+        RawValue::Exact(s) | RawValue::Ranged(s, _) => s.min <= hi && lo <= s.max,
         RawValue::Hidden { condition, .. } => match *condition {
             Condition::Range { min, max } => {
                 min.map_or(lo, |m| m.max(lo)) <= max.map_or(hi, |m| m.min(hi))

@@ -1046,6 +1046,34 @@
           ]
         },
         {
+          "description": "An item line whose values the import format scales in a way the\nengine does not model; it gives no effect.",
+          "type": "object",
+          "properties": {
+            "scaled-line": {
+              "type": "object",
+              "properties": {
+                "scaling": {
+                  "description": "The scaling (`catalyst`, `corrupted-range`,\n`modifier-magnitude`).",
+                  "type": "string"
+                },
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "scaling"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "scaled-line"
+          ]
+        },
+        {
           "description": "Passives are allocated, but the data's tree version was not\ngiven, so the build's was not checked.",
           "type": "string",
           "const": "unchecked-tree-version"

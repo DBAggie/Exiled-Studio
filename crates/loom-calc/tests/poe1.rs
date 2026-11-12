@@ -11,8 +11,8 @@
 use loom_calc::poe1::Poe1Field;
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
-    Field, FieldState, IndeterminateReason, ItemBase, Node, PassiveLinks, Range, Source,
-    StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
+    Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveLinks, Range,
+    Scaling, Source, StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
 };
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
@@ -521,6 +521,41 @@ fn a_jewel_should_count_only_in_an_allocated_socket() {
 }
 
 // ------------------------------------------------------------ the gaps
+
+#[test]
+fn the_hosts_line_values_should_roll_or_scale_item_lines() {
+    // Line 0: Int (10-30) rolled to 20 by the host; line 1: scaled.
+    let ring = item(
+        1,
+        vec![
+            modifier(vec![StatLine {
+                stat: StatId::new("additional_intelligence"),
+                value: StatValue::Ranged { min: 10, max: 30 },
+            }]),
+            modifier(vec![stat("additional_intelligence", 5)]),
+        ],
+    );
+    let b = with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]);
+    // Without the host's values the range is unsettled.
+    assert_eq!(
+        state(&run(&b), Field::Intelligence),
+        StateKind::Indeterminate
+    );
+    let mut o = options(Some("3_29"));
+    o.item_lines.insert(
+        ItemId(1),
+        [
+            (0, LineValues::Rolled(vec![Some(20)])),
+            (1, LineValues::Scaled(Scaling::Catalyst)),
+        ]
+        .into(),
+    );
+    let r = run_with(&b, &o);
+    // 32 + 20; the scaled line gives no effect and a reason.
+    assert_eq!(value(&r, Field::Intelligence), 52.0);
+    assert_eq!(partial_reasons(&r, Field::Intelligence), ["scaled-line"]);
+    assert_eq!(state(&r, Field::Intelligence), StateKind::Partial);
+}
 
 #[test]
 fn an_unmapped_stat_should_make_the_fields_partial() {

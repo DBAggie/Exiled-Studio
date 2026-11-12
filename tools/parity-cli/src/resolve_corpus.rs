@@ -720,7 +720,7 @@ fn value_text(value: &RawValue) -> String {
     };
     match value {
         RawValue::Exact(s) => v(s),
-        RawValue::Ranged(s) => format!("({})", v(s)),
+        RawValue::Ranged(s, _) => format!("({})", v(s)),
         RawValue::Hidden { assumed, .. } => {
             format!(
                 "hidden:{}",
