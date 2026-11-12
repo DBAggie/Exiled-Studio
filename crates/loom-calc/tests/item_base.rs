@@ -3,49 +3,12 @@
 //! reads a bundle. The calculation tests use a stub; this checks the join
 //! of base items, armour types, shield types, and weapon types.
 
-use std::path::{Path, PathBuf};
+mod common;
 
+use common::bundle;
 use loom_calc::{ArmourBase, CalcData, ItemBase, Range};
+use loom_data::bundle::BaseItem;
 use loom_data::bundle::properties::{ArmourType, ShieldType, ValueRange};
-use loom_data::bundle::{BaseItem, Bundle, MemorySource};
-
-#[expect(
-    clippy::disallowed_methods,
-    clippy::unwrap_used,
-    reason = "a test helper reads the fixture bundle (the crate itself does no I/O); a failure fails the test"
-)]
-fn files(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap() {
-        let path = entry.unwrap().path();
-        if path.is_dir() {
-            files(&path, out);
-        } else {
-            out.push(path);
-        }
-    }
-}
-
-#[expect(
-    clippy::disallowed_methods,
-    clippy::unwrap_used,
-    reason = "a test helper reads the fixture bundle (the crate itself does no I/O); a failure fails the test"
-)]
-fn bundle() -> Bundle {
-    let root =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../loom-data/tests/fixtures/bundle-poe1");
-    let mut paths = Vec::new();
-    files(&root, &mut paths);
-    let mut src = MemorySource::new();
-    for p in paths {
-        let rel = p
-            .strip_prefix(&root)
-            .unwrap()
-            .to_string_lossy()
-            .replace('\\', "/");
-        src.insert(rel, std::fs::read(&p).unwrap());
-    }
-    Bundle::load(&src).unwrap()
-}
 
 #[test]
 fn bases_should_join_their_property_tables() {

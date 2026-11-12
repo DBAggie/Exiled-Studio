@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
+pub use loom_data::bundle::skills::{ActiveSkill, GemEffect, GrantedEffect, SkillGem, StatSet};
 use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 
 use crate::error::CalcError;
@@ -56,6 +57,38 @@ pub trait CalcData {
     /// The properties of the item base with this name; `None` when no
     /// base has the name.
     fn item_base(&self, name: &str) -> Option<ItemBase>;
+
+    /// A skill gem by its base item ID. The skill reads default to `None`
+    /// (data without skill tables): a calculation then reports the gem as
+    /// missing data, never a silent value.
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
+        let _ = base_item;
+        None
+    }
+
+    /// A gem effect by ID.
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
+        let _ = id;
+        None
+    }
+
+    /// A granted effect by ID.
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
+        let _ = id;
+        None
+    }
+
+    /// An active skill by ID.
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
+        let _ = id;
+        None
+    }
+
+    /// A stat set by ID.
+    fn stat_set(&self, id: &str) -> Option<&StatSet> {
+        let _ = id;
+        None
+    }
 }
 
 /// What an item base is, for its properties ([`CalcData::item_base`]).
@@ -257,6 +290,42 @@ impl CalcData for Bundle {
         } else {
             ItemBase::Ambiguous
         })
+    }
+
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
+        self.skills
+            .as_ref()?
+            .gems
+            .iter()
+            .find(|g| g.base_item == base_item)
+    }
+
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
+        self.skills
+            .as_ref()?
+            .gem_effects
+            .iter()
+            .find(|e| e.id == id)
+    }
+
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
+        self.skills
+            .as_ref()?
+            .granted_effects
+            .iter()
+            .find(|e| e.id == id)
+    }
+
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
+        self.skills
+            .as_ref()?
+            .active_skills
+            .iter()
+            .find(|a| a.id == id)
+    }
+
+    fn stat_set(&self, id: &str) -> Option<&StatSet> {
+        self.skills.as_ref()?.stat_sets.iter().find(|s| s.id == id)
     }
 }
 

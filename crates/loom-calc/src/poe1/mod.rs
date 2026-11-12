@@ -14,6 +14,7 @@
 pub mod collect;
 pub mod mapping;
 pub mod phases;
+pub mod skill;
 
 pub use mapping::Poe1Mapping;
 

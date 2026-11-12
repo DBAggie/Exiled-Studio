@@ -42,8 +42,9 @@ pub use error::CalcError;
 pub use graph::{Graph, GraphError, Node, NodeIndex, Term};
 pub use ingest::{EffectTemplate, Ingest, StatMap, StatMapping, TypedMap, settle};
 pub use input::{
-    ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions, CharacterBase,
-    ItemBase, PassiveLinks, Range, SkillChoice, StatAmount,
+    ActiveSkill, ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions,
+    CharacterBase, GemEffect, GrantedEffect, ItemBase, PassiveLinks, Range, SkillChoice, SkillGem,
+    StatAmount, StatSet,
 };
 pub use quantity::{DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};

@@ -35,8 +35,8 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use loom_calc::{
-    ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, ItemBase, PassiveLinks,
-    Range, StatAmount,
+    ActiveSkill, ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, GemEffect,
+    GrantedEffect, ItemBase, PassiveLinks, Range, SkillGem, StatAmount, StatSet,
 };
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
@@ -318,6 +318,14 @@ impl<'b> OverlayData<'b> {
             .get(&(table.to_owned(), key.to_owned(), field.to_owned()))
     }
 
+    /// Whether the overlay has a `skills` row for the skill `id` (PoB's
+    /// skill ID is the granted effect's and its stat set's).
+    pub fn skill_refused(&self, id: &str) -> bool {
+        self.rows
+            .keys()
+            .any(|(table, key, _)| table == "skills" && key == id)
+    }
+
     /// Rows per table.
     pub fn counts(&self) -> BTreeMap<String, usize> {
         let mut out = BTreeMap::new();
@@ -405,6 +413,37 @@ impl CalcData for OverlayData<'_> {
 
     fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
         self.bundle.passive_links(node)
+    }
+
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
+        self.bundle.skill_gem(base_item)
+    }
+
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
+        self.bundle.gem_effect(id)
+    }
+
+    /// A skill the overlay has a row for reads as missing (per skill, at
+    /// read time; maintainer decision 2026-11-12): PoB's skill values are
+    /// in its own form (type names, level rows), which no table converts
+    /// yet, so the overlay run reports the skill as missing data rather
+    /// than calculate with the game's row under the overlay's name.
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
+        if self.skill_refused(id) {
+            return None;
+        }
+        self.bundle.granted_effect(id)
+    }
+
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
+        self.bundle.active_skill(id)
+    }
+
+    fn stat_set(&self, id: &str) -> Option<&StatSet> {
+        if self.skill_refused(id) {
+            return None;
+        }
+        self.bundle.stat_set(id)
     }
 
     fn item_base(&self, name: &str) -> Option<ItemBase> {
