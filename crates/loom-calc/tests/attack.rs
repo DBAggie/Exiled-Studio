@@ -334,6 +334,7 @@ fn build(skill: &str, part: Option<&str>, slots: &[(&str, &str)], enemy: &[(&str
         config.inputs.push(ConfigInput {
             name: (*name).to_owned(),
             value: ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
+            kind: loom_domain::ConfigInputKind::Input,
             attributes: Vec::new(),
         });
     }

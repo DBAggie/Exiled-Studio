@@ -3,9 +3,10 @@
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     AscendancyId, Attribute, Attributes, Build, BuildPart, Character, ClassId, Config, ConfigInput,
-    ConfigSet, ConfigSetId, ConfigValue, Game, GameSpecific, Gem, GemId, ItemId, JewelSocket,
-    MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet,
-    SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
+    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, Game, GameSpecific, Gem, GemId, ItemId,
+    JewelSocket, MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives,
+    SkillId, SkillSet, SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart,
+    TreeVersion,
 };
 use roxmltree::{Node, NodeType};
 
@@ -428,6 +429,10 @@ fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
                 Some(i) => inputs.push(i),
                 None => inputs.push_opaque(opaque(c)?),
             },
+            ("Placeholder", true) => match placeholder(c) {
+                Some(i) => inputs.push(i),
+                None => inputs.push_opaque(opaque(c)?),
+            },
             _ => inputs.push_opaque(opaque(c)?),
         }
     }
@@ -456,6 +461,23 @@ fn input(n: Node<'_, '_>) -> Option<ConfigInput> {
     Some(ConfigInput {
         name: text(n, "name")?,
         value,
+        kind: ConfigInputKind::Input,
         attributes: rest(n, &["name", "boolean", "number", "string"]),
+    })
+}
+
+/// A `Placeholder` with a number (PoB v2.67.2, `Classes/ConfigTab.lua`,
+/// `Load`). Any other form stays opaque: PoB loads a `string` placeholder
+/// as the input's value, not as a placeholder.
+fn placeholder(n: Node<'_, '_>) -> Option<ConfigInput> {
+    if children(n).next().is_some() {
+        return None;
+    }
+    let x = n.attribute("number")?;
+    Some(ConfigInput {
+        name: text(n, "name")?,
+        value: ConfigValue::Number(Sourced::read(Number(x.parse().ok()?), x)),
+        kind: ConfigInputKind::Placeholder,
+        attributes: rest(n, &["name", "number"]),
     })
 }

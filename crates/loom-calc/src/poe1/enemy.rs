@@ -25,7 +25,7 @@
 //! `unmodelled-config`, so the Uber boss's damage taken never gives a
 //! `Complete` hit.
 
-use loom_domain::{Build, ConfigValue};
+use loom_domain::{Build, ConfigInputKind, ConfigValue};
 
 use crate::input::CalcData;
 use crate::math;
@@ -125,6 +125,25 @@ pub const ENEMY_INPUTS: [&str; 8] = [
     "enemyEvasion",
 ];
 
+/// The placeholders [`enemy`] derives (P3-12b): PoB's `enemyIsBoss`
+/// `apply`, which comes before them in PoB's list, sets them on every run
+/// for each kind it knows (`Modules/ConfigOptions.lua` 2087 to 2219;
+/// `SetPlaceholder` with `notify` writes the config set's placeholder, an
+/// empty one as nil), so a build's saved ones are never read. For a kind
+/// PoB does not know they would be, and the enemy model reports
+/// [`EnemyProblem::UnknownBossKind`]. `enemyLevel`'s saved placeholder is
+/// read once by `UpdateLevel` before `enemyIsBoss` runs, which then
+/// resets it and calls `UpdateLevel` again.
+pub const RESET_PLACEHOLDERS: [&str; 7] = [
+    "enemyLevel",
+    "enemyFireResist",
+    "enemyColdResist",
+    "enemyLightningResist",
+    "enemyChaosResist",
+    "enemyArmour",
+    "enemyEvasion",
+];
+
 /// Why part of the enemy is not known.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum EnemyProblem {
@@ -186,7 +205,10 @@ fn input<'a>(build: &'a Build, name: &str) -> Option<Value<'a>> {
         .active
         .and_then(|id| config.sets.typed().find(|s| s.id == id))
         .or_else(|| config.sets.typed().next())?;
-    let i = set.inputs.typed().find(|i| i.name == name)?;
+    let i = set
+        .inputs
+        .typed()
+        .find(|i| i.kind == ConfigInputKind::Input && i.name == name)?;
     Some(match &i.value {
         ConfigValue::Number(n) => Value::Number(n.value().0),
         ConfigValue::String(s) => Value::Text(s.as_str()),

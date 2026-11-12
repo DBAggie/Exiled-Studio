@@ -1,11 +1,24 @@
-//! Config inputs (Phase 3 plan, step 12; P3-12a): which of PoB's config
-//! inputs can change a computed field.
+//! Config inputs (Phase 3 plan, step 12; P3-12a, P3-12b): which of PoB's
+//! config inputs and placeholders can change a computed field.
 //!
 //! The engine models two inputs (`resistancePenalty` and the enemy
 //! model's numeric inputs, [`super::collect`]); every other input is
 //! `unmodelled-config` on every computed field, except the ones this
-//! module lists: inputs whose only effect is a named condition or
-//! multiplier that modifiers read ([`NAMED_ONLY`]).
+//! module lists: inputs whose only effect is a named condition,
+//! multiplier, or distance that modifiers read ([`NAMED_ONLY`]), and the
+//! enemy's damage, which only PoB's damage-taken estimates read
+//! ([`ENEMY_DAMAGE`]).
+//!
+//! **Placeholders** (P3-12b). PoB applies a numeric input's placeholder
+//! when the input is unset or zero (`Classes/ConfigTab.lua`,
+//! `BuildModList`, line 1147), through the input's own `apply`, and its
+//! calc modules read a few placeholders directly (`env.configPlaceholder`:
+//! the enemy's damage, the distances). So a placeholder is classified as
+//! its input is: [`NAMED_ONLY`] and [`ENEMY_DAMAGE`] hold for both. The
+//! enemy's level, resistances, armour, and evasion placeholders are
+//! [`super::enemy::RESET_PLACEHOLDERS`]: PoB's `enemyIsBoss` sets them on
+//! every run, so a build's saved ones are not read. Any other placeholder
+//! is `unmodelled-config` under its input's name.
 //!
 //! Why such an input changes no computed field: in PoB v2.67.2 the input
 //! adds `Condition:<name>` or `Multiplier:<name>` mods
@@ -29,6 +42,10 @@
 //! `CalcPerform.lua`, `CalcOffence.lua`, `CalcDefence.lua`) read its names
 //! only through modifiers or flags a modifier sets, or add from them only
 //! effects outside the slice; each row's comment gives what was checked.
+//! A distance (`meleeDistance`, `projectileDistance`) is the same case:
+//! PoB reads it as the skill's `skillDist`, and only the `DistanceRamp`
+//! and `MeleeProximity` tags of modifiers read that
+//! (`Classes/ModStore.lua` 599, 619).
 //! The stats behind those modifiers are [`DEPENDS_ON`]: they must stay
 //! reasons (`unmapped-stat`), and mapping one (even as `NoEffect`) must
 //! revisit this table (a test checks). Inputs with their
@@ -85,8 +102,52 @@
 /// - `multiplierNearbyEnemies`: `Multiplier:NearbyEnemies` and
 ///   `Condition:OnlyOneNearbyEnemy` (line 1234); the calc modules never
 ///   read them.
+///
+/// Added in P3-12b, the inputs whose placeholders PoB writes into a build
+/// (each has a `defaultPlaceholderState`):
+///
+/// - `ScorchStacks`, `ShockStacks`: the enemy's `Multiplier:ScorchStacks`,
+///   `Multiplier:ShockStacks` (lines 1892, 1951). `CalcPerform.lua` (3550,
+///   3566) reads them in the shock and scorch effects, only with the
+///   `ShockCanStack` or `ScorchCanStack` flag, which only a modifier sets
+///   (`ModParser.lua` 3045, 3047).
+/// - `aspectOfLunarisLunarProtection`, `aspectOfLunarisLunarResistance`,
+///   `aspectOfSolarisSunscaldStacks`, `configSpectralTigerCount`,
+///   `multiplierHallowingFlameStacksRemovedByAlly`, `sigilOfPowerStages`:
+///   `Multiplier:LunarProtection`, `LunarResistance`, `SunscaldStack`,
+///   `SpectralTigerConfig` and `SpectralTigerCount`,
+///   `HallowingFlameStacksRemovedByAlly`, `SigilOfPowerStage` (lines 262,
+///   265, 269, 644, 1994, 631); the calc modules never read them (the
+///   skills' stat maps do).
+/// - `meleeDistance`, `projectileDistance`: no `apply` (lines 1789,
+///   1790); `CalcActiveSkill.lua` (457) makes the input or placeholder the
+///   skill's `skillDist`, which only modifier tags read (module docs).
+///   `CalcOffence.lua` (1083, 1086) adds such modifiers for the
+///   `PointBlank` and `FarShot` flags, which only modifiers set.
+/// - `multiplierEnemyHallowingFlame`: the enemy's
+///   `Multiplier:HallowingFlame` (line 1991); the calc modules never read
+///   it (`CalcPerform.lua` 3440 reads the condition, not the multiplier,
+///   and only with `CanInflictHallowingFlame`, a modifier's flag).
+/// - `multiplierWitheredStackCountSelf`: `Multiplier:WitheredStack` (line
+///   1231); `CalcPerform.lua` (852) reads it for chaos damage taken by
+///   you (not a slice field), only with `CanBeWithered`, a skill's or
+///   map's flag.
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
+    ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
+    ("ShockStacks", &["enemy Multiplier:ShockStacks"]),
+    (
+        "aspectOfLunarisLunarProtection",
+        &["Multiplier:LunarProtection"],
+    ),
+    (
+        "aspectOfLunarisLunarResistance",
+        &["Multiplier:LunarResistance"],
+    ),
+    (
+        "aspectOfSolarisSunscaldStacks",
+        &["Multiplier:SunscaldStack"],
+    ),
     (
         "bloodSandStance",
         &["Condition:SandStance", "Condition:BloodStance"],
@@ -127,11 +188,56 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionStationary",
         &["Multiplier:StationarySeconds", "Condition:Stationary"],
     ),
+    (
+        "configSpectralTigerCount",
+        &[
+            "Multiplier:SpectralTigerConfig",
+            "Multiplier:SpectralTigerCount",
+        ],
+    ),
     ("intensifyIntensity", &["Multiplier:Intensity"]),
+    ("meleeDistance", &["skillDist"]),
+    (
+        "multiplierEnemyHallowingFlame",
+        &["enemy Multiplier:HallowingFlame"],
+    ),
+    (
+        "multiplierHallowingFlameStacksRemovedByAlly",
+        &["Multiplier:HallowingFlameStacksRemovedByAlly"],
+    ),
     (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
     ),
+    (
+        "multiplierWitheredStackCountSelf",
+        &["Multiplier:WitheredStack"],
+    ),
+    ("projectileDistance", &["skillDist"]),
+    ("sigilOfPowerStages", &["Multiplier:SigilOfPowerStage"]),
+];
+
+/// The enemy's damage (PoB v2.67.2, `Modules/ConfigOptions.lua` 2352 to
+/// 2376), sorted (a test checks): inputs with no `apply`, which only
+/// `calcs.buildDefenceEstimations` reads (`CalcDefence.lua` 1737 to 1757,
+/// 2965, 3552: damage taken, effective life, maximum hit; no slice field)
+/// as an input or placeholder. `enemyDamageRollRange` is also read by
+/// `presetBossSkills`'s `apply` (2286), which only sets the damage
+/// placeholders. No effect for an input or a placeholder.
+pub const ENEMY_DAMAGE: &[&str] = &[
+    "enemyChaosDamage",
+    "enemyColdDamage",
+    "enemyColdPen",
+    "enemyCritChance",
+    "enemyCritDamage",
+    "enemyDamageRollRange",
+    "enemyFireDamage",
+    "enemyFirePen",
+    "enemyLightningDamage",
+    "enemyLightningPen",
+    "enemyPhysicalDamage",
+    "enemyPhysicalOverwhelm",
+    "enemySpeed",
 ];
 
 /// The game stats through which PoB turns a [`NAMED_ONLY`] input into a
@@ -159,17 +265,56 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
 ///   map ignores these two stats, so they are the only trace the engine
 ///   sees: classifying them as `NoEffect` would make
 ///   `conditionEnemyChilled` silent.
+///
+/// Added in P3-12b:
+///
+/// - `can_apply_additional_scorch`, `raider_shocks_you_apply_can_stack_up_to_50_times`:
+///   `ScorchCanStack`, `ShockCanStack` (`ModParser.lua` 3045, 3047).
+/// - The distance modifiers (`DistanceRamp`, `MeleeProximity`):
+///   `arrow_critical_strike_chance_+%_max_as_distance_travelled_increases`,
+///   `arrow_damage_+%_max_as_distance_travelled_increases`,
+///   `deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases`,
+///   `impale_effect_+%_max_as_distance_travelled_increases`,
+///   `projectile_damage_+%_max_as_distance_travelled_increases`,
+///   `projectile_damage_+%_max_before_distance_increase`,
+///   `slayer_damage_+%_final_from_distance` (`ModParser.lua` 2511, 2662,
+///   3013, 3917, 4638 to 4640); `keystone_point_blank`, `player_far_shot`,
+///   `gain_player_far_shot_while_do_not_have_iron_reflexes` (the
+///   `PointBlank` and `FarShot` flags, 2317, 2661, 5489); and the skill
+///   stats `lancing_steel_damage_+%_at_close_range`,
+///   `shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed`,
+///   `shield_crush_damage_+%_final_from_distance`,
+///   `support_slashing_damage_+%_final_from_distance` (the skills' stat
+///   maps, `Data/Skills/act_dex.lua`, `act_str.lua`, `sup_dex.lua`).
+///   Freezing Pulse and Eye of Winter add theirs in their own skill code
+///   (`act_int.lua`), outside any stat: those skills are not modelled.
 pub const DEPENDS_ON: &[&str] = &[
     "additional_spell_block_%_if_havent_blocked_recently",
+    "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
+    "arrow_damage_+%_max_as_distance_travelled_increases",
+    "can_apply_additional_scorch",
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
     "consecrated_ground_enemy_damage_taken_+%",
+    "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
     "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
     "gain_convergence_on_hitting_unique_enemy",
+    "gain_player_far_shot_while_do_not_have_iron_reflexes",
+    "impale_effect_+%_max_as_distance_travelled_increases",
     "keystone_cold_purist",
+    "keystone_point_blank",
+    "lancing_steel_damage_+%_at_close_range",
     "max_chance_to_block_attacks_if_not_blocked_recently",
+    "player_far_shot",
+    "projectile_damage_+%_max_as_distance_travelled_increases",
+    "projectile_damage_+%_max_before_distance_increase",
+    "raider_shocks_you_apply_can_stack_up_to_50_times",
+    "shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed",
+    "shield_crush_damage_+%_final_from_distance",
+    "slayer_damage_+%_final_from_distance",
     "spell_block_is_maximum_if_not_blocked_recently",
     "support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
     "support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
+    "support_slashing_damage_+%_final_from_distance",
     "your_consecrated_ground_grants_accuracy_rating_+%",
 ];
 
@@ -180,6 +325,12 @@ pub fn named_only(input: &str) -> bool {
     NAMED_ONLY
         .binary_search_by(|(name, _)| (*name).cmp(input))
         .is_ok()
+}
+
+/// Whether `input` is the enemy's damage ([`ENEMY_DAMAGE`]).
+#[must_use]
+pub fn enemy_damage(input: &str) -> bool {
+    ENEMY_DAMAGE.binary_search(&input).is_ok()
 }
 
 #[cfg(test)]
@@ -251,5 +402,24 @@ mod tests {
                 "{input}"
             );
         }
+    }
+
+    #[test]
+    fn the_enemy_damage_should_be_sorted_and_apart_from_the_other_tables() {
+        use super::super::enemy::{ENEMY_INPUTS, RESET_PLACEHOLDERS};
+
+        assert!(ENEMY_DAMAGE.windows(2).all(|w| w[0] < w[1]));
+        for input in ENEMY_DAMAGE {
+            assert!(enemy_damage(input), "{input}");
+            assert!(!named_only(input), "{input}");
+            assert!(!ENEMY_INPUTS.contains(input), "{input}");
+            assert!(!RESET_PLACEHOLDERS.contains(input), "{input}");
+        }
+        for input in RESET_PLACEHOLDERS {
+            assert!(!named_only(input), "{input}");
+            assert!(!enemy_damage(input), "{input}");
+        }
+        assert!(!enemy_damage("enemyIsBoss"));
+        assert!(!enemy_damage("enemyArmour"));
     }
 }

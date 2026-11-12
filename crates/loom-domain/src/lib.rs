@@ -35,7 +35,7 @@ mod value;
 mod tests;
 
 pub use build::{Build, BuildPart, Character};
-pub use config::{Config, ConfigInput, ConfigSet, ConfigValue};
+pub use config::{Config, ConfigInput, ConfigInputKind, ConfigSet, ConfigValue};
 pub use error::DomainError;
 pub use game::{DataVersion, Game, GameSpecific, Poe2Choices};
 pub use id::{

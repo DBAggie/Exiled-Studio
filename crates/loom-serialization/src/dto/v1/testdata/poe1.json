@@ -958,6 +958,18 @@
                 }
               },
               {
+                "typed": {
+                  "name": "enemyArmour",
+                  "value": {
+                    "number": {
+                      "value": 61989.0,
+                      "source": "61989"
+                    }
+                  },
+                  "kind": "placeholder"
+                }
+              },
+              {
                 "opaque": {
                   "element": {
                     "name": "Placeholder",

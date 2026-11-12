@@ -427,6 +427,11 @@ export interface ConfigInput {
    */
   attributes?: Attribute[]
   /**
+   * Whether the value was set or is a placeholder; left out for a
+   * set value.
+   */
+  kind?: 'input' | 'placeholder'
+  /**
    * The key.
    */
   name: string

@@ -218,6 +218,62 @@ fn kept_whole_should_be_empty_when_everything_reads() {
 }
 
 #[test]
+fn a_numeric_placeholder_should_be_typed_beside_the_inputs() {
+    use loom_domain::ConfigInputKind;
+
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<Placeholder name="enemyArmour" number="61989"/>
+			<Placeholder name="ShockStacks" number="1"/>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    let kinds: Vec<_> = set
+        .inputs
+        .typed()
+        .map(|i| (i.name.as_str(), i.kind))
+        .collect();
+    assert_eq!(
+        kinds,
+        [
+            ("flag", ConfigInputKind::Input),
+            ("count", ConfigInputKind::Input),
+            ("choice", ConfigInputKind::Input),
+            ("enemyArmour", ConfigInputKind::Placeholder),
+            ("ShockStacks", ConfigInputKind::Placeholder),
+        ]
+    );
+    assert_eq!(set.inputs.opaque().count(), 0);
+    assert!(export(&b).contains(r#"<Placeholder name="enemyArmour" number="61989"/>"#));
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// PoB loads a `string` placeholder as the input's value
+/// (`Classes/ConfigTab.lua`, `Load`), so it is not typed as a placeholder;
+/// nor is one without a number.
+#[test]
+fn a_placeholder_without_a_number_should_be_kept_whole() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<Placeholder name="text" string="x"/>
+			<Placeholder name="bad" number="x"/>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 3);
+    assert_eq!(set.inputs.opaque().count(), 2);
+    assert_eq!(
+        kept_whole(&b),
+        [
+            "Config/ConfigSet/Placeholder",
+            "Config/ConfigSet/Placeholder"
+        ]
+    );
+}
+
+#[test]
 fn xml_equal_should_see_a_changed_value_or_text() {
     assert!(!xml_equal(r#"<a x="1"/>"#, r#"<a x="2"/>"#).unwrap());
     assert!(!xml_equal("<a>x</a>", "<a>y</a>").unwrap());

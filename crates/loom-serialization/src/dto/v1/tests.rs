@@ -458,9 +458,16 @@ pub(crate) fn poe1_build() -> Build {
         inputs.push(ConfigInput {
             name: name.to_owned(),
             value,
+            kind: loom_domain::ConfigInputKind::Input,
             attributes: Vec::new(),
         });
     }
+    inputs.push(ConfigInput {
+        name: "enemyArmour".to_owned(),
+        value: number(61989.0, Some("61989")),
+        kind: loom_domain::ConfigInputKind::Placeholder,
+        attributes: Vec::new(),
+    });
     inputs.push_opaque(element("Placeholder", vec![attr("name", "x")], Vec::new()));
     b.config.active = Some(ConfigSetId(1));
     b.config.sets.push(ConfigSet {

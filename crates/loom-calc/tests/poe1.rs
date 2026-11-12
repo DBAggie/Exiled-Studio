@@ -776,6 +776,7 @@ fn gems_config_and_choices_should_be_reasons() {
     config.inputs.push(ConfigInput {
         name: "useFrenzyCharges".to_owned(),
         value: ConfigValue::Boolean(false),
+        kind: loom_domain::ConfigInputKind::Input,
         attributes: Vec::new(),
     });
     b.config.sets.push(config);
@@ -877,6 +878,7 @@ fn the_resistance_penalty_should_follow_its_config_input() {
         config.inputs.push(ConfigInput {
             name: "resistancePenalty".to_owned(),
             value: ConfigValue::Number(Sourced::new(loom_domain::Number(value))),
+            kind: loom_domain::ConfigInputKind::Input,
             attributes: Vec::new(),
         });
         b.config.sets.push(config);
@@ -1124,6 +1126,7 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
             config.inputs.push(ConfigInput {
                 name: name.to_owned(),
                 value,
+                kind: loom_domain::ConfigInputKind::Input,
                 attributes: Vec::new(),
             });
         }
@@ -1161,6 +1164,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
             config.inputs.push(ConfigInput {
                 name: name.to_owned(),
                 value,
+                kind: loom_domain::ConfigInputKind::Input,
                 attributes: Vec::new(),
             });
         }
@@ -1216,6 +1220,73 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     }
 }
 
+/// P3-12b (`poe1::config`, module docs): a placeholder is classified as
+/// its input; the enemy's derived ones are the enemy model's; any other is
+/// a reason under its input's name.
+#[test]
+fn placeholders_should_be_classified_as_their_inputs() {
+    use loom_domain::ConfigInputKind;
+
+    let with = |entries: Vec<(&str, f64, ConfigInputKind)>| {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value, kind) in entries {
+            config.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value: ConfigValue::Number(Sourced::new(loom_domain::Number(value))),
+                kind,
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let bare = run(&witch(1));
+    let placeholder = ConfigInputKind::Placeholder;
+    let quiet: Vec<&str> = loom_calc::poe1::config::NAMED_ONLY
+        .iter()
+        .map(|(name, _)| *name)
+        .chain(loom_calc::poe1::config::ENEMY_DAMAGE.iter().copied())
+        .chain(loom_calc::poe1::enemy::RESET_PLACEHOLDERS)
+        .collect();
+    for value in [0.0, 1.0, 99.0] {
+        let all = quiet.iter().map(|n| (*n, value, placeholder)).collect();
+        let r = with(all);
+        for field in [Field::Life, Field::Mana, FIRE, Field::Armour] {
+            assert_eq!(state(&r, field), StateKind::Complete, "{value}");
+            assert_eq!(value_of(&r, field), value_of(&bare, field), "{value}");
+        }
+    }
+    // The enemy's damage is quiet as an input too.
+    let r = with(vec![
+        ("enemyPhysicalDamage", 5000.0, ConfigInputKind::Input),
+        ("enemySpeed", 100.0, ConfigInputKind::Input),
+    ]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    // Any other placeholder is a reason under its input's name; a
+    // `resistancePenalty` placeholder is not the modelled input.
+    for name in ["conditionShockEffect", "resistancePenalty"] {
+        let r = with(vec![(name, 20.0, placeholder)]);
+        let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+            panic!("{name}: not partial");
+        };
+        assert_eq!(
+            p.iter().collect::<Vec<_>>(),
+            [&UnsupportedReason::UnmodelledConfig {
+                input: name.to_owned()
+            }],
+            "{name}"
+        );
+    }
+    let r = with(vec![("resistancePenalty", -30.0, placeholder)]);
+    assert_eq!(value_of(&r, FIRE), value_of(&bare, FIRE));
+}
+
 #[test]
 fn the_last_spec_line_of_a_key_should_count() {
     // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
@@ -1263,6 +1334,7 @@ fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
     config.inputs.push(ConfigInput {
         name: "resistancePenalty".to_owned(),
         value: ConfigValue::String("Act 5".to_owned()),
+        kind: loom_domain::ConfigInputKind::Input,
         attributes: Vec::new(),
     });
     b.config.sets.push(config);

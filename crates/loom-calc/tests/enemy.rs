@@ -55,6 +55,7 @@ fn build(level: u32, inputs: &[(&str, ConfigValue)]) -> Build {
         set.inputs.push(ConfigInput {
             name: (*name).to_owned(),
             value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
             attributes: Vec::new(),
         });
     }
@@ -86,6 +87,30 @@ fn the_default_enemy_should_be_a_pinnacle_boss() {
     assert_eq!(e.armour, Some((armour * (mean / 100.0) + 0.5).floor()));
     assert_eq!(e.evasion, Some((840.0 * 1.5_f64 + 0.5).floor()));
     assert!(e.problems.is_empty(), "{:?}", e.problems);
+}
+
+/// PoB's `enemyIsBoss` resets these placeholders on every run, so a
+/// build's saved ones change nothing (P3-12b, `RESET_PLACEHOLDERS`).
+#[test]
+fn saved_placeholders_should_not_change_the_enemy() {
+    use loom_calc::poe1::enemy::RESET_PLACEHOLDERS;
+    use loom_domain::ConfigInputKind;
+
+    let data = data();
+    for kind in ["None", "Boss", "Pinnacle", "Uber"] {
+        let bare = build(70, &[("enemyIsBoss", text(kind))]);
+        let mut saved = bare.clone();
+        let set = saved.config.sets.typed_mut().next().unwrap();
+        for name in RESET_PLACEHOLDERS {
+            set.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value: number(1.0),
+                kind: ConfigInputKind::Placeholder,
+                attributes: Vec::new(),
+            });
+        }
+        assert_eq!(enemy(&saved, &data), enemy(&bare, &data), "{kind}");
+    }
 }
 
 #[test]

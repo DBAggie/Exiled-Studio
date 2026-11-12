@@ -2,9 +2,9 @@
 //! the attributes kept as read, in order; untyped content where it was.
 
 use loom_domain::{
-    Attributes, Build, BuildPart, Character, Config, ConfigValue, Entry, GameSpecific, Gem, Item,
-    ItemPart, Items, ItemsEntry, OpaqueNode, Ordered, PassiveSpec, Passives, Skills, Sourced,
-    SpecPart,
+    Attributes, Build, BuildPart, Character, Config, ConfigInputKind, ConfigValue, Entry,
+    GameSpecific, Gem, Item, ItemPart, Items, ItemsEntry, OpaqueNode, Ordered, PassiveSpec,
+    Passives, Skills, Sourced, SpecPart,
 };
 
 /// An XML writer that indents with tabs, as PoB does.
@@ -336,7 +336,11 @@ fn config(w: &mut Writer, c: &Config) {
                         ConfigValue::String(s) => put(&mut a, "string", Some(s)),
                     }
                     kept(&mut a, &i.attributes);
-                    w.element(3, "Input", &a, |_| {});
+                    let element = match i.kind {
+                        ConfigInputKind::Input => "Input",
+                        ConfigInputKind::Placeholder => "Placeholder",
+                    };
+                    w.element(3, element, &a, |_| {});
                 });
             });
         });

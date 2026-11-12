@@ -745,9 +745,25 @@ dto! {
         pub name: String,
         /// The value.
         pub value: ConfigValue,
+        /// Whether the value was set or is a placeholder; left out for a
+        /// set value.
+        #[serde(default, skip_serializing_if = "ConfigInputKind::is_input")]
+        pub kind: ConfigInputKind,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// Whether a config value was set or is a placeholder.
+    #[derive(Default, Copy, PartialEq, Eq)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum ConfigInputKind {
+        /// A value set for the input.
+        #[default]
+        Input,
+        /// A placeholder: the value a planner shows for an input left
+        /// unset, which it may also use for that input.
+        Placeholder,
     }
 
     /// A config value.
@@ -759,6 +775,17 @@ dto! {
         Number(Sourced<Number>),
         /// Text.
         String(String),
+    }
+}
+
+impl ConfigInputKind {
+    /// Whether this is a set value (for `skip_serializing_if`).
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "serde's skip_serializing_if passes a reference"
+    )]
+    fn is_input(&self) -> bool {
+        *self == Self::Input
     }
 }
 
