@@ -28,6 +28,8 @@ New reasons, each on every computed field:
 | Reason | When |
 |---|---|
 | `unmodelled-item`, `no-base-name` | an armour piece the host named no base for |
+| `unmodelled-item`, `not-armour` | a helmet, gloves, boots, or body armour whose base has no armour properties (only the off hand takes a quiver, whose lines are global) |
+| `missing-data` (indeterminate), `shield_types` | a shield without a block row |
 | `unmodelled-item`, `ambiguous-base` | bases of the name with different properties (Two-Toned Boots, three bases in game data) |
 | `unmodelled-item`, `base-properties` | a weapon in the off hand (dual wielding: P3-10), or any weapon slot |
 | `unmodelled-item`, `base-percentile` | a shown defence (`Armour: 120`) without its percentile line; PoB derives one, we do not yet (PoB writes both lines) |
@@ -63,6 +65,15 @@ Found while making them: "+15% chance to Suppress Spell Damage" resolves `ambigu
 
 Inputs: bundle `local/p3/p3-1c/evidence2/bundle-poe1-a` (Steam build 26530219, format 2); overlay `local/p3/p3-2/run4/overlay.json`; scope `docs/phase-3/calc-scope-poe1.json`. Outputs in `local/p3/p3-7/evidence/`, local; summaries in `docs/phase-3/defence-fields/`.
 
-EVIDENCE_TABLE
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, fixture manifest (the manifest committed in `5ba3bfd`; adapter protocol 4 as in P3-5 and P3-6, so the oracle tool's own commit does not change PoB's output) | 60 | Exit 0: every expectation met, 3/3 each; the 4 new fixtures `ok` |
+| `calc-run`, public (fixtures, community, PoB's 3.13 builds), twice (clean `50a2b02`) | 60 | 59 documents, `malformed.xml` `IMPORT_XML` at `read` (exit 1, as expected); 425 fields complete, 68 partial, 510 indeterminate, 413 not computed; the two runs' documents and `report.json` byte-identical |
+| `calc-run`, corpus, `--anonymous`, twice | 21 | 21 documents, all `indeterminate`: every corpus build uses an older tree (3_15 to 3_28); byte-identical |
+| `calc-run --data-overlay`, public and corpus | 60, 21 | The P3-2 overlay has no row these fields read (no `bases` rows: P3-1c found them equal), so the same values |
+| `calc-parity`, public, with the overlay run and the manifest | 60 | **No difference.** 425 fields match (the 23 mechanic fixtures and the 2 synthetic level 1 Scions, 17 each); 178 breakdown terms match, 47 absent where PoB writes none; every mechanic target met (391 of 391). Exit 5 (`incomplete`), expected: 34 real builds have no complete field to compare. Of them, 4 on the data's tree are `partial` (68 fields: gems, config, unmapped stats, excluded lines) and the rest `indeterminate` (older trees, unsettled values); `malformed.xml` is the expected failure (both sides fail to import) |
+| `calc-parity`, corpus, against P3-5's protocol-4 oracle run (adapter unchanged) | 21 | No difference; exit 5 (`incomplete`): every corpus build is `indeterminate` for its tree version, so the corpus gives no parity evidence for these fields; the mechanic fixtures do |
 
-Tests: `crates/loom-calc/tests/poe1.rs` (27: the P3-6 set, plus bare defences, the penalty input, resistance caps and truncation, an armour piece at the top roll and at a percentile, attribute bonuses on every row, shield and spell block, each armour-slot reason); `poe1/mapping.rs` (a test per new row group and the piece mapping); `poe1/phases.rs` (`floor(n x 0.2)` equals integer division up to 100,000); `graph.rs` (`Trunc` towards zero); calc result v1 goldens with `trunc` and `item-base`; `calc_run` (17 computed fields on the synthetic build). CI's `round-trip` job checks the synthetic build's counts (7 not computed, 17 indeterminate: the synthetic bundle has no Scion).
+The calc result v1 document gained a node kind (`trunc`) and a source (`item-base`) under its additive rule (`dto/calc/v1/mod.rs`): until the Phase 3 gate every reader is in this repository; a reader outside it must treat unknown node kinds and sources as open.
+
+Tests: `crates/loom-calc/tests/poe1.rs` (31: the P3-6 set, plus bare defences, the penalty input and a non-numeric one, resistance caps and truncation, an armour piece at the top roll and at a percentile, the last quality line, attribute bonuses on every row, shield and spell block, a shield in the swap set in use, PoB's row order over every slot, each armour-slot reason); `tests/item_base.rs` (3: `Bundle::item_base` over the synthetic bundle: the table join, weapon, other, equal and ambiguous rows, no property tables); `poe1/mapping.rs` (a test per new row group and the piece mapping); `poe1/phases.rs` (`floor(n x 0.2)` equals integer division up to 100,000); `graph.rs` (`Trunc` towards zero); calc result v1 goldens with `trunc` and `item-base`; `calc_run` (17 computed fields on the synthetic build). CI's `round-trip` job checks the synthetic build's counts (7 not computed, 17 indeterminate: the synthetic bundle has no Scion).

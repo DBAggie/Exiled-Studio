@@ -1,8 +1,8 @@
 {
   "format": 1,
   "tool": {
-    "commit": "5ba3bfddd24ea7db11d863320330a27abcf9df51",
-    "dirty": true
+    "commit": "50a2b02bf01668231c6036eebd9b615137ab5c46",
+    "dirty": false
   },
   "bundle": {
     "game": "poe1",
@@ -57,9 +57,9 @@
   },
   "timing": {
     "builds": 21,
-    "min_micros": 576,
-    "median_micros": 1321,
-    "max_micros": 1536,
-    "total_micros": 25876
+    "min_micros": 568,
+    "median_micros": 1332,
+    "max_micros": 1606,
+    "total_micros": 26229
   }
 }
