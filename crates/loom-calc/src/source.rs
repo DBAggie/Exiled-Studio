@@ -50,4 +50,11 @@ pub enum Source {
     /// A rule of the engine (for example an attribute's implicit effect),
     /// by name.
     Rule(&'static str),
+    /// A line of a custom modifier block of the active config set.
+    CustomModifier {
+        /// The block's index in the set.
+        block: usize,
+        /// The line's index among the block's lines.
+        line: usize,
+    },
 }

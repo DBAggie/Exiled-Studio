@@ -658,6 +658,38 @@
           "required": [
             "rule"
           ]
+        },
+        {
+          "description": "A line of a custom modifier block of the active config set.",
+          "type": "object",
+          "properties": {
+            "custom-modifier": {
+              "type": "object",
+              "properties": {
+                "block": {
+                  "description": "The block's index in the set.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                },
+                "line": {
+                  "description": "The line's index among the block's lines.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "block",
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "custom-modifier"
+          ]
         }
       ]
     },

@@ -273,6 +273,128 @@ fn a_placeholder_without_a_number_should_be_kept_whole() {
     );
 }
 
+/// PoB writes custom modifier blocks after the inputs (`Classes/
+/// ConfigTab.lua`, `Save`); they are typed there, text as read.
+#[test]
+fn custom_modifier_blocks_after_the_inputs_should_be_typed() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        "<Input name=\"choice\" string=\"Fire\"/>
+			<Placeholder name=\"ShockStacks\" number=\"1\"/>
+			<CustomModifierBlock enabled=\"true\" title=\"Default\">
+				Onslaught &amp; more
+Culling Strike
+			</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"false\" title=\"Off\" x=\"1\">\n\t\t\t\t\n\t\t\t</CustomModifierBlock>
+			<CustomModifierBlock title=\"Group 3\" enabled=\"true\"/>",
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 4);
+    assert_eq!(set.inputs.opaque().count(), 0);
+    let blocks: Vec<_> = set
+        .custom_modifiers
+        .iter()
+        .map(|c| {
+            (
+                c.title.as_deref(),
+                c.enabled,
+                c.text.as_str(),
+                c.attributes.len(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        blocks,
+        [
+            (
+                Some("Default"),
+                true,
+                "\n\t\t\t\tOnslaught & more\nCulling Strike\n\t\t\t",
+                0
+            ),
+            (Some("Off"), false, "\n\t\t\t\t\n\t\t\t", 1),
+            (Some("Group 3"), true, "", 0),
+        ]
+    );
+    // The modifier lines, pending until resolution.
+    let first = &set.custom_modifiers[0].lines;
+    assert_eq!(
+        first.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(),
+        ["Onslaught & more", "Culling Strike"]
+    );
+    assert!(
+        first
+            .iter()
+            .all(|l| l.resolution == loom_domain::LineResolution::Pending)
+    );
+    assert!(set.custom_modifiers[1].lines.is_empty());
+    let out = export(&b);
+    assert!(
+        out.contains("Onslaught &amp; more\nCulling Strike"),
+        "{out}"
+    );
+    assert!(out.contains(r#"<CustomModifierBlock title="Group 3" enabled="true"/>"#));
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// A block before an input, with `enabled` other than `true` or `false`
+/// (PoB reads a missing one as true, any other as false), or with an
+/// element inside stays opaque in place and is listed.
+#[test]
+fn other_custom_modifier_blocks_should_be_kept_whole() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        "<CustomModifierBlock enabled=\"true\">Onslaught</CustomModifierBlock>
+			<Input name=\"choice\" string=\"Fire\"/>
+			<CustomModifierBlock title=\"a\">Onslaught</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"yes\">Onslaught</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"true\">a<b/></CustomModifierBlock>
+			<CustomModifierBlock enabled=\"true\">Culling Strike</CustomModifierBlock>",
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 3);
+    assert_eq!(set.inputs.opaque().count(), 4);
+    assert_eq!(set.custom_modifiers.len(), 1);
+    assert_eq!(set.custom_modifiers[0].text, "Culling Strike");
+    assert_eq!(kept_whole(&b), ["Config/ConfigSet/CustomModifierBlock"; 4]);
+}
+
+fn lines(text: &str) -> Vec<String> {
+    super::read::custom_modifier_lines(text).collect()
+}
+
+#[test]
+fn custom_modifier_lines_should_be_trimmed_and_skip_empty_ones() {
+    // As PoB saves a block: the text indented, lines after the first not.
+    assert_eq!(
+        lines("\n\t\t\t\tPerfect Forest Warrior\nOnslaught\r\n  Culling Strike \n\t\t\t"),
+        ["Perfect Forest Warrior", "Onslaught", "Culling Strike"]
+    );
+    assert!(lines("").is_empty());
+    assert!(lines("\n\t\t\t\t\n\t\t\t").is_empty());
+    // Vertical tab and form feed are Lua spaces; a no-break space is not.
+    assert!(lines("\u{b}\u{c}").is_empty());
+    assert_eq!(lines("\u{a0}"), ["\u{a0}"]);
+}
+
+#[test]
+fn custom_modifier_lines_should_lose_colour_codes() {
+    assert_eq!(
+        lines("^1=== CAP RES ===\n^xFF00aaOnslaught^7\n^1\n^xABCDEF"),
+        ["=== CAP RES ===", "Onslaught"]
+    );
+    // Not a code: too few hex digits, upper-case X, a caret alone.
+    assert_eq!(lines("^xFF00 a"), ["^xFF00 a"]);
+    assert_eq!(lines("^XFF00AA"), ["^XFF00AA"]);
+    assert_eq!(lines("a ^ b"), ["a ^ b"]);
+    // Two passes, as `gsub` twice: removing `^1` can make a `^x` code.
+    assert_eq!(lines("^^1xFF00AAz"), ["z"]);
+    // Other text is kept, whatever its script.
+    assert_eq!(lines("^2Gain Onslaught — 4s"), ["Gain Onslaught — 4s"]);
+}
+
 #[test]
 fn xml_equal_should_see_a_changed_value_or_text() {
     assert!(!xml_equal(r#"<a x="1"/>"#, r#"<a x="2"/>"#).unwrap());

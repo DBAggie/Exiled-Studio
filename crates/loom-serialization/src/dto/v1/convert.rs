@@ -13,12 +13,12 @@ use super::DtoError;
 use super::types::{Adapted, Exclusion};
 use super::types::{
     AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
-    ConfigSet, ConfigValue, DataVersion, Entry, Game, GameSpecific, Gem, HeaderLine, Item,
-    ItemBody, ItemLine, ItemPart, ItemSet, Items, ItemsEntry, JewelSocket, LineKind,
-    LineResolution, MasteryEffect, ModSection, ModifierLine, NoBase, NonFinite, Number, OpaqueNode,
-    PassiveSpec, Passives, Poe2Choices, Prefix, PropertyValue, Rarity, Resolved, SkillSet, Skills,
-    SlotEntry, SocketGroup, Sourced, SpecPart, StatLine, StatValue, TypedResolution,
-    UnresolvedReason, VariantSelection,
+    ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion, Entry, Game,
+    GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items, ItemsEntry,
+    JewelSocket, LineKind, LineResolution, MasteryEffect, ModSection, ModifierLine, NoBase,
+    NonFinite, Number, OpaqueNode, PassiveSpec, Passives, Poe2Choices, Prefix, PropertyValue,
+    Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup, Sourced, SpecPart, StatLine,
+    StatValue, TypedResolution, UnresolvedReason, VariantSelection,
 };
 
 // ---- shared ----------------------------------------------------------------
@@ -827,6 +827,24 @@ fn config_to(c: &d::Config) -> Config {
                 },
                 attributes: attrs_to(&i.attributes),
             }),
+            custom_modifiers: set
+                .custom_modifiers
+                .iter()
+                .map(|b| CustomModifierBlock {
+                    title: b.title.clone(),
+                    enabled: b.enabled,
+                    text: b.text.clone(),
+                    lines: b
+                        .lines
+                        .iter()
+                        .map(|l| CustomModifierLine {
+                            text: l.text.clone(),
+                            resolution: resolution_to(&l.resolution),
+                        })
+                        .collect(),
+                    attributes: attrs_to(&b.attributes),
+                })
+                .collect(),
             attributes: attrs_to(&set.attributes),
         }),
         attributes: attrs_to(&c.attributes),
@@ -857,9 +875,35 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                         attributes: attrs_from(i.attributes),
                     })
                 })?,
+                custom_modifiers: set
+                    .custom_modifiers
+                    .into_iter()
+                    .map(|b| {
+                        Ok(d::CustomModifierBlock {
+                            title: b.title,
+                            enabled: b.enabled,
+                            text: b.text,
+                            lines: b
+                                .lines
+                                .into_iter()
+                                .map(|l| {
+                                    Ok(d::CustomModifierLine {
+                                        text: l.text,
+                                        resolution: resolution_from(l.resolution)?,
+                                    })
+                                })
+                                .collect::<Result<_, DtoError>>()?,
+                            attributes: attrs_from(b.attributes),
+                        })
+                    })
+                    .collect::<Result<_, DtoError>>()?,
                 attributes: attrs_from(set.attributes),
             })
         })?,
         attributes: attrs_from(c.attributes),
+    })
+    .and_then(|config: d::Config| {
+        config.check_custom_lines().map_err(DtoError::Domain)?;
+        Ok(config)
     })
 }

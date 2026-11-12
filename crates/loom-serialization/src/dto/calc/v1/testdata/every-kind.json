@@ -28,6 +28,17 @@
           }
         },
         {
+          "unresolved-line": {
+            "source": {
+              "custom-modifier": {
+                "block": 1,
+                "line": 2
+              }
+            },
+            "reason": "no-template"
+          }
+        },
+        {
           "excluded-line": {
             "source": {
               "item": {
@@ -212,6 +223,17 @@
                 }
               },
               "reason": "no-match"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "custom-modifier": {
+                  "block": 1,
+                  "line": 2
+                }
+              },
+              "reason": "no-template"
             }
           },
           {

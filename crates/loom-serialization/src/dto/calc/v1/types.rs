@@ -305,6 +305,13 @@ dto! {
         Enemy,
         /// A rule of the engine, by name.
         Rule(String),
+        /// A line of a custom modifier block of the active config set.
+        CustomModifier {
+            /// The block's index in the set.
+            block: u64,
+            /// The line's index among the block's lines.
+            line: u64,
+        },
     }
 
     /// A provenance graph node. Its children are earlier nodes; its value

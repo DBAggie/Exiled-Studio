@@ -369,6 +369,7 @@ fn sample_build(game: Game, item: Item) -> Build {
         id: ConfigSetId(1),
         title: Some("Default".to_owned()),
         inputs,
+        custom_modifiers: Vec::new(),
         attributes: Attributes::new(),
     });
 

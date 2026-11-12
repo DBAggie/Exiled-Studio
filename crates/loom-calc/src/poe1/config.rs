@@ -51,8 +51,9 @@
 //! reasons (`unmapped-stat`), and mapping one (even as `NoEffect`) must
 //! revisit this table (a test checks). Inputs with their
 //! own effects (charges, rage, fortification, shock and its effect,
-//! exposure, a minion's aura, custom modifiers, bandit and pantheon) stay
-//! reasons.
+//! exposure, a minion's aura, the legacy `customMods` text, bandit and
+//! pantheon) stay reasons. Custom modifier blocks are not inputs: their
+//! lines act through their resolutions (`collect::config`, P3-12c).
 
 /// Config inputs whose only effect is named conditions or multipliers
 /// that modifiers read, with those names (PoB v2.67.2,

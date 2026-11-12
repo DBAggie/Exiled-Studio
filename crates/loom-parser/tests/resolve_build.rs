@@ -491,3 +491,94 @@ fn a_bundle_with_skipped_references_should_be_refused() {
     let err = Resolver::new(&data).unwrap_err();
     assert_eq!(err.code(), "IMPORT_DATA_UNVALIDATED");
 }
+
+/// Custom modifier lines (P3-12c): each read alone in the default scope,
+/// with no base, in every block of every set, enabled or not.
+#[test]
+fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
+    use loom_domain::{ConfigSet, ConfigSetId, CustomModifierBlock, CustomModifierLine};
+
+    let texts = [
+        "+15 to maximum Life",
+        "+15 TO MAXIMUM LIFE",
+        "+(10-20) to maximum Life",
+        "+12 to Accuracy",
+        "+12 to Evasion",
+        "+5 to Shadowed Text",
+        "Nothing like this",
+        "+1 first half",
+    ];
+    let block = |enabled: bool| CustomModifierBlock {
+        title: None,
+        enabled,
+        text: String::new(),
+        lines: texts
+            .iter()
+            .map(|t| CustomModifierLine {
+                text: (*t).to_owned(),
+                resolution: LineResolution::Pending,
+            })
+            .collect(),
+        attributes: Vec::new(),
+    };
+    let mut b = build(Game::Poe1, Vec::new());
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![block(true), block(false)],
+        attributes: Vec::new(),
+    });
+    let bundle = bundle("bundle-poe1");
+    let data = BundleData::new(&bundle);
+    // No item, but unresolved custom lines: the build is not complete.
+    assert_eq!(
+        resolve_build(&mut b, &data, base_line).unwrap(),
+        Completeness::Partial
+    );
+    let expected = vec![
+        stats(vec![exact("test_maximum_life", 15)], None),
+        stats(
+            vec![exact("test_maximum_life", 15)],
+            Some(Adapted::CaseFolded),
+        ),
+        stats(
+            vec![StatLine {
+                stat: StatId::new("test_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }],
+            None,
+        ),
+        // No base, so no mod row settles it (an item line's does).
+        unresolved(UnresolvedReason::Ambiguous(vec![
+            vec![StatId::new("test_accuracy_a")],
+            vec![StatId::new("test_accuracy_b")],
+        ])),
+        unresolved(UnresolvedReason::Ambiguous(vec![
+            vec![StatId::new("test_evasion_a")],
+            vec![StatId::new("test_evasion_b")],
+        ])),
+        unresolved(UnresolvedReason::OnlyShadowed),
+        unresolved(UnresolvedReason::NoTemplate),
+        // Half of a two-line description, read alone.
+        unresolved(UnresolvedReason::NoTemplate),
+    ];
+    let set = b.config.sets.typed().next().unwrap();
+    for blk in &set.custom_modifiers {
+        let got: Vec<_> = blk
+            .lines
+            .iter()
+            .map(|l| Some(l.resolution.clone()))
+            .collect();
+        assert_eq!(got, expected);
+    }
+    // Resolved lines are kept: a second run changes nothing.
+    let before = b.clone();
+    resolve_build(&mut b, &data, base_line).unwrap();
+    assert_eq!(b, before);
+    // Only resolved lines left: complete.
+    for blk in &mut b.config.sets.typed_mut().next().unwrap().custom_modifiers {
+        blk.lines.truncate(3);
+    }
+    assert_eq!(b.completeness(), Completeness::Complete);
+}

@@ -76,6 +76,10 @@ fn source_to(s: &c::Source) -> Source {
         },
         c::Source::Enemy => Source::Enemy,
         c::Source::Rule(name) => Source::Rule((*name).to_owned()),
+        c::Source::CustomModifier { block, line } => Source::CustomModifier {
+            block: index_to(*block),
+            line: index_to(*line),
+        },
     }
 }
 

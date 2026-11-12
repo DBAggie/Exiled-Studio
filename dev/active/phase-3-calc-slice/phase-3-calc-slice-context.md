@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12b: PoB's config placeholders)
+Last Updated: 2026-11-12 (P3-12c: custom modifier blocks in full)
 
 # Phase 3: calc slice (context)
 
@@ -302,6 +302,19 @@ The question as asked: where the default enemy's armour and evasion come from: P
 
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
+
+## Decisions in P3-12c (PR #85; custom modifier blocks in full; evidence `docs/phase-3/config-inputs.md`, "P3-12c")
+- **In full (maintainer, 2026-11-12, during the session):** the session first typed the blocks with each line a reason (reading the earlier MVP remark as "smallest step"); the maintainer corrected it: implement the blocks in full, the MVP remark does not cut a step short. The interim reason `unmodelled-custom-modifier` was removed before the PR.
+- **Lines like item lines:** a block keeps its text as read (export) and its `lines`, each a `LineResolution`, derived by the import adapter (PoB: `StripEscapes`, Lua `%s` trim, empty lines left out). The PoB-specific rules live in the adapter, not the calc. Nothing checks `lines` against `text`: a command that edits `text` must derive them again (documented on the type).
+- **Resolution:** each line alone, in the bundle's default scope (character-wide, no item base), with case folding. No base means no mod-row filter, so an ambiguous line stays unresolved; half of a two-line description is `no-template`. Ranges stay ranges (`unsettled-value`).
+- **Calc:** `Ingest::custom_line`, the game's mapping, source `custom-modifier { block, line }` (appended last to `Source`, so existing order and results are unchanged); unresolved, pending, excluded lines are the usual line reasons with that source; a `continues` resolution cannot occur (the domain refuses it, `DOMAIN_CONTINUED_CUSTOM_LINE`) and would be `unread-line`.
+- **Typed blocks only after the inputs** (where PoB writes them), so export keeps the order; any other block stays opaque and is listed.
+- **`completeness`** counts unresolved custom lines (review); quarantine entries stay per item line.
+- **The old layout** (inputs under `<Config>`, no set) was ignored with no reason: now `<untyped>` (6 public builds, 9 corpus builds); modelling it is a follow-up with the legacy `customMods` input.
+- **PoB's grammar differs** (its own parser, partial lines dropped): every line one side applies and the other does not is a reason here; no compared fixture differs, so no register entry.
+
+## code-architecture-reviewer (P3-12c, 2026-11-12) summary
+No blockers; PoB claims confirmed (`BuildModList` 1106 to 1128, `Save` 941 to 950, `Load` 837 to 866 and the legacy migration, `StripEscapes`). Applied: unresolved custom lines make `Build::completeness` `Partial`; `lines` documented as derived from `text`; tests (completeness, a ranged custom line); the docs. Left: quarantine entries for config content; the legacy `customMods` over-reports when a block has text (PoB then ignores it), conservative.
 
 ## Decisions in P3-12b (PR #84; PoB's config placeholders; evidence `docs/phase-3/config-inputs.md`, "P3-12b")
 - **Why next:** `<untyped>` was a config reason in all 7 in-scope builds, and in every build PoB saved with placeholders; PoB applies a numeric option's placeholder when its input is unset (`ConfigTab.lua` 1147), so the reason was right in principle but said nothing about which placeholder mattered.

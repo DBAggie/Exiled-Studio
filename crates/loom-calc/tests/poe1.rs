@@ -771,6 +771,7 @@ fn gems_config_and_choices_should_be_reasons() {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
@@ -873,6 +874,7 @@ fn the_resistance_penalty_should_follow_its_config_input() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         config.inputs.push(ConfigInput {
@@ -1120,6 +1122,7 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value) in inputs {
@@ -1158,6 +1161,7 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value) in inputs {
@@ -1233,6 +1237,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
             id: ConfigSetId(1),
             title: None,
             inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
             attributes: Vec::new(),
         };
         for (name, value, kind) in entries {
@@ -1288,6 +1293,169 @@ fn placeholders_should_be_classified_as_their_inputs() {
 }
 
 #[test]
+fn custom_modifier_lines_of_enabled_blocks_should_apply() {
+    use loom_domain::{CustomModifierBlock, CustomModifierLine, Exclusion, UnresolvedReason};
+
+    let resolved = |v: i64| LineResolution::Resolved {
+        result: Resolved::Stats(vec![stat("base_maximum_life", v)]),
+        adapted: None,
+    };
+    let block = |enabled: bool, lines: Vec<LineResolution>| CustomModifierBlock {
+        title: Some("Default".to_owned()),
+        enabled,
+        text: String::new(),
+        lines: lines
+            .into_iter()
+            .map(|resolution| CustomModifierLine {
+                text: "line".to_owned(),
+                resolution,
+            })
+            .collect(),
+        attributes: Vec::new(),
+    };
+    let with = |blocks: Vec<CustomModifierBlock>| {
+        let mut b = witch(1);
+        b.config.sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: blocks,
+            attributes: Vec::new(),
+        });
+        run(&b)
+    };
+    let bare = run(&witch(1));
+    let life = value_of(&bare, Field::Life);
+
+    // An enabled block's resolved line acts as a character-wide modifier;
+    // a disabled block, whatever it holds, and an empty one do nothing.
+    let r = with(vec![
+        block(true, vec![]),
+        block(true, vec![resolved(10)]),
+        block(
+            false,
+            vec![
+                resolved(50),
+                LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            ],
+        ),
+    ]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    let top = r.fields[&Field::Life].node.unwrap();
+    assert!(
+        r.graph
+            .iter()
+            .filter(|(i, _, _)| i.get() <= top.get())
+            .any(|(_, n, _)| format!("{n:?}").contains("CustomModifier { block: 1, line: 0 }")),
+        "the graph names the line"
+    );
+
+    // A line without a usable resolution is a reason, under its block and
+    // line; the resolved line still acts.
+    let r = with(vec![
+        block(false, vec![resolved(50)]),
+        block(
+            true,
+            vec![
+                resolved(10),
+                LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+                LineResolution::Pending,
+                LineResolution::Excluded(Exclusion::Custom),
+                LineResolution::Continues { line: 0 },
+            ],
+        ),
+    ]);
+    let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+        panic!("not partial");
+    };
+    let at = |line| Source::CustomModifier { block: 1, line };
+    assert_eq!(
+        p.iter().cloned().collect::<Vec<_>>(),
+        [
+            UnsupportedReason::UnresolvedLine {
+                source: at(1),
+                reason: "no-template",
+            },
+            UnsupportedReason::ExcludedLine {
+                source: at(3),
+                exclusion: "custom",
+            },
+            UnsupportedReason::PendingLine { source: at(2) },
+            UnsupportedReason::UnreadLine { source: at(4) },
+        ]
+    );
+
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+
+    // A ranged line has no rolled value (the host rolls item lines only):
+    // its value stays unsettled.
+    let r = with(vec![block(
+        true,
+        vec![LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }]),
+            adapted: None,
+        }],
+    )]);
+    let FieldState::Indeterminate { reasons, .. } = &r.fields[&Field::Life].state else {
+        panic!("{:?}", r.fields[&Field::Life].state);
+    };
+    assert!(
+        reasons
+            .iter()
+            .any(|i| matches!(i, IndeterminateReason::UnsettledValue { .. })),
+        "{reasons:?}"
+    );
+}
+
+#[test]
+fn untyped_config_content_should_be_a_reason() {
+    use loom_domain::OpaqueNode;
+
+    let untyped = [&UnsupportedReason::UnmodelledConfig {
+        input: "<untyped>".to_owned(),
+    }];
+    let partial = |b: &loom_domain::Build| {
+        let r = run(b);
+        let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+            panic!("not partial");
+        };
+        p.iter().cloned().collect::<Vec<_>>()
+    };
+    // Content outside a config set (PoB loads it into set 1), with no set
+    // and beside one.
+    let mut b = witch(1);
+    b.config
+        .sets
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    });
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+    // A block kept whole in a set.
+    let mut b = witch(1);
+    let mut set = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    };
+    set.inputs
+        .push_opaque(OpaqueNode::element("CustomModifierBlock"));
+    b.config.sets.push(set);
+    assert_eq!(partial(&b).iter().collect::<Vec<_>>(), untyped);
+}
+
+#[test]
 fn the_last_spec_line_of_a_key_should_count() {
     // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
     let plate = item(
@@ -1329,6 +1497,7 @@ fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
         id: ConfigSetId(1),
         title: None,
         inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {

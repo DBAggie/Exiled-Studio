@@ -410,6 +410,13 @@
             "$ref": "#/$defs/Attribute"
           }
         },
+        "custom_modifiers": {
+          "description": "Custom modifier blocks, after the inputs; left out when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierBlock"
+          }
+        },
         "id": {
           "description": "The set's ID.",
           "type": "integer",
@@ -510,6 +517,65 @@
             "string"
           ]
         }
+      ]
+    },
+    "CustomModifierBlock": {
+      "description": "A block of custom modifier lines.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "enabled": {
+          "description": "Whether the block applies.",
+          "type": "boolean"
+        },
+        "lines": {
+          "description": "The modifier lines read from the text, with their resolutions;\nleft out when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierLine"
+          }
+        },
+        "text": {
+          "description": "The block's text, as read.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "text"
+      ]
+    },
+    "CustomModifierLine": {
+      "description": "One modifier line of a custom modifier block.",
+      "type": "object",
+      "properties": {
+        "resolution": {
+          "description": "What the line resolved to.",
+          "$ref": "#/$defs/LineResolution"
+        },
+        "text": {
+          "description": "The modifier text.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "resolution"
       ]
     },
     "DataVersion": {

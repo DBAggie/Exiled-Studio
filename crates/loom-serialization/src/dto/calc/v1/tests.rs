@@ -111,6 +111,10 @@ fn every_reason() -> Reasons {
             source: Source::Gem { group: 0, gem: 0 },
             what: "physical-hit-armour",
         },
+        UnsupportedReason::UnresolvedLine {
+            source: Source::CustomModifier { block: 1, line: 2 },
+            reason: "no-template",
+        },
     ]);
     r.indeterminate.extend([
         IndeterminateReason::ConflictingOverride {
@@ -694,7 +698,7 @@ fn field_reasons_should_follow_the_state() {
     let life = by("life");
     assert!(life.unsupported.is_empty() && life.indeterminate.is_empty());
     assert!(life.value.is_some() && life.node.is_some());
-    assert_eq!(by("mana").unsupported.len(), 17);
+    assert_eq!(by("mana").unsupported.len(), 18);
     let es = by("energy-shield");
     assert!(es.unsupported.is_empty());
     assert!(matches!(
@@ -705,7 +709,7 @@ fn field_reasons_should_follow_the_state() {
     assert!(by("mana").reason.is_none());
     let fire = by("resistance.fire");
     assert_eq!((fire.unsupported.len(), fire.indeterminate.len()), (1, 4));
-    assert_eq!(doc.result.reasons.unsupported.len(), 17);
+    assert_eq!(doc.result.reasons.unsupported.len(), 18);
     assert_eq!(doc.result.reasons.indeterminate.len(), 4);
 }
 
