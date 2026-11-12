@@ -589,11 +589,19 @@ const LEGACY_CUSTOM_MODS: &str = "customMods";
 /// when its raw text, read as XML reads it, is not the parser's value
 /// (the raw text is then not where it was looked for), or when it holds a
 /// raw `>`: XML allows one, but PoB's tag pattern ends the tag there
-/// (`xml.lua` 52), so PoB does not read the value at all.
+/// (`xml.lua` 52), so PoB does not read the value at all. Also `None`
+/// when it holds a reference PoB reads as nothing (`&#10;`): PoB drops it
+/// silently, so the element is kept whole and stays a reason rather than
+/// losing that text without a trace (ADR-015).
 fn pob_attribute(n: Node<'_, '_>, name: &str) -> Option<String> {
     let a = n.attribute_node(name)?;
     let raw = n.document().input_text().get(a.range_value())?;
-    (!raw.contains('>') && xml_attribute_value(raw)? == a.value()).then(|| pob_decode(raw))
+    let dropped = raw.split('&').skip(1).any(|r| {
+        r.split_once(';')
+            .is_none_or(|(e, _)| named_entity(e).is_none())
+    });
+    (!raw.contains('>') && !dropped && xml_attribute_value(raw)? == a.value())
+        .then(|| pob_decode(raw))
 }
 
 /// A raw attribute text read as XML reads it: line ends normalised, then

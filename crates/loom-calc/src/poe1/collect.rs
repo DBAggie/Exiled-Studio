@@ -1070,6 +1070,14 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if is_legacy_custom_mods(input) {
             continue;
         }
+        // Lines on any other input: no format applies them; a build
+        // document can carry them, so they are a reason, never ignored.
+        if !input.lines.is_empty() {
+            ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.name.clone(),
+            });
+            continue;
+        }
         // Named conditions, multipliers, and distances only modifiers
         // read, and the enemy's damage: no computed field changes, for an
         // input or a placeholder (`poe1::config`, P3-12a, P3-12b).

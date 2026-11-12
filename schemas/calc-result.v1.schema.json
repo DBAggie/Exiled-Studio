@@ -692,7 +692,7 @@
           ]
         },
         {
-          "description": "A custom modifier line of a config input of the active config\nset (PoB's legacy `customMods`).",
+          "description": "A custom modifier line of a config input of the active config\nset (PoB v2.67.2's legacy `customMods`).",
           "type": "object",
           "properties": {
             "config-input-line": {

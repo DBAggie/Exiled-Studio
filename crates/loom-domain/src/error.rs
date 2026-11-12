@@ -50,6 +50,8 @@ impl DomainError {
         match self {
             Self::GameMismatch { .. } => "DOMAIN_GAME_MISMATCH",
             Self::BrokenContinuation { .. } => "DOMAIN_BROKEN_CONTINUATION",
+            // One code for both: the same rule, on a block's line or an
+            // input's.
             Self::ContinuedCustomLine { .. } | Self::ContinuedCustomInputLine { .. } => {
                 "DOMAIN_CONTINUED_CUSTOM_LINE"
             }

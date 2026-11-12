@@ -680,30 +680,47 @@ b"/>"#,
     assert!(input.lines.is_empty());
 }
 
-/// PoB decodes the five named entities and reads any other reference as
-/// nothing (`xml.lua`, `decodeContent`): `&#10;` is no line break there.
+/// PoB decodes the five named entities (`xml.lua`, `decodeContent`), in
+/// either quote (its pattern takes both); `&amp;#10;` is the text `&#10;`.
 #[test]
-fn a_character_reference_should_read_as_pob_reads_it() {
-    let b = import(&with_inputs(
-        r#"<Input name="customMods" string="a&#10;b &#39;c&apos; &lt;d&gt; &quot;e&quot;"/>"#,
-    ))
-    .unwrap();
+fn named_entities_should_read_as_pob_reads_them() {
+    let b = round_trip(&with_inputs(
+        r#"<Input name='customMods' string='&apos;c&apos; &lt;d&gt; &quot;e&quot; &amp;#10;'/>"#,
+    ));
     let input = first_input(&b, "customMods");
     assert_eq!(
         input.value,
-        ConfigValue::String("ab c' <d> \"e\"".to_owned())
+        ConfigValue::String("'c' <d> \"e\" &#10;".to_owned())
     );
-    assert_eq!(input_lines(&input), ["ab c' <d> \"e\""]);
-    // Written back as PoB writes it, it reads the same.
-    assert_eq!(import(&export(&b)).unwrap(), b);
+    assert_eq!(input_lines(&input), ["'c' <d> \"e\" &#10;"]);
+}
+
+/// PoB reads any other reference as nothing (`&#10;` is no line break
+/// there): silent in PoB, so the element is kept whole (a reason). As with a raw `>`, the
+/// export writes the kept value as XML read it, so it need not re-import
+/// the same.
+#[test]
+fn another_reference_should_keep_the_input_whole() {
+    for value in ["a&#10;b", "&#39;c", "&#x41;"] {
+        let b = import(&with_inputs(&format!(
+            r#"<Input name="customMods" string="{value}"/>"#
+        )))
+        .unwrap();
+        let set = b.config.sets.typed().next().unwrap();
+        assert!(
+            set.inputs.typed().all(|i| i.name != "customMods"),
+            "{value}"
+        );
+        assert_eq!(kept_whole(&b), ["Config/ConfigSet/Input"], "{value}");
+    }
 }
 
 /// A carriage return stays in the value (PoB on Windows reads the file in
 /// text mode, elsewhere not); the lines lose it with Lua's `%s` trim.
 #[test]
 fn a_crlf_value_should_keep_its_carriage_returns_and_give_the_same_lines() {
-    let crlf =
-        with_inputs("<Input name=\"customMods\" string=\"a\r\nb\r\n\"/>").replace('\n', "\r\n");
+    // A whole file with CRLF line ends, the value's included.
+    let crlf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>").replace('\n', "\r\n");
     let lf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>");
     let (crlf, lf) = (import(&crlf).unwrap(), import(&lf).unwrap());
     let (crlf_input, lf_input) = (
@@ -712,7 +729,7 @@ fn a_crlf_value_should_keep_its_carriage_returns_and_give_the_same_lines() {
     );
     assert_eq!(
         crlf_input.value,
-        ConfigValue::String("a\r\r\nb\r\r\n".to_owned())
+        ConfigValue::String("a\r\nb\r\n".to_owned())
     );
     assert_eq!(lf_input.value, ConfigValue::String("a\nb\n".to_owned()));
     assert_eq!(input_lines(&crlf_input), ["a", "b"]);

@@ -1595,6 +1595,32 @@ fn legacy_custom_mods_should_act_as_pob_migrates_them() {
     let r = run(&b);
     assert!(reasons(&r).contains(&unknown));
     assert_eq!(value_of(&r, Field::Life), life);
+
+    // Only the active set's input acts.
+    let mut b = witch(1);
+    b.config.active = Some(ConfigSetId(2));
+    b.config
+        .sets
+        .push(set_of(vec![legacy(text(), vec![resolved(10)])], vec![]));
+    let mut other = set_of(vec![], vec![]);
+    other.id = ConfigSetId(2);
+    b.config.sets.push(other);
+    let r = run(&b);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life);
+
+    // Lines on any other input (a build document can carry them) are a
+    // reason under its name, never ignored or applied.
+    let mut stray = legacy(text(), vec![resolved(10)]);
+    stray.name = "conditionStationary".to_owned();
+    let r = with(vec![stray], vec![]);
+    assert_eq!(
+        reasons(&r),
+        [UnsupportedReason::UnmodelledConfig {
+            input: "conditionStationary".to_owned(),
+        }]
+    );
+    assert_eq!(value_of(&r, Field::Life), life);
 }
 
 #[test]

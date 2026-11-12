@@ -58,7 +58,7 @@ pub enum Source {
         line: usize,
     },
     /// A custom modifier line of a config input of the active config set
-    /// (PoB's legacy `customMods`).
+    /// (PoB v2.67.2's legacy `customMods`).
     ConfigInputLine {
         /// The input's name.
         input: String,
