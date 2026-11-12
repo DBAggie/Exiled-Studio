@@ -12,9 +12,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_calc::poe1::enemy::Boss;
 use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{Passive, PassiveTables, StatAmount};
-use loom_data::bundle::properties::{MonsterLevel, PropertyTables};
+use loom_data::bundle::properties::{MonsterLevel, MonsterType, PropertyTables};
 use loom_data::bundle::skills::{Resource, SkillTables, StatSet};
 use loom_data::stat_desc::{NotRenderedReason, StatValue, VariantFilter};
 use serde::Serialize;
@@ -363,6 +364,7 @@ pub fn compare(
     bundle: &Bundle,
     export: &Export,
     passive_scope: &str,
+    bosses: &[Boss],
 ) -> Result<Comparison, String> {
     let (Some(skills), Some(passives), Some(properties)) =
         (&bundle.skills, &bundle.passives, &bundle.properties)
@@ -376,6 +378,7 @@ pub fn compare(
     compare_characters(&mut out, passives, export);
     compare_constants(&mut out, passives, properties, export);
     compare_monster_levels(&mut out, properties, export);
+    compare_bosses(&mut out, properties, export, bosses);
     compare_passives(&mut out, bundle, passives, export, passive_scope)?;
     Ok(out)
 }
@@ -1004,6 +1007,62 @@ fn compare_constants(
             "value",
             ours_constants.get(key).copied().map_or(Value::Null, ours),
             opt(export.game_constants.get(key).copied()),
+        );
+    }
+}
+
+/// PoB's bosses (`data.bosses`) against the bundle's monster types, by
+/// a boss list (the engine's `loom_calc::poe1::enemy::BOSSES`, PoB's
+/// `Export/Enemies/Bosses.txt`, in a run): each boss's armour and evasion
+/// multipliers and uber mark; a boss on one side only is a difference.
+fn compare_bosses(
+    out: &mut Comparison,
+    properties: &PropertyTables,
+    export: &Export,
+    bosses: &[Boss],
+) {
+    const T: &str = "bosses";
+    let ours: BTreeMap<&str, (&Boss, Option<&MonsterType>)> = bosses
+        .iter()
+        .map(|b| {
+            let row = properties
+                .monster_types
+                .iter()
+                .find(|m| m.id == b.monster_type);
+            (b.name, (b, row))
+        })
+        .collect();
+    let names: BTreeSet<&str> = ours
+        .keys()
+        .copied()
+        .chain(export.bosses.keys().map(String::as_str))
+        .collect();
+    for name in names {
+        let pob = export.bosses.get(name);
+        let (boss, row) = match ours.get(name) {
+            Some((b, r)) => (Some(*b), *r),
+            None => (None, None),
+        };
+        out.check(
+            T,
+            name,
+            "armour",
+            row.map_or(Value::Null, |r| int(r.armour)),
+            opt(pob.map(|p| p.armour_mult)),
+        );
+        out.check(
+            T,
+            name,
+            "evasion",
+            row.map_or(Value::Null, |r| int(r.evasion)),
+            opt(pob.map(|p| p.evasion_mult)),
+        );
+        out.check(
+            T,
+            name,
+            "uber",
+            boss.map_or(Value::Null, |b| Value::Bool(b.uber)),
+            pob.map_or(Value::Null, |p| Value::Bool(p.is_uber)),
         );
     }
 }

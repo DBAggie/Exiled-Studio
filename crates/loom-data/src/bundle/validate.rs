@@ -699,7 +699,7 @@ fn property_refs(p: &PropertyTables, bases: &BTreeSet<&str>, report: &mut Report
 
 /// The item property and monster tables' domain checks (module docs).
 fn property_domain(p: &PropertyTables, game: Game, report: &mut Report) {
-    let files: [(&str, Vec<&str>); 4] = [
+    let files: [(&str, Vec<&str>); 5] = [
         (
             properties::WEAPON_TYPES,
             p.weapon_types
@@ -724,6 +724,10 @@ fn property_domain(p: &PropertyTables, game: Game, report: &mut Report) {
         (
             properties::GAME_CONSTANTS,
             p.game_constants.iter().map(|c| c.id.as_str()).collect(),
+        ),
+        (
+            properties::MONSTER_TYPES,
+            p.monster_types.iter().map(|m| m.id.as_str()).collect(),
         ),
     ];
     for (file, ids) in files {

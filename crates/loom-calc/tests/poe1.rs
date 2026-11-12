@@ -155,6 +155,30 @@ impl CalcData for Data {
             links,
         })
     }
+    fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
+        None
+    }
+    fn gem_effect(&self, _: &str) -> Option<&loom_calc::GemEffect> {
+        None
+    }
+    fn granted_effect(&self, _: &str) -> Option<&loom_calc::GrantedEffect> {
+        None
+    }
+    fn active_skill(&self, _: &str) -> Option<&loom_calc::ActiveSkill> {
+        None
+    }
+    fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
+        None
+    }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
+        None
+    }
 }
 
 fn witch(level: u32) -> Build {
@@ -498,6 +522,24 @@ fn an_unmapped_stat_should_make_the_fields_partial() {
     }
     // The values are still computed.
     assert_eq!(value(&r, Field::Life), 1125.0);
+}
+
+#[test]
+fn a_stat_without_effect_on_the_slice_should_leave_the_fields_complete() {
+    // Regeneration and movement speed reach no slice field (P3-8a).
+    let ring = item(
+        1,
+        vec![modifier(vec![
+            stat("life_regeneration_rate_per_minute_%", 60),
+            stat("base_movement_velocity_+%", 10),
+            stat("base_maximum_life", 10),
+        ])],
+    );
+    let r = run(&with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]));
+    assert_eq!(value(&r, Field::Life), 1135.0);
+    for field in CHARACTER {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
 }
 
 #[test]
@@ -1023,6 +1065,43 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
                 key: "Nothing".to_owned()
             })
     );
+}
+
+#[test]
+fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
+    let with = |inputs: Vec<(&str, ConfigValue)>| {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            config.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let r = with(vec![
+        ("enemyLevel", n(80.0)),
+        ("enemyFireResist", n(0.0)),
+        ("enemyArmour", n(1000.0)),
+    ]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    // The boss kind stays a reason: its other modifiers are not ingested.
+    let r = with(vec![(
+        "enemyIsBoss",
+        ConfigValue::String("Uber".to_owned()),
+    )]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
+    let r = with(vec![("enemyLevel", ConfigValue::Boolean(true))]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
 }
 
 #[test]

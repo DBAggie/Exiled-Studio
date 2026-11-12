@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 1;
+pub const FORMAT: u32 = 2;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -42,8 +42,25 @@ pub struct Export {
     pub character_constants: BTreeMap<String, f64>,
     /// `data.monsterConstants`.
     pub monster_constants: BTreeMap<String, f64>,
+    /// `data.bosses`, by PoB's name (format 2).
+    pub bosses: BTreeMap<String, Boss>,
     /// The tree.
     pub tree: Tree,
+}
+
+/// A boss of `data.bosses`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Boss {
+    /// `armourMult`, percent.
+    #[serde(rename = "armourMult")]
+    pub armour_mult: f64,
+    /// `evasionMult`, percent.
+    #[serde(rename = "evasionMult")]
+    pub evasion_mult: f64,
+    /// `isUber`.
+    #[serde(rename = "isUber")]
+    pub is_uber: bool,
 }
 
 /// PoB's version.

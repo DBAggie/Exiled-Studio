@@ -835,6 +835,7 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
             export: &export,
             rules: &rules,
             passive_scope: data_parity::compare::PASSIVE_SCOPE,
+            bosses: &loom_calc::poe1::enemy::BOSSES,
             tool: resolve_corpus::Tool {
                 commit: git(&["rev-parse", "HEAD"]),
                 dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),

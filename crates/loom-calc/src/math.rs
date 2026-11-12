@@ -71,6 +71,20 @@ pub fn percent_factor(x: f64) -> f64 {
     1.0 + x / 100.0
 }
 
+/// `base` to the power `n` (`n >= 0`) by repeated multiplication, left to
+/// right: only IEEE-exact operations, so every platform (wasm32 included)
+/// gives the same bits. It may differ from C's `pow` (which PoB's Lua `^`
+/// calls) in the last bit; a caller that floors or rounds the result
+/// checks its values against PoB's (the monster armour table, P3-11).
+#[must_use]
+pub fn pow_int(base: f64, n: u32) -> f64 {
+    let mut out = 1.0;
+    for _ in 0..n {
+        out *= base;
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

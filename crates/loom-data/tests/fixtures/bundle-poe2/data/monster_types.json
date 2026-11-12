@@ -1,0 +1,12 @@
+[
+ {
+  "armour": 50,
+  "evasion": 0,
+  "id": "TestBossArmoured"
+ },
+ {
+  "armour": 0,
+  "evasion": 100,
+  "id": "TestBossEvasive"
+ }
+]

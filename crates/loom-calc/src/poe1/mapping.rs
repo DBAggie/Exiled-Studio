@@ -296,8 +296,125 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
+/// Stats that reach no slice field, whatever the build's config (40): `(stat,
+/// why)`, sorted by stat ID (P3-8a). Each is read as PoB v2.67.2 reads its
+/// text, and none feeds a slice field (attributes, life, mana, energy
+/// shield, armour, evasion, resistances, block, spell block, spell
+/// suppression, unreserved life and mana, and the main skill's hit,
+/// speed, hit chance, crit, and hit DPS) on its own.
+///
+/// What is left out on purpose, so it stays `Unmapped` until a step maps
+/// it: anything that can change a hit or its rate through the enemy
+/// (shock, chill, exposure, intimidate, consecrated ground's effect,
+/// curses), charges' counts, rage, area, gem levels, minion damage and
+/// speed (keystones redirect them to the player), and staff or shield
+/// conditioned block and damage, fortification's maximum (PoB scales
+/// suppression, armour, evasion, and attack speed per fortification), and
+/// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also
+/// reads it as the enemy's `SelfCritMultiplier`, which reaches the main
+/// skill's crit multiplier). A stat that makes one of these rows matter is
+/// itself unmapped, so the fields stay `Partial` while it is in the
+/// build: rage regenerated per life or mana regenerated (PoB
+/// `ModParser.lua` `RageRegen` per `LifeRegen`, then rage's damage),
+/// and any `PerStat` on a row's PoB mod. Mapping such a converter later
+/// must revisit the rows it reaches; the guarantee holds only while it is
+/// unmapped.
+pub const NO_EFFECT: &[(&str, &str)] = &[
+    ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
+    ("avoid_interruption_while_casting_%", "interruption"),
+    ("base_chance_to_freeze_%", "freeze"),
+    (
+        "base_energy_shield_leech_from_spell_damage_permyriad",
+        "leech",
+    ),
+    ("base_movement_velocity_+%", "movement-speed"),
+    ("base_stun_duration_+%", "stun"),
+    (
+        "cannot_be_shocked_while_at_maximum_power_charges",
+        "ailment-on-self",
+    ),
+    ("cannot_have_life_leeched_from", "leech"),
+    (
+        "chance_to_create_consecrated_ground_on_melee_kill_%",
+        "ground-creation-chance",
+    ),
+    ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    (
+        "chance_to_gain_power_charge_when_block_%",
+        "charge-gain-chance",
+    ),
+    ("cold_ailment_duration_+%", "ailment-duration"),
+    (
+        "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
+        "regeneration",
+    ),
+    (
+        "elemental_ailment_duration_on_self_+%_while_holding_shield",
+        "ailment-on-self",
+    ),
+    (
+        "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
+        "regeneration",
+    ),
+    ("fortify_duration_+%", "fortification"),
+    ("freeze_duration_+%", "ailment-duration"),
+    (
+        "gain_power_charge_for_each_second_channeling_spell",
+        "charge-gain-chance",
+    ),
+    ("gloves_freeze_proliferation_radius", "freeze"),
+    ("golem_immunity_to_elemental_damage", "minion-defence"),
+    ("golem_maximum_life_+%", "minion-defence"),
+    ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    (
+        "life_regeneration_per_minute_%_per_fortification",
+        "regeneration",
+    ),
+    ("life_regeneration_rate_per_minute_%", "regeneration"),
+    (
+        "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        "regeneration",
+    ),
+    (
+        "life_regeneration_rate_per_minute_per_level",
+        "regeneration",
+    ),
+    ("lightning_ailment_duration_+%", "ailment-duration"),
+    ("local_has_X_abyss_sockets", "sockets"),
+    ("mana_regeneration_rate_+%", "regeneration"),
+    (
+        "mana_regeneration_rate_+%_per_1%_spell_block_chance",
+        "regeneration",
+    ),
+    ("mana_regeneration_rate_+%_per_power_charge", "regeneration"),
+    (
+        "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+        "regeneration",
+    ),
+    (
+        "minion_life_regeneration_rate_per_minute_%",
+        "minion-defence",
+    ),
+    ("minion_maximum_life_+%", "minion-defence"),
+    ("physical_damage_taken_%_as_fire", "damage-taken"),
+    ("physical_damage_taken_%_as_lightning", "damage-taken"),
+    ("rage_loss_delay_ms", "rage-duration"),
+    ("regenerate_energy_shield_instead_of_life", "regeneration"),
+    ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
+    (
+        "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
+        "ground-duration",
+    ),
+];
+
 impl StatMapping for Poe1Mapping {
     fn map(&self, stat: &StatId) -> StatMap {
+        if NO_EFFECT
+            .binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
+            .is_ok()
+        {
+            return StatMap::NoEffect;
+        }
         ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .map_or(StatMap::Unmapped, |i| {
                 StatMap::Effects(
@@ -432,6 +549,52 @@ mod tests {
     fn rows_should_be_sorted_and_unique() {
         assert!(ROWS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(LOCAL_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(NO_EFFECT.windows(2).all(|w| w[0].0 < w[1].0));
+    }
+
+    #[test]
+    fn no_effect_stats_should_be_known_and_never_mapped() {
+        for &(stat, why) in NO_EFFECT {
+            assert_eq!(
+                Poe1Mapping.map(&StatId::new(stat)),
+                StatMap::NoEffect,
+                "{stat}"
+            );
+            assert!(!why.is_empty());
+            assert!(
+                ROWS.binary_search_by(|(id, _)| (*id).cmp(stat)).is_err(),
+                "{stat} is both mapped and without effect"
+            );
+            assert!(
+                LOCAL_ROWS
+                    .binary_search_by(|(id, _)| (*id).cmp(stat))
+                    .is_err(),
+                "{stat} is both a local piece stat and without effect"
+            );
+            // An armour piece's lines see the same.
+            let piece = PieceMapping {
+                slot: ArmourSlot::Helmet,
+            };
+            assert_eq!(piece.map(&StatId::new(stat)), StatMap::NoEffect, "{stat}");
+        }
+        // Left out on purpose: they can change a slice field.
+        for stat in [
+            "lightning_ailment_effect_+%",
+            "chill_effect_+%",
+            "minion_damage_+%",
+            "maximum_life_+%_if_no_life_tags_on_body_armour",
+            "base_mana_reservation_efficiency_+%",
+            "action_speed_-%",
+            "max_power_charges",
+            "base_max_fortification",
+            "base_self_critical_strike_multiplier_-%",
+        ] {
+            assert_eq!(
+                Poe1Mapping.map(&StatId::new(stat)),
+                StatMap::Unmapped,
+                "{stat}"
+            );
+        }
     }
 
     #[test]

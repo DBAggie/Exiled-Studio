@@ -1,7 +1,7 @@
 """Writes the synthetic test bundles (Phase 2 plan, step 3; decision 10),
 format 2 with the skill tables (Phase 3 plan, step 1a), the character
 and passive tables (step 1b), and the item property and monster tables
-(step 1c).
+(step 1c, monster types in step 1d).
 
 Every row is made up for the tests: no game data. Run from the repository
 root after changing a row, then commit the output:
@@ -498,6 +498,10 @@ def properties(game):
         "data/monster_levels.json": [level(1, 4.99, 22), level(2, 5.5, 28)],
         "data/game_constants.json": [
             {"id": "MonsterDamageReductionImprovement", "value": 670, "divisor": 100}
+        ],
+        "data/monster_types.json": [
+            {"id": "TestBossArmoured", "armour": 50, "evasion": 0},
+            {"id": "TestBossEvasive", "armour": 0, "evasion": 100},
         ],
     }
 

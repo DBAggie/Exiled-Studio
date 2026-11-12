@@ -637,7 +637,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     let pr = &property_tables;
     // Every file of `bundle_properties::FILES`; the load-back refuses a
     // bundle that lacks one.
-    let property_files: [(&str, Vec<u8>, usize); 5] = [
+    let property_files: [(&str, Vec<u8>, usize); 6] = [
         (
             bundle_properties::WEAPON_TYPES,
             to_json(&pr.weapon_types)?,
@@ -662,6 +662,11 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
             bundle_properties::GAME_CONSTANTS,
             to_json(&pr.game_constants)?,
             pr.game_constants.len(),
+        ),
+        (
+            bundle_properties::MONSTER_TYPES,
+            to_json(&pr.monster_types)?,
+            pr.monster_types.len(),
         ),
     ];
     for (path, bytes, n) in property_files {
