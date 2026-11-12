@@ -130,6 +130,7 @@ PoE1 base stats by class and level; attributes and their implicit effects (stren
 Armour, evasion (with the armour and evasion items' local properties and quality), resistances (with maximum resistances, the PoE1 act penalty as the oracle's config sets it), block and spell block, spell suppression.
 - **Accept:** as step 6, for these fields.
 - **Depends on:** 1c, 6.
+- **Done in P3-7** (`docs/phase-3/defence-fields.md`; context file, "Decisions in P3-7"): 17 of the 24 fields computed; armour pieces with base ranges, percentiles, quality, and local lines; the resistance penalty as a modelled config input; slot rows named from a static table; 4 new mechanic fixtures, and all 23 mechanic fixtures match the oracle on the 17 fields and every breakdown PoB writes.
 
 ### 8. Stat-to-effect mapping for the in-scope builds (L, several PRs)
 Map every stat that step 3's inventory finds in the in-scope builds' passives, items, jewels, and gems for the slice fields, most frequent first. Each mapping is a data row (or code where the effect needs logic) in `loom_calc::poe1`, with a test and, where it is new behaviour, a mechanic fixture. Keystones and conditional stats ("while ...", "if ...") map to conditions; a condition the engine cannot settle from config makes the field `Partial` with `UnmodelledCondition`.
