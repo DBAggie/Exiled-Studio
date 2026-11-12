@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-8b: rolled values)
+Last Updated: 2026-11-12 (P3-12a: config inputs that only set named conditions)
 
 # Phase 3: calc slice (tasks)
 
@@ -78,6 +78,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
   - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
 - [ ] P3-12 buffs and config (one or more PRs)
+  - [x] P3-12a config inputs that only set named conditions (PR open, cascade on #81; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
+  - [ ] Next: `<untyped>` (placeholders, custom modifiers), charges, rage, fortification, shock, exposure, other gems (auras, buffs)
 
 ## P3-14: corpus run and register
 - [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered

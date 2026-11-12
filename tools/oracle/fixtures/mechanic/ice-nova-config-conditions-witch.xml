@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12a): ice-nova-witch.xml with every config input
+     that only sets named conditions or multipliers (loom_calc::poe1::config::NAMED_ONLY):
+     no modifier reads them, so PoB's values equal ice-nova-witch.xml's.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="OverloadedIntensity" number="3"/>
+			<Input name="bloodSandStance" string="SAND"/>
+			<Input boolean="true" name="conditionBeenHitRecently"/>
+			<Input boolean="true" name="conditionBlockedRecently"/>
+			<Input boolean="true" name="conditionChilledEnemyRecently"/>
+			<Input boolean="true" name="conditionConvergence"/>
+			<Input boolean="true" name="conditionCritRecently"/>
+			<Input boolean="true" name="conditionEnemyChilled"/>
+			<Input name="conditionEnemyChilledEffect" number="30"/>
+			<Input boolean="true" name="conditionEnemyOnConsecratedGround"/>
+			<Input boolean="true" name="conditionFullLife"/>
+			<Input boolean="true" name="conditionOnConsecratedGround"/>
+			<Input boolean="true" name="conditionShockedEnemyRecently"/>
+			<Input name="conditionStationary" number="3"/>
+			<Input name="intensifyIntensity" number="4"/>
+			<Input name="multiplierNearbyEnemies" number="5"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

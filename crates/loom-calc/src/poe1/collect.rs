@@ -30,7 +30,8 @@
 //!
 //! Not modelled yet, each a reason on every computed field: other enabled
 //! gems (auras, buffs, reservation: P3-12), config inputs other than
-//! the resistance penalty (P3-12), bandit and pantheon choices other than
+//! the resistance penalty, the enemy model's numeric inputs, and
+//! [`super::config::NAMED_ONLY`] (P3-12a), bandit and pantheon choices other than
 //! none, a weapon's base properties in the off hand (dual wielding), an
 //! armour piece's percentile
 //! derived from its shown value, active flasks, abyssal sockets, and
@@ -1004,8 +1005,12 @@ fn active_config(build: &Build) -> Option<&ConfigSet> {
         .or_else(|| config.sets.typed().next())
 }
 
-/// Every input of the active config set the engine does not model:
-/// all but a numeric `resistancePenalty` ([`resistance_penalty`]).
+/// Every input of the active config set that can change a computed field
+/// the engine does not model: all but a numeric `resistancePenalty`
+/// ([`resistance_penalty`]), the enemy model's numeric inputs, and the
+/// inputs that only set named conditions or multipliers
+/// ([`super::config::NAMED_ONLY`]). Untyped content (PoB's placeholders,
+/// custom modifier blocks) is one `<untyped>` reason.
 fn config(build: &Build, ingest: &mut Ingest<'_>) {
     let Some(set) = active_config(build) else {
         return;
@@ -1030,6 +1035,11 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             && input.name != "enemyIsBoss"
             && matches!(input.value, ConfigValue::Number(_))
         {
+            continue;
+        }
+        // Named conditions and multipliers only modifiers read: no
+        // computed field changes (`poe1::config`, P3-12a).
+        if super::config::named_only(&input.name) {
             continue;
         }
         ingest.reason(UnsupportedReason::UnmodelledConfig {
