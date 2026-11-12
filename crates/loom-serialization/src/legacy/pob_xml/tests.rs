@@ -384,7 +384,10 @@ fn the_old_config_layout_should_be_one_flat_set() {
     assert_eq!(b.config.layout, loom_domain::ConfigLayout::Flat);
     assert_eq!(b.config.sets.entries().len(), 1);
     let set = b.config.sets.typed().next().unwrap();
-    assert_eq!((set.id, set.title.as_deref()), (loom_domain::ConfigSetId(1), None));
+    assert_eq!(
+        (set.id, set.title.as_deref()),
+        (loom_domain::ConfigSetId(1), None)
+    );
     assert_eq!(set.inputs.typed().count(), 2);
     assert_eq!(set.custom_modifiers.len(), 1);
     assert_eq!(kept_whole(&b), ["Config/Input"]);

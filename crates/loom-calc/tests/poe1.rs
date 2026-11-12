@@ -775,7 +775,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "useFrenzyCharges".to_owned(),
+        name: "multiplierRage".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1212,9 +1212,9 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "useFrenzyCharges",
+        "multiplierRage",
         "conditionEnemyShocked",
-        "buffFortification",
+        "conditionEnemyColdExposure",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {

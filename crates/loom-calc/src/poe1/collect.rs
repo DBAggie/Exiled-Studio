@@ -91,6 +91,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     items(input, spec, ingest);
     gems(input, ingest);
     config(build, ingest);
+    super::charges::charges(active_config(build), input.data, ingest);
 }
 
 /// The character's base values: class attributes, life and mana with
@@ -1070,6 +1071,10 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
     for input in set.inputs.typed() {
         // PoB's legacy custom modifiers, above.
         if is_legacy_custom_mods(input) {
+            continue;
+        }
+        // Charges: their own effects (`poe1::charges`, P3-12e).
+        if super::charges::is_charge_input(&input.name) {
             continue;
         }
         // Lines on any other input: no format applies them; a build

@@ -285,6 +285,11 @@ impl CalcData for Data {
             }
             "base_evasion_rating" => Some(15),
             "base_critical_strike_multiplier" if self.constants => Some(150),
+            "max_power_charges" | "max_frenzy_charges" | "max_endurance_charges" => Some(3),
+            "critical_strike_chance_+%_per_power_charge" => Some(50),
+            "base_attack_speed_+%_per_frenzy_charge"
+            | "base_cast_speed_+%_per_frenzy_charge"
+            | "object_inherent_damage_+%_final_per_frenzy_charge" => Some(4),
             _ => None,
         }
     }
@@ -710,4 +715,101 @@ fn enemy_inputs_of_another_type_and_missing_constants_should_be_reasons() {
         assert_eq!(r.fields[&f].state.kind(), StateKind::Indeterminate, "{f}");
     }
     assert_eq!(r.fields[&Field::Speed].state, FieldState::Complete);
+}
+
+/// Power and frenzy charges (P3-12e, `poe1::charges`): with `use` set,
+/// the maximum (3 here) or the override, else its placeholder; endurance
+/// charges change no computed field.
+#[test]
+fn charges_should_act_as_pob_counts_them() {
+    use loom_domain::ConfigInputKind;
+
+    let with = |inputs: &[(&str, ConfigValue, ConfigInputKind)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value, kind) in inputs {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: value.clone(),
+                kind: *kind,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let on = || ConfigValue::Boolean(true);
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let input = ConfigInputKind::Input;
+    let placeholder = ConfigInputKind::Placeholder;
+    let bare = run(&build(vec![group(&["IceNova"])]));
+
+    // Three power charges: 5% x (1 + 150 / 100).
+    let r = with(&[("usePowerCharges", on(), input)]);
+    assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+    assert_eq!(value(&r, Field::CritChance), 12.5);
+    // The override, else its placeholder; 0 is unset.
+    for (inputs, crit) in [
+        (vec![("overridePowerCharges", n(1.0), input)], 7.5),
+        (vec![("overridePowerCharges", n(2.0), placeholder)], 10.0),
+        (
+            vec![
+                ("overridePowerCharges", n(0.0), input),
+                ("overridePowerCharges", n(1.0), placeholder),
+            ],
+            7.5,
+        ),
+    ] {
+        let mut all = vec![("usePowerCharges", on(), input)];
+        all.extend(inputs);
+        assert_eq!(value(&with(&all), Field::CritChance), crit);
+    }
+    // Without `use`, an override and `false` do nothing.
+    for inputs in [
+        vec![("overridePowerCharges", n(2.0), input)],
+        vec![("usePowerCharges", ConfigValue::Boolean(false), input)],
+        vec![("useEnduranceCharges", on(), input)],
+    ] {
+        let r = with(&inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+            assert_eq!(value(&r, f), value(&bare, f), "{f}");
+        }
+    }
+    // Three frenzy charges: 12% increased cast speed, 12% more damage.
+    let r = with(&[("useFrenzyCharges", on(), input)]);
+    assert_eq!(r.fields[&Field::Speed].state, FieldState::Complete);
+    assert!((value(&r, Field::Speed) - 2.0 * 1.12).abs() < 1e-12);
+    assert!(
+        (value(&r, Field::AverageDamage) - value(&bare, Field::AverageDamage) * 1.12).abs() < 1e-9
+    );
+    // A `use` that is not a flag, or an override that is not a number, is
+    // a reason under the `use` input.
+    for inputs in [
+        vec![("usePowerCharges", n(1.0), input)],
+        vec![
+            ("usePowerCharges", on(), input),
+            (
+                "overridePowerCharges",
+                ConfigValue::String("x".to_owned()),
+                input,
+            ),
+        ],
+    ] {
+        let r = with(&inputs);
+        let FieldState::Partial(p) = &r.fields[&Field::CritChance].state else {
+            panic!("not partial");
+        };
+        assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+            input: "usePowerCharges".to_owned(),
+        }));
+        assert_eq!(value(&r, Field::CritChance), 5.0);
+    }
 }
