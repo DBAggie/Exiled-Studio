@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-8b: rolled values)
+Last Updated: 2026-11-12 (P3-12a: config inputs that only set named conditions)
 
 # Phase 3: calc slice (context)
 
@@ -292,6 +292,15 @@ The question as asked: where the default enemy's armour and evasion come from: P
 - **Smite's aura** (`minimum_added_lightning_damage_from_skill`, `maximum_...`): PoB applies it as a `GlobalEffect` aura buff on the character (`LightningMin` BASE), scaled by aura and buff effect, whose stats are unmapped; mapped as added lightning damage without flags. Its other stats reach no slice field (`NO_EFFECT`: radius, duration, targeting, display stats; shock chance as `ailment-chance`: PoB shocks the enemy only from its config or a guaranteed source, never from a chance).
 - **Mappings (P3-10):** accuracy and increased accuracy, added damage to attacks of every type, increased attack, melee, physical damage, attack speed, the area damage more of skills, the skill's conversion, Melee Physical Damage's more physical melee damage and less attack speed, Elemental Damage with Attacks' more elemental attack damage. Concentrated Effect's less area stays unmapped (area, P3-8a's rule), so its row is not added.
 - **Known limits, not reached by any fixture:** accuracy's more multiplier is the store's; PoB calls `skillModList:More("MORE", cfg, "Accuracy")`, which reads its arguments in the wrong order (no mapped stat has an accuracy more). The enemy's missing monster tables count with an attack (it reads the enemy's evasion) even when the config sets the evasion and armour.
+
+## Decisions in P3-12a (PR #82; config inputs that only set named conditions; evidence `docs/phase-3/config-inputs.md`)
+- **Why first in step 12:** every reason is build-wide, and of the in-scope builds' config reasons (18 Ice Nova, 19 Smite) about half only set PoB named conditions or multipliers. Removing them changes no value and makes later steps' remaining list honest. It turns no in-scope field `Complete` (other gems, unmapped stats, choices, and 10 config inputs each remain).
+- **The rule:** `loom_calc::poe1::config::NAMED_ONLY` (16 inputs), matched by name whatever the value (PoB's `apply` keys on the value only). Sound because every ingested stat is mapped (no mapping reads a named condition), `NoEffect` (P3-8a: config-independent), or a reason, and an effect reading a named condition is `unmodelled-condition` (the engine sets none from config). Each input checked in `ConfigOptions.lua` and the calc modules (line numbers in the doc).
+- **`DEPENDS_ON` (review):** the 11 stats that start the modifier paths must stay `Unmapped` (test). Bonechill's two stats are ignored by PoB's stat map (its effect is skill data), so they look like `NoEffect` candidates: classifying them so would silence `conditionEnemyChilled`.
+- **Not done:** `<untyped>` (PoB `Placeholder` values apply for unset count inputs, `ConfigTab:BuildModList`; custom modifier blocks); the fixtures' other condition inputs (`conditionKilledRecently`, ...).
+
+## code-architecture-reviewer (P3-12a, 2026-11-12) summary
+No blockers; the 16 rows and every line number confirmed against PoB. Applied: `DEPENDS_ON` with its test; the integration test over every input and value kind against the bare build; a local negative control (Ice Nova with Bonechill: PoB's DPS rises 30% with a configured chill, the engine stays `Partial` through Bonechill's stats); doc wording (the mechanic fixture shows the positive half only; "only through modifiers or flags a modifier sets"; `DesiredChillVal`; the names column is documentation).
 
 ## Decisions in P3-8b (rolled values of PoB's ranged lines; catalyst lines as reasons)
 - **Why first:** every field of the 7 in-scope builds is `indeterminate` for one reason, `unsettled-value`: PoB-crafted lines such as `{range:1}+(16-24) to Dexterity and Intelligence` resolve to the interval (Spike B: "reproducing the roll is Phase 2 import work", not done in Phase 2). PoB settles them with the line's roll `r` (`Modules/ItemTools.lua` `itemLib.applyRange`: `a + r x (b - a)` per range, `formatValue`'s `roundSymmetric` at the stat's precision).
