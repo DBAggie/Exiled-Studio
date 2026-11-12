@@ -43,7 +43,7 @@ An input is listed only if PoB's calc modules (`CalcSetup.lua`, `CalcPerform.lua
 
 ### Evidence
 
-2026-11-12, Windows; the tool built from this PR's code (clean tree in the commit noted in the PR). Inputs as P3-8b's and the Q11 switch's: bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`; a new oracle run for the new fixture.
+2026-11-12, Windows; tool commit `23a1a5c`, clean (the runs before it, on the uncommitted tree, gave byte-identical documents). Inputs as P3-8b's and the Q11 switch's: bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`; a new oracle run for the new fixture.
 
 | Run | Builds | Result |
 |---|---|---|
