@@ -593,6 +593,16 @@
       "description": "A level 85 Shadow in evasion and energy shield pieces (rare, original): a hybrid helmet with percentiles, quality and hybrid local lines; global evasion, energy shield and defences from jewellery; attribute bonuses on every row (P3-7)."
     },
     {
+      "id": "ice-nova-config-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-config-conditions-witch.xml",
+      "sha256": "0baa38f9b254ae44c22895fb40624b23b171d8183d9fd1afa5f3c763b7dc6e04",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with every config input that only sets named conditions or multipliers (loom_calc::poe1::config::NAMED_ONLY): PoB's values equal the bare fixture's, and no input is a reason (P3-12a)."
+    },
+    {
       "id": "ice-nova-witch.xml",
       "tier": "mechanic",
       "source": "local",

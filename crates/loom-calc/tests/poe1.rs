@@ -1148,6 +1148,75 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
 }
 
 #[test]
+fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
+    let with = |inputs: Vec<(&str, ConfigValue)>| {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            config.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let yes = || ConfigValue::Boolean(true);
+    // P3-12a (`poe1::config`): named conditions and multipliers only. Every
+    // listed input, with each kind of value PoB saves (and false, 0), gives
+    // the bare build's fields and states.
+    let bare = run(&witch(1));
+    let values = || {
+        vec![
+            yes(),
+            ConfigValue::Boolean(false),
+            n(3.0),
+            n(0.0),
+            ConfigValue::String("SAND".to_owned()),
+        ]
+    };
+    for (input, _) in loom_calc::poe1::config::NAMED_ONLY {
+        for value in values() {
+            let r = with(vec![(input, value.clone())]);
+            for field in [Field::Life, Field::Mana, FIRE, Field::Armour] {
+                assert_eq!(state(&r, field), StateKind::Complete, "{input} {value:?}");
+                assert_eq!(value_of(&r, field), value_of(&bare, field), "{input}");
+            }
+        }
+    }
+    let all: Vec<_> = loom_calc::poe1::config::NAMED_ONLY
+        .iter()
+        .map(|(input, _)| (*input, yes()))
+        .collect();
+    let r = with(all);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(state(&r, FIRE), StateKind::Complete);
+    // An input with its own effects stays a reason, alone or beside them.
+    for input in [
+        "useFrenzyCharges",
+        "conditionEnemyShocked",
+        "buffFortification",
+    ] {
+        let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
+        let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
+            panic!("{input}: not partial");
+        };
+        let config = |name: &str| UnsupportedReason::UnmodelledConfig {
+            input: name.to_owned(),
+        };
+        assert_eq!(p.len(), 1, "{input}");
+        assert!(p.contains(&config(input)), "{input}");
+    }
+}
+
+#[test]
 fn the_last_spec_line_of_a_key_should_count() {
     // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
     let plate = item(

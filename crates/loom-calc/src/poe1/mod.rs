@@ -14,6 +14,7 @@
 //! another kind of skill, are `Unsupported` with `NotComputed`.
 
 pub mod collect;
+pub mod config;
 pub mod enemy;
 pub mod hit;
 pub mod mapping;

@@ -4,7 +4,7 @@ The game is the truth; Path of Building (PoB) at a pinned tag is the regression 
 
 | File | What it is |
 |---|---|
-| `divergence-register.json` | The register: every accepted difference. Empty until Phase 3 compares a successor result. |
+| `divergence-register.json` | The register: every accepted difference. The first entries (DIV-0001 to DIV-0025, a weapon's attack time in floored milliseconds, Q11) came with Phase 3's attack-rate switch (PR #81) (`docs/phase-3/attack-hits.md`, "The switch"). |
 | `divergence-register.schema.json` | The format as JSON Schema (documentation). `loom-parity-cli divergence-check` enforces it, plus the rules a schema cannot express. |
 
 Unregistered differences fail a parity gate. There is no general "close enough" rule: every tolerance is written down per field, in an entry (ADR-006, "Comparison rules").
