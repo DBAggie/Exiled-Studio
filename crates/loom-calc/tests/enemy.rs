@@ -102,13 +102,31 @@ fn each_boss_kind_should_set_its_placeholders() {
         enemy(&build(95, &[("enemyIsBoss", text("None"))]), &data).level,
         85
     );
-    // A standard boss: 40% elemental, 25% chaos.
+    // A standard boss: 40% elemental, 25% chaos; the table's armour and
+    // evasion, unscaled.
     let e = enemy(&build(70, &[("enemyIsBoss", text("Boss"))]), &data);
     assert_eq!(
         e.resistances,
         [Some(40.0), Some(40.0), Some(40.0), Some(25.0)]
     );
     assert_eq!(e.level, 70);
+    assert_eq!(e.armour, monster_armour(&data, 70));
+    assert_eq!(e.evasion, Some(700.0));
+    // Uber with a level input: the input (capped), the table at 85.
+    let e = enemy(
+        &build(
+            90,
+            &[("enemyIsBoss", text("Uber")), ("enemyLevel", number(90.0))],
+        ),
+        &data,
+    );
+    assert_eq!(e.level, 85);
+    assert_eq!(e.evasion, Some(850.0 * 1.5));
+    // A character level outside 1..100 is clamped, as PoB's.
+    assert_eq!(
+        enemy(&build(0, &[("enemyIsBoss", text("None"))]), &data).level,
+        1
+    );
     // Uber: level 85, the uber bosses' means (armour 200%, evasion 150%).
     let e = enemy(&build(10, &[("enemyIsBoss", text("Uber"))]), &data);
     assert_eq!(e.level, 85);
@@ -142,6 +160,10 @@ fn inputs_should_win_over_placeholders() {
     assert_eq!(e.resistances[1], Some(50.0));
     assert_eq!(e.armour, Some(1000.0));
     assert_eq!(e.evasion, Some((840.0 * 1.5_f64 + 0.5).floor()));
+    let e = enemy(&build(90, &[("enemyEvasion", number(0.0))]), &data);
+    assert_eq!(e.evasion, Some(0.0), "an evasion input of 0 counts");
+    assert_eq!(monster_armour(&data, 101), None, "past PoB's table");
+    assert_eq!(monster_armour(&data, 0), None);
     // A level input above the cap; a level of 0 is no input.
     assert_eq!(
         enemy(&build(90, &[("enemyLevel", number(99.0))]), &data).level,
@@ -227,5 +249,14 @@ fn the_real_default_enemy_should_be_pobs() {
     for (i, pob) in POB_ARMOUR.iter().enumerate() {
         let level = i64::try_from(i).unwrap() + 1;
         assert_eq!(monster_armour(&data, level), Some(*pob), "level {level}");
+        // No value sits within 1e-9 of a whole number before the floor,
+        // so C's `pow` (PoB) and repeated multiplication cannot floor apart.
+        let base: f64 = 1.0 + 670.0 / 100.0 / 100.0;
+        let raw = (10.0 + 2.0 * level as f64) * base.powi(i32::try_from(level).unwrap());
+        let fraction = raw - raw.floor();
+        assert!(
+            fraction > 1e-9 && fraction < 1.0 - 1e-9,
+            "level {level}: {raw}"
+        );
     }
 }

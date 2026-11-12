@@ -1089,16 +1089,15 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
     };
     let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
     let r = with(vec![
-        ("enemyIsBoss", ConfigValue::String("Uber".to_owned())),
         ("enemyLevel", n(80.0)),
         ("enemyFireResist", n(0.0)),
         ("enemyArmour", n(1000.0)),
     ]);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
-    // A value the model does not read stays a reason.
+    // The boss kind stays a reason: its other modifiers are not ingested.
     let r = with(vec![(
         "enemyIsBoss",
-        ConfigValue::String("Huge".to_owned()),
+        ConfigValue::String("Uber".to_owned()),
     )]);
     assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
     let r = with(vec![("enemyLevel", ConfigValue::Boolean(true))]);

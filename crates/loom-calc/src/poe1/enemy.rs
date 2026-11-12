@@ -12,6 +12,15 @@
 //! `monster_types`); which bosses count is PoB's choice
 //! (`src/Export/Enemies/Bosses.txt`), kept here as a rule with its source
 //! (maintainer decision Q10, 2026-11-12, option a).
+//!
+//! Not modelled yet, for the hit phases (P3-9b, P3-10): the boss kind's
+//! other modifiers (`Modules/ConfigOptions.lua`, `enemyIsBoss`): the
+//! player's `WarcryPower` and `Multiplier:EnemyPower` +20, the enemy's
+//! `Condition:RareOrUnique`, `Condition:PinnacleBoss`, `AilmentThreshold`
+//! MORE, and the Uber boss's `DamageTaken` MORE -70, which changes hit
+//! damage. So an `enemyIsBoss` input stays `unmodelled-config`, and the
+//! default kind's modifiers must be modelled before a hit field is
+//! `Complete`.
 
 use loom_domain::{Build, ConfigValue};
 
@@ -95,6 +104,9 @@ impl BossKind {
 
 /// PoB's `data.misc.MaxEnemyLevel`.
 pub const MAX_ENEMY_LEVEL: i64 = 85;
+
+/// The last level of PoB's monster tables (100 rows).
+pub const MAX_TABLE_LEVEL: i64 = 100;
 
 /// The config inputs the enemy model reads (PoB's names), each modelled
 /// when its value has the expected type (`enemyIsBoss` a string, the
@@ -181,6 +193,9 @@ fn input<'a>(build: &'a Build, name: &str) -> Option<Value<'a>> {
 /// constant as value / divisor. `None` without the constant.
 #[must_use]
 pub fn monster_armour(data: &dyn CalcData, level: i64) -> Option<f64> {
+    if !(1..=MAX_TABLE_LEVEL).contains(&level) {
+        return None;
+    }
     let (value, divisor) = data.game_constant("MonsterDamageReductionImprovement")?;
     let n = u32::try_from(level).ok()?;
     #[expect(
@@ -242,6 +257,9 @@ pub fn enemy(build: &Build, data: &dyn CalcData) -> Enemy {
     };
     let kind = match input(build, "enemyIsBoss") {
         None => BossKind::Pinnacle,
+        // An unknown kind: PoB sets no placeholder (a build's saved ones
+        // would count); the Pinnacle values are only a guess, and the
+        // problem says so.
         Some(Value::Text(t)) => BossKind::of(t).unwrap_or_else(|| {
             problems.push(EnemyProblem::UnknownBossKind {
                 value: t.to_owned(),
@@ -262,7 +280,10 @@ pub fn enemy(build: &Build, data: &dyn CalcData) -> Enemy {
         .character
         .level
         .as_ref()
-        .map_or(1, |l| i64::from(*l.value()));
+        .map_or(1, |l| i64::from(*l.value()))
+        .clamp(1, 100);
+    // A fractional level input is cut to its whole part; PoB keeps it and
+    // finds no table row (undefined in PoB, a nil placeholder).
     #[expect(
         clippy::cast_possible_truncation,
         reason = "a level input is a small whole number; PoB reads it as one"
