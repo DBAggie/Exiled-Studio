@@ -1,0 +1,213 @@
+{
+ "builds_with_reason_changes": 15,
+ "only_after": [
+  "ice-nova-custom-modifiers-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Savior.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "OccVortex.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "discrepancy-movement-speed.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ],
+   "gone": []
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 4}}, \"stat\": \"pride_reserves_no_mana\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 6}}, \"stat\": \"pride_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 7}}, \"stat\": \"physical_hit_and_dot_damage_%_taken_as_fire\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 8}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 11}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 5}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 11}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 13}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 10}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 12}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 14}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 9}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  }
+ },
+ "reasons_added": 39,
+ "reasons_gone": 9,
+ "state_changes": {
+  "discrepancy-movement-speed.xml.json": {
+   "armour": [
+    "complete",
+    "partial"
+   ],
+   "block-chance": [
+    "complete",
+    "partial"
+   ],
+   "dexterity": [
+    "complete",
+    "partial"
+   ],
+   "energy-shield": [
+    "complete",
+    "partial"
+   ],
+   "evasion": [
+    "complete",
+    "partial"
+   ],
+   "intelligence": [
+    "complete",
+    "partial"
+   ],
+   "life": [
+    "complete",
+    "partial"
+   ],
+   "life-unreserved": [
+    "complete",
+    "partial"
+   ],
+   "mana": [
+    "complete",
+    "partial"
+   ],
+   "mana-unreserved": [
+    "complete",
+    "partial"
+   ],
+   "poe1.spell-block-chance": [
+    "complete",
+    "partial"
+   ],
+   "poe1.spell-suppression-chance": [
+    "complete",
+    "partial"
+   ],
+   "resistance.chaos": [
+    "complete",
+    "partial"
+   ],
+   "resistance.cold": [
+    "complete",
+    "partial"
+   ],
+   "resistance.fire": [
+    "complete",
+    "partial"
+   ],
+   "resistance.lightning": [
+    "complete",
+    "partial"
+   ],
+   "strength": [
+    "complete",
+    "partial"
+   ]
+  }
+ },
+ "value_changes": {}
+}

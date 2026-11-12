@@ -125,4 +125,64 @@ Tests (1133 workspace tests, 5 new): the PoB reader (a numeric placeholder typed
 
 Commands: as P3-12a's (above), with `<out>` = `local/p3/p3-12b/evidence`, plus `build-round-trip` (`AGENTS.md`).
 
-**Not done.** PoB's `CustomModifierBlock` (custom modifiers, newer builds) stays untyped: `<untyped>` remains in 9 public builds, all from such a block: empty in four (Smite act1 among them), real modifiers in five (Smite act2, act5, and act10: "Perfect Forest Warrior", "Onslaught", "Culling Strike"; two others). Typing the blocks, with an empty block as no effect and each line as a reason until it is modelled, is the next config step.
+**Not done.** PoB's `CustomModifierBlock` (custom modifiers, newer builds) stays untyped: `<untyped>` remains in 9 public builds, all from such a block: empty in four (Smite act1 among them), real modifiers in five (Smite act2, act5, and act10: "Perfect Forest Warrior", "Onslaught", "Culling Strike"; two others). Typing the blocks, with an empty block as no effect and each line as a reason until it is modelled, is the next config step. (Corrected in P3-12c: Smite act1's active set 5 holds the same three lines as act2, act5, and act10. Done in P3-12c, below, in full: the lines are resolved and applied.)
+
+## P3-12c: custom modifier blocks
+
+**Why.** PoB's custom modifiers (Configuration tab, "Custom Modifiers") are text the player writes, applied to the character as modifiers. PoB saves them per config set as `<CustomModifierBlock title enabled>` with the text inside (`Classes/ConfigTab.lua`, `Save`, line 944), and applies every line of every enabled block with text (`BuildModList`, lines 1106 to 1128): each line goes through `StripEscapes` and a trim of Lua's `%s`, then `modLib.parseMod`; a line it parses is added to the config's modifiers. The model kept the blocks untyped, so every build that has one had the reason `unmodelled-config <untyped>`, whatever the blocks held. The maintainer asked for the blocks in full (2026-11-12): the lines act, as in PoB.
+
+**The model.**
+- `loom_domain::CustomModifierBlock` (on `ConfigSet::custom_modifiers`): title, enabled, the text as read, and its `lines` (`CustomModifierLine`: the modifier text and a `LineResolution`, as an item's modifier line). `Config::check_custom_lines`: a custom line never continues another line (`DOMAIN_CONTINUED_CUSTOM_LINE`; the build document refuses one both ways).
+- The PoB reader types the blocks after a set's last other child, where PoB writes them; a block elsewhere, one whose `enabled` is not `true` or `false` (PoB reads a missing one as true, any other as false), or one with an element inside stays untyped in place and is listed by `kept_whole`. The lines are PoB's: `StripEscapes` (`HeadlessWrapper.lua` 75: `^` and a digit, then `^x` and six hex digits, two passes), the `%s` trim, empty lines left out. PoB's XML reader trims each text node and drops a whitespace-only one (`runtime/lua/xml.lua`), so an indented empty block has no text in PoB; ours keeps the whitespace for export and has no line, the same effect. The writer writes the text back unchanged.
+- Resolution (`loom_parser::import::Resolver`, `resolve_custom_modifiers`): every pending line of every block, read alone in the bundle's default scope (character-wide: no item base) with the case-folding tolerance. With no base, no mod row can settle an ambiguous line, so it stays `ambiguous`; half of a description over two lines, read alone, has no template. A range stays a range (`unsettled-value`).
+- The engine (`Ingest::custom_line`): each line of an enabled block of the active set acts through its resolution and the game's mapping, under the new source `custom-modifier` (block and line indexes); a line that did not resolve is `unresolved-line` (also `pending-line`, `excluded-line`) with that source, as an item line is. A disabled block does nothing.
+- Build document v1 gains a set's optional `custom_modifiers` (with `lines` and their resolutions); calc result v1 gains the source `custom-modifier`. Both additive, on P3-12b's rule; schemas and TypeScript regenerated.
+- Content directly under `<Config>` (an old layout; PoB loads it into set 1) was ignored by the engine with no reason; it is now `<untyped>`.
+
+**What PoB reads that the game data does not.** PoB's parser knows its own shorthand, which is not a game text: "Onslaught" (PoB gives the Onslaught condition, 20% increased attack and cast speed), "Culling Strike", "Perfect Forest Warrior". Such a line does not resolve against the stat descriptions (or is ambiguous) and stays a reason. A game text can also render a stat the player did not mean: "100% more Spell Damage" resolves to Pain Attunement's `pain_attunement_keystone_spell_damage_+%_final` (its description has no condition text), which is unmapped, so a reason, where PoB adds generic more spell damage. Both are reasons, never silent values.
+
+PoB's parser is its own grammar (`Modules/ModParser.lua`), and it drops a line it reads only in part (`mods and not extra`); ours reads game text through the stat descriptions. So a line can apply in one and not the other. Each such line is a reason here, never a value; no compared fixture differs (below), so the divergence register gains no entry.
+
+**What changes in the builds.** No field value changes in any public or corpus document. In the 9 public builds whose blocks gave `<untyped>`, that reason is gone; lines that do not apply are named instead (39 reasons added in 15 builds, `p3-12c-public-vs-p3-12b.json`):
+- The 4 in-scope Smite builds: "Perfect Forest Warrior" `unresolved-line` `no-template`, "Onslaught" `ambiguous`, and "Culling Strike", which resolves to `kill_enemy_on_hit_if_under_10%_life` and is `unmapped-stat`. Their state stays `Partial`.
+- Two community builds' blocks (Facebreaker, Forged Frostbearer): 6 `unmapped-stat` (Pride, curses, damage taken as fire) and 15 `unresolved-line`.
+- Four builds whose blocks are empty lose `<untyped>` and gain nothing.
+- **The old config layout.** Six builds keep inputs directly under `<Config>`, PoB's layout before config sets (`Load` puts them into set 1). They now give `<untyped>`: PoB's five 3.13 test builds and `discrepancy-movement-speed.xml`. Their inputs were ignored before with no reason, a silent path. `discrepancy-movement-speed.xml` held only a legacy `customMods` line (movement speed, no slice field), so its 17 `Complete` fields become `Partial`. Modelling that layout is a follow-up.
+- The 3 in-scope Ice Nova builds are unchanged: their custom modifiers are the legacy `customMods` input (follow-ups).
+
+### Evidence
+
+2026-11-12, Windows; tool commit `a8e034c`, clean. Inputs as P3-12b's: bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`; a new oracle run for the new fixture. Summaries: `docs/phase-3/config-inputs/p3-12c-*`.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 87 | Every expectation met (86 `ok`, `malformed.xml` `ORACLE_IMPORT`), 3/3 identical runs each; the new fixture among them |
+| `calc-run`, public, twice | 87 | 86 documents; 1008 complete (+5: +22 the new fixture, -17 `discrepancy-movement-speed.xml`), 351 partial, 393 unsupported, 312 indeterminate. Byte-identical twice |
+| Documents against P3-12b's run | 86 | **No field value changes.** States: one build (above). Reasons: 9 gone, 39 added in 15 builds (above; `p3-12c-public-vs-p3-12b.json`) |
+| `calc-run --data-overlay`, public | 87 | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 87 | 25 differences, all registered (DIV-0001 to DIV-0025, unchanged), 0 unexpected, no unused entry, no missing mechanic fixture; 990 fields match. **Every mechanic target met (991 of 991, 50 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | All `indeterminate` (older trees), byte-identical, no difference; against P3-12b's run no value or state change; reasons: 9 builds gain `<untyped>` (the old layout), 1 an `unresolved-line`, 2 lose `<untyped>` (`p3-12c-corpus-poe1-26530219-vs-p3-12b.json`: kinds, sources, and stat IDs only, no text) |
+| `build-round-trip`, public and corpus | 82, 21 | All pass (blocks typed, their text written back) |
+
+**The new fixture** (`mechanic/ice-nova-custom-modifiers-witch.xml`): `ice-nova-witch.xml` with three blocks: an empty one; an enabled one of five game-text lines (`+30% to Cold Resistance`, `^2+20 to maximum Life^7`, `^xFF0000+20% to Global Critical Strike Multiplier`, `50% increased Spell Damage`, `10% increased Cast Speed`, with a blank line and a `^1` line between them); and a disabled one with three more. The engine's 22 compared fields are `Complete` and equal PoB's (`TotalDPS` 1739.93; the bare fixture 1039.35).
+
+**The disabled block** (local only, `local/p3/p3-12c/negative/`): the same build with the third block enabled. PoB: life 1245, fire resistance -20, `TotalDPS` 2899.75. The engine matches on all 22 fields here too (44 of 44 over both builds). PoB applies a block only when enabled, and so does the engine.
+
+**A probe of PoB-only lines** (local only, `local/p3/p3-12c/probe/`): ten lines in one block, PoB against the engine. The engine equals PoB on every field the resolved lines reach (life 1145, cold resistance 75, critical strike multiplier 1.7). It differs only where its lines are reasons: "Onslaught" (PoB +20% cast speed: `Speed` 1.857 against 1.571) and "100% more Spell Damage" (PoB doubles `AverageDamage`).
+
+Tests (1141 workspace tests, 8 new):
+- The PoB reader: blocks typed after the inputs with their lines, written back; other blocks kept whole; PoB's line rules (trim, Lua spaces, colour codes, two passes).
+- The DTO golden with a block's lines and resolutions, and a continued custom line refused both ways.
+- `resolve_build`: each outcome of a custom line on the synthetic bundle, idempotent, and unresolved lines make the build `Partial`.
+- `tests/poe1.rs`: an enabled block's resolved line applies with its source in the graph, disabled and empty blocks do nothing, each unresolved state is its reason, and a ranged line is unsettled. Content under `<Config>` and a block kept whole are `<untyped>`.
+
+Clippy, fmt, wasm32; schemas and TypeScript regenerated (the TypeScript type order moves; generated), UI type check.
+
+Commands: as P3-12a's, with `<out>` = `local/p3/p3-12c/evidence` (script `local/p3/p3-12c/evidence.sh`), plus `build-round-trip` of `tools/oracle/fixtures`, `mechanic`, and `community` and of the corpus.
+
+### Follow-ups
+
+- **The legacy `customMods` input** (the 3 in-scope Ice Nova builds, several community builds). PoB moves it into a block when the set has no block with text (`Load`, line 876). roxmltree normalises a line break in an attribute value to a space, so the lines cannot be split from the domain's value. The reader must read the attribute's raw text. Our writer also writes a line break in an attribute as `&#10;`, which PoB's reader turns into nothing (`xml.lua` decodes only five named entities). Both are needed before those lines can act; the input stays `unmodelled-config` meanwhile.
+- **The old config layout** (inputs directly under `<Config>`): type it as set 1, as PoB does, writing it back without a set.
+- **PoB's shorthand** ("Onslaught", "Culling Strike"): the in-scope Smite builds need Onslaught's buff and culling strike modelled, from the buff side (P3-12) rather than as text.
+- **Quarantine:** custom lines count in `completeness` but are not listed by `Build::quarantine` (per item line); a quarantine entry for config content would need a new shape.
