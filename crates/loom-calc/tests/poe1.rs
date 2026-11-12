@@ -118,6 +118,12 @@ impl CalcData for Data {
                 block: Some(24),
                 ..ArmourBase::default()
             })),
+            // An armour base without a shield row (as a shield the data
+            // lacks a block chance for).
+            "Test Mitts" => Some(ItemBase::Armour(ArmourBase {
+                armour: range(10, 10),
+                ..ArmourBase::default()
+            })),
             "Test Sword" => Some(ItemBase::Weapon),
             "Test Quiver" => Some(ItemBase::Other),
             "Two-Toned Boots" => Some(ItemBase::Ambiguous),
@@ -984,6 +990,27 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
     // A quiver's lines are global; nothing is missing.
     let quiver = r("Weapon 2", Some("Test Quiver"), vec![]);
     assert_eq!(state(&quiver, Field::Armour), StateKind::Complete);
+    // A base without armour properties in an armour slot is not a silent
+    // nothing.
+    assert_eq!(
+        reason(&r("Helmet", Some("Test Quiver"), vec![])),
+        "not-armour"
+    );
+    // A shield without a block chance in the data.
+    let no_block = r("Weapon 2", Some("Test Mitts"), vec![]);
+    assert_eq!(
+        state(&no_block, Field::BlockChance),
+        StateKind::Indeterminate
+    );
+    assert!(
+        no_block
+            .reasons
+            .indeterminate
+            .contains(&IndeterminateReason::MissingData {
+                table: "shield_types",
+                key: "Test Mitts".to_owned()
+            })
+    );
     // A base the data lacks.
     let unknown = r("Gloves", Some("Nothing"), vec![]);
     assert_eq!(state(&unknown, Field::Armour), StateKind::Indeterminate);
@@ -995,6 +1022,119 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
                 table: "base_items",
                 key: "Nothing".to_owned()
             })
+    );
+}
+
+#[test]
+fn the_last_spec_line_of_a_key_should_count() {
+    // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
+    let plate = item(
+        2,
+        vec![spec_line("Quality", "20"), spec_line("Quality", "10")],
+    );
+    let b = with_items(witch(90), vec![plate], &[("Body Armour", 2, false)]);
+    let r = run_with(&b, &with_bases(&[(2, "Test Plate")]));
+    assert_eq!(value(&r, Field::Armour), 132.0);
+}
+
+#[test]
+fn a_shield_in_the_swap_set_in_use_should_count_as_the_off_hand() {
+    let shield = item(4, vec![]);
+    let mut b = witch(90);
+    b.items.entries.push(ItemsEntry::Item(shield));
+    let mut set = ItemSet {
+        id: ItemSetId(1),
+        title: None,
+        slots: Ordered::new(),
+        attributes: vec![Attribute::new("useSecondWeaponSet", "true")],
+    };
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Weapon 2 Swap"),
+        item: Some(ItemId(4)),
+        attributes: Vec::new(),
+    });
+    b.items.entries.push(ItemsEntry::Set(set));
+    let r = run_with(&b, &with_bases(&[(4, "Test Shield")]));
+    assert_eq!(value(&r, Field::BlockChance), 24.0);
+    assert_eq!(value(&r, Field::Armour), 10.0);
+    assert_eq!(state(&r, Field::BlockChance), StateKind::Complete);
+}
+
+#[test]
+fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
+    let mut b = witch(1);
+    let mut config = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    config.inputs.push(ConfigInput {
+        name: "resistancePenalty".to_owned(),
+        value: ConfigValue::String("Act 5".to_owned()),
+        attributes: Vec::new(),
+    });
+    b.config.sets.push(config);
+    let r = run(&b);
+    assert_eq!(value(&r, FIRE), -60.0);
+    assert_eq!(partial_reasons(&r, FIRE), ["unmodelled-config"]);
+}
+
+#[test]
+fn rows_should_sum_in_pobs_slot_order() {
+    // Every slot and the global row; the sum is taken in PoB's order.
+    let bases = [
+        (1, "Helmet"),
+        (2, "Gloves"),
+        (3, "Boots"),
+        (4, "Body Armour"),
+        (5, "Weapon 2"),
+    ];
+    let items = bases.iter().map(|(id, _)| item(*id, vec![])).collect();
+    let slots: Vec<_> = bases.iter().map(|(id, s)| (*s, *id, false)).collect();
+    let mut b = with_items(witch(90), items, &slots);
+    b.items.entries.push(ItemsEntry::Item(item(
+        9,
+        vec![modifier(vec![
+            stat("base_physical_damage_reduction_rating", 7),
+            stat("physical_damage_reduction_rating_+%", 13),
+        ])],
+    )));
+    let r = run_with(
+        &b,
+        &with_bases(&[
+            (1, "Test Plate"),
+            (2, "Test Plate"),
+            (3, "Test Plate"),
+            (4, "Test Plate"),
+            (5, "Test Shield"),
+        ]),
+    );
+    // Item 9 is in no slot: only the pieces. 120 x 4 + 10, no increase.
+    assert_eq!(value(&r, Field::Armour), 490.0);
+    let top = r.fields[&Field::Armour].node.unwrap();
+    let rows: Vec<&'static str> = r
+        .graph
+        .iter()
+        .filter(|(i, _, _)| i.get() < top.get())
+        .filter_map(|(_, n, _)| match n {
+            Node::Product {
+                term: Term::Step(s),
+                ..
+            } if s.starts_with("slot.") => Some(*s),
+            _ => None,
+        })
+        .collect();
+    let armour_rows: Vec<_> = rows.iter().rev().take(5).rev().copied().collect();
+    assert_eq!(
+        armour_rows,
+        [
+            "slot.helmet",
+            "slot.gloves",
+            "slot.boots",
+            "slot.body-armour",
+            "slot.weapon-2"
+        ]
     );
 }
 

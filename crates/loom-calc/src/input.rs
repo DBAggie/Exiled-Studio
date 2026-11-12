@@ -216,10 +216,14 @@ impl CalcData for Bundle {
             .filter(|b| b.name == name)
             .map(|b| b.id.as_str())
             .collect();
+        // Without the property tables (format 1) no base's properties are
+        // known: `None`, so the calculation reports missing data rather
+        // than calling an armour piece something else.
+        let tables = self.properties.as_ref()?;
         if rows.is_empty() {
             return None;
         }
-        let tables = self.properties.as_ref();
+        let tables = Some(tables);
         let range = |r: &loom_data::bundle::properties::ValueRange| Range {
             min: r.min,
             max: r.max,

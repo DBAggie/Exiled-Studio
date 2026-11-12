@@ -572,24 +572,21 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         &mut reasons,
     )?);
     let base = total(calc, &base_terms, Term::Base)?;
-    let modifier = |calc: &mut Calc<'_>, reasons: &mut Reasons| -> Result<[Valued; 2], CalcError> {
-        let (store, graph) = calc.parts();
-        let inc = store.increased(graph, Quantity::BlockChance, &cx)?;
-        let more = store.more(graph, Quantity::BlockChance, &cx)?;
-        reasons.extend(&inc.reasons);
-        reasons.extend(&more.reasons);
-        Ok([
-            Valued {
-                node: inc.node,
-                value: inc.value,
-            },
-            Valued {
-                node: more.node,
-                value: more.value,
-            },
-        ])
+    // Attack and spell block share these nodes (and their reasons).
+    let (store, graph) = calc.parts();
+    let inc = store.increased(graph, Quantity::BlockChance, &cx)?;
+    let more = store.more(graph, Quantity::BlockChance, &cx)?;
+    let mut modifier_reasons = inc.reasons.clone();
+    modifier_reasons.extend(&more.reasons);
+    reasons.extend(&modifier_reasons);
+    let inc = Valued {
+        node: inc.node,
+        value: inc.value,
     };
-    let [inc, more] = modifier(calc, &mut reasons)?;
+    let more = Valued {
+        node: more.node,
+        value: more.value,
+    };
     let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
     let rounded = round(calc, raw, Term::Step("total"))?;
     let max_base = sum(
@@ -612,7 +609,7 @@ fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         Term::Base,
         &mut reasons,
     )?;
-    let [inc, more] = modifier(calc, &mut reasons)?;
+    reasons.extend(&modifier_reasons);
     let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
     let rounded = round(calc, raw, Term::Step("total"))?;
     let max_base = sum(

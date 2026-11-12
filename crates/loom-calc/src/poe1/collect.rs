@@ -520,8 +520,25 @@ fn armour_slot(
         return;
     };
     match name.find(input.data) {
-        Some(ItemBase::Armour(base)) => armour_piece(item, slot, slot_name, &base, ingest),
-        Some(ItemBase::Other) => item_lines(item, ingest),
+        Some(ItemBase::Armour(base)) => {
+            if slot == ArmourSlot::Weapon2 && base.block.is_none() {
+                // Every shield has a block chance; one the data lacks would
+                // be a silent 0.
+                ingest.indeterminate(IndeterminateReason::MissingData {
+                    table: "shield_types",
+                    key: name.name.clone(),
+                });
+            }
+            armour_piece(item, slot, slot_name, &base, ingest);
+        }
+        // A quiver in the off hand: its lines only.
+        Some(ItemBase::Other) if slot == ArmourSlot::Weapon2 => item_lines(item, ingest),
+        // A helmet, gloves, boots, or body armour whose base has no armour
+        // properties: whatever it is, its defences are not known.
+        Some(ItemBase::Other) => {
+            ingest.reason(unmodelled("not-armour"));
+            item_lines(item, ingest);
+        }
         Some(ItemBase::Weapon) => {
             ingest.reason(unmodelled("base-properties"));
             item_lines(item, ingest);
@@ -647,32 +664,38 @@ fn armour_piece(
     }
     let mut shown = Vec::new();
     let mut percentiles = Vec::new();
+    // The last line of each key counts, as PoB's `self.quality` and
+    // `armourData[key]` are overwritten line by line.
+    let mut specs: BTreeMap<PieceValue, (usize, &str)> = BTreeMap::new();
     for (index, line) in item.body.lines.iter().enumerate() {
         let LineKind::Spec { key, value, .. } = &line.kind else {
             continue;
         };
+        if key == "Quality" {
+            specs.insert(PieceValue::Quality, (index, value));
+        } else if let Some(d) = percentile_defence(key) {
+            percentiles.push(d);
+            specs.insert(PieceValue::Percentile(d), (index, value));
+        } else if let Some(d) = shown_defence(key) {
+            shown.push(d);
+        }
+    }
+    for (target, (index, value)) in specs {
         let at = Source::Item {
             item: item.id,
             line: index,
             adapted: None,
         };
-        let target = if key == "Quality" {
-            Some(PieceValue::Quality)
-        } else if let Some(d) = percentile_defence(key) {
-            percentiles.push(d);
-            Some(PieceValue::Percentile(d))
-        } else {
-            if let Some(d) = shown_defence(key) {
-                shown.push(d);
-            }
-            None
-        };
-        let Some(target) = target else { continue };
         match spec_number(value) {
             Some(n) => ingest.effect(effect(piece(target), Op::Base, n, &at)),
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
         }
     }
+    // A shown value with a range of 0 needs no percentile: PoB's
+    // derivation (`Classes/Item.lua:2323-2325`) divides by the range,
+    // giving +-inf (clamped to 1 or 0) or NaN when the shown value equals
+    // the rest exactly; times a range of 0 the term is 0 either way but in
+    // the NaN case, which a shown value PoB itself wrote never hits.
     for (defence, variance) in ranges {
         if variance != 0.0 && shown.contains(&defence) && !percentiles.contains(&defence) {
             ingest.reason(UnsupportedReason::UnmodelledItem {

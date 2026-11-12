@@ -196,7 +196,7 @@
       {
         "field": "energy-shield",
         "value": 0.0,
-        "node": 177,
+        "node": 174,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -228,7 +228,7 @@
       {
         "field": "armour",
         "value": 0.0,
-        "node": 188,
+        "node": 185,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -260,7 +260,7 @@
       {
         "field": "evasion",
         "value": 0.0,
-        "node": 199,
+        "node": 196,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -452,7 +452,7 @@
       {
         "field": "life-unreserved",
         "value": 57.0,
-        "node": 200,
+        "node": 197,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -484,7 +484,7 @@
       {
         "field": "mana-unreserved",
         "value": 56.0,
-        "node": 201,
+        "node": 198,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -551,7 +551,7 @@
       {
         "field": "poe1.spell-suppression-chance",
         "value": 0.0,
-        "node": 160,
+        "node": 157,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -583,7 +583,7 @@
       {
         "field": "poe1.spell-block-chance",
         "value": 0.0,
-        "node": 157,
+        "node": 154,
         "state": "indeterminate",
         "indeterminate": [
           {
@@ -1808,30 +1808,12 @@
         "value": 0.0
       },
       {
-        "kind": "sum",
-        "term": "step.increased-sum",
-        "value": 0.0
-      },
-      {
-        "kind": "percent-factor",
-        "term": "increased",
-        "children": [
-          149
-        ],
-        "value": 1.0
-      },
-      {
-        "kind": "product",
-        "term": "more",
-        "value": 1.0
-      },
-      {
         "kind": "product",
         "term": "step.unrounded",
         "children": [
           148,
-          150,
-          151
+          140,
+          141
         ],
         "value": 0.0
       },
@@ -1839,7 +1821,7 @@
         "kind": "round-half-up",
         "term": "step.total",
         "children": [
-          152
+          149
         ],
         "value": 0.0
       },
@@ -1860,8 +1842,8 @@
         "kind": "min",
         "term": "step.max",
         "children": [
-          154,
-          155
+          151,
+          152
         ],
         "value": 0.0
       },
@@ -1869,8 +1851,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          153,
-          156
+          150,
+          153
         ],
         "value": 0.0
       },
@@ -1891,8 +1873,8 @@
         "kind": "min",
         "term": "result",
         "children": [
-          158,
-          159
+          155,
+          156
         ],
         "value": 0.0
       },
@@ -1909,7 +1891,7 @@
         "term": "step.attribute-scaled",
         "children": [
           35,
-          161
+          158
         ],
         "value": 3.2
       },
@@ -1917,7 +1899,7 @@
         "kind": "floor",
         "term": "step.energy-shield-from-intelligence",
         "children": [
-          162
+          159
         ],
         "value": 3.0
       },
@@ -1934,7 +1916,7 @@
         "term": "step.attribute-scaled",
         "children": [
           23,
-          164
+          161
         ],
         "value": 2.8000000000000003
       },
@@ -1942,7 +1924,7 @@
         "kind": "floor",
         "term": "step.evasion-from-dexterity",
         "children": [
-          165
+          162
         ],
         "value": 2.0
       },
@@ -1955,8 +1937,8 @@
         "kind": "sum",
         "term": "step.increased-sum",
         "children": [
-          167,
-          163
+          164,
+          160
         ],
         "value": 3.0
       },
@@ -1964,7 +1946,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          168
+          165
         ],
         "value": 1.03
       },
@@ -1977,8 +1959,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          169,
-          170
+          166,
+          167
         ],
         "value": 1.03
       },
@@ -1991,7 +1973,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          172
+          169
         ],
         "value": 0.0
       },
@@ -2004,7 +1986,7 @@
         "kind": "round-half-up",
         "term": "step.rounded",
         "children": [
-          174
+          171
         ],
         "value": 0.0
       },
@@ -2020,8 +2002,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          175,
-          176
+          172,
+          173
         ],
         "value": 0.0
       },
@@ -2034,7 +2016,7 @@
         "kind": "sum",
         "term": "step.increased-sum",
         "children": [
-          178
+          175
         ],
         "value": 0.0
       },
@@ -2042,7 +2024,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          179
+          176
         ],
         "value": 1.0
       },
@@ -2055,8 +2037,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          180,
-          181
+          177,
+          178
         ],
         "value": 1.0
       },
@@ -2069,7 +2051,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          183
+          180
         ],
         "value": 0.0
       },
@@ -2082,7 +2064,7 @@
         "kind": "round-half-up",
         "term": "step.rounded",
         "children": [
-          185
+          182
         ],
         "value": 0.0
       },
@@ -2098,8 +2080,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          186,
-          187
+          183,
+          184
         ],
         "value": 0.0
       },
@@ -2112,8 +2094,8 @@
         "kind": "sum",
         "term": "step.increased-sum",
         "children": [
-          189,
-          166
+          186,
+          163
         ],
         "value": 2.0
       },
@@ -2121,7 +2103,7 @@
         "kind": "percent-factor",
         "term": "increased",
         "children": [
-          190
+          187
         ],
         "value": 1.02
       },
@@ -2134,8 +2116,8 @@
         "kind": "product",
         "term": "step.modifier",
         "children": [
-          191,
-          192
+          188,
+          189
         ],
         "value": 1.02
       },
@@ -2148,7 +2130,7 @@
         "kind": "sum",
         "term": "base",
         "children": [
-          194
+          191
         ],
         "value": 0.0
       },
@@ -2161,7 +2143,7 @@
         "kind": "round-half-up",
         "term": "step.rounded",
         "children": [
-          196
+          193
         ],
         "value": 0.0
       },
@@ -2177,8 +2159,8 @@
         "kind": "max",
         "term": "result",
         "children": [
-          197,
-          198
+          194,
+          195
         ],
         "value": 0.0
       },
