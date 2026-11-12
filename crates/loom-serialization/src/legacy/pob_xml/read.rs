@@ -549,15 +549,123 @@ fn input(n: Node<'_, '_>) -> Option<ConfigInput> {
     ) {
         (Some(b), None, None) => ConfigValue::Boolean(boolean(b)?),
         (None, Some(x), None) => ConfigValue::Number(Sourced::read(Number(x.parse().ok()?), x)),
-        (None, None, Some(s)) => ConfigValue::String(s.to_owned()),
+        (None, None, Some(_)) => ConfigValue::String(pob_attribute(n, "string")?),
         _ => return None,
     };
+    let name = text(n, "name")?;
+    // PoB's legacy custom modifiers: one string of lines, which `Load`
+    // moves into a block (`ConfigTab.lua` 872 to 884); whether they apply
+    // is the calculations' concern.
+    let lines = match &value {
+        ConfigValue::String(s) if name == LEGACY_CUSTOM_MODS => custom_modifier_lines(s)
+            .map(|text| CustomModifierLine {
+                text,
+                resolution: LineResolution::Pending,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
     Some(ConfigInput {
-        name: text(n, "name")?,
+        name,
         value,
         kind: ConfigInputKind::Input,
+        lines,
         attributes: rest(n, &["name", "boolean", "number", "string"]),
     })
+}
+
+/// PoB's legacy custom modifier input (before `CustomModifierBlock`).
+const LEGACY_CUSTOM_MODS: &str = "customMods";
+
+/// The value of attribute `name` as PoB reads it (PoB v2.67.2,
+/// `runtime/lua/xml.lua`, `parseAttribs` and `decodeContent`): the raw
+/// text between the quotes, with its line breaks, tabs, and carriage
+/// returns (XML would turn each into a space), `&lt;`, `&gt;`, `&amp;`,
+/// `&apos;`, and `&quot;` decoded, and any other reference (`&#10;`)
+/// removed. PoB writes line breaks raw (`encodeContent` escapes only those
+/// five characters), so a multi-line value round-trips only this way.
+///
+/// `None` (the element is then kept whole) when the attribute is absent,
+/// when its raw text, read as XML reads it, is not the parser's value
+/// (the raw text is then not where it was looked for), or when it holds a
+/// raw `>`: XML allows one, but PoB's tag pattern ends the tag there
+/// (`xml.lua` 52), so PoB does not read the value at all.
+fn pob_attribute(n: Node<'_, '_>, name: &str) -> Option<String> {
+    let a = n.attribute_node(name)?;
+    let raw = n.document().input_text().get(a.range_value())?;
+    (!raw.contains('>') && xml_attribute_value(raw)? == a.value()).then(|| pob_decode(raw))
+}
+
+/// A raw attribute text read as XML reads it: line ends normalised, then
+/// each line break and tab a space, then references decoded (a character
+/// reference is not normalised). `None` for a reference XML does not
+/// define.
+fn xml_attribute_value(raw: &str) -> Option<String> {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '&' => {
+                let reference: String = chars.by_ref().take_while(|&c| c != ';').collect();
+                out.push(xml_reference(&reference)?);
+            }
+            '\r' => {
+                chars.next_if_eq(&'\n');
+                out.push(' ');
+            }
+            '\n' | '\t' => out.push(' '),
+            c => out.push(c),
+        }
+    }
+    Some(out)
+}
+
+/// An XML reference's character: a predefined entity, or a decimal or
+/// hexadecimal character reference.
+fn xml_reference(reference: &str) -> Option<char> {
+    if let Some(named) = named_entity(reference) {
+        return Some(named);
+    }
+    let code = match reference.strip_prefix("#x") {
+        Some(hex) => u32::from_str_radix(hex, 16).ok()?,
+        None => reference.strip_prefix('#')?.parse().ok()?,
+    };
+    char::from_u32(code)
+}
+
+/// The five entities PoB decodes.
+fn named_entity(name: &str) -> Option<char> {
+    match name {
+        "lt" => Some('<'),
+        "gt" => Some('>'),
+        "amp" => Some('&'),
+        "apos" => Some('\''),
+        "quot" => Some('"'),
+        _ => None,
+    }
+}
+
+/// PoB's `decodeContent`: each `&` up to the next `;` replaced by the
+/// named entity, or by nothing when it is any other; an `&` with no `;`
+/// after it stays.
+fn pob_decode(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some((before, after)) = rest.split_once('&') {
+        out.push_str(before);
+        match after.split_once(';') {
+            Some((name, tail)) => {
+                out.extend(named_entity(name));
+                rest = tail;
+            }
+            None => {
+                out.push('&');
+                rest = after;
+            }
+        }
+    }
+    out.push_str(rest);
+    out
 }
 
 /// A `Placeholder` with a number (PoB v2.67.2, `Classes/ConfigTab.lua`,
@@ -572,6 +680,7 @@ fn placeholder(n: Node<'_, '_>) -> Option<ConfigInput> {
         name: text(n, "name")?,
         value: ConfigValue::Number(Sourced::read(Number(x.parse().ok()?), x)),
         kind: ConfigInputKind::Placeholder,
+        lines: Vec::new(),
         attributes: rest(n, &["name", "number"]),
     })
 }

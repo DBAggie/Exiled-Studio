@@ -80,6 +80,10 @@ fn source_to(s: &c::Source) -> Source {
             block: index_to(*block),
             line: index_to(*line),
         },
+        c::Source::ConfigInputLine { input, line } => Source::ConfigInputLine {
+            input: input.clone(),
+            line: index_to(*line),
+        },
     }
 }
 

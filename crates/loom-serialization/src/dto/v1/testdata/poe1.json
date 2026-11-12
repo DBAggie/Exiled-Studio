@@ -981,6 +981,42 @@
                     ]
                   }
                 }
+              },
+              {
+                "typed": {
+                  "name": "customMods",
+                  "value": {
+                    "string": "+20 to maximum Life\n\nIce Nova Buffs\n"
+                  },
+                  "lines": [
+                    {
+                      "text": "+20 to maximum Life",
+                      "resolution": {
+                        "resolved": {
+                          "result": {
+                            "stats": [
+                              {
+                                "stat": "made_up_life",
+                                "value": {
+                                  "exact": {
+                                    "min": 20,
+                                    "max": 20
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "text": "Ice Nova Buffs",
+                      "resolution": {
+                        "unresolved": "no-template"
+                      }
+                    }
+                  ]
+                }
               }
             ],
             "custom_modifiers": [

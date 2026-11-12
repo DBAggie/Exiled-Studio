@@ -338,6 +338,13 @@
           "description": "Whether the value was set or is a placeholder; left out for a\nset value.",
           "$ref": "#/$defs/ConfigInputKind"
         },
+        "lines": {
+          "description": "The custom modifier lines read from a text value applied as\nsuch (PoB's legacy `customMods`), with their resolutions; left\nout when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierLine"
+          }
+        },
         "name": {
           "description": "The key.",
           "type": "string"
@@ -560,7 +567,7 @@
       ]
     },
     "CustomModifierLine": {
-      "description": "One modifier line of a custom modifier block.",
+      "description": "One modifier line of a custom modifier block or a config input.",
       "type": "object",
       "properties": {
         "resolution": {

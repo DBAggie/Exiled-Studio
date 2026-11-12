@@ -459,6 +459,7 @@ pub(crate) fn poe1_build() -> Build {
             name: name.to_owned(),
             value,
             kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
             attributes: Vec::new(),
         });
     }
@@ -466,9 +467,33 @@ pub(crate) fn poe1_build() -> Build {
         name: "enemyArmour".to_owned(),
         value: number(61989.0, Some("61989")),
         kind: loom_domain::ConfigInputKind::Placeholder,
+        lines: Vec::new(),
         attributes: Vec::new(),
     });
     inputs.push_opaque(element("Placeholder", vec![attr("name", "x")], Vec::new()));
+    // PoB's legacy custom modifiers: a string input with lines (P3-12d).
+    inputs.push(ConfigInput {
+        name: "customMods".to_owned(),
+        value: ConfigValue::String("+20 to maximum Life\n\nIce Nova Buffs\n".to_owned()),
+        kind: loom_domain::ConfigInputKind::Input,
+        lines: vec![
+            loom_domain::CustomModifierLine {
+                text: "+20 to maximum Life".to_owned(),
+                resolution: LineResolution::Resolved {
+                    result: Resolved::Stats(vec![stat(
+                        "made_up_life",
+                        StatValue::Exact { min: 20, max: 20 },
+                    )]),
+                    adapted: None,
+                },
+            },
+            loom_domain::CustomModifierLine {
+                text: "Ice Nova Buffs".to_owned(),
+                resolution: LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            },
+        ],
+        attributes: Vec::new(),
+    });
     b.config.active = Some(ConfigSetId(1));
     b.config.sets.push(ConfigSet {
         id: ConfigSetId(1),
@@ -687,6 +712,31 @@ fn a_continued_custom_line_should_give_dto_domain_both_ways() {
     let json = poe1_json().replacen(
         "\"text\": \"Onslaught\",\n                    \"resolution\": {\n                      \"unresolved\": \"no-template\"",
         "\"text\": \"Onslaught\",\n                    \"resolution\": {\n                      \"continues\": { \"line\": 0 }",
+        1,
+    );
+    assert_ne!(json, poe1_json(), "the replacement must apply");
+    assert_eq!(code(&json), "DTO_DOMAIN");
+}
+
+#[test]
+fn a_continued_custom_input_line_should_give_dto_domain_both_ways() {
+    let mut b = poe1_build();
+    let set = b.config.sets.typed_mut().next().unwrap();
+    let input = set
+        .inputs
+        .typed_mut()
+        .find(|i| i.name == "customMods")
+        .unwrap();
+    input.lines[1].resolution = LineResolution::Continues { line: 0 };
+    let err = to_json(&b).unwrap_err();
+    assert_eq!(err.code(), "DTO_DOMAIN");
+    assert!(
+        err.to_string().contains("input \"customMods\", line 1"),
+        "{err}"
+    );
+    let json = poe1_json().replacen(
+        "\"text\": \"Ice Nova Buffs\",\n                      \"resolution\": {\n                        \"unresolved\": \"no-template\"",
+        "\"text\": \"Ice Nova Buffs\",\n                      \"resolution\": {\n                        \"continues\": { \"line\": 0 }",
         1,
     );
     assert_ne!(json, poe1_json(), "the replacement must apply");

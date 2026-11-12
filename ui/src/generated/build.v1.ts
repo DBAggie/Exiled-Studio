@@ -449,7 +449,7 @@ export interface CustomModifierBlock {
   title?: string | null
 }
 /**
- * One modifier line of a custom modifier block.
+ * One modifier line of a custom modifier block or a config input.
  */
 export interface CustomModifierLine {
   /**
@@ -568,6 +568,12 @@ export interface ConfigInput {
    * set value.
    */
   kind?: 'input' | 'placeholder'
+  /**
+   * The custom modifier lines read from a text value applied as
+   * such (PoB's legacy `customMods`), with their resolutions; left
+   * out when none.
+   */
+  lines?: CustomModifierLine[]
   /**
    * The key.
    */

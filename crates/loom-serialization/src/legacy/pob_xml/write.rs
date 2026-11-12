@@ -33,6 +33,26 @@ fn escape(s: &str, attribute: bool) -> String {
     out
 }
 
+/// An attribute value as PoB writes one (PoB v2.67.2, `runtime/lua/xml.lua`,
+/// `encodeContent`): only `&`, `<`, `>`, and `"` escaped (and `'`, which
+/// PoB escapes too); line breaks, tabs, and carriage returns raw, where
+/// PoB reads them back (a character reference such as `&#10;` it reads as
+/// nothing). The reader reads such a value raw (`read::pob_attribute`).
+fn escape_pob(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\x27' => out.push_str("&apos;"),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
 /// An attribute list: typed ones (when set) and the kept ones.
 type Attrs = Vec<(String, String)>;
 
@@ -69,6 +89,12 @@ impl Writer {
     }
 
     fn open(&mut self, depth: usize, name: &str, attrs: &Attrs) {
+        self.open_pob(depth, name, attrs, None);
+    }
+
+    /// [`Writer::open`], with attribute `pob` (when named) written as PoB
+    /// writes one ([`escape_pob`]).
+    fn open_pob(&mut self, depth: usize, name: &str, attrs: &Attrs, pob: Option<&str>) {
         self.indent(depth);
         self.out.push('<');
         self.out.push_str(name);
@@ -76,7 +102,11 @@ impl Writer {
             self.out.push(' ');
             self.out.push_str(k);
             self.out.push_str("=\"");
-            self.out.push_str(&escape(v, true));
+            if pob == Some(k.as_str()) {
+                self.out.push_str(&escape_pob(v));
+            } else {
+                self.out.push_str(&escape(v, true));
+            }
             self.out.push('"');
         }
     }
@@ -84,7 +114,19 @@ impl Writer {
     /// An element whose children `body` writes; self-closing when it
     /// writes none.
     fn element(&mut self, depth: usize, name: &str, attrs: &Attrs, body: impl FnOnce(&mut Self)) {
-        self.open(depth, name, attrs);
+        self.element_pob(depth, name, attrs, None, body);
+    }
+
+    /// [`Writer::element`], with attribute `pob` written as PoB writes one.
+    fn element_pob(
+        &mut self,
+        depth: usize,
+        name: &str,
+        attrs: &Attrs,
+        pob: Option<&str>,
+        body: impl FnOnce(&mut Self),
+    ) {
+        self.open_pob(depth, name, attrs, pob);
         self.out.push('>');
         let start = self.out.len();
         body(self);
@@ -355,7 +397,9 @@ fn config(w: &mut Writer, c: &Config) {
                         ConfigInputKind::Input => "Input",
                         ConfigInputKind::Placeholder => "Placeholder",
                     };
-                    w.element(3, element, &a, |_| {});
+                    // A string as PoB writes it: PoB reads a line break in
+                    // it (the legacy `customMods`) back only when raw.
+                    w.element_pob(3, element, &a, Some("string"), |_| {});
                 });
                 for b in &set.custom_modifiers {
                     let mut a = Attrs::new();

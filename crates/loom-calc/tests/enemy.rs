@@ -57,6 +57,7 @@ fn build(level: u32, inputs: &[(&str, ConfigValue)]) -> Build {
             name: (*name).to_owned(),
             value: value.clone(),
             kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
             attributes: Vec::new(),
         });
     }
@@ -107,6 +108,7 @@ fn saved_placeholders_should_not_change_the_enemy() {
                 name: name.to_owned(),
                 value: number(1.0),
                 kind: ConfigInputKind::Placeholder,
+                lines: Vec::new(),
                 attributes: Vec::new(),
             });
         }

@@ -690,6 +690,36 @@
           "required": [
             "custom-modifier"
           ]
+        },
+        {
+          "description": "A custom modifier line of a config input of the active config\nset (PoB's legacy `customMods`).",
+          "type": "object",
+          "properties": {
+            "config-input-line": {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "description": "The input's name.",
+                  "type": "string"
+                },
+                "line": {
+                  "description": "The line's index among the input's lines.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "input",
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "config-input-line"
+          ]
         }
       ]
     },

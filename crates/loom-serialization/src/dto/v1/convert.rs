@@ -825,6 +825,7 @@ fn config_to(c: &d::Config) -> Config {
                     d::ConfigInputKind::Input => ConfigInputKind::Input,
                     d::ConfigInputKind::Placeholder => ConfigInputKind::Placeholder,
                 },
+                lines: lines_to(&i.lines),
                 attributes: attrs_to(&i.attributes),
             }),
             custom_modifiers: set
@@ -834,14 +835,7 @@ fn config_to(c: &d::Config) -> Config {
                     title: b.title.clone(),
                     enabled: b.enabled,
                     text: b.text.clone(),
-                    lines: b
-                        .lines
-                        .iter()
-                        .map(|l| CustomModifierLine {
-                            text: l.text.clone(),
-                            resolution: resolution_to(&l.resolution),
-                        })
-                        .collect(),
+                    lines: lines_to(&b.lines),
                     attributes: attrs_to(&b.attributes),
                 })
                 .collect(),
@@ -849,6 +843,28 @@ fn config_to(c: &d::Config) -> Config {
         }),
         attributes: attrs_to(&c.attributes),
     }
+}
+
+fn lines_to(lines: &[d::CustomModifierLine]) -> Vec<CustomModifierLine> {
+    lines
+        .iter()
+        .map(|l| CustomModifierLine {
+            text: l.text.clone(),
+            resolution: resolution_to(&l.resolution),
+        })
+        .collect()
+}
+
+fn lines_from(lines: Vec<CustomModifierLine>) -> Result<Vec<d::CustomModifierLine>, DtoError> {
+    lines
+        .into_iter()
+        .map(|l| {
+            Ok(d::CustomModifierLine {
+                text: l.text,
+                resolution: resolution_from(l.resolution)?,
+            })
+        })
+        .collect()
 }
 
 fn config_from(c: Config) -> Result<d::Config, DtoError> {
@@ -872,6 +888,7 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                             ConfigInputKind::Input => d::ConfigInputKind::Input,
                             ConfigInputKind::Placeholder => d::ConfigInputKind::Placeholder,
                         },
+                        lines: lines_from(i.lines)?,
                         attributes: attrs_from(i.attributes),
                     })
                 })?,
@@ -883,16 +900,7 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                             title: b.title,
                             enabled: b.enabled,
                             text: b.text,
-                            lines: b
-                                .lines
-                                .into_iter()
-                                .map(|l| {
-                                    Ok(d::CustomModifierLine {
-                                        text: l.text,
-                                        resolution: resolution_from(l.resolution)?,
-                                    })
-                                })
-                                .collect::<Result<_, DtoError>>()?,
+                            lines: lines_from(b.lines)?,
                             attributes: attrs_from(b.attributes),
                         })
                     })

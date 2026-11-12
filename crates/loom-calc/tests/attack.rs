@@ -336,6 +336,7 @@ fn build(skill: &str, part: Option<&str>, slots: &[(&str, &str)], enemy: &[(&str
             name: (*name).to_owned(),
             value: ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
             kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
             attributes: Vec::new(),
         });
     }

@@ -25,13 +25,14 @@ impl Config {
     /// # Errors
     /// [`DomainError::ContinuedCustomLine`] for the first such line.
     pub fn check_custom_lines(&self) -> Result<(), DomainError> {
+        let continued = |lines: &[CustomModifierLine]| {
+            lines
+                .iter()
+                .position(|l| matches!(l.resolution, LineResolution::Continues { .. }))
+        };
         for set in self.sets.typed() {
             for (block, b) in set.custom_modifiers.iter().enumerate() {
-                if let Some(line) = b
-                    .lines
-                    .iter()
-                    .position(|l| matches!(l.resolution, LineResolution::Continues { .. }))
-                {
+                if let Some(line) = continued(&b.lines) {
                     return Err(DomainError::ContinuedCustomLine {
                         set: set.id.0,
                         block,
@@ -39,8 +40,28 @@ impl Config {
                     });
                 }
             }
+            for input in set.inputs.typed() {
+                if let Some(line) = continued(&input.lines) {
+                    return Err(DomainError::ContinuedCustomInputLine {
+                        set: set.id.0,
+                        input: input.name.clone(),
+                        line,
+                    });
+                }
+            }
         }
         Ok(())
+    }
+
+    /// Every custom modifier line of every set: the blocks' and the
+    /// inputs'.
+    pub fn custom_lines(&self) -> impl Iterator<Item = &CustomModifierLine> {
+        self.sets.typed().flat_map(|s| {
+            s.custom_modifiers
+                .iter()
+                .flat_map(|b| &b.lines)
+                .chain(s.inputs.typed().flat_map(|i| &i.lines))
+        })
     }
 }
 
@@ -100,6 +121,13 @@ pub struct ConfigInput {
     pub value: ConfigValue,
     /// Whether the value was set or is a placeholder.
     pub kind: ConfigInputKind,
+    /// The modifier lines the import adapter read from a text value its
+    /// format applies as custom modifier lines (PoB's legacy `customMods`
+    /// input), in order, each with its resolution; empty for any other
+    /// input. Whether they apply is the calculations' concern (PoB applies
+    /// them only when the set has no block with text). Derived from
+    /// `value`, as a block's lines are from its text.
+    pub lines: Vec<CustomModifierLine>,
     /// Attributes not typed.
     pub attributes: Attributes,
 }
