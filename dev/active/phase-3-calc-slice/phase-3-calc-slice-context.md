@@ -303,7 +303,7 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
-## Decisions in P3-12c (custom modifier blocks in full; evidence `docs/phase-3/config-inputs.md`, "P3-12c")
+## Decisions in P3-12c (PR #85; custom modifier blocks in full; evidence `docs/phase-3/config-inputs.md`, "P3-12c")
 - **In full (maintainer, 2026-11-12, during the session):** the session first typed the blocks with each line a reason (reading the earlier MVP remark as "smallest step"); the maintainer corrected it: implement the blocks in full, the MVP remark does not cut a step short. The interim reason `unmodelled-custom-modifier` was removed before the PR.
 - **Lines like item lines:** a block keeps its text as read (export) and its `lines`, each a `LineResolution`, derived by the import adapter (PoB: `StripEscapes`, Lua `%s` trim, empty lines left out). The PoB-specific rules live in the adapter, not the calc. Nothing checks `lines` against `text`: a command that edits `text` must derive them again (documented on the type).
 - **Resolution:** each line alone, in the bundle's default scope (character-wide, no item base), with case folding. No base means no mod-row filter, so an ambiguous line stays unresolved; half of a two-line description is `no-template`. Ranges stay ranges (`unsettled-value`).

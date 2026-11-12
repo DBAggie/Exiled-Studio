@@ -81,7 +81,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [ ] P3-12 buffs and config (one or more PRs)
   - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
   - [x] P3-12b PoB's config placeholders (PR #84, merged into `dev` as `95b53a6`; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
-  - [x] P3-12c custom modifier blocks in full (PR open; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
+  - [x] P3-12c custom modifier blocks in full (PR #85, open; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
   - [ ] Next: the legacy `customMods` input and the old config layout; then charges, rage, fortification, shock, exposure, other gems (auras, buffs), Onslaught and culling strike
 
 ## P3-14: corpus run and register
