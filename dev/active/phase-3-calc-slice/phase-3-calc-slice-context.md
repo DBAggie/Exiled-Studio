@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-8c: the Smite builds' global stats)
+Last Updated: 2026-11-12 (P3-12b: PoB's config placeholders)
 
 # Phase 3: calc slice (context)
 
@@ -302,6 +302,16 @@ The question as asked: where the default enemy's armour and evasion come from: P
 
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
+
+## Decisions in P3-12b (PR #84; PoB's config placeholders; evidence `docs/phase-3/config-inputs.md`, "P3-12b")
+- **Why next:** `<untyped>` was a config reason in all 7 in-scope builds, and in every build PoB saved with placeholders; PoB applies a numeric option's placeholder when its input is unset (`ConfigTab.lua` 1147), so the reason was right in principle but said nothing about which placeholder mattered.
+- **Typed in the domain, not read from opaque content:** `ConfigInput.kind` (`Input`, `Placeholder`), so the calc never knows PoB's element names. A string placeholder (PoB loads it as the input's value) and one without a number stay opaque.
+- **Build document v1, additive (accepted by the maintainer 2026-11-12 (MVP: keep v1, no migration)):** an optional `kind` (left out for `input`), the first change to build v1 since Phase 2, on calc result v1's written rule (`dto/calc/v1/mod.rs`): additive until the Phase 3 gate, every reader in this repository, nothing released. Caveat: a reader from before the change refuses a document with a placeholder (`DTO_JSON`, not `MIGRATE_TOO_NEW`). The alternative is a v2 with a no-op migration.
+- **A placeholder is classified as its input** (same `apply`): `NAMED_ONLY` + 13 rows (stack counts, multipliers, the two distances, whose `skillDist` only modifier tags read); `ENEMY_DAMAGE` (13, inputs too: only `buildDefenceEstimations` reads them); `enemy::RESET_PLACEHOLDERS` (7, placeholders only: `enemyIsBoss` resets them each run; `enemyPhysicalOverwhelm` is not reset by Pinnacle or Uber, so it is in `ENEMY_DAMAGE`). Any other placeholder is `unmodelled-config` under its name. `DEPENDS_ON` + 18 stats.
+- **Not done:** `CustomModifierBlock` (custom modifiers): `<untyped>` left in 9 public builds (empty block in 4, Smite act1 among them; real modifiers in 5, Smite act2, act5, act10).
+
+## code-architecture-reviewer (P3-12b, 2026-11-12) summary
+No wrong value or silent path; every PoB claim confirmed (Load, `BuildModList`, `enemyIsBoss` per kind, the readers of the enemy's damage and the distances). Applied: two more `DEPENDS_ON` stats (Hallowing Flame's per-flame-removed lightning, which reads `multiplierHallowingFlameStacksRemovedByAlly`; the Point Blank support on an item); a maintainer-run test that every `DEPENDS_ON` stat is in the real bundle (typos); "unset, or 0 unless `countAllowZero`" wording; `calc-survey` lists set inputs only (its report byte-identical to `dev`'s); a local PoB check of the None and Uber kinds (slice keys equal with and without the placeholders); the build v1 rule written down for the maintainer. Noted: a placeholder's reason has its input's form.
 
 ## Decisions in P3-12a (PR #82; config inputs that only set named conditions; evidence `docs/phase-3/config-inputs.md`)
 - **Why first in step 12:** every reason is build-wide, and of the in-scope builds' config reasons (18 Ice Nova, 19 Smite) about half only set PoB named conditions or multipliers. Removing them changes no value and makes later steps' remaining list honest. It turns no in-scope field `Complete` (other gems, unmapped stats, choices, and 10 config inputs each remain).

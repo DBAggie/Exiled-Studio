@@ -148,6 +148,10 @@ pub fn kept_whole(build: &Build) -> Vec<String> {
                     out.extend(
                         named(&set.inputs, "Input").map(|()| "Config/ConfigSet/Input".to_owned()),
                     );
+                    out.extend(
+                        named(&set.inputs, "Placeholder")
+                            .map(|()| "Config/ConfigSet/Placeholder".to_owned()),
+                    );
                 }
             }
             _ => {}

@@ -334,6 +334,10 @@
             "$ref": "#/$defs/Attribute"
           }
         },
+        "kind": {
+          "description": "Whether the value was set or is a placeholder; left out for a\nset value.",
+          "$ref": "#/$defs/ConfigInputKind"
+        },
         "name": {
           "description": "The key.",
           "type": "string"
@@ -377,6 +381,21 @@
           "required": [
             "opaque"
           ]
+        }
+      ]
+    },
+    "ConfigInputKind": {
+      "description": "Whether a config value was set or is a placeholder.",
+      "oneOf": [
+        {
+          "description": "A value set for the input.",
+          "type": "string",
+          "const": "input"
+        },
+        {
+          "description": "A placeholder: the value a planner shows for an input left\nunset, which it may also use for that input.",
+          "type": "string",
+          "const": "placeholder"
         }
       ]
     },

@@ -12,12 +12,13 @@ use loom_domain as d;
 use super::DtoError;
 use super::types::{Adapted, Exclusion};
 use super::types::{
-    AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigSet,
-    ConfigValue, DataVersion, Entry, Game, GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine,
-    ItemPart, ItemSet, Items, ItemsEntry, JewelSocket, LineKind, LineResolution, MasteryEffect,
-    ModSection, ModifierLine, NoBase, NonFinite, Number, OpaqueNode, PassiveSpec, Passives,
-    Poe2Choices, Prefix, PropertyValue, Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup,
-    Sourced, SpecPart, StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
+    AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
+    ConfigSet, ConfigValue, DataVersion, Entry, Game, GameSpecific, Gem, HeaderLine, Item,
+    ItemBody, ItemLine, ItemPart, ItemSet, Items, ItemsEntry, JewelSocket, LineKind,
+    LineResolution, MasteryEffect, ModSection, ModifierLine, NoBase, NonFinite, Number, OpaqueNode,
+    PassiveSpec, Passives, Poe2Choices, Prefix, PropertyValue, Rarity, Resolved, SkillSet, Skills,
+    SlotEntry, SocketGroup, Sourced, SpecPart, StatLine, StatValue, TypedResolution,
+    UnresolvedReason, VariantSelection,
 };
 
 // ---- shared ----------------------------------------------------------------
@@ -820,6 +821,10 @@ fn config_to(c: &d::Config) -> Config {
                     d::ConfigValue::Number(n) => ConfigValue::Number(sourced_to(n, number_to)),
                     d::ConfigValue::String(s) => ConfigValue::String(s.clone()),
                 },
+                kind: match i.kind {
+                    d::ConfigInputKind::Input => ConfigInputKind::Input,
+                    d::ConfigInputKind::Placeholder => ConfigInputKind::Placeholder,
+                },
                 attributes: attrs_to(&i.attributes),
             }),
             attributes: attrs_to(&set.attributes),
@@ -844,6 +849,10 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                                 d::ConfigValue::Number(sourced_from(n, number_from)?)
                             }
                             ConfigValue::String(s) => d::ConfigValue::String(s),
+                        },
+                        kind: match i.kind {
+                            ConfigInputKind::Input => d::ConfigInputKind::Input,
+                            ConfigInputKind::Placeholder => d::ConfigInputKind::Placeholder,
                         },
                         attributes: attrs_from(i.attributes),
                     })

@@ -76,5 +76,53 @@ $lpc calc-parity local/p3/p3-5/evidence-p4/oracle-corpus <out>/corpus --slice do
 ### Follow-ups
 
 - More inputs of the same kind (the public fixtures' other `condition*` and `multiplier*` inputs), each checked as above.
-- `<untyped>`: type PoB's `Placeholder` values (PoB applies a count input's placeholder when the input is unset) and custom modifier blocks.
+- `<untyped>`: type PoB's `Placeholder` values (PoB applies a count input's placeholder when the input is unset) and custom modifier blocks. Placeholders: done in P3-12b (below).
 - Inputs with their own effects, as the in-scope builds need them: charges, rage, fortification, shock, exposure (P3-12's next steps).
+
+## P3-12b: placeholders
+
+**Why.** PoB saves a placeholder (`<Placeholder name="ShockStacks" number="1"/>`) for every option that has one, and applies a numeric option's placeholder when its input is unset, or 0 unless the option is `countAllowZero` (`Classes/ConfigTab.lua`, `BuildModList`, line 1147), through the option's own `apply`; its calc modules also read some placeholders directly (`env.configPlaceholder`: the enemy's damage, the distances). The model kept placeholders untyped, so every build PoB saved since placeholders exist had the reason `unmodelled-config <untyped>`, whatever they held.
+
+**The model** (`loom_domain::ConfigInput`, `kind`). A numeric `Placeholder` is a config entry of kind `Placeholder`, beside the inputs in source order; the PoB reader types it and the writer writes it back. PoB loads a `string` placeholder as the input's value (`Load`, line 876), so that form, and one without a number, stays untyped (and is listed by `kept_whole`). Build document v1 gains an optional `kind` on a config entry, left out for a set value (`"kind": "placeholder"`); schema and TypeScript regenerated. Documents are strict, so a reader from before this change refuses a document with a placeholder (`DTO_JSON`, not `MIGRATE_TOO_NEW`) rather than dropping it. This is the first change to build v1 since Phase 2, made additive rather than as a v2 with a migration, on the rule calc result v1 already follows (`dto::calc::v1`): additive changes until the Phase 3 gate, every reader being in this repository and nothing released. Accepted by the maintainer 2026-11-12 (keep v1, no migration).
+
+**The rule** (`crates/loom-calc/src/poe1/config.rs`). A placeholder is classified as its input, because PoB applies it through the same `apply`:
+
+| Placeholders | Class | Why (PoB v2.67.2) |
+|---|---|---|
+| `ScorchStacks`, `ShockStacks` | `NAMED_ONLY` | The enemy's `Multiplier:ScorchStacks`, `ShockStacks` (`ConfigOptions.lua` 1892, 1951); `CalcPerform.lua` 3550, 3566 read them only with `ScorchCanStack` or `ShockCanStack`, which only a modifier sets (`ModParser.lua` 3045, 3047) |
+| `aspectOfLunarisLunarProtection`, `aspectOfLunarisLunarResistance`, `aspectOfSolarisSunscaldStacks`, `configSpectralTigerCount`, `multiplierHallowingFlameStacksRemovedByAlly`, `sigilOfPowerStages` | `NAMED_ONLY` | Multipliers (262, 265, 269, 644, 1994, 631) the calc modules never read; the skills' stat maps and modifiers do (Hallowing Flame: `ModParser.lua` 2898) |
+| `multiplierEnemyHallowingFlame` | `NAMED_ONLY` | The enemy's `Multiplier:HallowingFlame` (1991); never read (`CalcPerform.lua` 3440 reads the condition, and only with a modifier's `CanInflictHallowingFlame`) |
+| `multiplierWitheredStackCountSelf` | `NAMED_ONLY` | `Multiplier:WitheredStack` (1231); `CalcPerform.lua` 852: chaos damage taken by you (no slice field), only with `CanBeWithered` |
+| `meleeDistance`, `projectileDistance` | `NAMED_ONLY` | No `apply` (1789, 1790); `CalcActiveSkill.lua` 457 makes the input or placeholder the skill's `skillDist`, which only modifiers' `DistanceRamp` and `MeleeProximity` tags read (`ModStore.lua` 599, 619); `CalcOffence.lua` 1083, 1086 add such modifiers for `PointBlank` and `FarShot`, modifiers' flags |
+| `enemyLevel`, the four resistances, `enemyArmour`, `enemyEvasion` | `enemy::RESET_PLACEHOLDERS` | `enemyIsBoss`, earlier in PoB's list, sets them on every run for each kind it knows (2087 to 2219); the enemy model derives them (P3-11). For an unknown kind PoB would read the saved ones, and the enemy model reports `UnknownBossKind` |
+| `enemy{Physical,Lightning,Cold,Fire,Chaos}Damage`, `enemy{Lightning,Cold,Fire}Pen`, `enemyPhysicalOverwhelm`, `enemyCritChance`, `enemyCritDamage`, `enemySpeed`, `enemyDamageRollRange` | `ENEMY_DAMAGE` (inputs too) | No `apply` (2352 to 2376); only `calcs.buildDefenceEstimations` reads them (`CalcDefence.lua` 1737 to 1757, 2965, 3552: damage taken, effective life, maximum hit; no slice field), and `presetBossSkills` reads the roll range to set the damage placeholders (2286). `enemyPhysicalOverwhelm` is here, not reset: Pinnacle and Uber leave it |
+
+Any other placeholder is `unmodelled-config` under its input's name. The enemy model and the resistance penalty read set inputs only. A placeholder's reason has the same form as its input's (`unmodelled-config` and the name), so a report does not tell them apart.
+
+**What the rule depends on.** `DEPENDS_ON` gains 18 stats, each asserted `Unmapped` through every mapping and (maintainer-run, `tests/enemy.rs`) present in the real bundle: shock and scorch stacking (`raider_shocks_you_apply_can_stack_up_to_50_times`, `can_apply_additional_scorch`), and the distance modifiers: the projectile and arrow ramps (6), `slayer_damage_+%_final_from_distance`, `keystone_point_blank`, the Point Blank support on an item, `player_far_shot`, `gain_player_far_shot_while_do_not_have_iron_reflexes`, and four skill stats (Lancing Steel, Shattering Steel, Shield Crush, Close Combat support); and the Hallowing Flame modifier that reads `multiplierHallowingFlameStacksRemovedByAlly` (`physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%`, `ModParser.lua` 2898). Freezing Pulse and Eye of Winter add their distance modifiers in their own skill code, outside any stat; neither skill is modelled.
+
+**What changes:** reasons only. No value, state, or graph changes in any document. In the 3 in-scope Ice Nova builds `<untyped>` is gone (9 config reasons left: `bandit`, `conditionEnemyColdExposure`, `conditionEnemyShocked`, `customMods`, the pantheon (2), `summonLightningGolemEnableWrath`, two charges); the 4 Smite builds keep it through their custom modifier block (below).
+
+### Evidence
+
+2026-11-12, Windows; tool commit `803e7cf`, clean (the run on the uncommitted tree before it gave byte-identical documents). Inputs as P3-12a's: bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`; a new oracle run for the new fixture. Summaries: `docs/phase-3/config-inputs/p3-12b-*`.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 86 | Every expectation met (85 `ok`, `malformed.xml` `ORACLE_IMPORT`), 3/3 identical runs each; the new fixture among them |
+| `calc-run`, public, twice | 86 | 85 documents; 1003 complete (+22, the new fixture), 334 partial, 391 unsupported, 312 indeterminate. Byte-identical twice |
+| Documents against P3-8c's run | 85 | **No field value, state, or graph changes.** Reasons only: 22 gone in 19 builds (`<untyped>` 19, `projectileDistance` 2, `meleeDistance` 1, inputs now `NAMED_ONLY`), none added (`p3-12b-public-reasons-vs-p3-8c.json`) |
+| `calc-run --data-overlay`, public | 86 | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 86 | 25 differences, all registered (DIV-0001 to DIV-0025, unchanged), 0 unexpected, no unused entry, no missing mechanic fixture; 985 fields match (+22). **Every mechanic target met (969 of 969, 49 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | All `indeterminate` (older trees), byte-identical, no difference; against P3-8c's run no value or state change, 12 reasons gone in 11 builds (`<untyped>` 10, `meleeDistance` 2), none added |
+| `build-round-trip`, public and corpus | 81, 21 | All pass (the reader now types placeholders; export and re-import equal) |
+
+**The new fixture** (`mechanic/ice-nova-config-placeholders-witch.xml`): `ice-nova-witch.xml` with a saved placeholder for each of the 31 classified inputs at a value PoB would show if it used it (the enemy's cold resistance 0, level 1, armour 0; shock stacks 5; distances 5 and 90), and two enemy damage inputs. PoB's values equal the bare fixture's on all 24 compared fields (`TotalDPS` 1039.35 in both): PoB really resets the enemy's placeholders, and the rest change nothing here. The engine's fields are `Complete` and match, with no config reason. As for P3-12a, this is the positive half: on a bare build no modifier reads the names.
+
+**The other boss kinds** (local only, `local/p3/p3-12b/kinds/`; the fixture runs only the default Pinnacle, whose resets differ from the others'). The same build with `enemyIsBoss` `None` and `Uber`, each bare and with the fixture's placeholders and inputs (oracle 3/3 each): every slice key of PoB's `main_output` is equal between bare and placeholders (`TotalDPS` 2078.71 for None, 311.81 for Uber). The only keys that differ are PoB's damage-taken estimates (`TotalEHP`, `PhysicalTakenHit`, `enemySkillTime`, `totalEnemyDamage`, and 9 others), from the two enemy damage inputs: `ENEMY_DAMAGE` reaches PoB's output, but no slice field. Not a mechanic fixture: an `enemyIsBoss` input stays a reason, so the engine's fields are `Partial`.
+
+Tests (1133 workspace tests, 5 new): the PoB reader (a numeric placeholder typed beside the inputs, written back; a string or non-numeric one kept whole and listed); the DTO golden with a placeholder; `poe1::config` (`ENEMY_DAMAGE` sorted and apart from the other tables; `DEPENDS_ON` with the 16 new stats `Unmapped` through every mapping); `tests/poe1.rs`, every classified placeholder at 0, 1, and 99 gives the bare build's states and values, enemy damage inputs are quiet, and any other placeholder (`conditionShockEffect`, a `resistancePenalty` placeholder) is the only reason under its name; `tests/enemy.rs`, saved placeholders at 1 leave each boss kind's enemy unchanged. Clippy, fmt, wasm32; schema and TypeScript regenerated, UI type check.
+
+Commands: as P3-12a's (above), with `<out>` = `local/p3/p3-12b/evidence`, plus `build-round-trip` (`AGENTS.md`).
+
+**Not done.** PoB's `CustomModifierBlock` (custom modifiers, newer builds) stays untyped: `<untyped>` remains in 9 public builds, all from such a block: empty in four (Smite act1 among them), real modifiers in five (Smite act2, act5, and act10: "Perfect Forest Warrior", "Onslaught", "Culling Strike"; two others). Typing the blocks, with an empty block as no effect and each line as a reason until it is modelled, is the next config step.

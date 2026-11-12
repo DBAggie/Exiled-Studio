@@ -1,0 +1,134 @@
+{
+ "builds_added": 0,
+ "builds_gone": 19,
+ "changed": {},
+ "only_after": [
+  "ice-nova-config-placeholders-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}",
+    "{\"unmodelled-config\": {\"input\": \"meleeDistance\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}",
+    "{\"unmodelled-config\": {\"input\": \"projectileDistance\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}",
+    "{\"unmodelled-config\": {\"input\": \"projectileDistance\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  }
+ },
+ "reasons_added": {},
+ "reasons_gone": {
+  "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}": 19,
+  "{\"unmodelled-config\": {\"input\": \"meleeDistance\"}}": 1,
+  "{\"unmodelled-config\": {\"input\": \"projectileDistance\"}}": 2
+ }
+}

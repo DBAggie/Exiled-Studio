@@ -40,8 +40,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{
-    Build, ConfigSet, ConfigValue, GameSpecific, Item, ItemId, ItemSet, LineKind, NodeId,
-    PassiveSpec, StatId, StatLine, StatValue,
+    Build, ConfigInputKind, ConfigSet, ConfigValue, GameSpecific, Item, ItemId, ItemSet, LineKind,
+    NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
 use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
@@ -184,7 +184,7 @@ fn resistance_penalty(build: &Build, ingest: &mut Ingest<'_>) {
     let configured = set.and_then(|s| {
         s.inputs
             .typed()
-            .find(|i| i.name == RESISTANCE_PENALTY_INPUT)
+            .find(|i| i.kind == ConfigInputKind::Input && i.name == RESISTANCE_PENALTY_INPUT)
             .and_then(|i| match &i.value {
                 ConfigValue::Number(n) => Some(n.value().0),
                 ConfigValue::Boolean(_) | ConfigValue::String(_) => None,
@@ -1005,12 +1005,16 @@ fn active_config(build: &Build) -> Option<&ConfigSet> {
         .or_else(|| config.sets.typed().next())
 }
 
-/// Every input of the active config set that can change a computed field
-/// the engine does not model: all but a numeric `resistancePenalty`
-/// ([`resistance_penalty`]), the enemy model's numeric inputs, and the
-/// inputs that only set named conditions or multipliers
-/// ([`super::config::NAMED_ONLY`]). Untyped content (PoB's placeholders,
-/// custom modifier blocks) is one `<untyped>` reason.
+/// Every input and placeholder of the active config set that can change a
+/// computed field the engine does not model: all but a numeric
+/// `resistancePenalty` ([`resistance_penalty`]), the enemy model's numeric
+/// inputs and the placeholders it derives
+/// ([`super::enemy::RESET_PLACEHOLDERS`]), the inputs that only set named
+/// conditions, multipliers, or distances ([`super::config::NAMED_ONLY`]),
+/// and the enemy's damage ([`super::config::ENEMY_DAMAGE`]). A
+/// placeholder's reason has its input's name (`poe1::config`, module
+/// docs). Untyped content (custom modifier blocks, a placeholder PoB reads
+/// as an input) is one `<untyped>` reason.
 fn config(build: &Build, ingest: &mut Ingest<'_>) {
     let Some(set) = active_config(build) else {
         return;
@@ -1023,6 +1027,22 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
     // Every input, whatever its value: some of PoB's options default to
     // on, so even `false` can change a result.
     for input in set.inputs.typed() {
+        // Named conditions, multipliers, and distances only modifiers
+        // read, and the enemy's damage: no computed field changes, for an
+        // input or a placeholder (`poe1::config`, P3-12a, P3-12b).
+        if super::config::named_only(&input.name) || super::config::enemy_damage(&input.name) {
+            continue;
+        }
+        if input.kind == ConfigInputKind::Placeholder {
+            // PoB's `enemyIsBoss` sets these on every run; the enemy
+            // model derives them (P3-12b).
+            if !super::enemy::RESET_PLACEHOLDERS.contains(&input.name.as_str()) {
+                ingest.reason(UnsupportedReason::UnmodelledConfig {
+                    input: input.name.clone(),
+                });
+            }
+            continue;
+        }
         if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
             continue;
         }
@@ -1035,11 +1055,6 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             && input.name != "enemyIsBoss"
             && matches!(input.value, ConfigValue::Number(_))
         {
-            continue;
-        }
-        // Named conditions and multipliers only modifiers read: no
-        // computed field changes (`poe1::config`, P3-12a).
-        if super::config::named_only(&input.name) {
             continue;
         }
         ingest.reason(UnsupportedReason::UnmodelledConfig {

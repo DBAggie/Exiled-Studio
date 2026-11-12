@@ -242,7 +242,13 @@ pub fn inventory(build: &Build, t: &Tables<'_>, main_group: Option<usize>) -> In
         .and_then(|id| config.sets.typed().find(|s| s.id == id))
         .or_else(|| config.sets.typed().next());
     if let Some(set) = set {
-        inv.config = set.inputs.typed().map(|i| i.name.clone()).collect();
+        // Set inputs only: placeholders are typed since P3-12b.
+        inv.config = set
+            .inputs
+            .typed()
+            .filter(|i| i.kind == loom_domain::ConfigInputKind::Input)
+            .map(|i| i.name.clone())
+            .collect();
     }
     inv
 }

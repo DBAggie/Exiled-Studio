@@ -36,8 +36,24 @@ pub struct ConfigInput {
     pub name: String,
     /// The value.
     pub value: ConfigValue,
+    /// Whether the value was set or is a placeholder.
+    pub kind: ConfigInputKind,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// Whether a config value was set or is a placeholder.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ConfigInputKind {
+    /// A value set for the input.
+    #[default]
+    Input,
+    /// A placeholder: the value a planner shows for an input left unset,
+    /// which it may also use for that input (PoB applies a numeric
+    /// input's placeholder when the input is unset, or 0 unless the
+    /// option is `countAllowZero`). What it
+    /// changes is the calculations' concern.
+    Placeholder,
 }
 
 /// A config value.

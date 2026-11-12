@@ -55,6 +55,7 @@ fn build(level: u32, inputs: &[(&str, ConfigValue)]) -> Build {
         set.inputs.push(ConfigInput {
             name: (*name).to_owned(),
             value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
             attributes: Vec::new(),
         });
     }
@@ -86,6 +87,30 @@ fn the_default_enemy_should_be_a_pinnacle_boss() {
     assert_eq!(e.armour, Some((armour * (mean / 100.0) + 0.5).floor()));
     assert_eq!(e.evasion, Some((840.0 * 1.5_f64 + 0.5).floor()));
     assert!(e.problems.is_empty(), "{:?}", e.problems);
+}
+
+/// PoB's `enemyIsBoss` resets these placeholders on every run, so a
+/// build's saved ones change nothing (P3-12b, `RESET_PLACEHOLDERS`).
+#[test]
+fn saved_placeholders_should_not_change_the_enemy() {
+    use loom_calc::poe1::enemy::RESET_PLACEHOLDERS;
+    use loom_domain::ConfigInputKind;
+
+    let data = data();
+    for kind in ["None", "Boss", "Pinnacle", "Uber"] {
+        let bare = build(70, &[("enemyIsBoss", text(kind))]);
+        let mut saved = bare.clone();
+        let set = saved.config.sets.typed_mut().next().unwrap();
+        for name in RESET_PLACEHOLDERS {
+            set.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value: number(1.0),
+                kind: ConfigInputKind::Placeholder,
+                attributes: Vec::new(),
+            });
+        }
+        assert_eq!(enemy(&saved, &data), enemy(&bare, &data), "{kind}");
+    }
 }
 
 #[test]
@@ -221,6 +246,26 @@ fn the_armour_table_should_equal_pobs_with_its_constant() {
         let level = i64::try_from(i).unwrap() + 1;
         assert_eq!(monster_armour(&data, level), Some(*pob), "level {level}");
     }
+}
+
+/// Every stat the config rules depend on (`loom_calc::poe1::config::
+/// DEPENDS_ON`) is a stat of the real bundle: a misspelt ID would pass the
+/// `Unmapped` check. Maintainer-run: `LOOM_BUNDLE_DIR=<bundle> cargo test
+/// -p loom-calc --test enemy -- --ignored`.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn the_config_rules_stats_should_be_real_stats() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let missing: Vec<_> = loom_calc::poe1::config::DEPENDS_ON
+        .iter()
+        .filter(|id| !data.stats.iter().any(|s| s.id == **id))
+        .collect();
+    assert!(missing.is_empty(), "{missing:?}");
 }
 
 /// The real PoE1 bundle's default enemy against the values PoB v2.67.2
