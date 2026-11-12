@@ -2,9 +2,11 @@
 //! resolved build (borrowed, immutable), a view of the game data, and the
 //! options.
 
+use std::collections::BTreeMap;
+
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
-use loom_domain::{Build, ConfigSetId, DataVersion, ItemSetId, SpecId, TreeVersion};
+use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 
 use crate::error::CalcError;
 
@@ -50,6 +52,66 @@ pub trait CalcData {
     /// A passive node's place in the tree: whether it is a root (a class
     /// or ascendancy start) and the nodes it is linked to, either way.
     fn passive_links(&self, node: u32) -> Option<PassiveLinks>;
+
+    /// The properties of the item base with this name; `None` when no
+    /// base has the name.
+    fn item_base(&self, name: &str) -> Option<ItemBase>;
+}
+
+/// What an item base is, for its properties ([`CalcData::item_base`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemBase {
+    /// An armour piece (or shield) with its defences.
+    Armour(ArmourBase),
+    /// A weapon.
+    Weapon,
+    /// Another base (jewellery, quivers, jewels, flasks).
+    Other,
+    /// Bases of this name have different properties (PoE1's Two-Toned
+    /// Boots: three bases, one name).
+    Ambiguous,
+}
+
+/// A range of base values a property rolls in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Range {
+    /// The lowest roll.
+    pub min: i64,
+    /// The highest roll.
+    pub max: i64,
+}
+
+/// An armour base's defences (the armour types and shield types tables).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ArmourBase {
+    /// Armour.
+    pub armour: Range,
+    /// Evasion rating.
+    pub evasion: Range,
+    /// Energy shield.
+    pub energy_shield: Range,
+    /// A shield's chance to block, percent.
+    pub block: Option<i64>,
+}
+
+/// An item's base name as the import adapter found it (the adapter's
+/// format rules, as `resolve_build` takes them): the name, and a name to
+/// try when it is not a base.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BaseName {
+    /// The name to look up.
+    pub name: String,
+    /// A name to look up when `name` is not a base.
+    pub fallback: Option<String>,
+}
+
+impl BaseName {
+    /// The base of this name (else the fallback's) in `data`.
+    #[must_use]
+    pub fn find(&self, data: &dyn CalcData) -> Option<ItemBase> {
+        data.item_base(&self.name)
+            .or_else(|| self.fallback.as_deref().and_then(|f| data.item_base(f)))
+    }
 }
 
 /// A passive node's links in the tree ([`CalcData::passive_links`]).
@@ -146,6 +208,52 @@ impl CalcData for Bundle {
             links,
         })
     }
+
+    fn item_base(&self, name: &str) -> Option<ItemBase> {
+        let rows: Vec<&str> = self
+            .base_items
+            .iter()
+            .filter(|b| b.name == name)
+            .map(|b| b.id.as_str())
+            .collect();
+        if rows.is_empty() {
+            return None;
+        }
+        let tables = self.properties.as_ref();
+        let range = |r: &loom_data::bundle::properties::ValueRange| Range {
+            min: r.min,
+            max: r.max,
+        };
+        let found: Vec<ItemBase> = rows
+            .iter()
+            .map(|id| {
+                let armour =
+                    tables.and_then(|t| t.armour_types.iter().find(|a| a.base_item == *id));
+                if let Some(a) = armour {
+                    let block = tables
+                        .and_then(|t| t.shield_types.iter().find(|s| s.base_item == *id))
+                        .map(|s| s.block);
+                    ItemBase::Armour(ArmourBase {
+                        armour: range(&a.armour),
+                        evasion: range(&a.evasion),
+                        energy_shield: range(&a.energy_shield),
+                        block,
+                    })
+                } else if tables.is_some_and(|t| t.weapon_types.iter().any(|w| w.base_item == *id))
+                {
+                    ItemBase::Weapon
+                } else {
+                    ItemBase::Other
+                }
+            })
+            .collect();
+        let first = found[0];
+        Some(if found.iter().all(|f| *f == first) {
+            first
+        } else {
+            ItemBase::Ambiguous
+        })
+    }
 }
 
 /// A skill picked by position.
@@ -174,6 +282,12 @@ pub struct CalcOptions {
     /// Steam build with evidence). `None`: a build that allocates passives
     /// is `Partial` with `UncheckedTreeVersion`.
     pub tree_version: Option<TreeVersion>,
+    /// Each item's base name, as the import adapter names it (its
+    /// format's rules, which the core does not know: a legacy name line
+    /// holds affixes around the base). The host gives them, as it gives
+    /// `resolve_build` its base names. An armour piece without one is
+    /// `Partial` (`unmodelled-item`, `no-base-name`).
+    pub item_bases: BTreeMap<ItemId, BaseName>,
 }
 
 /// A calculation's input: an immutable snapshot.

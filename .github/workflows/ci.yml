@@ -202,7 +202,7 @@ jobs:
         run: |
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/calc-poe1
           target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/calc-poe2
-          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 16 and .field_states.indeterminate == 8' out/round-trip/calc-poe1/summary.json
+          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 7 and .field_states.indeterminate == 17' out/round-trip/calc-poe1/summary.json
           jq -e '.builds == 1 and .ok == 1 and .build_states.unsupported == 1' out/round-trip/calc-poe2/summary.json
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'

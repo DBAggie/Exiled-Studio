@@ -149,14 +149,20 @@ impl<'m> Ingest<'m> {
 
     /// Adds the effects of stat lines from `source`.
     pub fn stats(&mut self, source: &Source, stats: &[StatLine]) {
+        let mapping = self.mapping;
         for line in stats {
-            self.stat(source, line);
+            self.stat_with(mapping, source, line);
         }
     }
 
     /// Adds the effects of one stat line from `source`.
     pub fn stat(&mut self, source: &Source, line: &StatLine) {
-        let templates = match self.mapping.map(&line.stat) {
+        let mapping = self.mapping;
+        self.stat_with(mapping, source, line);
+    }
+
+    fn stat_with(&mut self, mapping: &dyn StatMapping, source: &Source, line: &StatLine) {
+        let templates = match mapping.map(&line.stat) {
             StatMap::NoEffect => return,
             StatMap::Unmapped => {
                 self.reasons
@@ -191,6 +197,21 @@ impl<'m> Ingest<'m> {
 
     /// Adds the effects of an item line by its resolution.
     pub fn item_line(&mut self, item: ItemId, line: usize, resolution: &LineResolution) {
+        let mapping = self.mapping;
+        self.item_line_with(mapping, item, line, resolution);
+    }
+
+    /// [`Ingest::item_line`] with another mapping for the line's stats and
+    /// typed resolutions: an item whose local stats act on the item itself
+    /// (an armour piece's own defences) maps them to its own quantities and
+    /// leaves the others to the game's mapping.
+    pub fn item_line_with(
+        &mut self,
+        mapping: &dyn StatMapping,
+        item: ItemId,
+        line: usize,
+        resolution: &LineResolution,
+    ) {
         let at = |adapted| Source::Item {
             item,
             line,
@@ -218,8 +239,12 @@ impl<'m> Ingest<'m> {
             LineResolution::Resolved { result, adapted } => {
                 let source = at(*adapted);
                 match result {
-                    Resolved::Stats(stats) => self.stats(&source, stats),
-                    Resolved::Typed(t) => self.typed(&source, t),
+                    Resolved::Stats(stats) => {
+                        for s in stats {
+                            self.stat_with(mapping, &source, s);
+                        }
+                    }
+                    Resolved::Typed(t) => self.typed_with(mapping, &source, t),
                 }
             }
         }
@@ -227,7 +252,17 @@ impl<'m> Ingest<'m> {
 
     /// Adds the effects of a typed resolution from `source`.
     pub fn typed(&mut self, source: &Source, resolution: &TypedResolution) {
-        match self.mapping.typed(resolution, source) {
+        let mapping = self.mapping;
+        self.typed_with(mapping, source, resolution);
+    }
+
+    fn typed_with(
+        &mut self,
+        mapping: &dyn StatMapping,
+        source: &Source,
+        resolution: &TypedResolution,
+    ) {
+        match mapping.typed(resolution, source) {
             TypedMap::Effects(effects) => {
                 for e in effects {
                     self.store.add(e);

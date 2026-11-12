@@ -1,5 +1,7 @@
-//! The Path of Exile phases of P3-6 (Phase 3 plan, step 6): attributes,
-//! life, mana, energy shield, and unreserved life and mana.
+//! The Path of Exile phases of P3-6 and P3-7 (Phase 3 plan, steps 6 and
+//! 7): attributes, life, mana, resistances, block, spell block, spell
+//! suppression, energy shield, armour, evasion, and unreserved life and
+//! mana.
 //!
 //! Each formula follows the game as PoB v2.67.2 computes it, cited per
 //! phase, with the same order of operations (floating-point products
@@ -7,23 +9,26 @@
 //! node, built to `docs/phase-3/slice-fields.json` revision 2's `graph`
 //! references: a field's node has [`Term::Result`]; below it the nearest
 //! [`Term::Base`], [`Term::Increased`], and [`Term::More`] nodes are the
-//! breakdown's terms; an energy shield row is `step.slot.<source>`.
+//! breakdown's terms; a defence row is `step.slot.<source>` (a static
+//! name per slot, `ArmourSlot::row`), and an armour piece's own nodes are
+//! `step.piece-*` so the search for a row's terms finds the row's.
 //!
 //! Attribute bonuses read the attribute's field node, so a derived field
 //! carries its attribute's reasons (`Calc::set_derived`).
 
+use super::{ArmourSlot, Defence, PieceValue, Poe1Field, Poe1Quantity};
 use crate::condition::QueryContext;
 use crate::engine::{Calc, Phase};
 use crate::error::CalcError;
 use crate::graph::{Node, NodeIndex, Term};
 use crate::math;
-use crate::quantity::{Op, Quantity};
+use crate::quantity::{DamageType, Op, Quantity};
 use crate::result::Field;
 use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
-pub const PHASES: [Phase; 4] = [
+pub const PHASES: [Phase; 6] = [
     Phase {
         name: "attributes",
         run: attributes,
@@ -33,8 +38,16 @@ pub const PHASES: [Phase; 4] = [
         run: life_mana,
     },
     Phase {
-        name: "energy-shield",
-        run: energy_shield,
+        name: "resistances",
+        run: resistances,
+    },
+    Phase {
+        name: "block",
+        run: block,
+    },
+    Phase {
+        name: "primary-defences",
+        run: primary_defences,
     },
     Phase {
         name: "unreserved",
@@ -59,10 +72,9 @@ enum Order {
     Right,
 }
 
-/// The parts of a chain: `base`, the increase factor, the more factor,
-/// and their product, with the reasons the store's queries gave.
+/// A chain's product (`base x increase factor x more factor`), with the
+/// reasons the store's queries gave.
 struct ChainParts {
-    base: Valued,
     product: Valued,
     reasons: Reasons,
 }
@@ -147,10 +159,6 @@ fn chain(
     reasons.extend(&inc_effects.reasons);
     reasons.extend(&more.reasons);
     Ok(ChainParts {
-        base: Valued {
-            node: base_node,
-            value: base,
-        },
         product: Valued {
             node: product,
             value,
@@ -196,10 +204,11 @@ fn at_least(
 }
 
 /// `floor(attribute * factor)`: an attribute's bonus. `factor` is `0.5`
-/// for "per 2" (exact) and `0.1` for "per 10": `0.1` as a double is a
-/// little above one tenth, so for a whole number `n` the product is at
-/// least `n / 10` and below the next whole number; the floor equals
-/// PoB's `m_floor(n / 10)` (a test checks every `n` up to 100,000).
+/// for "per 2" (exact), `0.2` for "per 5", and `0.1` for "per 10": `0.2`
+/// and `0.1` as doubles are a little above a fifth and a tenth, so for a
+/// whole number `n` the product is at least `n / 5` (`n / 10`) and below
+/// the next whole number; the floor equals PoB's `m_floor(n / 5)` and
+/// `m_floor(n / 10)` (a test checks every `n` up to 100,000).
 fn bonus(
     calc: &mut Calc<'_>,
     attribute: Field,
@@ -319,14 +328,431 @@ fn life_mana(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     Ok(())
 }
 
-/// Energy shield: the sum of its rows, `max(round(sum), 0)`
-/// (`Modules/CalcDefence.lua`). P3-6 has the `Global` row: flat global
-/// energy shield times `calcLib.mod(modDB, nil, "EnergyShield",
-/// "Defences")`, present only when the base is above 0; intelligence
-/// adds `floor(Int / 10)` percent increased (`EnergyShield` INC from
-/// "Intelligence"). Armour pieces' rows need their base properties
-/// (P3-7); an item in such a slot makes the field `Partial` until then.
-fn energy_shield(calc: &mut Calc<'_>) -> Result<(), CalcError> {
+/// A constant of a rule.
+fn constant(calc: &mut Calc<'_>, label: &'static str, value: f64) -> Result<Valued, CalcError> {
+    let node = calc
+        .graph_mut()
+        .push(Node::Constant { label, value }, value)?;
+    Ok(Valued { node, value })
+}
+
+/// The sum of `op` effects on `quantity`, with `term`.
+fn sum(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    op: Op,
+    term: Term,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let cx = QueryContext::default();
+    let (store, graph) = calc.parts();
+    let q = store.sum(graph, quantity, op, &cx, term)?;
+    reasons.extend(&q.reasons);
+    Ok(Valued {
+        node: q.node,
+        value: q.value,
+    })
+}
+
+/// Whether the store holds any effect on `quantity`.
+fn has(calc: &Calc<'_>, quantity: Quantity) -> bool {
+    calc.store()
+        .effects()
+        .iter()
+        .any(|e| e.quantity == quantity)
+}
+
+/// `a op b` as a two-input node.
+fn pair(
+    calc: &mut Calc<'_>,
+    a: Valued,
+    b: Valued,
+    term: Term,
+    min: bool,
+) -> Result<Valued, CalcError> {
+    let (node, value) = if min {
+        (
+            Node::Min {
+                term,
+                a: a.node,
+                b: b.node,
+            },
+            math::min(a.value, b.value),
+        )
+    } else {
+        (
+            Node::Max {
+                term,
+                a: a.node,
+                b: b.node,
+            },
+            math::max(a.value, b.value),
+        )
+    };
+    let node = calc.graph_mut().push(node, value)?;
+    Ok(Valued { node, value })
+}
+
+/// `trunc(x)` (PoB's `m_modf`) with `term`.
+fn trunc(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+    let value = math::trunc(x.value);
+    let node = calc
+        .graph_mut()
+        .push(Node::Trunc { term, of: x.node }, value)?;
+    Ok(Valued { node, value })
+}
+
+/// The product of `factors` from 1, left to right, with `term`.
+fn product(calc: &mut Calc<'_>, factors: &[Valued], term: Term) -> Result<Valued, CalcError> {
+    let mut value = 1.0;
+    for f in factors {
+        value *= f.value;
+    }
+    let node = calc.graph_mut().push(
+        Node::Product {
+            term,
+            factors: factors.iter().map(|f| f.node).collect(),
+        },
+        value,
+    )?;
+    Ok(Valued { node, value })
+}
+
+/// The sum of `terms` from 0, in order, with `term`.
+fn total(calc: &mut Calc<'_>, terms: &[Valued], term: Term) -> Result<Valued, CalcError> {
+    let mut value = 0.0;
+    for t in terms {
+        value += t.value;
+    }
+    let node = calc.graph_mut().push(
+        Node::Sum {
+            term,
+            terms: terms.iter().map(|t| t.node).collect(),
+        },
+        value,
+    )?;
+    Ok(Valued { node, value })
+}
+
+/// `1 + x / 100` with `term`.
+fn factor(calc: &mut Calc<'_>, x: Valued, term: Term) -> Result<Valued, CalcError> {
+    let value = math::percent_factor(x.value);
+    let node = calc
+        .graph_mut()
+        .push(Node::PercentFactor { term, of: x.node }, value)?;
+    Ok(Valued { node, value })
+}
+
+/// Resistances (`Modules/CalcDefence.lua`, `calcs.resistances`), for
+/// fire, cold, lightning, and chaos: `max = trunc(min(base max, 90))`,
+/// `total = trunc(base x max(calcLib.mod, 0))`, `min = -200`, the value
+/// `max(min(total, max), min)`. The base includes the resistance penalty
+/// (`collect`); elemental stats are mapped to each element. The
+/// breakdown's terms are `step.min`, `step.max`, `step.total`.
+fn resistances(calc: &mut Calc<'_>) -> Result<(), CalcError> {
+    for t in [
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Lightning,
+        DamageType::Chaos,
+    ] {
+        let mut reasons = Reasons::new();
+        let quantity = Quantity::Resistance(t);
+        let base = sum(calc, quantity, Op::Base, Term::Base, &mut reasons)?;
+        let cx = QueryContext::default();
+        let (store, graph) = calc.parts();
+        let inc = store.increased(graph, quantity, &cx)?;
+        let more = store.more(graph, quantity, &cx)?;
+        reasons.extend(&inc.reasons);
+        reasons.extend(&more.reasons);
+        let modifier = product(
+            calc,
+            &[
+                Valued {
+                    node: inc.node,
+                    value: inc.value,
+                },
+                Valued {
+                    node: more.node,
+                    value: more.value,
+                },
+            ],
+            Term::Step("modifier"),
+        )?;
+        let zero = constant(calc, "no-negative-modifier", 0.0)?;
+        let modifier = pair(
+            calc,
+            modifier,
+            zero,
+            Term::Step("modifier-at-least-zero"),
+            false,
+        )?;
+        let raw = product(calc, &[base, modifier], Term::Step("unrounded"))?;
+        let total = trunc(calc, raw, Term::Step("total"))?;
+
+        let max_base = sum(
+            calc,
+            Quantity::MaximumResistance(t),
+            Op::Base,
+            Term::Step("maximum-sum"),
+            &mut reasons,
+        )?;
+        let cap = constant(calc, "maximum-resistance-cap", MAX_RESIST_CAP)?;
+        let max = pair(calc, max_base, cap, Term::Step("maximum-capped"), true)?;
+        let max = trunc(calc, max, Term::Step("max"))?;
+        let floor = constant(calc, "resistance-floor", RESIST_FLOOR)?;
+        let min = trunc(calc, floor, Term::Step("min"))?;
+
+        let capped = pair(calc, total, max, Term::Step("capped"), true)?;
+        let value = pair(calc, capped, min, Term::Result, false)?;
+        calc.set(Field::Resistance(t), query(value, reasons));
+    }
+    Ok(())
+}
+
+/// PoB's `data.misc.MaxResistCap`: no maximum resistance above 90%.
+const MAX_RESIST_CAP: f64 = 90.0;
+/// PoB's `data.misc.ResistFloor`.
+const RESIST_FLOOR: f64 = -200.0;
+/// PoB's `data.misc.BlockChanceCap`.
+const BLOCK_CHANCE_CAP: f64 = 90.0;
+/// PoB's `data.misc.SuppressionChanceCap`.
+const SUPPRESSION_CHANCE_CAP: f64 = 100.0;
+
+/// Block, spell block, and spell suppression (`Modules/CalcDefence.lua`,
+/// `calcs.defence`):
+/// - attack block: `min(round((shield + base) x (1 + inc / 100) x more),
+///   min(max, 90))`, the shield's own `floor((base block + local flat) x
+///   (1 + local inc / 100))` (`Classes/Item.lua`);
+/// - spell block: `min(round(base x (1 + inc / 100) x more), min(max,
+///   90))`, with attack block's increases and more (the game's "Chance to
+///   Block Attack and Spell Damage");
+/// - spell suppression: `min(base, 100)`.
+///
+/// Keystones and flags that replace these (Necromantic Aegis, "cannot
+/// block", block chance equal to another) come from stats the mapping
+/// does not know, which make the fields `Partial`.
+fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
+    let cx = QueryContext::default();
+    let mut reasons = Reasons::new();
+    let shield_q = Quantity::Poe1(Poe1Quantity::Piece(ArmourSlot::Weapon2, PieceValue::Block));
+    let mut base_terms = Vec::new();
+    if has(calc, shield_q) {
+        let b = sum(
+            calc,
+            shield_q,
+            Op::Base,
+            Term::Step("shield-block-base"),
+            &mut reasons,
+        )?;
+        let inc = sum(
+            calc,
+            shield_q,
+            Op::Increased,
+            Term::Step("shield-block-increased-sum"),
+            &mut reasons,
+        )?;
+        let inc = factor(calc, inc, Term::Step("shield-block-increased"))?;
+        let raw = product(calc, &[b, inc], Term::Step("shield-block-unrounded"))?;
+        let value = math::floor(raw.value);
+        let node = calc.graph_mut().push(
+            Node::Floor {
+                term: Term::Step("shield-block"),
+                of: raw.node,
+            },
+            value,
+        )?;
+        base_terms.push(Valued { node, value });
+    }
+    base_terms.push(sum(
+        calc,
+        Quantity::BlockChance,
+        Op::Base,
+        Term::Step("block-effects"),
+        &mut reasons,
+    )?);
+    let base = total(calc, &base_terms, Term::Base)?;
+    let modifier = |calc: &mut Calc<'_>, reasons: &mut Reasons| -> Result<[Valued; 2], CalcError> {
+        let (store, graph) = calc.parts();
+        let inc = store.increased(graph, Quantity::BlockChance, &cx)?;
+        let more = store.more(graph, Quantity::BlockChance, &cx)?;
+        reasons.extend(&inc.reasons);
+        reasons.extend(&more.reasons);
+        Ok([
+            Valued {
+                node: inc.node,
+                value: inc.value,
+            },
+            Valued {
+                node: more.node,
+                value: more.value,
+            },
+        ])
+    };
+    let [inc, more] = modifier(calc, &mut reasons)?;
+    let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
+    let rounded = round(calc, raw, Term::Step("total"))?;
+    let max_base = sum(
+        calc,
+        Quantity::MaximumBlockChance,
+        Op::Base,
+        Term::Step("maximum-sum"),
+        &mut reasons,
+    )?;
+    let cap = constant(calc, "block-chance-cap", BLOCK_CHANCE_CAP)?;
+    let max = pair(calc, max_base, cap, Term::Step("max"), true)?;
+    let value = pair(calc, rounded, max, Term::Result, true)?;
+    calc.set(Field::BlockChance, query(value, reasons));
+
+    let mut reasons = Reasons::new();
+    let base = sum(
+        calc,
+        Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+        Op::Base,
+        Term::Base,
+        &mut reasons,
+    )?;
+    let [inc, more] = modifier(calc, &mut reasons)?;
+    let raw = product(calc, &[base, inc, more], Term::Step("unrounded"))?;
+    let rounded = round(calc, raw, Term::Step("total"))?;
+    let max_base = sum(
+        calc,
+        Quantity::Poe1(Poe1Quantity::MaximumSpellBlockChance),
+        Op::Base,
+        Term::Step("maximum-sum"),
+        &mut reasons,
+    )?;
+    let cap = constant(calc, "block-chance-cap", BLOCK_CHANCE_CAP)?;
+    let max = pair(calc, max_base, cap, Term::Step("max"), true)?;
+    let value = pair(calc, rounded, max, Term::Result, true)?;
+    calc.set(
+        Field::Poe1(Poe1Field::SpellBlockChance),
+        query(value, reasons),
+    );
+
+    let mut reasons = Reasons::new();
+    let base = sum(
+        calc,
+        Quantity::Poe1(Poe1Quantity::SpellSuppressionChance),
+        Op::Base,
+        Term::Base,
+        &mut reasons,
+    )?;
+    let cap = constant(calc, "suppression-chance-cap", SUPPRESSION_CHANCE_CAP)?;
+    let value = pair(calc, base, cap, Term::Result, true)?;
+    calc.set(
+        Field::Poe1(Poe1Field::SpellSuppressionChance),
+        query(value, reasons),
+    );
+    Ok(())
+}
+
+/// A defence's global modifier, `calcLib.mod`: `(1 + inc / 100) x more`,
+/// with the attribute bonus as an extra increase. Every row of the
+/// defence multiplies by it.
+fn defence_modifier(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    extra_inc: Option<Valued>,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let effects = sum(
+        calc,
+        quantity,
+        Op::Increased,
+        Term::Step("increased-effects"),
+        reasons,
+    )?;
+    let mut terms = vec![effects];
+    terms.extend(extra_inc);
+    let inc = total(calc, &terms, Term::Step("increased-sum"))?;
+    let inc = factor(calc, inc, Term::Increased)?;
+    let cx = QueryContext::default();
+    let (store, graph) = calc.parts();
+    let more = store.more(graph, quantity, &cx)?;
+    reasons.extend(&more.reasons);
+    product(
+        calc,
+        &[
+            inc,
+            Valued {
+                node: more.node,
+                value: more.value,
+            },
+        ],
+        Term::Step("modifier"),
+    )
+}
+
+/// The value of `defence` on the armour piece in `slot` (`Classes/
+/// Item.lua`): `round((min + local flat + range x percentile) x (1 + local
+/// inc / 100) x (1 + quality / 100))`; the percentile is 1 when the item
+/// gives none. Its nodes are `step.piece-*`, and the value's term is
+/// [`Term::Base`]: the row's base.
+fn piece(
+    calc: &mut Calc<'_>,
+    slot: ArmourSlot,
+    defence: Defence,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let q = |v| Quantity::Poe1(Poe1Quantity::Piece(slot, v));
+    let flat = sum(
+        calc,
+        q(PieceValue::Defence(defence)),
+        Op::Base,
+        Term::Step("piece-flat"),
+        reasons,
+    )?;
+    let variance = sum(
+        calc,
+        q(PieceValue::Variance(defence)),
+        Op::Base,
+        Term::Step("piece-range"),
+        reasons,
+    )?;
+    let percentile = if has(calc, q(PieceValue::Percentile(defence))) {
+        sum(
+            calc,
+            q(PieceValue::Percentile(defence)),
+            Op::Base,
+            Term::Step("piece-percentile"),
+            reasons,
+        )?
+    } else {
+        constant(calc, "default-percentile", 1.0)?
+    };
+    let rolled = product(calc, &[variance, percentile], Term::Step("piece-rolled"))?;
+    let base = total(calc, &[flat, rolled], Term::Step("piece-base"))?;
+    let inc = sum(
+        calc,
+        q(PieceValue::Defence(defence)),
+        Op::Increased,
+        Term::Step("piece-increased-sum"),
+        reasons,
+    )?;
+    let inc = factor(calc, inc, Term::Step("piece-increased"))?;
+    let quality = sum(
+        calc,
+        q(PieceValue::Quality),
+        Op::Base,
+        Term::Step("piece-quality-sum"),
+        reasons,
+    )?;
+    let quality = factor(calc, quality, Term::Step("piece-quality"))?;
+    let raw = product(calc, &[base, inc, quality], Term::Step("piece-unrounded"))?;
+    round(calc, raw, Term::Base)
+}
+
+/// Energy shield, armour, and evasion (`Modules/CalcDefence.lua`, primary
+/// defences): each the sum of its rows, `max(round(sum), 0)`. A row is
+/// an armour piece's value (in the order Helmet, Gloves, Boots, Body
+/// Armour, Weapon 2) or the global flat value, each when above 0, times
+/// the defence's `calcLib.mod` (with `Defences`, mapped into each). The
+/// attribute bonuses are increases on every row: intelligence `floor(Int
+/// / 10)`% energy shield, dexterity `floor(Dex / 5)`% evasion
+/// (`Modules/CalcPerform.lua`). Rows are `step.slot.<slot>` and
+/// `step.slot.global` (static names, `ArmourSlot::row`).
+fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let int_bonus = bonus(
         calc,
         Field::Intelligence,
@@ -334,41 +760,64 @@ fn energy_shield(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         "tenth",
         "energy-shield-from-intelligence",
     )?;
-    let parts = chain(
+    let dex_bonus = bonus(
         calc,
-        Quantity::EnergyShield,
-        &[],
-        int_bonus.as_slice(),
-        Order::Right,
-        Term::Step("slot.global"),
+        Field::Dexterity,
+        0.2,
+        "fifth",
+        "evasion-from-dexterity",
     )?;
-    let mut rows = Vec::new();
-    let mut total = 0.0;
-    if parts.base.value > 0.0 {
-        total += parts.product.value;
-        rows.push(parts.product.node);
+    for (defence, field, quantity, extra, dep) in [
+        (
+            Defence::EnergyShield,
+            Field::EnergyShield,
+            Quantity::EnergyShield,
+            int_bonus,
+            Some(Field::Intelligence),
+        ),
+        (Defence::Armour, Field::Armour, Quantity::Armour, None, None),
+        (
+            Defence::Evasion,
+            Field::Evasion,
+            Quantity::Evasion,
+            dex_bonus,
+            Some(Field::Dexterity),
+        ),
+    ] {
+        let mut reasons = Reasons::new();
+        let modifier = defence_modifier(calc, quantity, extra, &mut reasons)?;
+        let mut rows = Vec::new();
+        for slot in ArmourSlot::ALL {
+            if !has(
+                calc,
+                Quantity::Poe1(Poe1Quantity::Piece(slot, PieceValue::Equipped)),
+            ) {
+                continue;
+            }
+            let base = piece(calc, slot, defence, &mut reasons)?;
+            if base.value > 0.0 {
+                rows.push(product(calc, &[base, modifier], Term::Step(slot.row()))?);
+            }
+        }
+        let flat = sum(
+            calc,
+            quantity,
+            Op::Base,
+            Term::Step("base-effects"),
+            &mut reasons,
+        )?;
+        let base = total(calc, &[flat], Term::Base)?;
+        if base.value > 0.0 {
+            rows.push(product(calc, &[base, modifier], Term::Step("slot.global"))?);
+        }
+        let sum = total(calc, &rows, Term::Step("slots"))?;
+        let rounded = round(calc, sum, Term::Step("rounded"))?;
+        let value = at_least(calc, rounded, "minimum", 0.0)?;
+        match dep {
+            Some(dep) => calc.set_derived(field, query(value, reasons), &[dep]),
+            None => calc.set(field, query(value, reasons)),
+        }
     }
-    let sum = calc.graph_mut().push(
-        Node::Sum {
-            term: Term::Step("slots"),
-            terms: rows,
-        },
-        total,
-    )?;
-    let rounded = round(
-        calc,
-        Valued {
-            node: sum,
-            value: total,
-        },
-        Term::Step("rounded"),
-    )?;
-    let es = at_least(calc, rounded, "minimum", 0.0)?;
-    calc.set_derived(
-        Field::EnergyShield,
-        query(es, parts.reasons),
-        &[Field::Intelligence],
-    );
     Ok(())
 }
 
@@ -425,6 +874,7 @@ mod tests {
             let product = f64::from(n) * 0.1;
             assert_eq!(product.floor(), f64::from(n / 10), "{n}");
             assert_eq!((f64::from(n) * 0.5).floor(), f64::from(n / 2), "{n}");
+            assert_eq!((f64::from(n) * 0.2).floor(), f64::from(n / 5), "{n}");
         }
     }
 }

@@ -34,7 +34,10 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use loom_calc::{CalcData, CalcInput, CalcOptions, CharacterBase, PassiveLinks, StatAmount};
+use loom_calc::{
+    ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, ItemBase, PassiveLinks,
+    Range, StatAmount,
+};
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
@@ -327,11 +330,18 @@ impl<'b> OverlayData<'b> {
 
 /// The overlay rows of tables the engine reads, by field: the integer
 /// fields it substitutes.
-const APPLIED: [(&str, &str); 4] = [
+const APPLIED: [(&str, &str); 11] = [
     ("characters", "strength"),
     ("characters", "dexterity"),
     ("characters", "intelligence"),
     ("character_constants", "value"),
+    ("bases", "armour_min"),
+    ("bases", "armour_max"),
+    ("bases", "evasion_min"),
+    ("bases", "evasion_max"),
+    ("bases", "energy_shield_min"),
+    ("bases", "energy_shield_max"),
+    ("bases", "block"),
 ];
 
 /// Fields the engine reads but an overlay row cannot give: PoB's passive
@@ -339,7 +349,13 @@ const APPLIED: [(&str, &str); 4] = [
 /// calculate with the game's value under the overlay's name. Rows of
 /// fields the engine does not read (a passive's name or ascendancy)
 /// change nothing.
-const NOT_APPLICABLE: [(&str, &str); 2] = [("passives", "stats"), ("mastery_effects", "stats")];
+const NOT_APPLICABLE: [(&str, &str); 3] = [
+    ("passives", "stats"),
+    ("mastery_effects", "stats"),
+    // PoB's base has armour properties the bundle's lacks: there is no
+    // bundle row to substitute into.
+    ("bases", "armour"),
+];
 
 fn check_applicable(key: &(String, String, String), pob: &Value) -> Result<(), String> {
     let (table, _, field) = key;
@@ -389,6 +405,24 @@ impl CalcData for OverlayData<'_> {
 
     fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
         self.bundle.passive_links(node)
+    }
+
+    fn item_base(&self, name: &str) -> Option<ItemBase> {
+        match self.bundle.item_base(name)? {
+            ItemBase::Armour(a) => {
+                let range = |field: &str, r: Range| Range {
+                    min: self.int("bases", name, &format!("{field}_min"), r.min),
+                    max: self.int("bases", name, &format!("{field}_max"), r.max),
+                };
+                Some(ItemBase::Armour(ArmourBase {
+                    armour: range("armour", a.armour),
+                    evasion: range("evasion", a.evasion),
+                    energy_shield: range("energy_shield", a.energy_shield),
+                    block: a.block.map(|b| self.int("bases", name, "block", b)),
+                }))
+            }
+            other => Some(other),
+        }
     }
 }
 
@@ -445,11 +479,23 @@ fn one(
                 .map_err(|e| e.name().to_owned())
         })
         .map_err(|e| (Step::Resolve, e.code().to_owned()))?;
+    // The same base names the resolver used, for the engine's armour
+    // pieces (the legacy format's naming rules stay in the adapter).
+    let item_bases = build
+        .items
+        .items()
+        .filter_map(|item| {
+            pob_item::item_base(&item.body, request.data.base_names())
+                .ok()
+                .map(|(name, fallback)| (item.id, BaseName { name, fallback }))
+        })
+        .collect();
     let options = CalcOptions {
         tree_version: request
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
+        item_bases,
         ..CalcOptions::default()
     };
     let data: &dyn CalcData = match &request.overlay {

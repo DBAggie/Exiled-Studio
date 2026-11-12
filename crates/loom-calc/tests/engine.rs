@@ -27,6 +27,9 @@ impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
     }
+    fn item_base(&self, _: &str) -> Option<loom_calc::ItemBase> {
+        None
+    }
     fn character(&self, _: &str) -> Option<CharacterBase> {
         None
     }
@@ -328,7 +331,7 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .filter(|(_, f)| f.value.is_some())
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
-    assert_eq!(computed.len(), 8, "{computed:?}");
+    assert_eq!(computed.len(), 17, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons
@@ -343,7 +346,7 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 16);
+    assert_eq!(not_computed, 7);
     assert_eq!(r.state, StateKind::Indeterminate);
     assert!(format!("{input:?}").contains("Poe1"));
 }

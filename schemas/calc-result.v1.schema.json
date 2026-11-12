@@ -404,6 +404,11 @@
           "const": "round-half-up"
         },
         {
+          "description": "The child's integer part, towards zero.",
+          "type": "string",
+          "const": "trunc"
+        },
+        {
           "description": "The smaller child.",
           "type": "string",
           "const": "min"
@@ -514,6 +519,31 @@
           "additionalProperties": false,
           "required": [
             "item"
+          ]
+        },
+        {
+          "description": "An item's base (the properties the game data gives it).",
+          "type": "object",
+          "properties": {
+            "item-base": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "description": "The item's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "item"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "item-base"
           ]
         },
         {

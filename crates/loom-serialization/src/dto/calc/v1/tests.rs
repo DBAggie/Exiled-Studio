@@ -181,6 +181,15 @@ fn every_kind_result() -> CalcResult {
         Op::Base,
         5.0,
     );
+    leaf(
+        &mut g,
+        Source::ItemBase {
+            item: loom_domain::ItemId(4),
+        },
+        Quantity::Armour,
+        Op::Base,
+        12.0,
+    );
     let sum = g
         .derive(Node::Sum {
             term: Term::Base,
@@ -255,6 +264,11 @@ fn every_kind_result() -> CalcResult {
             replaced: min,
         })
         .unwrap();
+    g.derive(Node::Trunc {
+        term: Term::Step("total"),
+        of: product,
+    })
+    .unwrap();
 
     let reasons = every_reason();
     let mut fields = BTreeMap::new();
@@ -306,6 +320,9 @@ struct Data(DataVersion);
 impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
+    }
+    fn item_base(&self, _: &str) -> Option<loom_calc::ItemBase> {
+        None
     }
     fn character(&self, class: &str) -> Option<CharacterBase> {
         (class == "Witch").then_some(CharacterBase {
@@ -590,6 +607,7 @@ fn every_node_kind_should_have_its_children_and_term() {
         "override",
         "floor",
         "round-half-up",
+        "trunc",
         "min",
         "max",
     ] {

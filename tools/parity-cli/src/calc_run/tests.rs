@@ -88,14 +88,14 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     let b = &out.report.builds[0];
     assert_eq!(b.id, "synthetic-poe1.xml");
     assert_eq!(b.status, "ok");
-    // P3-6 computes the 8 character fields; the synthetic bundle has no
-    // Scion, so they are indeterminate (missing-data); 16 not computed.
+    // P3-6 and P3-7 compute 17 fields; the synthetic bundle has no
+    // Scion, so they are indeterminate (missing-data); 7 not computed.
     assert_eq!(b.state.as_deref(), Some("indeterminate"));
     assert_eq!(
         b.fields,
         Some(StateCounts {
-            unsupported: 16,
-            indeterminate: 8,
+            unsupported: 7,
+            indeterminate: 17,
             ..StateCounts::default()
         })
     );
@@ -107,8 +107,8 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     );
     let doc = calc_dto::from_json(json).unwrap();
     assert_eq!(doc.result.fields.len(), 24);
-    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&16));
-    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&8));
+    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&7));
+    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&17));
     assert_eq!(out.summary.build_states.get("indeterminate"), Some(&1));
     assert_eq!(out.summary.timing.builds, 1);
 }
