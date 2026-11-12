@@ -8,6 +8,7 @@
 //! | `data/shield_types.json` | [`ShieldType`]s: a shield base's block chance |
 //! | `data/monster_levels.json` | [`MonsterLevel`]s: the game's per-level monster stats |
 //! | `data/game_constants.json` | [`GameConstant`]s |
+//! | `data/monster_types.json` | [`MonsterType`]s: a monster type's armour and evasion multipliers (P3-1d) |
 //!
 //! The default monster stats that are not per level (resistances, caps,
 //! ...) are the monster object template's `Stats` block, in
@@ -44,14 +45,17 @@ pub const SHIELD_TYPES: &str = "data/shield_types.json";
 pub const MONSTER_LEVELS: &str = "data/monster_levels.json";
 /// Game constants.
 pub const GAME_CONSTANTS: &str = "data/game_constants.json";
+/// Monster types.
+pub const MONSTER_TYPES: &str = "data/monster_types.json";
 
 /// The section's files, each required in format 2.
-pub const FILES: [&str; 5] = [
+pub const FILES: [&str; 6] = [
     WEAPON_TYPES,
     ARMOUR_TYPES,
     SHIELD_TYPES,
     MONSTER_LEVELS,
     GAME_CONSTANTS,
+    MONSTER_TYPES,
 ];
 
 /// A weapon base's properties (`WeaponTypes`).
@@ -166,6 +170,22 @@ pub struct GameConstant {
     pub divisor: i64,
 }
 
+/// A monster type's defence multipliers (`MonsterTypes`), percent: the
+/// game scales the monster level's armour and evasion by `100 + value`
+/// (PoB v2.67.2's `Data/Bosses.lua` carries the same two columns of the
+/// bosses it lists, `src/Export/Scripts/bossData.lua`). The calc's enemy
+/// model reads the bosses PoB lists (P3-11).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct MonsterType {
+    /// ID.
+    pub id: String,
+    /// Armour multiplier, percent.
+    pub armour: i64,
+    /// Evasion multiplier, percent.
+    pub evasion: i64,
+}
+
 /// The item property and monster tables.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PropertyTables {
@@ -179,6 +199,8 @@ pub struct PropertyTables {
     pub monster_levels: Vec<MonsterLevel>,
     /// Game constants.
     pub game_constants: Vec<GameConstant>,
+    /// Monster types.
+    pub monster_types: Vec<MonsterType>,
 }
 
 impl PropertyTables {
@@ -193,6 +215,7 @@ impl PropertyTables {
             shield_types: json(source, SHIELD_TYPES)?,
             monster_levels: json(source, MONSTER_LEVELS)?,
             game_constants: json(source, GAME_CONSTANTS)?,
+            monster_types: json(source, MONSTER_TYPES)?,
         })
     }
 }
