@@ -36,6 +36,11 @@ pub struct EffectTemplate {
     /// The effect's value per unit of the stat (for example `-1` for a
     /// "reduced" stat).
     pub scale: f64,
+    /// What the scaled value is divided by: the effect is `value x scale /
+    /// divisor`, one IEEE operation each, so a stat in hundredths (`/ 100`)
+    /// gives the bits the game's rule gives, which a scale of `0.01` would
+    /// not always. `1` for most stats.
+    pub divisor: f64,
     /// When it applies.
     pub conditions: Conditions,
 }
@@ -155,6 +160,14 @@ impl<'m> Ingest<'m> {
         }
     }
 
+    /// [`Ingest::stats`] through another mapping (a gem's stats act only
+    /// on the skill it supports).
+    pub fn stats_with(&mut self, mapping: &dyn StatMapping, source: &Source, stats: &[StatLine]) {
+        for line in stats {
+            self.stat_with(mapping, source, line);
+        }
+    }
+
     /// Adds the effects of one stat line from `source`.
     pub fn stat(&mut self, source: &Source, line: &StatLine) {
         let mapping = self.mapping;
@@ -188,7 +201,7 @@ impl<'m> Ingest<'m> {
             self.store.add(Effect {
                 quantity: t.quantity,
                 op: t.op,
-                value: value * t.scale,
+                value: value * t.scale / t.divisor,
                 conditions: t.conditions,
                 source: source.clone(),
             });
@@ -295,15 +308,17 @@ mod tests {
 
     impl StatMapping for Map {
         fn map(&self, stat: &StatId) -> StatMap {
-            let t = |op, scale| EffectTemplate {
+            let t = |op, scale, divisor| EffectTemplate {
                 quantity: Quantity::Life,
                 op,
                 scale,
+                divisor,
                 conditions: Conditions::none(),
             };
             match stat.as_str() {
-                "life" => StatMap::Effects(vec![t(Op::Base, 1.0)]),
-                "reduced_life" => StatMap::Effects(vec![t(Op::Increased, -1.0)]),
+                "life" => StatMap::Effects(vec![t(Op::Base, 1.0, 1.0)]),
+                "reduced_life" => StatMap::Effects(vec![t(Op::Increased, -1.0, 1.0)]),
+                "life_hundredths" => StatMap::Effects(vec![t(Op::Base, 1.0, 100.0)]),
                 "ignored" => StatMap::NoEffect,
                 _ => StatMap::Unmapped,
             }
@@ -328,10 +343,20 @@ mod tests {
             &Source::Character,
             &[line("life", exact(12)), line("reduced_life", exact(10))],
         );
+        i.stats_with(
+            &Map,
+            &Source::Character,
+            &[line("life_hundredths", exact(7))],
+        );
         let (store, reasons) = i.finish();
         assert!(reasons.is_empty());
-        assert_eq!(store.len(), 2);
+        assert_eq!(store.len(), 3);
         assert_eq!(store.effects()[1].value, -10.0);
+        // Divided, as the game's rule: 7 / 100, not 7 x 0.01.
+        assert_eq!(
+            store.effects()[2].value.to_bits(),
+            (7.0_f64 / 100.0).to_bits()
+        );
     }
 
     #[test]

@@ -124,7 +124,18 @@
             }
           }
         },
-        "unchecked-tree-version"
+        "unchecked-tree-version",
+        {
+          "unmodelled-skill": {
+            "source": {
+              "gem": {
+                "group": 0,
+                "gem": 0
+              }
+            },
+            "what": "physical-hit-armour"
+          }
+        }
       ],
       "indeterminate": [
         {
@@ -289,7 +300,18 @@
               }
             }
           },
-          "unchecked-tree-version"
+          "unchecked-tree-version",
+          {
+            "unmodelled-skill": {
+              "source": {
+                "gem": {
+                  "group": 0,
+                  "gem": 0
+                }
+              },
+              "what": "physical-hit-armour"
+            }
+          }
         ]
       },
       {
@@ -580,6 +602,24 @@
           11
         ],
         "value": 47.0
+      },
+      {
+        "kind": "quotient",
+        "term": "step.crit-share",
+        "children": [
+          8,
+          15
+        ],
+        "value": 0.5773333333333333
+      },
+      {
+        "kind": "difference",
+        "term": "step.non-crit-share",
+        "children": [
+          9,
+          21
+        ],
+        "value": 0.5226666666666668
       }
     ]
   }

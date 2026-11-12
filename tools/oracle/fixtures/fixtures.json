@@ -591,6 +591,116 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "A level 85 Shadow in evasion and energy shield pieces (rare, original): a hybrid helmet with percentiles, quality and hybrid local lines; global evasion, energy shield and defences from jewellery; attribute bonuses on every row (P3-7)."
+    },
+    {
+      "id": "ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-witch.xml",
+      "sha256": "9c63aed3b9b760fec630fc6c9c68625e8e78a49365e60ae211db013b82be4fd9",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 90 Witch casting Ice Nova (level 20) alone: base damage from the skill's level, crit, cast speed, the default enemy's cold resistance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-level10-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-level10-witch.xml",
+      "sha256": "fc1993d060585967ea125a8bf6caa7c4e3556696f765a2386dde330e858f1781",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 40 Witch casting Ice Nova at level 10 with 20% quality: another level's base damage; quality adds only area (P3-9b)."
+    },
+    {
+      "id": "ice-nova-added-cold-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-added-cold-witch.xml",
+      "sha256": "e91a91a6e7585689990eebe4ccd2ee15c0fea1dc3e79320d39adce042db7d1f4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Added Cold Damage: added damage scaled by the skill's damage effectiveness (P3-9b)."
+    },
+    {
+      "id": "ice-nova-controlled-destruction-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-controlled-destruction-witch.xml",
+      "sha256": "2bc26cb3382244c58cb3225a5a9a5243d3b9d5bbb93f7a3ba5d60fc1bd0758cd",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Controlled Destruction: more spell damage, less critical strike chance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-increased-critical-strikes-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-increased-critical-strikes-witch.xml",
+      "sha256": "25116a55df502caf9b809d7f11714d0c753d349e2e533f81d2d1155663f3e757",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Strikes: additional base and increased critical strike chance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-cold-penetration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-cold-penetration-witch.xml",
+      "sha256": "782699e902e4f0cd4d7f34031f80ee1f183a9964db4f08f2eb5c106f228d20e3",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Cold Penetration: penetration of the default enemy's cold resistance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-faster-casting-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-faster-casting-witch.xml",
+      "sha256": "1a41a9900617eb90ddc339a339f87a6d2af595b016dcfd3b7fd37533abda4d27",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Faster Casting: increased cast speed (P3-9b)."
+    },
+    {
+      "id": "ice-nova-increased-critical-damage-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-increased-critical-damage-witch.xml",
+      "sha256": "c1d8c2aa7ccedc67b1fd54cb3040d9cc351b8969ac766a4941a7928a473ef43a",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Damage: critical strike multiplier (P3-9b)."
+    },
+    {
+      "id": "ice-nova-added-damage-items-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-added-damage-items-witch.xml",
+      "sha256": "808d11908dab636cbdf5c78841c15902faa3a49f5042bcb84ca57ac50aa988a2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with jewellery (rare, original): added cold damage to spells; increased spell, cold, elemental and generic damage; cast speed (P3-9b)."
+    },
+    {
+      "id": "ice-nova-crit-items-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-crit-items-witch.xml",
+      "sha256": "6abd49cefb2d24696f8dfa226d9750eb31a893e4e6729d9fab8849930c0f42eb",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with jewellery (rare, original): spell critical strike chance, global critical strike chance and multiplier (P3-9b)."
+    },
+    {
+      "id": "ice-nova-enemy-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-enemy-witch.xml",
+      "sha256": "1bbff35058435e824872a1aac58a5b2dd95078221d9606801c53d25d3629dbdc",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured with 80% cold resistance (above the default maximum of 75%, which the input raises) and level 70 (P3-9b)."
     }
   ]
 }

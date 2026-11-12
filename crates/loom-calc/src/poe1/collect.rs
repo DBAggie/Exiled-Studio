@@ -21,8 +21,11 @@
 //!   block maximums, base evasion) are character template stats, and
 //!   the resistance penalty is the config's `resistancePenalty` or -60.
 //!
-//! Not modelled yet, each a reason on every computed field: enabled gems
-//! (auras, buffs, reservation: P3-9a, P3-12), config inputs other than
+//! The main skill's gems act through their stats when the engine computes
+//! its hit (a self-cast spell, P3-9b).
+//!
+//! Not modelled yet, each a reason on every computed field: other enabled
+//! gems (auras, buffs, reservation: P3-12), config inputs other than
 //! the resistance penalty (P3-12), bandit and pantheon choices other than
 //! none, weapons' base properties (P3-10), an armour piece's percentile
 //! derived from its shown value, active flasks, abyssal sockets, and
@@ -35,8 +38,9 @@ use loom_domain::{
     PassiveSpec, StatId, StatLine, StatValue,
 };
 
-use super::mapping::{PieceMapping, Poe1Mapping};
-use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity};
+use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping};
+use super::skill::{self, InstanceProblem};
+use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, hit};
 use crate::ingest::{Ingest, StatMapping};
 use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveLinks, StatAmount};
 use crate::quantity::{DamageType, Op, Quantity};
@@ -79,7 +83,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
-    gems(build, ingest);
+    gems(input, ingest);
     config(build, ingest);
 }
 
@@ -737,9 +741,16 @@ fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'
     }
 }
 
-/// Every enabled gem of an enabled group of the active skill set: not
-/// modelled yet.
-fn gems(build: &Build, ingest: &mut Ingest<'_>) {
+/// The gems of the active skill set's enabled groups. When the main skill
+/// is a self-cast spell the engine computes ([`hit::spell_skill`]), its
+/// active gem and the supports that apply act through their stats on the
+/// skill alone ([`SkillMapping`]: a stat with any other effect is
+/// unmapped, a reason on every field), and their instance problems are
+/// reasons. Every other enabled gem (other groups, other effects of a
+/// main-group gem, supports that do not apply) is not modelled yet: a
+/// reason on every field (its auras, buffs, reservation).
+fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
+    let build = input.build;
     let skills = &build.skills;
     let Some(set) = skills
         .active
@@ -753,17 +764,70 @@ fn gems(build: &Build, ingest: &mut Ingest<'_>) {
             source: Source::Rule("untyped-skill-group"),
         });
     }
+    let spell = hit::spell_skill(build, input.data);
+    let modelled: Vec<_> = spell.as_ref().map_or_else(Vec::new, |s| {
+        std::iter::once(&s.skill.active_gem)
+            .chain(&s.skill.supports)
+            .copied()
+            .collect()
+    });
+    let main_group = spell.as_ref().map(|s| s.group);
     for (g, group) in set.groups.typed().enumerate() {
         if !group.enabled {
             continue;
         }
         for (i, gem) in group.gems.typed().enumerate() {
-            if gem.enabled {
-                ingest.reason(UnsupportedReason::UnmodelledGem {
-                    source: Source::Gem { group: g, gem: i },
-                });
+            if !gem.enabled {
+                continue;
+            }
+            // A main-group gem is modelled when each of its effects is.
+            if main_group == Some(g)
+                && skill::gem_effects(gem, input.data).is_some_and(|effects| {
+                    effects
+                        .iter()
+                        .all(|e| modelled.iter().any(|m| m.gem == i && m.effect.id == e.id))
+                })
+            {
+                continue;
+            }
+            ingest.reason(UnsupportedReason::UnmodelledGem {
+                source: Source::Gem { group: g, gem: i },
+            });
+        }
+    }
+    let Some(spell) = spell else { return };
+    for r in modelled {
+        let source = Source::Gem {
+            group: spell.group,
+            gem: r.gem,
+        };
+        let instance = skill::instance(r.effect, r.level, r.quality, input.data);
+        for p in &instance.problems {
+            match p {
+                InstanceProblem::MissingStatSet { id } => {
+                    ingest.indeterminate(IndeterminateReason::MissingData {
+                        table: "stat_sets",
+                        key: id.clone(),
+                    });
+                }
+                _ => ingest.reason(UnsupportedReason::UnmodelledSkill {
+                    source: source.clone(),
+                    what: p.name(),
+                }),
             }
         }
+        let stats: Vec<StatLine> = instance
+            .stats
+            .iter()
+            .map(|(stat, value)| StatLine {
+                stat: StatId::new(stat.as_str()),
+                value: StatValue::Exact {
+                    min: *value,
+                    max: *value,
+                },
+            })
+            .collect();
+        ingest.stats_with(&SkillMapping, &source, &stats);
     }
 }
 

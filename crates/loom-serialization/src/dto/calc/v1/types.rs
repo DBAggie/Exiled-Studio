@@ -215,6 +215,13 @@ dto! {
         /// Passives are allocated, but the data's tree version was not
         /// given, so the build's was not checked.
         UncheckedTreeVersion,
+        /// Part of the main skill the engine does not model yet.
+        UnmodelledSkill {
+            /// The gem (or the rule) it comes from.
+            source: Source,
+            /// What is not modelled.
+            what: String,
+        },
     }
 
     /// Why a value cannot be settled.
@@ -348,5 +355,9 @@ dto! {
         Min,
         /// The larger child.
         Max,
+        /// The first child less the second.
+        Difference,
+        /// The first child divided by the second.
+        Quotient,
     }
 }

@@ -36,6 +36,9 @@ impl CalcData for Data {
     fn character_constant(&self, _: &str) -> Option<i64> {
         None
     }
+    fn monster_constant(&self, _: &str) -> Option<i64> {
+        None
+    }
     fn passive_stats(&self, _: u32) -> Option<&[StatAmount]> {
         None
     }
@@ -105,6 +108,7 @@ impl StatMapping for Mapping {
                 quantity,
                 op,
                 scale: 1.0,
+                divisor: 1.0,
                 conditions: Conditions::none(),
             }])
         };

@@ -417,6 +417,16 @@
           "description": "The larger child.",
           "type": "string",
           "const": "max"
+        },
+        {
+          "description": "The first child less the second.",
+          "type": "string",
+          "const": "difference"
+        },
+        {
+          "description": "The first child divided by the second.",
+          "type": "string",
+          "const": "quotient"
         }
       ]
     },
@@ -1034,6 +1044,34 @@
           "description": "Passives are allocated, but the data's tree version was not\ngiven, so the build's was not checked.",
           "type": "string",
           "const": "unchecked-tree-version"
+        },
+        {
+          "description": "Part of the main skill the engine does not model yet.",
+          "type": "object",
+          "properties": {
+            "unmodelled-skill": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The gem (or the rule) it comes from.",
+                  "$ref": "#/$defs/Source"
+                },
+                "what": {
+                  "description": "What is not modelled.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "what"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "unmodelled-skill"
+          ]
         }
       ]
     }

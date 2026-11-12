@@ -130,12 +130,16 @@ fn a_gem_instance_should_have_its_quality_level_and_constant_stats() {
     let effect = data.granted_effect("TestBolt").unwrap();
     // Level 2, quality 20: quality 0.5 x 20 = 10; level stat 2 and the
     // constant 5 on the same stat: 7.
-    // The implicit stat counts 1 (PoB's `level[index] or 1`).
+    // The implicit stat counts 1 (PoB's `level[index] or 1`). Base damage
+    // (effectiveness interpolation) is the game's resolved value: 6 to 12
+    // at level 2.
     let i = instance(effect, 2, 20, &data);
     assert_eq!(i.level, Some(2));
     assert_eq!(
         i.stats,
         [
+            ("test_base_damage_max".to_owned(), 12),
+            ("test_base_damage_min".to_owned(), 6),
             ("test_damage_per_level".to_owned(), 7),
             ("test_quality_cast_speed".to_owned(), 10),
             ("test_spell_flag".to_owned(), 1)
@@ -147,9 +151,18 @@ fn a_gem_instance_should_have_its_quality_level_and_constant_stats() {
     assert_eq!(
         i.stats,
         [
+            ("test_base_damage_max".to_owned(), 9),
+            ("test_base_damage_min".to_owned(), 4),
             ("test_damage_per_level".to_owned(), 6),
             ("test_spell_flag".to_owned(), 1)
         ]
+    );
+    // The level rows PoB uses for a gem's level.
+    let row = loom_calc::poe1::skill::stat_set_level(effect, 9, &data).unwrap();
+    assert_eq!((row.level, row.spell_crit_chance), (2, 600));
+    assert_eq!(
+        loom_calc::poe1::skill::effect_level(effect, 1).map(|l| l.level),
+        Some(1)
     );
 }
 
@@ -281,13 +294,16 @@ fn real_gems_should_have_pobs_stats() {
             .collect::<Vec<_>>()
     };
     // Ice Nova: radius 0.15 x 20 = 3, level 4, constant 26; freeze 25;
-    // `is_area_damage` 1.
+    // `is_area_damage` 1; base damage 1122 to 1683 (resolved; PoB's
+    // effectiveness formula at level requirement 70 gives the same).
     assert_eq!(
         stats("IceNova"),
         s(&[
             ("active_skill_base_area_of_effect_radius", 33),
             ("base_chance_to_freeze_%", 25),
             ("is_area_damage", 1),
+            ("spell_maximum_base_cold_damage", 1683),
+            ("spell_minimum_base_cold_damage", 1122),
         ])
     );
     // Smite: area damage 0.5 x 20 = 10 and the level's -20; the quality
@@ -304,6 +320,8 @@ fn real_gems_should_have_pobs_stats() {
             ("base_skill_effect_duration", 4000),
             ("base_smite_number_of_targets", 1),
             ("console_skill_dont_chase", 1),
+            ("maximum_added_lightning_damage_from_skill", 220),
+            ("minimum_added_lightning_damage_from_skill", 12),
             ("quality_display_active_skill_area_damage_is_gem", 1),
             (
                 "quality_display_active_skill_area_damage_quality_negated_from_gem",

@@ -148,6 +148,12 @@ pub(super) fn unsupported_to(r: &c::UnsupportedReason) -> UnsupportedReason {
             source: source_to(source),
         },
         c::UnsupportedReason::UncheckedTreeVersion => UnsupportedReason::UncheckedTreeVersion,
+        c::UnsupportedReason::UnmodelledSkill { source, what } => {
+            UnsupportedReason::UnmodelledSkill {
+                source: source_to(source),
+                what: (*what).to_owned(),
+            }
+        }
     }
 }
 
@@ -248,6 +254,8 @@ fn node_kind_to(n: &c::Node) -> (NodeKind, Option<c::Term>) {
         c::Node::Trunc { term, .. } => (NodeKind::Trunc, Some(*term)),
         c::Node::Min { term, .. } => (NodeKind::Min, Some(*term)),
         c::Node::Max { term, .. } => (NodeKind::Max, Some(*term)),
+        c::Node::Difference { term, .. } => (NodeKind::Difference, Some(*term)),
+        c::Node::Quotient { term, .. } => (NodeKind::Quotient, Some(*term)),
     }
 }
 

@@ -8,11 +8,14 @@
 //! gathers the build, [`mapping`] maps the stats those fields read,
 //! [`phases`] computes them. P3-7 adds the core defences: armour,
 //! evasion, energy shield with armour pieces, resistances, block, spell
-//! block, spell suppression. The main skill's fields are `Unsupported`
-//! with `NotComputed`; each later engine PR adds what it models.
+//! block, spell suppression. P3-9b computes the main skill's hit when it is
+//! a self-cast spell ([`hit`]): average damage, cast rate, crit chance and
+//! multiplier, hit DPS. Its other hit fields, and every hit field of
+//! another kind of skill, are `Unsupported` with `NotComputed`.
 
 pub mod collect;
 pub mod enemy;
+pub mod hit;
 pub mod mapping;
 pub mod phases;
 pub mod skill;
@@ -25,7 +28,7 @@ use crate::engine::{Phase, Ruleset};
 use crate::error::CalcError;
 use crate::ingest::{Ingest, StatMapping};
 use crate::input::CalcInput;
-use crate::quantity::DamageType;
+use crate::quantity::{Bound, DamageType};
 use crate::result::Field;
 
 /// A quantity only Path of Exile has.
@@ -39,6 +42,18 @@ pub enum Poe1Quantity {
     MaximumSpellBlockChance,
     /// A value of the armour piece in a slot (its local properties).
     Piece(ArmourSlot, PieceValue),
+    /// The main skill's own base damage of a type (its level's
+    /// "spell_minimum_base_cold_damage", ...).
+    SkillBaseDamage(DamageType, Bound),
+    /// The main skill's base critical strike chance, percent (its level's).
+    SkillCritChance,
+    /// The main skill's damage effectiveness (its level's), which scales
+    /// added damage.
+    DamageEffectiveness,
+    /// The main skill's base damage multiplier (its level's).
+    BaseDamageMultiplier,
+    /// The main skill's cast time, seconds.
+    CastTime,
 }
 
 impl core::fmt::Display for Poe1Quantity {
@@ -48,6 +63,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::SpellBlockChance => f.write_str("spell-block-chance"),
             Self::MaximumSpellBlockChance => f.write_str("maximum-spell-block-chance"),
             Self::Piece(slot, value) => write!(f, "piece.{}.{value}", slot.name()),
+            Self::SkillBaseDamage(t, b) => {
+                write!(f, "skill-base-damage.{}.{}", t.name(), b.name())
+            }
+            Self::SkillCritChance => f.write_str("skill-crit-chance"),
+            Self::DamageEffectiveness => f.write_str("damage-effectiveness"),
+            Self::BaseDamageMultiplier => f.write_str("base-damage-multiplier"),
+            Self::CastTime => f.write_str("cast-time"),
         }
     }
 }
@@ -316,8 +338,13 @@ mod tests {
                 "resistances",
                 "block",
                 "primary-defences",
-                "unreserved"
+                "unreserved",
+                "spell-hit"
             ]
+        );
+        assert_eq!(
+            Quantity::Poe1(Poe1Quantity::SkillBaseDamage(DamageType::Cold, Bound::Min)).to_string(),
+            "poe1.skill-base-damage.cold.min"
         );
     }
 }

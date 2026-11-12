@@ -6,7 +6,9 @@ use std::collections::BTreeMap;
 
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
-pub use loom_data::bundle::skills::{ActiveSkill, GemEffect, GrantedEffect, SkillGem, StatSet};
+pub use loom_data::bundle::skills::{
+    ActiveSkill, EffectLevel, GemEffect, GrantedEffect, SkillGem, StatSet, StatSetLevel,
+};
 use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 
 use crate::error::CalcError;
@@ -30,6 +32,10 @@ pub struct CharacterBase {
 /// the character constants (per-level growth, caps).
 pub const CHARACTER_TEMPLATE: &str = "metadata/characters/character";
 
+/// The object template every monster extends; its `Stats` are the monster
+/// constants (the enemy's base maximum resistance, P3-9b).
+pub const MONSTER_TEMPLATE: &str = "metadata/monsters/monster";
+
 /// The game data a calculation reads, as `ItemData` is for import. The
 /// bundle implements it; the parity tool's data overlay (P3-5) is another
 /// implementation, so the core keeps the game's data. Every table read
@@ -43,6 +49,10 @@ pub trait CalcData {
 
     /// A character constant: a stat of [`CHARACTER_TEMPLATE`].
     fn character_constant(&self, stat: &str) -> Option<i64>;
+
+    /// A monster constant: a stat of [`MONSTER_TEMPLATE`] (PoB's
+    /// `data.monsterConstants`).
+    fn monster_constant(&self, stat: &str) -> Option<i64>;
 
     /// The stats of the passive node with this number.
     fn passive_stats(&self, node: u32) -> Option<&[StatAmount]>;
@@ -198,15 +208,11 @@ impl CalcData for Bundle {
     }
 
     fn character_constant(&self, stat: &str) -> Option<i64> {
-        self.passives
-            .as_ref()?
-            .object_templates
-            .iter()
-            .find(|t| t.id == CHARACTER_TEMPLATE)?
-            .stats
-            .iter()
-            .find(|s| s.stat == stat)
-            .map(|s| s.value)
+        template_stat(self, CHARACTER_TEMPLATE, stat)
+    }
+
+    fn monster_constant(&self, stat: &str) -> Option<i64> {
+        template_stat(self, MONSTER_TEMPLATE, stat)
     }
 
     fn passive_stats(&self, node: u32) -> Option<&[StatAmount]> {
@@ -375,6 +381,20 @@ impl CalcData for Bundle {
             .find(|c| c.id == id)
             .map(|c| (c.value, c.divisor))
     }
+}
+
+/// A stat of the object template `template` in `bundle`.
+fn template_stat(bundle: &Bundle, template: &str, stat: &str) -> Option<i64> {
+    bundle
+        .passives
+        .as_ref()?
+        .object_templates
+        .iter()
+        .find(|t| t.id == template)?
+        .stats
+        .iter()
+        .find(|s| s.stat == stat)
+        .map(|s| s.value)
 }
 
 /// A skill picked by position.

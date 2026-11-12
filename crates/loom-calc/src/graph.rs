@@ -122,6 +122,25 @@ pub enum Node {
         /// The input.
         of: NodeIndex,
     },
+    /// `a - b` (one IEEE subtraction).
+    Difference {
+        /// The breakdown term.
+        term: Term,
+        /// The minuend.
+        a: NodeIndex,
+        /// The subtrahend.
+        b: NodeIndex,
+    },
+    /// `a / b` (one IEEE division; the game's rules divide where a product
+    /// with the reciprocal would round differently).
+    Quotient {
+        /// The breakdown term.
+        term: Term,
+        /// The dividend.
+        a: NodeIndex,
+        /// The divisor.
+        b: NodeIndex,
+    },
     /// [`math::min`].
     Min {
         /// The breakdown term.
@@ -158,7 +177,10 @@ impl Node {
                 vec![*of]
             }
             Self::Override { by, replaced } => vec![*by, *replaced],
-            Self::Min { a, b, .. } | Self::Max { a, b, .. } => vec![*a, *b],
+            Self::Min { a, b, .. }
+            | Self::Max { a, b, .. }
+            | Self::Difference { a, b, .. }
+            | Self::Quotient { a, b, .. } => vec![*a, *b],
         }
     }
 
@@ -182,6 +204,8 @@ impl Node {
             Self::Trunc { of, .. } => math::trunc(get(*of)),
             Self::Min { a, b, .. } => math::min(get(*a), get(*b)),
             Self::Max { a, b, .. } => math::max(get(*a), get(*b)),
+            Self::Difference { a, b, .. } => get(*a) - get(*b),
+            Self::Quotient { a, b, .. } => get(*a) / get(*b),
         }
     }
 }
@@ -441,6 +465,22 @@ mod tests {
             })
             .unwrap();
         assert_eq!(g.value(trunc), Some(-2.0), "towards zero, as m_modf");
+        let diff = g
+            .derive(Node::Difference {
+                term: Term::Result,
+                a,
+                b,
+            })
+            .unwrap();
+        let quot = g
+            .derive(Node::Quotient {
+                term: Term::Result,
+                a: c,
+                b,
+            })
+            .unwrap();
+        assert_eq!(g.value(diff), Some(-1.5));
+        assert_eq!(g.value(quot), Some(1.75));
         assert_eq!(g.value(sum), Some(6.5));
         assert_eq!(g.value(pct), Some(1.04));
         assert_eq!(g.value(prod), Some(6.5 * 1.04));
@@ -451,7 +491,7 @@ mod tests {
         assert_eq!(g.value(any), Some(1.0));
         assert_eq!(g.value(over), Some(4.0));
         assert_eq!(g.value(c), Some(7.0));
-        assert_eq!(g.len(), 14);
+        assert_eq!(g.len(), 16);
         g.check().unwrap();
     }
 
