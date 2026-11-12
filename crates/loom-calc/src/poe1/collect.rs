@@ -40,8 +40,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{
-    Build, ConfigInput, ConfigInputKind, ConfigSet, ConfigValue, GameSpecific, Item, ItemId,
-    ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
+    Build, ConfigInput, ConfigInputKind, ConfigLayout, ConfigSet, ConfigValue, GameSpecific, Item,
+    ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
 use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
@@ -1020,7 +1020,9 @@ fn active_config(build: &Build) -> Option<&ConfigSet> {
 /// The lines of PoB's legacy `customMods` input act the same way where
 /// PoB moves them into a block ([`legacy_custom_mods`], P3-12d).
 /// Untyped content (a block the reader kept whole, a placeholder PoB reads
-/// as an input, content outside a config set, which PoB loads into set 1)
+/// as an input, content outside a config set beside set elements, which
+/// PoB loads into set 1; PoB's layout with no set element is read as one
+/// flat set, P3-12e)
 /// is one `<untyped>` reason.
 fn config(build: &Build, ingest: &mut Ingest<'_>) {
     let untyped = || UnsupportedReason::UnmodelledConfig {
@@ -1140,6 +1142,9 @@ enum Legacy<'a> {
 /// The last input of that name in the set is the one PoB keeps (its inputs
 /// are a table). `None` when the set has none.
 ///
+/// In PoB's layout before config sets ([`ConfigLayout::Flat`]), set 1
+/// also holds PoB's empty default block before the blocks read.
+///
 /// Not known, so a reason: untyped content in the set, or outside any set
 /// when the set is set 1 (PoB loads it there), can hold another input or
 /// block of PoB's count; a value that is a number or `true` (PoB then
@@ -1161,10 +1166,13 @@ fn legacy_custom_mods<'a>(build: &Build, set: &'a ConfigSet) -> Option<Legacy<'a
         ConfigValue::Boolean(false) => return Some(Legacy::Nothing),
         ConfigValue::Boolean(true) | ConfigValue::Number(_) => return Some(Legacy::Unknown),
     };
+    // In PoB's layout before config sets, set 1 already holds an empty
+    // default block when `Load` appends the blocks it reads (`Load`, 890
+    // to 900; `NewConfigSet`, 1281), so one block read makes two.
     let migrated = !text.is_empty()
-        && match set.custom_modifiers.as_slice() {
-            [] => true,
-            [only] => only.text.trim_ascii().is_empty(),
+        && match (build.config.layout, set.custom_modifiers.as_slice()) {
+            (_, []) => true,
+            (ConfigLayout::Sets, [only]) => only.text.trim_ascii().is_empty(),
             _ => false,
         };
     Some(if migrated {

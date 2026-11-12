@@ -144,18 +144,15 @@ pub fn kept_whole(build: &Build) -> Vec<String> {
                 out.extend(
                     named(&build.config.sets, "ConfigSet").map(|()| "Config/ConfigSet".to_owned()),
                 );
+                // PoB's layout before config sets has no set element.
+                let set_path = match build.config.layout {
+                    loom_domain::ConfigLayout::Sets => "Config/ConfigSet",
+                    loom_domain::ConfigLayout::Flat => "Config",
+                };
                 for set in build.config.sets.typed() {
-                    out.extend(
-                        named(&set.inputs, "Input").map(|()| "Config/ConfigSet/Input".to_owned()),
-                    );
-                    out.extend(
-                        named(&set.inputs, "Placeholder")
-                            .map(|()| "Config/ConfigSet/Placeholder".to_owned()),
-                    );
-                    out.extend(
-                        named(&set.inputs, "CustomModifierBlock")
-                            .map(|()| "Config/ConfigSet/CustomModifierBlock".to_owned()),
-                    );
+                    for name in ["Input", "Placeholder", "CustomModifierBlock"] {
+                        out.extend(named(&set.inputs, name).map(|()| format!("{set_path}/{name}")));
+                    }
                 }
             }
             _ => {}

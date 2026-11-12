@@ -720,9 +720,25 @@ dto! {
         pub active: Option<u32>,
         /// The sets.
         pub sets: Vec<Entry<ConfigSet>>,
+        /// How the build's format held the sets; left out for one element
+        /// per set.
+        #[serde(default, skip_serializing_if = "ConfigLayout::is_sets")]
+        pub layout: ConfigLayout,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// How a build's format held its config sets.
+    #[derive(Default, Copy, PartialEq, Eq)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum ConfigLayout {
+        /// Each set in its own element.
+        #[default]
+        Sets,
+        /// One set (ID 1, no title, no attributes) held directly, with no
+        /// set element.
+        Flat,
     }
 
     /// One config set.
@@ -820,6 +836,18 @@ impl ConfigInputKind {
     )]
     fn is_input(&self) -> bool {
         *self == Self::Input
+    }
+}
+
+impl ConfigLayout {
+    /// Whether this is the layout with one element per set (for
+    /// `skip_serializing_if`).
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "serde's skip_serializing_if passes a reference"
+    )]
+    fn is_sets(&self) -> bool {
+        *self == Self::Sets
     }
 }
 

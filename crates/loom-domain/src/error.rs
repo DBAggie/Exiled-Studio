@@ -41,6 +41,9 @@ pub enum DomainError {
         /// The line's index among the input's lines.
         line: usize,
     },
+    /// A flat config does not hold exactly one set with ID 1, no title,
+    /// and no attributes.
+    FlatConfigLayout,
 }
 
 impl DomainError {
@@ -55,6 +58,7 @@ impl DomainError {
             Self::ContinuedCustomLine { .. } | Self::ContinuedCustomInputLine { .. } => {
                 "DOMAIN_CONTINUED_CUSTOM_LINE"
             }
+            Self::FlatConfigLayout => "DOMAIN_FLAT_CONFIG_LAYOUT",
         }
     }
 }
@@ -80,6 +84,11 @@ impl fmt::Display for DomainError {
             Self::ContinuedCustomInputLine { set, input, line } => write!(
                 f,
                 "{}: config set {set}, input {input:?}, line {line}",
+                self.code()
+            ),
+            Self::FlatConfigLayout => write!(
+                f,
+                "{}: a flat config holds one set, ID 1, without title or attributes",
                 self.code()
             ),
         }

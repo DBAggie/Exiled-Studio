@@ -1621,6 +1621,31 @@ fn legacy_custom_mods_should_act_as_pob_migrates_them() {
         }]
     );
     assert_eq!(value_of(&r, Field::Life), life);
+
+    // PoB's layout before config sets (P3-12e): set 1 holds PoB's empty
+    // default block before the blocks read. No block read: the lines act.
+    // One block read, even an empty one, makes two: PoB discards the
+    // input, and only the block's lines act.
+    let flat = |blocks: Vec<CustomModifierBlock>| {
+        let mut b = witch(1);
+        b.config.layout = loom_domain::ConfigLayout::Flat;
+        b.config
+            .sets
+            .push(set_of(vec![legacy(text(), vec![resolved(10)])], blocks));
+        run(&b)
+    };
+    let r = flat(vec![]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    for (blocks, added) in [
+        (vec![block(true, "", None)], 0.0),
+        (vec![block(false, "\n", None)], 0.0),
+        (vec![block(true, "x", Some(5))], 5.0),
+    ] {
+        let r = flat(blocks);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+        assert_eq!(value_of(&r, Field::Life), life + added);
+    }
 }
 
 #[test]

@@ -3,10 +3,10 @@
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     AscendancyId, Attribute, Attributes, Build, BuildPart, Character, ClassId, Config, ConfigInput,
-    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock, CustomModifierLine,
-    Game, GameSpecific, Gem, GemId, ItemId, JewelSocket, LineResolution, MasteryEffect, NodeId,
-    Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet, SkillSetId, Skills,
-    SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
+    ConfigInputKind, ConfigLayout, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock,
+    CustomModifierLine, Game, GameSpecific, Gem, GemId, ItemId, JewelSocket, LineResolution,
+    MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet,
+    SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
 };
 use roxmltree::{Node, NodeType};
 
@@ -403,25 +403,60 @@ fn gem(n: Node<'_, '_>) -> Option<Gem> {
     })
 }
 
+/// The `<Config>` element. With no `ConfigSet` child and some content, it
+/// is PoB's layout before config sets: PoB loads every child into set 1
+/// (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`, lines 888 to 902), read
+/// here as one flat set. A mix of both layouts keeps its loose children
+/// untyped (PoB's result then depends on their order).
 fn config_of(n: Node<'_, '_>) -> Option<Config> {
+    let active = number_u32(n, "activeConfigSet")?.map(|s| ConfigSetId(*s.value()));
+    let attributes = rest(n, &["activeConfigSet"]);
+    let is_set = |c: &Node<'_, '_>| c.is_element() && c.tag_name().name() == "ConfigSet";
+    if children(n).next().is_some() && !children(n).any(|c| is_set(&c)) {
+        let (inputs, custom_modifiers) = set_content(n)?;
+        let mut sets = Ordered::new();
+        sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs,
+            custom_modifiers,
+            attributes: Attributes::new(),
+        });
+        return Some(Config {
+            active,
+            sets,
+            layout: ConfigLayout::Flat,
+            attributes,
+        });
+    }
     let mut sets = Ordered::new();
     for c in children(n) {
-        match (c.tag_name().name(), c.is_element()) {
-            ("ConfigSet", true) => match config_set(c) {
-                Some(s) => sets.push(s),
-                None => sets.push_opaque(opaque(c)?),
-            },
-            _ => sets.push_opaque(opaque(c)?),
+        match config_set(c).filter(|_| is_set(&c)) {
+            Some(s) => sets.push(s),
+            None => sets.push_opaque(opaque(c)?),
         }
     }
     Some(Config {
-        active: number_u32(n, "activeConfigSet")?.map(|s| ConfigSetId(*s.value())),
+        active,
         sets,
-        attributes: rest(n, &["activeConfigSet"]),
+        layout: ConfigLayout::Sets,
+        attributes,
     })
 }
 
 fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
+    let (inputs, custom_modifiers) = set_content(n)?;
+    Some(ConfigSet {
+        id: ConfigSetId(*required_u32(n, "id")?.value()),
+        title: text(n, "title"),
+        inputs,
+        custom_modifiers,
+        attributes: rest(n, &["id", "title"]),
+    })
+}
+
+/// A set's inputs, placeholders, and custom modifier blocks.
+fn set_content(n: Node<'_, '_>) -> Option<(Ordered<ConfigInput>, Vec<CustomModifierBlock>)> {
     // The blocks after the last other child are typed (PoB writes them
     // last); any other block stays opaque in place.
     let all: Vec<_> = children(n).collect();
@@ -448,24 +483,43 @@ fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
             _ => inputs.push_opaque(opaque(c)?),
         }
     }
-    Some(ConfigSet {
-        id: ConfigSetId(*required_u32(n, "id")?.value()),
-        title: text(n, "title"),
-        inputs,
-        custom_modifiers,
-        attributes: rest(n, &["id", "title"]),
-    })
+    Some((inputs, custom_modifiers))
 }
 
 /// A `CustomModifierBlock` (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`
 /// and `Save`) with `enabled` written as `true` or `false` and only text
 /// inside. Any other form stays opaque (PoB reads a missing `enabled` as
 /// true and any other value as false).
+///
+/// PoB reads the text with its own XML reader (`runtime/lua/xml.lua`,
+/// `ParseXML`): trimmed, the five named entities decoded, any other
+/// reference read as nothing, and a CDATA section as a separate node. XML
+/// decodes a character reference (`&#10;` a line break) and a CDATA
+/// section as text, so a block whose raw text holds either is kept whole:
+/// read here, its lines would differ from PoB's (ADR-015: kept, never
+/// silently changed).
 fn custom_modifier_block(n: Node<'_, '_>) -> Option<CustomModifierBlock> {
     if !n.is_element() || n.tag_name().name() != "CustomModifierBlock" {
         return None;
     }
     if n.children().any(|c| !c.is_text()) {
+        return None;
+    }
+    // The raw content: after the first `>`, before the end tag. A raw `>`
+    // in an attribute only adds the attributes' rest to the text checked,
+    // never leaves content out. An element with no children has none.
+    let raw = n.document().input_text().get(n.range()).unwrap_or_default();
+    let content = raw
+        .split_once('>')
+        .and_then(|(_, after)| after.rsplit_once("</"))
+        .map_or("", |(content, _)| content);
+    let read_differently = n.has_children()
+        && (content.contains("<![CDATA[")
+            || content.split('&').skip(1).any(|r| {
+                r.split_once(';')
+                    .is_none_or(|(e, _)| named_entity(e).is_none())
+            }));
+    if read_differently {
         return None;
     }
     let enabled = match n.attribute("enabled")? {

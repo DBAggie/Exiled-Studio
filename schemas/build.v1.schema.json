@@ -310,6 +310,10 @@
             "$ref": "#/$defs/Attribute"
           }
         },
+        "layout": {
+          "description": "How the build's format held the sets; left out for one element\nper set.",
+          "$ref": "#/$defs/ConfigLayout"
+        },
         "sets": {
           "description": "The sets.",
           "type": "array",
@@ -403,6 +407,21 @@
           "description": "A placeholder: the value a planner shows for an input left\nunset, which it may also use for that input.",
           "type": "string",
           "const": "placeholder"
+        }
+      ]
+    },
+    "ConfigLayout": {
+      "description": "How a build's format held its config sets.",
+      "oneOf": [
+        {
+          "description": "Each set in its own element.",
+          "type": "string",
+          "const": "sets"
+        },
+        {
+          "description": "One set (ID 1, no title, no attributes) held directly, with no\nset element.",
+          "type": "string",
+          "const": "flat"
         }
       ]
     },

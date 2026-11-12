@@ -361,6 +361,111 @@ fn other_custom_modifier_blocks_should_be_kept_whole() {
     assert_eq!(kept_whole(&b), ["Config/ConfigSet/CustomModifierBlock"; 4]);
 }
 
+/// PoB's layout before config sets: the content directly under `<Config>`
+/// is set 1, read as one flat set and written back without a set element.
+#[test]
+fn the_old_config_layout_should_be_one_flat_set() {
+    let xml = BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        r#"<Config>
+		<Input name="flag" boolean="true"/>
+		<Placeholder name="ShockStacks" number="1"/>
+		<Input name="odd" number="x"/>
+		<CustomModifierBlock enabled="true" title="Default">+10 to maximum Life</CustomModifierBlock>
+	</Config>"#,
+    );
+    let b = round_trip(&xml);
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Flat);
+    assert_eq!(b.config.sets.entries().len(), 1);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!((set.id, set.title.as_deref()), (loom_domain::ConfigSetId(1), None));
+    assert_eq!(set.inputs.typed().count(), 2);
+    assert_eq!(set.custom_modifiers.len(), 1);
+    assert_eq!(kept_whole(&b), ["Config/Input"]);
+    assert!(!export(&b).contains("ConfigSet"));
+    // The build document carries it and refuses a flat config that is not
+    // one set 1 without title.
+    let json = crate::dto::v1::to_json(&b).unwrap();
+    assert!(json.contains(r#""layout": "flat""#), "{json}");
+    let mut bad = b.clone();
+    bad.config.sets.typed_mut().next().unwrap().title = Some("t".to_owned());
+    let err = crate::dto::v1::to_json(&bad).unwrap_err();
+    assert!(
+        err.to_string().contains("DOMAIN_FLAT_CONFIG_LAYOUT"),
+        "{err}"
+    );
+    // An empty `<Config>` stays the layout with sets, with none.
+    let b = round_trip(&BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        "<Config/>",
+    ));
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Sets);
+    assert_eq!(b.config.sets.entries().len(), 0);
+}
+
+/// Both layouts at once: the loose content stays untyped beside the sets.
+#[test]
+fn loose_config_content_beside_sets_should_stay_untyped() {
+    let xml = BASE.replace(
+        r#"<Config activeConfigSet="1">"#,
+        r#"<Config activeConfigSet="1">
+		<Input name="loose" boolean="true"/>"#,
+    );
+    let b = round_trip(&xml);
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Sets);
+    assert_eq!(b.config.sets.typed().count(), 1);
+    assert_eq!(b.config.sets.opaque().count(), 1);
+}
+
+/// A block's text that PoB's XML reader reads otherwise than XML (another
+/// reference than the five, which PoB reads as nothing; a CDATA section,
+/// which PoB reads as a separate node) keeps the block whole.
+#[test]
+fn block_text_read_otherwise_by_pob_should_keep_the_block_whole() {
+    for body in [
+        "+10 to maximum Life&#10;+5 to Strength",
+        "<![CDATA[+10 to maximum Life]]>",
+        "a <![CDATA[b]]>",
+    ] {
+        let xml = BASE.replace(
+            r#"<Input name="choice" string="Fire"/>"#,
+            &format!(
+                r#"<Input name="choice" string="Fire"/>
+			<CustomModifierBlock enabled="true">{body}</CustomModifierBlock>"#
+            ),
+        );
+        let b = import(&xml).unwrap();
+        let set = b.config.sets.typed().next().unwrap();
+        assert!(set.custom_modifiers.is_empty(), "{body}");
+        assert_eq!(
+            kept_whole(&b),
+            ["Config/ConfigSet/CustomModifierBlock"],
+            "{body}"
+        );
+    }
+    // The five named entities are read as PoB reads them.
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<CustomModifierBlock enabled="true">a &lt;&gt;&amp;&apos;&quot; b</CustomModifierBlock>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.custom_modifiers[0].text, "a <>&'\" b");
+}
+
 fn lines(text: &str) -> Vec<String> {
     super::read::custom_modifier_lines(text).collect()
 }
