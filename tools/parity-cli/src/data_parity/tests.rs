@@ -863,6 +863,11 @@ fn bosses_should_compare_their_multipliers_and_uber_mark() {
         ),
         ("bosses", "Armoured", "armour")
     );
+    for (field, value) in [("evasionMult", json!(5)), ("isUber", json!(false))] {
+        let mut export = equal_export();
+        export["bosses"]["Armoured"][field] = value;
+        assert_eq!(differences(&export).len(), 1, "{field}");
+    }
     // A boss PoB lists and the engine does not, and the other way.
     let mut export = equal_export();
     export["bosses"]["Extra"] = json!({"armourMult": 0, "evasionMult": 0, "isUber": false});

@@ -170,9 +170,9 @@ pub struct GameConstant {
     pub divisor: i64,
 }
 
-/// A monster type's defence multipliers (`MonsterTypes`), percent: the
-/// game scales the monster level's armour and evasion by `100 + value`
-/// (PoB v2.67.2's `Data/Bosses.lua` carries the same two columns of the
+/// A monster type's defence multipliers (`MonsterTypes`), percent: PoB
+/// v2.67.2 scales the monster level's armour and evasion by `100 + value`
+/// for its bosses (`src/Modules/Data.lua`, `data.bossStats`; PoB's `Data/Bosses.lua` carries the same two columns of the
 /// bosses it lists, `src/Export/Scripts/bossData.lua`). The calc's enemy
 /// model reads the bosses PoB lists (P3-11).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
