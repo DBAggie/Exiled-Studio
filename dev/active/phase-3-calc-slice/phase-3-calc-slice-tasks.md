@@ -76,7 +76,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
 - [x] P3-9b spell hits (PR #77; `docs/phase-3/spell-hits.md`; 11 Ice Nova mechanic fixtures match PoB on every target)
 - [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
-  - [x] Q11 switch: a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
+  - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
 - [ ] P3-12 buffs and config (one or more PRs)
 
 ## P3-14: corpus run and register

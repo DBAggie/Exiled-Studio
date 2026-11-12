@@ -28,7 +28,7 @@ New in calc result v1 (additive rule; schema and TypeScript regenerated): graph 
 
 ## Question Q11: a weapon's attack rate
 
-**Answered 2026-11-12 (maintainer, in-game tooltip): 1.72**. The Siege Axe with 15% increased attack speed shows the floored-milliseconds value, not PoB's 1.73: the game floors the attack time to integer ms after local increases, and attacks per second is `1000 / ms`. **Switched** in the Q11 switch PR (below).
+**Answered 2026-11-12 (maintainer, in-game tooltip): 1.72**. The Siege Axe with 15% increased attack speed shows the floored-milliseconds value, not PoB's 1.73: the game floors the attack time to integer ms after local increases, and attacks per second is `1000 / ms`. **Switched** in the Q11 switch PR #81 (below).
 
 ### The switch
 
