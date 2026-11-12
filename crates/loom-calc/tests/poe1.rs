@@ -32,7 +32,8 @@ fn amount(stat: &str, value: i64) -> StatAmount {
 }
 
 /// The class start of the small tree: linked to passives 1 to 4; passive
-/// 5 is linked to nothing.
+/// 5 is linked to nothing, and 6 is a cluster jewel socket linked to
+/// nothing (as one inside a subgraph).
 const START: u32 = 100;
 
 /// A small table: the Witch (as the game's characters table), the
@@ -58,6 +59,7 @@ impl Data {
                 (3, vec![amount("keystone_unknown_to_the_mapping", 1)]),
                 (4, vec![]),
                 (5, vec![amount("base_maximum_life", 50)]),
+                (6, vec![]),
                 (START, vec![]),
             ],
             masteries: vec![(77, vec![amount("maximum_mana_+%", 10)])],
@@ -109,11 +111,12 @@ impl CalcData for Data {
         let links = match node {
             START => vec![1, 2, 3, 4],
             1..=4 => vec![START],
-            5 => vec![],
+            5 | 6 => vec![],
             _ => return None,
         };
         Some(PassiveLinks {
             root: node == START,
+            expansion: node == 6,
             links,
         })
     }
@@ -486,6 +489,20 @@ fn an_unconnected_node_and_its_mastery_should_not_count() {
     // Node 1 counts (1226, as alone); node 5's life and the mastery do not.
     assert_eq!(value(&r, Field::Life), 1226.0);
     assert_eq!(value(&r, Field::Mana), 590.0);
+}
+
+#[test]
+fn a_cluster_socket_off_the_tree_should_be_a_cluster_reason() {
+    let r = run(&with_spec(witch(90), spec(&[6])));
+    assert!(
+        r.reasons
+            .partial
+            .contains(&UnsupportedReason::UnmodelledPassive {
+                source: Source::Passive { node: NodeId(6) },
+                what: "cluster-jewel-node",
+            })
+    );
+    assert_eq!(value(&r, Field::Life), 1125.0);
 }
 
 #[test]

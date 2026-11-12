@@ -246,9 +246,19 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         // path (Thread of Hope, Intuitive Leap) are not modelled yet, so
         // their nodes land here too: partial, never a silent value.
         if !connected.contains(&node.0) {
+            // A cluster jewel socket inside a subgraph (PoB's legacy ids
+            // are tree ids) connects through the cluster jewel.
+            let expansion = input
+                .data
+                .passive_links(node.0)
+                .is_some_and(|l| l.expansion);
             ingest.reason(UnsupportedReason::UnmodelledPassive {
                 source: Source::Passive { node: *node },
-                what: "unconnected-node",
+                what: if expansion {
+                    "cluster-jewel-node"
+                } else {
+                    "unconnected-node"
+                },
             });
             continue;
         }

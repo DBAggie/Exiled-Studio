@@ -57,6 +57,9 @@ pub trait CalcData {
 pub struct PassiveLinks {
     /// A class or ascendancy start: allocated nodes connect to one.
     pub root: bool,
+    /// A cluster jewel socket: one inside a cluster jewel's subgraph
+    /// connects through the jewel, not the tree.
+    pub expansion: bool,
     /// The linked nodes, sorted and unique.
     pub links: Vec<u32>,
 }
@@ -139,6 +142,7 @@ impl CalcData for Bundle {
         links.dedup();
         Some(PassiveLinks {
             root: !passive.characters.is_empty() || passive.ascendancy_start,
+            expansion: passive.expansion,
             links,
         })
     }
