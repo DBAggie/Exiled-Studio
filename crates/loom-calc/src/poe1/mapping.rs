@@ -102,6 +102,18 @@ const CHAOS_T: DamageType = DamageType::Chaos;
 ///   `ModFlag.Melee`), `support_melee_physical_damage_attack_speed_+%_final`
 ///   (`Speed` MORE, `ModFlag.Attack`).
 ///
+/// P3-8c adds three global stats of the in-scope Smite builds
+/// (`Data/SkillStatMap.lua` unless named):
+/// - `attack_and_cast_speed_+%`: "#% increased Attack and Cast Speed"
+///   (`Speed` INC, no flag: every skill PoB computes a rate for is an
+///   attack or a cast);
+/// - `elemental_damage_with_attack_skills_+%`: "#% increased Elemental
+///   Damage with Attack Skills" (`ElementalDamage` INC,
+///   `KeywordFlag.Attack`);
+/// - `melee_critical_strike_chance_+%`: "#% increased Melee Critical Strike
+///   Chance" (no stat map row; `ModParser.lua` reads the text as
+///   `CritChance` INC with `ModFlag.Melee`, its "melee" flag word).
+///
 /// PoB tells `ModFlag.Attack` from `KeywordFlag.Attack`; both are the
 /// `ATTACK` flag here, which every attack hit has and nothing else does.
 pub const HIT_ROWS: &[HitRow] = &[
@@ -120,6 +132,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
+    ),
+    (
+        "attack_and_cast_speed_+%",
+        &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
     ),
     (
         "attack_damage_+%",
@@ -212,6 +228,16 @@ pub const HIT_ROWS: &[HitRow] = &[
         &[(Quantity::Damage, Op::Increased, 1.0, NONE, Flags::ELEMENTAL)],
     ),
     (
+        "elemental_damage_with_attack_skills_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::ATTACK,
+            Flags::ELEMENTAL,
+        )],
+    ),
+    (
         "fire_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::FIRE, NONE)],
     ),
@@ -238,6 +264,10 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "maximum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MAX), Op::Base, 1.0, NONE, NONE)],
+    ),
+    (
+        "melee_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, Flags::MELEE, NONE)],
     ),
     (
         "melee_damage_+%",
@@ -692,8 +722,8 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field, whatever the build's config (41): `(stat,
-/// why)`, sorted by stat ID (P3-8a). Each is read as PoB v2.67.2 reads its
+/// Stats that reach no slice field, whatever the build's config (54): `(stat,
+/// why)`, sorted by stat ID (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
 /// suppression, unreserved life and mana, and the main skill's hit,
@@ -702,8 +732,9 @@ pub struct Poe1Mapping;
 /// What is left out on purpose, so it stays `Unmapped` until a step maps
 /// it: anything that can change a hit or its rate through the enemy
 /// (shock, chill, exposure, intimidate, consecrated ground's effect,
-/// curses), charges' counts, rage, area, gem levels, minion damage and
-/// speed (keystones redirect them to the player), and staff or shield
+/// curses), charges' counts, rage, area, gem levels, minion speed (stats
+/// redirect it to the player; minion damage is in, with its redirects in
+/// [`NO_EFFECT_DEPENDS_ON`]), and staff or shield
 /// conditioned block and damage, fortification's maximum (PoB scales
 /// suppression, armour, evasion, and attack speed per fortification), and
 /// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also
@@ -758,6 +789,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "ground-creation-chance",
     ),
     ("chance_to_fortify_on_melee_hit_+%", "fortification"),
+    // "#% chance to Freeze, Shock and Ignite" (PoB `EnemyFreezeChance`,
+    // `EnemyShockChance`, `EnemyIgniteChance` BASE): a chance, as
+    // `base_chance_to_shock_%_from_skill` above; PoB's ailment chances
+    // (`CalcOffence.lua` 4262) set the chance on hit and the ailment's
+    // flags, never the enemy's shock or a hit (P3-8c).
+    ("chance_to_freeze_shock_ignite_%", "ailment-chance"),
     (
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
@@ -811,6 +848,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
         "regeneration",
     ),
+    // "Minions deal #% increased Damage" (PoB `MinionModifier` LIST of
+    // `Damage` INC): only a minion's own calculation reads it, and no
+    // minion is in the slice; it reaches the character only through the
+    // stats in `NO_EFFECT_DEPENDS_ON`, which stay reasons (P3-8c).
+    ("minion_damage_+%", "minion-damage"),
     (
         "minion_life_regeneration_rate_per_minute_%",
         "minion-defence",
@@ -837,6 +879,51 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
+    ),
+];
+
+/// Stats that would make a [`NO_EFFECT`] row reach a slice field: `(stat,
+/// row)`, sorted by stat. A row's `NoEffect` holds only while these stay
+/// reasons (`unmapped-stat`), so the fields are `Partial` whenever one is
+/// in the build; mapping one (even as `NoEffect`) must revisit the row (a
+/// test checks each is `Unmapped` through every mapping).
+///
+/// The minion damage redirects are every stat whose description says
+/// increases to minion damage also affect you (`stat_descriptions.txt`,
+/// "Minion Damage also affect"; the skill stat
+/// `active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value`):
+/// PoB reads them as `MinionDamageAppliesToPlayer` (`ModParser.lua` 3455
+/// to 3459, `Data/SkillStatMap.lua` 905), which `CalcOffence.lua` 613
+/// turns into the player's increased damage. Four more stats in the stats
+/// table name the same redirect (`minion_damage_also_affect_you`,
+/// `minion_damage_modifiers_apply_to_you_at_%_value`, its `150%` twin,
+/// `minion_damage_modifiers_apply_to_all_damage_at_%_value`); none has a
+/// description or a PoB row, so no line resolves to them, and they are
+/// `Unmapped` anyway.
+pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
+    (
+        "active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value",
+        "minion_damage_+%",
+    ),
+    (
+        "additive_minion_damage_modifiers_apply_to_you_at_%_value",
+        "minion_damage_+%",
+    ),
+    (
+        "additive_minion_damage_modifiers_apply_to_you_at_150%_value",
+        "minion_damage_+%",
+    ),
+    (
+        "dominating_blow_and_absolution_additive_minion_damage_modifiers_apply_to_you_at_150%_value",
+        "minion_damage_+%",
+    ),
+    (
+        "minion_damage_increases_and_reductions_also_affects_you",
+        "minion_damage_+%",
+    ),
+    (
+        "modifiers_to_minion_damage_also_affect_you",
+        "minion_damage_+%",
     ),
 ];
 
@@ -1266,7 +1353,7 @@ mod tests {
         for stat in [
             "lightning_ailment_effect_+%",
             "chill_effect_+%",
-            "minion_damage_+%",
+            "minion_attack_speed_+%",
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
@@ -1277,6 +1364,75 @@ mod tests {
             assert_eq!(
                 Poe1Mapping.map(&StatId::new(stat)),
                 StatMap::Unmapped,
+                "{stat}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_no_effect_rows_dependencies_should_stay_unmapped() {
+        assert!(NO_EFFECT_DEPENDS_ON.windows(2).all(|w| w[0].0 < w[1].0));
+        let piece = PieceMapping {
+            slot: ArmourSlot::Helmet,
+        };
+        let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
+        for &(stat, row) in NO_EFFECT_DEPENDS_ON {
+            assert!(
+                NO_EFFECT.binary_search_by(|(id, _)| (*id).cmp(row)).is_ok(),
+                "{stat}: {row} is not a NO_EFFECT row"
+            );
+            for m in mappings {
+                assert_eq!(
+                    m.map(&StatId::new(stat)),
+                    StatMap::Unmapped,
+                    "{stat}: mapping it must revisit {row}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn the_smite_builds_global_stats_should_map_as_pob_reads_them() {
+        assert_eq!(
+            hit("attack_and_cast_speed_+%"),
+            [(Quantity::Speed, Op::Increased, 1.0, Conditions::none())]
+        );
+        assert_eq!(
+            hit("elemental_damage_with_attack_skills_+%"),
+            [(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                Conditions::none()
+                    .with_all(Flags::ATTACK)
+                    .with_any(Flags::ELEMENTAL)
+            )]
+        );
+        assert_eq!(
+            hit("melee_critical_strike_chance_+%"),
+            [(
+                Quantity::CritChance,
+                Op::Increased,
+                1.0,
+                Conditions::none().with_all(Flags::MELEE)
+            )]
+        );
+        // A gem carrying them acts on its skill alone, as the game's.
+        for stat in [
+            "attack_and_cast_speed_+%",
+            "elemental_damage_with_attack_skills_+%",
+            "melee_critical_strike_chance_+%",
+        ] {
+            assert_eq!(
+                SkillMapping.map(&StatId::new(stat)),
+                Poe1Mapping.map(&StatId::new(stat)),
+                "{stat}"
+            );
+        }
+        for stat in ["minion_damage_+%", "chance_to_freeze_shock_ignite_%"] {
+            assert_eq!(
+                Poe1Mapping.map(&StatId::new(stat)),
+                StatMap::NoEffect,
                 "{stat}"
             );
         }

@@ -821,6 +821,26 @@
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
       "description": "A level 90 Witch with two rings, an amulet and a belt (rare, original) whose lines are ranges with PoB's roll: rolls between the ends, a tie on a reduced line, implicit rolls, and an agreeing ModRange (P3-8b)."
+    },
+    {
+      "id": "smite-global-attack-stats-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-global-attack-stats-templar.xml",
+      "sha256": "9a39f3df00818365026f84300f42da48b219cbadf263210ce49c78018c73efba",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Karui Maul (1000 ms) and an amulet (rare, original): increased attack and cast speed, elemental damage with attack skills, melee critical strike chance; minion damage and a chance to freeze, shock and ignite, which change no slice field (P3-8c)."
+    },
+    {
+      "id": "ice-nova-attack-and-cast-speed-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-attack-and-cast-speed-witch.xml",
+      "sha256": "2bc3a608817543e3ac4c3546acb8c9628b85a89d92819e7726e3ffcc267a45f1",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with an amulet (rare, original): increased attack and cast speed on a spell (P3-8c)."
     }
   ]
 }
