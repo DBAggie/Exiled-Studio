@@ -8,14 +8,14 @@
     "tool_commit": "8d6052c626b0beca5c784881709b324ea3d87ea2"
   },
   "successor": {
-    "sha256": "e09211cb4127e46de6c864482871e4f134d1475c8afa4b95074adb530c351985",
+    "sha256": "9728cdce81275b850f5f3bea0d5262e9dbd5398b09dbc3aaf7c49239dad875f5",
     "platform": null,
-    "tool_commit": "4a2533fd96240072b45519b370c9ba0f0986bdcb"
+    "tool_commit": "25be13ce96f928f53a34ff8d90e35e91d2a9a477"
   },
   "overlay": {
-    "sha256": "83a69615c7732e1a97da7f42dfc703c9852c07faa325098d78e657b42599e67f",
+    "sha256": "ee06e077ea34e905991d978dde97bd446d929eba00a5d0c6f3fc79d7e37c428e",
     "platform": null,
-    "tool_commit": "4a2533fd96240072b45519b370c9ba0f0986bdcb"
+    "tool_commit": "25be13ce96f928f53a34ff8d90e35e91d2a9a477"
   },
   "bundle": {
     "game": "poe1",
@@ -29,7 +29,7 @@
     "status": "proposed"
   },
   "register": {
-    "sha256": "d9f2e2bf487feeae0ee07263c4c4dce02ef3dfff64cc06deb026b7d8e40a5c64",
+    "sha256": "c76ff26c9972fce31449c4fbc5624d56e79a4233cd1833a2fb12746e7055856f",
     "entries": 25,
     "accepted": 25
   },

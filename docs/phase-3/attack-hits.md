@@ -56,7 +56,7 @@ Every fixture whose weapon's attack time does not divide 1000 exactly now differ
 
 The `TotalDPS` breakdown's rate line prints two decimals (1.27, 1.47, ...), equal on both sides. `smite-weapon-mods-templar.xml` is the check's own weapon: the weapon is 1.7241 (PoB 1.73), and Smite's 15% less attack speed gives 1.4655.
 
-**Evidence (2026-11-12, Windows).** Runs on the P3-1d bundle against P3-8b's oracle run (`local/p3/p3-8b/evidence/oracle`; no fixture changed); outputs in `local/p3/q11/evidence/`; summaries in `docs/phase-3/attack-rate/`.
+**Evidence (2026-11-12, Windows).** Runs from clean `25be13c` on the P3-1d bundle against P3-8b's oracle run (`local/p3/p3-8b/evidence/oracle`; no fixture changed); outputs in `local/p3/q11/evidence/`; summaries in `docs/phase-3/attack-rate/`.
 
 | Run | Result |
 |---|---|

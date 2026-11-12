@@ -8,9 +8,9 @@
     "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "successor": {
-    "sha256": "708825ca18d89588df782b15bc1322e611e3fbb51bde90aa5ef2b7a1c5d3fd2e",
+    "sha256": "c5dff239c4f4631cb0e090387c977f5cbbb9b0e49c794b5f38d35519b267b530",
     "platform": null,
-    "tool_commit": "4a2533fd96240072b45519b370c9ba0f0986bdcb"
+    "tool_commit": "25be13ce96f928f53a34ff8d90e35e91d2a9a477"
   },
   "overlay": null,
   "bundle": {
@@ -25,7 +25,7 @@
     "status": "proposed"
   },
   "register": {
-    "sha256": "d9f2e2bf487feeae0ee07263c4c4dce02ef3dfff64cc06deb026b7d8e40a5c64",
+    "sha256": "c76ff26c9972fce31449c4fbc5624d56e79a4233cd1833a2fb12746e7055856f",
     "entries": 25,
     "accepted": 25
   },
