@@ -50,7 +50,8 @@ pub enum ConfigInputKind {
     Input,
     /// A placeholder: the value a planner shows for an input left unset,
     /// which it may also use for that input (PoB applies a numeric
-    /// input's placeholder when the input is unset or zero). What it
+    /// input's placeholder when the input is unset, or 0 unless the
+    /// option is `countAllowZero`). What it
     /// changes is the calculations' concern.
     Placeholder,
 }

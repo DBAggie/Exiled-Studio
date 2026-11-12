@@ -10,7 +10,8 @@
 //! ([`ENEMY_DAMAGE`]).
 //!
 //! **Placeholders** (P3-12b). PoB applies a numeric input's placeholder
-//! when the input is unset or zero (`Classes/ConfigTab.lua`,
+//! when the input is unset, or 0 unless the option is `countAllowZero`
+//! (`Classes/ConfigTab.lua`,
 //! `BuildModList`, line 1147), through the input's own `apply`, and its
 //! calc modules read a few placeholders directly (`env.configPlaceholder`:
 //! the enemy's damage, the distances). So a placeholder is classified as
@@ -117,8 +118,10 @@
 ///   `Multiplier:LunarProtection`, `LunarResistance`, `SunscaldStack`,
 ///   `SpectralTigerConfig` and `SpectralTigerCount`,
 ///   `HallowingFlameStacksRemovedByAlly`, `SigilOfPowerStage` (lines 262,
-///   265, 269, 644, 1994, 631); the calc modules never read them (the
-///   skills' stat maps do).
+///   265, 269, 644, 1994, 631); the calc modules never read them; the
+///   skills' stat maps and modifiers do (`HallowingFlameStacksRemovedByAlly`:
+///   extra lightning damage per flame removed, `ModParser.lua` 2898, its
+///   stat in [`DEPENDS_ON`]).
 /// - `meleeDistance`, `projectileDistance`: no `apply` (lines 1789,
 ///   1790); `CalcActiveSkill.lua` (457) makes the input or placeholder the
 ///   skill's `skillDist`, which only modifier tags read (module docs).
@@ -279,8 +282,10 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   `projectile_damage_+%_max_before_distance_increase`,
 ///   `slayer_damage_+%_final_from_distance` (`ModParser.lua` 2511, 2662,
 ///   3013, 3917, 4638 to 4640); `keystone_point_blank`, `player_far_shot`,
-///   `gain_player_far_shot_while_do_not_have_iron_reflexes` (the
-///   `PointBlank` and `FarShot` flags, 2317, 2661, 5489); and the skill
+///   `gain_player_far_shot_while_do_not_have_iron_reflexes`,
+///   `local_display_socketed_gems_supported_by_level_x_point_blank` (the
+///   `PointBlank` and `FarShot` flags, 2317, 2661, 5489; the last through
+///   the Point Blank support, `sup_dex.lua`); and the skill
 ///   stats `lancing_steel_damage_+%_at_close_range`,
 ///   `shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed`,
 ///   `shield_crush_damage_+%_final_from_distance`,
@@ -288,6 +293,12 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   maps, `Data/Skills/act_dex.lua`, `act_str.lua`, `sup_dex.lua`).
 ///   Freezing Pulse and Eye of Winter add theirs in their own skill code
 ///   (`act_int.lua`), outside any stat: those skills are not modelled.
+/// - `physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%`:
+///   reads `Multiplier:HallowingFlameStacksRemovedByAlly` (`ModParser.lua`
+///   2898).
+///
+/// Each is a stat of the real bundle (a maintainer-run test,
+/// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
 pub const DEPENDS_ON: &[&str] = &[
     "additional_spell_block_%_if_havent_blocked_recently",
     "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
@@ -303,7 +314,9 @@ pub const DEPENDS_ON: &[&str] = &[
     "keystone_cold_purist",
     "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
+    "local_display_socketed_gems_supported_by_level_x_point_blank",
     "max_chance_to_block_attacks_if_not_blocked_recently",
+    "physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%",
     "player_far_shot",
     "projectile_damage_+%_max_as_distance_travelled_increases",
     "projectile_damage_+%_max_before_distance_increase",
