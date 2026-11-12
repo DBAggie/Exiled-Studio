@@ -155,6 +155,7 @@ Weapon damage from the base and local mods, attack speed, accuracy and hit chanc
 The enemy the oracle's config describes (level, resistances, armour, evasion, boss flags, the default when the build sets nothing), penetration, exposure, and damage-taken modifiers the in-scope builds use.
 - **Accept:** mechanic fixtures for each config value used by the in-scope builds; hit DPS fixtures match.
 - **Depends on:** 1c, 4, 6.
+- **Done in P3-11** (`docs/phase-3/enemy-model.md`; context file, "Decisions in P3-11"): `loom_calc::poe1::enemy::enemy` (PoB's config rules for the boss kind, level, resistances, armour, evasion; PoB's armour table derived from the game constant); the real bundle's default enemy equals PoB's saved values. The hit-DPS fixtures of the Accept come with P3-9b, which reads the enemy.
 
 ### 12. Buffs and configuration for the in-scope builds (L, several PRs)
 What step 3's inventory finds in the in-scope builds, in order of reach: charges, auras and heralds with their reservation, curses, flasks and their config, conditions set by config (`Config` inputs). Each config input is either modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`.
