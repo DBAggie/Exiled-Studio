@@ -37,6 +37,10 @@ const INT: Quantity = Quantity::Intelligence;
 /// - `additional_*`: "+# to Strength" and the pairs and "all Attributes"
 ///   (PoB `Str`, `Dex`, `Int` BASE; the pairs and all attributes read as
 ///   each attribute).
+/// - `base_strength`, `base_dexterity`, `base_intelligence` and the
+///   pairs: the passive tree's "+# to Strength", ... (the same text,
+///   `passive_skill_stat_descriptions.txt`; PoB reads the node's line as
+///   above).
 /// - `*_+%`: "#% increased Strength", ... (`Str` INC, ...).
 pub const ROWS: &[Row] = &[
     (
@@ -70,12 +74,27 @@ pub const ROWS: &[Row] = &[
             (INT, Op::Increased, 1.0),
         ],
     ),
+    ("base_dexterity", &[(DEX, Op::Base, 1.0)]),
+    (
+        "base_dexterity_and_intelligence",
+        &[(DEX, Op::Base, 1.0), (INT, Op::Base, 1.0)],
+    ),
+    ("base_intelligence", &[(INT, Op::Base, 1.0)]),
     (
         "base_maximum_energy_shield",
         &[(Quantity::EnergyShield, Op::Base, 1.0)],
     ),
     ("base_maximum_life", &[(Quantity::Life, Op::Base, 1.0)]),
     ("base_maximum_mana", &[(Quantity::Mana, Op::Base, 1.0)]),
+    ("base_strength", &[(STR, Op::Base, 1.0)]),
+    (
+        "base_strength_and_dexterity",
+        &[(STR, Op::Base, 1.0), (DEX, Op::Base, 1.0)],
+    ),
+    (
+        "base_strength_and_intelligence",
+        &[(STR, Op::Base, 1.0), (INT, Op::Base, 1.0)],
+    ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
     (
         "global_defences_+%",
@@ -210,6 +229,26 @@ mod tests {
                 (INT, Op::Base, 1.0)
             ]
         );
+        // The passive tree's stats read as the items'.
+        for (tree, item) in [
+            ("base_strength", "additional_strength"),
+            ("base_dexterity", "additional_dexterity"),
+            ("base_intelligence", "additional_intelligence"),
+            (
+                "base_strength_and_dexterity",
+                "additional_strength_and_dexterity",
+            ),
+            (
+                "base_strength_and_intelligence",
+                "additional_strength_and_intelligence",
+            ),
+            (
+                "base_dexterity_and_intelligence",
+                "additional_dexterity_and_intelligence",
+            ),
+        ] {
+            assert_eq!(effects(tree), effects(item), "{tree}");
+        }
         assert_eq!(effects("strength_+%"), [(STR, Op::Increased, 1.0)]);
         assert_eq!(effects("dexterity_+%"), [(DEX, Op::Increased, 1.0)]);
         assert_eq!(effects("intelligence_+%"), [(INT, Op::Increased, 1.0)]);

@@ -21,12 +21,15 @@
 //! (armour pieces and weapons: P3-7, P3-10), active flasks, abyssal
 //! sockets, and slots other than the known ones.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use loom_domain::{
-    Build, GameSpecific, Item, ItemId, ItemSet, LineKind, PassiveSpec, StatId, StatLine, StatValue,
+    Build, GameSpecific, Item, ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine,
+    StatValue,
 };
 
 use crate::ingest::Ingest;
-use crate::input::{CalcInput, StatAmount};
+use crate::input::{CalcInput, PassiveLinks, StatAmount};
 use crate::quantity::{Op, Quantity};
 use crate::source::Source;
 use crate::state::{IndeterminateReason, UnsupportedReason};
@@ -166,6 +169,36 @@ fn lines(stats: &[StatAmount]) -> Vec<StatLine> {
 /// The bit PoB sets on the nodes of a cluster jewel's subgraph.
 const CLUSTER_NODE_BIT: u32 = 0x1_0000;
 
+/// The allocated tree nodes connected to an allocated root (a class or
+/// ascendancy start) through allocated nodes (`Classes/PassiveSpec.lua`
+/// `BuildAllDependsAndPaths`, `connectedToStart`). A node the data lacks
+/// links nothing.
+fn connected(input: &CalcInput<'_>, nodes: &[NodeId]) -> BTreeSet<u32> {
+    let allocated: BTreeSet<u32> = nodes
+        .iter()
+        .map(|n| n.0)
+        .filter(|n| n & CLUSTER_NODE_BIT == 0)
+        .collect();
+    let links: BTreeMap<u32, PassiveLinks> = allocated
+        .iter()
+        .filter_map(|&n| input.data.passive_links(n).map(|l| (n, l)))
+        .collect();
+    let mut seen: BTreeSet<u32> = links
+        .iter()
+        .filter(|(_, l)| l.root)
+        .map(|(n, _)| *n)
+        .collect();
+    let mut queue: Vec<u32> = seen.iter().copied().collect();
+    while let Some(n) = queue.pop() {
+        for &m in links.get(&n).map_or(&[][..], |l| l.links.as_slice()) {
+            if allocated.contains(&m) && seen.insert(m) {
+                queue.push(m);
+            }
+        }
+    }
+    seen
+}
+
 /// The allocated nodes and chosen mastery effects of `spec`, after the
 /// tree version check.
 fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) {
@@ -186,6 +219,7 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             }
         }
     }
+    let connected = connected(input, nodes);
     for node in nodes {
         // PoB numbers the nodes it generates from a socketed cluster jewel
         // with bit 16 set, above every tree node hash
@@ -199,19 +233,34 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             });
             continue;
         }
-        match input.data.passive_stats(node.0) {
-            Some(stats) => ingest.stats(&Source::Passive { node: *node }, &lines(stats)),
-            None => ingest.indeterminate(IndeterminateReason::MissingData {
+        let Some(stats) = input.data.passive_stats(node.0) else {
+            ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "passives",
                 key: node.0.to_string(),
-            }),
+            });
+            continue;
+        };
+        // PoB drops allocated nodes not connected to a start when it
+        // loads a build, and the game allows none; their stats do not
+        // count, and the fields say so. Jewels that allocate without a
+        // path (Thread of Hope, Intuitive Leap) are not modelled yet, so
+        // their nodes land here too: partial, never a silent value.
+        if !connected.contains(&node.0) {
+            ingest.reason(UnsupportedReason::UnmodelledPassive {
+                source: Source::Passive { node: *node },
+                what: "unconnected-node",
+            });
+            continue;
         }
+        ingest.stats(&Source::Passive { node: *node }, &lines(stats));
     }
     for m in masteries {
         // A mastery effect counts only on an allocated mastery (PoB keeps
         // `masteryEffects` of unallocated nodes in the XML but ignores
-        // them).
-        if !nodes.contains(&m.node) {
+        // them) that is connected: a mastery connects through an
+        // allocated notable of its group (the unconnected node itself is
+        // reported above).
+        if !nodes.contains(&m.node) || !connected.contains(&m.node.0) {
             continue;
         }
         match input.data.mastery_effect_stats(m.effect) {

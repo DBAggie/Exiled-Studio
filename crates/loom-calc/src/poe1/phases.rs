@@ -19,7 +19,7 @@ use crate::graph::{Node, NodeIndex, Term};
 use crate::math;
 use crate::quantity::{Op, Quantity};
 use crate::result::Field;
-use crate::state::Reasons;
+use crate::state::{Reasons, StateKind};
 use crate::store::Query;
 
 /// The phases, in order.
@@ -381,10 +381,22 @@ fn unreserved(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         (Field::LifeUnreserved, Field::Life),
         (Field::ManaUnreserved, Field::Mana),
     ] {
-        let Some((node, value)) = calc.field(pool).and_then(|f| Some((f.node?, f.value?))) else {
+        let Some((node, value, kind)) = calc
+            .field(pool)
+            .and_then(|f| Some((f.node?, f.value?, f.state.kind())))
+        else {
             continue;
         };
-        let value = 0.0 + value;
+        // PoB writes `<pool>Unreserved` only when the pool is above 0
+        // (`Modules/CalcPerform.lua`, reservation: `if max > 0`); for an
+        // empty pool the field stays not computed, as absent as PoB's.
+        // An indeterminate pool's value is not settled, so its unreserved
+        // field is derived (and indeterminate) as usual.
+        if value <= 0.0 && kind != StateKind::Indeterminate {
+            continue;
+        }
+        // Nothing is reserved yet (P3-9a, P3-12): the pool itself, as a
+        // one-term sum so the field has its own result node.
         let node = calc.graph_mut().push(
             Node::Sum {
                 term: Term::Result,

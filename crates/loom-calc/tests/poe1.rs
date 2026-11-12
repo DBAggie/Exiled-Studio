@@ -10,7 +10,8 @@
 
 use loom_calc::{
     CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, Field, FieldState,
-    IndeterminateReason, Node, Source, StatAmount, StateKind, Term, UnsupportedReason, calculate,
+    IndeterminateReason, Node, PassiveLinks, Source, StatAmount, StateKind, Term,
+    UnsupportedReason, calculate,
 };
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
@@ -30,9 +31,13 @@ fn amount(stat: &str, value: i64) -> StatAmount {
     }
 }
 
+/// The class start of the small tree: linked to passives 1 to 4; passive
+/// 5 is linked to nothing.
+const START: u32 = 100;
+
 /// A small table: the Witch (as the game's characters table), the
-/// per-level constants of `Character.ot`, passives 1 to 4, mastery
-/// effect 77.
+/// per-level constants of `Character.ot`, passives 1 to 5 and the start,
+/// mastery effect 77.
 struct Data {
     passives: Vec<(u32, Vec<StatAmount>)>,
     masteries: Vec<(u32, Vec<StatAmount>)>,
@@ -52,6 +57,8 @@ impl Data {
                 (2, vec![amount("additional_intelligence", 10)]),
                 (3, vec![amount("keystone_unknown_to_the_mapping", 1)]),
                 (4, vec![]),
+                (5, vec![amount("base_maximum_life", 50)]),
+                (START, vec![]),
             ],
             masteries: vec![(77, vec![amount("maximum_mana_+%", 10)])],
         }
@@ -98,6 +105,18 @@ impl CalcData for Data {
             .find(|(n, _)| *n == effect)
             .map(|(_, s)| s.as_slice())
     }
+    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
+        let links = match node {
+            START => vec![1, 2, 3, 4],
+            1..=4 => vec![START],
+            5 => vec![],
+            _ => return None,
+        };
+        Some(PassiveLinks {
+            root: node == START,
+            links,
+        })
+    }
 }
 
 fn witch(level: u32) -> Build {
@@ -115,6 +134,10 @@ fn options(tree: Option<&str>) -> CalcOptions {
     }
 }
 
+#[expect(
+    clippy::unwrap_used,
+    reason = "a test helper: a failure fails the test"
+)]
 fn run_with(b: &Build, options: &CalcOptions) -> CalcResult {
     let data = Data::new();
     let input = CalcInput {
@@ -131,6 +154,10 @@ fn run(b: &Build) -> CalcResult {
     run_with(b, &options(Some("3_29")))
 }
 
+#[expect(
+    clippy::unwrap_used,
+    reason = "a test helper: a failure fails the test"
+)]
 fn value(r: &CalcResult, field: Field) -> f64 {
     r.fields[&field].value.unwrap()
 }
@@ -151,10 +178,16 @@ const CHARACTER: [Field; 8] = [
     Field::ManaUnreserved,
 ];
 
+/// A spec with the class start and `nodes` allocated.
 fn spec(nodes: &[u32]) -> PassiveSpec {
     let mut s = PassiveSpec::new(SpecId(1));
     s.tree_version = Some(TreeVersion::new("3_29"));
-    s.nodes = Sourced::new(nodes.iter().map(|n| NodeId(*n)).collect());
+    s.nodes = Sourced::new(
+        std::iter::once(START)
+            .chain(nodes.iter().copied())
+            .map(NodeId)
+            .collect(),
+    );
     s
 }
 
@@ -331,6 +364,16 @@ fn a_mastery_effect_should_count_only_on_an_allocated_mastery() {
 }
 
 #[test]
+fn an_empty_mana_pool_should_have_no_unreserved_mana() {
+    // 100% reduced maximum mana: Mana 0; PoB writes no ManaUnreserved.
+    let ring = item(1, vec![modifier(vec![stat("maximum_mana_+%", -100)])]);
+    let r = run(&with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]));
+    assert_eq!(value(&r, Field::Mana), 0.0);
+    assert_eq!(state(&r, Field::ManaUnreserved), StateKind::Unsupported);
+    assert_eq!(value(&r, Field::LifeUnreserved), 1125.0);
+}
+
+#[test]
 fn ring_lines_should_reach_attributes_and_global_energy_shield() {
     // Int 32 + 20 = 52; energy shield row 30 * (1 + 5 / 100) = 31.5,
     // rounded half up: 32.
@@ -413,6 +456,46 @@ fn an_unknown_passive_should_be_indeterminate() {
                 key: "999".to_owned()
             })
     );
+}
+
+#[test]
+fn an_unconnected_node_and_its_mastery_should_not_count() {
+    // Node 5 (+50 life) is linked to nothing; PoB drops it on load. Its
+    // mastery effect (10% increased mana) does not count either.
+    let mut s = spec(&[1, 5]);
+    s.mastery_effects = Sourced::new(vec![MasteryEffect {
+        node: NodeId(5),
+        effect: 77,
+    }]);
+    let r = run(&with_spec(witch(90), s));
+    for field in CHARACTER {
+        assert_eq!(
+            partial_reasons(&r, field),
+            ["unmodelled-passive"],
+            "{field}"
+        );
+    }
+    assert!(
+        r.reasons
+            .partial
+            .contains(&UnsupportedReason::UnmodelledPassive {
+                source: Source::Passive { node: NodeId(5) },
+                what: "unconnected-node",
+            })
+    );
+    // Node 1 counts (1226, as alone); node 5's life and the mastery do not.
+    assert_eq!(value(&r, Field::Life), 1226.0);
+    assert_eq!(value(&r, Field::Mana), 590.0);
+}
+
+#[test]
+fn nodes_without_their_start_should_not_count() {
+    // The start is the only root: without it nothing is connected.
+    let mut s = spec(&[1]);
+    s.nodes = Sourced::new(vec![NodeId(1)]);
+    let r = run(&with_spec(witch(90), s));
+    assert_eq!(value(&r, Field::Life), 1125.0);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-passive"]);
 }
 
 #[test]

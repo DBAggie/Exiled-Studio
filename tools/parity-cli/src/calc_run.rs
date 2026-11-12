@@ -34,7 +34,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use loom_calc::{CalcData, CalcInput, CalcOptions, CharacterBase, StatAmount};
+use loom_calc::{CalcData, CalcInput, CalcOptions, CharacterBase, PassiveLinks, StatAmount};
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
@@ -385,6 +385,10 @@ impl CalcData for OverlayData<'_> {
 
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]> {
         self.bundle.mastery_effect_stats(effect)
+    }
+
+    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
+        self.bundle.passive_links(node)
     }
 }
 

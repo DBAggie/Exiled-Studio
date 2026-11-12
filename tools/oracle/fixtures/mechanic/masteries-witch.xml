@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-6): a level 90 Witch with the path to Utmost Intellect
+     and the Attributes mastery of its group (5% increased Attributes;
+     a mastery needs an allocated notable of its group).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes="4492,5296,8948,21678,27592,32210,38176,44924,49651,54447,55114,57226" masteryEffects="{4492,5356}"/>
+	</Tree>
+	<Skills/>
+	<Items/>
+	<Config/>
+</PathOfBuilding>

@@ -345,8 +345,10 @@ mod tests {
         assert!(tiers(Tier::Synthetic) >= 3);
         assert_eq!(tiers(Tier::Discrepancy), 1);
         assert!(tiers(Tier::Community) >= 1);
-        // The first mechanic fixtures come with P3-6.
+        // P3-6: a bare level 1 and level 90 character of each of the 7
+        // classes, and 5 stat sources; later steps add theirs.
         let mechanic = tiers(Tier::Mechanic);
+        assert!(mechanic >= 19, "{mechanic}");
         // Local fixtures resolve without an oracle (their hashes are checked
         // here, in every cargo test); PoB's are checked by oracle-run.
         let local = Manifest {
@@ -568,13 +570,9 @@ mod tests {
             let err = mechanic(change).unwrap_err();
             assert!(err.contains(expected), "{expected}: {err}");
         }
-        // Targets on another tier.
-        let err = manifest_with(last_targets).unwrap_err();
+        // Targets on another tier (the first entry is one of PoB's builds).
+        let err = manifest_with(|v| v["fixtures"][0]["targets"] = json!(["Life"])).unwrap_err();
         assert!(err.contains("only mechanic fixtures"), "{err}");
-    }
-
-    fn last_targets(v: &mut Value) {
-        last(v)["targets"] = json!(["Life"]);
     }
 
     #[test]

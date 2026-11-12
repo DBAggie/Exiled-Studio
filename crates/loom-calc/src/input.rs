@@ -46,6 +46,19 @@ pub trait CalcData {
 
     /// The stats of the mastery effect with this hash.
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]>;
+
+    /// A passive node's place in the tree: whether it is a root (a class
+    /// or ascendancy start) and the nodes it is linked to, either way.
+    fn passive_links(&self, node: u32) -> Option<PassiveLinks>;
+}
+
+/// A passive node's links in the tree ([`CalcData::passive_links`]).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct PassiveLinks {
+    /// A class or ascendancy start: allocated nodes connect to one.
+    pub root: bool,
+    /// The linked nodes, sorted and unique.
+    pub links: Vec<u32>,
 }
 
 impl CalcData for Bundle {
@@ -101,6 +114,33 @@ impl CalcData for Bundle {
             .iter()
             .find(|e| e.hash == i64::from(effect))
             .map(|e| e.stats.as_slice())
+    }
+
+    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
+        let tables = self.passives.as_ref()?;
+        let me = i64::from(node);
+        let passive = tables.passives.iter().find(|p| p.node == me)?;
+        let mut links = Vec::new();
+        // The tree stores each link once, on one of its two nodes.
+        for n in tables.tree.groups.iter().flat_map(|g| &g.nodes) {
+            if n.node == me {
+                links.extend(
+                    n.connections
+                        .iter()
+                        .filter_map(|c| u32::try_from(c.node).ok()),
+                );
+            } else if n.connections.iter().any(|c| c.node == me)
+                && let Ok(other) = u32::try_from(n.node)
+            {
+                links.push(other);
+            }
+        }
+        links.sort_unstable();
+        links.dedup();
+        Some(PassiveLinks {
+            root: !passive.characters.is_empty() || passive.ascendancy_start,
+            links,
+        })
     }
 }
 
