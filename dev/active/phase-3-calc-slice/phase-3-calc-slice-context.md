@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12a: config inputs that only set named conditions)
+Last Updated: 2026-11-12 (P3-8c: the Smite builds' global stats)
 
 # Phase 3: calc slice (context)
 
@@ -292,6 +292,16 @@ The question as asked: where the default enemy's armour and evasion come from: P
 - **Smite's aura** (`minimum_added_lightning_damage_from_skill`, `maximum_...`): PoB applies it as a `GlobalEffect` aura buff on the character (`LightningMin` BASE), scaled by aura and buff effect, whose stats are unmapped; mapped as added lightning damage without flags. Its other stats reach no slice field (`NO_EFFECT`: radius, duration, targeting, display stats; shock chance as `ailment-chance`: PoB shocks the enemy only from its config or a guaranteed source, never from a chance).
 - **Mappings (P3-10):** accuracy and increased accuracy, added damage to attacks of every type, increased attack, melee, physical damage, attack speed, the area damage more of skills, the skill's conversion, Melee Physical Damage's more physical melee damage and less attack speed, Elemental Damage with Attacks' more elemental attack damage. Concentrated Effect's less area stays unmapped (area, P3-8a's rule), so its row is not added.
 - **Known limits, not reached by any fixture:** accuracy's more multiplier is the store's; PoB calls `skillModList:More("MORE", cfg, "Accuracy")`, which reads its arguments in the wrong order (no mapped stat has an accuracy more). The enemy's missing monster tables count with an attack (it reads the enemy's evasion) even when the config sets the evasion and armour.
+
+## Decisions in P3-8c (PR #83; the Smite builds' global stats; evidence `docs/phase-3/stat-mapping.md`, "P3-8c")
+- **Why this step:** every reason is build-wide, so a field turns `Complete` only when a build loses every kind. `smite-inquisitor-act1` had the fewest unmapped stats (5 distinct, 13 occurrences): mapping them removes the kind from that build and narrows the other Smite and Ice Nova builds.
+- **Readings:** `attack_and_cast_speed_+%` is `Speed` INC with no flag (PoB's; the engine computes only attack and cast rates); `elemental_damage_with_attack_skills_+%` `Damage` INC, attack, any elemental; `melee_critical_strike_chance_+%` `CritChance` INC, melee. `chance_to_freeze_shock_ignite_%` and `minion_damage_+%` are `NoEffect`.
+- **`NO_EFFECT_DEPENDS_ON`** (new, like config's `DEPENDS_ON`): the six stats that redirect minion damage to the player must stay `Unmapped` (test). P3-8a had left minion damage out because of them; the guard makes the `NoEffect` safe.
+- **Fixture weapon:** the Karui Maul (1000 ms) is the only Smite weapon whose attack time divides 1000, so a fixture on it needs no `game-truth` entry after the Q11 switch. Later Smite fixtures that test speed can use it too.
+- **Not done:** the other Smite builds' unmapped stats (act2: consecrated ground effect, life if no life tags on the body armour, spirit strikes, melee damage at close range); minion speed redirects.
+
+## code-architecture-reviewer (P3-8c, 2026-11-12) summary
+No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
 ## Decisions in P3-12a (PR #82; config inputs that only set named conditions; evidence `docs/phase-3/config-inputs.md`)
 - **Why first in step 12:** every reason is build-wide, and of the in-scope builds' config reasons (18 Ice Nova, 19 Smite) about half only set PoB named conditions or multipliers. Removing them changes no value and makes later steps' remaining list honest. It turns no in-scope field `Complete` (other gems, unmapped stats, choices, and 10 config inputs each remain).

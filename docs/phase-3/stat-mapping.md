@@ -42,3 +42,41 @@ Unmapped stats (`docs/phase-3/stat-mapping/p3-8a-*-coverage.json`, counts only):
 | Corpus | 21 | 559, 2491 | 535, 2305 |
 
 Tests (`crates/loom-calc/src/poe1/mapping.rs`, `tests/poe1.rs`): the table is sorted and disjoint from the mapped and local piece rows; each row is `NoEffect` through `Poe1Mapping` and an armour piece's `PieceMapping`; nine stats that can reach the slice stay unmapped; a build with regeneration and movement speed stays `Complete`.
+
+## P3-8c: the Smite builds' global stats
+
+**Why these five.** After P3-12a, `smite-inquisitor-act1` had five unmapped stats left (13 occurrences), the fewest of the in-scope builds; all five also occur in the other Smite builds and two in the Ice Nova builds. With them done, that build has no `unmapped-stat` reason (it stays `Partial` through other gems, 10 config inputs, and the pantheon).
+
+| Stat | Text | Read as (PoB v2.67.2) |
+|---|---|---|
+| `attack_and_cast_speed_+%` | "#% increased Attack and Cast Speed" | `Speed` INC, no flag (`Data/SkillStatMap.lua` 524): every rate the engine computes is an attack's or a cast's, so it adds to the same sum as `attack_speed_+%` and `base_cast_speed_+%` |
+| `elemental_damage_with_attack_skills_+%` | "#% increased Elemental Damage with Attack Skills" | `ElementalDamage` INC, `KeywordFlag.Attack` (1593): `Damage` INC for an attack's elemental damage |
+| `melee_critical_strike_chance_+%` | "#% increased Melee Critical Strike Chance" | `CritChance` INC, `ModFlag.Melee` (no stat map row; `ModParser.lua`'s "melee" flag word) |
+| `chance_to_freeze_shock_ignite_%` | "#% chance to Freeze, Shock and Ignite" | `NoEffect` (`ailment-chance`): PoB's ailment chances (`CalcOffence.lua` 4262) set the chance on hit and the ailment's flags; the enemy is shocked only from the config or a `ShockBase`/`ShockOverride`/`ShockMinimum` source (`CalcPerform.lua` 3591), never from a chance |
+| `minion_damage_+%` | "Minions deal #% increased Damage" | `NoEffect` (`minion-damage`): a `MinionModifier` list, read only by a minion's calculation; no minion is in the slice |
+
+**What `minion_damage_+%` depends on** (`NO_EFFECT_DEPENDS_ON`). Minion damage reaches you only through `MinionDamageAppliesToPlayer` (`CalcOffence.lua` 613), set by six game stats ("Increases and Reductions to Minion Damage also affect you", its 150% and Dominating Blow forms, "Modifiers to Minion Damage also affect you", and two skill stats; `ModParser.lua` 3455 to 3459, `SkillStatMap.lua` 905). A test asserts each is `Unmapped` through every mapping: while one is in a build, the fields are `Partial`; mapping one must revisit the row. Four more stats in the stats table name the same redirect but have no description and no PoB row, so no line resolves to them (they are `Unmapped` too). Minion speed stays unmapped (P3-8a's rule).
+
+### Evidence (2026-11-12, Windows; tool commit `5287654`, clean)
+
+Inputs as P3-12a's: bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`; commands as in `docs/phase-3/config-inputs.md` (out folder `local/p3/p3-8c/evidence`). The runs on the uncommitted tree gave byte-identical documents to the clean commit's.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 85 | Every expectation met (84 `ok`, `malformed.xml` `ORACLE_IMPORT`), 3/3 identical runs each; the two new fixtures among them |
+| `calc-run`, public, twice | 85 | 84 documents; 981 complete (+45, the two new fixtures), 334 partial, 389 unsupported, 312 indeterminate. Byte-identical twice |
+| Documents against P3-12a's run | 82 | **No field state changes.** 188 `unmapped-stat` reasons gone in 23 builds (the five stats), none added. Values change in 8 builds already `Partial` (the 4 Smite builds, 2 Ice Nova, Shock Nova, Elemental Hit), the new stats now counted |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 85 | 25 differences, all registered (DIV-0001 to DIV-0025, unchanged), 0 unexpected, no unused entry, no missing mechanic fixture; 963 fields match (+45). Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | All `indeterminate` (older trees), byte-identical; reasons only (106 gone in 16 builds); no difference |
+
+**The new fixtures** (`tools/oracle/fixtures/mechanic/`): `smite-global-attack-stats-templar.xml`, Smite on a Karui Maul (1000 ms, the one Smite weapon whose attack time divides 1000, so the game's floored time equals PoB's and no register entry is needed) with an amulet carrying all five lines; `ice-nova-attack-and-cast-speed-witch.xml`, Ice Nova with "12% increased Attack and Cast Speed" (PoB's rate 1.4286 to 1.6). Every field of both is `Complete` and matches PoB. A local check (the Smite fixture with each line removed, engine only) shows each mapped line changes the value PoB matches: without the speed line `Speed` 0.85 (0.935 with it), without melee crit `CritChance` 1.1 (1.54), without the elemental line `AverageDamage` 122.03 (152.18); without the minion and ailment lines nothing changes, so PoB's values with those lines equal the engine's without them.
+
+Unmapped stats (`docs/phase-3/stat-mapping/p3-8c-*-coverage.json`, against P3-12a's run):
+
+| Group | Builds | Before (distinct, occurrences) | After |
+|---|---|---|---|
+| In-scope (Ice Nova, Smite, Winter Orb) | 8 | 108, 363 | 103, 292 |
+| All public | 82 | 1045, 3196 | 1040, 3008 |
+| Corpus | 21 | 509, 1844 | 504, 1738 |
+
+Tests (1128 workspace tests, 2 new, `mapping.rs`): the three rows as PoB reads them, the same through a gem's mapping, the two `NoEffect` rows; `NO_EFFECT_DEPENDS_ON` sorted, naming `NO_EFFECT` rows, each stat `Unmapped` through the game's, gem, piece, and weapon mappings. Clippy, fmt, wasm32. Reviewed by `code-architecture-reviewer`: no blockers; each reading confirmed in PoB; the parity evidence above and the comment on the four unreachable stats applied.
