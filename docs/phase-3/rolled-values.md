@@ -1,6 +1,6 @@
 # P3-8b: rolled values of PoB's ranged lines
 
-Phase 3, step 8 (plan `dev/active/phase-3-calc-slice/`; decisions in the context file, "Decisions in P3-8b").
+Phase 3, step 8 (plan `dev/active/phase-3-calc-slice/`; base `dev` after #79; decisions in the context file, "Decisions in P3-8b").
 
 ## Why
 
