@@ -69,7 +69,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-6 character, attributes, life, mana, ES (PR #71; `docs/phase-3/character-fields.md`; 19 mechanic fixtures match on their targets)
 - [x] P3-7 core defences (PR #72; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
 - [ ] P3-8 stat mappings (one or more PRs; coverage summary each)
-  - [x] P3-8a stats that reach no slice field (PR #PRNUM8A; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
+  - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
 - [ ] P3-9a skill model (next: before P3-11, decision in the context file, "Decisions in P3-8a")
 - [ ] P3-11 enemy model
 - [ ] P3-9b spell hits
