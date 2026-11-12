@@ -160,10 +160,24 @@ impl Build {
         out
     }
 
-    /// [`Completeness::Partial`] when anything is quarantined.
+    /// [`Completeness::Partial`] when anything is quarantined, or a custom
+    /// modifier line of any config set is pending or did not resolve
+    /// (P3-12c; [`Build::quarantine`] lists item lines only).
     #[must_use]
     pub fn completeness(&self) -> Completeness {
-        if self.quarantine().is_empty() {
+        let custom_open = self
+            .config
+            .sets
+            .typed()
+            .flat_map(|s| &s.custom_modifiers)
+            .flat_map(|b| &b.lines)
+            .any(|l| {
+                matches!(
+                    l.resolution,
+                    LineResolution::Pending | LineResolution::Unresolved(_)
+                )
+            });
+        if self.quarantine().is_empty() && !custom_open {
             Completeness::Complete
         } else {
             Completeness::Partial

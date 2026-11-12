@@ -1385,7 +1385,30 @@ fn custom_modifier_lines_of_enabled_blocks_should_apply() {
             UnsupportedReason::UnreadLine { source: at(4) },
         ]
     );
+
     assert_eq!(value_of(&r, Field::Life), life + 10.0);
+
+    // A ranged line has no rolled value (the host rolls item lines only):
+    // its value stays unsettled.
+    let r = with(vec![block(
+        true,
+        vec![LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }]),
+            adapted: None,
+        }],
+    )]);
+    let FieldState::Indeterminate { reasons, .. } = &r.fields[&Field::Life].state else {
+        panic!("{:?}", r.fields[&Field::Life].state);
+    };
+    assert!(
+        reasons
+            .iter()
+            .any(|i| matches!(i, IndeterminateReason::UnsettledValue { .. })),
+        "{reasons:?}"
+    );
 }
 
 #[test]

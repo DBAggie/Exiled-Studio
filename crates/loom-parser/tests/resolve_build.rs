@@ -531,7 +531,11 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
     });
     let bundle = bundle("bundle-poe1");
     let data = BundleData::new(&bundle);
-    resolve_build(&mut b, &data, base_line).unwrap();
+    // No item, but unresolved custom lines: the build is not complete.
+    assert_eq!(
+        resolve_build(&mut b, &data, base_line).unwrap(),
+        Completeness::Partial
+    );
     let expected = vec![
         stats(vec![exact("test_maximum_life", 15)], None),
         stats(
@@ -572,4 +576,9 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
     let before = b.clone();
     resolve_build(&mut b, &data, base_line).unwrap();
     assert_eq!(b, before);
+    // Only resolved lines left: complete.
+    for blk in &mut b.config.sets.typed_mut().next().unwrap().custom_modifiers {
+        blk.lines.truncate(3);
+    }
+    assert_eq!(b.completeness(), Completeness::Complete);
 }

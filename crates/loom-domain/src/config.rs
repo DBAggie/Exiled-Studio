@@ -73,7 +73,9 @@ pub struct CustomModifierBlock {
     pub text: String,
     /// The modifier lines the import adapter read from `text` (its
     /// format's rules say which lines hold a modifier and with what text),
-    /// in order, each with its resolution.
+    /// in order, each with its resolution. They are derived from `text`,
+    /// which an export writes: a change to `text` must derive them again
+    /// (nothing checks that they agree).
     pub lines: Vec<CustomModifierLine>,
     /// Attributes not typed.
     pub attributes: Attributes,
