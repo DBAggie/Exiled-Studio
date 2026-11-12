@@ -1293,13 +1293,24 @@ fn placeholders_should_be_classified_as_their_inputs() {
 }
 
 #[test]
-fn custom_modifier_lines_of_enabled_blocks_should_be_reasons() {
-    use loom_domain::CustomModifierBlock;
+fn custom_modifier_lines_of_enabled_blocks_should_apply() {
+    use loom_domain::{CustomModifierBlock, CustomModifierLine, Exclusion, UnresolvedReason};
 
-    let block = |enabled: bool, text: &str| CustomModifierBlock {
+    let resolved = |v: i64| LineResolution::Resolved {
+        result: Resolved::Stats(vec![stat("base_maximum_life", v)]),
+        adapted: None,
+    };
+    let block = |enabled: bool, lines: Vec<LineResolution>| CustomModifierBlock {
         title: Some("Default".to_owned()),
         enabled,
-        text: text.to_owned(),
+        text: String::new(),
+        lines: lines
+            .into_iter()
+            .map(|resolution| CustomModifierLine {
+                text: "line".to_owned(),
+                resolution,
+            })
+            .collect(),
         attributes: Vec::new(),
     };
     let with = |blocks: Vec<CustomModifierBlock>| {
@@ -1314,40 +1325,67 @@ fn custom_modifier_lines_of_enabled_blocks_should_be_reasons() {
         run(&b)
     };
     let bare = run(&witch(1));
-    // No effect: an empty block, one of blank or colour-code-only lines,
-    // and a disabled block with modifiers (PoB applies only enabled
-    // blocks with text).
+    let life = value_of(&bare, Field::Life);
+
+    // An enabled block's resolved line acts as a character-wide modifier;
+    // a disabled block, whatever it holds, and an empty one do nothing.
     let r = with(vec![
-        block(true, ""),
-        block(true, "\n\t\t\t\t\n\t\t\t"),
-        block(true, "^1\n\n^xFF0000  "),
-        block(false, "100% more Damage\nOnslaught"),
+        block(true, vec![]),
+        block(true, vec![resolved(10)]),
+        block(
+            false,
+            vec![
+                resolved(50),
+                LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            ],
+        ),
     ]);
-    for field in [Field::Life, Field::Mana, FIRE, Field::Armour] {
-        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
-        assert_eq!(value_of(&r, field), value_of(&bare, field), "{field}");
-    }
-    // Each line of an enabled block is a reason, once.
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    let top = r.fields[&Field::Life].node.unwrap();
+    assert!(
+        r.graph
+            .iter()
+            .filter(|(i, _, _)| i.get() <= top.get())
+            .any(|(_, n, _)| format!("{n:?}").contains("CustomModifier { block: 1, line: 0 }")),
+        "the graph names the line"
+    );
+
+    // A line without a usable resolution is a reason, under its block and
+    // line; the resolved line still acts.
     let r = with(vec![
-        block(true, "\n\t\t\t\tPerfect Forest Warrior\nOnslaught\n\t\t\t"),
-        block(false, "Culling Strike"),
-        block(true, "^2Onslaught"),
+        block(false, vec![resolved(50)]),
+        block(
+            true,
+            vec![
+                resolved(10),
+                LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+                LineResolution::Pending,
+                LineResolution::Excluded(Exclusion::Custom),
+                LineResolution::Continues { line: 0 },
+            ],
+        ),
     ]);
     let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
         panic!("not partial");
     };
+    let at = |line| Source::CustomModifier { block: 1, line };
     assert_eq!(
-        p.iter().collect::<Vec<_>>(),
+        p.iter().cloned().collect::<Vec<_>>(),
         [
-            &UnsupportedReason::UnmodelledCustomModifier {
-                line: "Onslaught".to_owned()
+            UnsupportedReason::UnresolvedLine {
+                source: at(1),
+                reason: "no-template",
             },
-            &UnsupportedReason::UnmodelledCustomModifier {
-                line: "Perfect Forest Warrior".to_owned()
+            UnsupportedReason::ExcludedLine {
+                source: at(3),
+                exclusion: "custom",
             },
+            UnsupportedReason::PendingLine { source: at(2) },
+            UnsupportedReason::UnreadLine { source: at(4) },
         ]
     );
-    assert_eq!(value_of(&r, Field::Life), value_of(&bare, Field::Life));
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
 }
 
 #[test]

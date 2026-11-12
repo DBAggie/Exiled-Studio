@@ -28,6 +28,17 @@
           }
         },
         {
+          "unresolved-line": {
+            "source": {
+              "custom-modifier": {
+                "block": 1,
+                "line": 2
+              }
+            },
+            "reason": "no-template"
+          }
+        },
+        {
           "excluded-line": {
             "source": {
               "item": {
@@ -146,11 +157,6 @@
             },
             "what": "physical-hit-armour"
           }
-        },
-        {
-          "unmodelled-custom-modifier": {
-            "line": "Onslaught"
-          }
         }
       ],
       "indeterminate": [
@@ -217,6 +223,17 @@
                 }
               },
               "reason": "no-match"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "custom-modifier": {
+                  "block": 1,
+                  "line": 2
+                }
+              },
+              "reason": "no-template"
             }
           },
           {
@@ -337,11 +354,6 @@
                 }
               },
               "what": "physical-hit-armour"
-            }
-          },
-          {
-            "unmodelled-custom-modifier": {
-              "line": "Onslaught"
             }
           }
         ]

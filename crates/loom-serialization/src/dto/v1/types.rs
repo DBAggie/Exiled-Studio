@@ -749,11 +749,23 @@ dto! {
         pub title: Option<String>,
         /// Whether the block applies.
         pub enabled: bool,
-        /// The lines, as read.
+        /// The block's text, as read.
         pub text: String,
+        /// The modifier lines read from the text, with their resolutions;
+        /// left out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub lines: Vec<CustomModifierLine>,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// One modifier line of a custom modifier block.
+    pub struct CustomModifierLine {
+        /// The modifier text.
+        pub text: String,
+        /// What the line resolved to.
+        pub resolution: LineResolution,
     }
 
     /// One config input.

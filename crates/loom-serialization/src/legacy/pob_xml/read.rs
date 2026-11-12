@@ -3,10 +3,10 @@
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     AscendancyId, Attribute, Attributes, Build, BuildPart, Character, ClassId, Config, ConfigInput,
-    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock, Game, GameSpecific,
-    Gem, GemId, ItemId, JewelSocket, MasteryEffect, NodeId, Number, OpaqueNode, Ordered,
-    PassiveSpec, Passives, SkillId, SkillSet, SkillSetId, Skills, SlotId, SocketGroup, Sourced,
-    SpecId, SpecPart, TreeVersion,
+    ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock, CustomModifierLine,
+    Game, GameSpecific, Gem, GemId, ItemId, JewelSocket, LineResolution, MasteryEffect, NodeId,
+    Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet, SkillSetId, Skills,
+    SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
 };
 use roxmltree::{Node, NodeType};
 
@@ -473,12 +473,69 @@ fn custom_modifier_block(n: Node<'_, '_>) -> Option<CustomModifierBlock> {
         "false" => false,
         _ => return None,
     };
+    let body: String = n.children().filter_map(|c| c.text()).collect();
     Some(CustomModifierBlock {
         title: text(n, "title"),
         enabled,
-        text: n.children().filter_map(|c| c.text()).collect(),
+        lines: custom_modifier_lines(&body)
+            .map(|text| CustomModifierLine {
+                text,
+                resolution: LineResolution::Pending,
+            })
+            .collect(),
+        text: body,
         attributes: rest(n, &["title", "enabled"]),
     })
+}
+
+/// The lines of a custom modifier block that PoB parses as modifiers
+/// (PoB v2.67.2, `Classes/ConfigTab.lua`, `BuildModList`, lines 1106 to
+/// 1128): each line with its colour codes removed (`StripEscapes`,
+/// `HeadlessWrapper.lua` 75: `^` and a digit, then `^x` and six hex
+/// digits) and trimmed of Lua's `%s`. An empty line is left out: it is no
+/// modifier.
+pub(super) fn custom_modifier_lines(text: &str) -> impl Iterator<Item = String> + '_ {
+    text.split('\n').filter_map(|line| {
+        let line = strip_escapes(line);
+        let line = line.trim_matches(is_lua_space);
+        (!line.is_empty()).then(|| line.to_owned())
+    })
+}
+
+/// Lua's `%s`: space, tab, line feed, vertical tab, form feed, carriage
+/// return.
+const fn is_lua_space(c: char) -> bool {
+    matches!(c, ' ' | '\t' | '\n' | '\u{b}' | '\u{c}' | '\r')
+}
+
+/// PoB's `StripEscapes`: every `^` and a digit removed, then every `^x`
+/// and six hex digits, in two passes as `gsub` does.
+fn strip_escapes(line: &str) -> String {
+    let colour = strip(line, 2, |b| matches!(b, [b'^', d] if d.is_ascii_digit()));
+    strip(
+        &colour,
+        8,
+        |b| matches!(b, [b'^', b'x', hex @ ..] if hex.iter().all(u8::is_ascii_hexdigit)),
+    )
+}
+
+/// `text` without every non-overlapping window of `len` bytes that
+/// `matches`, left to right. Only ASCII windows match, and a multi-byte
+/// character holds no ASCII byte, so the rest stays valid UTF-8.
+fn strip(text: &str, len: usize, matches: impl Fn(&[u8]) -> bool) -> String {
+    let bytes = text.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while let Some(&b) = bytes.get(i) {
+        match bytes.get(i..i + len) {
+            Some(window) if matches(window) => i += len,
+            _ => {
+                out.push(b);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8(out).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
 fn input(n: Node<'_, '_>) -> Option<ConfigInput> {

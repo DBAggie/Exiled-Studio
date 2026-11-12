@@ -1013,9 +1013,10 @@ fn active_config(build: &Build) -> Option<&ConfigSet> {
 /// conditions, multipliers, or distances ([`super::config::NAMED_ONLY`]),
 /// and the enemy's damage ([`super::config::ENEMY_DAMAGE`]). A
 /// placeholder's reason has its input's name (`poe1::config`, module
-/// docs). Each line of an enabled custom modifier block is an
-/// `unmodelled-custom-modifier` reason ([`super::config::custom_modifier_lines`]);
-/// a disabled block, or one with no line, changes nothing (P3-12c).
+/// docs). Each line of an enabled custom modifier block acts as a
+/// character-wide modifier through its resolution ([`Ingest::custom_line`]:
+/// a line that did not resolve is a reason); a disabled block changes
+/// nothing (P3-12c).
 /// Untyped content (a block the reader kept whole, a placeholder PoB reads
 /// as an input, content outside a config set, which PoB loads into set 1)
 /// is one `<untyped>` reason.
@@ -1032,9 +1033,12 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
     if set.inputs.opaque().next().is_some() {
         ingest.reason(untyped());
     }
-    for block in set.custom_modifiers.iter().filter(|b| b.enabled) {
-        for line in super::config::custom_modifier_lines(&block.text) {
-            ingest.reason(UnsupportedReason::UnmodelledCustomModifier { line });
+    // PoB applies only enabled blocks (`ConfigTab.lua`, `BuildModList`).
+    for (b, block) in set.custom_modifiers.iter().enumerate() {
+        if block.enabled {
+            for (l, line) in block.lines.iter().enumerate() {
+                ingest.custom_line(b, l, &line.resolution);
+            }
         }
     }
     // Every input, whatever its value: some of PoB's options default to

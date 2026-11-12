@@ -20,15 +20,19 @@
 			<CustomModifierBlock enabled="true" title="Default">
 				
 			</CustomModifierBlock>
-			<CustomModifierBlock enabled="true" title="Colour codes">
-				^1
+			<CustomModifierBlock enabled="true" title="Modifiers">
+				+30% to Cold Resistance
+^2+20 to maximum Life^7
 
-^xFF0000
+^xFF0000+20% to Global Critical Strike Multiplier
+50% increased Spell Damage
+^1
+10% increased Cast Speed
 			</CustomModifierBlock>
 			<CustomModifierBlock enabled="false" title="Off">
-				100% more Spell Damage
-+30% to Cold Resistance
-+20% to Global Critical Strike Multiplier
+				+40% to Fire Resistance
++100 to maximum Life
+100% increased Spell Damage
 			</CustomModifierBlock>
 		</ConfigSet>
 	</Config>

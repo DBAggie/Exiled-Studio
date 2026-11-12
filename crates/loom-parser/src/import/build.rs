@@ -215,7 +215,64 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 }
             }
         }
+        self.resolve_custom_modifiers(build);
         Ok((build.completeness(), ends))
+    }
+
+    /// Resolves the pending lines of every custom modifier block of every
+    /// config set (P3-12c). A planner applies such a line to the character,
+    /// as PoB adds the parsed line to the config's modifiers
+    /// (`Classes/ConfigTab.lua`, `BuildModList`): each line is read alone
+    /// in the default scope (no item base, so no mod row can settle an
+    /// ambiguous line, which stays unresolved), with the case-folding
+    /// tolerance item lines have. A ranged value stays a range.
+    fn resolve_custom_modifiers(&self, build: &mut Build) {
+        let scope = self.data.item_rules().default_scope.as_str();
+        // `new` indexes every scope; were the default one not, the lines
+        // would stay pending, which calc reports.
+        let Some(index) = self.indexes.get(scope) else {
+            return;
+        };
+        for set in build.config.sets.typed_mut() {
+            for block in &mut set.custom_modifiers {
+                for line in &mut block.lines {
+                    if line.resolution == LineResolution::Pending {
+                        line.resolution = self.resolve_custom_line(index, &line.text);
+                    }
+                }
+            }
+        }
+    }
+
+    /// One custom modifier line, alone, in `index`'s scope.
+    fn resolve_custom_line(&self, index: &Index<'_>, text: &str) -> LineResolution {
+        let Some(composed) = index
+            .resolve_lines_composed(&[text], self.data.compositions())
+            .into_iter()
+            .next()
+        else {
+            return LineResolution::Unresolved(UnresolvedReason::NoTemplate);
+        };
+        let mut resolution = composed.resolution;
+        let mut adapted = None;
+        if let Some(folded) =
+            tolerance::case_folded(index, text, &resolution, composed.composition.is_some())
+        {
+            resolution = folded;
+            adapted = Some(Adapted::CaseFolded);
+        }
+        match &resolution.outcome {
+            // Only a one-line description: the block's lines are read alone.
+            Outcome::Resolved(c) if resolution.lines == 1 => LineResolution::Resolved {
+                result: Resolved::Stats(stats(&c.stats)),
+                adapted,
+            },
+            Outcome::Resolved(_) => LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            Outcome::Ambiguous(cs) => LineResolution::Unresolved(UnresolvedReason::Ambiguous(
+                cs.iter().map(stat_ids).collect(),
+            )),
+            Outcome::Unresolved(u) => LineResolution::Unresolved(reason(u)),
+        }
     }
 
     /// Resolves the pending modifier lines of one item (module docs), with

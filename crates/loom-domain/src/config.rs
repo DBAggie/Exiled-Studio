@@ -1,7 +1,9 @@
 //! Config inputs, as typed key-value pairs. What each key means is the
 //! calculations' concern (Phase 3).
 
+use crate::error::DomainError;
 use crate::id::ConfigSetId;
+use crate::item::LineResolution;
 use crate::opaque::{Attributes, Ordered};
 use crate::value::{Number, Sourced};
 
@@ -14,6 +16,32 @@ pub struct Config {
     pub sets: Ordered<ConfigSet>,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+impl Config {
+    /// Checks that no custom modifier line continues another line (only
+    /// item lines resolve over several lines).
+    ///
+    /// # Errors
+    /// [`DomainError::ContinuedCustomLine`] for the first such line.
+    pub fn check_custom_lines(&self) -> Result<(), DomainError> {
+        for set in self.sets.typed() {
+            for (block, b) in set.custom_modifiers.iter().enumerate() {
+                if let Some(line) = b
+                    .lines
+                    .iter()
+                    .position(|l| matches!(l.resolution, LineResolution::Continues { .. }))
+                {
+                    return Err(DomainError::ContinuedCustomLine {
+                        set: set.id.0,
+                        block,
+                        line,
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 /// One config set.
@@ -41,10 +69,24 @@ pub struct CustomModifierBlock {
     pub title: Option<String>,
     /// Whether the block applies.
     pub enabled: bool,
-    /// The lines, as read (whitespace and line breaks included).
+    /// The block's text, as read (whitespace and line breaks included).
     pub text: String,
+    /// The modifier lines the import adapter read from `text` (its
+    /// format's rules say which lines hold a modifier and with what text),
+    /// in order, each with its resolution.
+    pub lines: Vec<CustomModifierLine>,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// One modifier line of a custom modifier block. Resolution reads it as a
+/// character-wide modifier (no item base).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomModifierLine {
+    /// The modifier text.
+    pub text: String,
+    /// What the line resolved to.
+    pub resolution: LineResolution,
 }
 
 /// One config input.

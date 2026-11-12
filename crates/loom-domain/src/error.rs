@@ -21,6 +21,16 @@ pub enum DomainError {
         /// Index of the line.
         line: usize,
     },
+    /// A custom modifier line claims to continue another line: only item
+    /// lines resolve over several lines.
+    ContinuedCustomLine {
+        /// The config set.
+        set: u32,
+        /// The block's index in the set.
+        block: usize,
+        /// The line's index in the block.
+        line: usize,
+    },
 }
 
 impl DomainError {
@@ -30,6 +40,7 @@ impl DomainError {
         match self {
             Self::GameMismatch { .. } => "DOMAIN_GAME_MISMATCH",
             Self::BrokenContinuation { .. } => "DOMAIN_BROKEN_CONTINUATION",
+            Self::ContinuedCustomLine { .. } => "DOMAIN_CONTINUED_CUSTOM_LINE",
         }
     }
 }
@@ -47,6 +58,11 @@ impl fmt::Display for DomainError {
             Self::BrokenContinuation { line } => {
                 write!(f, "{}: item line {line}", self.code())
             }
+            Self::ContinuedCustomLine { set, block, line } => write!(
+                f,
+                "{}: config set {set}, block {block}, line {line}",
+                self.code()
+            ),
         }
     }
 }

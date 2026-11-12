@@ -49,40 +49,6 @@ export type ConfigSetEntry =
       opaque: OpaqueNode
     }
 /**
- * One entry of a list with untyped content in place.
- */
-export type ConfigInputEntry =
-  | {
-      typed: ConfigInput
-    }
-  | {
-      opaque: OpaqueNode
-    }
-/**
- * One entry of a list with untyped content in place.
- */
-export type ItemsEntryEntry =
-  | {
-      typed: ItemsEntry
-    }
-  | {
-      opaque: OpaqueNode
-    }
-/**
- * An item or an item set.
- */
-export type ItemsEntry =
-  | {
-      item: Item
-    }
-  | {
-      set: ItemSet
-    }
-/**
- * A header line.
- */
-export type HeaderLine = 'item-class' | 'rarity' | 'separator' | 'name' | 'base'
-/**
  * Why a modifier line is not resolved by design.
  */
 export type Exclusion = 'not-selected' | 'custom' | 'section'
@@ -160,6 +126,40 @@ export type NoBase =
     }
   | 'not-found'
   | 'scope-conflict'
+/**
+ * One entry of a list with untyped content in place.
+ */
+export type ConfigInputEntry =
+  | {
+      typed: ConfigInput
+    }
+  | {
+      opaque: OpaqueNode
+    }
+/**
+ * One entry of a list with untyped content in place.
+ */
+export type ItemsEntryEntry =
+  | {
+      typed: ItemsEntry
+    }
+  | {
+      opaque: OpaqueNode
+    }
+/**
+ * An item or an item set.
+ */
+export type ItemsEntry =
+  | {
+      item: Item
+    }
+  | {
+      set: ItemSet
+    }
+/**
+ * A header line.
+ */
+export type HeaderLine = 'item-class' | 'rarity' | 'separator' | 'name' | 'base'
 /**
  * Item rarity.
  */
@@ -435,13 +435,125 @@ export interface CustomModifierBlock {
    */
   enabled: boolean
   /**
-   * The lines, as read.
+   * The modifier lines read from the text, with their resolutions;
+   * left out when none.
+   */
+  lines?: CustomModifierLine[]
+  /**
+   * The block's text, as read.
    */
   text: string
   /**
    * The title, if any.
    */
   title?: string | null
+}
+/**
+ * One modifier line of a custom modifier block.
+ */
+export interface CustomModifierLine {
+  /**
+   * What the line resolved to.
+   */
+  resolution:
+    | 'pending'
+    | {
+        excluded: Exclusion
+      }
+    | {
+        resolved: {
+          /**
+           * The tolerance it needed, if any.
+           */
+          adapted?: Adapted | null
+          /**
+           * The result.
+           */
+          result:
+            | {
+                stats: StatLine[]
+              }
+            | {
+                typed: TypedResolution
+              }
+        }
+      }
+    | {
+        continues: {
+          /**
+           * Index of that line among the item's lines.
+           */
+          line: number
+        }
+      }
+    | {
+        unresolved: UnresolvedReason
+      }
+  /**
+   * The modifier text.
+   */
+  text: string
+}
+/**
+ * A stat ID and its value.
+ */
+export interface StatLine {
+  /**
+   * The stat.
+   */
+  stat: string
+  /**
+   * Its value.
+   */
+  value:
+    | {
+        exact: {
+          /**
+           * Highest raw value.
+           */
+          max: number
+          /**
+           * Lowest raw value.
+           */
+          min: number
+        }
+      }
+    | {
+        ranged: {
+          /**
+           * Highest raw value.
+           */
+          max: number
+          /**
+           * Lowest raw value.
+           */
+          min: number
+        }
+      }
+    | {
+        hidden: {
+          /**
+           * The assumed value, if clear.
+           */
+          assumed?: number | null
+        }
+      }
+    | {
+        lookup: number[]
+      }
+}
+/**
+ * One placeholder value of a property line.
+ */
+export interface PropertyValue {
+  /**
+   * The placeholder's number.
+   */
+  slot: number
+  /**
+   * The value's text.
+   */
+  text: string
 }
 /**
  * One config input.
@@ -732,67 +844,6 @@ export interface Prefix {
    * The value, if any.
    */
   value?: string | null
-}
-/**
- * A stat ID and its value.
- */
-export interface StatLine {
-  /**
-   * The stat.
-   */
-  stat: string
-  /**
-   * Its value.
-   */
-  value:
-    | {
-        exact: {
-          /**
-           * Highest raw value.
-           */
-          max: number
-          /**
-           * Lowest raw value.
-           */
-          min: number
-        }
-      }
-    | {
-        ranged: {
-          /**
-           * Highest raw value.
-           */
-          max: number
-          /**
-           * Lowest raw value.
-           */
-          min: number
-        }
-      }
-    | {
-        hidden: {
-          /**
-           * The assumed value, if clear.
-           */
-          assumed?: number | null
-        }
-      }
-    | {
-        lookup: number[]
-      }
-}
-/**
- * One placeholder value of a property line.
- */
-export interface PropertyValue {
-  /**
-   * The placeholder's number.
-   */
-  slot: number
-  /**
-   * The value's text.
-   */
-  text: string
 }
 /**
  * Variant selection.

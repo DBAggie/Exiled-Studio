@@ -113,6 +113,10 @@ impl Document {
                 error,
             })?;
         }
+        build
+            .config
+            .check_custom_lines()
+            .map_err(DtoError::Domain)?;
         Ok(Self {
             format: FORMAT.to_owned(),
             version: VERSION,

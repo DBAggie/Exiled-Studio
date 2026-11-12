@@ -317,6 +317,18 @@ Culling Strike
             (Some("Group 3"), true, "", 0),
         ]
     );
+    // The modifier lines, pending until resolution.
+    let first = &set.custom_modifiers[0].lines;
+    assert_eq!(
+        first.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(),
+        ["Onslaught & more", "Culling Strike"]
+    );
+    assert!(
+        first
+            .iter()
+            .all(|l| l.resolution == loom_domain::LineResolution::Pending)
+    );
+    assert!(set.custom_modifiers[1].lines.is_empty());
     let out = export(&b);
     assert!(
         out.contains("Onslaught &amp; more\nCulling Strike"),
@@ -347,6 +359,40 @@ fn other_custom_modifier_blocks_should_be_kept_whole() {
     assert_eq!(set.custom_modifiers.len(), 1);
     assert_eq!(set.custom_modifiers[0].text, "Culling Strike");
     assert_eq!(kept_whole(&b), ["Config/ConfigSet/CustomModifierBlock"; 4]);
+}
+
+fn lines(text: &str) -> Vec<String> {
+    super::read::custom_modifier_lines(text).collect()
+}
+
+#[test]
+fn custom_modifier_lines_should_be_trimmed_and_skip_empty_ones() {
+    // As PoB saves a block: the text indented, lines after the first not.
+    assert_eq!(
+        lines("\n\t\t\t\tPerfect Forest Warrior\nOnslaught\r\n  Culling Strike \n\t\t\t"),
+        ["Perfect Forest Warrior", "Onslaught", "Culling Strike"]
+    );
+    assert!(lines("").is_empty());
+    assert!(lines("\n\t\t\t\t\n\t\t\t").is_empty());
+    // Vertical tab and form feed are Lua spaces; a no-break space is not.
+    assert!(lines("\u{b}\u{c}").is_empty());
+    assert_eq!(lines("\u{a0}"), ["\u{a0}"]);
+}
+
+#[test]
+fn custom_modifier_lines_should_lose_colour_codes() {
+    assert_eq!(
+        lines("^1=== CAP RES ===\n^xFF00aaOnslaught^7\n^1\n^xABCDEF"),
+        ["=== CAP RES ===", "Onslaught"]
+    );
+    // Not a code: too few hex digits, upper-case X, a caret alone.
+    assert_eq!(lines("^xFF00 a"), ["^xFF00 a"]);
+    assert_eq!(lines("^XFF00AA"), ["^XFF00AA"]);
+    assert_eq!(lines("a ^ b"), ["a ^ b"]);
+    // Two passes, as `gsub` twice: removing `^1` can make a `^x` code.
+    assert_eq!(lines("^^1xFF00AAz"), ["z"]);
+    // Other text is kept, whatever its script.
+    assert_eq!(lines("^2Gain Onslaught — 4s"), ["Gain Onslaught — 4s"]);
 }
 
 #[test]

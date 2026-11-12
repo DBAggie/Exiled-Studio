@@ -75,6 +75,18 @@ export type IndeterminateReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * The stat ID.
          */
@@ -176,6 +188,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * The stat ID.
          */
@@ -249,6 +273,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -318,6 +354,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -382,6 +430,18 @@ export type UnsupportedReason =
           | 'enemy'
           | {
               rule: string
+            }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
             }
       }
     }
@@ -451,6 +511,18 @@ export type UnsupportedReason =
           | 'enemy'
           | {
               rule: string
+            }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
             }
       }
     }
@@ -525,6 +597,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | {
@@ -598,6 +682,18 @@ export type UnsupportedReason =
           | 'enemy'
           | {
               rule: string
+            }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
             }
       }
     }
@@ -700,6 +796,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * What is not modelled.
          */
@@ -768,6 +876,18 @@ export type UnsupportedReason =
           | 'enemy'
           | {
               rule: string
+            }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
             }
       }
     }
@@ -839,6 +959,18 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
       }
     }
   | 'unchecked-tree-version'
@@ -905,18 +1037,22 @@ export type UnsupportedReason =
           | {
               rule: string
             }
+          | {
+              'custom-modifier': {
+                /**
+                 * The block's index in the set.
+                 */
+                block: number
+                /**
+                 * The line's index among the block's lines.
+                 */
+                line: number
+              }
+            }
         /**
          * What is not modelled.
          */
         what: string
-      }
-    }
-  | {
-      'unmodelled-custom-modifier': {
-        /**
-         * The line (colour codes removed, trimmed).
-         */
-        line: string
       }
     }
 /**
@@ -1097,6 +1233,18 @@ export interface Node {
             | 'enemy'
             | {
                 rule: string
+              }
+            | {
+                'custom-modifier': {
+                  /**
+                   * The block's index in the set.
+                   */
+                  block: number
+                  /**
+                   * The line's index among the block's lines.
+                   */
+                  line: number
+                }
               }
         }
       }

@@ -987,7 +987,39 @@
               {
                 "title": "Default",
                 "enabled": true,
-                "text": "\n\t\t\t\tOnslaught\nCulling Strike\n\t\t\t"
+                "text": "\n\t\t\t\t+30% to Cold Resistance\nOnslaught\nx\n\t\t\t",
+                "lines": [
+                  {
+                    "text": "+30% to Cold Resistance",
+                    "resolution": {
+                      "resolved": {
+                        "result": {
+                          "stats": [
+                            {
+                              "stat": "made_up_cold",
+                              "value": {
+                                "exact": {
+                                  "min": 30,
+                                  "max": 30
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "text": "Onslaught",
+                    "resolution": {
+                      "unresolved": "no-template"
+                    }
+                  },
+                  {
+                    "text": "x",
+                    "resolution": "pending"
+                  }
+                ]
               },
               {
                 "enabled": false,

@@ -76,6 +76,10 @@ fn source_to(s: &c::Source) -> Source {
         },
         c::Source::Enemy => Source::Enemy,
         c::Source::Rule(name) => Source::Rule((*name).to_owned()),
+        c::Source::CustomModifier { block, line } => Source::CustomModifier {
+            block: index_to(*block),
+            line: index_to(*line),
+        },
     }
 }
 
@@ -157,9 +161,6 @@ pub(super) fn unsupported_to(r: &c::UnsupportedReason) -> UnsupportedReason {
                 source: source_to(source),
                 what: (*what).to_owned(),
             }
-        }
-        c::UnsupportedReason::UnmodelledCustomModifier { line } => {
-            UnsupportedReason::UnmodelledCustomModifier { line: line.clone() }
         }
     }
 }

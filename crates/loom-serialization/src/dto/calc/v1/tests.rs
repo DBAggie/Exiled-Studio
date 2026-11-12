@@ -111,8 +111,9 @@ fn every_reason() -> Reasons {
             source: Source::Gem { group: 0, gem: 0 },
             what: "physical-hit-armour",
         },
-        UnsupportedReason::UnmodelledCustomModifier {
-            line: "Onslaught".to_owned(),
+        UnsupportedReason::UnresolvedLine {
+            source: Source::CustomModifier { block: 1, line: 2 },
+            reason: "no-template",
         },
     ]);
     r.indeterminate.extend([

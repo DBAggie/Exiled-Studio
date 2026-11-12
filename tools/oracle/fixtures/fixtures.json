@@ -617,10 +617,10 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/ice-nova-custom-modifiers-witch.xml",
-      "sha256": "8b48af0a52c2f6950401299f518877e7b74faf73933d39e30e8c063bff4c16b0",
+      "sha256": "b18e152036535f651deedd09e5d255ed508eac75a6ed899f525fa73ca30766d4",
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
-      "description": "ice-nova-witch.xml with three custom modifier blocks: an empty one, an enabled one of blank and colour-code-only lines, and a disabled one with three modifiers: PoB's values equal the bare fixture's, and no block is a reason (P3-12c)."
+      "description": "ice-nova-witch.xml with three custom modifier blocks: an empty one; an enabled one of five game-text modifiers (cold resistance, life, critical strike multiplier, spell damage, cast speed) with colour codes and blank lines; a disabled one with three more. The enabled lines apply as character-wide modifiers, the disabled ones not (P3-12c)."
     },
     {
       "id": "ice-nova-witch.xml",
