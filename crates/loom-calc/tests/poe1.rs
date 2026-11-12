@@ -501,6 +501,24 @@ fn an_unmapped_stat_should_make_the_fields_partial() {
 }
 
 #[test]
+fn a_stat_without_effect_on_the_slice_should_leave_the_fields_complete() {
+    // Regeneration and movement speed reach no slice field (P3-8a).
+    let ring = item(
+        1,
+        vec![modifier(vec![
+            stat("life_regeneration_rate_per_minute_%", 60),
+            stat("base_movement_velocity_+%", 10),
+            stat("base_maximum_life", 10),
+        ])],
+    );
+    let r = run(&with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]));
+    assert_eq!(value(&r, Field::Life), 1135.0);
+    for field in CHARACTER {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+}
+
+#[test]
 fn an_unknown_passive_should_be_indeterminate() {
     let r = run(&with_spec(witch(90), spec(&[999])));
     assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
