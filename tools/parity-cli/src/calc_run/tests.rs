@@ -231,6 +231,32 @@ fn an_overlay_should_hold_pobs_values_for_this_bundle_only() {
     assert_eq!(with.report.overlay.unwrap().rows.len(), 2);
 }
 
+#[test]
+fn an_overlay_should_refuse_a_skill_it_has_a_row_for() {
+    let dir = repo("crates/loom-data/tests/fixtures/bundle-poe1");
+    let bundle = crate::load_bundle(&dir).unwrap();
+    let sha = sha256_hex(&std::fs::read(dir.join("bundle.json")).unwrap());
+    let o = OverlayData::read(
+        &overlay(|v| {
+            v["rows"].as_array_mut().unwrap().push(json!(
+                {"table": "skills", "key": "TestBolt", "field": "types", "pob": "x", "bundle": "y", "category": "representation", "rule": "r"}
+            ));
+        }),
+        &bundle,
+        &sha,
+    )
+    .unwrap();
+    // The skill with a row reads as missing (granted effect and stat set);
+    // the others, its gem, and its active skill row read as the bundle's.
+    assert!(o.granted_effect("TestBolt").is_none());
+    assert!(o.stat_set("TestBolt").is_none());
+    assert!(bundle.granted_effect("TestBolt").is_some());
+    assert!(o.granted_effect("TestStrike").is_some());
+    assert!(o.skill_gem("Test/Gems/Bolt").is_some());
+    assert!(o.gem_effect("TestBolt").is_some());
+    assert!(o.active_skill("test_bolt").is_some());
+}
+
 /// A row for the overlay.
 fn row(table: &str, key: &str, field: &str, pob: Value) -> Value {
     json!({"table": table, "key": key, "field": field, "pob": pob, "bundle": 0, "category": "patch-delta", "rule": "r"})

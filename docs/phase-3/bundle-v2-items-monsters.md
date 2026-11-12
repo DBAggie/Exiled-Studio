@@ -1,6 +1,6 @@
 # Bundle format 2, item property and monster tables (P3-1c): evidence
 
-Phase 3 plan, step 1c (`dev/active/phase-3-calc-slice/`), the last calc section of format 2. Maintainer workstation, Windows, 2026-11-11. Follows `bundle-v2-skills.md` (P3-1a) and `bundle-v2-passives.md` (P3-1b); the bundle summaries in this folder are replaced with P3-1c's.
+Phase 3 plan, step 1c (`dev/active/phase-3-calc-slice/`), the last calc section of format 2. Maintainer workstation, Windows, 2026-11-11. Follows `bundle-v2-skills.md` (P3-1a) and `bundle-v2-passives.md` (P3-1b); the bundle summaries in this folder are replaced with P3-1c's. P3-1d (`monster-types.md`) then added `data/monster_types.json` and replaced them again with its bundles (every other file byte-identical to P3-1c's).
 
 ## Inputs
 - Game data: PoE1 Steam build 26530219, PoE2 Steam build 26476662 (unchanged).

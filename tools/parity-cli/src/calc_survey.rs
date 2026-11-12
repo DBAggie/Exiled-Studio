@@ -51,6 +51,8 @@ pub const FORMAT: u32 = 1;
 
 /// The bundle's tables the survey reads, indexed.
 pub struct Tables<'b> {
+    /// The bundle (the engine's skill rule reads it through `CalcData`).
+    pub bundle: &'b Bundle,
     /// Granted effects by ID.
     pub granted: BTreeMap<&'b str, &'b GrantedEffect>,
     /// Active skills by ID.
@@ -83,6 +85,7 @@ impl<'b> Tables<'b> {
             bases.entry(b.name.as_str()).or_default().push(b);
         }
         Ok(Self {
+            bundle,
             granted: skills
                 .granted_effects
                 .iter()
@@ -534,11 +537,11 @@ fn survey_one(name: String, bytes: &[u8], req: &Request<'_, '_, '_, '_>) -> Surv
     let mut inventory =
         inventory::inventory(&build, req.tables, main.as_ref().ok().map(|m| m.group));
     if let Ok(m) = &main {
-        inventory.supports = m.supports.iter().map(|s| s.id.clone()).collect();
-        inventory.unapplied_supports = m.unapplied.iter().map(|s| s.id.clone()).collect();
+        inventory.supports = m.supports.iter().map(|s| s.effect.id.clone()).collect();
+        inventory.unapplied_supports = m.unapplied.iter().map(|s| s.effect.id.clone()).collect();
         row.main_skill = Some(SkillRow {
             group: m.group,
-            skill: m.effect.id.clone(),
+            skill: m.effect().id.clone(),
             name: m.active.map(|a| a.name.clone()),
             kind: Kind::of(&m.types),
             types: m.types.clone(),

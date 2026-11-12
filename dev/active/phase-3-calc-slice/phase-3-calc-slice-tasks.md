@@ -70,8 +70,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-7 core defences (PR #72; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
 - [ ] P3-8 stat mappings (one or more PRs; coverage summary each)
   - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
-- [ ] P3-9a skill model (next: before P3-11, decision in the context file, "Decisions in P3-8a")
-- [ ] P3-11 enemy model
+- [x] P3-1d monster types for the default enemy (PR #75; `docs/phase-3/monster-types.md`; 22 bosses equal PoB's)
+- [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
+- [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
 - [ ] P3-9b spell hits
 - [ ] P3-10 attacks
 - [ ] P3-12 buffs and config (one or more PRs)

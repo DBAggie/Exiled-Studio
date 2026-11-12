@@ -10,10 +10,11 @@ use loom_data::bundle::Bundle;
 use loom_domain::Build;
 use serde_json::{Value, json};
 
-use super::main_skill::{Problem, main_skill, type_expression};
+use super::main_skill::{Problem, main_skill};
 use super::rules::{Archetype, Exclusion, Kind, Reason, Scope};
 use super::{Input, Inputs, Request, Tables, inventory, not_carried_passives, run, verdict};
 use crate::resolve_corpus::{BundleInputs, Tool};
+use loom_calc::poe1::skill::type_expression;
 
 const STEAM_BUILD: u64 = 26_530_219;
 
@@ -286,8 +287,8 @@ fn supports_apply_by_type_expression() {
         &t,
     )
     .unwrap();
-    let ids = |v: &[&loom_data::bundle::skills::GrantedEffect]| {
-        v.iter().map(|g| g.id.clone()).collect::<Vec<_>>()
+    let ids = |v: &[loom_calc::poe1::skill::GemEffectRef<'_>]| {
+        v.iter().map(|g| g.effect.id.clone()).collect::<Vec<_>>()
     };
     assert_eq!(ids(&m.supports), ["SupportNoSpell"]);
     assert_eq!(ids(&m.unapplied), ["SupportTotem"]);
@@ -333,7 +334,7 @@ fn main_group_and_skill_are_clamped_and_follow_the_active_set() {
     let b = bundle();
     let t = Tables::new(&b).unwrap();
     let two = format!("{}{}", group(&["Bolt"]), group(&["Strike"]));
-    let pick = |text: &str| main_skill(&import(text), &t).map(|m| (m.group, m.effect.id.clone()));
+    let pick = |text: &str| main_skill(&import(text), &t).map(|m| (m.group, m.effect().id.clone()));
     assert_eq!(pick(&xml(2, &two, SPEC, "")), Ok((2, "Strike".to_owned())));
     assert_eq!(pick(&xml(9, &two, SPEC, "")), Ok((2, "Strike".to_owned())));
     assert_eq!(pick(&xml(0, &two, SPEC, "")), Ok((1, "Bolt".to_owned())));
@@ -373,7 +374,7 @@ fn gems_are_found_by_variant_or_skill() {
             SPEC,
             "",
         );
-        main_skill(&import(&text), &t).map(|m| m.effect.id.clone())
+        main_skill(&import(&text), &t).map(|m| m.effect().id.clone())
     };
     // variantId picks the gem effect; skillId alone picks by granted effect.
     let vaal = |v: &str, extra: &str| {
@@ -415,7 +416,7 @@ fn global_effects_switched_off_make_the_pick_uncertain_only_when_it_matters() {
         let g = format!(
             r#"<Skill enabled="true" mainActiveSkill="{main}"><Gem gemId="Gem/VaalBolt" variantId="VaalBoltEffect" level="1" quality="0" enabled="true" {globals}/></Skill>"#
         );
-        main_skill(&import(&xml(1, &g, SPEC, "")), &t).map(|m| m.effect.id.clone())
+        main_skill(&import(&xml(1, &g, SPEC, "")), &t).map(|m| m.effect().id.clone())
     };
     // Default: enableGlobal1 on, enableGlobal2 off, so Bolt may or may not count.
     assert_eq!(pick(1, ""), Ok("Vaal".to_owned()));

@@ -141,7 +141,7 @@ impl Archetype {
                     || has("CreatesMinion")
                     || skill.active.is_some_and(|a| !a.minion_types.is_empty())
             }
-            Self::Mirage => skill.supports.iter().any(|s| is_mirage(s)),
+            Self::Mirage => skill.supports.iter().any(|s| is_mirage(s.effect)),
         }
     }
 }
