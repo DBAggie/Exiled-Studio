@@ -263,6 +263,11 @@ dto! {
             #[serde(default, skip_serializing_if = "Option::is_none")]
             adapted: Option<Adapted>,
         },
+        /// An item's base (the properties the game data gives it).
+        ItemBase {
+            /// The item's ID.
+            item: u32,
+        },
         /// An allocated passive node.
         Passive {
             /// The node's ID.
@@ -337,6 +342,8 @@ dto! {
         Floor,
         /// The child rounded half up.
         RoundHalfUp,
+        /// The child's integer part, towards zero.
+        Trunc,
         /// The smaller child.
         Min,
         /// The larger child.

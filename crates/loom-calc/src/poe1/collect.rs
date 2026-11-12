@@ -13,24 +13,33 @@
 //!   `base_mana`, the per-level values in `Character.ot`);
 //! - items: the active item set's slots of the weapon set in use, then
 //!   jewels in allocated sockets; flasks and tinctures only act while
-//!   active; an abyss jewel in an item is scaled by its parent.
+//!   active; an abyss jewel in an item is scaled by its parent;
+//! - an armour piece (helmet, gloves, boots, body armour, a shield in the
+//!   off hand) has its own defences from its base's ranges, its quality
+//!   and base percentiles, and its local lines (`Classes/Item.lua`; P3-7);
+//! - the character's base defences (maximum resistances, block and spell
+//!   block maximums, base evasion) are character template stats, and
+//!   the resistance penalty is the config's `resistancePenalty` or -60.
 //!
 //! Not modelled yet, each a reason on every computed field: enabled gems
-//! (auras, buffs, reservation: P3-9a, P3-12), config inputs (P3-12),
-//! bandit and pantheon choices other than none, item base properties
-//! (armour pieces and weapons: P3-7, P3-10), active flasks, abyssal
-//! sockets, and slots other than the known ones.
+//! (auras, buffs, reservation: P3-9a, P3-12), config inputs other than
+//! the resistance penalty (P3-12), bandit and pantheon choices other than
+//! none, weapons' base properties (P3-10), an armour piece's percentile
+//! derived from its shown value, active flasks, abyssal sockets, and
+//! slots other than the known ones.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{
-    Build, GameSpecific, Item, ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine,
-    StatValue,
+    Build, ConfigSet, ConfigValue, GameSpecific, Item, ItemId, ItemSet, LineKind, NodeId,
+    PassiveSpec, StatId, StatLine, StatValue,
 };
 
-use crate::ingest::Ingest;
-use crate::input::{CalcInput, PassiveLinks, StatAmount};
-use crate::quantity::{Op, Quantity};
+use super::mapping::{PieceMapping, Poe1Mapping};
+use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity};
+use crate::ingest::{Ingest, StatMapping};
+use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveLinks, StatAmount};
+use crate::quantity::{DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::{IndeterminateReason, UnsupportedReason};
 use crate::store::{Conditions, Effect};
@@ -63,12 +72,13 @@ fn base(quantity: Quantity, value: i64, source: Source) -> Effect {
 pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let build = input.build;
     character(input, ingest);
+    resistance_penalty(build, ingest);
     choices(build, ingest);
     let spec = active_spec(build);
     if let Some(spec) = spec {
         passives(input, spec, ingest);
     }
-    items(build, spec, ingest);
+    items(input, spec, ingest);
     gems(build, ingest);
     config(build, ingest);
 }
@@ -114,6 +124,88 @@ fn character(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
                 key: stat.to_owned(),
             }),
         }
+    }
+    // The character's base defences are stats of the character template,
+    // read through the mapping as an item's would be (PoB,
+    // `Modules/CalcSetup.lua`: `FireResistMax` ... BASE
+    // `base_maximum_all_resistances_%`, `BlockChanceMax` BASE
+    // `maximum_block_%`, `SpellBlockChanceMax` BASE
+    // `base_maximum_spell_block_%`, `Evasion` BASE `base_evasion_rating`).
+    for stat in [
+        "base_maximum_all_resistances_%",
+        "maximum_block_%",
+        "base_maximum_spell_block_%",
+        "base_evasion_rating",
+    ] {
+        match input.data.character_constant(stat) {
+            Some(value) => ingest.stat(
+                &Source::Character,
+                &StatLine {
+                    stat: StatId::new(stat),
+                    value: StatValue::Exact {
+                        min: value,
+                        max: value,
+                    },
+                },
+            ),
+            None => ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "character_constants",
+                key: stat.to_owned(),
+            }),
+        }
+    }
+}
+
+/// The resistance penalty PoB applies by default: the act 10 penalty,
+/// -60% to fire, cold, lightning, and chaos resistance (PoB,
+/// `Modules/CalcSetup.lua`: `<type>Resist` BASE
+/// `env.configInput.resistancePenalty or -60`). The game data carries no
+/// such row: it is a quest state, which PoB's config sets.
+pub const RESISTANCE_PENALTY: i64 = -60;
+
+/// The config input that sets the resistance penalty (PoB's
+/// `resistancePenalty`: 0, -30, or -60).
+pub const RESISTANCE_PENALTY_INPUT: &str = "resistancePenalty";
+
+/// The resistance penalty: the active config set's `resistancePenalty`
+/// when it is a number, else [`RESISTANCE_PENALTY`].
+fn resistance_penalty(build: &Build, ingest: &mut Ingest<'_>) {
+    let set = active_config(build);
+    let configured = set.and_then(|s| {
+        s.inputs
+            .typed()
+            .find(|i| i.name == RESISTANCE_PENALTY_INPUT)
+            .and_then(|i| match &i.value {
+                ConfigValue::Number(n) => Some(n.value().0),
+                ConfigValue::Boolean(_) | ConfigValue::String(_) => None,
+            })
+    });
+    let (value, source) = match configured {
+        Some(v) => (
+            v,
+            Source::Config {
+                input: RESISTANCE_PENALTY_INPUT.to_owned(),
+            },
+        ),
+        #[expect(clippy::cast_precision_loss, reason = "a small constant, exact as f64")]
+        None => (
+            RESISTANCE_PENALTY as f64,
+            Source::Rule("resistance-penalty"),
+        ),
+    };
+    for t in [
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Lightning,
+        DamageType::Chaos,
+    ] {
+        ingest.effect(Effect {
+            quantity: Quantity::Resistance(t),
+            op: Op::Base,
+            value,
+            conditions: Conditions::none(),
+            source: source.clone(),
+        });
     }
 }
 
@@ -339,7 +431,8 @@ fn active_set(build: &Build) -> Option<&ItemSet> {
 
 /// The items in use: the active item set's slots, then jewels in
 /// allocated sockets; each item once.
-fn items(build: &Build, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+    let build = input.build;
     let mut seen: Vec<ItemId> = Vec::new();
     if let Some(set) = active_set(build) {
         let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
@@ -367,7 +460,16 @@ fn items(build: &Build, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
                     ingest.reason(unmodelled("abyssal-socket"));
                     continue;
                 }
-                SlotKind::Properties => ingest.reason(unmodelled("base-properties")),
+                SlotKind::Properties => {
+                    if let (Some(armour), Some(item)) = (ArmourSlot::of(slot), build.items.item(id))
+                    {
+                        armour_slot(input, item, armour, slot, ingest);
+                        continue;
+                    }
+                    // A weapon's base properties (damage, speed, crit;
+                    // dual wielding's block) are P3-10's.
+                    ingest.reason(unmodelled("base-properties"));
+                }
                 SlotKind::Other => ingest.reason(unmodelled("slot")),
                 SlotKind::Lines => {}
             }
@@ -396,12 +498,227 @@ fn items(build: &Build, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
     }
 }
 
+/// The item in an armour slot (a helmet, gloves, boots, a body armour, or
+/// the off hand): an armour piece's base properties and local lines act
+/// on the piece ([`armour_piece`]); a quiver's or jewellery's lines are
+/// global; a weapon in the off hand (dual wielding) is P3-10's.
+fn armour_slot(
+    input: &CalcInput<'_>,
+    item: &Item,
+    slot: ArmourSlot,
+    slot_name: &str,
+    ingest: &mut Ingest<'_>,
+) {
+    let unmodelled = |what| UnsupportedReason::UnmodelledItem {
+        item: item.id,
+        slot: slot_name.to_owned(),
+        what,
+    };
+    let Some(name) = input.options.item_bases.get(&item.id) else {
+        ingest.reason(unmodelled("no-base-name"));
+        item_lines(item, ingest);
+        return;
+    };
+    match name.find(input.data) {
+        Some(ItemBase::Armour(base)) => {
+            if slot == ArmourSlot::Weapon2 && base.block.is_none() {
+                // Every shield has a block chance; one the data lacks would
+                // be a silent 0.
+                ingest.indeterminate(IndeterminateReason::MissingData {
+                    table: "shield_types",
+                    key: name.name.clone(),
+                });
+            }
+            armour_piece(item, slot, slot_name, &base, ingest);
+        }
+        // A quiver in the off hand: its lines only.
+        Some(ItemBase::Other) if slot == ArmourSlot::Weapon2 => item_lines(item, ingest),
+        // A helmet, gloves, boots, or body armour whose base has no armour
+        // properties: whatever it is, its defences are not known.
+        Some(ItemBase::Other) => {
+            ingest.reason(unmodelled("not-armour"));
+            item_lines(item, ingest);
+        }
+        Some(ItemBase::Weapon) => {
+            ingest.reason(unmodelled("base-properties"));
+            item_lines(item, ingest);
+        }
+        Some(ItemBase::Ambiguous) => {
+            ingest.reason(unmodelled("ambiguous-base"));
+            item_lines(item, ingest);
+        }
+        None => {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "base_items",
+                key: name.name.clone(),
+            });
+            item_lines(item, ingest);
+        }
+    }
+}
+
+/// The leading number of a spec value, as PoB's `specToNumber` reads it
+/// (`^[+-]?[%d.]+`).
+fn spec_number(value: &str) -> Option<f64> {
+    let value = value.trim();
+    let sign = usize::from(value.starts_with(['+', '-']));
+    let end = value[sign..]
+        .find(|c: char| !(c.is_ascii_digit() || c == '.'))
+        .map_or(value.len(), |i| i + sign);
+    let n: f64 = value[..end].trim_start_matches('+').parse().ok()?;
+    Some(n)
+}
+
+/// The defence a spec key shows (PoB reads `Evasion Rating` as `Evasion`).
+fn shown_defence(key: &str) -> Option<Defence> {
+    match key {
+        "Armour" => Some(Defence::Armour),
+        "Evasion" | "Evasion Rating" => Some(Defence::Evasion),
+        "Energy Shield" => Some(Defence::EnergyShield),
+        _ => None,
+    }
+}
+
+/// The defence whose base percentile a spec key gives.
+fn percentile_defence(key: &str) -> Option<Defence> {
+    match key {
+        "ArmourBasePercentile" => Some(Defence::Armour),
+        "EvasionBasePercentile" => Some(Defence::Evasion),
+        "EnergyShieldBasePercentile" => Some(Defence::EnergyShield),
+        _ => None,
+    }
+}
+
+/// An armour piece: its base's defence ranges and block, its quality and
+/// base percentiles from its spec lines, and its local lines, all on the
+/// piece's own quantities ([`Poe1Quantity::Piece`]); its other lines are
+/// global. PoB (`Classes/Item.lua`, the armour branch): a defence is
+/// `round((min + local flat + range x percentile) x (1 + local inc / 100)
+/// x (1 + quality / 100))`; a percentile comes from the item's
+/// `<Defence>BasePercentile` line, else from its shown value (`Armour:
+/// 120`) when it has one, else 1. Deriving it from a shown value is not
+/// modelled (`base-percentile`); PoB writes both lines.
+fn armour_piece(
+    item: &Item,
+    slot: ArmourSlot,
+    slot_name: &str,
+    base: &ArmourBase,
+    ingest: &mut Ingest<'_>,
+) {
+    let piece = |value| Quantity::Poe1(Poe1Quantity::Piece(slot, value));
+    let from_base = Source::ItemBase { item: item.id };
+    let effect = |quantity, op, value, source: &Source| Effect {
+        quantity,
+        op,
+        value,
+        conditions: Conditions::none(),
+        source: source.clone(),
+    };
+    ingest.effect(effect(
+        piece(PieceValue::Equipped),
+        Op::Flag,
+        1.0,
+        &from_base,
+    ));
+    let mut ranges = Vec::new();
+    for (defence, range) in [
+        (Defence::Armour, base.armour),
+        (Defence::Evasion, base.evasion),
+        (Defence::EnergyShield, base.energy_shield),
+    ] {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "base values are far below 2^53, where i64 to f64 is exact"
+        )]
+        let (min, variance) = (range.min as f64, (range.max - range.min) as f64);
+        if min != 0.0 {
+            ingest.effect(effect(
+                piece(PieceValue::Defence(defence)),
+                Op::Base,
+                min,
+                &from_base,
+            ));
+        }
+        if variance != 0.0 {
+            ingest.effect(effect(
+                piece(PieceValue::Variance(defence)),
+                Op::Base,
+                variance,
+                &from_base,
+            ));
+        }
+        ranges.push((defence, variance));
+    }
+    if let Some(block) = base.block {
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "block chances are small integers"
+        )]
+        let block = block as f64;
+        ingest.effect(effect(
+            piece(PieceValue::Block),
+            Op::Base,
+            block,
+            &from_base,
+        ));
+    }
+    let mut shown = Vec::new();
+    let mut percentiles = Vec::new();
+    // The last line of each key counts, as PoB's `self.quality` and
+    // `armourData[key]` are overwritten line by line.
+    let mut specs: BTreeMap<PieceValue, (usize, &str)> = BTreeMap::new();
+    for (index, line) in item.body.lines.iter().enumerate() {
+        let LineKind::Spec { key, value, .. } = &line.kind else {
+            continue;
+        };
+        if key == "Quality" {
+            specs.insert(PieceValue::Quality, (index, value));
+        } else if let Some(d) = percentile_defence(key) {
+            percentiles.push(d);
+            specs.insert(PieceValue::Percentile(d), (index, value));
+        } else if let Some(d) = shown_defence(key) {
+            shown.push(d);
+        }
+    }
+    for (target, (index, value)) in specs {
+        let at = Source::Item {
+            item: item.id,
+            line: index,
+            adapted: None,
+        };
+        match spec_number(value) {
+            Some(n) => ingest.effect(effect(piece(target), Op::Base, n, &at)),
+            None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
+        }
+    }
+    // A shown value with a range of 0 needs no percentile: PoB's
+    // derivation (`Classes/Item.lua:2323-2325`) divides by the range,
+    // giving +-inf (clamped to 1 or 0) or NaN when the shown value equals
+    // the rest exactly; times a range of 0 the term is 0 either way but in
+    // the NaN case, which a shown value PoB itself wrote never hits.
+    for (defence, variance) in ranges {
+        if variance != 0.0 && shown.contains(&defence) && !percentiles.contains(&defence) {
+            ingest.reason(UnsupportedReason::UnmodelledItem {
+                item: item.id,
+                slot: slot_name.to_owned(),
+                what: "base-percentile",
+            });
+        }
+    }
+    item_lines_with(&PieceMapping { slot }, item, ingest);
+}
+
 /// An item's lines: modifier lines by their resolution; lines the import
 /// did not read are reasons.
 fn item_lines(item: &Item, ingest: &mut Ingest<'_>) {
+    item_lines_with(&Poe1Mapping, item, ingest);
+}
+
+/// [`item_lines`] through `mapping`.
+fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'_>) {
     for (index, line) in item.body.lines.iter().enumerate() {
         match &line.kind {
-            LineKind::Modifier(m) => ingest.item_line(item.id, index, &m.resolution),
+            LineKind::Modifier(m) => ingest.item_line_with(mapping, item.id, index, &m.resolution),
             LineKind::Unrecognized | LineKind::Spec { known: false, .. } => {
                 ingest.reason(UnsupportedReason::UnreadLine {
                     source: Source::Item {
@@ -450,14 +767,19 @@ fn gems(build: &Build, ingest: &mut Ingest<'_>) {
     }
 }
 
-/// Every input of the active config set: not modelled yet.
-fn config(build: &Build, ingest: &mut Ingest<'_>) {
+/// The active config set: `Config.activeConfigSet`, else the first.
+fn active_config(build: &Build) -> Option<&ConfigSet> {
     let config = &build.config;
-    let Some(set) = config
+    config
         .active
         .and_then(|id| config.sets.typed().find(|s| s.id == id))
         .or_else(|| config.sets.typed().next())
-    else {
+}
+
+/// Every input of the active config set the engine does not model:
+/// all but a numeric `resistancePenalty` ([`resistance_penalty`]).
+fn config(build: &Build, ingest: &mut Ingest<'_>) {
+    let Some(set) = active_config(build) else {
         return;
     };
     if set.inputs.opaque().next().is_some() {
@@ -468,6 +790,20 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
     // Every input, whatever its value: some of PoB's options default to
     // on, so even `false` can change a result.
     for input in set.inputs.typed() {
+        if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
+            continue;
+        }
+        // The enemy model's numeric inputs (`poe1::enemy`): no computed
+        // field reads the enemy yet, and the hit fields will take its
+        // problems as their reasons (P3-9b). `enemyIsBoss` stays a reason:
+        // its kind also gives modifiers the engine does not ingest yet
+        // (`poe1::enemy` module docs).
+        if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str())
+            && input.name != "enemyIsBoss"
+            && matches!(input.value, ConfigValue::Number(_))
+        {
+            continue;
+        }
         ingest.reason(UnsupportedReason::UnmodelledConfig {
             input: input.name.clone(),
         });

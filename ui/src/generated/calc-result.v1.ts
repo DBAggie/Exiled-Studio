@@ -36,6 +36,14 @@ export type IndeterminateReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -129,6 +137,14 @@ export type UnsupportedReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -194,6 +210,14 @@ export type UnsupportedReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -255,6 +279,14 @@ export type UnsupportedReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -309,6 +341,14 @@ export type UnsupportedReason =
                  * The line's index among the item's lines.
                  */
                 line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
               }
             }
           | {
@@ -370,6 +410,14 @@ export type UnsupportedReason =
                  * The line's index among the item's lines.
                  */
                 line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
               }
             }
           | {
@@ -438,6 +486,14 @@ export type UnsupportedReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -501,6 +557,14 @@ export type UnsupportedReason =
                  * The line's index among the item's lines.
                  */
                 line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
               }
             }
           | {
@@ -597,6 +661,14 @@ export type UnsupportedReason =
               }
             }
           | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
+              }
+            }
+          | {
               passive: {
                 /**
                  * The node's ID.
@@ -655,6 +727,14 @@ export type UnsupportedReason =
                  * The line's index among the item's lines.
                  */
                 line: number
+              }
+            }
+          | {
+              'item-base': {
+                /**
+                 * The item's ID.
+                 */
+                item: number
               }
             }
           | {
@@ -832,6 +912,14 @@ export interface Node {
                 }
               }
             | {
+                'item-base': {
+                  /**
+                   * The item's ID.
+                   */
+                  item: number
+                }
+              }
+            | {
                 passive: {
                   /**
                    * The node's ID.
@@ -880,6 +968,7 @@ export interface Node {
     | 'override'
     | 'floor'
     | 'round-half-up'
+    | 'trunc'
     | 'min'
     | 'max'
   /**

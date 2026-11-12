@@ -82,6 +82,7 @@ Each sub-PR adds whole sections, end to end: canonical types and loader in `loom
 - **1c, item properties and monsters:** weapon, armour, and shield properties of base items, default monster stats (the extractor adds these tables).
 - **Accept (each):** synthetic v2 bundles load and validate in CI; the mutation set gives each new code; `bundle` is byte-identical over two runs per game; `bundle-check` exits 0 on the real PoE1 and PoE2 v2 bundles; scrubbed summaries committed; wasm32 build; `cargo deny`.
 - **Depends on:** nothing; 1b and 1c follow 1a (manifest).
+- **1d (added 2026-11-12, Q10 option a):** `data/monster_types.json` (monster types' armour and evasion multipliers) for the default enemy, PoB's boss list as a cited rule (`loom_calc::poe1::enemy::BOSSES`), and its `data-parity` check (`docs/phase-3/monster-types.md`).
 
 ### 2. Data parity against the oracle's data (M; after 1c)
 `loom-parity-cli data-parity <bundle-dir> <pob-checkout>` compares, for every row the slice reads, the bundle's values with PoB v2.67.2's `src/Data` and the tree PoB loads for each tree version the fixtures use (`local/pob-v2.67.2` and the oracle checkout; read only). PoB's data is Lua; the tool reads it with the oracle runtime through a small adapter script, not with a Lua parser of our own.
@@ -130,16 +131,19 @@ PoE1 base stats by class and level; attributes and their implicit effects (stren
 Armour, evasion (with the armour and evasion items' local properties and quality), resistances (with maximum resistances, the PoE1 act penalty as the oracle's config sets it), block and spell block, spell suppression.
 - **Accept:** as step 6, for these fields.
 - **Depends on:** 1c, 6.
+- **Done in P3-7** (`docs/phase-3/defence-fields.md`; context file, "Decisions in P3-7"): 17 of the 24 fields computed; armour pieces with base ranges, percentiles, quality, and local lines; the resistance penalty as a modelled config input; slot rows named from a static table; 4 new mechanic fixtures, and all 23 mechanic fixtures match the oracle on the 17 fields and every breakdown PoB writes.
 
 ### 8. Stat-to-effect mapping for the in-scope builds (L, several PRs)
 Map every stat that step 3's inventory finds in the in-scope builds' passives, items, jewels, and gems for the slice fields, most frequent first. Each mapping is a data row (or code where the effect needs logic) in `loom_calc::poe1`, with a test and, where it is new behaviour, a mechanic fixture. Keystones and conditional stats ("while ...", "if ...") map to conditions; a condition the engine cannot settle from config makes the field `Partial` with `UnmodelledCondition`.
 - **Accept (each PR):** the inventory's unmapped count for the in-scope builds falls; no in-scope build gains an unregistered difference; the coverage summary is committed.
 - **Depends on:** 3, 4; runs alongside 6, 7, 9, 10.
+- **P3-8a done** (`docs/phase-3/stat-mapping.md`): 40 stats that reach no slice field (`NoEffect`, with categories and the stats left out on purpose); in-scope unmapped stats 153 to 113.
 
 ### 9. Skills and spell hits (L, split into 9a and 9b)
 - **9a, skill model (M):** active gem, supports in its group (links), gem level and quality, the per-level and per-quality stats, skill types, the skill's own effects, damage effectiveness, cast or attack time, base crit chance; support gems the engine does not model make the skill's fields `Partial`. Accept: unit tests over synthetic skills; mechanic fixtures for gem level and quality on a field the step can already compute (for example a gem's mana cost or a support's reservation multiplier, if in the slice) or, failing that, engine tests against values read from the oracle output.
 - **9b, spell hits (M):** base damage per level, added damage scaled by effectiveness, conversion and gain as the chosen spell needs, increased and more modifiers by damage type and flags, crit chance and multiplier, cast speed, average hit, and hit DPS against the enemy (step 11). Accept: mechanic fixtures (the chosen spell alone; with one support each; with added damage; with crit) match; the chosen spell's in-scope builds match on the hit fields, or each difference is registered or `Partial` with its reason.
 - **Depends on:** 3 (Q2 confirmed), 4, 6, 11; 9b on 9a.
+- **Done in P3-9a** (`docs/phase-3/skill-model.md`; context file, "Decisions in P3-9a"): `loom_calc::poe1::skill`: the main skill (moved from `calc-survey`, which now calls it; survey outputs byte-identical before and after), supports, gem instance stats at level and quality; `CalcData` skill reads; the overlay refuses a skill per skill. Base damage (effectiveness interpolation) is 9b's.
 
 ### 10. Attacks (L)
 The chosen attack, Smite, has two PoB skill parts (Melee Hit, Area Hit): the harness (P3-5) and this step follow PoB's part selection (`skillPart`, default 1) and say which part each field compares.
@@ -151,6 +155,7 @@ Weapon damage from the base and local mods, attack speed, accuracy and hit chanc
 The enemy the oracle's config describes (level, resistances, armour, evasion, boss flags, the default when the build sets nothing), penetration, exposure, and damage-taken modifiers the in-scope builds use.
 - **Accept:** mechanic fixtures for each config value used by the in-scope builds; hit DPS fixtures match.
 - **Depends on:** 1c, 4, 6.
+- **Done in P3-11** (`docs/phase-3/enemy-model.md`; context file, "Decisions in P3-11"): `loom_calc::poe1::enemy::enemy` (PoB's config rules for the boss kind, level, resistances, armour, evasion; PoB's armour table derived from the game constant); the real bundle's default enemy equals PoB's saved values. The hit-DPS fixtures of the Accept come with P3-9b, which reads the enemy.
 
 ### 12. Buffs and configuration for the in-scope builds (L, several PRs)
 What step 3's inventory finds in the in-scope builds, in order of reach: charges, auras and heralds with their reservation, curses, flasks and their config, conditions set by config (`Config` inputs). Each config input is either modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`.

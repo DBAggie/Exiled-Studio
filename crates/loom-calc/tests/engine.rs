@@ -27,6 +27,9 @@ impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
     }
+    fn item_base(&self, _: &str) -> Option<loom_calc::ItemBase> {
+        None
+    }
     fn character(&self, _: &str) -> Option<CharacterBase> {
         None
     }
@@ -40,6 +43,30 @@ impl CalcData for Data {
         None
     }
     fn passive_links(&self, _: u32) -> Option<loom_calc::PassiveLinks> {
+        None
+    }
+    fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
+        None
+    }
+    fn gem_effect(&self, _: &str) -> Option<&loom_calc::GemEffect> {
+        None
+    }
+    fn granted_effect(&self, _: &str) -> Option<&loom_calc::GrantedEffect> {
+        None
+    }
+    fn active_skill(&self, _: &str) -> Option<&loom_calc::ActiveSkill> {
+        None
+    }
+    fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
+        None
+    }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
         None
     }
 }
@@ -328,7 +355,7 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .filter(|(_, f)| f.value.is_some())
         .map(|(k, f)| (*k, f.state.kind()))
         .collect();
-    assert_eq!(computed.len(), 8, "{computed:?}");
+    assert_eq!(computed.len(), 17, "{computed:?}");
     assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
         r.reasons
@@ -343,7 +370,7 @@ fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 16);
+    assert_eq!(not_computed, 7);
     assert_eq!(r.state, StateKind::Indeterminate);
     assert!(format!("{input:?}").contains("Poe1"));
 }

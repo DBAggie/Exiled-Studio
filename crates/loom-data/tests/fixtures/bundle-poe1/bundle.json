@@ -97,6 +97,11 @@
    "size": 539
   },
   {
+   "path": "data/monster_types.json",
+   "sha256": "06ded3def5e4e1ccad08fe2f0cb6af23d8c46bbc797678a557b5b207af8e338c",
+   "size": 135
+  },
+  {
    "path": "data/object_templates.json",
    "sha256": "7fadc4167a082c4d970962cd93f2c7f2ca3c32e7870c55eba8034248fb6922e4",
    "size": 236

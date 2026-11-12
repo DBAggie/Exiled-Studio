@@ -88,14 +88,14 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     let b = &out.report.builds[0];
     assert_eq!(b.id, "synthetic-poe1.xml");
     assert_eq!(b.status, "ok");
-    // P3-6 computes the 8 character fields; the synthetic bundle has no
-    // Scion, so they are indeterminate (missing-data); 16 not computed.
+    // P3-6 and P3-7 compute 17 fields; the synthetic bundle has no
+    // Scion, so they are indeterminate (missing-data); 7 not computed.
     assert_eq!(b.state.as_deref(), Some("indeterminate"));
     assert_eq!(
         b.fields,
         Some(StateCounts {
-            unsupported: 16,
-            indeterminate: 8,
+            unsupported: 7,
+            indeterminate: 17,
             ..StateCounts::default()
         })
     );
@@ -107,8 +107,8 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     );
     let doc = calc_dto::from_json(json).unwrap();
     assert_eq!(doc.result.fields.len(), 24);
-    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&16));
-    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&8));
+    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&7));
+    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&17));
     assert_eq!(out.summary.build_states.get("indeterminate"), Some(&1));
     assert_eq!(out.summary.timing.builds, 1);
 }
@@ -229,6 +229,32 @@ fn an_overlay_should_hold_pobs_values_for_this_bundle_only() {
     let with = run_with("poe1", &[input(POE1_BUILD)], false, Some(&overlay(|_| {}))).unwrap();
     assert_eq!(plain.documents, with.documents);
     assert_eq!(with.report.overlay.unwrap().rows.len(), 2);
+}
+
+#[test]
+fn an_overlay_should_refuse_a_skill_it_has_a_row_for() {
+    let dir = repo("crates/loom-data/tests/fixtures/bundle-poe1");
+    let bundle = crate::load_bundle(&dir).unwrap();
+    let sha = sha256_hex(&std::fs::read(dir.join("bundle.json")).unwrap());
+    let o = OverlayData::read(
+        &overlay(|v| {
+            v["rows"].as_array_mut().unwrap().push(json!(
+                {"table": "skills", "key": "TestBolt", "field": "types", "pob": "x", "bundle": "y", "category": "representation", "rule": "r"}
+            ));
+        }),
+        &bundle,
+        &sha,
+    )
+    .unwrap();
+    // The skill with a row reads as missing (granted effect and stat set);
+    // the others, its gem, and its active skill row read as the bundle's.
+    assert!(o.granted_effect("TestBolt").is_none());
+    assert!(o.stat_set("TestBolt").is_none());
+    assert!(bundle.granted_effect("TestBolt").is_some());
+    assert!(o.granted_effect("TestStrike").is_some());
+    assert!(o.skill_gem("Test/Gems/Bolt").is_some());
+    assert!(o.gem_effect("TestBolt").is_some());
+    assert!(o.active_skill("test_bolt").is_some());
 }
 
 /// A row for the overlay.

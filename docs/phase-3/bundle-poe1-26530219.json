@@ -1,7 +1,7 @@
 {
   "game": "poe1",
   "steam_build": 26530219,
-  "manifest_sha256": "6099814e09223f7dd731b7292d6663e48740c268136e2ee863a7b05e42cdfbba",
+  "manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b",
   "files": {
     "data/active_skills.json": {
       "rows": 1941,
@@ -97,6 +97,11 @@
       "rows": 100,
       "sha256": "6e80b2a33ab8fa4914f6607fc87ab7a926ba4c30297977352f22b7c6ce9999fe",
       "size": 31469
+    },
+    "data/monster_types.json": {
+      "rows": 3600,
+      "sha256": "7bce30f20a0c3b2c5cea662749366c884b7985ec3166ed76f8fa51136de74c94",
+      "size": 279005
     },
     "data/object_templates.json": {
       "rows": 9,

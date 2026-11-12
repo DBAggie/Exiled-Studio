@@ -115,6 +115,13 @@ pub enum Node {
         /// The input.
         of: NodeIndex,
     },
+    /// [`math::trunc`]: the integer part, towards zero (PoB's `m_modf`).
+    Trunc {
+        /// The breakdown term.
+        term: Term,
+        /// The input.
+        of: NodeIndex,
+    },
     /// [`math::min`].
     Min {
         /// The breakdown term.
@@ -146,7 +153,8 @@ impl Node {
             | Self::Any { of: c, .. } => c.clone(),
             Self::PercentFactor { of, .. }
             | Self::Floor { of, .. }
-            | Self::RoundHalfUp { of, .. } => {
+            | Self::RoundHalfUp { of, .. }
+            | Self::Trunc { of, .. } => {
                 vec![*of]
             }
             Self::Override { by, replaced } => vec![*by, *replaced],
@@ -171,6 +179,7 @@ impl Node {
             Self::Override { by, .. } => get(*by),
             Self::Floor { of, .. } => math::floor(get(*of)),
             Self::RoundHalfUp { of, .. } => math::round_half_up(get(*of)),
+            Self::Trunc { of, .. } => math::trunc(get(*of)),
             Self::Min { a, b, .. } => math::min(get(*a), get(*b)),
             Self::Max { a, b, .. } => math::max(get(*a), get(*b)),
         }
@@ -419,6 +428,19 @@ mod tests {
                 value: 7.0,
             })
             .unwrap();
+        let negative = g
+            .derive(Node::Constant {
+                label: "n",
+                value: -2.75,
+            })
+            .unwrap();
+        let trunc = g
+            .derive(Node::Trunc {
+                term: Term::Result,
+                of: negative,
+            })
+            .unwrap();
+        assert_eq!(g.value(trunc), Some(-2.0), "towards zero, as m_modf");
         assert_eq!(g.value(sum), Some(6.5));
         assert_eq!(g.value(pct), Some(1.04));
         assert_eq!(g.value(prod), Some(6.5 * 1.04));
@@ -429,7 +451,7 @@ mod tests {
         assert_eq!(g.value(any), Some(1.0));
         assert_eq!(g.value(over), Some(4.0));
         assert_eq!(g.value(c), Some(7.0));
-        assert_eq!(g.len(), 12);
+        assert_eq!(g.len(), 14);
         g.check().unwrap();
     }
 

@@ -132,7 +132,7 @@ impl Document {
     /// Checks the structure a reader relies on: each node's children are
     /// earlier nodes; leaves have no children and no term; `override`,
     /// `min`, `max` have two children, `percent-factor`, `floor`,
-    /// `round-half-up` one, and every composite but `override` a term;
+    /// `round-half-up`, `trunc` one, and every composite but `override` a term;
     /// a field has a value and a node together, its node is in the graph
     /// with the same value bits; `reason` is present exactly for
     /// `unsupported`, `unsupported` is not empty for `partial`,
@@ -153,9 +153,10 @@ impl Document {
                 NodeKind::Override | NodeKind::Min | NodeKind::Max => {
                     (Some(2), !matches!(n.kind, NodeKind::Override))
                 }
-                NodeKind::PercentFactor | NodeKind::Floor | NodeKind::RoundHalfUp => {
-                    (Some(1), true)
-                }
+                NodeKind::PercentFactor
+                | NodeKind::Floor
+                | NodeKind::RoundHalfUp
+                | NodeKind::Trunc => (Some(1), true),
                 NodeKind::Sum | NodeKind::Product | NodeKind::Any => (None, true),
             };
             if arity.is_some_and(|a| a != n.children.len()) {

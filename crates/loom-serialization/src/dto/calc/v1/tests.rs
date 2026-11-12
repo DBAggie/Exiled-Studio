@@ -181,6 +181,15 @@ fn every_kind_result() -> CalcResult {
         Op::Base,
         5.0,
     );
+    leaf(
+        &mut g,
+        Source::ItemBase {
+            item: loom_domain::ItemId(4),
+        },
+        Quantity::Armour,
+        Op::Base,
+        12.0,
+    );
     let sum = g
         .derive(Node::Sum {
             term: Term::Base,
@@ -255,6 +264,11 @@ fn every_kind_result() -> CalcResult {
             replaced: min,
         })
         .unwrap();
+    g.derive(Node::Trunc {
+        term: Term::Step("total"),
+        of: product,
+    })
+    .unwrap();
 
     let reasons = every_reason();
     let mut fields = BTreeMap::new();
@@ -307,6 +321,9 @@ impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
     }
+    fn item_base(&self, _: &str) -> Option<loom_calc::ItemBase> {
+        None
+    }
     fn character(&self, class: &str) -> Option<CharacterBase> {
         (class == "Witch").then_some(CharacterBase {
             base_life: 38,
@@ -330,6 +347,30 @@ impl CalcData for Data {
         None
     }
     fn passive_links(&self, _: u32) -> Option<loom_calc::PassiveLinks> {
+        None
+    }
+    fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
+        None
+    }
+    fn gem_effect(&self, _: &str) -> Option<&loom_calc::GemEffect> {
+        None
+    }
+    fn granted_effect(&self, _: &str) -> Option<&loom_calc::GrantedEffect> {
+        None
+    }
+    fn active_skill(&self, _: &str) -> Option<&loom_calc::ActiveSkill> {
+        None
+    }
+    fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
+        None
+    }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
         None
     }
 }
@@ -590,6 +631,7 @@ fn every_node_kind_should_have_its_children_and_term() {
         "override",
         "floor",
         "round-half-up",
+        "trunc",
         "min",
         "max",
     ] {

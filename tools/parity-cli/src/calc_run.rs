@@ -34,7 +34,11 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use loom_calc::{CalcData, CalcInput, CalcOptions, CharacterBase, PassiveLinks, StatAmount};
+use loom_calc::{
+    ActiveSkill, ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, GemEffect,
+    GrantedEffect, ItemBase, MonsterDefences, MonsterStats, PassiveLinks, Range, SkillGem,
+    StatAmount, StatSet,
+};
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
@@ -315,6 +319,14 @@ impl<'b> OverlayData<'b> {
             .get(&(table.to_owned(), key.to_owned(), field.to_owned()))
     }
 
+    /// Whether the overlay has a `skills` row for the skill `id` (PoB's
+    /// skill ID is the granted effect's and its stat set's).
+    pub fn skill_refused(&self, id: &str) -> bool {
+        self.rows
+            .keys()
+            .any(|(table, key, _)| table == "skills" && key == id)
+    }
+
     /// Rows per table.
     pub fn counts(&self) -> BTreeMap<String, usize> {
         let mut out = BTreeMap::new();
@@ -327,11 +339,18 @@ impl<'b> OverlayData<'b> {
 
 /// The overlay rows of tables the engine reads, by field: the integer
 /// fields it substitutes.
-const APPLIED: [(&str, &str); 4] = [
+const APPLIED: [(&str, &str); 11] = [
     ("characters", "strength"),
     ("characters", "dexterity"),
     ("characters", "intelligence"),
     ("character_constants", "value"),
+    ("bases", "armour_min"),
+    ("bases", "armour_max"),
+    ("bases", "evasion_min"),
+    ("bases", "evasion_max"),
+    ("bases", "energy_shield_min"),
+    ("bases", "energy_shield_max"),
+    ("bases", "block"),
 ];
 
 /// Fields the engine reads but an overlay row cannot give: PoB's passive
@@ -339,7 +358,13 @@ const APPLIED: [(&str, &str); 4] = [
 /// calculate with the game's value under the overlay's name. Rows of
 /// fields the engine does not read (a passive's name or ascendancy)
 /// change nothing.
-const NOT_APPLICABLE: [(&str, &str); 2] = [("passives", "stats"), ("mastery_effects", "stats")];
+const NOT_APPLICABLE: [(&str, &str); 3] = [
+    ("passives", "stats"),
+    ("mastery_effects", "stats"),
+    // PoB's base has armour properties the bundle's lacks: there is no
+    // bundle row to substitute into.
+    ("bases", "armour"),
+];
 
 fn check_applicable(key: &(String, String, String), pob: &Value) -> Result<(), String> {
     let (table, _, field) = key;
@@ -389,6 +414,75 @@ impl CalcData for OverlayData<'_> {
 
     fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
         self.bundle.passive_links(node)
+    }
+
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
+        self.bundle.skill_gem(base_item)
+    }
+
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
+        self.bundle.gem_effect(id)
+    }
+
+    /// A skill the overlay has a row for reads as missing (per skill, at
+    /// read time; maintainer decision 2026-11-12): PoB's skill values are
+    /// in its own form (type names, level rows), which no table converts
+    /// yet, so the overlay run reports the skill as missing data rather
+    /// than calculate with the game's row under the overlay's name.
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
+        if self.skill_refused(id) {
+            return None;
+        }
+        self.bundle.granted_effect(id)
+    }
+
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
+        self.bundle.active_skill(id)
+    }
+
+    fn stat_set(&self, id: &str) -> Option<&StatSet> {
+        if self.skill_refused(id) {
+            return None;
+        }
+        self.bundle.stat_set(id)
+    }
+
+    /// PoB's monster levels as the overlay gives them; the engine reads
+    /// evasion and accuracy (PoB's armour table is derived from a game
+    /// constant, P3-11, so the overlay's armour rows change nothing).
+    fn monster_level(&self, level: i64) -> Option<MonsterStats> {
+        let ours = self.bundle.monster_level(level)?;
+        let key = level.to_string();
+        Some(MonsterStats {
+            evasion: self.int("monster_levels", &key, "evasion", ours.evasion),
+            accuracy: self.int("monster_levels", &key, "accuracy", ours.accuracy),
+        })
+    }
+
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences> {
+        self.bundle.monster_type(id)
+    }
+
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)> {
+        self.bundle.game_constant(id)
+    }
+
+    fn item_base(&self, name: &str) -> Option<ItemBase> {
+        match self.bundle.item_base(name)? {
+            ItemBase::Armour(a) => {
+                let range = |field: &str, r: Range| Range {
+                    min: self.int("bases", name, &format!("{field}_min"), r.min),
+                    max: self.int("bases", name, &format!("{field}_max"), r.max),
+                };
+                Some(ItemBase::Armour(ArmourBase {
+                    armour: range("armour", a.armour),
+                    evasion: range("evasion", a.evasion),
+                    energy_shield: range("energy_shield", a.energy_shield),
+                    block: a.block.map(|b| self.int("bases", name, "block", b)),
+                }))
+            }
+            other => Some(other),
+        }
     }
 }
 
@@ -445,11 +539,23 @@ fn one(
                 .map_err(|e| e.name().to_owned())
         })
         .map_err(|e| (Step::Resolve, e.code().to_owned()))?;
+    // The same base names the resolver used, for the engine's armour
+    // pieces (the legacy format's naming rules stay in the adapter).
+    let item_bases = build
+        .items
+        .items()
+        .filter_map(|item| {
+            pob_item::item_base(&item.body, request.data.base_names())
+                .ok()
+                .map(|(name, fallback)| (item.id, BaseName { name, fallback }))
+        })
+        .collect();
     let options = CalcOptions {
         tree_version: request
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
+        item_bases,
         ..CalcOptions::default()
     };
     let data: &dyn CalcData = match &request.overlay {

@@ -65,6 +65,7 @@ fn source_to(s: &c::Source) -> Source {
                 d::Adapted::SplitSection => Adapted::SplitSection,
             }),
         },
+        c::Source::ItemBase { item } => Source::ItemBase { item: item.0 },
         c::Source::Passive { node } => Source::Passive { node: node.0 },
         c::Source::Gem { group, gem } => Source::Gem {
             group: index_to(*group),
@@ -244,6 +245,7 @@ fn node_kind_to(n: &c::Node) -> (NodeKind, Option<c::Term>) {
         c::Node::Override { .. } => (NodeKind::Override, None),
         c::Node::Floor { term, .. } => (NodeKind::Floor, Some(*term)),
         c::Node::RoundHalfUp { term, .. } => (NodeKind::RoundHalfUp, Some(*term)),
+        c::Node::Trunc { term, .. } => (NodeKind::Trunc, Some(*term)),
         c::Node::Min { term, .. } => (NodeKind::Min, Some(*term)),
         c::Node::Max { term, .. } => (NodeKind::Max, Some(*term)),
     }

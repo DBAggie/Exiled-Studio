@@ -8,10 +8,11 @@
 //! `loom_calc::poe1::phases`); the mechanic fixtures check the same
 //! against the oracle (`docs/phase-3/character-fields.md`).
 
+use loom_calc::poe1::Poe1Field;
 use loom_calc::{
-    CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, Field, FieldState,
-    IndeterminateReason, Node, PassiveLinks, Source, StatAmount, StateKind, Term,
-    UnsupportedReason, calculate,
+    ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
+    Field, FieldState, IndeterminateReason, ItemBase, Node, PassiveLinks, Range, Source,
+    StatAmount, StateKind, Term, UnsupportedReason, calculate,
 };
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
@@ -92,6 +93,40 @@ impl CalcData for Data {
         match stat {
             "life_per_level" => Some(12),
             "mana_per_level" => Some(6),
+            "base_maximum_all_resistances_%" | "maximum_block_%" | "base_maximum_spell_block_%" => {
+                Some(75)
+            }
+            "base_evasion_rating" => Some(15),
+            _ => None,
+        }
+    }
+    fn item_base(&self, name: &str) -> Option<ItemBase> {
+        let range = |min, max| Range { min, max };
+        match name {
+            // An armour base with a range, and an energy shield one.
+            "Test Plate" => Some(ItemBase::Armour(ArmourBase {
+                armour: range(100, 120),
+                ..ArmourBase::default()
+            })),
+            "Test Robe" => Some(ItemBase::Armour(ArmourBase {
+                energy_shield: range(50, 50),
+                evasion: range(10, 20),
+                ..ArmourBase::default()
+            })),
+            "Test Shield" => Some(ItemBase::Armour(ArmourBase {
+                armour: range(10, 10),
+                block: Some(24),
+                ..ArmourBase::default()
+            })),
+            // An armour base without a shield row (as a shield the data
+            // lacks a block chance for).
+            "Test Mitts" => Some(ItemBase::Armour(ArmourBase {
+                armour: range(10, 10),
+                ..ArmourBase::default()
+            })),
+            "Test Sword" => Some(ItemBase::Weapon),
+            "Test Quiver" => Some(ItemBase::Other),
+            "Two-Toned Boots" => Some(ItemBase::Ambiguous),
             _ => None,
         }
     }
@@ -119,6 +154,30 @@ impl CalcData for Data {
             expansion: node == 6,
             links,
         })
+    }
+    fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
+        None
+    }
+    fn gem_effect(&self, _: &str) -> Option<&loom_calc::GemEffect> {
+        None
+    }
+    fn granted_effect(&self, _: &str) -> Option<&loom_calc::GrantedEffect> {
+        None
+    }
+    fn active_skill(&self, _: &str) -> Option<&loom_calc::ActiveSkill> {
+        None
+    }
+    fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
+        None
+    }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
+        None
     }
 }
 
@@ -289,13 +348,31 @@ fn a_bare_character_should_have_its_class_and_level_values() {
         assert_eq!(value(&r, field), v, "{field}");
         assert_eq!(state(&r, field), StateKind::Complete, "{field}");
     }
-    // The other 16 slice fields are not computed yet.
+    // The defences (P3-7): evasion 15 x (1 + floor(14 / 5) / 100) = 15.3,
+    // 15; no armour; the act 10 penalty on each resistance; no block or
+    // suppression.
+    let defences = [
+        (Field::Evasion, 15.0),
+        (Field::Armour, 0.0),
+        (Field::Resistance(DamageType::Fire), -60.0),
+        (Field::Resistance(DamageType::Cold), -60.0),
+        (Field::Resistance(DamageType::Lightning), -60.0),
+        (Field::Resistance(DamageType::Chaos), -60.0),
+        (Field::BlockChance, 0.0),
+        (Field::Poe1(Poe1Field::SpellBlockChance), 0.0),
+        (Field::Poe1(Poe1Field::SpellSuppressionChance), 0.0),
+    ];
+    for (field, v) in defences {
+        assert_eq!(value(&r, field), v, "{field}");
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+    // The other 7 slice fields (the main skill's) are not computed yet.
     let not_computed = r
         .fields
         .values()
         .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
         .count();
-    assert_eq!(not_computed, 16);
+    assert_eq!(not_computed, 7);
     assert_eq!(r.state, StateKind::Unsupported);
 }
 
@@ -445,6 +522,24 @@ fn an_unmapped_stat_should_make_the_fields_partial() {
     }
     // The values are still computed.
     assert_eq!(value(&r, Field::Life), 1125.0);
+}
+
+#[test]
+fn a_stat_without_effect_on_the_slice_should_leave_the_fields_complete() {
+    // Regeneration and movement speed reach no slice field (P3-8a).
+    let ring = item(
+        1,
+        vec![modifier(vec![
+            stat("life_regeneration_rate_per_minute_%", 60),
+            stat("base_movement_velocity_+%", 10),
+            stat("base_maximum_life", 10),
+        ])],
+    );
+    let r = run(&with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]));
+    assert_eq!(value(&r, Field::Life), 1135.0);
+    for field in CHARACTER {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
 }
 
 #[test]
@@ -665,6 +760,461 @@ fn gems_config_and_choices_should_be_reasons() {
     }))
     .unwrap();
     assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
+}
+
+// ------------------------------------------------------------- defences
+
+fn spec_line(key: &str, value: &str) -> ItemLine {
+    ItemLine {
+        source: format!("{key}: {value}"),
+        kind: LineKind::Spec {
+            key: key.to_owned(),
+            value: value.to_owned(),
+            known: true,
+        },
+    }
+}
+
+/// Options naming each item's base (`(item, base name)`).
+fn with_bases(bases: &[(u32, &str)]) -> CalcOptions {
+    let mut o = options(Some("3_29"));
+    for (id, name) in bases {
+        o.item_bases.insert(
+            ItemId(*id),
+            BaseName {
+                name: (*name).to_owned(),
+                fallback: None,
+            },
+        );
+    }
+    o
+}
+
+const FIRE: Field = Field::Resistance(DamageType::Fire);
+const COLD: Field = Field::Resistance(DamageType::Cold);
+const SPELL_BLOCK: Field = Field::Poe1(Poe1Field::SpellBlockChance);
+const SUPPRESSION: Field = Field::Poe1(Poe1Field::SpellSuppressionChance);
+
+/// The value of the node with step term `name` below `field`'s node (the
+/// nearest one, as `calc-parity` finds it).
+fn step(r: &CalcResult, field: Field, name: &str) -> Option<f64> {
+    let top = r.fields[&field].node?;
+    r.graph
+        .iter()
+        .filter(|(i, _, _)| i.get() <= top.get())
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .find(|(_, n, _)| match n {
+            Node::Sum { term, .. }
+            | Node::Product { term, .. }
+            | Node::Trunc { term, .. }
+            | Node::Min { term, .. }
+            | Node::Max { term, .. }
+            | Node::Floor { term, .. }
+            | Node::RoundHalfUp { term, .. }
+            | Node::PercentFactor { term, .. } => {
+                matches!(term, Term::Step(s) if *s == name)
+            }
+            _ => false,
+        })
+        .map(|(_, _, v)| v)
+}
+
+#[test]
+fn the_resistance_penalty_should_follow_its_config_input() {
+    for (value, expect) in [(0.0, 0.0), (-30.0, -30.0)] {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        config.inputs.push(ConfigInput {
+            name: "resistancePenalty".to_owned(),
+            value: ConfigValue::Number(Sourced::new(loom_domain::Number(value))),
+            attributes: Vec::new(),
+        });
+        b.config.sets.push(config);
+        let r = run(&b);
+        for t in DamageType::ALL.into_iter().skip(1) {
+            let field = Field::Resistance(t);
+            assert_eq!(value_of(&r, field), expect, "{field}");
+            assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+        }
+    }
+}
+
+fn value_of(r: &CalcResult, field: Field) -> f64 {
+    value(r, field)
+}
+
+#[test]
+fn resistances_should_be_capped_by_their_maximum_and_truncated() {
+    // Fire: -60 + 200 + 10 = 150, maximum 75 + 20 + 2 = 97, capped at 90.
+    // Cold: -60 + 10 = -50, maximum 77. Chaos: -60 + 3 = -57.
+    let ring = item(
+        1,
+        vec![modifier(vec![
+            stat("base_fire_damage_resistance_%", 200),
+            stat("base_resist_all_elements_%", 10),
+            stat("base_maximum_fire_damage_resistance_%", 20),
+            stat("additional_maximum_all_resistances_%", 2),
+            stat("base_chaos_damage_resistance_%", 3),
+        ])],
+    );
+    let r = run(&with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]));
+    assert_eq!(value(&r, FIRE), 90.0);
+    assert_eq!(step(&r, FIRE, "total"), Some(150.0));
+    assert_eq!(step(&r, FIRE, "max"), Some(90.0));
+    assert_eq!(step(&r, FIRE, "min"), Some(-200.0));
+    assert_eq!(value(&r, COLD), -50.0);
+    assert_eq!(step(&r, COLD, "max"), Some(77.0));
+    assert_eq!(value(&r, Field::Resistance(DamageType::Chaos)), -57.0);
+    assert_eq!(state(&r, FIRE), StateKind::Complete);
+}
+
+#[test]
+fn an_armour_piece_should_add_its_local_value_as_a_row() {
+    // Test Plate: armour 100 to 120. With no percentile line the roll is
+    // the top: (100 + 20 + 20 x 1) x (1 + 50 / 100) x (1 + 20 / 100) =
+    // 252; a global 10% increase: 252 x 1.1 = 277.2, 277.
+    let plate = item(
+        2,
+        vec![
+            spec_line("Quality", "20"),
+            modifier(vec![
+                stat("local_base_physical_damage_reduction_rating", 20),
+                stat("local_physical_damage_reduction_rating_+%", 50),
+            ]),
+        ],
+    );
+    let ring = item(
+        1,
+        vec![modifier(vec![stat(
+            "physical_damage_reduction_rating_+%",
+            10,
+        )])],
+    );
+    let b = with_items(
+        witch(90),
+        vec![plate, ring],
+        &[("Body Armour", 2, false), ("Ring 1", 1, false)],
+    );
+    let r = run_with(&b, &with_bases(&[(2, "Test Plate")]));
+    assert_eq!(value(&r, Field::Armour), 277.0);
+    assert_eq!(state(&r, Field::Armour), StateKind::Complete);
+    assert_eq!(
+        step(&r, Field::Armour, "slot.body-armour"),
+        Some(252.0 * 1.1)
+    );
+    assert_eq!(
+        step(&r, Field::Armour, "slot.global"),
+        None,
+        "no flat armour"
+    );
+    // The local stats did not reach the global sum.
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+
+    // A percentile line: (100 + 20 + 20 x 0.5) x 1.5 x 1.2 = 234.
+    let plate = item(
+        2,
+        vec![
+            spec_line("Quality", "+20%"),
+            spec_line("Armour", "234"),
+            spec_line("ArmourBasePercentile", "0.5"),
+            modifier(vec![
+                stat("local_base_physical_damage_reduction_rating", 20),
+                stat("local_physical_damage_reduction_rating_+%", 50),
+            ]),
+        ],
+    );
+    let b = with_items(witch(90), vec![plate], &[("Body Armour", 2, false)]);
+    let r = run_with(&b, &with_bases(&[(2, "Test Plate")]));
+    assert_eq!(value(&r, Field::Armour), 234.0);
+    assert_eq!(state(&r, Field::Armour), StateKind::Complete);
+}
+
+#[test]
+fn attribute_bonuses_should_scale_every_row() {
+    // Test Robe in the helmet: energy shield 50, evasion 10 to 20 (20 at
+    // the top). Int 32: 3% more... increased: 50 x 1.03 = 51.5, 52.
+    // Evasion: helmet 20 x 1.02 = 20.4, global 15 x 1.02 = 15.3; 35.7, 36.
+    let robe = item(3, vec![]);
+    let b = with_items(witch(90), vec![robe], &[("Helmet", 3, false)]);
+    let r = run_with(&b, &with_bases(&[(3, "Test Robe")]));
+    assert_eq!(value(&r, Field::EnergyShield), 52.0);
+    assert_eq!(value(&r, Field::Evasion), 36.0);
+    assert_eq!(step(&r, Field::Evasion, "slot.helmet"), Some(20.0 * 1.02));
+    assert_eq!(step(&r, Field::Evasion, "slot.global"), Some(15.0 * 1.02));
+    assert_eq!(step(&r, Field::EnergyShield, "slot.helmet"), Some(51.5));
+    for field in [Field::EnergyShield, Field::Evasion, Field::Armour] {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+}
+
+#[test]
+fn a_shield_should_give_block_and_block_increases_should_reach_spell_block() {
+    // Shield 24 + 3 = 27, x 1.1 = 29.7, floored: 29. Attack block (29 + 5)
+    // x 1.2 = 40.8, 41, below the maximum 77. Spell block 10 x 1.2 = 12.
+    // Suppression 120, capped at 100.
+    let shield = item(
+        4,
+        vec![modifier(vec![
+            stat("local_additional_block_chance_%", 3),
+            stat("local_block_chance_+%", 10),
+        ])],
+    );
+    let ring = item(
+        1,
+        vec![modifier(vec![
+            stat("additional_block_%", 5),
+            stat("block_chance_+%", 20),
+            stat("maximum_block_%", 2),
+            stat("base_spell_block_%", 10),
+            stat("base_spell_suppression_chance_%", 120),
+        ])],
+    );
+    let b = with_items(
+        witch(90),
+        vec![shield, ring],
+        &[("Weapon 2", 4, false), ("Ring 1", 1, false)],
+    );
+    let r = run_with(&b, &with_bases(&[(4, "Test Shield")]));
+    assert_eq!(step(&r, Field::BlockChance, "shield-block"), Some(29.0));
+    assert_eq!(value(&r, Field::BlockChance), 41.0);
+    assert_eq!(step(&r, Field::BlockChance, "max"), Some(77.0));
+    assert_eq!(value(&r, SPELL_BLOCK), 12.0);
+    assert_eq!(value(&r, SUPPRESSION), 100.0);
+    // The shield's armour is a row too: 10.
+    assert_eq!(value(&r, Field::Armour), 10.0);
+    for field in [Field::BlockChance, SPELL_BLOCK, SUPPRESSION, Field::Armour] {
+        assert_eq!(state(&r, field), StateKind::Complete, "{field}");
+    }
+}
+
+#[test]
+fn armour_slots_without_a_known_base_should_be_reasons() {
+    let r = |slot: &str, base: Option<&str>, lines: Vec<ItemLine>| {
+        let b = with_items(witch(1), vec![item(2, lines)], &[(slot, 2, false)]);
+        let o = base.map_or_else(|| options(Some("3_29")), |n| with_bases(&[(2, n)]));
+        run_with(&b, &o)
+    };
+    let reason = |r: &CalcResult| {
+        r.reasons
+            .partial
+            .iter()
+            .find_map(|p| match p {
+                UnsupportedReason::UnmodelledItem { what, .. } => Some(*what),
+                _ => None,
+            })
+            .unwrap_or("none")
+    };
+    assert_eq!(reason(&r("Helmet", None, vec![])), "no-base-name");
+    assert_eq!(
+        reason(&r("Weapon 2", Some("Test Sword"), vec![])),
+        "base-properties"
+    );
+    assert_eq!(
+        reason(&r("Boots", Some("Two-Toned Boots"), vec![])),
+        "ambiguous-base"
+    );
+    assert_eq!(
+        reason(&r(
+            "Body Armour",
+            Some("Test Plate"),
+            vec![spec_line("Armour", "130")]
+        )),
+        "base-percentile",
+        "a shown value without its percentile"
+    );
+    // A quiver's lines are global; nothing is missing.
+    let quiver = r("Weapon 2", Some("Test Quiver"), vec![]);
+    assert_eq!(state(&quiver, Field::Armour), StateKind::Complete);
+    // A base without armour properties in an armour slot is not a silent
+    // nothing.
+    assert_eq!(
+        reason(&r("Helmet", Some("Test Quiver"), vec![])),
+        "not-armour"
+    );
+    // A shield without a block chance in the data.
+    let no_block = r("Weapon 2", Some("Test Mitts"), vec![]);
+    assert_eq!(
+        state(&no_block, Field::BlockChance),
+        StateKind::Indeterminate
+    );
+    assert!(
+        no_block
+            .reasons
+            .indeterminate
+            .contains(&IndeterminateReason::MissingData {
+                table: "shield_types",
+                key: "Test Mitts".to_owned()
+            })
+    );
+    // A base the data lacks.
+    let unknown = r("Gloves", Some("Nothing"), vec![]);
+    assert_eq!(state(&unknown, Field::Armour), StateKind::Indeterminate);
+    assert!(
+        unknown
+            .reasons
+            .indeterminate
+            .contains(&IndeterminateReason::MissingData {
+                table: "base_items",
+                key: "Nothing".to_owned()
+            })
+    );
+}
+
+#[test]
+fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
+    let with = |inputs: Vec<(&str, ConfigValue)>| {
+        let mut b = witch(1);
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            config.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let r = with(vec![
+        ("enemyLevel", n(80.0)),
+        ("enemyFireResist", n(0.0)),
+        ("enemyArmour", n(1000.0)),
+    ]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    // The boss kind stays a reason: its other modifiers are not ingested.
+    let r = with(vec![(
+        "enemyIsBoss",
+        ConfigValue::String("Uber".to_owned()),
+    )]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
+    let r = with(vec![("enemyLevel", ConfigValue::Boolean(true))]);
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
+}
+
+#[test]
+fn the_last_spec_line_of_a_key_should_count() {
+    // Two quality lines: PoB keeps the last (10): 120 x 1.1 = 132.
+    let plate = item(
+        2,
+        vec![spec_line("Quality", "20"), spec_line("Quality", "10")],
+    );
+    let b = with_items(witch(90), vec![plate], &[("Body Armour", 2, false)]);
+    let r = run_with(&b, &with_bases(&[(2, "Test Plate")]));
+    assert_eq!(value(&r, Field::Armour), 132.0);
+}
+
+#[test]
+fn a_shield_in_the_swap_set_in_use_should_count_as_the_off_hand() {
+    let shield = item(4, vec![]);
+    let mut b = witch(90);
+    b.items.entries.push(ItemsEntry::Item(shield));
+    let mut set = ItemSet {
+        id: ItemSetId(1),
+        title: None,
+        slots: Ordered::new(),
+        attributes: vec![Attribute::new("useSecondWeaponSet", "true")],
+    };
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Weapon 2 Swap"),
+        item: Some(ItemId(4)),
+        attributes: Vec::new(),
+    });
+    b.items.entries.push(ItemsEntry::Set(set));
+    let r = run_with(&b, &with_bases(&[(4, "Test Shield")]));
+    assert_eq!(value(&r, Field::BlockChance), 24.0);
+    assert_eq!(value(&r, Field::Armour), 10.0);
+    assert_eq!(state(&r, Field::BlockChance), StateKind::Complete);
+}
+
+#[test]
+fn a_resistance_penalty_that_is_not_a_number_should_be_a_reason() {
+    let mut b = witch(1);
+    let mut config = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    config.inputs.push(ConfigInput {
+        name: "resistancePenalty".to_owned(),
+        value: ConfigValue::String("Act 5".to_owned()),
+        attributes: Vec::new(),
+    });
+    b.config.sets.push(config);
+    let r = run(&b);
+    assert_eq!(value(&r, FIRE), -60.0);
+    assert_eq!(partial_reasons(&r, FIRE), ["unmodelled-config"]);
+}
+
+#[test]
+fn rows_should_sum_in_pobs_slot_order() {
+    // Every slot and the global row; the sum is taken in PoB's order.
+    let bases = [
+        (1, "Helmet"),
+        (2, "Gloves"),
+        (3, "Boots"),
+        (4, "Body Armour"),
+        (5, "Weapon 2"),
+    ];
+    let items = bases.iter().map(|(id, _)| item(*id, vec![])).collect();
+    let slots: Vec<_> = bases.iter().map(|(id, s)| (*s, *id, false)).collect();
+    let mut b = with_items(witch(90), items, &slots);
+    b.items.entries.push(ItemsEntry::Item(item(
+        9,
+        vec![modifier(vec![
+            stat("base_physical_damage_reduction_rating", 7),
+            stat("physical_damage_reduction_rating_+%", 13),
+        ])],
+    )));
+    let r = run_with(
+        &b,
+        &with_bases(&[
+            (1, "Test Plate"),
+            (2, "Test Plate"),
+            (3, "Test Plate"),
+            (4, "Test Plate"),
+            (5, "Test Shield"),
+        ]),
+    );
+    // Item 9 is in no slot: only the pieces. 120 x 4 + 10, no increase.
+    assert_eq!(value(&r, Field::Armour), 490.0);
+    let top = r.fields[&Field::Armour].node.unwrap();
+    let rows: Vec<&'static str> = r
+        .graph
+        .iter()
+        .filter(|(i, _, _)| i.get() < top.get())
+        .filter_map(|(_, n, _)| match n {
+            Node::Product {
+                term: Term::Step(s),
+                ..
+            } if s.starts_with("slot.") => Some(*s),
+            _ => None,
+        })
+        .collect();
+    let armour_rows: Vec<_> = rows.iter().rev().take(5).rev().copied().collect();
+    assert_eq!(
+        armour_rows,
+        [
+            "slot.helmet",
+            "slot.gloves",
+            "slot.boots",
+            "slot.body-armour",
+            "slot.weapon-2"
+        ]
+    );
 }
 
 // ------------------------------------------------------------- the graph

@@ -22,6 +22,12 @@ pub enum Source {
         /// mark it (plan decision 11).
         adapted: Option<Adapted>,
     },
+    /// An item's base: the properties the game data gives the base
+    /// (an armour piece's defence ranges, a shield's block chance).
+    ItemBase {
+        /// The item.
+        item: ItemId,
+    },
     /// An allocated passive node.
     Passive {
         /// The node.

@@ -162,13 +162,13 @@
       {
         "field": "life",
         "value": 48.0,
-        "node": 11,
+        "node": 12,
         "state": "complete"
       },
       {
         "field": "mana",
         "value": 47.0,
-        "node": 12,
+        "node": 13,
         "state": "partial",
         "unsupported": [
           {
@@ -302,13 +302,13 @@
         "value": {
           "f64_bits": "7ff0000000000000"
         },
-        "node": 17,
+        "node": 18,
         "state": "complete"
       },
       {
         "field": "resistance.fire",
         "value": 75.0,
-        "node": 18,
+        "node": 19,
         "state": "indeterminate",
         "unsupported": [
           "not-computed"
@@ -357,7 +357,7 @@
       {
         "field": "poe1.spell-block-chance",
         "value": 1.0,
-        "node": 13,
+        "node": 14,
         "state": "complete"
       }
     ],
@@ -454,6 +454,20 @@
         "value": 5.0
       },
       {
+        "kind": {
+          "contribution": {
+            "source": {
+              "item-base": {
+                "item": 4
+              }
+            },
+            "quantity": "armour",
+            "op": "base"
+          }
+        },
+        "value": 12.0
+      },
+      {
         "kind": "sum",
         "term": "base",
         "children": [
@@ -483,9 +497,9 @@
         "kind": "product",
         "term": "result",
         "children": [
-          7,
           8,
-          9
+          9,
+          10
         ],
         "value": 47.63
       },
@@ -493,7 +507,7 @@
         "kind": "round-half-up",
         "term": "result",
         "children": [
-          10
+          11
         ],
         "value": 48.0
       },
@@ -501,7 +515,7 @@
         "kind": "floor",
         "term": "step.floored",
         "children": [
-          10
+          11
         ],
         "value": 47.0
       },
@@ -536,7 +550,7 @@
         "term": "result",
         "children": [
           5,
-          14
+          15
         ],
         "value": 75.0
       },
@@ -544,8 +558,8 @@
         "kind": "max",
         "term": "step.at-least-floor",
         "children": [
-          12,
-          15
+          13,
+          16
         ],
         "value": {
           "f64_bits": "7ff0000000000000"
@@ -555,9 +569,17 @@
         "kind": "override",
         "children": [
           5,
-          16
+          17
         ],
         "value": 75.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          11
+        ],
+        "value": 47.0
       }
     ]
   }

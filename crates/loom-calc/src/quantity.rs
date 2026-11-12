@@ -71,8 +71,12 @@ pub enum Quantity {
     Resistance(DamageType),
     /// Maximum resistance to a damage type.
     MaximumResistance(DamageType),
-    /// Chance to block attack damage.
+    /// Chance to block attack damage. Its `Increased` and `More` effects
+    /// scale every block chance (the game's "Chance to Block Attack and
+    /// Spell Damage").
     BlockChance,
+    /// Maximum chance to block attack damage.
+    MaximumBlockChance,
     /// Damage; which damage (type, skill kind) is set by the effect's
     /// conditions and the query's context.
     Damage,
@@ -102,12 +106,13 @@ impl fmt::Display for Quantity {
             Self::Resistance(t) => write!(f, "resistance.{}", t.name()),
             Self::MaximumResistance(t) => write!(f, "maximum-resistance.{}", t.name()),
             Self::BlockChance => f.write_str("block-chance"),
+            Self::MaximumBlockChance => f.write_str("maximum-block-chance"),
             Self::Damage => f.write_str("damage"),
             Self::Speed => f.write_str("speed"),
             Self::CritChance => f.write_str("crit-chance"),
             Self::CritMultiplier => f.write_str("crit-multiplier"),
             Self::Accuracy => f.write_str("accuracy"),
-            Self::Poe1(q) => write!(f, "poe1.{}", q.name()),
+            Self::Poe1(q) => write!(f, "poe1.{q}"),
         }
     }
 }

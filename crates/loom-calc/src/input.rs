@@ -2,9 +2,12 @@
 //! resolved build (borrowed, immutable), a view of the game data, and the
 //! options.
 
+use std::collections::BTreeMap;
+
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
-use loom_domain::{Build, ConfigSetId, DataVersion, ItemSetId, SpecId, TreeVersion};
+pub use loom_data::bundle::skills::{ActiveSkill, GemEffect, GrantedEffect, SkillGem, StatSet};
+use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 
 use crate::error::CalcError;
 
@@ -50,6 +53,111 @@ pub trait CalcData {
     /// A passive node's place in the tree: whether it is a root (a class
     /// or ascendancy start) and the nodes it is linked to, either way.
     fn passive_links(&self, node: u32) -> Option<PassiveLinks>;
+
+    /// The properties of the item base with this name; `None` when no
+    /// base has the name.
+    fn item_base(&self, name: &str) -> Option<ItemBase>;
+
+    /// A skill gem by its base item ID. Data without skill tables gives
+    /// `None` for every skill read: a calculation then reports the gem as
+    /// unknown, never a value.
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem>;
+
+    /// A gem effect by ID.
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect>;
+
+    /// A granted effect by ID.
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect>;
+
+    /// An active skill by ID.
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill>;
+
+    /// A stat set by ID.
+    fn stat_set(&self, id: &str) -> Option<&StatSet>;
+
+    /// The game's monster stats at a level (`DefaultMonsterStats`).
+    fn monster_level(&self, level: i64) -> Option<MonsterStats>;
+
+    /// A monster type's armour and evasion multipliers, percent.
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences>;
+
+    /// A game constant as `(value, divisor)`.
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)>;
+}
+
+/// The game's monster stats at one level ([`CalcData::monster_level`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MonsterStats {
+    /// Evasion rating.
+    pub evasion: i64,
+    /// Accuracy rating.
+    pub accuracy: i64,
+}
+
+/// A monster type's defence multipliers, percent
+/// ([`CalcData::monster_type`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MonsterDefences {
+    /// Armour multiplier.
+    pub armour: i64,
+    /// Evasion multiplier.
+    pub evasion: i64,
+}
+
+/// What an item base is, for its properties ([`CalcData::item_base`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemBase {
+    /// An armour piece (or shield) with its defences.
+    Armour(ArmourBase),
+    /// A weapon.
+    Weapon,
+    /// Another base (jewellery, quivers, jewels, flasks).
+    Other,
+    /// Bases of this name have different properties (PoE1's Two-Toned
+    /// Boots: three bases, one name).
+    Ambiguous,
+}
+
+/// A range of base values a property rolls in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct Range {
+    /// The lowest roll.
+    pub min: i64,
+    /// The highest roll.
+    pub max: i64,
+}
+
+/// An armour base's defences (the armour types and shield types tables).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct ArmourBase {
+    /// Armour.
+    pub armour: Range,
+    /// Evasion rating.
+    pub evasion: Range,
+    /// Energy shield.
+    pub energy_shield: Range,
+    /// A shield's chance to block, percent.
+    pub block: Option<i64>,
+}
+
+/// An item's base name as the import adapter found it (the adapter's
+/// format rules, as `resolve_build` takes them): the name, and a name to
+/// try when it is not a base.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BaseName {
+    /// The name to look up.
+    pub name: String,
+    /// A name to look up when `name` is not a base.
+    pub fallback: Option<String>,
+}
+
+impl BaseName {
+    /// The base of this name (else the fallback's) in `data`.
+    #[must_use]
+    pub fn find(&self, data: &dyn CalcData) -> Option<ItemBase> {
+        data.item_base(&self.name)
+            .or_else(|| self.fallback.as_deref().and_then(|f| data.item_base(f)))
+    }
 }
 
 /// A passive node's links in the tree ([`CalcData::passive_links`]).
@@ -146,6 +254,127 @@ impl CalcData for Bundle {
             links,
         })
     }
+
+    fn item_base(&self, name: &str) -> Option<ItemBase> {
+        let rows: Vec<&str> = self
+            .base_items
+            .iter()
+            .filter(|b| b.name == name)
+            .map(|b| b.id.as_str())
+            .collect();
+        // Without the property tables (format 1) no base's properties are
+        // known: `None`, so the calculation reports missing data rather
+        // than calling an armour piece something else.
+        let tables = self.properties.as_ref()?;
+        if rows.is_empty() {
+            return None;
+        }
+        let tables = Some(tables);
+        let range = |r: &loom_data::bundle::properties::ValueRange| Range {
+            min: r.min,
+            max: r.max,
+        };
+        let found: Vec<ItemBase> = rows
+            .iter()
+            .map(|id| {
+                let armour =
+                    tables.and_then(|t| t.armour_types.iter().find(|a| a.base_item == *id));
+                if let Some(a) = armour {
+                    let block = tables
+                        .and_then(|t| t.shield_types.iter().find(|s| s.base_item == *id))
+                        .map(|s| s.block);
+                    ItemBase::Armour(ArmourBase {
+                        armour: range(&a.armour),
+                        evasion: range(&a.evasion),
+                        energy_shield: range(&a.energy_shield),
+                        block,
+                    })
+                } else if tables.is_some_and(|t| t.weapon_types.iter().any(|w| w.base_item == *id))
+                {
+                    ItemBase::Weapon
+                } else {
+                    ItemBase::Other
+                }
+            })
+            .collect();
+        let first = found[0];
+        Some(if found.iter().all(|f| *f == first) {
+            first
+        } else {
+            ItemBase::Ambiguous
+        })
+    }
+
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
+        self.skills
+            .as_ref()?
+            .gems
+            .iter()
+            .find(|g| g.base_item == base_item)
+    }
+
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
+        self.skills
+            .as_ref()?
+            .gem_effects
+            .iter()
+            .find(|e| e.id == id)
+    }
+
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
+        self.skills
+            .as_ref()?
+            .granted_effects
+            .iter()
+            .find(|e| e.id == id)
+    }
+
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
+        self.skills
+            .as_ref()?
+            .active_skills
+            .iter()
+            .find(|a| a.id == id)
+    }
+
+    fn stat_set(&self, id: &str) -> Option<&StatSet> {
+        self.skills.as_ref()?.stat_sets.iter().find(|s| s.id == id)
+    }
+
+    fn monster_level(&self, level: i64) -> Option<MonsterStats> {
+        // Levels run 1, 2, 3, ... without gaps (validated): level n is row
+        // n - 1.
+        let row = self
+            .properties
+            .as_ref()?
+            .monster_levels
+            .get(usize::try_from(level.checked_sub(1)?).ok()?)?;
+        (row.level == level).then_some(MonsterStats {
+            evasion: row.evasion,
+            accuracy: row.accuracy,
+        })
+    }
+
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences> {
+        self.properties
+            .as_ref()?
+            .monster_types
+            .iter()
+            .find(|m| m.id == id)
+            .map(|m| MonsterDefences {
+                armour: m.armour,
+                evasion: m.evasion,
+            })
+    }
+
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)> {
+        self.properties
+            .as_ref()?
+            .game_constants
+            .iter()
+            .find(|c| c.id == id)
+            .map(|c| (c.value, c.divisor))
+    }
 }
 
 /// A skill picked by position.
@@ -174,6 +403,12 @@ pub struct CalcOptions {
     /// Steam build with evidence). `None`: a build that allocates passives
     /// is `Partial` with `UncheckedTreeVersion`.
     pub tree_version: Option<TreeVersion>,
+    /// Each item's base name, as the import adapter names it (its
+    /// format's rules, which the core does not know: a legacy name line
+    /// holds affixes around the base). The host gives them, as it gives
+    /// `resolve_build` its base names. An armour piece without one is
+    /// `Partial` (`unmodelled-item`, `no-base-name`).
+    pub item_bases: BTreeMap<ItemId, BaseName>,
 }
 
 /// A calculation's input: an immutable snapshot.

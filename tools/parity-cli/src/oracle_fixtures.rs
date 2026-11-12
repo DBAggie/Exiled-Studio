@@ -346,9 +346,10 @@ mod tests {
         assert_eq!(tiers(Tier::Discrepancy), 1);
         assert!(tiers(Tier::Community) >= 1);
         // P3-6: a bare level 1 and level 90 character of each of the 7
-        // classes, and 5 stat sources; later steps add theirs.
+        // classes, and 5 stat sources; P3-7 4 defence builds; later steps
+        // add theirs.
         let mechanic = tiers(Tier::Mechanic);
-        assert!(mechanic >= 19, "{mechanic}");
+        assert!(mechanic >= 23, "{mechanic}");
         // Local fixtures resolve without an oracle (their hashes are checked
         // here, in every cargo test); PoB's are checked by oracle-run.
         let local = Manifest {
