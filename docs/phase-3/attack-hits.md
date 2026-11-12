@@ -26,7 +26,9 @@ Six slice fields, with PoB v2.67.2's formulas, order of operations, and rounding
 
 New in calc result v1 (additive rule; schema and TypeScript regenerated): graph node `power` (`base ^ exponent`, `math::pow`, PoB's Lua `^`), on the pure-Rust `libm` crate (musl's `pow`; the same bits on Windows, Linux, and wasm32, a test writes them).
 
-## Open question Q11: a weapon's attack rate
+## Question Q11: a weapon's attack rate
+
+**Answered 2026-11-12 (maintainer, in-game tooltip): 1.72**. The Siege Axe with 15% increased attack speed shows the floored-milliseconds value, not PoB's 1.73: the game floors the attack time to integer ms after local increases, and attacks per second is `1000 / ms`. The engine still follows PoB; the next PR switches it.
 
 PoB rounds a weapon's base attack rate to two decimals in its data exporter (`AttackRateBase = round(1000 / attack time, 2)`: 1.45 for a 690 ms axe, against 1000 / 690 = 1.4493) and the rate with local attack speed again (`Classes/Item.lua`). The game data carries the attack time in milliseconds; the game's tooltip shows two decimals, which says nothing about its calculation. The engine follows PoB until the game's own rounding is settled (context file, Q11). No register entry: nothing differs from the oracle.
 
