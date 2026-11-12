@@ -135,14 +135,16 @@ pub const PASSIVE_TABLES: [&str; 4] = [
 /// step 1c), in both games: weapon, armour, and shield properties of base
 /// items, the per-level monster stats, and the game constants (PoB derives
 /// monster armour from `MonsterDamageReductionImprovement` there instead
-/// of reading `DefaultMonsterStats.Armour`). The default monster stats of
+/// of reading `DefaultMonsterStats.Armour`), and the monster types' defence
+/// multipliers (P3-1d, the enemy model's bosses). The default monster stats of
 /// the monster object template come with [`crate::itemtype::OBJECT_TEMPLATES`].
-pub const ITEM_PROPERTY_TABLES: [&str; 5] = [
+pub const ITEM_PROPERTY_TABLES: [&str; 6] = [
     "WeaponTypes",
     "ArmourTypes",
     "ShieldTypes",
     "DefaultMonsterStats",
     "GameConstants",
+    "MonsterTypes",
 ];
 
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],

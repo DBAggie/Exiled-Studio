@@ -277,6 +277,8 @@ pub struct Request<'a> {
     pub rules: &'a [u8],
     /// The scope passive text renders with ([`compare::PASSIVE_SCOPE`]).
     pub passive_scope: &'a str,
+    /// The bosses to compare (`loom_calc::poe1::enemy::BOSSES` in a run).
+    pub bosses: &'a [loom_calc::poe1::enemy::Boss],
     /// The tool record.
     pub tool: Tool,
 }
@@ -320,7 +322,7 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
                 .unwrap_or("an unknown version")
         ));
     }
-    let comparison = compare::compare(bundle, &export, request.passive_scope)?;
+    let comparison = compare::compare(bundle, &export, request.passive_scope, request.bosses)?;
     let inputs = Inputs {
         game,
         steam_build: bundle.manifest.source.steam_build,

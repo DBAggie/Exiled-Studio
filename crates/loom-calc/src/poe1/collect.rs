@@ -793,6 +793,17 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
             continue;
         }
+        // The enemy model's numeric inputs (`poe1::enemy`): no computed
+        // field reads the enemy yet, and the hit fields will take its
+        // problems as their reasons (P3-9b). `enemyIsBoss` stays a reason:
+        // its kind also gives modifiers the engine does not ingest yet
+        // (`poe1::enemy` module docs).
+        if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str())
+            && input.name != "enemyIsBoss"
+            && matches!(input.value, ConfigValue::Number(_))
+        {
+            continue;
+        }
         ingest.reason(UnsupportedReason::UnmodelledConfig {
             input: input.name.clone(),
         });

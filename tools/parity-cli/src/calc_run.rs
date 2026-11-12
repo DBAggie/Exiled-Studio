@@ -36,7 +36,8 @@ use std::time::Instant;
 
 use loom_calc::{
     ActiveSkill, ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, GemEffect,
-    GrantedEffect, ItemBase, PassiveLinks, Range, SkillGem, StatAmount, StatSet,
+    GrantedEffect, ItemBase, MonsterDefences, MonsterStats, PassiveLinks, Range, SkillGem,
+    StatAmount, StatSet,
 };
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
@@ -444,6 +445,26 @@ impl CalcData for OverlayData<'_> {
             return None;
         }
         self.bundle.stat_set(id)
+    }
+
+    /// PoB's monster levels as the overlay gives them; the engine reads
+    /// evasion and accuracy (PoB's armour table is derived from a game
+    /// constant, P3-11, so the overlay's armour rows change nothing).
+    fn monster_level(&self, level: i64) -> Option<MonsterStats> {
+        let ours = self.bundle.monster_level(level)?;
+        let key = level.to_string();
+        Some(MonsterStats {
+            evasion: self.int("monster_levels", &key, "evasion", ours.evasion),
+            accuracy: self.int("monster_levels", &key, "accuracy", ours.accuracy),
+        })
+    }
+
+    fn monster_type(&self, id: &str) -> Option<MonsterDefences> {
+        self.bundle.monster_type(id)
+    }
+
+    fn game_constant(&self, id: &str) -> Option<(i64, i64)> {
+        self.bundle.game_constant(id)
     }
 
     fn item_base(&self, name: &str) -> Option<ItemBase> {

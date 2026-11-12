@@ -364,6 +364,15 @@ impl CalcData for Data {
     fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
         None
     }
+    fn monster_level(&self, _: i64) -> Option<loom_calc::MonsterStats> {
+        None
+    }
+    fn monster_type(&self, _: &str) -> Option<loom_calc::MonsterDefences> {
+        None
+    }
+    fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
+        None
+    }
 }
 
 fn build(game: Game, steam_build: u64) -> Build {

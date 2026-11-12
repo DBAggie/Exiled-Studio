@@ -528,7 +528,7 @@ fn tree_node_outside_its_orbit_should_give_its_code() {
 #[test]
 fn property_mutations_should_each_give_their_code() {
     type Edit = fn(&mut Value);
-    let cases: [(&str, &str, Edit, &str); 13] = [
+    let cases: [(&str, &str, Edit, &str); 15] = [
         (
             "data/weapon_types.json",
             "weapon base",
@@ -592,6 +592,23 @@ fn property_mutations_should_each_give_their_code() {
         (
             "data/game_constants.json",
             "constant without ID",
+            |v| {
+                v[0]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "data/monster_types.json",
+            "monster type twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/monster_types.json",
+            "monster type without ID",
             |v| {
                 v[0]["id"] = "".into();
             },

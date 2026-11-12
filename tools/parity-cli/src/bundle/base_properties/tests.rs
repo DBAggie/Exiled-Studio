@@ -132,6 +132,11 @@ fn extract(poe1: bool) -> BTreeMap<String, Vec<u8>> {
             &["Id", "Value", "Divisor"],
             &json!([["MonsterDamageReductionImprovement", 670, 100]]),
         ),
+        table(
+            "MonsterTypes",
+            &["Id", "Armour", "Evasion"],
+            &json!([["TestBoss", 50, -25]]),
+        ),
     ]
     .into_iter()
     .collect()
@@ -337,6 +342,8 @@ fn missing_columns_of_each_table_should_fail_the_conversion() {
         (true, "DefaultMonsterStats", "AltLife2"),
         (true, "DefaultMonsterStats", "MinionDamage"),
         (true, "GameConstants", "Divisor"),
+        (true, "MonsterTypes", "Armour"),
+        (false, "MonsterTypes", "Evasion"),
     ] {
         let mut files = extract(poe1);
         without(&mut files, name, column);
@@ -359,4 +366,31 @@ fn missing_columns_of_each_table_should_fail_the_conversion() {
         .1,
     );
     assert!(run(&files).is_err(), "constant without ID");
+    // A monster type without an ID.
+    let mut files = extract(true);
+    files.insert(
+        "tables/MonsterTypes.json".to_owned(),
+        table(
+            "MonsterTypes",
+            &["Id", "Armour", "Evasion"],
+            &json!([["", 0, 0]]),
+        )
+        .1,
+    );
+    assert!(run(&files).is_err(), "monster type without ID");
+}
+
+#[test]
+fn monster_types_should_convert_with_both_multipliers() {
+    for poe1 in [true, false] {
+        let (t, _, _) = run(&extract(poe1)).unwrap();
+        assert_eq!(
+            t.monster_types,
+            [loom_data::bundle::properties::MonsterType {
+                id: "TestBoss".to_owned(),
+                armour: 50,
+                evasion: -25,
+            }]
+        );
+    }
 }

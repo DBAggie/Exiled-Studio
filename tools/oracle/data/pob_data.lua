@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 1
+local FORMAT = 2
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -206,6 +206,13 @@ for _, name in ipairs(MONSTER_TABLES) do
 	monsterTables[name] = list(data[name])
 end
 
+-- PoB's bosses (`data.bosses`, `Data/Bosses.lua`): the multipliers its boss
+-- enemies' armour and evasion average (format 2, P3-1d).
+local bosses = {}
+for name, boss in pairs(data.bosses or {}) do
+	bosses[name] = { armourMult = boss.armourMult, evasionMult = boss.evasionMult, isUber = boss.isUber == true }
+end
+
 local function copyMap(t)
 	local out = {}
 	for k, v in pairs(t or {}) do
@@ -277,6 +284,7 @@ local document = {
 	game_constants = copyMap(data.gameConstants),
 	character_constants = copyMap(data.characterConstants),
 	monster_constants = copyMap(data.monsterConstants),
+	bosses = bosses,
 	tree = { classes = classes, nodes = nodes },
 }
 
