@@ -141,6 +141,15 @@ pub enum Node {
         /// The divisor.
         b: NodeIndex,
     },
+    /// `base ^ exponent` ([`math::pow`]: PoB's Lua `^`).
+    Power {
+        /// The breakdown term.
+        term: Term,
+        /// The base.
+        base: NodeIndex,
+        /// The exponent.
+        exponent: NodeIndex,
+    },
     /// [`math::min`].
     Min {
         /// The breakdown term.
@@ -181,6 +190,7 @@ impl Node {
             | Self::Max { a, b, .. }
             | Self::Difference { a, b, .. }
             | Self::Quotient { a, b, .. } => vec![*a, *b],
+            Self::Power { base, exponent, .. } => vec![*base, *exponent],
         }
     }
 
@@ -206,6 +216,7 @@ impl Node {
             Self::Max { a, b, .. } => math::max(get(*a), get(*b)),
             Self::Difference { a, b, .. } => get(*a) - get(*b),
             Self::Quotient { a, b, .. } => get(*a) / get(*b),
+            Self::Power { base, exponent, .. } => math::pow(get(*base), get(*exponent)),
         }
     }
 }
@@ -481,6 +492,14 @@ mod tests {
             .unwrap();
         assert_eq!(g.value(diff), Some(-1.5));
         assert_eq!(g.value(quot), Some(1.75));
+        let power = g
+            .derive(Node::Power {
+                term: Term::Result,
+                base: c,
+                exponent: a,
+            })
+            .unwrap();
+        assert_eq!(g.value(power), Some(math::pow(7.0, 2.5)));
         assert_eq!(g.value(sum), Some(6.5));
         assert_eq!(g.value(pct), Some(1.04));
         assert_eq!(g.value(prod), Some(6.5 * 1.04));
@@ -491,7 +510,7 @@ mod tests {
         assert_eq!(g.value(any), Some(1.0));
         assert_eq!(g.value(over), Some(4.0));
         assert_eq!(g.value(c), Some(7.0));
-        assert_eq!(g.len(), 16);
+        assert_eq!(g.len(), 17);
         g.check().unwrap();
     }
 

@@ -359,5 +359,7 @@ dto! {
         Difference,
         /// The first child divided by the second.
         Quotient,
+        /// The first child to the power of the second.
+        Power,
     }
 }

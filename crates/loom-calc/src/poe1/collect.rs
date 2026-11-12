@@ -17,17 +17,22 @@
 //! - an armour piece (helmet, gloves, boots, body armour, a shield in the
 //!   off hand) has its own defences from its base's ranges, its quality
 //!   and base percentiles, and its local lines (`Classes/Item.lua`; P3-7);
+//! - the weapon in the main hand has its own damage, attack time, and
+//!   critical strike chance from its base, its quality, and its local
+//!   lines (`Classes/Item.lua`, the weapon branch; P3-10), which only an
+//!   attack's hit reads;
 //! - the character's base defences (maximum resistances, block and spell
 //!   block maximums, base evasion) are character template stats, and
 //!   the resistance penalty is the config's `resistancePenalty` or -60.
 //!
 //! The main skill's gems act through their stats when the engine computes
-//! its hit (a self-cast spell, P3-9b).
+//! its hit (a self-cast spell, P3-9b; an attack, P3-10).
 //!
 //! Not modelled yet, each a reason on every computed field: other enabled
 //! gems (auras, buffs, reservation: P3-12), config inputs other than
 //! the resistance penalty (P3-12), bandit and pantheon choices other than
-//! none, weapons' base properties (P3-10), an armour piece's percentile
+//! none, a weapon's base properties in the off hand (dual wielding), an
+//! armour piece's percentile
 //! derived from its shown value, active flasks, abyssal sockets, and
 //! slots other than the known ones.
 
@@ -38,12 +43,12 @@ use loom_domain::{
     PassiveSpec, StatId, StatLine, StatValue,
 };
 
-use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping};
+use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
 use super::skill::{self, InstanceProblem};
-use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, hit};
+use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, hit};
 use crate::ingest::{Ingest, StatMapping};
-use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveLinks, StatAmount};
-use crate::quantity::{DamageType, Op, Quantity};
+use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveLinks, StatAmount, WeaponBase};
+use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::{IndeterminateReason, UnsupportedReason};
 use crate::store::{Conditions, Effect};
@@ -470,8 +475,10 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                         armour_slot(input, item, armour, slot, ingest);
                         continue;
                     }
-                    // A weapon's base properties (damage, speed, crit;
-                    // dual wielding's block) are P3-10's.
+                    if let (true, Some(item)) = (is_main_hand(slot), build.items.item(id)) {
+                        weapon_slot(input, item, slot, ingest);
+                        continue;
+                    }
                     ingest.reason(unmodelled("base-properties"));
                 }
                 SlotKind::Other => ingest.reason(unmodelled("slot")),
@@ -500,6 +507,162 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
             }),
         }
     }
+}
+
+/// Whether a slot in use is the main hand (`Weapon 1`, or `Weapon 1
+/// Swap` when the second weapon set is in use).
+fn is_main_hand(slot: &str) -> bool {
+    slot.strip_suffix(" Swap").unwrap_or(slot) == "Weapon 1"
+}
+
+/// The hands of the weapon set in use: the main hand's weapon (its item
+/// and base) when its base is a weapon, and whether the off hand holds a
+/// weapon or an item whose base is not known (dual wielding, as far as
+/// the engine can tell). The attack hit reads them
+/// ([`hit::attack_skill`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct Hands {
+    /// The main hand's weapon.
+    pub main: Option<(ItemId, WeaponBase)>,
+    /// The off hand holds a weapon, or an item whose base is not known.
+    pub off_hand_weapon: bool,
+}
+
+/// The weapon set in use's hands ([`Hands`]).
+#[must_use]
+pub fn hands(input: &CalcInput<'_>) -> Hands {
+    let mut hands = Hands::default();
+    let build = input.build;
+    let Some(set) = active_set(build) else {
+        return hands;
+    };
+    let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
+    for entry in set.slots.typed() {
+        let slot = entry.slot.as_str();
+        let Some(id) = entry.item else { continue };
+        if id.0 == 0 || !slot_in_use(slot, second) {
+            continue;
+        }
+        let base = input
+            .options
+            .item_bases
+            .get(&id)
+            .and_then(|name| name.find(input.data));
+        match slot.strip_suffix(" Swap").unwrap_or(slot) {
+            "Weapon 1" => {
+                if let Some(ItemBase::Weapon(w)) = base {
+                    hands.main = Some((id, w));
+                }
+            }
+            "Weapon 2" => {
+                hands.off_hand_weapon =
+                    !matches!(base, Some(ItemBase::Armour(_) | ItemBase::Other));
+            }
+            _ => {}
+        }
+    }
+    hands
+}
+
+/// The item in the main hand: a weapon's base properties and local lines
+/// act on the weapon ([`weapon`]); another item's lines are global, and
+/// its being in the main hand is a reason.
+fn weapon_slot(input: &CalcInput<'_>, item: &Item, slot_name: &str, ingest: &mut Ingest<'_>) {
+    let unmodelled = |what| UnsupportedReason::UnmodelledItem {
+        item: item.id,
+        slot: slot_name.to_owned(),
+        what,
+    };
+    let Some(name) = input.options.item_bases.get(&item.id) else {
+        ingest.reason(unmodelled("no-base-name"));
+        item_lines(item, ingest);
+        return;
+    };
+    match name.find(input.data) {
+        Some(ItemBase::Weapon(base)) => weapon(item, &base, ingest),
+        Some(ItemBase::Armour(_) | ItemBase::Other) => {
+            ingest.reason(unmodelled("not-weapon"));
+            item_lines(item, ingest);
+        }
+        Some(ItemBase::Ambiguous) => {
+            ingest.reason(unmodelled("ambiguous-base"));
+            item_lines(item, ingest);
+        }
+        None => {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "base_items",
+                key: name.name.clone(),
+            });
+            item_lines(item, ingest);
+        }
+    }
+}
+
+/// The weapon in the main hand: its base's physical damage, attack time,
+/// and critical strike chance, its quality from its spec lines (the last
+/// `Quality` line, as PoB's `self.quality`; none: 0), and its local lines,
+/// all on the weapon's own quantities ([`Poe1Quantity::Weapon`]); its
+/// other lines are global. The hit phase computes the weapon's values from
+/// them as PoB does (`hit` module docs).
+fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
+    let value = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
+    let from_base = Source::ItemBase { item: item.id };
+    let effect = |quantity, value: f64, source: &Source| Effect {
+        quantity,
+        op: Op::Base,
+        value,
+        conditions: Conditions::none(),
+        source: source.clone(),
+    };
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "base values are small integers, exact as f64"
+    )]
+    let (min, max, time, crit) = (
+        base.physical.min as f64,
+        base.physical.max as f64,
+        base.attack_time as f64,
+        base.crit_chance as f64,
+    );
+    for (bound, v) in [(Bound::Min, min), (Bound::Max, max)] {
+        if v != 0.0 {
+            ingest.effect(effect(
+                value(WeaponValue::Damage(DamageType::Physical, bound)),
+                v,
+                &from_base,
+            ));
+        }
+    }
+    ingest.effect(effect(value(WeaponValue::AttackTime), time, &from_base));
+    // Hundredths of a percent: one division, the nearest double to the
+    // decimal PoB's exporter writes (`CritChanceBase`).
+    ingest.effect(effect(
+        value(WeaponValue::CritChance),
+        crit / 100.0,
+        &from_base,
+    ));
+    let quality = item
+        .body
+        .lines
+        .iter()
+        .enumerate()
+        .rev()
+        .find_map(|(index, line)| match &line.kind {
+            LineKind::Spec { key, value, .. } if key == "Quality" => Some((index, value)),
+            _ => None,
+        });
+    if let Some((index, text)) = quality {
+        let at = Source::Item {
+            item: item.id,
+            line: index,
+            adapted: None,
+        };
+        match spec_number(text) {
+            Some(n) => ingest.effect(effect(value(WeaponValue::Quality), n, &at)),
+            None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
+        }
+    }
+    item_lines_with(&WeaponMapping, item, ingest);
 }
 
 /// The item in an armour slot (a helmet, gloves, boots, a body armour, or
@@ -543,7 +706,7 @@ fn armour_slot(
             ingest.reason(unmodelled("not-armour"));
             item_lines(item, ingest);
         }
-        Some(ItemBase::Weapon) => {
+        Some(ItemBase::Weapon(_)) => {
             ingest.reason(unmodelled("base-properties"));
             item_lines(item, ingest);
         }
@@ -742,7 +905,8 @@ fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'
 }
 
 /// The gems of the active skill set's enabled groups. When the main skill
-/// is a self-cast spell the engine computes ([`hit::spell_skill`]), its
+/// is a hit the engine computes ([`hit::hit_skill`]: a self-cast spell or
+/// an attack), its
 /// active gem and the supports that apply act through their stats on the
 /// skill alone ([`SkillMapping`]: a stat with any other effect is
 /// unmapped, a reason on every field), and their instance problems are
@@ -764,14 +928,14 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             source: Source::Rule("untyped-skill-group"),
         });
     }
-    let spell = hit::spell_skill(build, input.data);
-    let modelled: Vec<_> = spell.as_ref().map_or_else(Vec::new, |s| {
-        std::iter::once(&s.skill.active_gem)
-            .chain(&s.skill.supports)
+    let hit = hit::hit_skill(input);
+    let modelled: Vec<_> = hit.as_ref().map_or_else(Vec::new, |h| {
+        std::iter::once(&h.skill().active_gem)
+            .chain(&h.skill().supports)
             .copied()
             .collect()
     });
-    let main_group = spell.as_ref().map(|s| s.group);
+    let main_group = hit.as_ref().map(hit::HitSkill::group);
     for (g, group) in set.groups.typed().enumerate() {
         if !group.enabled {
             continue;
@@ -795,10 +959,10 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             });
         }
     }
-    let Some(spell) = spell else { return };
+    let Some(hit) = hit else { return };
     for r in modelled {
         let source = Source::Gem {
-            group: spell.group,
+            group: hit.group(),
             gem: r.gem,
         };
         let instance = skill::instance(r.effect, r.level, r.quality, input.data);

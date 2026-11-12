@@ -54,8 +54,8 @@ pub const PHASES: [Phase; 7] = [
         run: unreserved,
     },
     Phase {
-        name: "spell-hit",
-        run: super::hit::spell_hit,
+        name: "hit",
+        run: super::hit::hit,
     },
 ];
 
@@ -213,7 +213,7 @@ fn at_least(
 /// whole number `n` the product is at least `n / 5` (`n / 10`) and below
 /// the next whole number; the floor equals PoB's `m_floor(n / 5)` and
 /// `m_floor(n / 10)` (a test checks every `n` up to 100,000).
-fn bonus(
+pub(super) fn bonus(
     calc: &mut Calc<'_>,
     attribute: Field,
     factor: f64,

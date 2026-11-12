@@ -154,7 +154,8 @@ impl Document {
                 | NodeKind::Min
                 | NodeKind::Max
                 | NodeKind::Difference
-                | NodeKind::Quotient => (Some(2), !matches!(n.kind, NodeKind::Override)),
+                | NodeKind::Quotient
+                | NodeKind::Power => (Some(2), !matches!(n.kind, NodeKind::Override)),
                 NodeKind::PercentFactor
                 | NodeKind::Floor
                 | NodeKind::RoundHalfUp

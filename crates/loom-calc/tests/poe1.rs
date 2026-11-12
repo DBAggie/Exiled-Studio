@@ -12,7 +12,7 @@ use loom_calc::poe1::Poe1Field;
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
     Field, FieldState, IndeterminateReason, ItemBase, Node, PassiveLinks, Range, Source,
-    StatAmount, StateKind, Term, UnsupportedReason, calculate,
+    StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
 };
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
@@ -127,7 +127,12 @@ impl CalcData for Data {
                 armour: range(10, 10),
                 ..ArmourBase::default()
             })),
-            "Test Sword" => Some(ItemBase::Weapon),
+            "Test Sword" => Some(ItemBase::Weapon(WeaponBase {
+                class: "One Hand Sword".to_owned(),
+                physical: Range { min: 4, max: 9 },
+                attack_time: 645,
+                crit_chance: 500,
+            })),
             "Test Quiver" => Some(ItemBase::Other),
             "Two-Toned Boots" => Some(ItemBase::Ambiguous),
             _ => None,

@@ -54,6 +54,53 @@ pub enum Poe1Quantity {
     BaseDamageMultiplier,
     /// The main skill's cast time, seconds.
     CastTime,
+    /// A value of the weapon in the main hand (its local properties).
+    Weapon(WeaponValue),
+    /// The skill's own conversion of one damage type to another, percent
+    /// (PoB's `Skill<From>DamageConvertTo<To>`, which takes precedence over
+    /// other conversion).
+    SkillConversion(DamageType, DamageType),
+    /// The main skill's attack speed multiplier, percent (its level's: PoB's
+    /// `attackSpeedMultiplier`).
+    AttackSpeedMultiplier,
+    /// The enemy's largest physical damage reduction, percent.
+    MaximumPhysicalDamageReduction,
+}
+
+/// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
+/// branch of `BuildModListForSlotNum`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum WeaponValue {
+    /// Damage of a type: `Base` is the base's (physical) and the local
+    /// flat lines ("Adds # to # Physical Damage"), `Increased` the local
+    /// increases.
+    Damage(DamageType, Bound),
+    /// Attack time, milliseconds (the base's).
+    AttackTime,
+    /// Local attack speed (`Increased`).
+    AttackSpeed,
+    /// Critical strike chance, percent: `Base` is the base's and the local
+    /// flat lines, `Increased` the local increases.
+    CritChance,
+    /// The weapon's quality, percent.
+    Quality,
+    /// The weapon deals no physical damage when not 0 (the game's
+    /// `local_weapon_no_physical_damage`, which the canonical "#% increased
+    /// Physical Damage" line carries as 0).
+    NoPhysicalDamage,
+}
+
+impl core::fmt::Display for WeaponValue {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Damage(t, b) => write!(f, "damage.{}.{}", t.name(), b.name()),
+            Self::AttackTime => f.write_str("attack-time"),
+            Self::AttackSpeed => f.write_str("attack-speed"),
+            Self::CritChance => f.write_str("crit-chance"),
+            Self::Quality => f.write_str("quality"),
+            Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
+        }
+    }
 }
 
 impl core::fmt::Display for Poe1Quantity {
@@ -70,6 +117,14 @@ impl core::fmt::Display for Poe1Quantity {
             Self::DamageEffectiveness => f.write_str("damage-effectiveness"),
             Self::BaseDamageMultiplier => f.write_str("base-damage-multiplier"),
             Self::CastTime => f.write_str("cast-time"),
+            Self::Weapon(value) => write!(f, "weapon.{value}"),
+            Self::SkillConversion(from, to) => {
+                write!(f, "skill-conversion.{}.{}", from.name(), to.name())
+            }
+            Self::AttackSpeedMultiplier => f.write_str("attack-speed-multiplier"),
+            Self::MaximumPhysicalDamageReduction => {
+                f.write_str("maximum-physical-damage-reduction")
+            }
         }
     }
 }
@@ -339,7 +394,7 @@ mod tests {
                 "block",
                 "primary-defences",
                 "unreserved",
-                "spell-hit"
+                "hit"
             ]
         );
         assert_eq!(

@@ -286,6 +286,12 @@ fn every_kind_result() -> CalcResult {
         b: share,
     })
     .unwrap();
+    g.derive(Node::Power {
+        term: Term::Step("evasion-power"),
+        base: sum,
+        exponent: share,
+    })
+    .unwrap();
 
     let reasons = every_reason();
     let mut fields = BTreeMap::new();

@@ -115,12 +115,12 @@ pub struct MonsterDefences {
 }
 
 /// What an item base is, for its properties ([`CalcData::item_base`]).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemBase {
     /// An armour piece (or shield) with its defences.
     Armour(ArmourBase),
-    /// A weapon.
-    Weapon,
+    /// A weapon with its properties.
+    Weapon(WeaponBase),
     /// Another base (jewellery, quivers, jewels, flasks).
     Other,
     /// Bases of this name have different properties (PoE1's Two-Toned
@@ -148,6 +148,20 @@ pub struct ArmourBase {
     pub energy_shield: Range,
     /// A shield's chance to block, percent.
     pub block: Option<i64>,
+}
+
+/// A weapon base's properties (the weapon types table) and its item class.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct WeaponBase {
+    /// The item class, by ID (`One Hand Mace`, ...): which skills can use
+    /// the weapon (an active skill's weapon classes).
+    pub class: String,
+    /// Physical damage.
+    pub physical: Range,
+    /// Attack time, milliseconds.
+    pub attack_time: i64,
+    /// Critical strike chance, hundredths of a percent.
+    pub crit_chance: i64,
 }
 
 /// An item's base name as the import adapter found it (the adapter's
@@ -262,12 +276,7 @@ impl CalcData for Bundle {
     }
 
     fn item_base(&self, name: &str) -> Option<ItemBase> {
-        let rows: Vec<&str> = self
-            .base_items
-            .iter()
-            .filter(|b| b.name == name)
-            .map(|b| b.id.as_str())
-            .collect();
+        let rows: Vec<_> = self.base_items.iter().filter(|b| b.name == name).collect();
         // Without the property tables (format 1) no base's properties are
         // known: `None`, so the calculation reports missing data rather
         // than calling an armour piece something else.
@@ -282,9 +291,12 @@ impl CalcData for Bundle {
         };
         let found: Vec<ItemBase> = rows
             .iter()
-            .map(|id| {
+            .map(|row| {
+                let id = &row.id;
                 let armour =
                     tables.and_then(|t| t.armour_types.iter().find(|a| a.base_item == *id));
+                let weapon =
+                    tables.and_then(|t| t.weapon_types.iter().find(|w| w.base_item == *id));
                 if let Some(a) = armour {
                     let block = tables
                         .and_then(|t| t.shield_types.iter().find(|s| s.base_item == *id))
@@ -295,15 +307,22 @@ impl CalcData for Bundle {
                         energy_shield: range(&a.energy_shield),
                         block,
                     })
-                } else if tables.is_some_and(|t| t.weapon_types.iter().any(|w| w.base_item == *id))
-                {
-                    ItemBase::Weapon
+                } else if let Some(w) = weapon {
+                    ItemBase::Weapon(WeaponBase {
+                        class: row.item_class.clone().unwrap_or_default(),
+                        physical: Range {
+                            min: w.damage_min,
+                            max: w.damage_max,
+                        },
+                        attack_time: w.attack_time,
+                        crit_chance: w.crit_chance,
+                    })
                 } else {
                     ItemBase::Other
                 }
             })
             .collect();
-        let first = found[0];
+        let first = found[0].clone();
         Some(if found.iter().all(|f| *f == first) {
             first
         } else {

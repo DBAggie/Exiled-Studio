@@ -74,7 +74,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
 - [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
 - [x] P3-9b spell hits (PR #77; `docs/phase-3/spell-hits.md`; 11 Ice Nova mechanic fixtures match PoB on every target)
-- [ ] P3-10 attacks
+- [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
 - [ ] P3-12 buffs and config (one or more PRs)
 
 ## P3-14: corpus run and register

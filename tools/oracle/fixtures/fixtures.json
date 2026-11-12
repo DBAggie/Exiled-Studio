@@ -701,6 +701,106 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Ice Nova against an enemy configured with 80% cold resistance (above the default maximum of 75%, which the input raises) and level 70 (P3-9b)."
+    },
+    {
+      "id": "smite-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-templar.xml",
+      "sha256": "f5311a250d6b5fe3473bcfd8c28d38c791bb5e5a5fb3e6696ebae6c4b5891814",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite (level 20, Melee Hit) with a normal Siege Axe: weapon damage, attack rate and crit, accuracy against the default enemy's evasion, 50% conversion to lightning, the aura's added lightning, the enemy's armour (P3-10)."
+    },
+    {
+      "id": "smite-area-hit-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-area-hit-templar.xml",
+      "sha256": "4cd401ce20c879f5333b410f0545aa6e32652ebceae2854f01cfc64d01575386",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite (level 20, 20% quality) Area Hit: the skill's less area damage, its quality, area and not melee (P3-10)."
+    },
+    {
+      "id": "smite-weapon-mods-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-weapon-mods-templar.xml",
+      "sha256": "bf04498831c63d0ccbc5cbebf34d80cc7e3d3c0ff741d941247de803269d07a8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a rare Siege Axe (20% quality): local added physical and lightning damage, increased physical damage, attack speed, crit chance, accuracy (P3-10)."
+    },
+    {
+      "id": "smite-melee-physical-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-melee-physical-templar.xml",
+      "sha256": "5643fcf40cb13d9d0b3310e6c1ec79cef1fcf229709ffedb572b56288af316b2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Melee Physical Damage: more physical melee damage (also on the converted part), less attack speed (P3-10)."
+    },
+    {
+      "id": "smite-melee-physical-area-hit-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-melee-physical-area-hit-templar.xml",
+      "sha256": "29faa9570e353b995a5ec445e203d4a6f03b90a97c003014f99d77bda646d9dd",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite Area Hit with Melee Physical Damage: the more melee damage does not apply to the area hit (P3-10)."
+    },
+    {
+      "id": "smite-elemental-attacks-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-elemental-attacks-templar.xml",
+      "sha256": "58bfcf331ad9af30bb50ee4aaad54d9d1ad7886539f3942b255244c9160c7c1c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Elemental Damage with Attacks and Added Lightning Damage: more elemental attack damage, added lightning times effectiveness (P3-10)."
+    },
+    {
+      "id": "smite-items-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-items-templar.xml",
+      "sha256": "86d9d9f29bcb6dc516c6abc924c4a34899759ab715b75688a5b31e404c42687e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with jewellery (rare, original): added physical damage to attacks, accuracy and increased accuracy, increased physical, melee, attack, lightning damage, attack speed (P3-10)."
+    },
+    {
+      "id": "smite-crit-items-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-crit-items-templar.xml",
+      "sha256": "7e638c9e118b27967dd6f0b2067dbc12b9be37be4f7ffb4d1d12a43e56d48c8e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with an amulet (rare, original): global crit chance and multiplier on an attack (P3-10)."
+    },
+    {
+      "id": "smite-two-hand-level10-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-two-hand-level10-templar.xml",
+      "sha256": "a84f8f8b93e8476e4166bbef9fefbc882cbf53926a0b5412f73fb05eedc76ea6",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 40 Templar, Smite level 10 with a normal Double Axe (10% quality): another level, a two-handed weapon, weapon quality (P3-10)."
+    },
+    {
+      "id": "smite-enemy-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-enemy-templar.xml",
+      "sha256": "63bc88f00ec631f4450738e0029219c125f2cb927e5543a4c0f03aaf02b8e275",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite against a configured enemy: level 70, 20000 armour, 3000 evasion, 40% lightning resistance (P3-10)."
     }
   ]
 }

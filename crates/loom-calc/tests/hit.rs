@@ -613,23 +613,27 @@ fn base_damage_should_be_the_games_resolved_value() {
 }
 
 #[test]
-fn physical_hit_damage_should_be_partial_without_the_enemys_armour() {
+fn physical_hit_damage_should_read_the_enemys_armour() {
     let r = run(&build(vec![group(&["TestPhysicalNova"])]));
-    // The armour reason, and (this data has no monster tables) the enemy's
-    // missing armour rows, which count with physical damage.
+    // The enemy's armour is modelled (P3-10): no armour reason. This data
+    // has no monster tables and no reduction cap, so the enemy's armour
+    // rows and the cap are missing data, which count with physical damage.
     let FieldState::Indeterminate { reasons, partial } = &r.fields[&Field::AverageDamage].state
     else {
         panic!("not indeterminate");
     };
-    assert!(partial.iter().any(|x| matches!(
-        x,
-        UnsupportedReason::UnmodelledSkill {
-            what: "physical-hit-armour",
-            ..
-        }
-    )));
+    assert!(
+        !partial
+            .iter()
+            .any(|x| format!("{x:?}").contains("physical"))
+    );
     assert!(reasons.iter().all(|x| x.name() == "missing-data"));
-    // Not reduced: the hit itself.
+    assert!(
+        reasons
+            .iter()
+            .any(|x| format!("{x:?}").contains("maximum_physical_damage_reduction_%"))
+    );
+    // Without armour rows the enemy's armour is 0: the hit itself.
     assert_eq!(
         value(&r, Field::AverageDamage).to_bits(),
         average(100.0, 200.0, 5.0, 1.5, 0.0).to_bits()

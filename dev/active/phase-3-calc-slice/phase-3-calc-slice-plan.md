@@ -150,6 +150,7 @@ Map every stat that step 3's inventory finds in the in-scope builds' passives, i
 The chosen attack, Smite, has two PoB skill parts (Melee Hit, Area Hit): the harness (P3-5) and this step follow PoB's part selection (`skillPart`, default 1) and say which part each field compares.
 Weapon damage from the base and local mods, attack speed, accuracy and hit chance, attack crit, one-hand, two-hand, and dual-wield rules the chosen attack's builds use (anything else `Partial`), the attack skill's per-level stats and supports, average hit and hit DPS.
 - **Accept:** as step 9b, for the chosen attack.
+- **Done in P3-10** (PR #78; `docs/phase-3/attack-hits.md`; context file, "Decisions in P3-10"): Smite with one weapon in the main hand (one- or two-handed; dual wielding and unarmed not computed), both parts, the weapon's local values, strength's melee physical damage, the skill's conversion, accuracy and hit chance, the enemy's armour; 10 mechanic fixtures match PoB on every target. Q11 (the weapon's attack-rate rounding) follows PoB by default.
 - **Depends on:** 3 (Q2 confirmed), 4, 6, 9a, 11.
 
 ### 11. Enemy model (M)
