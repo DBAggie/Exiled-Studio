@@ -1,4 +1,4 @@
-Last Updated: 2026-11-11 (P3-5: parity harness)
+Last Updated: 2026-11-12 (P3-9b: spell hits)
 
 # Phase 3: calc slice (plan)
 
@@ -144,6 +144,7 @@ Map every stat that step 3's inventory finds in the in-scope builds' passives, i
 - **9b, spell hits (M):** base damage per level, added damage scaled by effectiveness, conversion and gain as the chosen spell needs, increased and more modifiers by damage type and flags, crit chance and multiplier, cast speed, average hit, and hit DPS against the enemy (step 11). Accept: mechanic fixtures (the chosen spell alone; with one support each; with added damage; with crit) match; the chosen spell's in-scope builds match on the hit fields, or each difference is registered or `Partial` with its reason.
 - **Depends on:** 3 (Q2 confirmed), 4, 6, 11; 9b on 9a.
 - **Done in P3-9a** (`docs/phase-3/skill-model.md`; context file, "Decisions in P3-9a"): `loom_calc::poe1::skill`: the main skill (moved from `calc-survey`, which now calls it; survey outputs byte-identical before and after), supports, gem instance stats at level and quality; `CalcData` skill reads; the overlay refuses a skill per skill. Base damage (effectiveness interpolation) is 9b's.
+- **Done in P3-9b** (`docs/phase-3/spell-hits.md`; context file, "Decisions in P3-9b"): `loom_calc::poe1::hit`: a self-cast spell's average damage, cast rate, crit chance and multiplier, hit DPS against the enemy (step 11), with PoB's more rounding; the main spell's gems act through their stats; base damage is the game's resolved value (equal to PoB's formula on every Ice Nova level). Conversion and gain are not modelled (Ice Nova needs none; their stats stay unmapped). 11 Ice Nova mechanic fixtures match PoB on every target.
 
 ### 10. Attacks (L)
 The chosen attack, Smite, has two PoB skill parts (Melee Hit, Area Hit): the harness (P3-5) and this step follow PoB's part selection (`skillPart`, default 1) and say which part each field compares.
