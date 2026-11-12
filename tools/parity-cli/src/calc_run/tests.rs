@@ -75,6 +75,7 @@ fn run_with(
                 },
             )
         }),
+        scope: None,
         anonymous,
         tool: ToolRecord::default(),
     };
@@ -87,12 +88,14 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     let b = &out.report.builds[0];
     assert_eq!(b.id, "synthetic-poe1.xml");
     assert_eq!(b.status, "ok");
-    assert_eq!(b.state.as_deref(), Some("unsupported"));
-    // P3-4: every field is not computed until P3-6.
+    // P3-6 computes the 8 character fields; the synthetic bundle has no
+    // Scion, so they are indeterminate (missing-data); 16 not computed.
+    assert_eq!(b.state.as_deref(), Some("indeterminate"));
     assert_eq!(
         b.fields,
         Some(StateCounts {
-            unsupported: 24,
+            unsupported: 16,
+            indeterminate: 8,
             ..StateCounts::default()
         })
     );
@@ -104,8 +107,9 @@ fn a_poe1_build_should_give_a_document_with_every_slice_field() {
     );
     let doc = calc_dto::from_json(json).unwrap();
     assert_eq!(doc.result.fields.len(), 24);
-    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&24));
-    assert_eq!(out.summary.build_states.get("unsupported"), Some(&1));
+    assert_eq!(out.summary.field_reasons.get("not-computed"), Some(&16));
+    assert_eq!(out.summary.field_reasons.get("missing-data"), Some(&8));
+    assert_eq!(out.summary.build_states.get("indeterminate"), Some(&1));
     assert_eq!(out.summary.timing.builds, 1);
 }
 
@@ -219,12 +223,148 @@ fn an_overlay_should_hold_pobs_values_for_this_bundle_only() {
         }))
         .contains("twice")
     );
-    // A run with the overlay records it and gives the same documents (the
-    // engine reads no table yet).
+    // A run with the overlay records it; rows of tables the engine does
+    // not read change nothing.
     let plain = run_with("poe1", &[input(POE1_BUILD)], false, None).unwrap();
     let with = run_with("poe1", &[input(POE1_BUILD)], false, Some(&overlay(|_| {}))).unwrap();
     assert_eq!(plain.documents, with.documents);
     assert_eq!(with.report.overlay.unwrap().rows.len(), 2);
+}
+
+/// A row for the overlay.
+fn row(table: &str, key: &str, field: &str, pob: Value) -> Value {
+    json!({"table": table, "key": key, "field": field, "pob": pob, "bundle": 0, "category": "patch-delta", "rule": "r"})
+}
+
+#[test]
+fn an_overlay_should_give_pobs_values_to_the_engines_reads() {
+    let dir = repo("crates/loom-data/tests/fixtures/bundle-poe1");
+    let bundle = crate::load_bundle(&dir).unwrap();
+    let sha = sha256_hex(&std::fs::read(dir.join("bundle.json")).unwrap());
+    let with = |rows: Vec<Value>| {
+        overlay(move |v| {
+            for r in rows {
+                v["rows"].as_array_mut().unwrap().push(r);
+            }
+        })
+    };
+    // An overlay row replaces a bundle value; it never adds a row. The
+    // synthetic bundle's character template is not the game's, so its
+    // constants are not read.
+    let o = OverlayData::read(
+        &with(vec![row(
+            "character_constants",
+            "life_per_level",
+            "value",
+            json!(10),
+        )]),
+        &bundle,
+        &sha,
+    )
+    .unwrap();
+    assert_eq!(o.character_constant("life_per_level"), None);
+    // With the game's template, the overlay's value is the one read.
+    let mut bundle = bundle;
+    bundle
+        .passives
+        .as_mut()
+        .unwrap()
+        .object_templates
+        .iter_mut()
+        .find(|t| t.id == "test/chars/character")
+        .unwrap()
+        .id = loom_calc::CHARACTER_TEMPLATE.to_owned();
+    assert_eq!(bundle.character_constant("test_life_per_level"), Some(12));
+    let o = OverlayData::read(
+        &with(vec![
+            row("characters", "Test Sage", "intelligence", json!(40)),
+            row(
+                "character_constants",
+                "test_life_per_level",
+                "value",
+                json!(10),
+            ),
+        ]),
+        &bundle,
+        &sha,
+    )
+    .unwrap();
+    let ours = bundle.character("Test Sage").unwrap();
+    let pob = o.character("Test Sage").unwrap();
+    assert_eq!(pob.intelligence, 40);
+    assert_eq!(
+        (pob.strength, pob.base_life),
+        (ours.strength, ours.base_life)
+    );
+    assert_eq!(o.character_constant("test_life_per_level"), Some(10));
+    assert_eq!(o.character("Nobody"), None);
+    assert_eq!(o.passive_stats(101), bundle.passive_stats(101));
+    assert_eq!(
+        o.mastery_effect_stats(4242),
+        bundle.mastery_effect_stats(4242)
+    );
+    // Rows the engine reads but cannot apply, or not as integers: refused.
+    for (r, message) in [
+        (
+            row("passives", "101", "stats", json!(["+10 to Life"])),
+            "cannot be applied",
+        ),
+        (
+            row("mastery_effects", "4242", "stats", json!([])),
+            "cannot be applied",
+        ),
+        (
+            row("characters", "Test Sage", "strength", json!(1.5)),
+            "not an integer",
+        ),
+    ] {
+        let err = OverlayData::read(&with(vec![r]), &bundle, &sha)
+            .err()
+            .unwrap();
+        assert!(err.contains(message), "{err}");
+    }
+    // A passive row the engine does not read changes nothing.
+    assert!(
+        OverlayData::read(
+            &with(vec![row("passives", "101", "ascendancy", json!("X"))]),
+            &bundle,
+            &sha
+        )
+        .is_ok()
+    );
+}
+
+#[test]
+fn an_overlay_run_should_calculate_with_pobs_values() {
+    // The synthetic build as a Test Sage (the synthetic bundle's class).
+    let mut sage = input(POE1_BUILD);
+    sage.bytes = String::from_utf8(sage.bytes)
+        .unwrap()
+        .replace("className=\"Scion\"", "className=\"Test Sage\"")
+        .into_bytes();
+    let doc = |out: &Outputs| calc_dto::from_json(&out.documents[0].1).unwrap();
+    let int = |out: &Outputs| {
+        let d = doc(out);
+        let f = d
+            .result
+            .fields
+            .iter()
+            .find(|f| f.field == "intelligence")
+            .unwrap();
+        serde_json::to_value(f.value.as_ref().unwrap()).unwrap()
+    };
+    let plain = run_with("poe1", std::slice::from_ref(&sage), false, None).unwrap();
+    let rows = overlay(|v| {
+        v["rows"].as_array_mut().unwrap().push(row(
+            "characters",
+            "Test Sage",
+            "intelligence",
+            json!(40),
+        ));
+    });
+    let with = run_with("poe1", &[sage], false, Some(&rows)).unwrap();
+    assert_eq!(int(&plain), json!(32.0));
+    assert_eq!(int(&with), json!(40.0));
 }
 
 #[test]

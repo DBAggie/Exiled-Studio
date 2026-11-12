@@ -73,6 +73,30 @@ export type IndeterminateReason =
         stat: string
       }
     }
+  | {
+      'missing-data': {
+        /**
+         * The key the build gives.
+         */
+        key: string
+        /**
+         * The table.
+         */
+        table: string
+      }
+    }
+  | {
+      'tree-version': {
+        /**
+         * The build's.
+         */
+        build: string
+        /**
+         * The data's.
+         */
+        data: string
+      }
+    }
 /**
  * An import tolerance a line needed.
  */
@@ -456,6 +480,218 @@ export type UnsupportedReason =
       }
     }
   | 'not-computed'
+  | {
+      'unmodelled-gem': {
+        /**
+         * The gem.
+         */
+        source:
+          | 'character'
+          | {
+              item: {
+                /**
+                 * The import tolerance the line needed, if any.
+                 */
+                adapted?: Adapted | null
+                /**
+                 * The item's ID.
+                 */
+                item: number
+                /**
+                 * The line's index among the item's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              passive: {
+                /**
+                 * The node's ID.
+                 */
+                node: number
+              }
+            }
+          | {
+              gem: {
+                /**
+                 * The gem's index in the group.
+                 */
+                gem: number
+                /**
+                 * The socket group's index.
+                 */
+                group: number
+              }
+            }
+          | {
+              config: {
+                /**
+                 * The input's name.
+                 */
+                input: string
+              }
+            }
+          | 'enemy'
+          | {
+              rule: string
+            }
+      }
+    }
+  | {
+      'unmodelled-config': {
+        /**
+         * The input's name.
+         */
+        input: string
+      }
+    }
+  | {
+      'unmodelled-choice': {
+        /**
+         * Which choice.
+         */
+        choice: string
+        /**
+         * Its value, as the build writes it.
+         */
+        value: string
+      }
+    }
+  | {
+      'unmodelled-item': {
+        /**
+         * The item's ID.
+         */
+        item: number
+        /**
+         * Its slot, as the build names it.
+         */
+        slot: string
+        /**
+         * What is not modelled.
+         */
+        what: string
+      }
+    }
+  | {
+      'unmodelled-passive': {
+        /**
+         * The passive.
+         */
+        source:
+          | 'character'
+          | {
+              item: {
+                /**
+                 * The import tolerance the line needed, if any.
+                 */
+                adapted?: Adapted | null
+                /**
+                 * The item's ID.
+                 */
+                item: number
+                /**
+                 * The line's index among the item's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              passive: {
+                /**
+                 * The node's ID.
+                 */
+                node: number
+              }
+            }
+          | {
+              gem: {
+                /**
+                 * The gem's index in the group.
+                 */
+                gem: number
+                /**
+                 * The socket group's index.
+                 */
+                group: number
+              }
+            }
+          | {
+              config: {
+                /**
+                 * The input's name.
+                 */
+                input: string
+              }
+            }
+          | 'enemy'
+          | {
+              rule: string
+            }
+        /**
+         * What is not modelled.
+         */
+        what: string
+      }
+    }
+  | {
+      'unread-line': {
+        /**
+         * The line.
+         */
+        source:
+          | 'character'
+          | {
+              item: {
+                /**
+                 * The import tolerance the line needed, if any.
+                 */
+                adapted?: Adapted | null
+                /**
+                 * The item's ID.
+                 */
+                item: number
+                /**
+                 * The line's index among the item's lines.
+                 */
+                line: number
+              }
+            }
+          | {
+              passive: {
+                /**
+                 * The node's ID.
+                 */
+                node: number
+              }
+            }
+          | {
+              gem: {
+                /**
+                 * The gem's index in the group.
+                 */
+                gem: number
+                /**
+                 * The socket group's index.
+                 */
+                group: number
+              }
+            }
+          | {
+              config: {
+                /**
+                 * The input's name.
+                 */
+                input: string
+              }
+            }
+          | 'enemy'
+          | {
+              rule: string
+            }
+      }
+    }
+  | 'unchecked-tree-version'
 /**
  * A number: a JSON number when finite, otherwise its bit pattern (JSON
  * has no NaN or infinity). Finite values are written in the shortest

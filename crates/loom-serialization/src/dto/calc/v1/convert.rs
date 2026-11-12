@@ -118,6 +118,35 @@ pub(super) fn unsupported_to(r: &c::UnsupportedReason) -> UnsupportedReason {
             }
         }
         c::UnsupportedReason::NotComputed => UnsupportedReason::NotComputed,
+        c::UnsupportedReason::UnmodelledGem { source } => UnsupportedReason::UnmodelledGem {
+            source: source_to(source),
+        },
+        c::UnsupportedReason::UnmodelledConfig { input } => UnsupportedReason::UnmodelledConfig {
+            input: input.clone(),
+        },
+        c::UnsupportedReason::UnmodelledChoice { choice, value } => {
+            UnsupportedReason::UnmodelledChoice {
+                choice: (*choice).to_owned(),
+                value: value.clone(),
+            }
+        }
+        c::UnsupportedReason::UnmodelledItem { item, slot, what } => {
+            UnsupportedReason::UnmodelledItem {
+                item: item.0,
+                slot: slot.clone(),
+                what: (*what).to_owned(),
+            }
+        }
+        c::UnsupportedReason::UnmodelledPassive { source, what } => {
+            UnsupportedReason::UnmodelledPassive {
+                source: source_to(source),
+                what: (*what).to_owned(),
+            }
+        }
+        c::UnsupportedReason::UnreadLine { source } => UnsupportedReason::UnreadLine {
+            source: source_to(source),
+        },
+        c::UnsupportedReason::UncheckedTreeVersion => UnsupportedReason::UncheckedTreeVersion,
     }
 }
 
@@ -134,6 +163,14 @@ pub(super) fn indeterminate_to(r: &c::IndeterminateReason) -> IndeterminateReaso
                 source: source_to(source),
             }
         }
+        c::IndeterminateReason::MissingData { table, key } => IndeterminateReason::MissingData {
+            table: (*table).to_owned(),
+            key: key.clone(),
+        },
+        c::IndeterminateReason::TreeVersion { build, data } => IndeterminateReason::TreeVersion {
+            build: build.clone(),
+            data: data.clone(),
+        },
     }
 }
 

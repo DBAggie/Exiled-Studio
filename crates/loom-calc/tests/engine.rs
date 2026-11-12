@@ -11,10 +11,10 @@
 use std::cell::Cell;
 
 use loom_calc::{
-    Calc, CalcData, CalcError, CalcInput, CalcOptions, ConditionKey, Conditions, DamageType,
-    Effect, EffectTemplate, Field, FieldState, Flags, Ingest, Op, Phase, Quantity, QueryContext,
-    Ruleset, Source, StatMap, StatMapping, StateKind, Term, UnsupportedReason, calculate,
-    calculate_cancellable, calculate_with,
+    Calc, CalcData, CalcError, CalcInput, CalcOptions, CharacterBase, ConditionKey, Conditions,
+    DamageType, Effect, EffectTemplate, Field, FieldState, Flags, IndeterminateReason, Ingest, Op,
+    Phase, Quantity, QueryContext, Ruleset, Source, StatAmount, StatMap, StatMapping, StateKind,
+    Term, UnsupportedReason, calculate, calculate_cancellable, calculate_with,
 };
 use loom_domain::{Build, DataVersion, Game, NodeId, StatId, StatLine, StatValue};
 
@@ -22,9 +22,22 @@ use loom_domain::{Build, DataVersion, Game, NodeId, StatId, StatLine, StatValue}
 
 struct Data(DataVersion);
 
+/// Data with a version and no table.
 impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
+    }
+    fn character(&self, _: &str) -> Option<CharacterBase> {
+        None
+    }
+    fn character_constant(&self, _: &str) -> Option<i64> {
+        None
+    }
+    fn passive_stats(&self, _: u32) -> Option<&[StatAmount]> {
+        None
+    }
+    fn mastery_effect_stats(&self, _: u32) -> Option<&[StatAmount]> {
+        None
     }
 }
 
@@ -294,7 +307,7 @@ fn a_poe2_build_should_be_unsupported_not_calculated() {
 }
 
 #[test]
-fn a_poe1_build_should_list_every_slice_field_as_not_computed_yet() {
+fn a_poe1_build_without_its_class_in_the_data_should_be_indeterminate() {
     let b = build(Game::Poe1);
     let data = Data(version(Game::Poe1));
     let options = CalcOptions::default();
@@ -306,11 +319,29 @@ fn a_poe1_build_should_list_every_slice_field_as_not_computed_yet() {
     let r = calculate(&input).unwrap();
     assert_eq!(r.fields.len(), loom_calc::poe1::SLICE.len());
     assert_eq!(r.fields.len(), 24, "docs/phase-3/slice-fields.json");
+    let computed: Vec<_> = r
+        .fields
+        .iter()
+        .filter(|(_, f)| f.value.is_some())
+        .map(|(k, f)| (*k, f.state.kind()))
+        .collect();
+    assert_eq!(computed.len(), 8, "{computed:?}");
+    assert!(computed.iter().all(|(_, k)| *k == StateKind::Indeterminate));
     assert!(
-        r.fields.values().all(|f| f.value.is_none()
-            && f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
+        r.reasons
+            .indeterminate
+            .contains(&IndeterminateReason::MissingData {
+                table: "characters",
+                key: String::new()
+            })
     );
-    assert_eq!(r.state, StateKind::Unsupported);
+    let not_computed = r
+        .fields
+        .values()
+        .filter(|f| f.state == FieldState::Unsupported(UnsupportedReason::NotComputed))
+        .count();
+    assert_eq!(not_computed, 16);
+    assert_eq!(r.state, StateKind::Indeterminate);
     assert!(format!("{input:?}").contains("Poe1"));
 }
 

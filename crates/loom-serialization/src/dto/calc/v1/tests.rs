@@ -5,10 +5,11 @@ use std::collections::BTreeMap;
 
 use loom_calc::poe1::Poe1Field;
 use loom_calc::{
-    Calc, CalcData, CalcError, CalcInput, CalcOptions, CalcResult, ConditionKey, Conditions,
-    DamageType, EffectTemplate, Field, FieldResult, FieldState, Graph, IndeterminateReason, Ingest,
-    Node, Op, Phase, Quantity, QueryContext, Reasons, Ruleset, Source, StatMap, StatMapping,
-    StateKind, Term, UnsupportedReason, calculate, calculate_with,
+    Calc, CalcData, CalcError, CalcInput, CalcOptions, CalcResult, CharacterBase, ConditionKey,
+    Conditions, DamageType, EffectTemplate, Field, FieldResult, FieldState, Graph,
+    IndeterminateReason, Ingest, Node, Op, Phase, Quantity, QueryContext, Reasons, Ruleset, Source,
+    StatAmount, StatMap, StatMapping, StateKind, Term, UnsupportedReason, calculate,
+    calculate_with,
 };
 use loom_domain::{Adapted, Build, DataVersion, Game, ItemId, NodeId, StatId, StatLine, StatValue};
 
@@ -77,6 +78,31 @@ fn every_reason() -> Reasons {
             field: Field::Evasion,
         },
         UnsupportedReason::NotComputed,
+        UnsupportedReason::UnmodelledGem {
+            source: Source::Gem { group: 0, gem: 1 },
+        },
+        UnsupportedReason::UnmodelledConfig {
+            input: "made_up_input".to_owned(),
+        },
+        UnsupportedReason::UnmodelledChoice {
+            choice: "made-up-choice",
+            value: "Someone".to_owned(),
+        },
+        UnsupportedReason::UnmodelledItem {
+            item: ItemId(8),
+            slot: "Helmet".to_owned(),
+            what: "base-properties",
+        },
+        UnsupportedReason::UnmodelledPassive {
+            source: Source::Passive {
+                node: NodeId(0x1_0010),
+            },
+            what: "cluster-jewel-node",
+        },
+        UnsupportedReason::UnreadLine {
+            source: item(9, None),
+        },
+        UnsupportedReason::UncheckedTreeVersion,
     ]);
     r.indeterminate.extend([
         IndeterminateReason::ConflictingOverride {
@@ -85,6 +111,14 @@ fn every_reason() -> Reasons {
         IndeterminateReason::UnsettledValue {
             stat: StatId::new("ranged_stat"),
             source: item(6, Some(Adapted::SplitSection)),
+        },
+        IndeterminateReason::MissingData {
+            table: "passives",
+            key: "999".to_owned(),
+        },
+        IndeterminateReason::TreeVersion {
+            build: "3_28".to_owned(),
+            data: "3_29".to_owned(),
         },
     ]);
     r
@@ -267,9 +301,33 @@ fn every_kind_result() -> CalcResult {
 
 struct Data(DataVersion);
 
+/// One class (`Witch`, the game's base values) and the per-level
+/// constants; no passive.
 impl CalcData for Data {
     fn data_version(&self) -> DataVersion {
         self.0.clone()
+    }
+    fn character(&self, class: &str) -> Option<CharacterBase> {
+        (class == "Witch").then_some(CharacterBase {
+            base_life: 38,
+            base_mana: 34,
+            strength: 14,
+            dexterity: 14,
+            intelligence: 32,
+        })
+    }
+    fn character_constant(&self, stat: &str) -> Option<i64> {
+        match stat {
+            "life_per_level" => Some(12),
+            "mana_per_level" => Some(6),
+            _ => None,
+        }
+    }
+    fn passive_stats(&self, _: u32) -> Option<&[StatAmount]> {
+        None
+    }
+    fn mastery_effect_stats(&self, _: u32) -> Option<&[StatAmount]> {
+        None
     }
 }
 
@@ -364,9 +422,10 @@ fn engine_result() -> CalcResult {
     calculate_with(&input, &Rules, &|| false).unwrap()
 }
 
-/// The shipped rules on an empty build (`game` of each).
+/// The shipped rules on an empty level 1 Witch (`game` of each).
 fn shipped_result(game: Game) -> CalcResult {
-    let b = build(game, 1);
+    let mut b = build(game, 1);
+    b.character.class = Some(loom_domain::ClassId::new("Witch"));
     let data = Data(b.data.clone().unwrap());
     let options = CalcOptions::default();
     calculate(&CalcInput {
@@ -557,7 +616,7 @@ fn field_reasons_should_follow_the_state() {
     let life = by("life");
     assert!(life.unsupported.is_empty() && life.indeterminate.is_empty());
     assert!(life.value.is_some() && life.node.is_some());
-    assert_eq!(by("mana").unsupported.len(), 8);
+    assert_eq!(by("mana").unsupported.len(), 15);
     let es = by("energy-shield");
     assert!(es.unsupported.is_empty());
     assert!(matches!(
@@ -567,9 +626,9 @@ fn field_reasons_should_follow_the_state() {
     assert!(es.value.is_none() && es.node.is_none());
     assert!(by("mana").reason.is_none());
     let fire = by("resistance.fire");
-    assert_eq!((fire.unsupported.len(), fire.indeterminate.len()), (1, 2));
-    assert_eq!(doc.result.reasons.unsupported.len(), 8);
-    assert_eq!(doc.result.reasons.indeterminate.len(), 2);
+    assert_eq!((fire.unsupported.len(), fire.indeterminate.len()), (1, 4));
+    assert_eq!(doc.result.reasons.unsupported.len(), 15);
+    assert_eq!(doc.result.reasons.indeterminate.len(), 4);
 }
 
 #[test]

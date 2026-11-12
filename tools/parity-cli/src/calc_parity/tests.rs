@@ -136,6 +136,7 @@ fn write_successor(dir: &Path, overlay: bool, builds: Vec<SuccessorBuild>) {
             sha256: SHA.to_owned(),
             rows: BTreeMap::new(),
         }),
+        scope: None,
         anonymous: false,
         builds: records,
     };

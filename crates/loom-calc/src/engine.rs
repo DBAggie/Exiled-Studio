@@ -91,6 +91,12 @@ impl<'a> Calc<'a> {
         &mut self.graph
     }
 
+    /// The store and the graph together, to query the store into the
+    /// graph.
+    pub const fn parts(&mut self) -> (&ModStore, &mut Graph) {
+        (&self.store, &mut self.graph)
+    }
+
     /// A field written by an earlier phase.
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {

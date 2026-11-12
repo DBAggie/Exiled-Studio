@@ -141,6 +141,12 @@ impl<'m> Ingest<'m> {
         self.reasons.partial.insert(reason);
     }
 
+    /// Records a reason a value cannot be settled; it applies to every
+    /// computed field.
+    pub fn indeterminate(&mut self, reason: IndeterminateReason) {
+        self.reasons.indeterminate.insert(reason);
+    }
+
     /// Adds the effects of stat lines from `source`.
     pub fn stats(&mut self, source: &Source, stats: &[StatLine]) {
         for line in stats {

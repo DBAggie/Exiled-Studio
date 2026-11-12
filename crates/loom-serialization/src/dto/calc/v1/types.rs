@@ -171,6 +171,50 @@ dto! {
         },
         /// The engine does not compute this field yet.
         NotComputed,
+        /// An enabled gem whose effects the engine does not model yet.
+        UnmodelledGem {
+            /// The gem.
+            source: Source,
+        },
+        /// A config input the engine does not model yet.
+        UnmodelledConfig {
+            /// The input's name.
+            input: String,
+        },
+        /// A game-specific build choice the engine does not model.
+        UnmodelledChoice {
+            /// Which choice.
+            choice: String,
+            /// Its value, as the build writes it.
+            value: String,
+        },
+        /// An item in use whose effect goes beyond its lines, not
+        /// modelled yet.
+        UnmodelledItem {
+            /// The item's ID.
+            item: u32,
+            /// Its slot, as the build names it.
+            slot: String,
+            /// What is not modelled.
+            what: String,
+        },
+        /// An allocated passive whose stats the data does not hold, by a
+        /// rule of the game (a node generated from a jewel), not modelled
+        /// yet.
+        UnmodelledPassive {
+            /// The passive.
+            source: Source,
+            /// What is not modelled.
+            what: String,
+        },
+        /// An item line the import did not read.
+        UnreadLine {
+            /// The line.
+            source: Source,
+        },
+        /// Passives are allocated, but the data's tree version was not
+        /// given, so the build's was not checked.
+        UncheckedTreeVersion,
     }
 
     /// Why a value cannot be settled.
@@ -187,6 +231,20 @@ dto! {
             stat: String,
             /// Where it comes from.
             source: Source,
+        },
+        /// The build names something the game data does not have.
+        MissingData {
+            /// The table.
+            table: String,
+            /// The key the build gives.
+            key: String,
+        },
+        /// The build's passive tree is another version than the data's.
+        TreeVersion {
+            /// The build's.
+            build: String,
+            /// The data's.
+            data: String,
         },
     }
 
