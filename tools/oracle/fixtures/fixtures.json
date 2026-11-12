@@ -647,7 +647,7 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/ice-nova-charges-witch.xml",
-      "sha256": "4ae0d1c97f4ec40a7877a1c9e21decbacefbad68edded2fa22094aeff83f177f",
+      "sha256": "0bf85ee63ee9ea695e8bdedc1500ad5b03694f4fb7b3ce4dab7e8c9d6875daee",
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml using power, frenzy, and endurance charges at their maximum (3 each): increased critical strike chance per power charge, increased cast speed and more damage per frenzy charge; endurance charges reach no slice field (P3-12e)."
@@ -657,7 +657,7 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/smite-charges-templar.xml",
-      "sha256": "e7136676a676281e80c746d5542a8e50ec9585238b7dceabf9425b367a0149db",
+      "sha256": "b8495b585b972a49d50d1803be2d37ffbc8d56454ee4e60f0ccd17cd1646a0ae",
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "smite-templar.xml using charges with counts set: one power charge (the override's placeholder), two frenzy charges (increased attack speed, more damage), one endurance charge; fortified with 10 stacks, which reach no slice field (P3-12e)."
