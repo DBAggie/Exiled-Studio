@@ -22,14 +22,20 @@ fn files(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 /// The synthetic PoE1 bundle.
+pub fn bundle() -> Bundle {
+    bundle_at(
+        &Path::new(env!("CARGO_MANIFEST_DIR")).join("../loom-data/tests/fixtures/bundle-poe1"),
+    )
+}
+
+/// The bundle in the folder `root`.
 #[expect(
     clippy::disallowed_methods,
     clippy::unwrap_used,
-    reason = "a test helper reads the fixture bundle (the crate itself does no I/O); a failure fails the test"
+    reason = "a test helper reads a bundle (the crate itself does no I/O); a failure fails the test"
 )]
-pub fn bundle() -> Bundle {
-    let root =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../loom-data/tests/fixtures/bundle-poe1");
+pub fn bundle_at(root: &Path) -> Bundle {
+    let root = root.to_path_buf();
     let mut paths = Vec::new();
     files(&root, &mut paths);
     let mut src = MemorySource::new();

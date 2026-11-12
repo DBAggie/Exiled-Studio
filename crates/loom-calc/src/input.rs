@@ -58,37 +58,22 @@ pub trait CalcData {
     /// base has the name.
     fn item_base(&self, name: &str) -> Option<ItemBase>;
 
-    /// A skill gem by its base item ID. The skill reads default to `None`
-    /// (data without skill tables): a calculation then reports the gem as
-    /// missing data, never a silent value.
-    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
-        let _ = base_item;
-        None
-    }
+    /// A skill gem by its base item ID. Data without skill tables gives
+    /// `None` for every skill read: a calculation then reports the gem as
+    /// unknown, never a value.
+    fn skill_gem(&self, base_item: &str) -> Option<&SkillGem>;
 
     /// A gem effect by ID.
-    fn gem_effect(&self, id: &str) -> Option<&GemEffect> {
-        let _ = id;
-        None
-    }
+    fn gem_effect(&self, id: &str) -> Option<&GemEffect>;
 
     /// A granted effect by ID.
-    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect> {
-        let _ = id;
-        None
-    }
+    fn granted_effect(&self, id: &str) -> Option<&GrantedEffect>;
 
     /// An active skill by ID.
-    fn active_skill(&self, id: &str) -> Option<&ActiveSkill> {
-        let _ = id;
-        None
-    }
+    fn active_skill(&self, id: &str) -> Option<&ActiveSkill>;
 
     /// A stat set by ID.
-    fn stat_set(&self, id: &str) -> Option<&StatSet> {
-        let _ = id;
-        None
-    }
+    fn stat_set(&self, id: &str) -> Option<&StatSet>;
 }
 
 /// What an item base is, for its properties ([`CalcData::item_base`]).

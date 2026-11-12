@@ -155,6 +155,21 @@ impl CalcData for Data {
             links,
         })
     }
+    fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
+        None
+    }
+    fn gem_effect(&self, _: &str) -> Option<&loom_calc::GemEffect> {
+        None
+    }
+    fn granted_effect(&self, _: &str) -> Option<&loom_calc::GrantedEffect> {
+        None
+    }
+    fn active_skill(&self, _: &str) -> Option<&loom_calc::ActiveSkill> {
+        None
+    }
+    fn stat_set(&self, _: &str) -> Option<&loom_calc::StatSet> {
+        None
+    }
 }
 
 fn witch(level: u32) -> Build {

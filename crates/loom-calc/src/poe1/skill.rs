@@ -45,7 +45,9 @@
 //! level is the gem's, kept when the effect has that level, else clamped
 //! to `1..=#levels`; the stats are the quality stats (`modf(per 1% x
 //! quality)`), the level's integer stats, and the stat set's constant
-//! stats, summed per stat. Effectiveness-scaled float stats (base damage,
+//! stats, summed per stat, with the stat set's implicit stats as 1 each
+//! (PoB's `level[index] or 1`); only the first stat set counts, as PoB's
+//! exporter writes only it. Effectiveness-scaled float stats (base damage,
 //! `statInterpolation` 3) are the spell and attack hits' (P3-9b, P3-10);
 //! linear interpolation (code 2) is not modelled and is a reason.
 
@@ -90,13 +92,18 @@ impl SkillProblem {
     }
 }
 
-/// One granted effect of a gem in the main group.
+/// One granted effect of a gem in the main group, with the gem's level
+/// and quality as the build writes them.
 #[derive(Debug, Clone, Copy)]
 pub struct GemEffectRef<'d> {
     /// The gem's position among the group's typed gems (0-based).
     pub gem: usize,
     /// The granted effect.
     pub effect: &'d GrantedEffect,
+    /// The gem's level.
+    pub level: i64,
+    /// The gem's quality.
+    pub quality: i64,
 }
 
 /// The main skill.
@@ -194,7 +201,8 @@ fn global_enabled(gem: &Gem, n: usize) -> bool {
 
 /// `calcLib.doesTypeExpressionMatch`: a postfix expression over the
 /// skill's types; true when any value left on the stack is true. An empty
-/// expression is false.
+/// expression is false; an operator without operands leaves the stack as
+/// PoB's `nil` does (a malformed expression is false, as in PoB).
 #[must_use]
 pub fn type_expression(expr: &[String], types: &BTreeSet<String>, minion: &[String]) -> bool {
     let mut stack: Vec<bool> = Vec::new();
@@ -314,7 +322,12 @@ pub fn main_skill<'d>(
                 .unwrap_or_default(),
         })?;
         for (n, effect) in effects.into_iter().enumerate() {
-            let r = GemEffectRef { gem: g, effect };
+            let r = GemEffectRef {
+                gem: g,
+                effect,
+                level: i64::from(*gem.level.value()),
+                quality: i64::from(*gem.quality.value()),
+            };
             if effect.support {
                 group_supports.push(r);
             } else {
@@ -387,14 +400,15 @@ pub enum InstanceProblem {
 pub struct Instance<'d> {
     /// The granted effect.
     pub effect: &'d GrantedEffect,
-    /// The level used: the gem's, or PoB's fallback.
-    pub level: i64,
+    /// The level used: the gem's, or PoB's fallback; `None` with
+    /// [`InstanceProblem::NoLevel`].
+    pub level: Option<i64>,
     /// The quality used.
     pub quality: i64,
-    /// The integer stats, summed per stat, sorted by stat ID.
+    /// The integer stats, summed per stat, sorted by stat ID; the stat
+    /// set's implicit stats (flags such as `is_area_damage`) count 1 each,
+    /// as PoB's `level[index] or 1` gives a stat without a level value.
     pub stats: Vec<(String, i64)>,
-    /// The stat set's implicit stats (flags such as `is_area_damage`).
-    pub implicit: Vec<String>,
     /// What is not known.
     pub problems: Vec<InstanceProblem>,
 }
@@ -430,7 +444,6 @@ pub fn instance<'d>(
 ) -> Instance<'d> {
     let mut stats: BTreeMap<String, i64> = BTreeMap::new();
     let mut problems = Vec::new();
-    let mut implicit = Vec::new();
     if quality > 0 {
         for q in &effect.quality {
             // PoB's `math.modf(stat[2] * quality)` with `stat[2]` the
@@ -453,71 +466,63 @@ pub fn instance<'d>(
     if level.is_none() {
         problems.push(InstanceProblem::NoLevel);
     }
-    let sets: Vec<Option<&StatSet>> = effect
-        .stat_sets
-        .iter()
-        .map(|id| data.stat_set(id))
-        .collect();
-    if sets.len() > 1 {
+    // PoB's exporter writes the first (main) stat set only; a later one
+    // (skill parts, stages) is flagged and not counted.
+    if effect.stat_sets.len() > 1 {
         problems.push(InstanceProblem::SeveralStatSets);
     }
-    for (id, set) in effect.stat_sets.iter().zip(&sets) {
-        let Some(set) = set else {
-            problems.push(InstanceProblem::MissingStatSet { id: id.clone() });
-            continue;
-        };
-        implicit.extend(set.implicit_stats.iter().cloned());
-        if let Some(row) = level.and_then(|l| set.levels.iter().find(|r| r.level == l)) {
-            for s in &row.stats {
-                match s.interpolation {
-                    None | Some(1) => *stats.entry(s.stat.clone()).or_default() += s.value,
-                    Some(_) => problems.push(InstanceProblem::Interpolated {
-                        stat: s.stat.clone(),
-                    }),
-                }
-            }
-        }
-        for c in &set.constant_stats {
-            *stats.entry(c.stat.clone()).or_default() += c.value;
+    if let Some(id) = effect.stat_sets.first() {
+        match data.stat_set(id) {
+            None => problems.push(InstanceProblem::MissingStatSet { id: id.clone() }),
+            Some(set) => set_stats(set, level, &mut stats, &mut problems),
         }
     }
     problems.sort();
     problems.dedup();
-    implicit.sort();
-    implicit.dedup();
     Instance {
         effect,
-        // 0 only with `NoLevel` among the problems.
-        level: level.unwrap_or(0),
+        level,
         quality,
         stats: stats.into_iter().collect(),
-        implicit,
         problems,
     }
 }
 
+/// A stat set's implicit, level, and constant stats into `stats`.
+fn set_stats(
+    set: &StatSet,
+    level: Option<i64>,
+    stats: &mut BTreeMap<String, i64>,
+    problems: &mut Vec<InstanceProblem>,
+) {
+    for s in &set.implicit_stats {
+        *stats.entry(s.clone()).or_default() += 1;
+    }
+    if let Some(row) = level.and_then(|l| set.levels.iter().find(|r| r.level == l)) {
+        for s in &row.stats {
+            match s.interpolation {
+                None | Some(1) => *stats.entry(s.stat.clone()).or_default() += s.value,
+                Some(_) => problems.push(InstanceProblem::Interpolated {
+                    stat: s.stat.clone(),
+                }),
+            }
+        }
+    }
+    for c in &set.constant_stats {
+        *stats.entry(c.stat.clone()).or_default() += c.value;
+    }
+}
+
 /// The main skill's gem instances: the active effect's, then each applied
-/// support's, at its gem's level and quality.
+/// support's, at its gem's level and quality as the build writes them.
+/// Not modelled yet: modifiers that raise gem levels or quality ("+1 to
+/// Level of all Cold Skill Gems", PoB's `GemLevel`/`GemSupportLevel`
+/// mods); their stats are unmapped, so the fields that read the skill are
+/// `Partial` while they are in the build.
 #[must_use]
-pub fn instances<'d>(
-    build: &Build,
-    skill: &MainSkill<'d>,
-    data: &'d dyn CalcData,
-) -> Vec<Instance<'d>> {
-    let Ok(groups) = active_groups(build) else {
-        return Vec::new();
-    };
-    let Some(group) = groups.get(skill.group - 1) else {
-        return Vec::new();
-    };
-    let gems: Vec<&Gem> = group.gems.typed().collect();
+pub fn instances<'d>(skill: &MainSkill<'d>, data: &'d dyn CalcData) -> Vec<Instance<'d>> {
     std::iter::once(&skill.active_gem)
         .chain(&skill.supports)
-        .map(|r| {
-            let (level, quality) = gems.get(r.gem).map_or((1, 0), |g| {
-                (i64::from(*g.level.value()), i64::from(*g.quality.value()))
-            });
-            instance(r.effect, level, quality, data)
-        })
+        .map(|r| instance(r.effect, r.level, r.quality, data))
         .collect()
 }

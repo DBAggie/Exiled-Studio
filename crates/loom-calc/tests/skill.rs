@@ -130,34 +130,42 @@ fn a_gem_instance_should_have_its_quality_level_and_constant_stats() {
     let effect = data.granted_effect("TestBolt").unwrap();
     // Level 2, quality 20: quality 0.5 x 20 = 10; level stat 2 and the
     // constant 5 on the same stat: 7.
+    // The implicit stat counts 1 (PoB's `level[index] or 1`).
     let i = instance(effect, 2, 20, &data);
-    assert_eq!(i.level, 2);
+    assert_eq!(i.level, Some(2));
     assert_eq!(
         i.stats,
         [
             ("test_damage_per_level".to_owned(), 7),
-            ("test_quality_cast_speed".to_owned(), 10)
+            ("test_quality_cast_speed".to_owned(), 10),
+            ("test_spell_flag".to_owned(), 1)
         ]
     );
-    assert_eq!(i.implicit, ["test_spell_flag"]);
     assert!(i.problems.is_empty());
     // No quality: no quality stat.
     let i = instance(effect, 1, 0, &data);
-    assert_eq!(i.stats, [("test_damage_per_level".to_owned(), 6)]);
+    assert_eq!(
+        i.stats,
+        [
+            ("test_damage_per_level".to_owned(), 6),
+            ("test_spell_flag".to_owned(), 1)
+        ]
+    );
 }
 
 #[test]
 fn a_gem_level_outside_the_effect_should_be_clamped_as_pob_does() {
     let data = bundle();
     let effect = data.granted_effect("TestBolt").unwrap();
-    assert_eq!(instance(effect, 21, 0, &data).level, 2);
-    assert_eq!(instance(effect, 0, 0, &data).level, 1);
+    assert_eq!(instance(effect, 21, 0, &data).level, Some(2));
+    assert_eq!(instance(effect, 0, 0, &data).level, Some(1));
     // An effect without levels: no level PoB could use.
     let strike = data.granted_effect("TestStrike").unwrap();
     let mut empty = strike.clone();
     empty.levels.clear();
     let i = instance(&empty, 1, 0, &data);
     assert!(i.problems.contains(&InstanceProblem::NoLevel));
+    assert_eq!(i.level, None);
 }
 
 #[test]
@@ -198,13 +206,26 @@ fn interpolated_level_stats_and_missing_stat_sets_should_be_problems() {
             stat: "linear".to_owned()
         }]
     );
-    let mut missing = effect.clone();
-    missing.stat_sets = vec!["Nowhere".to_owned(), "TestBolt".to_owned()];
-    let i = instance(&missing, 1, 0, &data);
+    // Only the first stat set counts (PoB exports only it); a later one
+    // is flagged.
+    let mut several = effect.clone();
+    several.stat_sets = vec!["TestBolt".to_owned(), "SupportTestDamage".to_owned()];
+    let i = instance(&several, 1, 0, &data);
     assert!(i.problems.contains(&InstanceProblem::SeveralStatSets));
-    assert!(i.problems.contains(&InstanceProblem::MissingStatSet {
-        id: "Nowhere".to_owned()
-    }));
+    assert_eq!(
+        i.stats,
+        instance(&effect, 1, 0, &data).stats,
+        "the second set adds nothing"
+    );
+    let mut missing = effect.clone();
+    missing.stat_sets = vec!["Nowhere".to_owned()];
+    let i = instance(&missing, 1, 0, &data);
+    assert_eq!(
+        i.problems,
+        [InstanceProblem::MissingStatSet {
+            id: "Nowhere".to_owned()
+        }]
+    );
 }
 
 #[test]
@@ -212,11 +233,12 @@ fn the_main_skills_instances_should_use_each_gems_level_and_quality() {
     let data = bundle();
     let b = build(vec![group(vec![bolt(2, 20), support()])], 1);
     let m = main_skill(&b, &data).unwrap();
-    let is = instances(&b, &m, &data);
+    assert_eq!((m.active_gem.level, m.active_gem.quality), (2, 20));
+    let is = instances(&m, &data);
     assert_eq!(is.len(), 2);
     assert_eq!(
         (is[0].effect.id.as_str(), is[0].level, is[0].quality),
-        ("TestBolt", 2, 20)
+        ("TestBolt", Some(2), 20)
     );
     assert_eq!(is[1].effect.id.as_str(), "SupportTestDamage");
 }
@@ -230,4 +252,66 @@ fn type_expressions_should_be_postfix() {
     assert!(type_expression(&e(&["B", "A", "OR"]), &types, &[]));
     assert!(!type_expression(&e(&["B", "A", "AND"]), &types, &[]));
     assert!(!type_expression(&[], &types, &[]));
+}
+
+/// The real PoE1 bundle's Ice Nova and Smite at level 20 and quality 20,
+/// against PoB v2.67.2's own skill data (`Data/Skills/act_int.lua`
+/// `IceNova`, `act_str.lua` `Smite`: `qualityStats`, `constantStats`,
+/// the level-20 row, and `stats` with PoB's `level[index] or 1`).
+/// Maintainer-run: `LOOM_BUNDLE_DIR=<bundle> cargo test -p loom-calc
+/// --test skill -- --ignored`.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_gems_should_have_pobs_stats() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let stats = |id: &str| {
+        let effect = data.granted_effect(id).unwrap();
+        let i = instance(effect, 20, 20, &data);
+        assert!(i.problems.is_empty(), "{id}: {:?}", i.problems);
+        i.stats
+    };
+    let s = |v: &[(&str, i64)]| {
+        v.iter()
+            .map(|(k, n)| ((*k).to_owned(), *n))
+            .collect::<Vec<_>>()
+    };
+    // Ice Nova: radius 0.15 x 20 = 3, level 4, constant 26; freeze 25;
+    // `is_area_damage` 1.
+    assert_eq!(
+        stats("IceNova"),
+        s(&[
+            ("active_skill_base_area_of_effect_radius", 33),
+            ("base_chance_to_freeze_%", 25),
+            ("is_area_damage", 1),
+        ])
+    );
+    // Smite: area damage 0.5 x 20 = 10 and the level's -20; the quality
+    // display stat 1 x 20; shock 19; radii 6 + 15 and 6 + 36; the
+    // constants; three implicit flags.
+    assert_eq!(
+        stats("Smite"),
+        s(&[
+            ("active_skill_area_damage_+%_final", -10),
+            ("active_skill_base_area_of_effect_radius", 21),
+            ("active_skill_base_secondary_area_of_effect_radius", 42),
+            ("active_skill_secondary_area_of_effect_description_mode", 4),
+            ("base_chance_to_shock_%_from_skill", 19),
+            ("base_skill_effect_duration", 4000),
+            ("base_smite_number_of_targets", 1),
+            ("console_skill_dont_chase", 1),
+            ("quality_display_active_skill_area_damage_is_gem", 1),
+            (
+                "quality_display_active_skill_area_damage_quality_negated_from_gem",
+                20
+            ),
+            ("skill_physical_damage_%_to_convert_to_lightning", 50),
+            ("smite_lightning_target_range", 50),
+            ("visual_hit_effect_elemental_is_holy", 1),
+        ])
+    );
 }
