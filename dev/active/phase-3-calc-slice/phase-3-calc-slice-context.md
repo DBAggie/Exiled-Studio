@@ -304,6 +304,24 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
+## P3-12i in progress: socket colour quality (research notes, 2026-11-13; branch `feat/p3-12i-socket-colour` from `dev` at `0814131`, no code yet)
+**Game (maintainer, 2026-11-13):** since 3.29 any gem fits any socket; a gem in a socket of its own colour gains quality; a white socket gives none.
+
+**PoB v2.67.2, read so far:**
+- `Data.lua` 297: `MatchingSocketQualityBonus = 10`.
+- `Classes/SkillsTab.lua` 1210 to 1245 (`UpdateSocketGroups`): for every socket group in list order, enabled or not, with a slot, each gem with a granted effect gets `matchesSocket`. The gem's colour is `grantedEffect.color` (1 R, 2 G, 3 B; PoB's exporter writes `GrantedEffects.Attribute`, `Export/Scripts/skills.lua` 157). Its socket index is `gemOffset + i`, where `gemOffset` counts every gem (disabled ones too) of the earlier groups in the same slot (`slotSocketedCounts`). It matches when the slot's item has sockets and either `item.sockets.colourAlwaysMatches`, or the socket at that index has the gem's colour.
+- `Classes/Item.lua` 658 to 666: the `Sockets:` spec line, one socket per letter in `RGBWA`, a space starts a new link group. 2595 to 2634: the socket count can be forced, and abyssal sockets rebuilt. 2636: `colourAlwaysMatches` comes from the local flag `SocketAlwaysMatches`, set by the mod line "Gems Socketed always have the quality bonus from socket colour" (`ModParser.lua` 3086).
+- `Modules/CalcSetup.lua` 1578 (supports) and 1654 (actives): `actualQuality = gemInstance.quality + (matchesSocket and 10 or 0)`. Supports get the bonus too. `CalcActiveSkill.lua` 545 to 547 adds `GemSocketQuality` BASE 10, read only for the displayed `GemQuality` (`CalcPerform.lua` 3895), not a slice field.
+
+**Plan:**
+1. Bundle: add the granted effect's `Attribute` as an optional `GrantedEffect.attribute` field (additive). This touches the extractor, the converter, the validator, and the synthetic rows.
+2. PoB export: add each skill's `color`. Add a `data-parity` comparison of `color` against `attribute`.
+3. Items: read the `Sockets` spec line, including its link groups.
+4. `skill::main_skill` and `skill::group_skills`: give each gem +10 quality when it matches, using the same offset rule as PoB (all groups of the slot, every gem, in list order). An item with the "always" line (the stat behind it, to find in the bundle) matches every gem. A forced socket count or abyssal sockets should stay a reason.
+5. Remove the `socket-colour-quality` reason.
+6. Mechanic fixtures: a gem in a matching socket, a non-matching socket, and a white socket, on the main skill and on an aura. Expect the in-scope builds whose groups have slots to change (Ice Nova mapping, Smite act5 and act10).
+7. A new real bundle is needed, so re-extract (as P3-12g's `evidence.sh` did: extract twice, bundle twice, `bundle-check`).
+
 ## Plan for P3-12h (other gems, first PR: inert gems, reservation, auras and buffs)
 The largest reason left in all 7 in-scope builds is `unmodelled-gem`: every enabled gem but the main skill's. PoB v2.67.2 lets another skill reach the character only through (checked: every loop over `env.player.activeSkillList` in `Modules/Calc*.lua`):
 1. **reservation** (`CalcPerform.lua` 1928 to 2040): a skill with `HasReservation` and not `ReservationBecomesCost` reserves its level's flat and percent mana or life, times `floor(SupportManaMultiplier, 4)` (each applied support's `manaMultiplier`, the game's `cost_multiplier - 100`, as MORE), `round(.., 0)` flat and `round(.., 2)` percent, scaled by `Reserved` INC and MORE and `ReservationEfficiency`; `doActorLifeManaReservation` (526 to 560): `reserved = flat + ceil(max x percent / 100)`, `Unreserved = max - reserved`;
