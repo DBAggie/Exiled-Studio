@@ -21,14 +21,14 @@
 //! Differences on purpose: PoB also sets `Using<flag>` from the off hand's
 //! weapon type (`CalcPerform.lua` 187 to 190), but a staff cannot be held
 //! in the off hand. A shield is an armour base with a chance to block
-//! (only shields have one). The hands are looked up for every query
-//! context (`collect::hands`); caching them per calculation is a
-//! follow-up (the public run took about three times as long).
+//! (only shields have one). The conditions are settled once per
+//! calculation (`Ruleset::states`, P3-8g); every query context comes from
+//! `Calc::context`.
 
 use std::collections::BTreeMap;
 
 use super::collect::{self, Held};
-use crate::condition::{ConditionKey, Flags, QueryContext};
+use crate::condition::ConditionKey;
 use crate::input::CalcInput;
 
 /// The main hand holds a staff or a warstaff (PoB's `UsingStaff`).
@@ -61,13 +61,4 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         }
     }
     out
-}
-
-/// A query context with `flags` and the build's settled conditions.
-#[must_use]
-pub fn context(input: &CalcInput<'_>, flags: Flags) -> QueryContext {
-    QueryContext {
-        flags,
-        states: states(input),
-    }
 }

@@ -191,7 +191,7 @@ Eight stats of the in-scope builds (and many public builds) apply "while wieldin
 
 ### The engine
 
-- **`loom_calc::poe1::states`** settles `UsingStaff` and `UsingShield` from the hands of the weapon set in use (`collect::hands`, which gains `main_hand` and `off_hand`: empty, a weapon of a class, a shield, another base, or unknown). A hand whose base is not known leaves its condition unsettled: an effect that needs it is `unmodelled-condition`. Every PoE1 query context (`hit.rs`, `phases.rs`) now comes from `states::context`. The core's named conditions (`Conditions::with_state`) existed since P3-4; no effect used one before, so no earlier value can change.
+- **`loom_calc::poe1::states`** settles `UsingStaff` and `UsingShield` from the hands of the weapon set in use (`collect::hands`, which gains `main_hand` and `off_hand`: empty, a weapon of a class, a shield, another base, or unknown). A hand whose base is not known leaves its condition unsettled: an effect that needs it is `unmodelled-condition`. Every PoE1 query context (`hit.rs`, `phases.rs`) holds them (since P3-8g through `Ruleset::states` and `Calc::context`). The core's named conditions (`Conditions::with_state`) existed since P3-4; no effect used one before, so no earlier value can change.
 - **`mapping::STATE_ROWS`**, each as PoB reads its text:
 
   | Stat | Effect |
@@ -218,7 +218,7 @@ Both matched PoB on every target with no reason left (the first draft used Drift
 
 ### Review
 
-`code-architecture-reviewer`: no code blockers. It confirmed the conditions' sources (the set in use, Warstaff as Staff, Aegis needing a shield, an empty hand settled false), that no earlier value can change, and that the block, spell block, and defence phases read the conditional effects. Applied: the engine-level tests above, an assertion for every row, and module docs on what is not settled. Not changed: `Hands::off_hand_weapon` beside `off_hand` (derivable; left to avoid touching the attack path after the run). Follow-up: the hands are looked up for every query context, so the public run's calculation time rose from about 74 ms to 229 ms (113 builds); caching them per calculation needs the core's `Calc` to hold game state, a design step.
+`code-architecture-reviewer`: no code blockers. It confirmed the conditions' sources (the set in use, Warstaff as Staff, Aegis needing a shield, an empty hand settled false), that no earlier value can change, and that the block, spell block, and defence phases read the conditional effects. Applied: the engine-level tests above, an assertion for every row, and module docs on what is not settled. Not changed: `Hands::off_hand_weapon` beside `off_hand` (derivable; left to avoid touching the attack path after the run). Follow-up: the hands are looked up for every query context, so the public run's calculation time rose from about 74 ms to 229 ms (113 builds); done in P3-8g (below).
 
 ### Evidence
 
@@ -234,3 +234,19 @@ Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p
 **Against P3-8e.** No field state changes. 32 values in 14 public builds change, every one closer to PoB's or equal (1 equal): block and spell block in most of them; the Ice Nova mapping build's armour, evasion, energy shield, block, spell block, crit chance and multiplier, average damage, and DPS; the Ice Nova campaign build's damage and spell block. 124 reasons gone in 15 public builds, none added. Corpus: 6 values in 6 builds closer to PoB's or equal (spell block), 11 reasons gone, none added.
 
 Tests: 1212 workspace tests, clippy, fmt, wasm32.
+
+## P3-8g: the settled conditions once per calculation
+
+P3-8f settled `UsingStaff` and `UsingShield` in every query context, looking the hands up each time; the public run's calculation time rose about threefold. The core now asks the game's rules once per calculation: `Ruleset::states` (default: none) gives the named conditions the build settles, `Calc` keeps them, and `Calc::context(flags)` builds every query context with them. PoE1's rules return `poe1::states::states`. The core stays game-neutral: it holds condition names and values, never PoE1's. A condition that could differ per query (a skill's own hand) would need a per-query rule; none does yet (both conditions are the character's).
+
+### Evidence
+
+Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree, `local/p3/p3-8g/evidence.sh` at tool commit `4cfece7`. No fixture changes: P3-8f's oracle run is the oracle side.
+
+| Run | Result |
+|---|---|
+| `calc-run`, public, twice | Byte-identical twice, and **byte-identical to P3-8f's** (113 documents). Calculation time 78 ms (P3-8f: 229 ms) |
+| `calc-parity`, public, with P3-8f's oracle run | The same counts as P3-8f: 33 registered differences, 0 unexpected, 1579 fields match |
+| `calc-run`, corpus (21, `--anonymous`) | Byte-identical to P3-8f's. Calculation time 39 ms (P3-8f: 139 ms) |
+
+Tests: 1213 workspace tests (the engine tests' synthetic ruleset now settles its conditions through `Ruleset::states` and queries through `Calc::context`; a direct test of `Calc::context` and of the default), clippy, fmt, wasm32. Review: `code-architecture-reviewer`, no blockers; doc fixes and the direct tests applied.
