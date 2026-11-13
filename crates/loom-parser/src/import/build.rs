@@ -227,7 +227,8 @@ impl<'d, 'b> Resolver<'d, 'b> {
     /// in the default scope, with the case-folding tolerance item lines
     /// have. A ranged value stays a range. With no item base, the item
     /// filter cannot settle an ambiguous line; the reading is kept when it
-    /// is the only one a mod row of an item domain backs
+    /// is the only global one (no stat local to an item) a mod row of an
+    /// item domain backs
     /// ([`BundleData::item_domains`], P3-12j: "Onslaught" renders both
     /// the character's stat and a flask's display stat, which no mod row
     /// carries), else the line stays ambiguous.
