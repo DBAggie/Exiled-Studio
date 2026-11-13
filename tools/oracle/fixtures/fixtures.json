@@ -1101,6 +1101,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml with custom lines: 20% increased area damage, +30% critical strike multiplier for spell damage, and four stats that reach no slice field (area of effect, spell and aura area of effect, light radius) (P3-8e)."
+    },
+    {
+      "id": "ice-nova-staff-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-staff-conditions-witch.xml",
+      "sha256": "1a96652fb48f4a0a59ac1b9642edc74ae0fa918ee0f19b6147f490c1538cc312",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Gnarled Branch (a staff) and custom lines while wielding a staff: spell damage, crit chance and multiplier, spell block, defences (P3-8f)."
+    },
+    {
+      "id": "ice-nova-shield-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-shield-conditions-witch.xml",
+      "sha256": "4095b4e051a9b69608ead51807a5fc14969fe7376d6d541f5566faf2837dfa42",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Carved Wand and a Twig Spirit Shield and custom lines: spell damage and spell block while holding a shield; staff lines without a staff (P3-8f)."
     }
   ]
 }
