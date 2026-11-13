@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8h): Smite (level 20, Melee Hit, a lightning skill) with a normal Siege Axe and custom lines that name a skill keyword: crit chance and multiplier with lightning and cold skills, cast speed with lightning skills, physical, lightning, and fire damage with attack skills, lightning damage with spell skills.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				+30% to Critical Strike Multiplier with Lightning Skills
++50% to Critical Strike Multiplier with Cold Skills
+40% increased Critical Strike Chance with Lightning Skills
+20% increased Cast Speed with Lightning Skills
+20% increased Lightning Damage with Attack Skills
+15% increased Physical Damage with Attack Skills
+25% increased Fire Damage with Attack Skills
+50% increased Lightning Damage with Spell Skills
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

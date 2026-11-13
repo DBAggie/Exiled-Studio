@@ -48,6 +48,20 @@ impl Flags {
     pub const CAST: Self = Self(1 << 11);
     /// Fire, cold, or lightning (for an `any` condition).
     pub const ELEMENTAL: Self = Self(Self::FIRE.0 | Self::COLD.0 | Self::LIGHTNING.0);
+    /// A physical skill: the skill's own keyword, whatever damage types its
+    /// hit deals (the damage type flags above describe one part of a hit).
+    pub const SKILL_PHYSICAL: Self = Self(1 << 12);
+    /// A fire skill (skill keyword).
+    pub const SKILL_FIRE: Self = Self(1 << 13);
+    /// A cold skill (skill keyword).
+    pub const SKILL_COLD: Self = Self(1 << 14);
+    /// A lightning skill (skill keyword).
+    pub const SKILL_LIGHTNING: Self = Self(1 << 15);
+    /// A chaos skill (skill keyword).
+    pub const SKILL_CHAOS: Self = Self(1 << 16);
+    /// A fire, cold, or lightning skill (for an `any` condition).
+    pub const SKILL_ELEMENTAL: Self =
+        Self(Self::SKILL_FIRE.0 | Self::SKILL_COLD.0 | Self::SKILL_LIGHTNING.0);
 
     /// The raw bits.
     #[must_use]
@@ -88,6 +102,18 @@ impl Flags {
             DamageType::Cold => Self::COLD,
             DamageType::Lightning => Self::LIGHTNING,
             DamageType::Chaos => Self::CHAOS,
+        }
+    }
+
+    /// The skill keyword of a damage type.
+    #[must_use]
+    pub const fn skill(t: DamageType) -> Self {
+        match t {
+            DamageType::Physical => Self::SKILL_PHYSICAL,
+            DamageType::Fire => Self::SKILL_FIRE,
+            DamageType::Cold => Self::SKILL_COLD,
+            DamageType::Lightning => Self::SKILL_LIGHTNING,
+            DamageType::Chaos => Self::SKILL_CHAOS,
         }
     }
 }
@@ -300,5 +326,43 @@ mod tests {
         assert!(Flags::NONE.is_empty());
         assert_eq!(Flags::damage(DamageType::Cold), Flags::COLD);
         assert_eq!((Flags::SPELL | Flags::HIT).bits(), 0b101);
+    }
+
+    #[test]
+    fn skill_keywords_should_be_apart_from_damage_types() {
+        let types = [
+            DamageType::Physical,
+            DamageType::Fire,
+            DamageType::Cold,
+            DamageType::Lightning,
+            DamageType::Chaos,
+        ];
+        let mut all = Flags::NONE;
+        for t in types {
+            let k = Flags::skill(t);
+            assert!(!k.is_empty());
+            assert!(!all.intersects(k), "{t:?} shares a bit");
+            assert!(!k.intersects(Flags::damage(t)));
+            all = all | k;
+        }
+        let damage = types.iter().fold(Flags::NONE, |a, t| a | Flags::damage(*t));
+        assert!(!all.intersects(damage | Flags::SPELL | Flags::ATTACK | Flags::CAST));
+        assert_eq!(
+            Flags::SKILL_ELEMENTAL,
+            Flags::SKILL_FIRE | Flags::SKILL_COLD | Flags::SKILL_LIGHTNING
+        );
+        // A cold skill's physical hit is not cold damage, and a cold hit of
+        // a fire skill is not a cold skill's.
+        let cold_skill = Conditions::none().with_all(Flags::SKILL_COLD);
+        assert_eq!(
+            cold_skill.applies(&QueryContext::with_flags(
+                Flags::SKILL_COLD | Flags::PHYSICAL
+            )),
+            Applies::Yes
+        );
+        assert_eq!(
+            cold_skill.applies(&QueryContext::with_flags(Flags::SKILL_FIRE | Flags::COLD)),
+            Applies::No
+        );
     }
 }

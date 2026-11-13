@@ -1121,6 +1121,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml with a Carved Wand and a Twig Spirit Shield and custom lines: spell damage and spell block while holding a shield; staff lines without a staff (P3-8f)."
+    },
+    {
+      "id": "ice-nova-skill-keywords-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-skill-keywords-witch.xml",
+      "sha256": "ff08f29f6c77165b75beebb6a9e4ccca418e034d5a2d7f8c3341f8484dc942f0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines that name a skill keyword: cast speed, crit chance, and crit multiplier with cold and elemental skills (applied) and with fire and lightning skills (not); cold damage with spell skills (applied) and attack skills (not) (P3-8h)."
+    },
+    {
+      "id": "smite-skill-keywords-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-skill-keywords-templar.xml",
+      "sha256": "5ca8c0938c7299658805837d625a8d4e78f8e0a21c67a33f244217d13903f7fa",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml with custom lines that name a skill keyword: crit chance and multiplier with lightning skills (applied) and cold skills (not), cast speed with lightning skills (not: an attack), physical and lightning damage with attack skills (applied), fire damage with attack skills (no fire damage), lightning damage with spell skills (not) (P3-8h)."
     }
   ]
 }

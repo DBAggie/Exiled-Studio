@@ -59,7 +59,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use loom_domain::{Attributes, Build, Gem, SocketGroup};
 
 use super::sockets::{SocketMatch, socket_matches};
+use crate::condition::Flags;
 use crate::input::{ActiveSkill, CalcData, EffectLevel, GrantedEffect, StatSet, StatSetLevel};
+use crate::quantity::DamageType;
 
 /// Why a build has no main skill the engine can name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,7 +141,30 @@ impl<'d> MainSkill<'d> {
     pub const fn effect(&self) -> &'d GrantedEffect {
         self.active_gem.effect
     }
+
+    /// The skill's keyword flags (P3-8h): PoB v2.67.2 sets
+    /// `KeywordFlag.Lightning`, `.Cold`, `.Fire`, `.Chaos`, `.Physical`
+    /// from the skill's types after the supports added theirs
+    /// (`Modules/CalcActiveSkill.lua` 391 to 405), whatever damage the hit
+    /// deals; "with Cold Skills" needs the keyword.
+    #[must_use]
+    pub fn keyword_flags(&self) -> Flags {
+        KEYWORD_TYPES
+            .iter()
+            .filter(|(name, _)| self.types.contains(*name))
+            .fold(Flags::NONE, |flags, (_, t)| flags | Flags::skill(*t))
+    }
 }
+
+/// The game's skill type names that give a skill keyword (the game's
+/// `ActiveSkillType` IDs, which PoB's `SkillType` names match).
+pub const KEYWORD_TYPES: [(&str, DamageType); 5] = [
+    ("Physical", DamageType::Physical),
+    ("Fire", DamageType::Fire),
+    ("Cold", DamageType::Cold),
+    ("Lightning", DamageType::Lightning),
+    ("Chaos", DamageType::Chaos),
+];
 
 /// The value of attribute `name`, if any.
 #[must_use]
