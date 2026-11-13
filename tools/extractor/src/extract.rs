@@ -147,10 +147,16 @@ pub const ITEM_PROPERTY_TABLES: [&str; 6] = [
     "MonsterTypes",
 ];
 
+/// PoE1 build-choice tables the calc bundle reads (P3-12g): the pantheon's
+/// gods with their souls' stats (PoB v2.67.2 exports `Data/Pantheons.lua`
+/// from it, `src/Export/Scripts/pantheons.lua`).
+pub const CHOICE_TABLES_POE1: [&str; 1] = ["PantheonPanelLayout"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
-/// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
+/// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`], and
+/// [`CHOICE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
@@ -162,6 +168,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
         roots.extend(ITEM_LINE_TABLES_POE1);
+        roots.extend(CHOICE_TABLES_POE1);
     }
     roots
 }
@@ -1972,12 +1979,14 @@ mod tests {
                 .iter()
                 .chain(&MOD_SOURCE_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
+                .chain(&CHOICE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
         assert!(
             MOD_SOURCE_TABLES_POE1
                 .iter()
                 .chain(&ITEM_LINE_TABLES_POE1)
+                .chain(&CHOICE_TABLES_POE1)
                 .all(|t| !poe2.contains(t))
         );
     }

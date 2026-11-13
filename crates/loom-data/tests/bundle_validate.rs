@@ -791,3 +791,52 @@ fn property_values_and_shapes_should_each_give_their_code() {
         assert_eq!(codes(&src), [code], "{what}");
     }
 }
+
+/// The pantheon (P3-12g): each mutation gives its code alone.
+#[test]
+fn pantheon_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/pantheons.json";
+    let cases: [(&str, Edit, &str); 5] = [
+        (
+            "soul stat",
+            |v| {
+                v[0]["souls"][1]["stats"][0][0] = "nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "god twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "god without ID",
+            |v| {
+                v[1]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "soul without stats",
+            |v| {
+                v[0]["souls"][0]["stats"] = json!([]);
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "soul without a name",
+            |v| {
+                v[1]["souls"][0]["name"] = "".into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}

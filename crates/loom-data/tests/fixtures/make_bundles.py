@@ -563,6 +563,22 @@ poe1["poe1/grafts.json"] = {
     "bases": [{"base": "Plain Test Charm", "graft": "TestGraft1", "gem": "Test/Gems/Bolt", "skill": "Test Bolt"}],
     "levels": [1, 20],
 }
+# P3-12g: two made-up gods, a major one with an upgrade soul and a minor one.
+poe1["poe1/pantheons.json"] = [
+    {
+        "id": "TestMajorGod",
+        "major": True,
+        "souls": [
+            {"name": "Soul of Test", "stats": [["test_maximum_life", 10]]},
+            {"name": "Test Upgrade", "stats": [["test_passive_life", 5], ["test_strength", 2]]},
+        ],
+    },
+    {
+        "id": "TestMinorGod",
+        "major": False,
+        "souls": [{"name": "Soul of Minor Test", "stats": [["test_maximum_life", 4]]}],
+    },
+]
 write("bundle-poe1", "poe1", poe1)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))
 print("ok")

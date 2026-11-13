@@ -32,6 +32,7 @@ mod oracle_output;
 mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
+mod pantheons;
 mod poe1;
 mod poe2;
 mod properties;

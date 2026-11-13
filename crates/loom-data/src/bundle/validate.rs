@@ -6,8 +6,9 @@
 //!   file is unlisted; `signatures` is empty (formats 1 and 2);
 //! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
 //!   required files, every file parses);
-//! - **referential:** mod stats, quality stats, and the stats of the
-//!   rules' compositions are stats; mod classes and base classes are item
+//! - **referential:** mod stats, quality stats, the stats of the PoE1
+//!   section's build choices (`poe1::Poe1Section::choice_stats`), and the
+//!   stats of the rules' compositions are stats; mod classes and base classes are item
 //!   classes; base implicits are mods; graft gems are base items; client
 //!   texts the rules name exist; in the skill tables (format 2), every
 //!   stat, skill type, item class, active skill, granted effect, stat set,
@@ -28,7 +29,9 @@
 //!   (`BUNDLE_VALUE_RANGE`); the property tables have their game's shape
 //!   (`BUNDLE_GAME_SHAPE`); the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
-//!   ascending levels (`BUNDLE_SKILL_LEVELS`);
+//!   ascending levels (`BUNDLE_SKILL_LEVELS`); the PoE1 section's build
+//!   choices have unique, non-empty IDs, and their rows the shape
+//!   `poe1::Poe1Section::choice_domain` names (`BUNDLE_VALUE_RANGE`);
 //! - **smoke:** every stat-description scope the rules name is one file,
 //!   builds, and renders a sample.
 //!
@@ -241,6 +244,11 @@ fn referential(b: &Bundle, report: &mut Report) {
         for g in p.grafts.iter().flat_map(|g| &g.bases) {
             if !bases.contains(g.gem.as_str()) {
                 dangling(format!("poe1/grafts:{}", g.graft), "gem", &g.gem);
+            }
+        }
+        for (at, s) in p.choice_stats() {
+            if !stats.contains(s) {
+                dangling(at, "stat", s);
             }
         }
     }
@@ -893,6 +901,17 @@ fn domain(b: &Bundle, report: &mut Report) {
     }
     if let Some(p) = &b.properties {
         property_domain(p, b.game, report);
+    }
+    if let Some(p) = &b.poe1 {
+        let (file, ids, findings) = p.choice_domain();
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
     }
 }
 

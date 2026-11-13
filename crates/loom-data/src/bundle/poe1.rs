@@ -9,6 +9,9 @@
 //!   each grants, and the allowed skill levels
 //!   (`BrequelGraftGrantedSkillLevels`). Essences need no file: their item
 //!   classes are precomputed into the mod rows (`essence_classes`).
+//! - `poe1/pantheons.json`: the pantheon's gods (`PantheonPanelLayout`,
+//!   rows not disabled), each with its souls and their stats (P3-12g; the
+//!   calc applies a chosen god's souls).
 
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +23,32 @@ pub const DIR: &str = "poe1/";
 pub const QUALITY_TYPES: &str = "poe1/quality_types.json";
 /// Grafts.
 pub const GRAFTS: &str = "poe1/grafts.json";
+/// Pantheons.
+pub const PANTHEONS: &str = "poe1/pantheons.json";
+
+/// A god of the pantheon (`PantheonPanelLayout`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Pantheon {
+    /// ID (`TheBrineKing`, ...): the name PoB's config stores.
+    pub id: String,
+    /// A major god (else a minor one).
+    pub major: bool,
+    /// The god's souls with stats, in the table's order (the god's own
+    /// soul first, then its upgrades).
+    pub souls: Vec<PantheonSoul>,
+}
+
+/// One soul of a god: its name and stats (`Effect<n>_StatsKeys` with
+/// `Effect<n>_Values`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PantheonSoul {
+    /// The soul's name (`GodName<n>`).
+    pub name: String,
+    /// The soul's stats (`(stat, value)`), in the table's order.
+    pub stats: Vec<(String, i64)>,
+}
 
 /// An alternate quality type.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,9 +94,47 @@ pub struct Poe1Section {
     pub quality_types: Option<Vec<QualityType>>,
     /// Grafts (`None` when the file is absent).
     pub grafts: Option<Grafts>,
+    /// Pantheons (`None` when the file is absent).
+    pub pantheons: Option<Vec<Pantheon>>,
 }
 
 impl Poe1Section {
+    /// The stats the section's build choices (the pantheon's souls) name,
+    /// each with the row it is on: the validator checks each is a stat.
+    pub(super) fn choice_stats(&self) -> Vec<(String, &str)> {
+        let mut out = Vec::new();
+        for g in self.pantheons.iter().flatten() {
+            for (s, _) in g.souls.iter().flat_map(|soul| &soul.stats) {
+                out.push((format!("{PANTHEONS}:{}", g.id), s.as_str()));
+            }
+        }
+        out
+    }
+
+    /// The pantheon's domain checks for the validator: the file, its IDs
+    /// (each must be unique and not empty), and the rows whose shape is
+    /// wrong (a soul without a name or a stat: the converter keeps only
+    /// souls with stats, as PoB's export does).
+    pub(super) fn choice_domain(&self) -> (&'static str, Vec<&str>, Vec<(String, &'static str)>) {
+        let gods = self.pantheons.as_deref().unwrap_or_default();
+        let ids = gods.iter().map(|g| g.id.as_str()).collect();
+        let bad = gods
+            .iter()
+            .filter(|g| {
+                g.souls
+                    .iter()
+                    .any(|s| s.name.is_empty() || s.stats.is_empty())
+            })
+            .map(|g| {
+                (
+                    format!("{PANTHEONS}:{}", g.id),
+                    "a soul without a name or a stat",
+                )
+            })
+            .collect();
+        (PANTHEONS, ids, bad)
+    }
+
     /// Reads the section's files the manifest lists.
     ///
     /// # Errors
@@ -85,6 +152,11 @@ impl Poe1Section {
             },
             grafts: if listed(GRAFTS) {
                 Some(json(source, GRAFTS)?)
+            } else {
+                None
+            },
+            pantheons: if listed(PANTHEONS) {
+                Some(json(source, PANTHEONS)?)
             } else {
                 None
             },
