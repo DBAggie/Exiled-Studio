@@ -1317,7 +1317,7 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/ice-nova-granted-passive-staff-witch.xml",
-      "sha256": "cc55a4f5db1695c6c6d340724ee3cc584988fbd22856a92dcf41e1354d16fd44",
+      "sha256": "b029ecba9fdf4f5daf2f33228c7593f458d799bf3b17923cb10eeb73f6f910ca",
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml with a 20% quality staff granting 1% increased elemental damage per 2% quality and an amulet anointed with Disciple of the Slaughter (a minimum frenzy charge, damage per frenzy charge) (P3-8n)."

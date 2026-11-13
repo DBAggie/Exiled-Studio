@@ -1306,6 +1306,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "active_skill_secondary_area_of_effect_description_mode",
         "display",
     ),
+    // P3-8n: a chance to gain a frenzy charge on kill (Disciple of the
+    // Slaughter): as the power charge's, PoB never reads it.
+    ("add_frenzy_charge_on_kill_%_chance", "charge-gain-chance"),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
     (
         "additional_chaos_resistance_against_damage_over_time_%",

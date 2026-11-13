@@ -471,6 +471,7 @@ mod tests {
     /// slice field per charge or changes a count PoB's calc reads.
     const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
         // Chances to gain a charge: PoB's calc never reads them.
+        "add_frenzy_charge_on_kill_%_chance",
         "add_power_charge_on_kill_%_chance",
         // Shock on you: not a slice field.
         "cannot_be_shocked_while_at_maximum_power_charges",

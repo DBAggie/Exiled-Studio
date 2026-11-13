@@ -49,7 +49,12 @@ const TEXTS: [(&str, &str); 7] = [
 /// buffs, each checked to reach no slice field (`poe1::mapping::NO_EFFECT`'s
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
-const NO_EFFECT_NAMING: &[&str] = &["base_aura_area_of_effect_+%"];
+const NO_EFFECT_NAMING: &[&str] = &[
+    "base_aura_area_of_effect_+%",
+    // The golems' buff effect (P3-8n): only golem skills read it, and no
+    // golem gem is modelled.
+    "golem_buff_effect_+%",
+];
 
 #[test]
 fn the_texts_should_name_the_rows() {

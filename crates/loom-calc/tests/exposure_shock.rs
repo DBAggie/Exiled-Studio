@@ -90,6 +90,11 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "shocked_effect_on_self_+%",
 ];
 
+/// Rows whose text names shock but which read a condition the config
+/// settles (`poe1::conditions`, P3-8n): "if you have Shocked an Enemy
+/// Recently".
+const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
+
 #[test]
 fn the_texts_should_name_the_rows() {
     let rows: Vec<&str> = STATS
@@ -170,6 +175,9 @@ fn real_exposure_and_shock_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // A row that reads the config's condition (P3-8n), never the
+            // enemy's shock.
+            loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

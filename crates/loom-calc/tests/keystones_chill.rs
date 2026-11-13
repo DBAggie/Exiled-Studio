@@ -58,6 +58,14 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "cold_ailment_duration_+%",
 ];
 
+/// Rows that read the enemy being chilled, never set its chill (P3-8n,
+/// `poe1::damage_taken`'s `enemy_states`): resistances of an ignited or
+/// chilled enemy, damage taken per second chilled.
+const ENEMY_ROWS: &[&str] = &[
+    "ignites_and_chill_apply_elemental_resistance_+",
+    "permanent_damage_+%_per_second_of_chill",
+];
+
 #[test]
 fn the_texts_should_name_the_rows() {
     let mut rows: Vec<&str> = KEYSTONES
@@ -144,6 +152,7 @@ fn real_keystone_and_chill_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            loom_calc::StatMap::Effects(_) if ENEMY_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }
