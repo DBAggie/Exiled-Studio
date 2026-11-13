@@ -13,9 +13,9 @@
 
 use loom_domain::StatId;
 
-use crate::condition::{Conditions, Flags};
+use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping};
-use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue};
+use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
@@ -133,6 +133,11 @@ pub const HIT_ROWS: &[HitRow] = &[
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
+    (
+        "area_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::AREA, NONE)],
+    ),
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
@@ -210,6 +215,13 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             NONE,
         )],
+    ),
+    // "+#% to Critical Strike Multiplier for Spell Damage": PoB's
+    // `CritMultiplier` BASE with "for spell damage" (`ModFlag.Spell`,
+    // `ModParser.lua` 748, 968; P3-8e).
+    (
+        "base_spell_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
     (
         "cold_damage_+%",
@@ -472,6 +484,82 @@ const BLOCK: Quantity = Quantity::BlockChance;
 const SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::SpellBlockChance);
 const MAX_SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::MaximumSpellBlockChance);
 const SUPPRESSION: Quantity = Quantity::Poe1(Poe1Quantity::SpellSuppressionChance);
+
+/// A stat that applies under a named condition the build settles
+/// ([`super::states`], P3-8f): `(stat, [(quantity, op, flags, condition)])`.
+type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
+
+/// The weapon-condition stats (P3-8f), sorted by stat ID, each read as PoB
+/// v2.67.2 reads its game text: "while wielding a Staff" is
+/// `{ type = "Condition", var = "UsingStaff" }` (`Modules/ModParser.lua`
+/// 1619), "while holding a Shield" `UsingShield` (1598, `while holding a
+/// (%w+)`); "to block attack damage" `BlockChance`, "to block spell
+/// damage" `SpellBlockChance`, "defences" `Defences` (energy shield,
+/// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
+/// BASE (252, 365, 375, 748).
+pub const STATE_ROWS: &[StateRow] = &[
+    (
+        "defences_+%_while_wielding_staff",
+        &[
+            (
+                Quantity::EnergyShield,
+                Op::Increased,
+                NONE,
+                states::USING_STAFF,
+            ),
+            (Quantity::Armour, Op::Increased, NONE, states::USING_STAFF),
+            (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
+        ],
+    ),
+    (
+        "global_critical_strike_chance_+%_while_holding_staff",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "global_critical_strike_multiplier_+_while_holding_staff",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "shield_spell_block_%",
+        &[(SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD)],
+    ),
+    (
+        "spell_block_with_staff_%",
+        &[(SPELL_BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+    (
+        "spell_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_staff_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::SPELL,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "staff_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
 ///
@@ -740,7 +828,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field (96): `(stat, why)`, sorted by stat ID
+/// Stats that reach no slice field (101): `(stat, why)`, sorted by stat ID
 /// (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -812,6 +900,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
+    ("base_aura_area_of_effect_+%", "area"),
     ("base_avoid_freeze_%", "ailment-on-self"),
     ("base_avoid_projectiles_%_chance", "avoidance"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -825,6 +914,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "leech",
     ),
     ("base_movement_velocity_+%", "movement-speed"),
+    // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
+    // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
+    ("base_skill_area_of_effect_+%", "area"),
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
     ("base_skill_effect_duration", "skill-duration"),
@@ -942,6 +1034,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "life_regeneration_rate_per_minute_per_level",
         "regeneration",
     ),
+    ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
     // "Gems Socketed always have the Quality bonus from Socket Colour":
     // its effect is the gems' quality, `poe1::sockets` (P3-12i).
@@ -1015,6 +1108,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
     ("smite_lightning_target_range", "targeting"),
+    ("spell_area_of_effect_+%", "area"),
     // Melee Physical Damage's more damage with poison and bleeding: no
     // ailment is in the slice.
     (
@@ -1052,6 +1146,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// `minion_damage_modifiers_apply_to_all_damage_at_%_value`); none has a
 /// description or a PoB row, so no line resolves to them, and they are
 /// `Unmapped` anyway.
+///
+/// Light radius (P3-8e) reaches a slice field only through
+/// `LightRadiusAppliesToDamage` (`Damage` INC, `CalcOffence.lua` 746),
+/// `LightRadiusAppliesToAccuracy` (`Accuracy` INC, 732), and Eclipse
+/// Solaris's fire damage per 1% light radius (`ModParser.lua` 2436); their
+/// stats are the guards. The game's other light radius stats (applying to
+/// area of effect, scaling with energy shield, while phased) reach no slice
+/// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value",
@@ -1068,6 +1170,22 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "dominating_blow_and_absolution_additive_minion_damage_modifiers_apply_to_you_at_150%_value",
         "minion_damage_+%",
+    ),
+    (
+        "light_radius_additive_modifiers_apply_to_damage",
+        "light_radius_+%",
+    ),
+    (
+        "light_radius_increases_apply_to_accuracy",
+        "light_radius_+%",
+    ),
+    (
+        "maximum_added_fire_damage_to_attacks_per_1%_light_radius",
+        "light_radius_+%",
+    ),
+    (
+        "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
+        "light_radius_+%",
     ),
     (
         "minion_damage_increases_and_reductions_also_affects_you",
@@ -1130,6 +1248,32 @@ impl StatMapping for Poe1Mapping {
                     })
                     .collect(),
             );
+        }
+        if let Ok(i) = STATE_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                STATE_ROWS[i]
+                    .1
+                    .iter()
+                    .map(|&(quantity, op, all, state)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale: 1.0,
+                        divisor: 1.0,
+                        conditions: Conditions::none()
+                            .with_all(all)
+                            .with_state(ConditionKey::new(state), true),
+                    })
+                    .collect(),
+            );
+        }
+        if let Some((kind, value)) = super::charges::modifier(stat.as_str()) {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::Charge(kind, value)),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
         }
         ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .map_or(StatMap::Unmapped, |i| {
@@ -1538,7 +1682,6 @@ mod tests {
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
-            "max_power_charges",
             "base_max_fortification",
             "base_self_critical_strike_multiplier_-%",
         ] {
@@ -1930,6 +2073,14 @@ mod tests {
             )]
         );
         assert_eq!(
+            hit("area_damage_+%"),
+            [(Quantity::Damage, Op::Increased, 1.0, all(Flags::AREA))]
+        );
+        assert_eq!(
+            hit("base_spell_critical_strike_multiplier_+"),
+            [(Quantity::CritMultiplier, Op::Base, 1.0, all(Flags::SPELL))]
+        );
+        assert_eq!(
             hit("melee_physical_damage_+%"),
             [(
                 Quantity::Damage,
@@ -2028,6 +2179,76 @@ mod tests {
         assert_eq!(
             Poe1Mapping.map(&StatId::new("local_attack_speed_+%")),
             StatMap::Unmapped
+        );
+    }
+
+    /// The condition rows (P3-8f) are sorted, disjoint from the other
+    /// tables, and read only conditions `states` settles.
+    #[test]
+    fn state_rows_should_read_settled_conditions_only() {
+        assert!(STATE_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, rows) in STATE_ROWS {
+            assert!(!HIT_ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!NO_EFFECT.iter().any(|r| r.0 == *id), "{id}");
+            for (_, _, _, state) in *rows {
+                assert!(
+                    [states::USING_STAFF, states::USING_SHIELD].contains(state),
+                    "{id}: {state}"
+                );
+            }
+        }
+        // Each row as PoB reads its text (the table's docs).
+        let staff = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_STAFF);
+        let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
+        let expected = [
+            (
+                "defences_+%_while_wielding_staff",
+                vec![
+                    staff(Quantity::EnergyShield, Op::Increased, NONE),
+                    staff(Quantity::Armour, Op::Increased, NONE),
+                    staff(Quantity::Evasion, Op::Increased, NONE),
+                ],
+            ),
+            (
+                "global_critical_strike_chance_+%_while_holding_staff",
+                vec![staff(Quantity::CritChance, Op::Increased, NONE)],
+            ),
+            (
+                "global_critical_strike_multiplier_+_while_holding_staff",
+                vec![staff(Quantity::CritMultiplier, Op::Base, NONE)],
+            ),
+            (
+                "shield_spell_block_%",
+                vec![shield(SPELL_BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "spell_block_with_staff_%",
+                vec![staff(SPELL_BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "spell_damage_+%_while_holding_shield",
+                vec![shield(Quantity::Damage, Op::Increased, Flags::SPELL)],
+            ),
+            (
+                "spell_staff_damage_+%",
+                vec![staff(Quantity::Damage, Op::Increased, Flags::SPELL)],
+            ),
+            ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
+        ];
+        assert_eq!(STATE_ROWS.len(), expected.len());
+        for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {
+            assert_eq!(id, want_id);
+            assert_eq!(rows.to_vec(), *want, "{id}");
+        }
+        let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new("spell_staff_damage_+%")) else {
+            panic!("spell_staff_damage_+%");
+        };
+        assert_eq!(
+            t[0].conditions,
+            Conditions::none()
+                .with_all(Flags::SPELL)
+                .with_state(ConditionKey::new(states::USING_STAFF), true)
         );
     }
 }
