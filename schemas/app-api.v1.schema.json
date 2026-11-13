@@ -1,0 +1,1548 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Application API v1",
+  "description": "Every top-level type of the API, so one schema names them all. Never\nsent.",
+  "type": "object",
+  "properties": {
+    "command": {
+      "description": "A command.",
+      "$ref": "#/$defs/Command"
+    },
+    "error": {
+      "description": "An error.",
+      "$ref": "#/$defs/ApiError"
+    },
+    "event": {
+      "description": "An event.",
+      "$ref": "#/$defs/Event"
+    },
+    "item": {
+      "description": "One item.",
+      "$ref": "#/$defs/ItemView"
+    },
+    "mcp": {
+      "description": "The MCP server's state.",
+      "$ref": "#/$defs/McpStatus"
+    },
+    "outcome": {
+      "description": "A command's answer.",
+      "$ref": "#/$defs/Outcome"
+    },
+    "preview": {
+      "description": "An item edit's preview.",
+      "$ref": "#/$defs/ItemEditPreview"
+    },
+    "recent": {
+      "description": "Recent builds.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecentEntry"
+      }
+    },
+    "recovery": {
+      "description": "Recovery snapshots found at start.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecoveryEntry"
+      }
+    },
+    "snapshot": {
+      "description": "The snapshot query's answer.",
+      "$ref": "#/$defs/Snapshot"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "item",
+    "command",
+    "outcome",
+    "event",
+    "error",
+    "preview",
+    "mcp",
+    "recovery",
+    "recent"
+  ],
+  "$defs": {
+    "ApiError": {
+      "description": "An error: a stable code (ADR-014) and a message for logs. The UI\nshows text for the code, not the message.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,\n`APP_*`, ...).",
+          "type": "string"
+        },
+        "message": {
+          "description": "Detail in English, for diagnostics.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "BuildView": {
+      "description": "The open build.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "class": {
+          "description": "The class, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "completeness": {
+          "description": "`complete` or `partial`: whether anything was not read.",
+          "type": "string"
+        },
+        "data-version": {
+          "description": "The data version the build is pinned to.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataVersionView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "game": {
+          "description": "`poe1` or `poe2`.",
+          "type": "string"
+        },
+        "items": {
+          "description": "The items, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemSummary"
+          }
+        },
+        "level": {
+          "description": "The character level, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "The import's counts.",
+          "$ref": "#/$defs/LineCounts"
+        },
+        "main-skill": {
+          "description": "The main skill's gem names, if the build has a main group.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "A display name: the file's stem, else \"imported build\" in the\nUI's language (empty here).",
+          "type": "string"
+        },
+        "warnings": {
+          "description": "Lines with warnings: kept, shown, not calculated (ADR-015).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WarningView"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "game",
+        "completeness",
+        "lines",
+        "items",
+        "warnings"
+      ]
+    },
+    "CalcState": {
+      "description": "A calculation's progress.",
+      "oneOf": [
+        {
+          "description": "No build, or no data.",
+          "type": "string",
+          "const": "idle"
+        },
+        {
+          "description": "A calculation of the latest version runs.",
+          "type": "string",
+          "const": "running"
+        },
+        {
+          "description": "The result is of the latest version.",
+          "type": "string",
+          "const": "done"
+        },
+        {
+          "description": "The latest version's calculation failed.",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "CalcStatus": {
+      "description": "The calculation of the latest version.",
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "Why the latest calculation failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result-state": {
+          "description": "The result's overall state (`complete`, `partial`,\n`unsupported`, `indeterminate`), when there is one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/CalcState"
+        },
+        "version": {
+          "description": "The version of the result held (`result` is of it); may be\nolder than the snapshot's while a calculation runs.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "version"
+      ]
+    },
+    "ChangeKind": {
+      "description": "What a change was, for undo and redo labels.",
+      "oneOf": [
+        {
+          "description": "An item edit.",
+          "type": "string",
+          "const": "item-edit"
+        },
+        {
+          "description": "An item edit an MCP client requested.",
+          "type": "string",
+          "const": "request-applied"
+        }
+      ]
+    },
+    "ChangeRequest": {
+      "description": "A change an MCP client asked for.",
+      "type": "object",
+      "properties": {
+        "client": {
+          "description": "The client's name, as it gave it.",
+          "type": "string"
+        },
+        "edit": {
+          "description": "The edit.",
+          "$ref": "#/$defs/ItemEdit"
+        },
+        "error": {
+          "description": "Why it failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "Its ID, unique in the session.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "note": {
+          "description": "The client's note, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "preview": {
+          "description": "Its effect, calculated when it arrived.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemEditPreview"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/RequestStatus"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "client",
+        "edit",
+        "status"
+      ]
+    },
+    "Command": {
+      "description": "A command (ADR-004): an intent the application runs in order.",
+      "oneOf": [
+        {
+          "description": "Imports a PoB share code or XML text.",
+          "type": "object",
+          "properties": {
+            "import-text": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "import-text"
+          ]
+        },
+        {
+          "description": "Applies an item edit.",
+          "type": "object",
+          "properties": {
+            "edit-item": {
+              "$ref": "#/$defs/ItemEdit"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "edit-item"
+          ]
+        },
+        {
+          "description": "Reverts the latest change.",
+          "type": "string",
+          "const": "undo"
+        },
+        {
+          "description": "Applies the latest reverted change again.",
+          "type": "string",
+          "const": "redo"
+        },
+        {
+          "description": "Saves the build where it is saved.",
+          "type": "string",
+          "const": "save"
+        },
+        {
+          "description": "Opens a recent build by its index.",
+          "type": "object",
+          "properties": {
+            "open-recent": {
+              "type": "object",
+              "properties": {
+                "index": {
+                  "description": "The index in the recent list.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "index"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "open-recent"
+          ]
+        },
+        {
+          "description": "Restores a recovery snapshot.",
+          "type": "object",
+          "properties": {
+            "restore": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The snapshot's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "restore"
+          ]
+        },
+        {
+          "description": "Discards a recovery snapshot.",
+          "type": "object",
+          "properties": {
+            "discard": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The snapshot's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "discard"
+          ]
+        },
+        {
+          "description": "Approves a change request.",
+          "type": "object",
+          "properties": {
+            "approve": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The request's ID.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "approve"
+          ]
+        },
+        {
+          "description": "Declines a change request.",
+          "type": "object",
+          "properties": {
+            "decline": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The request's ID.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "decline"
+          ]
+        },
+        {
+          "description": "Closes the build.",
+          "type": "string",
+          "const": "close"
+        }
+      ]
+    },
+    "DataStatus": {
+      "description": "The game data.",
+      "type": "object",
+      "properties": {
+        "bundle": {
+          "description": "The bundle folder, if one is set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data-version": {
+          "description": "The bundle's data version, when it loaded.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataVersionView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "description": "Why the bundle did not load, if it did not (a stable code).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tree-version": {
+          "description": "The passive tree version the application gives the engine for\nthis bundle, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataVersionView": {
+      "description": "A data version.",
+      "type": "object",
+      "properties": {
+        "game": {
+          "description": "`poe1` or `poe2`.",
+          "type": "string"
+        },
+        "schema-version": {
+          "description": "The bundle's data schema version.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "steam-build": {
+          "description": "The Steam build it was extracted from, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "game",
+        "schema-version"
+      ]
+    },
+    "Event": {
+      "description": "An event (ADR-004): something committed, a job's progress, or an\nerror.",
+      "type": "object",
+      "properties": {
+        "correlation": {
+          "description": "The command that caused it, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What happened.",
+          "$ref": "#/$defs/EventKind"
+        },
+        "version": {
+          "description": "The snapshot version after the event.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ]
+    },
+    "EventKind": {
+      "description": "What an event reports.",
+      "oneOf": [
+        {
+          "description": "The build changed (or was opened, imported, closed).",
+          "type": "string",
+          "const": "build-changed"
+        },
+        {
+          "description": "The build was saved.",
+          "type": "object",
+          "properties": {
+            "saved": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "description": "Where.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "path"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "saved"
+          ]
+        },
+        {
+          "description": "A calculation started.",
+          "type": "string",
+          "const": "calc-started"
+        },
+        {
+          "description": "A calculation finished; its result is the snapshot's.",
+          "type": "object",
+          "properties": {
+            "calc-finished": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "description": "The result's overall state.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "state"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "calc-finished"
+          ]
+        },
+        {
+          "description": "A calculation failed.",
+          "type": "object",
+          "properties": {
+            "calc-failed": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "description": "Why.",
+                  "$ref": "#/$defs/ApiError"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "calc-failed"
+          ]
+        },
+        {
+          "description": "The MCP server or its requests changed.",
+          "type": "string",
+          "const": "mcp-changed"
+        },
+        {
+          "description": "A command failed.",
+          "type": "object",
+          "properties": {
+            "failed": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "description": "Why.",
+                  "$ref": "#/$defs/ApiError"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "failed"
+          ]
+        }
+      ]
+    },
+    "FieldDelta": {
+      "description": "One field before and after an edit.",
+      "type": "object",
+      "properties": {
+        "after": {
+          "description": "Its value after, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "before": {
+          "description": "Its value before, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "field": {
+          "description": "The field's name.",
+          "type": "string"
+        },
+        "state-after": {
+          "description": "Its state after.",
+          "type": "string"
+        },
+        "state-before": {
+          "description": "Its state before.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "state-before",
+        "state-after"
+      ]
+    },
+    "HistoryView": {
+      "description": "Undo and redo.",
+      "type": "object",
+      "properties": {
+        "can-redo": {
+          "description": "Whether there is a change to redo.",
+          "type": "boolean"
+        },
+        "can-undo": {
+          "description": "Whether there is a change to undo.",
+          "type": "boolean"
+        },
+        "redo": {
+          "description": "What redo would apply again.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChangeKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "undo": {
+          "description": "What undo would revert.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ChangeKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "can-undo",
+        "can-redo"
+      ]
+    },
+    "ItemEdit": {
+      "description": "An item edit: line operations on one item.",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "ops": {
+          "description": "The operations, in order; line indices are the item's before\nthe edit.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineOp"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "ops"
+      ]
+    },
+    "ItemEditPreview": {
+      "description": "An item edit's effect, calculated by the application (never by the\nrequester).",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Each slice field before and after.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          }
+        },
+        "item": {
+          "description": "The item as edited, with its lines' new statuses.",
+          "$ref": "#/$defs/ItemView"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "fields"
+      ]
+    },
+    "ItemSummary": {
+      "description": "One item in a list.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "name": {
+          "description": "The name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rarity": {
+          "description": "`normal`, `magic`, `rare`, `unique`, `relic`, if read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "slot": {
+          "description": "The slot it is in, in the active item set, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "warnings": {
+          "description": "Its lines with warnings.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "warnings"
+      ]
+    },
+    "ItemView": {
+      "description": "One item with its lines.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "Every source line, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineView"
+          }
+        },
+        "name": {
+          "description": "The name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rarity": {
+          "description": "The rarity, if read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "slot": {
+          "description": "The slot it is in, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lines"
+      ]
+    },
+    "LineCounts": {
+      "description": "Counts of item modifier lines by status.",
+      "type": "object",
+      "properties": {
+        "adapted": {
+          "description": "Resolved after an import tolerance.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "excluded": {
+          "description": "Excluded by the item (another variant, a custom line, a\nsection without effect).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "matched": {
+          "description": "Resolved to game stats exactly.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "modifiers": {
+          "description": "Modifier lines.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "warnings": {
+          "description": "With a warning.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "modifiers",
+        "matched",
+        "adapted",
+        "warnings",
+        "excluded"
+      ]
+    },
+    "LineOp": {
+      "description": "One line operation of an item edit.",
+      "oneOf": [
+        {
+          "description": "Replaces the line's text.",
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "text": {
+                  "description": "The new text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line",
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "replace"
+          ]
+        },
+        {
+          "description": "Removes the line.",
+          "type": "object",
+          "properties": {
+            "remove": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove"
+          ]
+        },
+        {
+          "description": "Adds a modifier line after the item's last line.",
+          "type": "object",
+          "properties": {
+            "add": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add"
+          ]
+        }
+      ]
+    },
+    "LineStatus": {
+      "description": "A line's status, as the UI names it (`docs/ui/UI-DESIGN-BRIEF.md`,\nterminology).",
+      "oneOf": [
+        {
+          "description": "Resolved to game stats or a typed kind.",
+          "type": "string",
+          "const": "matched"
+        },
+        {
+          "description": "Resolved after an import tolerance.",
+          "type": "string",
+          "const": "adapted"
+        },
+        {
+          "description": "Kept and shown, not calculated (ADR-015).",
+          "type": "string",
+          "const": "warning"
+        },
+        {
+          "description": "Excluded by the item.",
+          "type": "string",
+          "const": "excluded"
+        },
+        {
+          "description": "Continues the line before it (one description over several\nlines).",
+          "type": "string",
+          "const": "continues"
+        },
+        {
+          "description": "Not a modifier line.",
+          "type": "string",
+          "const": "other"
+        }
+      ]
+    },
+    "LineView": {
+      "description": "One source line of an item.",
+      "type": "object",
+      "properties": {
+        "adapted": {
+          "description": "The tolerance it needed (`case-folded`, `split-section`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code": {
+          "description": "The warning's code (`LINE_NO_TEMPLATE`, ...), when the status is\n`warning`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "index": {
+          "description": "The line's index among the item's lines.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it is: the domain's line kind name (`modifier`, `spec`,\n`name`, ...).",
+          "type": "string"
+        },
+        "numbers": {
+          "description": "The numbers in the text, in order, for roll edits.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NumberSpan"
+          }
+        },
+        "section": {
+          "description": "The modifier list it belongs to (`implicit`, `explicit`, ...);\nmodifier lines only.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stats": {
+          "description": "What the line resolved to: game stats, or a typed kind.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatView"
+          }
+        },
+        "status": {
+          "description": "Its status.",
+          "$ref": "#/$defs/LineStatus"
+        },
+        "text": {
+          "description": "The line as written.",
+          "type": "string"
+        },
+        "typed": {
+          "description": "The typed kind (`granted-skill`, ...), if it resolved to one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "text",
+        "kind",
+        "status",
+        "stats",
+        "numbers"
+      ]
+    },
+    "McpPermissions": {
+      "description": "What MCP clients may do. Reading is allowed while the server runs.",
+      "type": "object",
+      "properties": {
+        "requests": {
+          "description": "Clients may request changes (off by default: read-only).",
+          "type": "boolean"
+        },
+        "standing-grant": {
+          "description": "Requests apply without asking (a standing grant the user can\nrevoke).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "requests",
+        "standing-grant"
+      ]
+    },
+    "McpStatus": {
+      "description": "The MCP server (ADR-017).",
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "description": "What clients may do.",
+          "$ref": "#/$defs/McpPermissions"
+        },
+        "requests": {
+          "description": "Change requests, newest last.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeRequest"
+          }
+        },
+        "running": {
+          "description": "Whether it runs.",
+          "type": "boolean"
+        },
+        "token": {
+          "description": "The session's bearer token, while it runs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "Its address, while it runs (`http://127.0.0.1:<port>/mcp`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "running",
+        "permissions",
+        "requests"
+      ]
+    },
+    "NumberSpan": {
+      "description": "A number in a line's text: where it is, as character offsets.",
+      "type": "object",
+      "properties": {
+        "end": {
+          "description": "The offset after the last character.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "The first character's offset.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "The number as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "text"
+      ]
+    },
+    "Outcome": {
+      "description": "A command's answer.",
+      "oneOf": [
+        {
+          "description": "Done; the snapshot version after it.",
+          "type": "object",
+          "properties": {
+            "done": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "description": "The version.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "version"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "done"
+          ]
+        },
+        {
+          "description": "Done, with text to give the user (a share code).",
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                },
+                "version": {
+                  "description": "The version.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "description": "Nothing to do (undo with an empty history, a cancelled dialog).",
+          "type": "string",
+          "const": "nothing"
+        }
+      ]
+    },
+    "RecentEntry": {
+      "description": "A recent build.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When it was last opened or saved, in seconds since the Unix\nepoch.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "index": {
+          "description": "Its position in the list (the UI opens a recent build by it;\nthe application checks it, the UI never sends a path).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "name": {
+          "description": "The display name.",
+          "type": "string"
+        },
+        "path": {
+          "description": "The build document's path.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "path",
+        "name",
+        "at"
+      ]
+    },
+    "RecoveryEntry": {
+      "description": "A recovery snapshot (autosave) found at start.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Its ID (the file's stem).",
+          "type": "string"
+        },
+        "name": {
+          "description": "The build's display name.",
+          "type": "string"
+        },
+        "origin": {
+          "description": "The file it was imported from, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Where the build was saved, if it was.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "saved-at": {
+          "description": "When it was written, in seconds since the Unix epoch.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "saved-at",
+        "name"
+      ]
+    },
+    "RequestStatus": {
+      "description": "A change request's status.",
+      "oneOf": [
+        {
+          "description": "Waiting for the user.",
+          "type": "string",
+          "const": "pending"
+        },
+        {
+          "description": "Applied (approved, or under the standing grant).",
+          "type": "string",
+          "const": "applied"
+        },
+        {
+          "description": "Declined by the user.",
+          "type": "string",
+          "const": "declined"
+        },
+        {
+          "description": "It could not apply (the item changed, a line is gone, ...).",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "Snapshot": {
+      "description": "The application's state at one version. Queries return it whole;\nevents say when it changed (ADR-004: a missed event version means\nquery again).",
+      "type": "object",
+      "properties": {
+        "build": {
+          "description": "The open build, if any.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuildView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "calc": {
+          "description": "The calculation of the latest version.",
+          "$ref": "#/$defs/CalcStatus"
+        },
+        "data": {
+          "description": "The game data the application calculates with.",
+          "$ref": "#/$defs/DataStatus"
+        },
+        "dirty": {
+          "description": "Whether the build changed since it was last saved or opened.",
+          "type": "boolean"
+        },
+        "history": {
+          "description": "Undo and redo.",
+          "$ref": "#/$defs/HistoryView"
+        },
+        "origin": {
+          "description": "The file the build was imported from, if any; never written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Where the build is saved (a build document), if it is.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "Increases with every change of the build (import, open, edit,\nundo, redo); 0 before any build.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "calc",
+        "history",
+        "dirty",
+        "data"
+      ]
+    },
+    "StatView": {
+      "description": "One stat a line resolved to.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The game's stat ID.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value as text (`15`, `10 to 20`, `hidden`).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "WarningView": {
+      "description": "A line with a warning.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The stable code.",
+          "type": "string"
+        },
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "item-name": {
+          "description": "The item's name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "description": "The line's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "The line as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "line",
+        "text",
+        "code"
+      ]
+    }
+  }
+}

@@ -21,6 +21,7 @@ loom-serialization = { path = "crates/loom-serialization" }
 loom-persistence = { path = "crates/loom-persistence" }
 loom-app = { path = "crates/loom-app" }
 loom-integrations = { path = "crates/loom-integrations" }
+loom-pipeline = { path = "crates/loom-pipeline" }
 
 # Third-party crates shared across the workspace.
 sha2 = "0.10"

@@ -1817,6 +1817,7 @@ dependencies = [
  "loom-data",
  "loom-domain",
  "loom-parser",
+ "loom-pipeline",
  "loom-serialization",
  "roxmltree",
  "serde",
@@ -1840,6 +1841,18 @@ dependencies = [
  "loom-domain",
  "loom-serialization",
  "serde_json",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "loom-pipeline"
+version = "0.0.0"
+dependencies = [
+ "loom-calc",
+ "loom-data",
+ "loom-domain",
+ "loom-parser",
+ "loom-serialization",
  "thiserror 2.0.21",
 ]
 

@@ -17,7 +17,8 @@ crates/
   loom-data           core   canonical game-data model, abstract bundle source
   loom-parser         core   text -> stat-ID resolution, import parsing
   loom-calc           core   calculations over immutable snapshots
-  loom-serialization  core   versioned DTOs (build, calc result), migrations, legacy XML adapters
+  loom-serialization  core   versioned DTOs (build, calc result, app API), migrations, legacy XML adapters
+  loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
   loom-persistence    host   files, autosave, SQLite indexes
   loom-app            host   command/query/event API, single-writer build task
   loom-integrations   host   network adapters, MCP addon transport
@@ -37,11 +38,12 @@ Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-data` <- `loom-parser`, `loom-calc`
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
 - `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
+- `loom-parser`, `loom-calc`, `loom-serialization` <- `loom-pipeline` (Phase 4 plan, decision 0)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
-**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization) must:
+**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline) must:
 - build for `wasm32-unknown-unknown` (CI checks every PR; ADR-016);
 - not use the filesystem, threads, clocks, environment, or network. Each has a `clippy.toml` that bans these; hosts inject them;
 - depend only on other core crates and pure, wasm-compatible libraries;
@@ -57,7 +59,7 @@ Toolchain: Rust pinned by `rust-toolchain.toml`; Node per `.node-version`; pnpm 
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
-cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
+cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
 # Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto (build v1, calc::v1), regenerate both;

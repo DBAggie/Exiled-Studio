@@ -1,0 +1,20 @@
+[package]
+name = "loom-pipeline"
+description = "Text to calc result: import, resolution, the host's settled values, and the engine, shared by the app and the parity tools (core, wasm32)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-calc.workspace = true
+loom-data.workspace = true
+loom-domain.workspace = true
+loom-parser.workspace = true
+loom-serialization.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

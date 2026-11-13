@@ -12,6 +12,7 @@
 //! [`calc`] holds the calc result document (Phase 3 plan, step 13), by
 //! version.
 
+pub mod app;
 pub mod calc;
 pub mod v1;
 

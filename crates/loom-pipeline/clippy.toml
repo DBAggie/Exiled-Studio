@@ -1,0 +1,26 @@
+# Core crate (ADR-016): must stay wasm32-compatible and host-independent.
+# No filesystem, threads, clocks, environment, or network; hosts inject these.
+# Keep the shared settings in sync with the workspace clippy.toml.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+
+disallowed-types = [
+  { path = "std::fs::File", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::fs::OpenOptions", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::time::Instant", reason = "ADR-016: clocks are injected by the host" },
+  { path = "std::time::SystemTime", reason = "ADR-016: clocks are injected by the host" },
+  { path = "std::net::TcpStream", reason = "ADR-011/016: no network in core" },
+  { path = "std::net::TcpListener", reason = "ADR-011/016: no network in core" },
+  { path = "std::net::UdpSocket", reason = "ADR-011/016: no network in core" },
+  { path = "std::thread::JoinHandle", reason = "ADR-016: threads belong to the host layer" },
+]
+disallowed-methods = [
+  { path = "std::fs::read", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::fs::read_to_string", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::fs::write", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::fs::read_dir", reason = "ADR-016: core crates do no filesystem I/O" },
+  { path = "std::thread::spawn", reason = "ADR-016: threads belong to the host layer" },
+  { path = "std::thread::sleep", reason = "ADR-016: threads belong to the host layer" },
+  { path = "std::env::var", reason = "ADR-016: configuration is injected by the host" },
+  { path = "std::env::var_os", reason = "ADR-016: configuration is injected by the host" },
+]

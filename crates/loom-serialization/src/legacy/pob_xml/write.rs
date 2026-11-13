@@ -459,7 +459,7 @@ fn items(w: &mut Writer, items: &Items) {
 /// entries), the lines are joined with `\n`: blank lines and indentation
 /// are not written. PoB reads such a text the same way (it trims each line
 /// and skips blank ones), so only the layout of the text changes.
-fn item_text(item: &Item) -> String {
+pub fn item_text(item: &Item) -> String {
     let lines = &item.body.lines;
     let spacing = &item.text_spacing;
     if spacing.len() != lines.len() + 1 {

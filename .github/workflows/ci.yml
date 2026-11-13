@@ -344,7 +344,7 @@ jobs:
       - name: Build core crates for wasm32-unknown-unknown
         run: >-
           cargo build --locked --target wasm32-unknown-unknown
-          -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
+          -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline
 
   deny:
     name: cargo-deny
