@@ -109,6 +109,22 @@ pub trait CalcData {
     fn mods_by_tag(&self, _tag: &str) -> Option<ModsByTag> {
         None
     }
+
+    /// Whether a passive node is a notable, and whether it is an
+    /// ascendancy's (P3-8n: which node an item's "Allocates <name>"
+    /// grants). `None` (the default) when the data does not say.
+    fn passive_kind(&self, _node: u32) -> Option<PassiveKind> {
+        None
+    }
+}
+
+/// A passive node's kind ([`CalcData::passive_kind`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PassiveKind {
+    /// A notable.
+    pub notable: bool,
+    /// An ascendancy's node.
+    pub ascendancy: bool,
 }
 
 /// The mods by an implicit tag ([`CalcData::mods_by_tag`]).
@@ -432,6 +448,19 @@ impl CalcData for Bundle {
 
     fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
         Some(self)
+    }
+
+    fn passive_kind(&self, node: u32) -> Option<PassiveKind> {
+        let p = self
+            .passives
+            .as_ref()?
+            .passives
+            .iter()
+            .find(|p| p.node == i64::from(node))?;
+        Some(PassiveKind {
+            notable: p.notable,
+            ascendancy: p.ascendancy.is_some(),
+        })
     }
 
     fn mods_by_tag(&self, tag: &str) -> Option<ModsByTag> {

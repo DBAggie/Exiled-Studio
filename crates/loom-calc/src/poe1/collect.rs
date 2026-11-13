@@ -509,8 +509,11 @@ const GRANTED_PASSIVE_STAT: &str = "mod_granted_passive_hash";
 /// `CalcSetup.lua` 1287 to 1297; P3-8n): each [`Poe1Quantity::GrantedPassive`]
 /// effect's value is a candidate node hash, the key of the passives table;
 /// a line's candidates share its source. PoB looks the node up by its name
-/// among the tree's notables and ascendancy nodes: here the one candidate
-/// the passives table has (none or several: indeterminate). PoB adds the
+/// among the tree's notables, then the ascendancy nodes
+/// (`notableMap[name] or ascendancyMap[name]`; `Classes/PassiveTree.lua`
+/// 551 to 563): here the one candidate the passives table has, or of
+/// several the one tree notable, else the one ascendancy notable (none, or
+/// two of a kind: indeterminate). PoB adds the
 /// node to the allocated set, so a node the tree already allocates (and
 /// connects) counts once; otherwise its stats count with the node as
 /// source.
@@ -545,6 +548,25 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
                 input.data.passive_stats(node).map(|_| node)
             })
             .collect();
+        // Of several, PoB's order: a tree notable, then an ascendancy node.
+        let pick = |tree: bool| -> Vec<u32> {
+            known
+                .iter()
+                .copied()
+                .filter(|&n| {
+                    input
+                        .data
+                        .passive_kind(n)
+                        .is_some_and(|k| k.notable && k.ascendancy != tree)
+                })
+                .collect()
+        };
+        let known = if known.len() > 1 {
+            let tree = pick(true);
+            if tree.is_empty() { pick(false) } else { tree }
+        } else {
+            known
+        };
         let [node] = known.as_slice() else {
             ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "passives",

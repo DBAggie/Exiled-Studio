@@ -421,6 +421,10 @@ impl CalcData for OverlayData<'_> {
         self.bundle.mods_by_tag(tag)
     }
 
+    fn passive_kind(&self, node: u32) -> Option<loom_calc::input::PassiveKind> {
+        self.bundle.passive_kind(node)
+    }
+
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]> {
         self.bundle.mastery_effect_stats(effect)
     }
