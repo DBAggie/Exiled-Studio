@@ -1762,7 +1762,10 @@ dependencies = [
  "loom-domain",
  "loom-parser",
  "loom-persistence",
+ "loom-pipeline",
  "loom-serialization",
+ "serde_json",
+ "thiserror 2.0.21",
 ]
 
 [[package]]
@@ -1840,6 +1843,7 @@ version = "0.0.0"
 dependencies = [
  "loom-domain",
  "loom-serialization",
+ "serde",
  "serde_json",
  "thiserror 2.0.21",
 ]

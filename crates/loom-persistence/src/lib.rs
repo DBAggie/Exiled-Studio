@@ -1,7 +1,8 @@
 //! File-first build storage (ADR-009; Phase 2 plan, decision 13). Host
 //! layer: filesystem access is allowed here and injected into the core
-//! from this crate. Autosave and recovery snapshots, and the SQLite index
-//! and cache, come with the build list in Phase 4.
+//! from this crate. [`recovery`] holds the autosave snapshots and
+//! [`recent`] the recent builds list (Phase 4 plan, decision 8); the SQLite
+//! index waits for search.
 //!
 //! - [`Store::load`] reads a build document of any version the migrations
 //!   reach ([`loom_serialization::dto::read_with`]) and returns the
@@ -22,6 +23,9 @@
 //! that failed: `PERSIST_*` for files ([`PersistError`]), `MIGRATE_*` and
 //! `DTO_*` from `loom-serialization` unchanged. No layer wraps or renames
 //! another's code.
+
+pub mod recent;
+pub mod recovery;
 
 use std::ffi::{OsStr, OsString};
 use std::io::{self, Write as _};
@@ -493,6 +497,35 @@ impl<F: FileOps> Store<F> {
             }
         })?;
         Ok(())
+    }
+
+    /// Writes `bytes` to `target` atomically, replacing it if it exists:
+    /// for the application's own files (recovery snapshots, the recent
+    /// list), never for a user's build ([`Store::save`] guards those).
+    ///
+    /// # Errors
+    /// `PERSIST_PATH`, `PERSIST_WRITE`, `PERSIST_RENAME`; the target is then
+    /// unchanged.
+    pub fn write_replacing(&self, target: &Path, bytes: &[u8]) -> Result<(), PersistError> {
+        let (dir, name) = split(target)?;
+        let temp = self.write_temp(&dir, &name, bytes)?;
+        self.files.rename(&temp, target).map_err(|source| {
+            let leftover = !self.discard(&temp);
+            PersistError::Rename {
+                from: temp.clone(),
+                to: target.to_owned(),
+                source,
+                leftover,
+            }
+        })
+    }
+
+    /// Reads a text file this store wrote (UTF-8, no byte order mark).
+    ///
+    /// # Errors
+    /// `PERSIST_READ`, `PERSIST_ENCODING`.
+    pub fn read_file(&self, path: &Path) -> Result<String, PersistError> {
+        self.read_text(path)
     }
 
     /// Whether the existing `target` may be replaced: a build document

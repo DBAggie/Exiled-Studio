@@ -69,6 +69,11 @@ dto! {
         pub origin: Option<String>,
         /// The game data the application calculates with.
         pub data: DataStatus,
+        /// Notices about the open build that are not errors (for example
+        /// `APP_RESOLUTION_CHANGED`: the build's stored resolutions differ
+        /// from this bundle's, so they stand and rolled values stay
+        /// unsettled).
+        pub notices: Vec<ApiError>,
     }
 
     /// The game data.
@@ -234,9 +239,20 @@ dto! {
         /// Whether there is a change to redo.
         pub can_redo: bool,
         /// What undo would revert.
-        pub undo: Option<ChangeKind>,
+        pub undo: Option<HistoryEntry>,
         /// What redo would apply again.
-        pub redo: Option<ChangeKind>,
+        pub redo: Option<HistoryEntry>,
+    }
+
+    /// One change in the history (ADR-017: an addon's change is recorded
+    /// like the user's).
+    pub struct HistoryEntry {
+        /// What it was.
+        pub kind: ChangeKind,
+        /// The item it changed.
+        pub item: u32,
+        /// The change request it applied, when an MCP client asked for it.
+        pub request: Option<u64>,
     }
 
     /// The calculation of the latest version.
@@ -253,13 +269,26 @@ dto! {
         pub error: Option<ApiError>,
     }
 
-    /// An item edit: line operations on one item.
+    /// An item edit: line operations on one item. It is refused as stale
+    /// (`APP_STALE_EDIT`) when the item's lines it names are not the ones
+    /// it expects.
     pub struct ItemEdit {
         /// The item's ID.
         pub item: u32,
         /// The operations, in order; line indices are the item's before
         /// the edit.
         pub ops: Vec<LineOp>,
+        /// The text each line the operations name had when the edit was
+        /// made, by line index.
+        pub expect: Vec<ExpectedLine>,
+    }
+
+    /// A line's text an edit expects.
+    pub struct ExpectedLine {
+        /// The line's index.
+        pub line: u32,
+        /// Its text.
+        pub text: String,
     }
 
     /// An item edit's effect, calculated by the application (never by the
@@ -342,9 +371,9 @@ dto! {
 
     /// A recent build.
     pub struct RecentEntry {
-        /// Its position in the list (the UI opens a recent build by it;
-        /// the application checks it, the UI never sends a path).
-        pub index: u32,
+        /// The ID the application issued for it (the UI opens a recent
+        /// build by it and never sends a path).
+        pub id: String,
         /// The build document's path.
         pub path: String,
         /// The display name.
@@ -441,6 +470,14 @@ dto_enum! {
             /// The line's index.
             line: u32,
         },
+        /// Sets a ranged line's roll, as PoB's `{range:r}` prefix (0 the
+        /// low end, 1 the high end), keeping the range.
+        SetRange {
+            /// The line's index.
+            line: u32,
+            /// The roll, from 0 to 1.
+            value: f64,
+        },
         /// Adds a modifier line after the item's last line.
         Add {
             /// The text.
@@ -475,10 +512,10 @@ dto_enum! {
         Redo,
         /// Saves the build where it is saved.
         Save,
-        /// Opens a recent build by its index.
+        /// Opens a recent build by its ID.
         OpenRecent {
-            /// The index in the recent list.
-            index: u32,
+            /// The ID.
+            id: String,
         },
         /// Restores a recovery snapshot.
         Restore {
@@ -500,6 +537,8 @@ dto_enum! {
             /// The request's ID.
             id: u64,
         },
+        /// Writes the build's PoB share code.
+        ExportShareCode,
         /// Closes the build.
         Close,
     }
@@ -572,7 +611,7 @@ mod tests {
     fn command_should_read_its_kebab_case_wire_form() {
         let json = r#"{"edit-item":{"item":1,"ops":[{"replace":{"line":3,"text":"+1 to x"}},"undo-is-not-an-op"]}}"#;
         assert!(serde_json::from_str::<Command>(json).is_err());
-        let json = r#"{"edit-item":{"item":1,"ops":[{"replace":{"line":3,"text":"+1 to x"}},{"remove":{"line":4}},{"add":{"text":"y"}}]}}"#;
+        let json = r#"{"edit-item":{"item":1,"ops":[{"replace":{"line":3,"text":"+1 to x"}},{"remove":{"line":4}},{"add":{"text":"y"}}],"expect":[]}}"#;
         let command: Command = serde_json::from_str(json).unwrap();
         assert_eq!(
             command,
@@ -588,6 +627,7 @@ mod tests {
                         text: "y".to_owned()
                     },
                 ],
+                expect: Vec::new(),
             })
         );
         assert_eq!(serde_json::to_string(&Command::Undo).unwrap(), r#""undo""#);

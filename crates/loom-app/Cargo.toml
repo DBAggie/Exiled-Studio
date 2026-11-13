@@ -15,6 +15,13 @@ loom-parser.workspace = true
 loom-calc.workspace = true
 loom-serialization.workspace = true
 loom-persistence.workspace = true
+loom-pipeline.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+loom-persistence.workspace = true
+loom-serialization.workspace = true
 
 [lints]
 workspace = true
