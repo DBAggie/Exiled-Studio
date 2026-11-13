@@ -34,7 +34,8 @@
 //! `data-parity`). What it cannot know is [`SocketMatch::Unknown`]: the
 //! gem keeps its own quality and a skill that reads it has a reason
 //! (`unmodelled-skill` `socket-colour-quality`): untyped gem content in a
-//! group of the slot, an item that is not typed, an item without a
+//! group of the slot (the index is not certain), an item that is not
+//! typed, an item without a
 //! `Sockets` line (PoB's `socketLimit` sockets), more than one such line,
 //! a line that rebuilds the sockets ([`REBUILDS`]), or a gem whose colour
 //! the bundle does not carry.
@@ -120,10 +121,9 @@ fn sockets(build: &Build, slot: &str) -> Sockets {
     let Some(set) = active_item_set(build) else {
         return Sockets::None;
     };
-    if set.slots.opaque().next().is_some() {
-        return Sockets::Unknown("untyped-slot");
-    }
-    // PoB keeps the last entry of a slot name (`selItemId` set per entry).
+    // The typed slots, as `collect` reads the items in use: untyped content
+    // of a set is also PoB's jewel-socket entries (`SocketIdURL`). PoB
+    // keeps the last entry of a slot name (`selItemId` set per entry).
     let Some(id) = set
         .slots
         .typed()
