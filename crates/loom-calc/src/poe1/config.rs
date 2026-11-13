@@ -50,11 +50,12 @@
 //! The stats behind those modifiers are [`DEPENDS_ON`]: they must stay
 //! reasons (`unmapped-stat`), and mapping one (even as `NoEffect`) must
 //! revisit this table (a test checks). Inputs with their
-//! own effects (a minion's aura, the pantheon, and every input not
-//! listed) stay reasons; charges ([`super::charges`], P3-12e), the
-//! enemy's damage taken (shock, the boss kind, delirium:
-//! [`super::damage_taken`], P3-12f), and the bandit
-//! ([`super::collect`], P3-12f) have their effects. Custom
+//! own effects (a minion's aura, and every input not listed) stay
+//! reasons; charges ([`super::charges`], P3-12e), the enemy's damage
+//! taken and evasion (shock, the boss kind, delirium: P3-12f; Intimidate,
+//! Unnerve, Blind: P3-12g; [`super::damage_taken`]), the bandit
+//! ([`super::collect`], P3-12f), and the pantheon ([`super::pantheon`],
+//! P3-12g) have their effects. Custom
 //! modifier blocks are not inputs: their lines act through their
 //! resolutions (`collect::config`, P3-12c), and so do the lines of PoB's
 //! legacy `customMods` input where PoB moves them into a block
@@ -181,6 +182,40 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   (line 424; itself a reason). PoB's skills that expose set the
 ///   exposure itself (`Data/Skills`), not the chance: other gems, reasons.
 ///   The modifiers' stats are in [`DEPENDS_ON`].
+///
+/// Added in P3-12g, the public builds' most frequent remaining inputs
+/// (each line of `ConfigOptions.lua`, then every reader of its names in
+/// `CalcSetup.lua`, `CalcPerform.lua`, `CalcOffence.lua`, `CalcDefence.lua`,
+/// `CalcTriggers.lua`, `CalcActiveSkill.lua`, `CalcTools.lua`, `Calcs.lua`,
+/// `CalcMirages.lua`, `CalcBreakdown.lua`):
+///
+/// - `conditionCastSpellRecently`, `conditionUsedMinionSkillRecently`:
+///   `Condition:CastSpellRecently`, `Condition:UsedMinionSkillRecently`,
+///   each with `Condition:UsedSkillRecently` (lines 1489, 1526); no calc
+///   module reads them.
+/// - `multiplierNonInstantSpellCastRecently`:
+///   `Multiplier:NonInstantSpellCastRecently` (line 1493); no calc module
+///   reads it.
+/// - `conditionKilledRecently`: `Condition:KilledRecently` (line 1270);
+///   only `CalcTriggers.lua` (1136, 1156) reads it, for trigger skills
+///   (other gems, reasons).
+/// - `conditionLeeching`: `Condition:Leeching` (line 1068); no calc module
+///   reads it.
+/// - `conditionEnemyBleeding`, `conditionEnemyLowLife`,
+///   `conditionEnemyPoisoned`: the enemy's `Condition:Bleeding`,
+///   `Condition:LowLife`, `Condition:Poisoned` (lines 1786, 1777, 1798); no
+///   calc module reads them on the enemy (`CalcSetup.lua` 73 sets
+///   `Poisoned` from poison stacks; `CalcPerform.lua` 1605 reads the
+///   player's `LowLife`, for flasks).
+/// - `conditionEnemyIgnited`: the enemy's `Condition:Ignited` (line 1852),
+///   which `CalcSetup.lua` (72) turns into `Condition:Burning`. Readers:
+///   Combustion (`CalcPerform.lua` 2709 to 2716: the enemy's fire
+///   resistance, only for a skill supported by the Combustion gem, whose
+///   stat `ignites_apply_fire_resistance_+` is in [`DEPENDS_ON`]) and
+///   Call the Pyre's trigger (`CalcTriggers.lua` 1371, a gem).
+/// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
+///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
+///   (not a slice field).
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
@@ -208,6 +243,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
     ("conditionBlockedRecently", &["Condition:BlockedRecently"]),
     (
+        "conditionCastSpellRecently",
+        &["Condition:CastSpellRecently", "Condition:UsedSkillRecently"],
+    ),
+    (
         "conditionChilledEnemyRecently",
         &["Condition:ChilledEnemyRecently"],
     ),
@@ -216,6 +255,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionCritRecently",
         &["Condition:CritRecently", "Condition:SkillCritRecently"],
     ),
+    ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
     (
         "conditionEnemyChilled",
         &["enemy Condition:Chilled", "enemy Condition:ChilledConfig"],
@@ -233,14 +273,23 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["enemy FireExposure (with CanApplyFireExposure)"],
     ),
     (
+        "conditionEnemyIgnited",
+        &["enemy Condition:Ignited", "enemy Condition:Burning"],
+    ),
+    (
         "conditionEnemyLightningExposure",
         &["enemy LightningExposure (with CanApplyLightningExposure)"],
     ),
+    ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
+    ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
     (
         "conditionEnemyOnConsecratedGround",
         &["enemy Condition:OnConsecratedGround"],
     ),
+    ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionFullLife", &["Condition:FullLife"]),
+    ("conditionKilledRecently", &["Condition:KilledRecently"]),
+    ("conditionLeeching", &["Condition:Leeching"]),
     (
         "conditionOnConsecratedGround",
         &["Condition:OnConsecratedGround"],
@@ -252,6 +301,13 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionStationary",
         &["Multiplier:StationarySeconds", "Condition:Stationary"],
+    ),
+    (
+        "conditionUsedMinionSkillRecently",
+        &[
+            "Condition:UsedMinionSkillRecently",
+            "Condition:UsedSkillRecently",
+        ],
     ),
     (
         "configSpectralTigerCount",
@@ -273,6 +329,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
+    ),
+    (
+        "multiplierNonInstantSpellCastRecently",
+        &["Multiplier:NonInstantSpellCastRecently"],
     ),
     (
         "multiplierRage",
@@ -434,6 +494,7 @@ pub const DEPENDS_ON: &[&str] = &[
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
     "graft_skill_inflict_fire_exposure_on_hit_%_chance",
     "graft_skill_inflict_lightning_exposure_on_hit_%_chance",
+    "ignites_apply_fire_resistance_+",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "inflict_all_exposure_on_hit",
     "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",

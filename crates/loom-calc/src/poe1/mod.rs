@@ -75,6 +75,10 @@ pub enum Poe1Quantity {
     /// the enemy): its `Increased` and `More` effects scale each hit
     /// ([`damage_taken`]).
     EnemyDamageTaken,
+    /// The enemy's evasion modifiers (PoB's `Evasion` INC and MORE on the
+    /// enemy, `calcLib.val`): they scale its base evasion before an
+    /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
+    EnemyEvasion,
 }
 
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
@@ -136,6 +140,7 @@ impl core::fmt::Display for Poe1Quantity {
                 f.write_str("maximum-physical-damage-reduction")
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
+            Self::EnemyEvasion => f.write_str("enemy-evasion"),
         }
     }
 }

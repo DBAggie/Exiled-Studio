@@ -529,6 +529,53 @@ fn the_hit_chance_should_follow_the_enemys_evasion() {
     assert!(value(&r, Field::AverageDamage) < value(&open, Field::AverageDamage) * 0.19);
 }
 
+/// P3-12g (`poe1::damage_taken`): a blinded enemy has 20% less evasion
+/// (`floor(-20 x 1)` MORE, before PoB's rounding), and an intimidated one
+/// takes 10% increased attack damage; Unnerve is for spells only.
+#[test]
+fn blind_and_intimidate_should_act_on_an_attack() {
+    let with = |enemy: &[(&str, f64)], checks: &[&str]| {
+        let mut b = build("Smite", Some("1"), &AXE, enemy);
+        for set in b.config.sets.typed_mut() {
+            for name in checks {
+                set.inputs.push(ConfigInput {
+                    name: (*name).to_owned(),
+                    value: ConfigValue::Boolean(true),
+                    kind: loom_domain::ConfigInputKind::Input,
+                    lines: Vec::new(),
+                    attributes: Vec::new(),
+                });
+            }
+        }
+        run(&b, &AXE)
+    };
+    let evasive = [
+        ("enemyArmour", 0.0),
+        ("enemyEvasion", 1000.0),
+        ("enemyLightningResist", 0.0),
+    ];
+    let r = with(&evasive, &["conditionEnemyBlinded"]);
+    // round(20 / (20 + (round(1000 x 0.8) / 5) ^ 0.9) x 125).
+    let chance = (20.0 / (20.0 + math::pow(800.0 / 5.0, 0.9)) * 125.0 + 0.5)
+        .floor()
+        .clamp(5.0, 100.0);
+    assert_eq!(value(&r, Field::HitChance), chance);
+    assert_eq!(value(&r, Field::HitChance), 21.0);
+    assert!(partial(&r, Field::HitChance).is_empty());
+    // Intimidate: each type's pass times 1.1; Unnerve: nothing on an attack.
+    let open = with(&OPEN, &[]);
+    let r = with(&OPEN, &["conditionEnemyIntimidated"]);
+    let hit = pass(10.0, 21.0, 0.5) * 1.1 + pass(5.0, 11.0, 1.0) * 1.1;
+    let crit = pass(10.0, 21.0, 0.5 * 1.5) * 1.1 + pass(5.0, 11.0, 1.5) * 1.1;
+    let average = (hit * (1.0 - 5.0 / 100.0) + crit * 5.0 / 100.0) * 100.0 / 100.0;
+    assert!((value(&r, Field::AverageDamage) - average).abs() < 1e-9);
+    assert!(partial(&r, Field::AverageDamage).is_empty());
+    let r = with(&OPEN, &["conditionEnemyUnnerved", "conditionEnemyBlinded"]);
+    for f in [Field::AverageDamage, Field::HitChance, Field::HitDps] {
+        assert_eq!(value(&r, f).to_bits(), value(&open, f).to_bits(), "{f}");
+    }
+}
+
 #[test]
 fn the_enemys_armour_should_reduce_physical_damage_per_pass() {
     let enemy = [

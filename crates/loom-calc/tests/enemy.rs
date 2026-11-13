@@ -252,7 +252,8 @@ fn the_armour_table_should_equal_pobs_with_its_constant() {
 }
 
 /// Every stat the config rules depend on (`loom_calc::poe1::config::
-/// DEPENDS_ON`, `poe1::buffs::DEPENDS_ON`) is a stat of the real bundle: a
+/// DEPENDS_ON`, `poe1::buffs::DEPENDS_ON`, `poe1::damage_taken::
+/// BLIND_DEPENDS_ON`) is a stat of the real bundle: a
 /// misspelt ID would pass the `Unmapped` check. Maintainer-run:
 /// `LOOM_BUNDLE_DIR=<bundle> cargo test -p loom-calc --test enemy --
 /// --ignored`.
@@ -268,6 +269,7 @@ fn the_config_rules_stats_should_be_real_stats() {
     let missing: Vec<_> = loom_calc::poe1::config::DEPENDS_ON
         .iter()
         .chain(loom_calc::poe1::buffs::DEPENDS_ON)
+        .chain(loom_calc::poe1::damage_taken::BLIND_DEPENDS_ON)
         .filter(|id| !data.stats.iter().any(|s| s.id == **id))
         .collect();
     assert!(missing.is_empty(), "{missing:?}");

@@ -1082,6 +1082,86 @@ fn the_enemys_damage_taken_should_scale_each_hit_as_pob_does() {
     );
 }
 
+/// Intimidate, Unnerve, and Blind (P3-12g, `poe1::damage_taken`): an
+/// unnerved enemy takes 10% increased spell damage, an intimidated one 10%
+/// increased attack damage (none on a spell), and Blind changes no spell
+/// field; a value other than a boolean is a reason.
+#[test]
+fn unnerve_should_raise_a_spells_damage_taken_and_intimidate_not() {
+    let with = |inputs: &[(&str, ConfigValue)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: value.clone(),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let on = || ConfigValue::Boolean(true);
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let expected = |taken: f64| {
+        let effect = taken * (1.0 - 50.0 / 100.0);
+        let hit = (100.0 / 2.0 + 200.0 / 2.0) * effect;
+        let crit_hit = ((100.0 * 1.5) / 2.0 + (200.0 * 1.5) / 2.0) * effect;
+        hit * (1.0 - 5.0 / 100.0) + crit_hit * 5.0 / 100.0
+    };
+    let r = with(&[("conditionEnemyUnnerved", on())]);
+    assert_eq!(r.fields[&Field::AverageDamage].state, FieldState::Complete);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(1.0 + 10.0 / 100.0).to_bits()
+    );
+    // With a shock, one sum of increases: `1 + (10 + 20) / 100`.
+    let r = with(&[
+        ("conditionEnemyUnnerved", on()),
+        ("conditionEnemyShocked", on()),
+        (
+            "conditionShockEffect",
+            ConfigValue::Number(Sourced::new(loom_domain::Number(20.0))),
+        ),
+    ]);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(1.0 + 30.0 / 100.0).to_bits()
+    );
+    for inputs in [
+        vec![("conditionEnemyIntimidated", on())],
+        vec![("conditionEnemyBlinded", on())],
+        vec![("conditionEnemyUnnerved", ConfigValue::Boolean(false))],
+    ] {
+        let r = with(&inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+            assert_eq!(value(&r, f).to_bits(), value(&bare, f).to_bits(), "{f}");
+        }
+    }
+    for input in [
+        "conditionEnemyUnnerved",
+        "conditionEnemyIntimidated",
+        "conditionEnemyBlinded",
+    ] {
+        let r = with(&[(input, ConfigValue::String("yes".to_owned()))]);
+        let FieldState::Partial(p) = &r.fields[&Field::AverageDamage].state else {
+            panic!("{input}: not partial");
+        };
+        assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+            input: input.to_owned(),
+        }));
+    }
+}
+
 /// Onslaught (P3-12f, `poe1::buffs`): 20% increased attack and cast
 /// speed; any value other than a boolean is a reason.
 #[test]

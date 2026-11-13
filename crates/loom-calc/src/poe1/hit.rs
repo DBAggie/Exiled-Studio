@@ -71,7 +71,9 @@
 //!    (`accuracy_rating_per_level x (level - 1)`, `Modules/CalcSetup.lua`),
 //!    2 per dexterity (`data.misc.AccuracyPerDexBase`), and the stats;
 //!    `max(min(round(accuracy / (accuracy + (evasion / 5) ^ 0.9) x 125),
-//!    100), 5)` against the enemy's evasion rounded (`calcs.hitChance`).
+//!    100), 5)` against the enemy's evasion rounded (`calcs.hitChance`;
+//!    the evasion is `calcLib.val`: the enemy model's base times the
+//!    enemy's evasion INC and MORE, only Blind's so far, P3-12g).
 //!    The enemy blocks nothing modelled, so the hit chance is the accuracy
 //!    hit chance.
 //!
@@ -838,7 +840,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     let mut hit_reasons = unvetted.clone();
     enemy_reasons(&enemy, true, &mut hit_reasons);
     let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
-    let hit_chance = accuracy_hit_chance(calc, &enemy, accuracy)?;
+    let hit_chance = accuracy_hit_chance(calc, &enemy, accuracy, &cx, &mut hit_reasons)?;
     calc.set_derived(
         Field::HitChance,
         phases::query(hit_chance, hit_reasons),
@@ -1091,14 +1093,35 @@ fn accuracy_hit_chance(
     calc: &mut Calc<'_>,
     enemy: &Enemy,
     accuracy: Valued,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    // `enemyEvasion = m_max(round(calcLib.val(enemyDB, "Evasion")), 0)`.
-    let evasion = leaf(
+    // `enemyEvasion = m_max(round(calcLib.val(enemyDB, "Evasion")), 0)`:
+    // the base (the enemy model's) times its INC and MORE, which only
+    // Blind gives ([`Poe1Quantity::EnemyEvasion`], P3-12g). Without such an
+    // effect the graph keeps the base alone.
+    let base = leaf(
         calc,
         Source::Enemy,
         Quantity::Evasion,
         enemy.evasion.unwrap_or(0.0),
     )?;
+    let quantity = Quantity::Poe1(Poe1Quantity::EnemyEvasion);
+    let evasion = if calc
+        .store()
+        .effects()
+        .iter()
+        .any(|e| e.quantity == quantity)
+    {
+        let (inc, more) = modifiers(calc, quantity, cx, reasons)?;
+        phases::product(
+            calc,
+            &[base, inc, more],
+            Term::Step("enemy-evasion-modified"),
+        )?
+    } else {
+        base
+    };
     let evasion = phases::round(calc, evasion, Term::Step("enemy-evasion-rounded"))?;
     let zero = phases::constant(calc, "no-negative-evasion", 0.0)?;
     let evasion = phases::pair(calc, evasion, zero, Term::Step("enemy-evasion"), false)?;

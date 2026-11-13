@@ -1,5 +1,6 @@
-//! The enemy's damage taken from the config (Phase 3 plan, step 12;
-//! P3-12f): shock, the Uber boss kind, and delirium.
+//! The enemy's damage taken and evasion from the config (Phase 3 plan,
+//! step 12): shock, the Uber boss kind, and delirium (P3-12f);
+//! Intimidate, Unnerve, and Blind (P3-12g).
 //!
 //! What PoB v2.67.2 does:
 //! - **The hit** (`Modules/CalcOffence.lua` 3515 to 3620, in the effective
@@ -35,6 +36,25 @@
 //!   the enemy `DamageTaken` MORE -16 to -80 and `Damage` INC 6 to 30 (the
 //!   enemy's damage: only PoB's damage-taken estimates read it, no slice
 //!   field); `0` ("None") nothing.
+//! - **Intimidate and Unnerve** (`conditionEnemyIntimidated`,
+//!   `conditionEnemyUnnerved`, `Modules/ConfigOptions.lua` 1956, 1977):
+//!   the enemy's `Condition:Intimidated` or `Condition:Unnerved`;
+//!   `calcs.initModDB` (`Modules/CalcSetup.lua` 64 to 67) gives every
+//!   actor, the enemy too, `DamageTaken` INC 10 with `ModFlag.Attack`
+//!   while intimidated and with `ModFlag.Spell` while unnerved: an
+//!   attack's or a spell's hit takes it (the party's variants need a party
+//!   member's condition: not modelled, no party).
+//! - **Blind** (`conditionEnemyBlinded`, 1834): the enemy's
+//!   `Condition:Blinded`, which `calcs.initModDB` (74) turns into the
+//!   `Blind` flag; `doActorMisc` (`Modules/CalcPerform.lua` 824 to 835,
+//!   run for the enemy at 3559) then gives the enemy `Accuracy` and
+//!   `Evasion` MORE `floor(-20 x effect)`, `effect` 1 plus the enemy's
+//!   `BlindEffect` and `BuffEffectOnSelf` INC (`blind_effect_+%`, "#%
+//!   increased Blind Effect", is an `EnemyModifier` of `BlindEffect`,
+//!   `ModParser.lua` 2238: it must stay a reason, [`BLIND_DEPENDS_ON`]),
+//!   unless the enemy cannot be blinded or is unaffected (enemy modifiers
+//!   only). The enemy's evasion is an attack's chance to hit; its accuracy
+//!   reaches no slice field.
 //!
 //! What the engine does: one quantity, [`Poe1Quantity::EnemyDamageTaken`]
 //! (PoB's `DamageTaken` on the enemy, every damage type), whose effects
@@ -51,6 +71,7 @@ use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
 use super::Poe1Quantity;
 use super::config::last_input as last;
 use super::enemy::{self, BossKind};
+use crate::condition::Flags;
 use crate::ingest::Ingest;
 use crate::input::CalcData;
 use crate::quantity::{Op, Quantity};
@@ -66,6 +87,25 @@ pub const SHOCK_EFFECT_INPUT: &str = "conditionShockEffect";
 pub const DELIRIUM_INPUT: &str = "deliriousPercentage";
 /// The boss kind list.
 pub const BOSS_INPUT: &str = "enemyIsBoss";
+/// The check that intimidates the enemy.
+pub const INTIMIDATED_INPUT: &str = "conditionEnemyIntimidated";
+/// The check that unnerves the enemy.
+pub const UNNERVED_INPUT: &str = "conditionEnemyUnnerved";
+/// The check that blinds the enemy.
+pub const BLINDED_INPUT: &str = "conditionEnemyBlinded";
+
+/// Intimidate's and Unnerve's increased damage taken (`CalcSetup.lua` 64,
+/// 66).
+pub const INTIMIDATE_UNNERVE_DAMAGE_TAKEN: f64 = 10.0;
+
+/// Blind's less evasion without modifiers (`floor(-20 x 1)`).
+pub const BLIND_LESS_EVASION: f64 = -20.0;
+
+/// The stats through which a blinded enemy's evasion would differ from
+/// [`BLIND_LESS_EVASION`]: they must stay reasons (a test checks each is
+/// `Unmapped` through every mapping; the real-bundle test that they are
+/// stats).
+pub const BLIND_DEPENDS_ON: &[&str] = &["blind_effect_+%"];
 
 /// The largest shock without modifiers (`ailmentData.Shock.max`,
 /// `Modules/Data.lua` 427).
@@ -88,7 +128,8 @@ pub const DELIRIUM: [(&str, f64); 5] = [
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
     match input {
-        SHOCKED_INPUT | SHOCK_EFFECT_INPUT | DELIRIUM_INPUT => true,
+        SHOCKED_INPUT | SHOCK_EFFECT_INPUT | DELIRIUM_INPUT | INTIMIDATED_INPUT
+        | UNNERVED_INPUT | BLINDED_INPUT => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -120,6 +161,47 @@ fn taken(op: Op, value: f64, input: &str) -> Effect {
         source: Source::Config {
             input: input.to_owned(),
         },
+    }
+}
+
+/// A check input's value: `Ok(false)` when unset or off, `Err(())` for a
+/// value that is not a boolean (PoB reads any other value as on; not
+/// modelled, a reason).
+fn check(set: &ConfigSet, name: &str) -> Result<bool, ()> {
+    match last(set, name, ConfigInputKind::Input) {
+        None | Some(ConfigValue::Boolean(false)) => Ok(false),
+        Some(ConfigValue::Boolean(true)) => Ok(true),
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => Err(()),
+    }
+}
+
+/// Intimidate, Unnerve, and Blind (module docs).
+fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+    let checks = [
+        (INTIMIDATED_INPUT, Flags::ATTACK),
+        (UNNERVED_INPUT, Flags::SPELL),
+        (BLINDED_INPUT, Flags::NONE),
+    ];
+    for (input, flag) in checks {
+        match check(set, input) {
+            Ok(false) => {}
+            Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: input.to_owned(),
+            }),
+            Ok(true) if input == BLINDED_INPUT => ingest.effect(Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyEvasion),
+                op: Op::More,
+                value: BLIND_LESS_EVASION,
+                conditions: Conditions::none(),
+                source: Source::Config {
+                    input: input.to_owned(),
+                },
+            }),
+            Ok(true) => ingest.effect(Effect {
+                conditions: Conditions::none().with_all(flag),
+                ..taken(Op::Increased, INTIMIDATE_UNNERVE_DAMAGE_TAKEN, input)
+            }),
+        }
     }
 }
 
@@ -155,6 +237,7 @@ pub fn damage_taken(
     ingest: &mut Ingest<'_>,
 ) {
     let Some(set) = set else { return };
+    conditions(set, ingest);
     match shock(set) {
         Ok(Some(shock)) => ingest.effect(taken(Op::Increased, shock, SHOCK_EFFECT_INPUT)),
         Ok(None) => {}
@@ -244,6 +327,57 @@ mod tests {
         }
     }
 
+    /// No mapped row, and no `NoEffect` row but the listed one, names
+    /// Intimidate, Unnerve, or Blind (P3-12g): such a stat (intimidating or
+    /// blinding on hit, a stronger Blind) is a reason, so the configured
+    /// conditions are the only ones the engine applies, as in a build
+    /// without those stats in PoB.
+    #[test]
+    fn no_mapped_stat_should_name_intimidate_unnerve_or_blind() {
+        use crate::ingest::{StatMap, StatMapping};
+        use crate::poe1::ArmourSlot;
+        use crate::poe1::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
+        use loom_domain::StatId;
+
+        let words = [
+            "intimidate",
+            "intimidated",
+            "intimidates",
+            "unnerve",
+            "unnerved",
+            "unnerves",
+            "blind",
+            "blinded",
+            "blinds",
+        ];
+        // Blind on you, not the enemy's (the pantheon's Garukhan).
+        let listed = ["cannot_be_blinded"];
+        let ids = HIT_ROWS
+            .iter()
+            .map(|r| r.0)
+            .chain(ROWS.iter().map(|r| r.0))
+            .chain(LOCAL_ROWS.iter().map(|r| r.0))
+            .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        for id in ids {
+            assert!(!names(id, &words), "{id}: revisit poe1::damage_taken");
+        }
+        for (id, _) in NO_EFFECT {
+            assert!(
+                !names(id, &words) || listed.contains(id),
+                "{id}: a NoEffect row naming Intimidate, Unnerve, or Blind"
+            );
+        }
+        let piece = PieceMapping {
+            slot: ArmourSlot::Helmet,
+        };
+        let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
+        for stat in BLIND_DEPENDS_ON {
+            for m in mappings {
+                assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
+            }
+        }
+    }
+
     #[test]
     fn the_inputs_should_not_be_named_only() {
         for input in [
@@ -251,6 +385,9 @@ mod tests {
             SHOCK_EFFECT_INPUT,
             DELIRIUM_INPUT,
             BOSS_INPUT,
+            INTIMIDATED_INPUT,
+            UNNERVED_INPUT,
+            BLINDED_INPUT,
         ] {
             assert!(!super::super::config::named_only(input), "{input}");
             assert!(!super::super::config::enemy_damage(input), "{input}");
