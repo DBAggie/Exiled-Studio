@@ -94,6 +94,60 @@ fn stat_set(id: &str) -> StatSet {
     }
 }
 
+/// Intimidating Cry (close-out): an 8 s cooldown, one stored use, two
+/// exerted attacks, no warcry speed.
+fn intimidating_cry_effect() -> GrantedEffect {
+    GrantedEffect {
+        cast_time: 800,
+        levels: vec![EffectLevel {
+            level: 1,
+            costs: Vec::new(),
+            cost_multiplier: 100,
+            cooldown: 8000,
+            stored_uses: 1,
+            attack_speed_multiplier: 0,
+            attack_time: 0,
+            reservations: Vec::new(),
+        }],
+        ..effect("IntimidatingCry", "intimidating-cry")
+    }
+}
+
+fn intimidating_cry_set() -> StatSet {
+    StatSet {
+        id: "IntimidatingCry".to_owned(),
+        implicit_stats: Vec::new(),
+        constant_stats: vec![
+            ConstantStat {
+                stat: "intimidating_cry_movement_speed_+%_per_5_power_up_to_cap".to_owned(),
+                value: 3,
+            },
+            ConstantStat {
+                stat: "skill_empowers_next_x_melee_attacks".to_owned(),
+                value: 2,
+            },
+        ],
+        base_effectiveness: 1.0,
+        incremental_effectiveness: 0.0,
+        damage_incremental_effectiveness: None,
+        levels: vec![StatSetLevel {
+            level: 1,
+            spell_crit_chance: 0,
+            attack_crit_chance: 0,
+            base_multiplier: 0,
+            damage_effectiveness: Some(0),
+            float_stats: Vec::new(),
+            stats: vec![LevelStat {
+                stat: "warcry_speed_+%".to_owned(),
+                value: 0,
+                interpolation: Some(1),
+            }],
+            flags: Vec::new(),
+            granted_effects: Vec::new(),
+        }],
+    }
+}
+
 fn active(id: &str, classes: &[&str]) -> ActiveSkill {
     ActiveSkill {
         id: id.to_owned(),
@@ -143,19 +197,39 @@ struct Data {
 
 impl Data {
     fn new() -> Self {
-        let ids = ["Smite", "TestStrike", "TestMaceStrike", "TestOverStrike"];
+        let ids = [
+            "Smite",
+            "TestStrike",
+            "TestMaceStrike",
+            "TestOverStrike",
+            "IntimidatingCry",
+        ];
         let (gems, gem_effects) = ids.iter().map(|id| gem_row(id)).unzip();
+        let mut sets: Vec<StatSet> = ids[..4].iter().map(|id| stat_set(id)).collect();
+        sets.push(intimidating_cry_set());
         Self {
             effects: vec![
                 effect("Smite", "smite"),
                 effect("TestStrike", "smite"),
                 effect("TestMaceStrike", "mace-strike"),
                 effect("TestOverStrike", "smite"),
+                intimidating_cry_effect(),
             ],
-            sets: ids.iter().map(|id| stat_set(id)).collect(),
+            sets,
             actives: vec![
                 active("smite", &["One Hand Axe"]),
                 active("mace-strike", &["One Hand Mace"]),
+                ActiveSkill {
+                    id: "intimidating-cry".to_owned(),
+                    name: "Intimidating Cry".to_owned(),
+                    types: ["Area", "Buff", "Cooldown", "Duration", "Warcry"]
+                        .iter()
+                        .map(|t| (*t).to_owned())
+                        .collect(),
+                    minion_types: Vec::new(),
+                    weapon_classes: Vec::new(),
+                    manually_cast: true,
+                },
             ],
             gems,
             gem_effects,
@@ -1024,4 +1098,52 @@ fn resolute_technique_and_bitter_frost_should_skip_what_they_do_not_read() {
     let r = run(&b, &AXE);
     assert!(partial(&r, Field::AverageDamage).is_empty());
     assert_eq!(value(&r, Field::AverageDamage), 0.0);
+}
+
+/// Intimidating Cry's exerted attacks (close-out; `CalcOffence.lua` 2592 to
+/// 2600, 3200 to 3201): PoB adds their uptime to the double damage chance,
+/// `min((exerts / rate) / (cooldown + cast time), 1) x 100 x stored uses`,
+/// the cooldown rounded up to server ticks and the cast time `0.8 / (1 +
+/// warcry speed)`. The uptime divides by the attack rate, so a rate that
+/// differs from PoB's (Q11) moves the average damage too (the Smite gate
+/// builds' register entries).
+#[test]
+fn intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate() {
+    let plain = run(&build("Smite", Some("1"), &AXE, &OPEN), &AXE);
+    let mut b = build("Smite", Some("1"), &AXE, &OPEN);
+    let mut cry = SocketGroup {
+        label: None,
+        enabled: true,
+        slot: None,
+        main_active_skill: None,
+        gems: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    cry.gems.push(Gem {
+        gem: Some(GemId::new("Test/Gems/IntimidatingCry")),
+        skill: Some(SkillId::new("IntimidatingCry")),
+        name: None,
+        level: Sourced::new(1),
+        quality: Sourced::new(0),
+        enabled: true,
+        attributes: Vec::new(),
+    });
+    for set in b.skills.sets.typed_mut() {
+        set.groups.push(cry.clone());
+    }
+    let r = run(&b, &AXE);
+    assert!(
+        partial(&r, Field::AverageDamage).is_empty(),
+        "{:?}",
+        partial(&r, Field::AverageDamage)
+    );
+    // The axe's 800 ms with Smite's -20% multiplier: 1 attack per second.
+    let rate = value(&r, Field::Speed);
+    assert_eq!(rate, value(&plain, Field::Speed));
+    let tick = 1.0 / 0.033;
+    let cooldown = math::ceil(8.0 * tick) / tick;
+    let uptime = ((2.0 / rate) / (cooldown + 0.8)).min(1.0) * 100.0;
+    let expected = value(&plain, Field::AverageDamage) * (1.0 + uptime / 100.0);
+    let got = value(&r, Field::AverageDamage);
+    assert!((got - expected).abs() < 1e-9 * expected, "{got} {expected}");
 }
