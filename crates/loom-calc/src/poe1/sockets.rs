@@ -38,7 +38,9 @@
 //! typed, an item without a
 //! `Sockets` line (PoB's `socketLimit` sockets), more than one such line,
 //! a line that rebuilds the sockets ([`REBUILDS`]), or a gem whose colour
-//! the bundle does not carry.
+//! the bundle does not carry in a red, green, or blue socket. An item
+//! without a `Sockets` line can over-report: on a base without PoB's
+//! `socketLimit` (a ring, an amulet) PoB has no sockets, so no match.
 
 use loom_domain::{Build, Item, LineKind, LineResolution, Resolved, SocketGroup};
 
@@ -221,12 +223,19 @@ pub fn socket_matches(
                         if group.gems.opaque().next().is_some() {
                             return SocketMatch::Unknown("untyped-gem");
                         }
+                        // No socket, or a white or abyssal one: no match
+                        // whatever the gem's colour.
+                        let Some(&socket) = colours.get(index).filter(|c| "RGB".contains(**c))
+                        else {
+                            return SocketMatch::No;
+                        };
                         let Some(attribute) = effect.attribute else {
                             return SocketMatch::Unknown("no-colour");
                         };
-                        match (colours.get(index), colour(attribute)) {
-                            (Some(socket), Some(gem)) if *socket == gem => SocketMatch::Yes,
-                            _ => SocketMatch::No,
+                        if colour(attribute) == Some(socket) {
+                            SocketMatch::Yes
+                        } else {
+                            SocketMatch::No
                         }
                     }
                 }

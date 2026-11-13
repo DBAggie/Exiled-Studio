@@ -1661,3 +1661,146 @@ fn items_whose_sockets_are_not_known_should_be_a_reason() {
     assert_eq!(matches(&empty)[1], [SocketMatch::No]);
     assert_eq!(gem_reasons(&run(&empty)), Vec::<String>::new());
 }
+
+/// The review's cases (P3-12i): a disabled earlier group and a gem the
+/// data does not have still take their sockets; untyped gem content makes
+/// the rest of the slot unknown; the last entry of a slot name holds the
+/// item; an empty slot, an item the build does not have, and a white
+/// socket for a gem without a colour.
+#[test]
+fn the_socket_index_should_follow_pobs_count() {
+    use SocketMatch::{No, Unknown, Yes};
+    let gloves = |groups: Vec<SocketGroup>, sockets: &str| {
+        with_item(build(groups), "Gloves", vec![spec("Sockets", sockets)])
+    };
+    // A disabled group counts its gems.
+    let mut off = in_slot(group(&["IceNova"]), "Gloves");
+    off.enabled = false;
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            off,
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "B-G",
+    );
+    assert_eq!(matches(&b), [vec![No], vec![Yes], vec![Yes]]);
+    // A gem the data does not have never matches but takes its socket.
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["NotAGem", "Precision"]), "Gloves"),
+        ],
+        "G-G",
+    );
+    assert_eq!(matches(&b)[1], [No, Yes]);
+    // Untyped gem content: this group's and later groups' gems of the slot
+    // are not known.
+    let mut untyped = in_slot(group(&["Precision"]), "Gloves");
+    untyped
+        .gems
+        .push_opaque(loom_domain::OpaqueNode::element("Gem"));
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            untyped,
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "G-G-G",
+    );
+    assert_eq!(
+        matches(&b)[1..],
+        [vec![Unknown("untyped-gem")], vec![Unknown("untyped-gem")]]
+    );
+    // A gem without a colour in a white socket, or past the last socket:
+    // no match whatever its colour, so no reason.
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Haste", "Haste"]), "Gloves"),
+        ],
+        "W",
+    );
+    assert_eq!(matches(&b)[1], [No, No]);
+    // The last entry of a slot name holds the item; `itemId="0"` none.
+    let mut b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "G",
+    );
+    let set = b
+        .items
+        .entries
+        .typed_mut()
+        .find_map(|e| match e {
+            ItemsEntry::Set(s) => Some(s),
+            ItemsEntry::Item(_) => None,
+        })
+        .unwrap();
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Gloves"),
+        item: None,
+        attributes: Vec::new(),
+    });
+    assert_eq!(matches(&b)[1], [No]);
+    // A slot naming an item the build does not have.
+    let set = b
+        .items
+        .entries
+        .typed_mut()
+        .find_map(|e| match e {
+            ItemsEntry::Set(s) => Some(s),
+            ItemsEntry::Item(_) => None,
+        })
+        .unwrap();
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Gloves"),
+        item: Some(ItemId(9)),
+        attributes: Vec::new(),
+    });
+    assert_eq!(matches(&b)[1], [Unknown("untyped-item")]);
+}
+
+/// Lines of an unselected variant are not part of the item; every
+/// rebuilding stat is unknown; the always-matching line wins over a
+/// socket rebuild, even "Has no Sockets" (PoB sets the flag after the
+/// rebuild).
+#[test]
+fn socket_lines_should_count_only_when_part_of_the_item() {
+    use SocketMatch::{Unknown, Yes};
+    let b = |lines| {
+        with_item(
+            build(vec![
+                group(&["IceNova"]),
+                in_slot(group(&["Precision"]), "Gloves"),
+            ]),
+            "Gloves",
+            lines,
+        )
+    };
+    let mut unselected = stat_line(ALWAYS_MATCHES);
+    if let LineKind::Modifier(m) = &mut unselected.kind {
+        m.resolution = LineResolution::Excluded(loom_domain::Exclusion::NotSelected);
+    }
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "G"), unselected]))[1],
+        [Yes]
+    );
+    for stat in loom_calc::poe1::sockets::REBUILDS {
+        assert_eq!(
+            matches(&b(vec![spec("Sockets", "G"), stat_line(stat)]))[1],
+            [Unknown("socket-count-line")],
+            "{stat}"
+        );
+    }
+    assert_eq!(
+        matches(&b(vec![
+            spec("Sockets", "R"),
+            stat_line("local_has_no_sockets"),
+            stat_line(ALWAYS_MATCHES),
+        ]))[1],
+        [Yes]
+    );
+}
