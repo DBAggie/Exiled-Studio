@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 2
+local FORMAT = 3
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -213,6 +213,22 @@ for name, boss in pairs(data.bosses or {}) do
 	bosses[name] = { armourMult = boss.armourMult, evasionMult = boss.evasionMult, isUber = boss.isUber == true }
 end
 
+-- PoB's pantheon (data.pantheons, Data/Pantheons.lua): each god's major
+-- mark and its souls, each soul's name and its mods' lines and values, in
+-- PoB's order (format 3, P3-12g).
+local pantheons = {}
+for id, god in pairs(data.pantheons or {}) do
+	local souls = {}
+	for i, soul in ipairs(god.souls or {}) do
+		local mods = {}
+		for j, mod in ipairs(soul.mods or {}) do
+			mods[j] = { line = mod.line, value = list(mod.value) }
+		end
+		souls[i] = { name = soul.name, mods = mods }
+	end
+	pantheons[id] = { isMajorGod = god.isMajorGod == true, souls = souls }
+end
+
 local function copyMap(t)
 	local out = {}
 	for k, v in pairs(t or {}) do
@@ -285,6 +301,7 @@ local document = {
 	character_constants = copyMap(data.characterConstants),
 	monster_constants = copyMap(data.monsterConstants),
 	bosses = bosses,
+	pantheons = pantheons,
 	tree = { classes = classes, nodes = nodes },
 }
 
