@@ -1031,7 +1031,8 @@ pub struct Poe1Mapping;
 /// What is left out on purpose, so it stays `Unmapped` until a step maps
 /// it: anything that can change a hit or its rate through the enemy
 /// (shock, chill, exposure, intimidate, consecrated ground's effect,
-/// curses), charges' counts, rage, area, gem levels, minion speed (stats
+/// curses), charges' counts, rage, area, gem levels but the global ones of
+/// [`super::gem_levels`] (P3-8i), minion speed (stats
 /// redirect it to the player; minion damage is in, with its redirects in
 /// [`NO_EFFECT_DEPENDS_ON`]), and staff or shield
 /// conditioned block and damage, fortification's maximum (PoB scales
@@ -1442,6 +1443,15 @@ impl StatMapping for Poe1Mapping {
         if let Some((kind, value)) = super::charges::modifier(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
                 quantity: Quantity::Poe1(Poe1Quantity::Charge(kind, value)),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
+        if let Some(quantity) = super::gem_levels::quantity(stat.as_str()) {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity,
                 op: Op::Base,
                 scale: 1.0,
                 divisor: 1.0,

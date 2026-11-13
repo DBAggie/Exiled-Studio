@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8i): a level 90 Witch casting Ice Nova (level 20) linked to Increased Critical Strikes (level 18) and Added Cold Damage (level 15), with Herald of Ice (level 10) in another group, and custom lines that raise gem levels: cold, spell, herald, and fire skill gems, critical and non-exceptional support gems. Ice Nova gains 2 levels, Increased Critical Strikes 3, Added Cold Damage 1, Herald of Ice 3; no gem is a fire skill.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Increased Critical Strikes" skillId="SupportIncreasedCriticalStrikes" variantId="SupportIncreasedCriticalStrikes" gemId="Metadata/Items/Gems/SupportGemIncreasedCriticalStrikes" level="18" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Added Cold Damage" skillId="SupportAddedColdDamage" variantId="SupportAddedColdDamage" gemId="Metadata/Items/Gems/SupportGemAddedColdDamage" level="15" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Herald of Ice" skillId="HeraldOfIce" variantId="HeraldOfIce" gemId="Metadata/Items/Gems/SkillGemHeraldOfIce" level="10" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				+1 to Level of all Cold Skill Gems
++1 to Level of all Spell Skill Gems
++1 to Level of all Herald Skill Gems
++3 to Level of all Fire Skill Gems
++2 to Level of all Critical Support Gems
++1 to Level of all non-Exceptional Support Gems
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

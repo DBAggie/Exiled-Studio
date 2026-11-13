@@ -43,9 +43,15 @@ pub fn gem_effects<'b>(gem: &Gem, t: &Tables<'b>) -> Option<Vec<&'b GrantedEffec
 }
 
 /// The build's main skill (the engine's rule over the survey's bundle).
+/// Gem levels change no pick, so none are read: the gems keep the levels
+/// the build writes.
 ///
 /// # Errors
 /// A [`Problem`] when the build has no main skill the survey can name.
 pub fn main_skill<'b>(build: &Build, t: &Tables<'b>) -> Result<MainSkill<'b>, Problem> {
-    loom_calc::poe1::skill::main_skill(build, t.bundle)
+    loom_calc::poe1::skill::main_skill(
+        build,
+        t.bundle,
+        &loom_calc::poe1::gem_levels::GemLevels::none(),
+    )
 }

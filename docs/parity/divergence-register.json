@@ -700,6 +700,66 @@
       "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
       "added": "2026-11-13",
       "status": "accepted"
+    },
+    {
+      "id": "DIV-0036",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.1475,
+      "successor_value": 1.1469265367316341,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0037",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 353.73885226424994,
+      "successor_value": 353.56207122863566,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0038",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "353.7",
+      "successor_value": "353.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
     }
   ]
 }

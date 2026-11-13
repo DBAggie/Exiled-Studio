@@ -291,3 +291,73 @@ Maintainer-run, 2026-11-13, Windows, from the main checkout on a clean tree, `lo
 **Against P3-8g.** No field state changes. 13 values change in 5 public builds, all toward PoB's: the three in-scope Ice Nova Elementalist builds' speed (cast speed with cold skills) and DPS, the mapping build's crit multiplier (4.08 to 4.25, PoB 4.48) and average damage; Shock Nova's speed, Elemental Hit's crit multiplier. 25 reasons gone in 12 public builds (among them every `cold_critical_strike_multiplier_+`, `cast_speed_for_cold_skills_+%`, and the Smite act10 build's four `fire_damage_with_attack_skills_+%`), none added; corpus 5 gone, none added, no value change.
 
 Tests: 1218 workspace tests, clippy, fmt, wasm32, the real-bundle test.
+
+## P3-8i: gem levels
+
+All three in-scope Ice Nova builds raise their gems' levels: "+1 to Level of all Cold Skill Gems" (a passive), "+N to Level of all Cold Spell Skill Gems" (an item), and in the mapping build also spell, all, and critical support gem levels. Until P3-8i each was `unmapped-stat`, and every gem kept the level the build writes.
+
+### What PoB v2.67.2 does
+
+- `Modules/ModParser.lua` 3280 to 3290 reads "+N to level of all <words> gems" as a `GemProperty` LIST modifier `{ keywordList = <the words>, key = "level", value = N }`. A phrase that is one gem's name gives `keyword` instead (3282).
+- `Modules/CalcSetup.lua` tabulates the `GemProperty` modifiers per group (1641, 1769), after the passives, items, and config (693) are in the modifier database. `applyGemMods` (397 to 429) adds `value` to the level of every support (1732) and active effect (1804) whose gem matches every keyword, by `calcLib.gemIsType` (`Modules/CalcTools.lua` 164 to 176): `skill` is a gem with `grants_active_skill` that is not a support; `non-exceptional` is a gem without `exceptional`; any other word is a gem tag.
+- The gem is the gem instance's `gemData`, which only a gem given by `gemId` has. `data.gemForSkill` is keyed by the granted effect's table, not its ID (`Modules/Data.lua` 1094), so a skill an item grants (only `skillId`, `Classes/SkillsTab.lua` 1182) has none and gains no level.
+- `calcLib.validateGemLevel` then clamps a level the effect has no row for.
+
+### The engine
+
+- **`loom_calc::poe1::gem_levels`.** `LEVEL_STATS` lists the 23 global gem level stats with their keywords: the words of each English description between "Level of all" and "Gems", lower-cased, as PoB's pattern reads them. A real-bundle test checks every row against its description, checks that every word is a gem tag or one of `gemIsType`'s words, and checks that no phrase is a gem's name. `is_type` is `gemIsType` without the name comparisons.
+- **`Poe1Quantity::GemLevel(stat)`** (calc result v1 name `poe1.gem-level.<stat>`, additive): the mapping gives each row one unconditional `Base` effect.
+- **`GemLevels`** sums these effects. Effects from a gem are left out, so a gem's own stat cannot raise the levels its stats were read at. `skill::main_skill` and `skill::group_skills` add each gem's matching total to its level (`GemEffectRef::level`, with the bonus kept apart as `bonus`). The gem's tags are its gem effect's (`GemEffects.Tags`, which PoB's exporter writes as `gem.tags`). So every reader of a gem's level sees the level PoB uses: the instance's stats, the stat set's level row (base damage, crit chance), the costs and reservation, and a support's cost multiplier. This holds for the main skill and for every other group's buffs.
+- **Order.** `collect` now adds the gems after the config, so custom lines count. The hit phase reads the same totals from the finished store, because the steps after the gems (charges, damage taken, buffs) add none. With the reorder alone, every document without a gem level stat stayed byte-identical.
+- **Left as reasons:** gem levels that depend on the socket ("+1 to Level of Socketed Gems" and its kin), a gem named in a line ("+1 to Level of all Raise Spectre Gems"), conditional lines, `supported_*_gem_level_+` (a support's own stat on what it supports), and gem quality modifiers.
+- **Not traced:** the `GemLevel` effects feed no graph node. A gem's level reaches the result only through the values it changes, so a document does not show why a gem is above the level the build writes. `GemEffectRef::bonus` holds the number. A "gem level" leaf with its sources is a follow-up.
+- **Unverified against the game:** a level past the effect's last row is clamped to it (PoB's rule). The fixtures stay inside the rows.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-gem-levels-witch.xml` | Ice Nova with Increased Critical Strikes and Added Cold Damage, Herald of Ice in another group. Lines for cold, spell, herald, and fire skill gems and for critical and non-exceptional support gems: Ice Nova gains 2 levels, Increased Critical Strikes 3, Added Cold Damage 1, Herald of Ice 3 (it has the `spell` tag). Every target equals PoB's |
+| `smite-gem-levels-templar.xml` | Smite with Melee Physical Damage, Precision in another group. Lines for strength, aura, dexterity, melee, and physical skill gems and for non-exceptional support gems: Smite (it has the `aura` tag) gains 3, Melee Physical Damage 1, Precision 3. Average damage, crit chance and multiplier, hit chance, and unreserved mana equal PoB's. Speed and DPS differ by Q11's floored attack time alone (1000 / 667 against PoB's 1.50, times the same 0.85 and 0.9): DIV-0036 to DIV-0038 (`game-truth`) |
+
+### Review
+
+`code-architecture-reviewer` found no blockers and checked `is_type`, the support and active handling, the item-granted case, the ordering, and the clamp against PoB. Applied:
+- effects from a gem are left out of the totals, and the two read points are documented;
+- a whole-number check on the sum;
+- the real-bundle test checks that no phrase is a gem name;
+- a test for a gem's own level stat;
+- doc wrapping.
+
+Recorded rather than changed: the provenance gap ("Not traced") and the clamp past the last row.
+
+### Evidence (P3-8i)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout on a clean tree: `local/p3/p3-8i/evidence.sh` at tool commit `7a7c173`. The review's `31cd0b5` leaves every calc document byte-identical: public and corpus were re-run and compared. P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8i-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 117 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 117 documents; 1693 complete, 334 partial, 445 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 38 registered differences (DIV-0036 to DIV-0038 new), 0 unexpected; 1665 fields match. **Every mechanic target met: 1659 of 1659 over 80 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8h** (`p3-8i-public-vs-p3-8h.json`, `p3-8i-corpus-poe1-26530219-vs-p3-8h.json`). No field state changes. Values changed in 4 public builds, every one toward PoB's:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Ice Nova campaign (lab 1) | average damage | 4024 | 4953 | 31434 |
+| Ice Nova campaign | average damage | 9459 | 11642 | 142914 |
+| Ice Nova mapping | average damage | 23523 | 62402 | 2335701 |
+| Ice Nova mapping | crit chance | 77.14 | 78.00 | 100 |
+| Ice Nova mapping | crit multiplier | 4.25 | 4.31 | 4.48 |
+| Ice Nova mapping | energy shield | 1674 | 1733 | 2255 |
+| Lacerate | average damage | 180.5 | 188.2 | 24757 |
+
+Each build's hit DPS follows its average damage. The mapping build's energy shield and crit values rose because its aura and Increased Critical Damage gems gained levels too.
+
+Reasons:
+- **Public:** 31 gone in 13 builds (every global gem level stat), none added.
+- **Corpus:** 13 gone in 6 builds, none added. One build's average damage and DPS moved toward PoB's.
+
+Tests: 1226 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.

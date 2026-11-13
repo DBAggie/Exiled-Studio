@@ -8,6 +8,7 @@
 //! `loom_calc::poe1::hit`). The mechanic fixtures check the same against
 //! the oracle (`docs/phase-3/spell-hits.md`).
 
+use loom_calc::poe1::gem_levels::GemLevels;
 use loom_calc::poe1::hit::spell_skill;
 use loom_calc::poe1::sockets::{ALWAYS_MATCHES, SocketMatch, socket_matches};
 use loom_calc::{
@@ -622,7 +623,10 @@ fn a_configured_resistance_above_the_maximum_should_raise_it() {
 fn only_a_self_cast_spell_without_cooldown_should_be_computed() {
     for main in ["TestStrike", "TestCooldownNova"] {
         let b = build(vec![group(&[main])]);
-        assert!(spell_skill(&b, &Data::new()).is_none(), "{main}");
+        assert!(
+            spell_skill(&b, &Data::new(), &GemLevels::none()).is_none(),
+            "{main}"
+        );
         let r = run(&b);
         for f in HIT {
             assert_eq!(
@@ -637,7 +641,7 @@ fn only_a_self_cast_spell_without_cooldown_should_be_computed() {
     // A disabled main group is not cast.
     let mut g = group(&["IceNova"]);
     g.enabled = false;
-    assert!(spell_skill(&build(vec![g]), &Data::new()).is_none());
+    assert!(spell_skill(&build(vec![g]), &Data::new(), &GemLevels::none()).is_none());
 }
 
 #[test]
@@ -1657,9 +1661,11 @@ fn a_gem_in_a_socket_of_its_colour_should_gain_quality() {
     // Abyssal sockets count in the order.
     assert_eq!(matches(&gloves("A-B-G")), [vec![No, No]]);
     let data = Data::new();
-    let main = loom_calc::poe1::skill::main_skill(&gloves("B-G"), &data).unwrap();
+    let main =
+        loom_calc::poe1::skill::main_skill(&gloves("B-G"), &data, &GemLevels::none()).unwrap();
     assert_eq!((main.active_gem.quality, main.active_gem.socket), (10, Yes));
-    let main = loom_calc::poe1::skill::main_skill(&gloves("R-G"), &data).unwrap();
+    let main =
+        loom_calc::poe1::skill::main_skill(&gloves("R-G"), &data, &GemLevels::none()).unwrap();
     assert_eq!(main.active_gem.quality, 0);
 }
 
