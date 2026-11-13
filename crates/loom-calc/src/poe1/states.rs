@@ -97,17 +97,24 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     out
 }
 
-/// Whether an allocated node carries [`NO_LIFE_MODIFIERS_STAT`]: only then
-/// is the condition settled (it reads every mod of the data). From another
-/// source the stat meets it unsettled, a reason.
+/// Whether an allocated node or a chosen mastery effect carries
+/// [`NO_LIFE_MODIFIERS_STAT`] (it is a Life Mastery's): only then is the
+/// condition settled (it reads every mod of the data). From another source
+/// the stat meets it unsettled, a reason.
 fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
+    let has = |stats: Option<&[crate::input::StatAmount]>| {
+        stats.is_some_and(|stats| stats.iter().any(|s| s.stat == NO_LIFE_MODIFIERS_STAT))
+    };
     collect::active_spec(input.build).is_some_and(|spec| {
-        spec.nodes.value().iter().any(|n| {
-            input
-                .data
-                .passive_stats(n.0)
-                .is_some_and(|stats| stats.iter().any(|s| s.stat == NO_LIFE_MODIFIERS_STAT))
-        })
+        spec.nodes
+            .value()
+            .iter()
+            .any(|n| has(input.data.passive_stats(n.0)))
+            || spec
+                .mastery_effects
+                .value()
+                .iter()
+                .any(|m| has(input.data.mastery_effect_stats(m.effect)))
     })
 }
 
@@ -146,11 +153,18 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
             _ => {}
         }
     }
-    let mods = input.data.mods_by_tag(LIFE_TAG)?;
-    let life_only = stats
+    tagless(&stats, &input.data.mods_by_tag(LIFE_TAG)?)
+}
+
+/// Whether no mod of an item with lines of `stats` can carry the tag of
+/// `mods` ([`no_life_modifiers_on_body_armour`]'s rule): `Some(false)` when
+/// a stat is only on tagged mods, `Some(true)` when no tagged mod has all
+/// its stats among `stats`, else `None`.
+fn tagless(stats: &BTreeSet<String>, mods: &crate::input::ModsByTag) -> Option<bool> {
+    let tagged_only = stats
         .iter()
         .any(|s| !mods.untagged.contains(s) && mods.tagged.iter().any(|m| m.contains(s)));
-    if life_only {
+    if tagged_only {
         return Some(false);
     }
     if mods
@@ -161,4 +175,41 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
         return None;
     }
     Some(true)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::input::ModsByTag;
+
+    fn set(ids: &[&str]) -> BTreeSet<String> {
+        ids.iter().map(|s| (*s).to_owned()).collect()
+    }
+
+    #[test]
+    fn a_body_armours_life_modifiers_should_be_settled_only_when_certain() {
+        let mods = ModsByTag {
+            tagged: vec![
+                vec!["base_maximum_life".to_owned()],
+                vec!["armour".to_owned(), "base_maximum_life".to_owned()],
+                vec!["life_regeneration".to_owned()],
+            ],
+            untagged: set(&["armour", "fire_resistance", "base_maximum_life"]),
+        };
+        // No tagged mod has all its stats here: no Life Modifier.
+        assert_eq!(
+            tagless(&set(&["armour", "fire_resistance"]), &mods),
+            Some(true)
+        );
+        // A stat only tagged mods carry: a Life Modifier.
+        assert_eq!(
+            tagless(&set(&["armour", "life_regeneration"]), &mods),
+            Some(false)
+        );
+        // A tagged mod's stats are all here, but an untagged mod also
+        // carries them: not settled.
+        assert_eq!(tagless(&set(&["base_maximum_life"]), &mods), None);
+        // No line: no Life Modifier.
+        assert_eq!(tagless(&BTreeSet::new(), &mods), Some(true));
+    }
 }

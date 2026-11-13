@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): a level 90 Witch casting Ice Nova (level 20), the enemy configured as chilled, on consecrated ground, and chilled by you for 4 seconds, custom lines "Enemies Ignited or Chilled by you have -5% to Elemental Resistances", "Enemies permanently take 1% increased Damage for each second they've ever been Chilled by you, up to a maximum of 10%", "Consecrated Ground you create applies 10% increased Damage taken to Enemies", "20% increased Effect of Consecrated Ground you create", and "Inflict Cold Exposure on Hit, applying -12% to Cold Resistance": the enemy's cold resistance lowered by 5 and 12, and 4% plus 12% increased damage taken.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyChilled" boolean="true"/>
+			<Input name="conditionEnemyOnConsecratedGround" boolean="true"/>
+			<Input name="multiplierChilledByYouSeconds" number="4"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Enemies Ignited or Chilled by you have -5% to Elemental Resistances
+Enemies permanently take 1% increased Damage for each second they've ever been Chilled by you, up to a maximum of 10%
+Consecrated Ground you create applies 10% increased Damage taken to Enemies
+20% increased Effect of Consecrated Ground you create
+Inflict Cold Exposure on Hit, applying -12% to Cold Resistance
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

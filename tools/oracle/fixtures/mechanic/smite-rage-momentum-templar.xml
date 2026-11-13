@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): Smite (level 20) supported by Momentum (level 20) with a rare Siege Axe, custom lines "Gain 1 Rage on Melee Hit", "+10 to Maximum Rage", and "Nearby Enemies are Intimidated while you have Rage", and the config's rage at 35: 35 rage of the maximum 40, 35% more attack damage, the enemy Intimidated (10% increased attack damage taken), and Momentum's attack speed per stack at its default count.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+				<Gem nameSpec="Momentum" skillId="SupportMomentum" variantId="SupportMomentum" gemId="Metadata/Items/Gems/SupportGemOnslaught" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Cleaver
+Siege Axe
+Quality: 20
+Implicits: 0
+Adds 10 to 20 Physical Damage
+80% increased Physical Damage
+15% increased Attack Speed
+25% increased Critical Strike Chance
+Adds 5 to 50 Lightning Damage
++200 to Accuracy Rating
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="multiplierRage" number="35"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Gain 1 Rage on Melee Hit
++10 to Maximum Rage
+Nearby Enemies are Intimidated while you have Rage
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
