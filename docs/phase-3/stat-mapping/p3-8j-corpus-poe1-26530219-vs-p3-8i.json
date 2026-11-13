@@ -1,0 +1,60 @@
+{
+ "builds_with_reason_changes": 3,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4177}}, \"stat\": \"minion_damage_increases_and_reductions_also_affects_you\"}}"
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24824}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24824}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4177}}, \"stat\": \"minion_damage_increases_and_reductions_also_affects_you\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42668}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42668}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"additive_modifiers_to_minion_attack_speed_also_affect_you\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"minion_cast_speed_+%\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 18}}, \"stat\": \"minion_attack_and_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15046}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15046}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24824}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24824}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25332}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25332}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 29106}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 29106}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42668}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42668}}, \"stat\": \"minion_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"additive_modifiers_to_minion_attack_speed_also_affect_you\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"minion_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43689}}, \"stat\": \"minion_cast_speed_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 23,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "average-damage": [
+    10.837239,
+    17.463831
+   ],
+   "hit-dps": [
+    328.4011818181818,
+    529.2069999999999
+   ]
+  }
+ }
+}
