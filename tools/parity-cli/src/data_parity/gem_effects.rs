@@ -164,8 +164,13 @@ const NO_SLICE_NAMES: &[&str] = &[
 const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 
 /// Types a modelled support may add after all: Momentum makes its skill a
-/// buff (its own movement-speed buff, `NoSlice`).
-const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[("SupportMomentum", "Buff")];
+/// buff (its own movement-speed buff, `NoSlice`); Summon Phantasm makes it
+/// create its phantasm (`ALLOWED_ADD_MINIONS`; a minion type only counts
+/// into named conditions, as an inert skill's may).
+const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
+    ("SupportMomentum", "Buff"),
+    ("SupportSummonPhantasm", "CreatesMinion"),
+];
 
 /// Supports that add a minion to the skill they support, and the minion:
 /// its own skills grant the character nothing (Summon Phantasm: the
