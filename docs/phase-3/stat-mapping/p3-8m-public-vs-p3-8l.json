@@ -1,0 +1,239 @@
+{
+ "builds_with_reason_changes": 14,
+ "only_after": [
+  "ice-nova-bitter-frost-witch.xml.json",
+  "ice-nova-elemental-overload-witch.xml.json",
+  "smite-resolute-technique-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13202}}, \"stat\": \"cold_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 17171}}, \"stat\": \"cold_ailment_effect_+%\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12128}}, \"stat\": \"keystone_cold_purist\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12128}}, \"stat\": \"keystone_cold_purist\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31961}}, \"stat\": \"resolute_technique\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12128}}, \"stat\": \"keystone_cold_purist\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40483}}, \"stat\": \"chill_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53290}}, \"stat\": \"chill_effect_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 17,
+ "state_changes": {},
+ "value_changes": {
+  "boneshatter-juggernaut.xml.json": {
+   "average-damage": [
+    2228.948628611394,
+    4651.231452925837
+   ],
+   "crit-chance": [
+    2.35,
+    0.0
+   ],
+   "crit-multiplier": [
+    1.5,
+    0.0
+   ],
+   "hit-chance": [
+    47.0,
+    100.0
+   ],
+   "hit-dps": [
+    3319.8539997142507,
+    6927.664973693164
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    4953.208904000001,
+    5905.200000000001
+   ],
+   "crit-multiplier": [
+    1.5,
+    1.0
+   ],
+   "hit-dps": [
+    14576.586203200004,
+    17378.160000000003
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    24026.308747895997,
+    29701.81475133599
+   ],
+   "hit-dps": [
+    76884.1879932672,
+    95045.80720427519
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    147034.27667819802,
+    177455.16150817004
+   ],
+   "hit-dps": [
+    439002.3403677626,
+    529830.410788679
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "average-damage": [
+    188.222925,
+    423.125
+   ],
+   "crit-chance": [
+    2.2,
+    0.0
+   ],
+   "crit-multiplier": [
+    1.5,
+    0.0
+   ],
+   "hit-chance": [
+    44.0,
+    100.0
+   ],
+   "hit-dps": [
+    220.53490372148858,
+    495.76230492196873
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    8179.825500000001,
+    10652.796
+   ],
+   "crit-multiplier": [
+    1.5,
+    1.0
+   ],
+   "hit-dps": [
+    28084.067550000003,
+    36574.5996
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    2818.810265074602,
+    6660.665625
+   ],
+   "crit-chance": [
+    5.74,
+    0.0
+   ],
+   "crit-multiplier": [
+    1.5,
+    0.0
+   ],
+   "hit-chance": [
+    41.0,
+    100.0
+   ],
+   "hit-dps": [
+    6704.242360085933,
+    15841.689376106846
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "average-damage": [
+    2028.84220292567,
+    4806.115624999999
+   ],
+   "crit-chance": [
+    5.74,
+    0.0
+   ],
+   "crit-multiplier": [
+    1.5,
+    0.0
+   ],
+   "hit-chance": [
+    41.0,
+    100.0
+   ],
+   "hit-dps": [
+    4621.783979392067,
+    10948.524319288665
+   ]
+  }
+ }
+}
