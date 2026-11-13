@@ -97,6 +97,10 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
+    // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
+    // after every source of their modifiers, before the enemy's damage
+    // taken (rage's Intimidate).
+    super::stacks::stacks(active_config(build), input.data, ingest);
     super::buffs::buffs(active_config(build), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
@@ -1126,7 +1130,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
 }
 
 /// The active config set: `Config.activeConfigSet`, else the first.
-fn active_config(build: &Build) -> Option<&ConfigSet> {
+pub(super) fn active_config(build: &Build) -> Option<&ConfigSet> {
     let config = &build.config;
     config
         .active
@@ -1210,7 +1214,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             continue;
         }
         // Charges: their own effects (`poe1::charges`, P3-12e).
-        if super::charges::is_charge_input(&input.name) {
+        if super::charges::is_charge_input(&input.name) || super::stacks::is_input(&input.name) {
             continue;
         }
         // The enemy's damage taken (shock, the boss kind, delirium),
@@ -1218,6 +1222,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         // reasons (`poe1::damage_taken`, `poe1::buffs`, [`choices`],
         // P3-12f, P3-12g).
         if super::damage_taken::handles(&input.name, &input.value)
+            || super::conditions::handles(&input.name, &input.value)
             || super::exposure::handles(&input.name)
             || super::buffs::is_buff_input(&input.name)
             || input.name == BANDIT_INPUT

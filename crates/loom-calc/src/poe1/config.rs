@@ -80,9 +80,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   `CalcSetup.lua` (652) adds `Condition:BloodStance` when not Sand;
 ///   read by the stance skills' stats.
 /// - `conditionBeenHitRecently`, `conditionBlockedRecently`,
-///   `conditionChilledEnemyRecently`, `conditionShockedEnemyRecently`,
-///   `conditionFullLife`: the condition of that name (lines 1375, 1421,
-///   1339, 1351, 174); the calc modules read them only through modifiers
+///   `conditionChilledEnemyRecently`, `conditionFullLife`: the condition of
+///   that name (lines 1375, 1421, 1339, 174); the calc modules read them
+///   only through modifiers
 ///   or flags a modifier sets (`CalcDefence.lua` 707, 723: maximum block
 ///   if not blocked recently, from a stat); `FullLife` is set by Chaos
 ///   Inoculation (`CalcPerform.lua` 86), not read.
@@ -97,16 +97,10 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
 ///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
 ///   taken when a modifier's flag asks for it.
-/// - `conditionEnemyOnConsecratedGround`: the enemy's
-///   `Condition:OnConsecratedGround` (line 2012); `CalcPerform.lua`
-///   (3688) adds damage taken from `DamageTakenConsecratedGround`, which
-///   only a modifier gives.
-/// - `conditionOnConsecratedGround`: `Condition:OnConsecratedGround`, also
-///   for minions (line 1148); `CalcPerform.lua` adds life regeneration
-///   and less curse effect on you (804, 3171; not slice fields) and
-///   accuracy from `ConsecratedGroundAlsoAccuracy` (a modifier).
-/// - `conditionStationary`: `Multiplier:StationarySeconds`, and
-///   `Condition:Stationary` when above 0 (line 158).
+/// - `conditionShockedEnemyRecently`, `conditionOnConsecratedGround`,
+///   `conditionEnemyOnConsecratedGround`, `conditionStationary`: moved in
+///   P3-8n to [`super::conditions`], which settles their conditions for
+///   the rows that read them.
 /// - `multiplierNearbyEnemies`: `Multiplier:NearbyEnemies` and
 ///   `Condition:OnlyOneNearbyEnemy` (line 1234); the calc modules never
 ///   read them.
@@ -253,26 +247,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
     ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
-    (
-        "conditionEnemyOnConsecratedGround",
-        &["enemy Condition:OnConsecratedGround"],
-    ),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionFullLife", &["Condition:FullLife"]),
     ("conditionKilledRecently", &["Condition:KilledRecently"]),
     ("conditionLeeching", &["Condition:Leeching"]),
-    (
-        "conditionOnConsecratedGround",
-        &["Condition:OnConsecratedGround"],
-    ),
-    (
-        "conditionShockedEnemyRecently",
-        &["Condition:ShockedEnemyRecently"],
-    ),
-    (
-        "conditionStationary",
-        &["Multiplier:StationarySeconds", "Condition:Stationary"],
-    ),
     (
         "conditionUsedMinionSkillRecently",
         &[
@@ -287,7 +265,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "Multiplier:SpectralTigerCount",
         ],
     ),
-    ("intensifyIntensity", &["Multiplier:Intensity"]),
     ("meleeDistance", &["skillDist"]),
     (
         "multiplierEnemyHallowingFlame",
@@ -300,14 +277,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
-    ),
-    (
-        "multiplierNonInstantSpellCastRecently",
-        &["Multiplier:NonInstantSpellCastRecently"],
-    ),
-    (
-        "multiplierRage",
-        &["Multiplier:RageStack (with CanGainRage)"],
     ),
     (
         "multiplierWitheredStackCountSelf",
@@ -435,7 +404,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
     "gain_x_rage_on_hit_with_tinctured_weapons",
     "gain_x_rage_on_melee_crit",
-    "gain_x_rage_on_melee_hit",
     "gain_x_rage_per_200_mana_spent",
     "gain_x_rage_when_hit",
     "gain_x_rage_when_you_use_a_life_flask",
@@ -563,7 +531,6 @@ mod tests {
     /// name it are listed and reach no slice field).
     #[test]
     fn no_mapped_stat_should_read_fortification() {
-        use crate::ingest::StatMapping;
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};
 
         let ids = HIT_ROWS
@@ -579,6 +546,9 @@ mod tests {
         // fortify, its duration, regeneration per stack; none reaches a
         // slice field.
         let checked = [
+            // The maximum (P3-8n): its readers per fortification are
+            // `mapping::NO_EFFECT_DEPENDS_ON` guards.
+            "base_max_fortification",
             "chance_to_fortify_on_melee_hit_+%",
             "fortify_duration_+%",
             "life_regeneration_per_minute_%_per_fortification",
@@ -589,12 +559,6 @@ mod tests {
                 "{id}: a NoEffect row naming fortification; check it and list it"
             );
         }
-        // The maximum stays a reason (PoB scales stats per stack).
-        assert_eq!(
-            crate::poe1::mapping::Poe1Mapping
-                .map(&loom_domain::StatId::new("base_max_fortification")),
-            crate::ingest::StatMap::Unmapped
-        );
     }
 
     /// Rage and exposure (P3-12f): no row of the shared tables names them,

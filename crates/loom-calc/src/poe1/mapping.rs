@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping};
-use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, states};
+use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, conditions, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
@@ -241,6 +241,19 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, NONE, NONE)],
     ),
+    // P3-8n: "#% of Physical Damage Converted to Fire Damage"
+    // (`PhysicalDamageConvertToFire` BASE), conversion that is not the
+    // skill's own.
+    (
+        "base_physical_damage_%_to_convert_to_fire",
+        &[(
+            Quantity::Poe1(Poe1Quantity::Conversion(PHYS, FIRE_T)),
+            Op::Base,
+            1.0,
+            NONE,
+            NONE,
+        )],
+    ),
     (
         "base_reduce_enemy_cold_resistance_%",
         &[(Quantity::Penetration(COLD_T), Op::Base, 1.0, NONE, NONE)],
@@ -317,6 +330,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             Op::Increased,
             1.0,
             cast_with(SK_LIGHTNING),
+            NONE,
+        )],
+    ),
+    // P3-8n: "#% chance to deal Double Damage" (`DoubleDamageChance` BASE,
+    // `ModParser.lua` 677).
+    (
+        "chance_to_deal_double_damage_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
+            Op::Base,
+            1.0,
+            NONE,
             NONE,
         )],
     ),
@@ -491,6 +516,18 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
         )],
     ),
+    // P3-8n: "Spells have a #% chance to deal Double Damage" (the same, with
+    // `ModFlag.Spell`).
+    (
+        "spell_chance_to_deal_double_damage_%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::DoubleDamageChance),
+            Op::Base,
+            1.0,
+            Flags::SPELL,
+            NONE,
+        )],
+    ),
     (
         "spell_critical_strike_chance_+%",
         &[(Quantity::CritChance, Op::Increased, 1.0, Flags::SPELL, NONE)],
@@ -612,7 +649,13 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
             | Quantity::Accuracy
             | Quantity::AddedDamage(..)
             | Quantity::Penetration(..)
-            | Quantity::Poe1(Poe1Quantity::SkillBaseDamage(..) | Poe1Quantity::SkillConversion(..))
+            | Quantity::Poe1(
+                Poe1Quantity::SkillBaseDamage(..)
+                    | Poe1Quantity::SkillConversion(..)
+                    | Poe1Quantity::Conversion(..)
+                    | Poe1Quantity::DoubleDamageChance
+                    | Poe1Quantity::Stack(..)
+            )
     )
 }
 
@@ -684,6 +727,47 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // P3-8n: "against Enemies that are on Full Life" (`ActorCondition` enemy
+    // `FullLife`, ModParser.lua 1945), from the config (`poe1::conditions`).
+    (
+        "critical_strike_chance_against_enemies_on_full_life_+%",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            conditions::ENEMY_FULL_LIFE,
+        )],
+    ),
+    // P3-8n: "against Unique Enemies" (enemy `RareOrUnique`, 1943).
+    (
+        "critical_strike_multiplier_+_vs_unique_enemies",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            conditions::ENEMY_RARE_OR_UNIQUE,
+        )],
+    ),
+    // P3-8n: "if you've Shattered an Enemy Recently" (1935).
+    (
+        "damage_+%_if_enemy_shattered_recently",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            conditions::SHATTERED_ENEMY_RECENTLY,
+        )],
+    ),
+    // P3-8n: "if you have Shocked an Enemy Recently" (1815).
+    (
+        "damage_+%_if_you_have_shocked_recently",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            NONE,
+            conditions::SHOCKED_ENEMY_RECENTLY,
+        )],
+    ),
     (
         "defences_+%_while_wielding_staff",
         &[
@@ -713,6 +797,42 @@ pub const STATE_ROWS: &[StateRow] = &[
             Op::Base,
             NONE,
             states::USING_STAFF,
+        )],
+    ),
+    // P3-8n: "Melee Damage with Hits at Close Range": `Damage` INC with
+    // `ModFlag.Melee` (716) and `KeywordFlag.Hit` (990), `AtCloseRange` (1939).
+    (
+        "melee_damage_+%_at_close_range",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::MELEE.union(Flags::HIT),
+            conditions::AT_CLOSE_RANGE,
+        )],
+    ),
+    // P3-8n: "Physical Damage with Staves": `PhysicalDamage` INC with
+    // `ModFlag.Staff` and `ModFlag.Hit` (939), which only an attack with a
+    // staff in the main hand has (a staff is two-handed).
+    (
+        "physical_staff_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
+            states::USING_STAFF,
+        )],
+    ),
+    // P3-8n: "Damage with Weapons Penetrates #% Fire Resistance"
+    // (`FirePenetration` BASE with `ModFlag.Weapon`, `ModParser.lua` 982),
+    // which an attack has when its hand holds a weapon
+    // (`CalcActiveSkill.lua` 209).
+    (
+        "reduce_enemy_fire_resistance_with_weapons_%",
+        &[(
+            Quantity::Penetration(FIRE_T),
+            Op::Base,
+            Flags::ATTACK,
+            states::MAIN_HAND_WEAPON,
         )],
     ),
     (
@@ -806,6 +926,17 @@ pub const STATE_ROWS: &[StateRow] = &[
 ///   name saying the game applies 150% of it; until that is settled it is
 ///   unmapped (the fields are `Partial`).
 pub const ROWS: &[Row] = &[
+    // P3-8n: "#% increased Action Speed" (the canonical stat is negated:
+    // "#% reduced Action Speed" for a positive value), PoB's `ActionSpeed`
+    // INC; the hit scales a self-cast skill's rate by it.
+    (
+        "action_speed_-%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ActionSpeed),
+            Op::Increased,
+            -1.0,
+        )],
+    ),
     (
         "additional_all_attributes",
         &[
@@ -1049,11 +1180,12 @@ pub struct Poe1Mapping;
 /// [`super::gem_levels`] (P3-8i), minion modifiers but those of
 /// [`super::minions`] (P3-8j, with the redirects to the player), and staff
 /// or shield
-/// conditioned block and damage, fortification's maximum (PoB scales
-/// suppression, armour, evasion, and attack speed per fortification), and
-/// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also
-/// reads it as the enemy's `SelfCritMultiplier`, which reaches the main
-/// skill's crit multiplier). A stat that makes one of these rows matter is
+/// conditioned block and damage. P3-8n adds fortification's maximum (the
+/// modifiers per fortification are its guards in
+/// [`NO_EFFECT_DEPENDS_ON`]) and `base_self_critical_strike_multiplier_-%`
+/// (the tree's line is the crits you take; PoB's skill stat map reads a
+/// curse gem's copy as the enemy's `SelfCritMultiplier`, and no curse gem
+/// is modelled, so none is ingested). A stat that makes one of these rows matter is
 /// itself unmapped, so the fields stay `Partial` while it is in the
 /// build: rage regenerated per life or mana regenerated (PoB
 /// `ModParser.lua` `RageRegen` per `LifeRegen`, then rage's damage),
@@ -1091,6 +1223,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
     ("always_shock", "ailment-chance"),
+    // P3-8n: "#% increased Area of Effect while you don't have
+    // Convergence" (`AreaOfEffect` INC, not `Convergence`): area, as above.
+    (
+        "area_of_effect_+%_while_you_do_not_have_convergence",
+        "area",
+    ),
     ("avoid_ailments_%_from_crit", "ailment-on-self"),
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
@@ -1099,6 +1237,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_avoid_freeze_%", "ailment-on-self"),
     ("base_avoid_projectiles_%_chance", "avoidance"),
     ("base_chance_to_freeze_%", "freeze"),
+    // P3-8n: a passive's "#% chance to Shock" (`EnemyShockChance` BASE): as
+    // the skill's chance below, never the enemy's shock in the hit.
+    ("base_chance_to_shock_%", "ailment-chance"),
     // A skill's chance to shock: PoB shocks the enemy only from its config
     // or a guaranteed source (`ShockBase`, `ShockOverride`,
     // `ShockMinimum`; `Modules/CalcPerform.lua`, the non-damaging
@@ -1108,7 +1249,22 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "base_energy_shield_leech_from_spell_damage_permyriad",
         "leech",
     ),
+    // P3-8n: "+# to maximum Fortification" (`MaximumFortification` BASE): PoB
+    // counts fortification only while Fortified (`buffFortification`, a named
+    // condition), and then only damage taken when hit and modifiers per
+    // fortification read the count ([`NO_EFFECT_DEPENDS_ON`]).
+    ("base_max_fortification", "fortification"),
     ("base_movement_velocity_+%", "movement-speed"),
+    // P3-8n: "Maximum # Summoned Golems" (`ActiveGolemLimit`): only golem
+    // skills (no golem gem is modelled, `poe1::gems`) and modifiers per
+    // summoned golem read it ([`NO_EFFECT_DEPENDS_ON`]).
+    ("base_number_of_golems_allowed", "golems"),
+    // P3-8n: "You take #% reduced Extra Damage from Critical Strikes" on the
+    // tree (`ReduceCritExtraDamage` BASE): the crits you take. A curse gem's
+    // own copy is read by PoB's skill stat map as the enemy's
+    // `SelfCritMultiplier`; no curse gem is modelled (`poe1::gems`), so it is
+    // never ingested.
+    ("base_self_critical_strike_multiplier_-%", "crit-on-self"),
     // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
     // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
     ("base_skill_area_of_effect_+%", "area"),
@@ -1163,6 +1319,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("curse_effect_on_self_+%", "curse-on-self"),
     ("debuff_time_passed_+%", "ailment-on-self"),
     ("degen_effect_+%", "damage-taken"),
+    // P3-8n: Intensify's text; PoB maps no modifier.
+    ("display_base_intensity_loss", "display"),
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
@@ -1174,6 +1332,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "elemental_damage_taken_+%_if_not_hit_recently",
         "damage-taken",
+    ),
+    // P3-8n: "Your Elemental Resistances cannot be lowered by Curses": only
+    // curses on you lower them, from the `playerCursedWith*` inputs, which
+    // stay reasons for `curse_effect_on_self_+%`
+    // ([`NO_EFFECT_DEPENDS_ON_INPUTS`]).
+    (
+        "elemental_resistance_cannot_be_lowered_by_curses",
+        "curse-on-self",
     ),
     (
         "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
@@ -1193,9 +1359,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "gain_power_charge_for_each_second_channeling_spell",
         "charge-gain-chance",
     ),
+    // P3-8n: Inspiration's charge gain; PoB maps no modifier (its charges are
+    // the maximum unless the config overrides them, `poe1::stacks`).
+    ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
     ("gloves_freeze_proliferation_radius", "freeze"),
+    // P3-8n: "#% increased Effect of Buffs granted by your Golems" (`BuffEffect`
+    // tagged `SkillType.Golem`): only golem skills read it, none modelled.
+    ("golem_buff_effect_+%", "golems"),
     ("golem_immunity_to_elemental_damage", "minion-defence"),
     ("golem_maximum_life_+%", "minion-defence"),
+    // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
+    // cost; the stats that add damage from it stay unmapped
+    // ([`NO_EFFECT_DEPENDS_ON`]).
+    ("hierophant_mana_cost_+%_final", "mana-cost"),
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
     // Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua` 5066): it
     // reaches only `CullMultiplier`, which scales `CullingDPS` and
@@ -1236,6 +1412,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("local_can_socket_gems_ignoring_colour", "sockets"),
     // Its effect on the sockets' order is `poe1::sockets`' (a reason).
     ("local_has_X_abyss_sockets", "sockets"),
+    (
+        "lose_all_righteous_charges_on_mana_use_threshold",
+        "charge-gain",
+    ),
     ("mana_regeneration_rate_+%", "regeneration"),
     (
         "mana_regeneration_rate_+%_per_1%_spell_block_chance",
@@ -1246,6 +1426,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
         "regeneration",
     ),
+    // P3-8n: "Melee Strikes target # additional nearby Enemies" (PoB's strike
+    // targets, `CalcOffence.lua` 1147): not the hit.
+    ("melee_attack_number_of_spirit_strikes", "targeting"),
     (
         "minion_life_regeneration_rate_per_minute_%",
         "minion-defence",
@@ -1297,13 +1480,46 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "damage-taken",
     ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
+    ("skill_mana_cost_+_with_non_channelling_skills", "mana-cost"),
     ("smite_lightning_target_range", "targeting"),
     ("spell_area_of_effect_+%", "area"),
+    // P3-8n: "Staff Attacks deal #% increased Damage with Ailments": ailments.
+    ("staff_ailment_damage_+%", "ailment-damage"),
+    // P3-8n: Arcane Surge Support's duration and threshold (PoB maps neither)
+    // and its mana regeneration (`ArcaneSurgeManaRegen` MAX: mana
+    // regeneration); its cast speed and spell damage are `poe1::buffs`.
+    ("support_arcane_surge_base_duration_ms", "skill-duration"),
+    (
+        "support_arcane_surge_gain_buff_on_mana_use_threshold",
+        "buff-gain",
+    ),
+    (
+        "support_arcane_surge_mana_regeneration_rate_+%",
+        "regeneration",
+    ),
+    ("support_inspiration_mana_cost_+%_final", "mana-cost"),
     // Melee Physical Damage's more damage with poison and bleeding: no
     // ailment is in the slice.
     (
         "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
         "ailment-damage",
+    ),
+    // P3-8n: Momentum's Swiftness and channelling (PoB maps the duration and
+    // the channelling time to no modifier, the speed per momentum lost to
+    // `MovementSpeed`); its attack speed is `poe1::stacks`.
+    ("support_momentum_base_buff_duration_ms", "skill-duration"),
+    (
+        "support_momentum_movement_speed_+%_per_stack_removed",
+        "movement-speed",
+    ),
+    (
+        "support_momentum_stack_while_channelling_base_ms",
+        "channelling",
+    ),
+    // P3-8n: Intensify's area per intensity (`AreaOfEffect` MORE): area.
+    (
+        "support_spell_boost_area_of_effect_+%_final_per_charge",
+        "area",
     ),
     ("take_half_area_damage_from_hit_%_chance", "damage-taken"),
     ("unaffected_by_burning_ground", "ground-on-self"),
@@ -1336,6 +1552,41 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// area of effect, scaling with energy shield, while phased) reach no slice
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
+    // P3-8n: damage from a mana cost (PoB `PercentStat` of `ManaCost`).
+    (
+        "added_chaos_damage_%_mana_cost_if_payable",
+        "hierophant_mana_cost_+%_final",
+    ),
+    (
+        "arc_and_crackling_lance_added_cold_damage_%_mana_cost_if_payable",
+        "hierophant_mana_cost_+%_final",
+    ),
+    // P3-8n: modifiers per fortification (`FortificationStacks`).
+    (
+        "armour_evasion_rating_+%_final_per_fortification_above_20",
+        "base_max_fortification",
+    ),
+    (
+        "attack_damage_+%_while_you_have_at_least_20_fortification",
+        "base_max_fortification",
+    ),
+    (
+        "attack_speed_+%_per_fortification",
+        "base_max_fortification",
+    ),
+    (
+        "attack_speed_+%_per_fortification_above_20",
+        "base_max_fortification",
+    ),
+    // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
+    (
+        "damage_+%_per_active_golem",
+        "base_number_of_golems_allowed",
+    ),
+    (
+        "forbidden_rite_and_dark_pact_added_chaos_damage_%_mana_cost_if_payable",
+        "hierophant_mana_cost_+%_final",
+    ),
     (
         "light_radius_additive_modifiers_apply_to_damage",
         "light_radius_+%",
@@ -1345,12 +1596,20 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "light_radius_+%",
     ),
     (
+        "manaweave_added_cold_damage_%_cost_if_payable",
+        "support_inspiration_mana_cost_+%_final",
+    ),
+    (
         "maximum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
     ),
     (
         "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
+    ),
+    (
+        "spell_suppression_chance_%_per_fortification",
+        "base_max_fortification",
     ),
 ];
 
@@ -1422,6 +1681,23 @@ impl StatMapping for Poe1Mapping {
                     })
                     .collect(),
             );
+        }
+        // Stacks and config multipliers (P3-8n): flags and `Base` values
+        // only `poe1::stacks` reads.
+        if let Some((kind, value)) = super::stacks::modifier(stat.as_str()) {
+            let op = match value {
+                super::stacks::StackValue::CanGain | super::stacks::StackValue::Intimidate => {
+                    Op::Flag
+                }
+                _ => Op::Base,
+            };
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::Stack(kind, value)),
+                op,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
         }
         if let Some((kind, value)) = super::charges::modifier(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
@@ -1871,12 +2147,7 @@ mod tests {
         // shock's scale, `poe1::damage_taken`; mana reservation efficiency
         // since P3-8l, `poe1::skill_modifiers`; the effect of chill since
         // P3-8m, the guaranteed chill's scale.)
-        for stat in [
-            "maximum_life_+%_if_no_life_tags_on_body_armour",
-            "action_speed_-%",
-            "base_max_fortification",
-            "base_self_critical_strike_multiplier_-%",
-        ] {
+        for stat in ["maximum_life_+%_if_no_life_tags_on_body_armour"] {
             assert_eq!(
                 Poe1Mapping.map(&StatId::new(stat)),
                 StatMap::Unmapped,
@@ -2439,7 +2710,13 @@ mod tests {
             assert!(!NO_EFFECT.iter().any(|r| r.0 == *id), "{id}");
             for (_, _, _, state) in *rows {
                 assert!(
-                    [states::USING_STAFF, states::USING_SHIELD].contains(state),
+                    [
+                        states::USING_STAFF,
+                        states::USING_SHIELD,
+                        states::MAIN_HAND_WEAPON
+                    ]
+                    .contains(state)
+                        || conditions::CHECKS.iter().any(|(_, c)| c == state),
                     "{id}: {state}"
                 );
             }
@@ -2447,7 +2724,44 @@ mod tests {
         // Each row as PoB reads its text (the table's docs).
         let staff = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_STAFF);
         let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
+        let config = |q: Quantity, op: Op, all: Flags, c: &'static str| (q, op, all, c);
         let expected = [
+            (
+                "critical_strike_chance_against_enemies_on_full_life_+%",
+                vec![config(
+                    Quantity::CritChance,
+                    Op::Increased,
+                    NONE,
+                    conditions::ENEMY_FULL_LIFE,
+                )],
+            ),
+            (
+                "critical_strike_multiplier_+_vs_unique_enemies",
+                vec![config(
+                    Quantity::CritMultiplier,
+                    Op::Base,
+                    NONE,
+                    conditions::ENEMY_RARE_OR_UNIQUE,
+                )],
+            ),
+            (
+                "damage_+%_if_enemy_shattered_recently",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    conditions::SHATTERED_ENEMY_RECENTLY,
+                )],
+            ),
+            (
+                "damage_+%_if_you_have_shocked_recently",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    NONE,
+                    conditions::SHOCKED_ENEMY_RECENTLY,
+                )],
+            ),
             (
                 "defences_+%_while_wielding_staff",
                 vec![
@@ -2463,6 +2777,32 @@ mod tests {
             (
                 "global_critical_strike_multiplier_+_while_holding_staff",
                 vec![staff(Quantity::CritMultiplier, Op::Base, NONE)],
+            ),
+            (
+                "melee_damage_+%_at_close_range",
+                vec![config(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::MELEE.union(Flags::HIT),
+                    conditions::AT_CLOSE_RANGE,
+                )],
+            ),
+            (
+                "physical_staff_damage_+%",
+                vec![staff(
+                    Quantity::Damage,
+                    Op::Increased,
+                    Flags::ATTACK.union(Flags::HIT).union(Flags::PHYSICAL),
+                )],
+            ),
+            (
+                "reduce_enemy_fire_resistance_with_weapons_%",
+                vec![(
+                    Quantity::Penetration(FIRE_T),
+                    Op::Base,
+                    Flags::ATTACK,
+                    states::MAIN_HAND_WEAPON,
+                )],
             ),
             (
                 "shield_spell_block_%",

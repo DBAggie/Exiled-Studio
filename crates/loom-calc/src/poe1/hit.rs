@@ -1393,9 +1393,71 @@ fn rate(
     let time = quotient(calc, base_time, modifier, Term::Step("time"))?;
     let one = phases::constant(calc, "one", 1.0)?;
     let rate = quotient(calc, one, time, Term::Step("uncapped"))?;
+    let rate = action_speed(calc, rate, &mut reasons)?;
     let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
     let value = phases::pair(calc, rate, cap, Term::Result, true)?;
     Ok((value, reasons))
+}
+
+/// A self-cast skill's rate times PoB's action speed modifier
+/// (`CalcOffence.lua` 2341: every skill the engine computes is self-cast;
+/// `calcs.actionSpeedMod`, `CalcPerform.lua` 1107: `max(minimum / 100, 1 +
+/// (temporal chains + ActionSpeed INC) / 100)`, with no minimum, maximum
+/// reduction, or Temporal Chains mapped). Queried only when the store has
+/// an action speed effect (P3-8n), so other hits keep their graphs. The
+/// modifier is the character's: no skill flag.
+fn action_speed(
+    calc: &mut Calc<'_>,
+    rate: Valued,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let quantity = Quantity::Poe1(Poe1Quantity::ActionSpeed);
+    if !phases::has(calc, quantity) {
+        return Ok(rate);
+    }
+    let cx = calc.context(Flags::NONE);
+    let modifier = increased(calc, quantity, &cx, reasons)?;
+    let zero = phases::constant(calc, "no-minimum-action-speed", 0.0)?;
+    let modifier = phases::pair(calc, modifier, zero, Term::Step("action-speed"), false)?;
+    phases::product(calc, &[rate, modifier], Term::Step("action-speed-scaled"))
+}
+
+/// PoB's `ScaledDamageEffect` from double damage (`CalcOffence.lua` 3196
+/// to 3209): `1 + min(DoubleDamageChance, 100) / 100`, with no triple
+/// damage or double damage on crit mapped (P3-8n). `None` when the store
+/// has no double damage effect.
+fn double_damage(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let quantity = Quantity::Poe1(Poe1Quantity::DoubleDamageChance);
+    if !phases::has(calc, quantity) {
+        return Ok(None);
+    }
+    let chance = sum_in(
+        calc,
+        quantity,
+        Op::Base,
+        cx,
+        Term::Step("double-damage-chance"),
+        reasons,
+    )?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let chance = phases::pair(
+        calc,
+        chance,
+        hundred,
+        Term::Step("double-damage-capped"),
+        true,
+    )?;
+    let effect = percent(calc, chance, Term::Step("double-damage-effect"))?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    Ok(Some(phases::total(
+        calc,
+        &[one, effect],
+        Term::Step("scaled-damage-effect"),
+    )?))
 }
 
 /// The enemy's resistance to `t` a hit meets (`calcResistForType`):
@@ -1676,18 +1738,26 @@ struct Conversion {
     kept: [Option<Valued>; 5],
 }
 
-/// PoB's `buildConversionTable` over the skill's own conversion (the only
-/// conversion mapped): `None` when the store has none, so a hit without
-/// conversion has no conversion nodes.
+/// PoB's `buildConversionTable` (`CalcOffence.lua` 1878 to 1921) over
+/// the skill's own conversion and, since P3-8n, the other conversion of a
+/// type to a later one (`<From>DamageConvertTo<To>`; the elemental and
+/// non-chaos sums of its other names are not mapped): `None` when the
+/// store has neither, so a hit without conversion has no conversion nodes.
+/// A type with only the skill's own conversion keeps P3-10's nodes.
 fn conversion(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
     reasons: &mut Reasons,
 ) -> Result<Option<Conversion>, CalcError> {
-    let quantity = |from: usize, to: usize| {
+    let skill_q = |from: usize, to: usize| {
         Quantity::Poe1(Poe1Quantity::SkillConversion(TYPES[from], TYPES[to]))
     };
-    let any = (0..4).any(|from| (from + 1..5).any(|to| phases::has(calc, quantity(from, to))));
+    let global_q =
+        |from: usize, to: usize| Quantity::Poe1(Poe1Quantity::Conversion(TYPES[from], TYPES[to]));
+    let any = (0..4).any(|from| {
+        (from + 1..5)
+            .any(|to| phases::has(calc, skill_q(from, to)) || phases::has(calc, global_q(from, to)))
+    });
     if !any {
         return Ok(None);
     }
@@ -1695,48 +1765,116 @@ fn conversion(
         share: [[None; 5]; 5],
         kept: [None; 5],
     };
+    // `m_max(skillModList:Sum("BASE", cfg, name), 0)`.
+    let floored = |calc: &mut Calc<'_>,
+                   q: Quantity,
+                   step: &'static str,
+                   reasons: &mut Reasons|
+     -> Result<Valued, CalcError> {
+        let sum = sum_in(calc, q, Op::Base, cx, Term::Step(step), reasons)?;
+        let zero = phases::constant(calc, "no-negative-conversion", 0.0)?;
+        phases::pair(calc, sum, zero, Term::Step("conversion"), false)
+    };
     // Chaos converts to nothing (`conversionTable["Chaos"] = { mult = 1 }`).
     for from in 0..4 {
         let mut skill = Vec::new();
+        let mut global = Vec::new();
         for to in from + 1..5 {
-            if phases::has(calc, quantity(from, to)) {
-                // `m_max(skillModList:Sum("BASE", cfg, "Skill...ConvertTo..."), 0)`.
-                let sum = sum_in(
-                    calc,
-                    quantity(from, to),
-                    Op::Base,
-                    cx,
-                    Term::Step("skill-conversion"),
-                    reasons,
-                )?;
-                let zero = phases::constant(calc, "no-negative-conversion", 0.0)?;
+            if phases::has(calc, skill_q(from, to)) {
                 skill.push((
                     to,
-                    phases::pair(calc, sum, zero, Term::Step("conversion"), false)?,
+                    floored(calc, skill_q(from, to), "skill-conversion", reasons)?,
+                ));
+            }
+            if phases::has(calc, global_q(from, to)) {
+                global.push((
+                    to,
+                    floored(calc, global_q(from, to), "global-conversion", reasons)?,
                 ));
             }
         }
-        if skill.is_empty() {
+        if skill.is_empty() && global.is_empty() {
             continue;
         }
         let parts: Vec<Valued> = skill.iter().map(|(_, v)| *v).collect();
-        let total = phases::total(calc, &parts, Term::Step("conversion-total"))?;
+        let skill_total = phases::total(calc, &parts, Term::Step("conversion-total"))?;
         let hundred = phases::constant(calc, "hundred", 100.0)?;
-        // Above 100%: `skillConv[type] = val x 100 / skillTotal`.
-        let factor = if total.value > 100.0 {
-            Some(quotient(
+        if global.is_empty() {
+            // P3-10's nodes. Above 100%: `skillConv[type] = val x 100 /
+            // skillTotal`.
+            let factor = if skill_total.value > 100.0 {
+                Some(quotient(
+                    calc,
+                    hundred,
+                    skill_total,
+                    Term::Step("conversion-scale"),
+                )?)
+            } else {
+                None
+            };
+            for (to, value) in skill {
+                let value = match factor {
+                    Some(f) => phases::product(calc, &[value, f], Term::Step("conversion-scaled"))?,
+                    None => value,
+                };
+                table.share[from][to] = Some(quotient(
+                    calc,
+                    value,
+                    hundred,
+                    Term::Step("conversion-share"),
+                )?);
+            }
+            // `mult = 1 - m_min((globalTotal + skillTotal) / 100, 1)`.
+            let one = phases::constant(calc, "one", 1.0)?;
+            let converted = quotient(calc, skill_total, hundred, Term::Step("converted-share"))?;
+            let converted =
+                phases::pair(calc, converted, one, Term::Step("converted-capped"), true)?;
+            table.kept[from] = Some(difference(calc, one, converted, Term::Step("kept-share"))?);
+            continue;
+        }
+        let parts: Vec<Valued> = global.iter().map(|(_, v)| *v).collect();
+        let mut global_total = phases::total(calc, &parts, Term::Step("global-conversion-total"))?;
+        let zero = phases::constant(calc, "no-conversion", 0.0)?;
+        if skill_total.value > 100.0 {
+            // The skill's own scaled to 100, the others removed.
+            let factor = quotient(calc, hundred, skill_total, Term::Step("conversion-scale"))?;
+            for (_, value) in &mut skill {
+                *value = phases::product(calc, &[*value, factor], Term::Step("conversion-scaled"))?;
+            }
+            for (_, value) in &mut global {
+                *value = zero;
+            }
+        } else if global_total.value + skill_total.value > 100.0 {
+            // `factor = (100 - skillTotal) / globalTotal`.
+            let left = difference(calc, hundred, skill_total, Term::Step("conversion-left"))?;
+            let factor = quotient(
                 calc,
-                hundred,
-                total,
-                Term::Step("conversion-scale"),
-            )?)
-        } else {
-            None
-        };
-        for (to, value) in skill {
-            let value = match factor {
-                Some(f) => phases::product(calc, &[value, f], Term::Step("conversion-scaled"))?,
-                None => value,
+                left,
+                global_total,
+                Term::Step("global-conversion-scale"),
+            )?;
+            for (_, value) in &mut global {
+                *value = phases::product(
+                    calc,
+                    &[*value, factor],
+                    Term::Step("global-conversion-scaled"),
+                )?;
+            }
+            global_total = phases::product(
+                calc,
+                &[global_total, factor],
+                Term::Step("global-conversion-total-scaled"),
+            )?;
+        }
+        // `conversion[type] = (globalConv[type] + skillConv[type]) / 100`.
+        for to in from + 1..5 {
+            let g = global.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
+            let k = skill.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
+            let value = match (g, k) {
+                (None, None) => continue,
+                (Some(g), None) => phases::total(calc, &[g, zero], Term::Step("conversion-sum"))?,
+                (None, Some(k)) => phases::total(calc, &[zero, k], Term::Step("conversion-sum"))?,
+                (Some(g), Some(k)) => phases::total(calc, &[g, k], Term::Step("conversion-sum"))?,
             };
             table.share[from][to] = Some(quotient(
                 calc,
@@ -1745,9 +1883,13 @@ fn conversion(
                 Term::Step("conversion-share"),
             )?);
         }
-        // `mult = 1 - m_min((globalTotal + skillTotal) / 100, 1)`.
         let one = phases::constant(calc, "one", 1.0)?;
-        let converted = quotient(calc, total, hundred, Term::Step("converted-share"))?;
+        let both = phases::total(
+            calc,
+            &[global_total, skill_total],
+            Term::Step("conversion-both"),
+        )?;
+        let converted = quotient(calc, both, hundred, Term::Step("converted-share"))?;
         let converted = phases::pair(calc, converted, one, Term::Step("converted-capped"), true)?;
         table.kept[from] = Some(difference(calc, one, converted, Term::Step("kept-share"))?);
     }
@@ -1915,6 +2057,7 @@ fn passes(
         ratio(shape.level.base_multiplier),
     )?;
     let conversion = conversion(calc, &cx, reasons)?;
+    let scaled = double_damage(calc, &cx, reasons)?;
     let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;
@@ -1982,7 +2125,16 @@ fn passes(
         if min.value == 0.0 && max.value == 0.0 {
             continue;
         }
-        let kept = conversion.as_ref().and_then(|c| c.kept[t]);
+        // `allMult = convMult x ScaledDamageEffect` (P3-8n).
+        let kept = match (conversion.as_ref().and_then(|c| c.kept[t]), scaled) {
+            (k, None) => k,
+            (None, Some(s)) => Some(s),
+            (Some(k), Some(s)) => Some(phases::product(
+                calc,
+                &[k, s],
+                Term::Step("scaled-multiplier"),
+            )?),
+        };
         let effect = match resistance_index(ty) {
             Some(index) => {
                 enemy_read = true;

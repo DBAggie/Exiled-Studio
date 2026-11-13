@@ -37,6 +37,11 @@ pub const USING_STAFF: &str = "UsingStaff";
 /// The off hand holds a shield (PoB's `UsingShield`).
 pub const USING_SHIELD: &str = "UsingShield";
 
+/// The main hand holds a weapon (P3-8n): PoB gives an attack with it
+/// `ModFlag.Weapon` (`CalcActiveSkill.lua` 209: the weapon's type is not
+/// `None`), which "with Weapons" modifiers need. Not a PoB condition.
+pub const MAIN_HAND_WEAPON: &str = "MainHandWeapon";
+
 /// The item classes of PoB's `Staff` weapon type.
 const STAFF_CLASSES: [&str; 2] = ["Staff", "Warstaff"];
 
@@ -55,10 +60,21 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         Held::Empty | Held::Weapon(_) | Held::Other => Some(false),
         Held::Unknown => None,
     };
-    for (key, value) in [(USING_STAFF, staff), (USING_SHIELD, shield)] {
+    let weapon = match &hands.main_hand {
+        Held::Weapon(_) => Some(true),
+        Held::Empty | Held::Shield | Held::Other => Some(false),
+        Held::Unknown => None,
+    };
+    for (key, value) in [
+        (USING_STAFF, staff),
+        (USING_SHIELD, shield),
+        (MAIN_HAND_WEAPON, weapon),
+    ] {
         if let Some(v) = value {
             out.insert(ConditionKey::new(key), v);
         }
     }
+    // The config's condition checks (P3-8n).
+    super::conditions::settle(input, &mut out);
     out
 }

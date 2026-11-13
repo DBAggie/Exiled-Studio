@@ -394,8 +394,18 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
         (UNNERVED_INPUT, Flags::SPELL),
         (BLINDED_INPUT, Flags::NONE),
     ];
+    // "Nearby Enemies are Intimidated while you have Rage" (P3-8n,
+    // `poe1::stacks`): the same flag as the config's, so once.
+    let rage = super::stacks::intimidates(Some(set), ingest);
     for (input, flag) in checks {
         match check(set, input) {
+            Ok(false) if input == INTIMIDATED_INPUT && rage.is_some() => {
+                ingest.effect(Effect {
+                    conditions: Conditions::none().with_all(flag),
+                    source: rage.clone().unwrap_or(Source::Rule("rage")),
+                    ..taken(Op::Increased, INTIMIDATE_UNNERVE_DAMAGE_TAKEN, input)
+                });
+            }
             Ok(false) => {}
             Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.to_owned(),
@@ -654,6 +664,7 @@ mod tests {
         // "Hits always Shock", P3-8k).
         "all_damage_can_shock",
         "always_shock",
+        "base_chance_to_shock_%",
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
         "cannot_be_shocked_while_at_maximum_power_charges",

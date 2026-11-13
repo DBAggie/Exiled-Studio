@@ -482,6 +482,13 @@ mod tests {
         // Flask charges (Ryslatha's soul, P3-12g): not the power, frenzy,
         // or endurance charges this module counts.
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
+        // Inspiration's charge gain and loss (P3-8n): PoB maps neither;
+        // Inspiration charges are `poe1::stacks`'s, not this module's.
+        "gain_righteous_charge_on_mana_spent_%",
+        "lose_all_righteous_charges_on_mana_use_threshold",
+        // Intensify's area per intensity (its "charge" is intensity,
+        // `poe1::stacks`): area, not a slice field.
+        "support_spell_boost_area_of_effect_+%_final_per_charge",
     ];
 
     /// The module's argument: no row of the mapping's tables reads or
