@@ -800,6 +800,18 @@ pub const STATE_ROWS: &[StateRow] = &[
             states::USING_STAFF,
         )],
     ),
+    // P3-8n: "#% increased maximum Life if there are no Life Modifiers on
+    // Equipped Body Armour" (the game's condition, `poe1::states`; PoB has no
+    // parser for it: a divergence).
+    (
+        "maximum_life_+%_if_no_life_tags_on_body_armour",
+        &[(
+            Quantity::Life,
+            Op::Increased,
+            NONE,
+            states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+        )],
+    ),
     // P3-8n: "Melee Damage with Hits at Close Range": `Damage` INC with
     // `ModFlag.Melee` (716) and `KeywordFlag.Hit` (990), `AtCloseRange` (1939).
     (
@@ -2270,17 +2282,6 @@ mod tests {
             };
             assert_eq!(piece.map(&StatId::new(stat)), StatMap::NoEffect, "{stat}");
         }
-        // Left out on purpose: they can change a slice field. (The effect
-        // of lightning ailments is a row since P3-8k: the guaranteed
-        // shock's scale, `poe1::damage_taken`; mana reservation efficiency
-        // since P3-8l, `poe1::skill_modifiers`; the effect of chill since
-        // P3-8m, the guaranteed chill's scale.)
-        assert_eq!(
-            Poe1Mapping.map(&StatId::new(
-                "maximum_life_+%_if_no_life_tags_on_body_armour"
-            )),
-            StatMap::Unmapped
-        );
     }
 
     #[test]
@@ -2840,7 +2841,8 @@ mod tests {
                     [
                         states::USING_STAFF,
                         states::USING_SHIELD,
-                        states::MAIN_HAND_WEAPON
+                        states::MAIN_HAND_WEAPON,
+                        states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
                     ]
                     .contains(state)
                         || conditions::CHECKS.iter().any(|(_, c)| c == state),
@@ -2904,6 +2906,15 @@ mod tests {
             (
                 "global_critical_strike_multiplier_+_while_holding_staff",
                 vec![staff(Quantity::CritMultiplier, Op::Base, NONE)],
+            ),
+            (
+                "maximum_life_+%_if_no_life_tags_on_body_armour",
+                vec![(
+                    Quantity::Life,
+                    Op::Increased,
+                    NONE,
+                    states::NO_LIFE_MODIFIERS_ON_BODY_ARMOUR,
+                )],
             ),
             (
                 "melee_damage_+%_at_close_range",

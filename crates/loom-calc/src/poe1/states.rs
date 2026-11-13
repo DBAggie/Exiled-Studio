@@ -25,7 +25,9 @@
 //! calculation (`Ruleset::states`, P3-8g); every query context comes from
 //! `Calc::context`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
+
+use loom_domain::{LineKind, LineResolution, Resolved};
 
 use super::collect::{self, Held};
 use crate::condition::ConditionKey;
@@ -41,6 +43,17 @@ pub const USING_SHIELD: &str = "UsingShield";
 /// `ModFlag.Weapon` (`CalcActiveSkill.lua` 209: the weapon's type is not
 /// `None`), which "with Weapons" modifiers need. Not a PoB condition.
 pub const MAIN_HAND_WEAPON: &str = "MainHandWeapon";
+
+/// "if there are no Life Modifiers on Equipped Body Armour" (P3-8n): the
+/// game's condition; PoB v2.67.2 has no parser for the line (a
+/// divergence, `docs/phase-3/stat-mapping.md`, "P3-8n").
+pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour";
+
+/// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].
+pub const NO_LIFE_MODIFIERS_STAT: &str = "maximum_life_+%_if_no_life_tags_on_body_armour";
+
+/// The game's implicit tag of a Life Modifier.
+const LIFE_TAG: &str = "life";
 
 /// The item classes of PoB's `Staff` weapon type.
 const STAFF_CLASSES: [&str; 2] = ["Staff", "Warstaff"];
@@ -76,5 +89,76 @@ pub fn states(input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
     }
     // The config's condition checks (P3-8n).
     super::conditions::settle(input, &mut out);
+    if reads_life_modifiers(input)
+        && let Some(v) = no_life_modifiers_on_body_armour(input)
+    {
+        out.insert(ConditionKey::new(NO_LIFE_MODIFIERS_ON_BODY_ARMOUR), v);
+    }
     out
+}
+
+/// Whether an allocated node carries [`NO_LIFE_MODIFIERS_STAT`]: only then
+/// is the condition settled (it reads every mod of the data). From another
+/// source the stat meets it unsettled, a reason.
+fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
+    collect::active_spec(input.build).is_some_and(|spec| {
+        spec.nodes.value().iter().any(|n| {
+            input
+                .data
+                .passive_stats(n.0)
+                .is_some_and(|stats| stats.iter().any(|s| s.stat == NO_LIFE_MODIFIERS_STAT))
+        })
+    })
+}
+
+/// Whether the equipped body armour has no Life Modifier (P3-8n): a
+/// modifier is one whose mod has the game's `life` implicit tag. The
+/// item's lines carry their stats, not their mods, so:
+/// - a line whose stat is only on mods with the tag is a Life Modifier:
+///   `false`;
+/// - when no mod with the tag has every one of its stats among the item's
+///   lines, none of its mods can have the tag: `true`;
+/// - otherwise not settled (`None`), as for an empty slot, a line that is
+///   not resolved to stats, or data without implicit tags.
+fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
+    let build = input.build;
+    let set = collect::active_item_set(build)?;
+    let id = set
+        .slots
+        .typed()
+        .find(|e| e.slot.as_str() == "Body Armour")
+        .and_then(|e| e.item)
+        .filter(|id| id.0 != 0)?;
+    let item = build.items.item(id)?;
+    let mut stats = BTreeSet::new();
+    for line in &item.body.lines {
+        match &line.kind {
+            LineKind::Modifier(m) => match &m.resolution {
+                LineResolution::Resolved {
+                    result: Resolved::Stats(lines),
+                    ..
+                } => stats.extend(lines.iter().map(|l| l.stat.as_str().to_owned())),
+                LineResolution::Excluded(loom_domain::Exclusion::NotSelected)
+                | LineResolution::Continues { .. } => {}
+                _ => return None,
+            },
+            LineKind::Unrecognized | LineKind::Spec { known: false, .. } => return None,
+            _ => {}
+        }
+    }
+    let mods = input.data.mods_by_tag(LIFE_TAG)?;
+    let life_only = stats
+        .iter()
+        .any(|s| !mods.untagged.contains(s) && mods.tagged.iter().any(|m| m.contains(s)));
+    if life_only {
+        return Some(false);
+    }
+    if mods
+        .tagged
+        .iter()
+        .any(|m| m.iter().all(|s| stats.contains(s)))
+    {
+        return None;
+    }
+    Some(true)
 }

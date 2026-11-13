@@ -244,6 +244,7 @@ fn mods(
         col("CraftingItemClassRestrictions")?,
         col("IsEssenceOnlyModifier")?,
     );
+    let implicit = column(&t, &["ImplicitTagsKeys", "ImplicitTags"])?;
     let mut slots = Vec::new();
     for n in 1..=8 {
         slots.push(StatSlot::find(&t, n)?);
@@ -295,6 +296,10 @@ fn mods(
             craft_classes: class_ids(&craft_rows),
             essence_only: r.get(essence).and_then(Value::as_bool).unwrap_or(false),
             essence_classes: essence_of.get(&n).map(class_ids),
+            implicit_tags: mod_filter::ints(r, implicit)
+                .into_iter()
+                .filter_map(|i| at(&tags, Some(i), counts))
+                .collect(),
         });
     }
     let names: BTreeSet<&str> = mod_types.iter().map(String::as_str).collect();
@@ -752,7 +757,8 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         .collect();
     let manifest = Manifest {
         format: bundle::CALC_FORMAT,
-        data_schema: 2,
+        // 3 since P3-8n: mods carry their implicit tags.
+        data_schema: 3,
         game: game.clone(),
         source: provenance(&raw),
         files: entries,
