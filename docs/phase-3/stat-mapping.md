@@ -724,3 +724,11 @@ The Smite builds' life now equals PoB's (the Life Mastery). Hit DPS follows aver
 Reasons: public 283 gone and 28 added in 29 builds; corpus 115 gone and 27 added in 19 builds. Every added reason is an `unmapped-stat` of a node an anoint now grants (shield and curse notables, minion counts, totems): the node counts, so its other stats are reasons.
 
 Tests: 1276 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.
+
+## Phase 3 close-out
+
+- `golem_buff_effect_+%` ("#% increased Effect of Buffs granted by your Golems", PoB's `BuffEffect` tagged `SkillType.Golem`) left `NO_EFFECT` for `poe1::skill_modifiers` (`Poe1Quantity::GolemBuffEffect`), which scales the golem gems' buffs now modelled.
+- `curse_effect_+%` ("#% increased Effect of your Curses", `CurseEffect` INC): `poe1::skill_modifiers` (`Poe1Quantity::CurseEffect`), the curse gems' scale.
+- `cast_speed_+%_if_have_crit_recently` ("#% increased Cast Speed if you've dealt a Critical Strike Recently", `Speed` INC `ModFlag.Cast`, `Condition` `CritRecently`, `ModParser.lua` 1785): a `STATE_ROWS` row on `poe1::conditions::CRIT_RECENTLY`.
+- "No Life Modifiers on Equipped Body Armour" (P3-8n) is also settled by PoB's affix record: a `Prefix:`/`Suffix:` spec line names the crafted mod (`{range:r}<mod id>`), and a named mod with the game's `life` tag whose stats are all on the item is a Life Modifier. The stat rule alone left Ice Nova campaign's crafted "+86 to maximum Life" unsettled (`base_maximum_life` is on untagged mods too), its life `Partial`; with the record it equals PoB's (`poe1::states`, test `a_body_armours_life_modifiers_should_be_settled_only_when_certain`).
+- `poe1::gems::GUARDED_WORDS` gained `curse_effect`, `debuff_effect`, and `exert` (a checked exception: `curse_effect_on_self_+%`, curses on you); `DEPENDS_ON` gained `number_of_additional_curses_allowed` (the curse limit stays 1).

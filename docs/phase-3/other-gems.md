@@ -175,3 +175,41 @@ Tests: 1202 workspace tests, clippy, fmt, wasm32; the maintainer-run real-bundle
 
 - An item without a `Sockets` line would need PoB's `socketLimit` per base, which is PoB's directive, not game data; it stays a reason.
 - The custom "Onslaught" line (next step), the other gems left (above), and the in-scope builds' unmapped stats.
+
+## Phase 3 close-out: the gate builds' other gems
+
+The maintainer asked (2026-11-13) for every step left in Phase 3 in one PR. This section covers the gems; the custom lines are `docs/phase-3/custom-lines.md`, the report `docs/phase-3/phase-3-report.md`. Every PoB citation is the pinned checkout (`local/oracle/pob`, v2.67.2); the legacy repository is 122 commits newer and differs (for example `buildConversionTable` rounds there).
+
+### What PoB does, and the engine
+
+| Gems | PoB v2.67.2 | Engine (`loom_calc::poe1::gems`) |
+|---|---|---|
+| Golems (Flame, Ice, Lightning, Stone, Stone of Safeguarding) | Their stat map's `GlobalEffect` `Buff` (damage, accuracy and crit, attack and cast speed, defences), scaled by `BuffEffect`: the gem's quality `golem_buff_effect_+%` and the tree's "Effect of Buffs granted by your Golems" (tagged `SkillType.Golem`; `CalcPerform.lua` 2266 to 2297) | `Kind::Buff`; `skill_modifiers::Totals::golem_buff_effect` (the tree's, new quantity `GolemBuffEffect`) and the gems' own `OWN_EFFECT_STATS` in `buff_scale` |
+| Lightning Golem's Wrath | The golem's minion skill `LightningGolemWrath`, enabled by `summonLightningGolemEnableWrath` (`ConfigOptions.lua` 681); its aura reaches the character (2782 to 2812) at the minion's level, the golem gem level's requirement; values effectiveness-scaled at that level (`CalcTools.lua` 198 to 205) | `wrath`: the golem's `base_display_minion_actor_level` (equal to the requirement), the game constants and the effect's effectiveness, `round(effectiveness x value)`; spell 2 to 20 and attack 4 to 33 lightning at level 70 |
+| Herald of Ash, Herald of Purity | `Buff`: physical gained as extra fire (`PhysicalDamageGainAsFire`); more physical damage | `Kind::Buff`; `Poe1Quantity::GainAs`, read by the hit's conversion table as PoB's `dmgTable[type] = (globalConv + skillConv + add) / 100` with the kept share unchanged (`CalcOffence.lua` 1961 to 2010 in the pin) |
+| Frost Bomb | `Debuff`: the enemy's `ColdExposure` -15 (`CalcPerform.lua` 2534 to 2600); the strongest exposure wins (3563 to 3588) | `Kind::Debuff`; `Poe1Quantity::SkillExposure`, a candidate of `poe1::exposure` |
+| Frostbite, Elemental Weakness | `Curse`: scaled by `CurseEffect` and the enemy's `CurseEffectOnSelf` (2601 to 2632), slotted up to the curse limit (3155 to 3215) | `Kind::Curse`; `Totals::curse_scale` (new quantity `CurseEffect`); a second hex is `curse-limit` (PoB's priority is not modelled); marks are not modelled |
+| Intimidating Cry, Rallying Cry | `Warcry` buffs reach no slice field; Intimidating Cry's exerted attacks add their uptime, `min((exerts / rate) / (cooldown + cast time), 1) x 100 x stored uses`, to the double damage chance (`CalcOffence.lua` 2592 to 2600, 3200 to 3201); Rallying Cry's `1 + min(allies, 5) x 5% x uptime` multiplies damage only with nearby allies | `Kind::Warcry`; `WarcryValue` terms (exerts, the cooldown rounded up to ticks, `1 / 0.8 x (1 + warcry speed)` from the gem and its supports, stored uses) and `hit::intimidating_uptime` with the action speed and the tick cap; Rallying Cry with allies configured is `rallying-cry-allies` |
+| Flesh and Stone | Blood Stance (on unless the config's stance is Sand, `CalcSetup.lua` 538): the enemy's `PhysicalDamageTaken` MORE on hits (`AuraDebuff`); Sand Stance: damage taken when hit | `Kind::Buff` (aura scale); `BuffStat::BloodStance` reads `bloodSandStance` (which left `config::NAMED_ONLY`) |
+| Righteous Fire of Arcane Devotion | More cast speed while unreserved life is at least 2 and mana at least 1 (`StatThreshold` tags) | `BuffStat::Threshold`: the rows carry `gems::STAT_THRESHOLD`, which the hit settles from the computed fields (`Calc::settle_state`) |
+| Flame Wall | Added fire damage to projectiles, `effectCond` `FlameWallAddedDamage` (`flameWallAddedDamage`) | `BuffStat::WhenInput`: the rows apply when the check is on |
+| Arcane Surge Support | Its buff, named "Arcane Surge", sets `AffectedByArcaneSurge` when it applies (2272), and `doActorMisc` (686 to 705, after the buffs) gives Arcane Surge's cast speed and enables the support's more spell damage | A `SUPPORTS` entry; `gems::arcane_surge_support` settles the condition (`poe1::conditions`), `poe1::buffs` gives the cast speed from it as from the config's check |
+| Guardian's Blessing | The supported aura reserves nothing (base mods set its reservation to 0 for `Aura`) and gains the support's `aura_effect_+%` | `NO_RESERVATION_SUPPORTS`; `aura_effect_+%` an own effect stat; PoB does not gate the aura on the support's minion, nor does the engine |
+| Automation, Convocation, Shockwave's attack, Meat Shield, Minion Life | Automation reserves and triggers; Convocation's buff is for minions only (`buffNotPlayer`); Shockwave Support's own attack hits on its own; the minion supports change minions | Inert or `NoSlice`; `SUPPORTS` entries |
+
+Two general rules changed with them:
+- **Supports' global effects** act whatever the supported skill's kind (Arcane Surge on Freezing Pulse, an inert skill); before, an inert skill's supports gave nothing.
+- **A buff's more multiplier is the character's.** PoB keeps buff mods in `modDB`, not in the main skill's `skillModList`, and rounds each list's product of one mod name apart (`ModList:MoreInternal`). The hit's `more` now groups by the main skill's own sources (`Calc::set_skill_sources`: its active gem and applied supports); before, every gem's effect counted as the skill's. Zealotry's more spell damage moved list in the Ice Nova mapping build (+0.47% before the fix).
+
+Items, found by the gate builds:
+- **An item or jewel in several slots counts in each**, as PoB counts per slot (`CalcSetup.lua` 701 to 837); P3-6 counted it once. The game cannot equip one item twice; the build's slots are taken as written (two Ice Nova builds hold one ring in both ring slots, the mapping build one jewel in two sockets). A repeated unique jewel is `jewel-limit` (PoB disables a limited one).
+- **Abyssal sockets**: a jewel in "<parent> Abyssal Socket <n>" counts when the parent item has at least `n` abyssal sockets (`local_has_X_abyss_sockets`; `ItemSlotControl.lua` 98 to 111 empties the others); a parent that scales its abyss jewels is a reason.
+- "#% increased Cast Speed if you've dealt a Critical Strike Recently" (`CritRecently`, from `conditionCritRecently`, which left `NAMED_ONLY`).
+
+### The check against PoB
+
+`data-parity` table `gem_effects` (`tools/parity-cli/src/data_parity/gem_effects.rs`) checks every new entry: debuffs, curses, and warcries are kinds with their own forbidden types; config-gated, Blood Stance, and threshold rows are compared with their tags; Elemental Weakness's three rows are PoB's `ElementalResist` and the Stone Golem's three PoB's `Defences`; each allowance (the golems' and Herald of Purity's minion types, Shockwave's triggered attack, Flesh and Stone's two buff kinds, the warcries' `UsesWarcryPower` buff, Guardian's Blessing's reservation keys, Automation's trigger) names why. Result: **453 values compared, 0 differences** (242 before); the whole `data-parity`: 534 differences, `uncategorized` 0, as before.
+
+### Tests
+
+`poe1::gems` (tables sorted, debuff and curse rows on the enemy, warcries reach no slice field, the guarded words, names); `poe1::skill_modifiers` (golem and curse scales); `crates/loom-calc/tests/attack.rs` (`intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate`); `crates/loom-calc/tests/poe1.rs` (the abyssal slot without a parent, Wrath's input handled); the parity-cli `gem_effects` tests.
