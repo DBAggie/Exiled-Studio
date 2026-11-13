@@ -97,3 +97,81 @@ Maintainer-run (`local/p3/p3-12h/evidence.sh`, P3-12g's bundle `local/p3/p3-12g/
 - **Other gems** of the in-scope builds: golems (the minion's buff, the Lightning Golem's Wrath), curses (Frostbite, Elemental Weakness), Frost Bomb's exposure, warcries (Intimidating Cry, Rallying Cry) and their exerted attacks, Herald of Ash (gain as extra), Herald of Purity (a minion), Flesh and Stone (stances), Righteous Fire, Automation, Convocation, Guardian's Blessing, Arcane Surge and Elemental Army's buffs.
 - **Buff and aura effect, reservation modifiers**: map them with the scale PoB applies (`ScaleAddMod`'s rounding) and the reservation terms.
 - **"Perfect Forest Warrior"** in the four Smite builds' active custom block (Q13, context file).
+
+## P3-12i: socket colour quality
+
+**The game** (maintainer, in game, 2026-11-13): since 3.29 a gem of any colour fits any socket; a gem in a socket of its own colour gains quality; a white socket gives none.
+
+### What PoB v2.67.2 does
+
+- `Classes/SkillsTab.lua` 1210 to 1245 (`UpdateSocketGroups`): for each socket group of the active skill set, in list order, enabled or not, that has a slot, gem `i` sits in socket `offset + i`. `offset` counts every gem of the earlier groups in the same slot, disabled gems and gems PoB does not know included. A gem PoB knows matches when the slot's item has `colourAlwaysMatches`, or when the socket at its index has the colour of its granted effect's `color` (1 `R`, 2 `G`, 3 `B`; `W`, `A`, and any other `color` never match).
+- `Classes/Item.lua` 658 to 666: the `Sockets:` line gives one socket per letter of `RGBWA`, in order (a space starts a new link group; the index runs on). Lines 1482 to 1490: an item without the line gets its base's `socketLimit` sockets of a default colour. `socketLimit` is PoB's own `#socketLimit` directive, not game data. Lines 2588 to 2635: "Has # Sockets", "Has # Abyssal Sockets", "Has no Sockets", and "Cannot have non-Abyssal sockets" rebuild the list. Line 2636: "Gems Socketed always have the Quality bonus from Socket Colour" sets `colourAlwaysMatches`.
+- `Modules/CalcSetup.lua` 1578 (supports) and 1654 (active skills): the instance's quality is the gem's plus `data.misc.MatchingSocketQualityBonus` (10, `Modules/Data.lua` 297) when it matches. The bonus has no cap. `CalcActiveSkill.lua` 545 to 547 also adds a `GemSocketQuality` mod, which only the displayed gem quality reads (not a slice field).
+
+### Game data
+
+| Change | Where |
+|---|---|
+| The granted effect's colour: `GrantedEffect.attribute`, the game's `GrantedEffects.Attribute` as stored (1 to 4), optional (PoE2 has no column; an older bundle has no field) | `loom_data::bundle::skills`, converter `tools/parity-cli/src/bundle/skills.rs` (required in the PoE1 layout, so a renamed column fails the run) |
+| The validator: an attribute other than 1 to 4 is `BUNDLE_VALUE_RANGE` | `crates/loom-data/src/bundle/validate.rs` |
+| PoB's data export, format 5: each skill's `color` | `tools/oracle/data/pob_data.lua` |
+| `data-parity`, table `skills`, field `color`: the bundle's attribute against PoB's `color`, which PoB's exporter copies from the same column (`src/Export/Scripts/skills.lua` 157) | `tools/parity-cli/src/data_parity/compare.rs` |
+
+The extract already held the column (the extractor writes every column), so P3-12g's extract was converted again; no new extraction was needed.
+
+### The engine
+
+`loom_calc::poe1::sockets::socket_matches` follows PoB's rule for each group of the active set and each of its gems. The gem's colour is that of its first granted effect, which is PoB's `grantedEffect`, else `gemData.grantedEffect`. The item is the last entry of the slot's name in the active item set; an empty slot or `itemId="0"` gives no match. `skill::main_skill` and `skill::group_skills` add 10 to a matching gem's instance quality, so the main skill's hit, its supports, and every other skill's buff stats read it.
+
+What the engine cannot know is `SocketMatch::Unknown`. The gem keeps its own quality, and a gem of the main skill or of a buff (its active gem or an applied support) is `unmodelled-skill` `socket-colour-quality`; an inert skill's quality reaches nothing, nor does a reservation (it reads the level's row only). The unknown cases:
+
+- `no-sockets-line`: PoB would add `socketLimit` sockets of a default colour. It can over-report: a base without a limit (a ring, an amulet, a belt) has no sockets in PoB, so no match;
+- `several-sockets-lines`;
+- `socket-count-line`: a line that rebuilds the sockets (`REBUILDS`: `local_has_X_sockets`, `local_has_X_abyss_sockets`, `local_has_no_sockets`, `local_cannot_have_non_abyssal_sockets`);
+- `untyped-gem` (untyped gem content in a group of the slot: the index is not certain), `untyped-item`;
+- the item set's untyped content is not a case: it is also PoB's jewel-socket entries (`SocketIdURL`), and `collect` reads the typed slots only too. The first evidence run treated it as unknown, which left every gem of 14 public builds a reason; the fix (`76ec05e`) came before the calc runs below.
+- `no-colour`: the bundle has no colour for the gem (an older bundle), and its socket is red, green, or blue (a white, abyssal, or missing socket gives no match whatever the colour).
+
+"Gems Socketed always have the Quality bonus from Socket Colour" (`local_can_socket_gems_ignoring_colour`) makes every gem of the item match and joins `NO_EFFECT` (category `sockets`): its only effect is the gems' quality. A test checks that it and `local_has_X_abyss_sockets` are `sockets` rows and that the other `REBUILDS` stats stay unmapped.
+
+A gem's quality now reaches stats it did not before. Melee Physical Damage's quality stat `melee_physical_damage_+%` became a hit row (PoB `SkillStatMap.lua` 776: `PhysicalDamage` INC with `ModFlag.Melee`).
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-socket-colours-witch.xml` | A Plate Vest socketed `B-B-R-W G-B`: Ice Nova and Controlled Destruction in blue sockets (+10 each: Controlled Destruction's 5% spell damage), Increased Critical Strikes (blue) in a red socket and Faster Casting in a white one (none); a second group in the same slot from socket 5: Precision in green (+10), Haste (green) in blue (none) |
+| `smite-socket-colours-templar.xml` | A Karui Maul (1000 ms: no Q11 difference) socketed `R-R-G`: Smite, Melee Physical Damage (5% increased melee physical damage), Faster Attacks (5% increased attack speed), each in a socket of its colour |
+
+The first run of both matched PoB on every target once `melee_physical_damage_+%` was mapped.
+
+Unit tests (`crates/loom-calc/tests/hit.rs`) cover matching, other colours, white, missing, and abyssal sockets; the offset across groups of one slot, with a disabled gem, a disabled group, a gem the data does not have, and other slots; the always-matching line, also beside "Has no Sockets" and on an unselected variant line (not part of the item); each unknown case (`no-sockets-line`, `several-sockets-lines`, each `REBUILDS` stat, `untyped-gem` for its group and the later ones of the slot, `untyped-item`, `no-colour`) and its reason; the last entry of a slot name; and an empty slot. A maintainer-run test (`real_gems_should_have_pobs_colours`) checks that every granted effect of the real bundle has a colour from 1 to 4 and that the fixtures' gems have PoB's.
+
+### Review
+
+`code-architecture-reviewer`: no blockers; every PoB claim confirmed (the offset rule, which gems count and which effect gives the colour, the last slot entry, the always-matching flag after the rebuilds, abyssal sockets, the quality in both setup paths). Applied: `no-colour` only where the socket's colour would decide it (`69b3cb1`); the tests above for the cases it listed; the notes on `no-sockets-line` over-reporting and on reservation. Not changed: `socket_matches` runs per `main_skill` call and once in `gems` (a few allocations); a set entry whose slot name PoB does not have (PoB ignores it; a malformed build).
+
+### Evidence
+
+Maintainer-run, 2026-11-13, Windows. `local/p3/p3-12i/evidence.sh` (tool commit `a80df66`, clean): the bundle twice, the PoB export twice, `data-parity` twice, `bundle-check`, the oracle run, the round trips. `local/p3/p3-12i/evidence-calc.sh` (tool commit `69b3cb1`, clean): the calc runs and `calc-parity` again after the fixes above (the `untyped-slot` case and the review). Summaries in `docs/phase-3/other-gems/p3-12i-*`.
+
+| Run | Result |
+|---|---|
+| `bundle` twice from P3-12g's extract (`local/p3/p3-12g/extract-poe1`) | Byte-identical, records too. Against P3-12g's bundle only `bundle.json` and `data/granted_effects.json` differ. The new local bundle is `local/p3/p3-12i/bundle-poe1-a` (manifest SHA-256 `ab807d33…`); the record `docs/phase-3/bundle-poe1-26530219.json` is replaced. Colours: 784 strength, 1,073 dexterity, 1,679 intelligence, 9,293 none |
+| `bundle-check` | Exit 0, no findings |
+| `pob_data.lua` twice (format 5) | Byte-identical; the oracle checkout stayed clean |
+| `data-parity` twice | Byte-identical. Table `skills` compares 1,508 more values (`color`), 0 differences; in total 534 differences, `uncategorized` 0, 314 overlay rows, as before. The record `docs/phase-3/data-parity-poe1-26530219.json` is replaced (`docs/phase-3/data-parity.md`, "P3-12i") |
+| `oracle-run`, the whole manifest | 106 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 106 documents (105 builds and `malformed.xml`, refused as expected); 1449 complete, 334 partial, 425 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 33 differences, all registered (DIV-0001 to DIV-0033, unchanged), 0 unexpected, no unused entry; 1425 fields match. **Every mechanic target met: 1415 of 1415 over 69 fixtures**, the two new ones on all their targets (22 and 23). Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference (exit 5) |
+| `build-round-trip`, public and corpus | 106 and 21 builds pass |
+
+**Against P3-12h** (`p3-12i-public-vs-p3-12h.json`, `p3-12i-corpus-poe1-26530219-vs-p3-12h.json`). No field state changes. 13 values in 5 public builds change, every one closer to PoB's: Boneshatter, Elemental Hit, Kinetic Blast, Lacerate, and Shock Nova (average damage, hit DPS; speed for Elemental Hit and Shock Nova; crit multiplier for Kinetic Blast), through their gems' socket quality and the melee physical damage row. 47 reasons gone in 18 public builds, none added: every `socket-colour-quality` (23, in 14 builds; the in-scope Ice Nova mapping build and Smite act5 and act10 among them) and 24 `melee_physical_damage_+%`. Corpus: no value change; 15 reasons gone (8 `socket-colour-quality`, 7 `melee_physical_damage_+%`), 1 added: `projectile_damage_+%`, a support's quality stat that a matching socket now gives a value.
+
+Tests: 1202 workspace tests, clippy, fmt, wasm32; the maintainer-run real-bundle tests with `LOOM_BUNDLE_DIR=local/p3/p3-12i/bundle-poe1-a` (`real_gems_should_have_pobs_colours` new; the enemy, skill, and parser ones pass).
+
+### Follow-ups
+
+- An item without a `Sockets` line would need PoB's `socketLimit` per base, which is PoB's directive, not game data; it stays a reason.
+- The custom "Onslaught" line (next step), the other gems left (above), and the in-scope builds' unmapped stats.

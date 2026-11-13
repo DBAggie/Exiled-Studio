@@ -304,23 +304,20 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
-## P3-12i in progress: socket colour quality (research notes, 2026-11-13; branch `feat/p3-12i-socket-colour` from `dev` at `0814131`, no code yet)
-**Game (maintainer, 2026-11-13):** since 3.29 any gem fits any socket; a gem in a socket of its own colour gains quality; a white socket gives none.
+## Decisions in P3-12i (PR #TBD; socket colour quality; evidence `docs/phase-3/other-gems.md`, "P3-12i")
+- **The colour as stored.** `GrantedEffect.attribute` keeps the game's number (as the interpolation number); the calc gives it its meaning (1 R, 2 G, 3 B, others none), equal to PoB's `color` (`data-parity`: 1,508 values, 0 differences). Optional: PoE2 has no column, an older bundle no field (`no-colour`, a reason only where it matters).
+- **No new extraction.** The extractor writes every column, so P3-12g's extract had `Attribute`; it was converted again (`local/p3/p3-12i/bundle-poe1-a`).
+- **PoB's index rule exactly:** every gem of the earlier groups of the same slot counts (disabled and unknown gems too); only typed groups of the active set (the active set must have no untyped group, as for the main skill). The colour is the gem's first granted effect's (PoB's `grantedEffect`, else `gemData.grantedEffect`).
+- **What stays a reason:** no `Sockets` line (PoB would add `socketLimit` sockets of a default colour; `socketLimit` is PoB's own directive), several lines, a socket-count line (`REBUILDS`), untyped gem content, an untyped item, no colour. Not a reason: the item set's untyped content (PoB's `SocketIdURL`; `collect` reads typed slots only; found by the first evidence run, fixed in `76ec05e`).
+- **Supports too** (PoB's `CalcSetup.lua` 1578): the reason covers the main skill's and buffs' applied supports; an inert skill's quality reaches nothing.
+- **`melee_physical_damage_+%`** became a hit row because a matching socket gives Melee Physical Damage quality (the Smite fixture showed it).
 
-**PoB v2.67.2, read so far:**
-- `Data.lua` 297: `MatchingSocketQualityBonus = 10`.
-- `Classes/SkillsTab.lua` 1210 to 1245 (`UpdateSocketGroups`): for every socket group in list order, enabled or not, with a slot, each gem with a granted effect gets `matchesSocket`. The gem's colour is `grantedEffect.color` (1 R, 2 G, 3 B; PoB's exporter writes `GrantedEffects.Attribute`, `Export/Scripts/skills.lua` 157). Its socket index is `gemOffset + i`, where `gemOffset` counts every gem (disabled ones too) of the earlier groups in the same slot (`slotSocketedCounts`). It matches when the slot's item has sockets and either `item.sockets.colourAlwaysMatches`, or the socket at that index has the gem's colour.
-- `Classes/Item.lua` 658 to 666: the `Sockets:` spec line, one socket per letter in `RGBWA`, a space starts a new link group. 2595 to 2634: the socket count can be forced, and abyssal sockets rebuilt. 2636: `colourAlwaysMatches` comes from the local flag `SocketAlwaysMatches`, set by the mod line "Gems Socketed always have the quality bonus from socket colour" (`ModParser.lua` 3086).
-- `Modules/CalcSetup.lua` 1578 (supports) and 1654 (actives): `actualQuality = gemInstance.quality + (matchesSocket and 10 or 0)`. Supports get the bonus too. `CalcActiveSkill.lua` 545 to 547 adds `GemSocketQuality` BASE 10, read only for the displayed `GemQuality` (`CalcPerform.lua` 3895), not a slice field.
-
-**Plan:**
-1. Bundle: add the granted effect's `Attribute` as an optional `GrantedEffect.attribute` field (additive). This touches the extractor, the converter, the validator, and the synthetic rows.
-2. PoB export: add each skill's `color`. Add a `data-parity` comparison of `color` against `attribute`.
-3. Items: read the `Sockets` spec line, including its link groups.
-4. `skill::main_skill` and `skill::group_skills`: give each gem +10 quality when it matches, using the same offset rule as PoB (all groups of the slot, every gem, in list order). An item with the "always" line (the stat behind it, to find in the bundle) matches every gem. A forced socket count or abyssal sockets should stay a reason.
-5. Remove the `socket-colour-quality` reason.
-6. Mechanic fixtures: a gem in a matching socket, a non-matching socket, and a white socket, on the main skill and on an aura. Expect the in-scope builds whose groups have slots to change (Ice Nova mapping, Smite act5 and act10).
-7. A new real bundle is needed, so re-extract (as P3-12g's `evidence.sh` did: extract twice, bundle twice, `bundle-check`).
+## P3-12j (next PR, code done in the worktree `D:/POE Dev/loom-wt-12j`, branch `feat/p3-12j-onslaught-line`)
+- PoB reads "Onslaught" as `Condition:Onslaught` (`ModParser.lua` 3973), the check's condition without the combat tag; the flag counts once (`CalcPerform.lua` 656 to 684).
+- "Onslaught" is a game text of two stats: `base_should_have_onslaught_from_stat` (item mod rows: Synthesis implicit, a unique) and `silver_flask_display_onslaught` (no mod row). Rule in `resolve_custom_line`: of an ambiguous custom line's readings, the only one a mod row of an item domain backs is the reading (`Mods::backed_in`, `BundleData::item_domains`: the base items' domains).
+- `Poe1Quantity::Onslaught` (a flag; calc result v1 name `poe1.onslaught`, additive); the stat maps to a `Flag` effect; `poe1::buffs` gives the speed once when the check or any unconditional flag is on.
+- Fixtures `ice-nova-onslaught-modifier-witch.xml`, `ice-nova-onslaught-twice-witch.xml`: both matched PoB on every target in the quick run. Doc draft: the scratch text moves into `docs/phase-3/config-inputs.md`, "P3-12j".
+- After it: power charges (maximum, minimum, per-charge stats in the Ice Nova builds) and gem levels ("+1 to Level of all Cold Skill Gems"): the in-scope builds' largest unmapped-stat groups (P3-8).
 
 ## Plan for P3-12h (other gems, first PR: inert gems, reservation, auras and buffs)
 The largest reason left in all 7 in-scope builds is `unmodelled-gem`: every enabled gem but the main skill's. PoB v2.67.2 lets another skill reach the character only through (checked: every loop over `env.player.activeSkillList` in `Modules/Calc*.lua`):
