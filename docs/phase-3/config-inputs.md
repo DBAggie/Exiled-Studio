@@ -1,6 +1,6 @@
 # Phase 3: config inputs (step 12)
 
-Plan step 12 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): each config input is modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`. Summaries: `docs/phase-3/config-inputs/`.
+Plan step 12 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): each config input is modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`. Summaries: `docs/phase-3/config-inputs/`.
 
 Before this step the engine modelled two kinds of input (`resistancePenalty`, P3-6; the enemy model's numeric inputs, P3-11). Every other input of the active config set was an `unmodelled-config` reason on every computed field, whatever it did.
 
@@ -663,6 +663,6 @@ Config inputs the other gems now read (`docs/phase-3/other-gems.md`, "Phase 3 cl
 - `flameWallAddedDamage` (443): Flame Wall's added fire damage to projectiles (`BuffStat::WhenInput`).
 - `bloodSandStance` (643) left `config::NAMED_ONLY`: Flesh and Stone's Blood Stance row applies unless the stance is Sand (`CalcSetup.lua` 538 sets Blood Stance otherwise).
 - `conditionCritRecently` (1240) left `NAMED_ONLY` for `poe1::conditions`: "#% increased Cast Speed if you've dealt a Critical Strike Recently" reads `CritRecently`; `SkillCritRecently` stays a name only modifiers read.
-- `multiplierNearbyAlly` (1110) stays named-only for every reader but Rallying Cry's exerted attacks: with a modelled Rallying Cry and allies above 0 it is `rallying-cry-allies` (`poe1::gems`).
+- `multiplierNearbyAlly` (1122) stays named-only for every reader but Rallying Cry's exerted attacks: with a modelled Rallying Cry and allies above 0 it is `rallying-cry-allies` (`poe1::gems`).
 
 The custom modifier lines (P3-12c, P3-12d) gained notes and patterns: `docs/phase-3/custom-lines.md` (ADR-015 Amendment 2).

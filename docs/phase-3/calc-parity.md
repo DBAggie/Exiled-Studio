@@ -1,6 +1,6 @@
 # Phase 3: the parity harness (P3-5)
 
-Plan step 5 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`, decisions 5, 9, 10): `calc-run` writes the successor's results, `calc-parity` compares them with the oracle's, and the fixture manifest gets the `mechanic` tier. The oracle adapter moves to protocol 4, which sets PoB's CALCS view (the breakdowns) to its main view (`main_output`), the maintainer's answer to Q9. Commands and exit codes: `AGENTS.md`; register rules: `docs/parity/README.md`.
+Plan step 5 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`, decisions 5, 9, 10): `calc-run` writes the successor's results, `calc-parity` compares them with the oracle's, and the fixture manifest gets the `mechanic` tier. The oracle adapter moves to protocol 4, which sets PoB's CALCS view (the breakdowns) to its main view (`main_output`), the maintainer's answer to Q9. Commands and exit codes: `AGENTS.md`; register rules: `docs/parity/README.md`.
 
 ## `calc-run`
 

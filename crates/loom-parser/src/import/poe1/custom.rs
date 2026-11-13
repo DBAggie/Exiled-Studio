@@ -136,18 +136,35 @@ fn split_number(text: &str) -> Option<(&str, &str)> {
 /// The markers a comment starts with in the players' blocks.
 pub const COMMENT_MARKERS: &[&str] = &["//", "--", "=", "~"];
 
+/// Words of a modifier's sentence: PoB applies numberless lines such as
+/// "Cannot be Stunned", "You have Onslaught", or "Enemies are Intimidated"
+/// (`ModParser.lua`'s flag and special forms), which no stat description
+/// may read. A numberless line with one of these words is never a note: it
+/// stays unresolved (a reason), so a line PoB applies cannot be hidden as a
+/// label. Compared per word, without case.
+pub const MODIFIER_WORDS: &[&str] = &[
+    "always", "are", "can", "cannot", "deal", "deals", "enemies", "enemy", "gain", "gains",
+    "grant", "grants", "has", "have", "immune", "is", "nearby", "never", "per", "recently", "take",
+    "takes", "when", "while", "you", "your",
+];
+
 /// Whether `text`, a custom line no description or pattern reads, is a
-/// note: it holds no digit (a label: a skill, a spectre, a heading), or it
-/// starts with a comment marker. A line naming a keystone is not one: PoB
-/// reads a keystone's name as the keystone (`keystones` tells the caller's
-/// names, compared without case).
+/// note: it starts with a comment marker, or it holds no digit and none of
+/// [`MODIFIER_WORDS`] (a label: a skill, a spectre, a heading). A line
+/// naming a keystone is not one: PoB reads a keystone's name as the
+/// keystone (`keystones` tells the caller's names, compared without case).
 #[must_use]
 pub fn is_note(text: &str, is_keystone: impl Fn(&str) -> bool) -> bool {
     if is_keystone(text) {
         return false;
     }
-    let comment = COMMENT_MARKERS.iter().any(|m| text.starts_with(m));
-    comment || !text.bytes().any(|b| b.is_ascii_digit())
+    if COMMENT_MARKERS.iter().any(|m| text.starts_with(m)) {
+        return true;
+    }
+    let sentence = text
+        .split(|c: char| !c.is_ascii_alphabetic() && c != '\'')
+        .any(|w| MODIFIER_WORDS.iter().any(|m| w.eq_ignore_ascii_case(m)));
+    !sentence && !text.bytes().any(|b| b.is_ascii_digit())
 }
 
 #[cfg(test)]
@@ -213,5 +230,14 @@ mod tests {
         assert!(!is_note("Gain 30 Rage", none));
         assert!(!is_note("-5% to Fire Resistance", none));
         assert!(!is_note("Iron Reflexes", |t| t.eq_ignore_ascii_case("iron reflexes")));
+        // Numberless lines PoB applies as flags are sentences, never notes.
+        assert!(!is_note("Cannot be Stunned", none));
+        assert!(!is_note("You have Onslaught", none));
+        assert!(!is_note("Enemies are Intimidated", none));
+        assert!(!is_note("Your hits can't be Evaded", none));
+        assert!(!is_note("Immune to Freeze", none));
+        // A word inside another is not one ("Primal", "Cane").
+        assert!(is_note("Primal Crushclaw Average Damage", none));
+        assert!(is_note("CANE", none));
     }
 }

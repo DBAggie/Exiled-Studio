@@ -1,6 +1,6 @@
 # Phase 3: attack hits (P3-10)
 
-Plan step 10 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill's hit when it is an attack with the weapon in the main hand, against the enemy of step 11. The chosen attack is Smite (Q2), with PoB's two skill parts (Melee Hit, Area Hit). Decisions: context file, "Decisions in P3-10".
+Plan step 10 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill's hit when it is an attack with the weapon in the main hand, against the enemy of step 11. The chosen attack is Smite (Q2), with PoB's two skill parts (Melee Hit, Area Hit). Decisions: context file, "Decisions in P3-10".
 
 ## What is computed (`crates/loom-calc/src/poe1/hit.rs`)
 

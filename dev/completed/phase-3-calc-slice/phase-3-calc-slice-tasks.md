@@ -5,7 +5,7 @@ Last Updated: 2026-11-13 (P3-8n: every stat the in-scope builds left unmapped)
 Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task in the PR that does it, with the PR number.
 
 ## P3-0: plan
-- [x] Plan, context, tasks in `dev/active/phase-3-calc-slice/`
+- [x] Plan, context, tasks in `dev/completed/phase-3-calc-slice/`
 - [x] plan-reviewer run; all findings applied (context file)
 - [x] Handoff, CLAUDE.md Status, ACTION-PLAN Next action updated
 - [x] Open PR: #59 (base `feat/p2-1-domain-model`, per the maintainer's 2026-11-11 instruction)
@@ -68,7 +68,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 ## P3-6 to P3-12: engine
 - [x] P3-6 character, attributes, life, mana, ES (PR #71; `docs/phase-3/character-fields.md`; 19 mechanic fixtures match on their targets)
 - [x] P3-7 core defences (PR #72; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
-- [ ] P3-8 stat mappings (one or more PRs; coverage summary each)
+- [x] P3-8 stat mappings (one or more PRs; coverage summary each)
   - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
   - [x] P3-8b rolled values of PoB's ranged lines, scaled lines as reasons (PR #80; `docs/phase-3/rolled-values.md`; in-scope builds no longer `indeterminate`)
   - [x] P3-8c the Smite builds' global stats (PR #83, merged into `dev` as `bcb8c6d`; `docs/phase-3/stat-mapping.md`; 3 hit rows, 2 `NoEffect` rows with `NO_EFFECT_DEPENDS_ON`; `smite-inquisitor-act1` has no `unmapped-stat`; in-scope unmapped 108 to 103; mechanic fixtures `smite-global-attack-stats-templar.xml`, `ice-nova-attack-and-cast-speed-witch.xml`)
@@ -78,7 +78,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
 - [x] P3-9b spell hits (PR #77; `docs/phase-3/spell-hits.md`; 11 Ice Nova mechanic fixtures match PoB on every target)
 - [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
   - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
-- [ ] P3-12 buffs and config (one or more PRs)
+- [x] P3-12 buffs and config (one or more PRs)
   - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
   - [x] P3-12b PoB's config placeholders (PR #84, merged into `dev` as `95b53a6`; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
   - [x] P3-12c custom modifier blocks in full (PR #85, merged into `dev` as `8c2998d`; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
@@ -109,16 +109,16 @@ Maintainer, 2026-11-13: every item left in P3-8, P3-12, P3-14, and P3-15, plus w
 Gate denominator: the 7 builds of the chosen skills (3 Ice Nova, 4 Smite); Winter Orb is in scope by archetype but not a chosen skill (survey), so it is not counted; its shared gems are modelled anyway.
 
 Reasons on the 7 at the start (`local/p3/p3-8n/evidence/public`): Ice Nova lab1/campaign: Arcane Surge, Frost Bomb, Flame Wall, Herald of Ash, golems (Flame, Ice, Lightning, Stone), Frostbite; 6 `customMods` lines; `summonLightningGolemEnableWrath`. Ice Nova mapping: Arcane Surge, golems (Flame, Stone, Lightning, Stone of Safeguarding), Righteous Fire of Arcane Devotion, Guardian's Blessing, Automation, Convocation, Frostbite; the 6 lines; Wrath; an abyssal socket (belt). Smite act1: Q13 only. Smite act2: Shockwave (its own granted skill), Herald of Ash, Herald of Purity, Intimidating Cry; Q13. Smite act5/act10: those plus Flesh and Stone, Elemental Weakness, Rallying Cry, Summon Lightning Golem.
-- [ ] Q13 custom notes; PoB-only custom lines applied
-- [ ] Gems: Herald of Ash, Herald of Purity, Arcane Surge support, Frost Bomb, Flame Wall, Frostbite, Elemental Weakness, golems and Wrath, Intimidating Cry, Rallying Cry, Flesh and Stone, RF of Arcane Devotion, Guardian's Blessing, Automation, Convocation, Shockwave's skill
-- [ ] Abyssal socket; config inputs left
-- [ ] Every slice field of the 7 `Complete`; values equal PoB or registered with evidence
-- [ ] Winter Orb's own items where they fit (channelling, Bonechill, Ice Bite, Assassin's Mark, flasks)
-- [ ] Smaller P3-8 items (socketed gem levels, "with Brand/Minion Skills", other weapon conditions) where the 7 need them
+- [x] Q13 custom notes; PoB-only custom lines applied (ADR-015 Amendment 2; `docs/phase-3/custom-lines.md`; `custom-lines` check: 46 notes all ignored by PoB, 7 patterns each equal to PoB's mod)
+- [x] Gems: Herald of Ash, Herald of Purity, Arcane Surge support, Frost Bomb, Flame Wall, Frostbite, Elemental Weakness, golems and Wrath, Intimidating Cry, Rallying Cry, Flesh and Stone, RF of Arcane Devotion, Guardian's Blessing, Automation, Convocation, Shockwave's skill (`docs/phase-3/other-gems.md`, "Phase 3 close-out"; `gem_effects` 453 values, 0 differences)
+- [x] Abyssal socket; config inputs left (`docs/phase-3/config-inputs.md`, "Phase 3 close-out")
+- [x] Every slice field of the 7 `Complete`; values equal PoB or registered with evidence (158 complete, 10 `HitSpeed`/`HitChance` PoB leaves absent; 20 differences, DIV-0052 to DIV-0071, Q11 `game-truth`; Ice Nova campaign's life settled by PoB's affix record)
+- [x] Winter Orb's own items where they fit: not done, by the pre-approved fallback (Winter Orb is not a chosen skill and not in the gate's denominator; channelling and stages are a mechanic of their own); its shared gems are modelled. Recorded in the report, "Known limitations"
+- [x] Smaller P3-8 items (socketed gem levels, "with Brand/Minion Skills", other weapon conditions) where the 7 need them: none of the 7 needs them (no `unmapped-stat` left); left for Phase 6+ expansion
 
 ## P3-14: corpus run and register
-- [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered
-- [ ] CI calc-parity job if Q1 is yes
+- [x] `calc-parity` on public fixtures and corpus; every difference fixed or registered (public: 0 unexpected; corpus: 0 builds in scope, every field `Indeterminate` or `Unsupported` with reasons; `docs/phase-3/phase-3-report.md`)
+- [x] CI calc-parity job if Q1 is yes: Q1 stays no (default), so no job; CI runs `calc-run` on the synthetic builds and compares the documents across platforms
 
 ## P3-15: report and gate
-- [ ] `docs/phase-3/phase-3-report.md`; handoff, CLAUDE.md, ACTION-PLAN; folder to `dev/completed/`
+- [x] `docs/phase-3/phase-3-report.md`; handoff, CLAUDE.md, ACTION-PLAN; folder to `dev/completed/`

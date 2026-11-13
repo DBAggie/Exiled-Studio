@@ -1,6 +1,6 @@
 # Phase 3: enemy model (P3-11)
 
-Plan step 11 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the enemy PoB v2.67.2's config describes. No slice field is the enemy's own; the hit fields read it (P3-9b spells, P3-10 attacks), where the oracle checks it through hit damage. Decisions: context file, "Decisions in P3-11".
+Plan step 11 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the enemy PoB v2.67.2's config describes. No slice field is the enemy's own; the hit fields read it (P3-9b spells, P3-10 attacks), where the oracle checks it through hit damage. Decisions: context file, "Decisions in P3-11".
 
 ## What is modelled (`crates/loom-calc/src/poe1/enemy.rs`)
 

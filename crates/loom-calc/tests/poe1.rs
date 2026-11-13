@@ -567,6 +567,77 @@ fn a_jewel_should_count_only_in_an_allocated_socket() {
     assert_eq!(value(&run(&b), Field::Strength), 14.0);
 }
 
+/// An item a build puts in two slots counts in each, as PoB counts per
+/// slot (`CalcSetup.lua` 701 to 722; close-out).
+#[test]
+fn an_item_in_two_slots_should_count_in_each() {
+    let ring = item(1, vec![modifier(vec![stat("additional_intelligence", 20)])]);
+    let r = run(&with_items(
+        witch(90),
+        vec![ring],
+        &[("Ring 1", 1, false), ("Ring 2", 1, false)],
+    ));
+    assert_eq!(value(&r, Field::Intelligence), 72.0);
+    assert_eq!(state(&r, Field::Intelligence), StateKind::Complete);
+}
+
+/// A jewel in "<parent> Abyssal Socket <n>" counts when the parent has at
+/// least `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111); a parent
+/// that scales its abyss jewels is a reason (close-out).
+#[test]
+fn an_abyssal_socket_should_count_by_its_parents_sockets() {
+    let jewel = || item(3, vec![modifier(vec![stat("additional_strength", 16)])]);
+    let belt = |line: &str| item(2, vec![modifier(vec![stat(line, 1)])]);
+    let run_belt = |line: &str, socket: &str| {
+        run(&with_items(
+            witch(1),
+            vec![belt(line), jewel()],
+            &[("Belt", 2, false), (socket, 3, false)],
+        ))
+    };
+    let r = run_belt("local_has_X_abyss_sockets", "Belt Abyssal Socket 1");
+    assert_eq!(value(&r, Field::Strength), 30.0);
+    assert_eq!(state(&r, Field::Strength), StateKind::Complete);
+    // The belt has one socket: the second is empty.
+    let r = run_belt("local_has_X_abyss_sockets", "Belt Abyssal Socket 2");
+    assert_eq!(value(&r, Field::Strength), 14.0);
+    assert_eq!(state(&r, Field::Strength), StateKind::Complete);
+    // A parent that scales its abyss jewels: not modelled.
+    let r = run_belt(
+        "local_socketed_abyss_jewel_effect_+%",
+        "Belt Abyssal Socket 1",
+    );
+    assert!(partial_reasons(&r, Field::Strength).contains(&"unmodelled-item"));
+}
+
+/// A jewel in two sockets counts in each; a unique one (PoB disables a
+/// limited repeat) is a reason (close-out).
+#[test]
+fn a_jewel_in_two_sockets_should_count_twice_unless_unique() {
+    let socket = |node| JewelSocket {
+        node: NodeId(node),
+        item: Some(ItemId(5)),
+        attributes: Vec::new(),
+    };
+    let build = |rarity| {
+        let mut jewel = item(5, vec![modifier(vec![stat("additional_strength", 16)])]);
+        jewel.body.rarity = rarity;
+        let mut s = spec(&[2, 4]);
+        s.jewel_sockets.push(socket(2));
+        s.jewel_sockets.push(socket(4));
+        let mut b = with_spec(witch(1), s);
+        b.items.entries.push(ItemsEntry::Item(jewel));
+        b
+    };
+    let bare = value(&run(&with_spec(witch(1), spec(&[2, 4]))), Field::Strength);
+    let r = run(&build(Some(loom_domain::Rarity::Rare)));
+    assert_eq!(value(&r, Field::Strength), bare + 32.0);
+    assert_eq!(state(&r, Field::Strength), StateKind::Complete);
+    let r = run(&build(Some(loom_domain::Rarity::Unique)));
+    assert_eq!(value(&r, Field::Strength), bare + 16.0);
+    assert_eq!(partial_reasons(&r, Field::Strength), ["unmodelled-item"]);
+}
+
 // ------------------------------------------------------------ the gaps
 
 #[test]

@@ -1,6 +1,6 @@
 # ADR-015: Stat-ID-First Modifier Model
 
-- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns)
+- Status: Accepted (Amendment 1, 2026-11-10: typed resolutions and adapted lines; Amendment 2, 2026-11-13: custom modifier notes and patterns, proposed; accepted when the maintainer merges its PR)
 - Date: 2026-11-08
 
 ## Context
@@ -19,7 +19,7 @@ Path of Building's core is `ModParser.lua` (about 7,000 lines), which pattern-ma
 - Breakdowns can cite the exact game stat behind every contribution.
 
 ## Amendment 1 (2026-11-10): Typed resolutions and adapted lines
-Proposed in the Spike B report (`docs/spikes/spike-b-resolution.md`, section 7) and accepted by the maintainer on 2026-11-10 (in the Spike C C5 session, after PR #39 opened); approved by merging the PR that adds it. Evidence: the Spike B report, sections 4c, 4d, 4e, and 7; the B5g, B5d, and B5e entries of `dev/completed/spike-b-text-stat-resolution/spike-b-text-stat-resolution-context.md`.
+Proposed in the Spike B report (`docs/spikes/spike-b-resolution.md`, section 7) and accepted by the maintainer on 2026-11-10 (in the Spike C C5 session, after PR #39 opened); proposed in that PR and accepted when the maintainer merges it. Evidence: the Spike B report, sections 4c, 4d, 4e, and 7; the B5g, B5d, and B5e entries of `dev/completed/spike-b-text-stat-resolution/spike-b-text-stat-resolution-context.md`.
 
 ### Context
 The original decision says a resolved line becomes `(stat_id, values)` from the stat-description tables. Spike B met its gate without the hybrid fallback, but three kinds of item text needed more than that:
@@ -41,7 +41,7 @@ The Spike B resolver reports the first two as resolved with a `kind` (`granted-s
 - The UI can mark adapted lines, so users see where their build's text differs from the game's.
 
 ## Amendment 2 (2026-11-13): Custom modifier notes and patterns
-Decided by the maintainer on 2026-11-13 in the Phase 3 close-out session (open question Q13, `dev/completed/phase-3-calc-slice/phase-3-calc-slice-context.md`; the maintainer chose option (b) after asking for an online check, and chose to apply the lines PoB reads); approved by merging the PR that adds it. Evidence: `docs/phase-3/custom-lines.md`.
+Decided by the maintainer on 2026-11-13 in the Phase 3 close-out session (open question Q13, `dev/completed/phase-3-calc-slice/phase-3-calc-slice-context.md`; the maintainer chose option (b) after asking for an online check, and chose to apply the lines PoB reads); proposed in that PR and accepted when the maintainer merges it. Evidence: `docs/phase-3/custom-lines.md`.
 
 ### Context
 A config set's custom modifier lines (PoB's custom modifier blocks and its legacy `customMods` input, P3-12c and P3-12d) are the player's own text, not the game's. PoB v2.67.2 parses each with its `ModParser` and applies a line only when the whole of it parses (`Classes/ConfigTab.lua` 1115 to 1116, `mods and not extra`); any other line does nothing. Two kinds of line kept builds of the Phase 3 gate `Partial` for good:
@@ -50,12 +50,12 @@ A config set's custom modifier lines (PoB's custom modifier blocks and its legac
 
 ### Decision
 For custom modifier lines of PoE1 config sets only (item lines are unchanged):
-- **Custom note.** A line with no template, no curated pattern, and either no digit or a comment marker first (`//`, `--`, `=`, `~`), that names no keystone, resolves to the typed kind `custom-note`. It has no effect, is kept for round-trip export, and is shown: the calc result lists it under `notes` (calc result v1, additive), and it is never a reason for a state.
+- **Custom note.** A line with no template, no curated pattern, and either a comment marker first (`//`, `--`, `=`, `~`) or no digit and no word of a modifier's sentence (`MODIFIER_WORDS`: "cannot", "you", "have", "is", "gain", "while", "enemies", ...), that names no keystone, resolves to the typed kind `custom-note`. It has no effect, is kept for round-trip export, and is shown: the calc result lists it under `notes` (calc result v1, additive), and it is never a reason for a state.
 - **Custom pattern.** A line that no stat description reads as one stat (no template, or ambiguous) but a curated pattern does resolves to the typed kind `custom-pattern` with the pattern's name and value. Each pattern names the PoB mod it stands for and maps to one effect in the calculation (`loom_calc::poe1::mapping::CUSTOM_PATTERNS`). Patterns are added one at a time, each with a test and PoB's parse as evidence.
 - **Checked against PoB.** `loom-parity-cli custom-lines` reads every custom line of the committed fixtures as a build does and compares it with PoB's own parse (`tools/oracle/data/pob_parse_lines.lua`): a note PoB applies, or a pattern whose effect differs from PoB's mods, fails it. It is maintainer-run, as the oracle is.
 - **Unchanged.** Stat IDs stay first: a line a stat description reads as one stat is never a note or a pattern. Every other unresolved custom line stays quarantined with its reason.
 
 ### Consequences
-- The note rule is a heuristic outside the fixtures: a numberless line PoB parses that no stat description reads (a keystone's name is excluded) would become a note. The `custom-lines` check finds such a line among the committed fixtures; a new one found later becomes a pattern or an exception.
+- The note rule is a heuristic outside the fixtures. A numberless line PoB applies is a sentence ("Cannot be Stunned", "You have Onslaught"), so a line with a modifier's word stays unresolved, a reason; a numberless line PoB parses without such a word (a keystone's name is excluded) would still become a note. The `custom-lines` check finds such a line among the committed fixtures; a new one found later becomes a pattern or an exception.
 - The patterns are text, the hybrid fallback this ADR allows per area: here the area is the player's custom lines, whose text no game data describes.
 - Build v1 gains the typed kinds `custom-note` and `custom-pattern`; calc result v1 gains `reasons.notes` (both additive).

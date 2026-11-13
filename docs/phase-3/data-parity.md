@@ -1,6 +1,6 @@
 # Data parity, bundle against PoB v2.67.2's data (P3-2): evidence
 
-Phase 3 plan, step 2 (`dev/active/phase-3-calc-slice/`, decision 5): before any calc comparison, the values a calculation reads are compared between our bundle (the current game) and the data PoB v2.67.2, the oracle, holds. Each difference gets a category with cited evidence, so a later calc difference can be told apart from a data-version difference. Maintainer workstation, Windows, 2026-11-11.
+Phase 3 plan, step 2 (`dev/completed/phase-3-calc-slice/`, decision 5): before any calc comparison, the values a calculation reads are compared between our bundle (the current game) and the data PoB v2.67.2, the oracle, holds. Each difference gets a category with cited evidence, so a later calc difference can be told apart from a data-version difference. Maintainer workstation, Windows, 2026-11-11.
 
 ## How
 1. `tools/oracle/data/pob_data.lua` (maintainer-run, outside the oracle adapter and its protocol) starts PoB with its own `HeadlessWrapper.lua` on the pinned oracle runtime and writes the data PoB holds: `data.skills`, `data.gems`, `data.itemBases` (weapons and armour), the monster tables and constants of `src/Data/Misc.lua`, and the tree file `TreeData/3_29/tree.lua`. Command: `tools/oracle/data/README.md`.

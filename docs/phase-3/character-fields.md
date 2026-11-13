@@ -1,6 +1,6 @@
 # Phase 3: character, attributes, life, mana, energy shield (P3-6)
 
-Plan step 6 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the engine's first computed fields. The mechanic fixtures match PoB v2.67.2 on every target and every breakdown PoB writes. Decisions: context file, "Decisions in P3-6".
+Plan step 6 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the engine's first computed fields. The mechanic fixtures match PoB v2.67.2 on every target and every breakdown PoB writes. Decisions: context file, "Decisions in P3-6".
 
 ## What is computed
 

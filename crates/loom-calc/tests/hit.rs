@@ -266,6 +266,11 @@ impl Data {
                 active("aura", &["Spell", "Aura", "Buff", "HasReservation"]),
                 active("slam", &["Attack", "Damage", "Area", "Melee"]),
                 active("chilling", &["Spell", "Area", "Cold", "ChillingArea"]),
+                active("hex", &["Spell", "Area", "Hex", "AppliesCurse", "Cold"]),
+                active("bomb", &["Spell", "Area", "Cold", "Duration"]),
+                active("herald", &["Spell", "Buff", "Herald", "Fire"]),
+                active("stance", &["Spell", "Buff", "Aura", "Physical"]),
+                active("golem", &["Spell", "Minion", "Golem", "CreatesMinion"]),
             ],
             gems,
             gem_effects,
@@ -299,13 +304,24 @@ impl Data {
 /// - `SupportTestMore` (above) supports a damaging skill: not modelled;
 /// - `Frostblink`: an inert spell typed `ChillingArea` (P3-8m): a
 ///   guaranteed chill.
-const OTHER_GEMS: [&str; 6] = [
+/// - `Frostbite`: a hex, -20 to the enemy's cold resistance (P3-close);
+/// - `FrostBomb`: a debuff, -15 cold exposure;
+/// - `HeraldOfAsh`: 15% of physical damage gained as extra fire;
+/// - `FleshAndStone`: Blood Stance, 10% more physical damage taken by the
+///   enemy from hits;
+/// - `SummonFlameGolem`: a golem's buff, 20% increased damage.
+const OTHER_GEMS: [&str; 11] = [
     "Precision",
     "Haste",
     "Discipline",
     "GroundSlam",
     "SupportFasterAttacks",
     "Frostblink",
+    "Frostbite",
+    "FrostBomb",
+    "HeraldOfAsh",
+    "FleshAndStone",
+    "SummonFlameGolem",
 ];
 
 fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
@@ -340,6 +356,34 @@ fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
     sets.push(stat_set("GroundSlam", Vec::new(), Vec::new()));
     sets.push(stat_set("SupportFasterAttacks", Vec::new(), Vec::new()));
     sets.push(stat_set("Frostblink", Vec::new(), Vec::new()));
+    sets.push(stat_set(
+        "Frostbite",
+        Vec::new(),
+        vec![int("base_cold_damage_resistance_%", -20)],
+    ));
+    sets.push(stat_set(
+        "FrostBomb",
+        Vec::new(),
+        vec![int("base_cold_damage_resistance_%", -15)],
+    ));
+    sets.push(stat_set(
+        "HeraldOfAsh",
+        Vec::new(),
+        vec![int("physical_damage_%_to_add_as_fire", 15)],
+    ));
+    sets.push(stat_set(
+        "FleshAndStone",
+        Vec::new(),
+        vec![int(
+            "flesh_stone_blood_stance_enemies_physical_damage_taken_when_hit_+%_final_from_player_distance",
+            10,
+        )],
+    ));
+    sets.push(stat_set(
+        "SummonFlameGolem",
+        Vec::new(),
+        vec![int("fire_golem_grants_damage_+%", 20)],
+    ));
     let mut support = effect("SupportFasterAttacks", None, true, 0);
     support.allowed_types = Vec::new();
     support.levels[0].cost_multiplier = 150;
@@ -357,6 +401,11 @@ fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
         effect("GroundSlam", Some("slam"), false, 0),
         support,
         effect("Frostblink", Some("chilling"), false, 0),
+        effect("Frostbite", Some("hex"), false, 0),
+        effect("FrostBomb", Some("bomb"), false, 0),
+        effect("HeraldOfAsh", Some("herald"), false, 0),
+        effect("FleshAndStone", Some("stance"), false, 0),
+        effect("SummonFlameGolem", Some("golem"), false, 0),
     ]
 }
 
@@ -2788,4 +2837,138 @@ fn bitter_frost_should_chill_and_deal_only_cold_damage_as_pob_does() {
         r.fields[&Field::AverageDamage].state,
         FieldState::Partial(_)
     ));
+}
+
+// ------------------------------------------------- other gems (P3-close)
+
+fn complete(r: &CalcResult) {
+    for f in HIT {
+        assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+    }
+}
+
+/// A hex lowers the enemy's resistance, scaled by curse effect (PoB's
+/// `CalcPerform.lua` 2601 to 2632).
+#[test]
+fn a_curse_should_lower_the_enemys_resistance_scaled_by_curse_effect() {
+    let r = run(&build(vec![group(&["IceNova"]), group(&["Frostbite"])]));
+    complete(&r);
+    // 50 - 20.
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 5.0, 1.5, 30.0).to_bits()
+    );
+    // 50% increased curse effect: -20 x 1.5 = -30.
+    let r = groups_with(
+        vec![group(&["IceNova"]), group(&["Frostbite"])],
+        &[("curse_effect_+%", 50)],
+        &[],
+    );
+    complete(&r);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 5.0, 1.5, 20.0).to_bits()
+    );
+}
+
+/// A debuff's exposure lowers the enemy's resistance; the strongest
+/// exposure wins over the config's (PoB's `CalcPerform.lua` 3563 to 3588).
+#[test]
+fn a_debuffs_exposure_should_win_when_strongest() {
+    let r = run(&build(vec![group(&["IceNova"]), group(&["FrostBomb"])]));
+    complete(&r);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 5.0, 1.5, 35.0).to_bits()
+    );
+    // The config's -10 exposure is weaker: still -15.
+    let r = groups_with(
+        vec![group(&["IceNova"]), group(&["FrostBomb"])],
+        &[(
+            "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
+            10,
+        )],
+        &[("conditionEnemyColdExposure", ConfigValue::Boolean(true))],
+    );
+    complete(&r);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 5.0, 1.5, 35.0).to_bits()
+    );
+}
+
+/// A golem's buff reaches the character, scaled by the golems' buff
+/// effect (PoB's `CalcPerform.lua` 2266 to 2297).
+#[test]
+fn a_golems_buff_should_scale_with_golem_buff_effect() {
+    let r = run(&build(vec![
+        group(&["IceNova"]),
+        group(&["SummonFlameGolem"]),
+    ]));
+    complete(&r);
+    // 20% increased damage.
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(120.0, 240.0, 5.0, 1.5, 50.0).to_bits()
+    );
+    // 50% increased golem buff effect: 30%.
+    let r = groups_with(
+        vec![group(&["IceNova"]), group(&["SummonFlameGolem"])],
+        &[("golem_buff_effect_+%", 50)],
+        &[],
+    );
+    complete(&r);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(130.0, 260.0, 5.0, 1.5, 50.0).to_bits()
+    );
+    // The buff's source is the golem's gem.
+    assert!(r.graph.iter().any(|(_, n, _)| matches!(
+        n,
+        loom_calc::Node::Contribution { source: Source::Gem { group: 1, .. }, value, .. }
+            if *value == 30.0
+    )));
+}
+
+/// Blood Stance's more physical damage taken applies unless the config's
+/// stance is Sand (PoB's `CalcSetup.lua` 538).
+#[test]
+fn blood_stance_should_raise_physical_damage_taken_unless_sand() {
+    let bare = run(&build(vec![group(&["TestPhysicalNova"])]));
+    let blood = run(&build(vec![
+        group(&["TestPhysicalNova"]),
+        group(&["FleshAndStone"]),
+    ]));
+    let sand = groups_with(
+        vec![group(&["TestPhysicalNova"]), group(&["FleshAndStone"])],
+        &[],
+        &[("bloodSandStance", ConfigValue::String("SAND".to_owned()))],
+    );
+    let (b, x, s) = (
+        value(&bare, Field::AverageDamage),
+        value(&blood, Field::AverageDamage),
+        value(&sand, Field::AverageDamage),
+    );
+    assert!(((x / b) - 1.1).abs() < 1e-12, "{b} {x}");
+    assert_eq!(s.to_bits(), b.to_bits());
+    assert_eq!(
+        blood.fields[&Field::AverageDamage].state.kind(),
+        bare.fields[&Field::AverageDamage].state.kind()
+    );
+}
+
+/// Herald of Ash's physical damage gained as extra fire is added to the
+/// hit as fire, against the enemy's fire resistance (PoB's
+/// `CalcOffence.lua` 1961 to 2010).
+#[test]
+fn a_heralds_gain_as_extra_should_add_fire() {
+    let bare = run(&build(vec![group(&["TestPhysicalNova"])]));
+    let herald = run(&build(vec![
+        group(&["TestPhysicalNova"]),
+        group(&["HeraldOfAsh"]),
+    ]));
+    let gained = value(&herald, Field::AverageDamage) - value(&bare, Field::AverageDamage);
+    // 15% of 100 to 200: 15 to 30 fire, at the boss's 50% fire resistance.
+    let fire = average(15.0, 30.0, 5.0, 1.5, 50.0);
+    assert!((gained - fire).abs() < 1e-9, "{gained} {fire}");
 }

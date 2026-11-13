@@ -971,7 +971,7 @@ impl WarcryValue {
 
 /// PoB's base warcry cast time, seconds (`CalcSetup.lua` 57).
 pub const WARCRY_CAST_TIME: f64 = 0.8;
-/// PoB's server tick rate (`Data.lua` 231: `1 / 0.033`).
+/// PoB's server tick rate (`Modules/Data.lua` 231: `1 / 0.033`).
 const SERVER_TICK_RATE: f64 = 1.0 / 0.033;
 
 /// Intimidating Cry's uptime terms (module docs) from its first modelled
@@ -1033,7 +1033,7 @@ fn intimidating_terms(
 }
 
 /// The config input of nearby allies, which Rallying Cry's exerted
-/// attacks read (`ConfigOptions.lua` 1110).
+/// attacks read (`ConfigOptions.lua` 1122).
 pub const NEARBY_ALLY_INPUT: &str = "multiplierNearbyAlly";
 /// The config input of the stance (`ConfigOptions.lua` 643).
 pub const STANCE_INPUT: &str = "bloodSandStance";

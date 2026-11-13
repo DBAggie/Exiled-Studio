@@ -318,6 +318,15 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 - **A flag quantity, read once:** `Poe1Quantity::Onslaught`; `poe1::buffs` reads it after every other source (`Ingest::effects`), so any number of sources give Onslaught once, as PoB's flag.
 - **Not done:** marking a rule-taken reading as `adapted` (a domain change).
 
+## Decisions in the Phase 3 close-out (branch `feat/p3-close-out`; one PR at the maintainer's request 2026-11-13; report `docs/phase-3/phase-3-report.md`)
+- **Q13: option (b), and PoB-only custom lines applied** (maintainer 2026-11-13): ADR-015 Amendment 2 (`custom-note`, `custom-pattern`, `loom_parser::import::poe1::custom`); `loom-parity-cli custom-lines` checks both against PoB's own parse of every fixture line (`tools/oracle/data/pob_parse_lines.lua`; `docs/phase-3/custom-lines.md`).
+- **The gate builds' other gems** (`docs/phase-3/other-gems.md`, "Phase 3 close-out"): every gem the 7 reach is modelled or inert with PoB's reason; two general rules changed (supports' global effects on inert skills; a buff's more multiplier is the character's, grouped by the main skill's own sources).
+- **Items:** an item in several slots counts in each (as PoB); abyssal sockets by the parent's count.
+- **Body armour Life Modifiers:** PoB's `Prefix:`/`Suffix:` affix record settles a crafted rare whose life stat is also on untagged mods (Ice Nova campaign was `Partial` on life; now equal to PoB).
+- **Fallback used (pre-approved):** Winter Orb's own mechanics (channelling stages, Bonechill, Ice Bite, Assassin's Mark, flasks) are not modelled: Winter Orb is not a chosen skill and not in the denominator. The smaller P3-8 items (socketed gem levels, "with Brand/Minion Skills", other weapon conditions) are not needed by the 7. Both go to Phase 6+ expansion (report, "Known limitations").
+- **Q1** stays on its default (no real bundle in CI): no CI calc-parity job; P3-14 is maintainer-run with committed summaries.
+- **Gate:** met (report). The 7 builds: every computed slice field `Complete`; 20 differences, all Q11 `game-truth` (DIV-0052 to DIV-0071).
+
 ## Next PRs (worktrees on this machine; each a cascade on the previous branch)
 - **P3-8d done (PR #93):** decisions in `docs/phase-3/stat-mapping.md`, "P3-8d": the charge modifiers' meaning lives in `charges::MODIFIERS` (asked before the mapping's rows, disjoint from them by a test), read after every other source; a minimum counts without the check, as PoB; the constant effects keep the `use` input as their source (a label gap, documented).
 - **P3-8e done (PR #94):** `docs/phase-3/stat-mapping.md`, "P3-8e": area of effect reaches no slice field (every PoB reader checked); light radius `NoEffect` guarded by its four "also applies" stats.

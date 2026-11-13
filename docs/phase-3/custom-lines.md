@@ -20,7 +20,7 @@ Tried in order, after the stat descriptions give no single reading:
 | `more-spell-block-chance` | "#% more/less spell block chance" | `SpellBlockChance` MORE | spell block more |
 
    "+1.5% to critical strike chance" is ambiguous in the descriptions (`additional_base_critical_strike_chance`, `local_critical_strike_chance`); "20% more Damage" renders three unique `_final` stats (Quill Rain, Berserker, Doedre's aura), none of which PoB reads.
-2. **Custom note**, when the descriptions give no template: a line with no digit, or one starting with a comment marker (`//`, `--`, `=`, `~`), that is not a keystone's name (PoB reads a keystone's name as the keystone). It has no effect; the calc result lists it under `reasons.notes` (`custom-note`), never as a reason for a state.
+2. **Custom note**, when the descriptions give no template: a line starting with a comment marker (`//`, `--`, `=`, `~`), or one with no digit and no word of a modifier's sentence (`MODIFIER_WORDS`: "always", "can", "cannot", "enemies", "gain", "have", "is", "while", "you", ...; added after review, so a flag line PoB applies, such as "Cannot be Stunned", stays a reason), that is not a keystone's name (PoB reads a keystone's name as the keystone). It has no effect; the calc result lists it under `reasons.notes` (`custom-note`), never as a reason for a state.
 3. Anything else keeps its unresolved reason.
 
 The typed kinds are `custom-note` and `custom-pattern` (build v1, additive; schema and TypeScript regenerated).
