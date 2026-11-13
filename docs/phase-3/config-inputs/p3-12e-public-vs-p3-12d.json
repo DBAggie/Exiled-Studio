@@ -1,0 +1,531 @@
+{
+ "builds_with_reason_changes": 33,
+ "only_after": [
+  "ice-nova-charges-witch.xml.json",
+  "ice-nova-old-config-layout-witch.xml.json",
+  "smite-charges-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Savior.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"buffElusive\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffTailwind\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyUnnerved\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionKilledRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}",
+    "{\"unmodelled-config\": {\"input\": \"igniteMode\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"changedStance\"}}",
+    "{\"unmodelled-config\": {\"input\": \"channellingCycloneCheck\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionConsumedCorpseRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIntimidated\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyMaimed\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyTaunted\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionUsedWarcryInPast8Seconds\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionUsedWarcryRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyAwakeningLevel\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}",
+    "{\"unmodelled-config\": {\"input\": \"infusedChannellingInfusion\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierWarcryPower\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierWarcryUsedRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"perforateSpikeOverlap\"}}",
+    "{\"unmodelled-config\": {\"input\": \"prideEffect\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffTailwind\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionKilledRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionMoving\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyAwakeningLevel\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierGaleForce\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierWitheredStackCount\"}}",
+    "{\"unmodelled-config\": {\"input\": \"toxicRainPodOverlap\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [
+    "{\"unmodelled-config\": {\"input\": \"EEIgnoreHitDamage\"}}",
+    "{\"unmodelled-config\": {\"input\": \"brandAttachedToEnemy\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyConditionHitByLightningDamage\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "discrepancy-movement-speed.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffFortification\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useEnduranceCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"useFrenzyCharges\"}}",
+    "{\"unmodelled-config\": {\"input\": \"usePowerCharges\"}}"
+   ]
+  }
+ },
+ "reasons_added": 42,
+ "reasons_gone": 68,
+ "state_changes": {
+  "discrepancy-movement-speed.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  }
+ },
+ "value_changes": {
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    748.6337696768001,
+    894.3017062399999
+   ],
+   "crit-chance": [
+    7.8048,
+    15.6096
+   ],
+   "hit-dps": [
+    2058.7428666112,
+    2638.190033408
+   ],
+   "speed": [
+    2.75,
+    2.95
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    3499.39513,
+    3725.4286300000003
+   ],
+   "crit-chance": [
+    20.615,
+    34.865
+   ],
+   "hit-dps": [
+    8848.470543000001,
+    9420.012393000003
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    4425.853474,
+    4692.764524
+   ],
+   "crit-chance": [
+    36.29,
+    50.540000000000006
+   ],
+   "hit-dps": [
+    12329.163248999997,
+    13072.701174
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    8769.537607040002,
+    10134.613165040002
+   ],
+   "crit-chance": [
+    41.040000000000006,
+    55.290000000000006
+   ],
+   "hit-dps": [
+    25556.938169088007,
+    29535.15836668801
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    29.13213644075,
+    41.343589596624994
+   ],
+   "crit-chance": [
+    14.452975000000002,
+    28.439725
+   ],
+   "hit-dps": [
+    60.0393492954525,
+    95.43108136281899
+   ],
+   "speed": [
+    2.060931899641577,
+    2.3082437275985663
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    5157.0246,
+    5382.331499999999
+   ],
+   "crit-chance": [
+    6.0,
+    15.0
+   ],
+   "hit-dps": [
+    16846.280359999997,
+    17582.2829
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "average-damage": [
+    461.3201999999999,
+    524.3313999999999
+   ],
+   "crit-chance": [
+    2.6,
+    5.6
+   ],
+   "hit-dps": [
+    587.9517779220778,
+    731.4020650531286
+   ],
+   "speed": [
+    1.2744982290436835,
+    1.3949232585596223
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    1198.8451743281253,
+    1363.203664875
+   ],
+   "crit-chance": [
+    2.665,
+    5.74
+   ],
+   "hit-dps": [
+    2009.1626032571116,
+    2448.777303550546
+   ],
+   "speed": [
+    1.675914994096812,
+    1.7963400236127511
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "average-damage": [
+    548.593255171875,
+    623.7143116875
+   ],
+   "crit-chance": [
+    2.665,
+    5.74
+   ],
+   "hit-dps": [
+    699.1811321818642,
+    870.0336000693993
+   ],
+   "speed": [
+    1.2744982290436835,
+    1.3949232585596223
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "average-damage": [
+    885.7676490000001,
+    1007.3113981875
+   ],
+   "crit-chance": [
+    2.665,
+    5.74
+   ],
+   "hit-dps": [
+    1413.3588873949236,
+    1728.603444233213
+   ],
+   "speed": [
+    1.5956316410861866,
+    1.7160566706021252
+   ]
+  }
+ }
+}
