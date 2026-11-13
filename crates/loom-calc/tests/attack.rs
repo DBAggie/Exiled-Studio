@@ -228,6 +228,13 @@ impl CalcData for Data {
                 attack_time: 800,
                 crit_chance: 500,
             })),
+            "Test Warstaff" => Some(ItemBase::Weapon(WeaponBase {
+                class: "Warstaff".to_owned(),
+                physical: Range { min: 10, max: 20 },
+                attack_time: 800,
+                crit_chance: 500,
+            })),
+            "Test Plate" => Some(ItemBase::Armour(loom_calc::ArmourBase::default())),
             "Test Shield" => Some(ItemBase::Armour(loom_calc::ArmourBase {
                 block: Some(20),
                 ..loom_calc::ArmourBase::default()
@@ -849,6 +856,53 @@ fn weapon_conditions_should_follow_the_hands() {
         &unknown,
         "shield_spell_block_%",
         Field::Poe1(loom_calc::poe1::Poe1Field::SpellBlockChance),
+    );
+    assert!(reasons.contains(&"unmodelled-condition"), "{reasons:?}");
+}
+
+/// The review's cases (P3-8f): a warstaff is a staff; the swap set's staff
+/// counts when that set is in use; an off-hand armour base without block
+/// is no shield; a main hand of unknown base leaves `UsingStaff` unsettled.
+#[test]
+fn weapon_conditions_should_cover_warstaves_swaps_and_unknown_hands() {
+    let block = |b: Build, slots: &[(&str, &str)], field: Field| {
+        let r = run(&b, slots);
+        (value(&r, field), partial(&r, field))
+    };
+    let line = |slots: &[(&str, &str)], n: u32, stat: &str| {
+        with_lines(build("Smite", Some("1"), slots, &OPEN), n, &[(stat, 10)])
+    };
+    let warstaff = [("Weapon 1", "Test Warstaff")];
+    assert_eq!(
+        block(
+            line(&warstaff, 1, "staff_block_%"),
+            &warstaff,
+            Field::BlockChance
+        )
+        .0,
+        10.0
+    );
+    // The staff in the swap set, the axe in the first: only with the
+    // second set in use.
+    let swap = [("Weapon 1", "Test Axe"), ("Weapon 1 Swap", "Test Staff")];
+    let b = line(&swap, 2, "staff_block_%");
+    assert_eq!(block(b.clone(), &swap, Field::BlockChance).0, 0.0);
+    assert_eq!(
+        block(second_weapon_set(b), &swap, Field::BlockChance).0,
+        10.0
+    );
+    // An armour base without block in the off hand is not a shield.
+    let plate = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Plate")];
+    let spell_block = Field::Poe1(loom_calc::poe1::Poe1Field::SpellBlockChance);
+    let (v, reasons) = block(line(&plate, 1, "shield_spell_block_%"), &plate, spell_block);
+    assert_eq!(v, 0.0);
+    assert!(!reasons.contains(&"unmodelled-condition"), "{reasons:?}");
+    // A main hand of unknown base: `UsingStaff` is not settled.
+    let unknown = [("Weapon 1", "Mystery Thing")];
+    let (_, reasons) = block(
+        line(&unknown, 1, "staff_block_%"),
+        &unknown,
+        Field::BlockChance,
     );
     assert!(reasons.contains(&"unmodelled-condition"), "{reasons:?}");
 }

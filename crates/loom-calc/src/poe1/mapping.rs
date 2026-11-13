@@ -2198,6 +2198,49 @@ mod tests {
                 );
             }
         }
+        // Each row as PoB reads its text (the table's docs).
+        let staff = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_STAFF);
+        let shield = |q: Quantity, op: Op, all: Flags| (q, op, all, states::USING_SHIELD);
+        let expected = [
+            (
+                "defences_+%_while_wielding_staff",
+                vec![
+                    staff(Quantity::EnergyShield, Op::Increased, NONE),
+                    staff(Quantity::Armour, Op::Increased, NONE),
+                    staff(Quantity::Evasion, Op::Increased, NONE),
+                ],
+            ),
+            (
+                "global_critical_strike_chance_+%_while_holding_staff",
+                vec![staff(Quantity::CritChance, Op::Increased, NONE)],
+            ),
+            (
+                "global_critical_strike_multiplier_+_while_holding_staff",
+                vec![staff(Quantity::CritMultiplier, Op::Base, NONE)],
+            ),
+            (
+                "shield_spell_block_%",
+                vec![shield(SPELL_BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "spell_block_with_staff_%",
+                vec![staff(SPELL_BLOCK, Op::Base, NONE)],
+            ),
+            (
+                "spell_damage_+%_while_holding_shield",
+                vec![shield(Quantity::Damage, Op::Increased, Flags::SPELL)],
+            ),
+            (
+                "spell_staff_damage_+%",
+                vec![staff(Quantity::Damage, Op::Increased, Flags::SPELL)],
+            ),
+            ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
+        ];
+        assert_eq!(STATE_ROWS.len(), expected.len());
+        for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {
+            assert_eq!(id, want_id);
+            assert_eq!(rows.to_vec(), *want, "{id}");
+        }
         let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new("spell_staff_damage_+%")) else {
             panic!("spell_staff_damage_+%");
         };

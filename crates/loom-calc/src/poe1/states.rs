@@ -13,7 +13,17 @@
 //! set in use ([`collect::hands`]): a hand holding an item whose base is
 //! not known leaves its condition unsettled, so an effect that needs it is
 //! `unmodelled-condition` (a reason), never a guess. Any other condition
-//! stays unsettled, as before P3-8f.
+//! stays unsettled, as before P3-8f: `OffHandIsEmpty`, `Unarmed`,
+//! `UsingMeleeWeapon`, `UsingOneHandedWeapon`, `UsingTwoHandedWeapon`,
+//! `DualWielding`, the other weapon types, and Necromantic Aegis's
+//! shield; an effect that needs one is a reason.
+//!
+//! Differences on purpose: PoB also sets `Using<flag>` from the off hand's
+//! weapon type (`CalcPerform.lua` 187 to 190), but a staff cannot be held
+//! in the off hand. A shield is an armour base with a chance to block
+//! (only shields have one). The hands are looked up for every query
+//! context (`collect::hands`); caching them per calculation is a
+//! follow-up (the public run took about three times as long).
 
 use std::collections::BTreeMap;
 
