@@ -1,0 +1,221 @@
+{
+ "builds_with_reason_changes": 17,
+ "only_after": [
+  "ice-nova-aura-effect-reservation-witch.xml.json",
+  "smite-aura-effect-reservation-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 43, \"line\": 19}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 3571}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 63194}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6799}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6799}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 8}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12143}}, \"stat\": \"non_curse_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 28859}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55571}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33718}}, \"stat\": \"base_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33718}}, \"stat\": \"non_curse_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34513}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5415}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44948}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13862}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 19}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 61, \"line\": 311}}, \"stat\": \"base_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21974}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25831}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 47197}}, \"stat\": \"base_life_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53188}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53188}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 65, \"line\": 21}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 3571}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 63194}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6799}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6799}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"base_mana_reservation_efficiency_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32932}}, \"stat\": \"non_curse_aura_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9392}}, \"stat\": \"non_curse_aura_effect_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 61,
+ "state_changes": {},
+ "value_changes": {
+  "animate-guardian-guardian.xml.json": {
+   "mana-unreserved": [
+    487.0,
+    626.0
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "mana-unreserved": [
+    564.0,
+    577.0
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "mana-unreserved": [
+    517.0,
+    530.0
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "energy-shield": [
+    1733.0,
+    1778.0
+   ],
+   "mana-unreserved": [
+    272.0,
+    462.0
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "mana-unreserved": [
+    3409.0,
+    3427.0
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "mana-unreserved": [
+    1062.0,
+    1099.0
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "mana-unreserved": [
+    921.0,
+    928.0
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    2733.3444546121023,
+    2818.810265074602
+   ],
+   "hit-dps": [
+    6500.970960821818,
+    6704.242360085933
+   ],
+   "mana-unreserved": [
+    544.0,
+    563.0
+   ]
+  }
+ }
+}

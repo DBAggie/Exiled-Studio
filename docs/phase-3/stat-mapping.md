@@ -484,3 +484,76 @@ Reasons:
 - **Corpus:** 15 gone in 8 builds, none added. No value changed.
 
 Tests: 1249 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (10, `tests/exposure_shock.rs` among them).
+
+## P3-8l: reservation efficiency and aura effect for the other gems
+
+The in-scope Ice Nova mapping and Smite act10 builds take passive nodes with "#% increased Mana Reservation Efficiency of Skills" (5 occurrences) and "#% increased effect of Non-Curse Auras from your Skills" (3). P3-12h modelled the other gems' reservation and auras without any modifier, so these stats stayed reasons (`gems::DEPENDS_ON`): each reserving skill reserved its base amount, and each aura acted unscaled.
+
+### What PoB v2.67.2 does
+
+- **Reading** (`Modules/ModParser.lua`). "mana (life) reservation efficiency of skills" is `ManaReservationEfficiency` (`LifeReservationEfficiency`), "reservation efficiency of skills" is `ReservationEfficiency`, and "reservation of skills" is `Reserved`. Each is INC with no tag (222 to 232). "effect of non-curse auras from your skills" is `AuraEffect` INC, tagged with the skill types `Aura` and not `AppliesCurse` (457). Two stats' descriptions double their value ("#% reduced Mana Reservation Efficiency of Skills" for `mana_reservation_efficiency_-2%_per_1`, and the generic one). PoB reads the line's number, so these stats act at -2 per point.
+- **Reservation** (`Modules/CalcPerform.lua` 1965 to 1989), per reserving skill and pool. `inc` is the INC sum of `<Pool>Reserved` and `Reserved`. `efficiency` is the INC sum of `<Pool>ReservationEfficiency` and `ReservationEfficiency`, at least -100. With `more > 0`, `inc > -100`, and a base above 0, the flat amount is `round(floor(flat x mult) x (100 + inc) / 100 x more / (1 + efficiency / 100) / efficiencyMore, 0)`. The percent is the same from `percent x mult`, rounded to 2 decimals. Otherwise the skill reserves nothing of that kind.
+- **Aura effect** (2392 to 2424). An `Aura` buff's mods are scaled by `(1 + inc / 100) x more`, where `inc` sums `AuraEffect`, `BuffEffect`, `BuffEffectOnSelf`, `AuraEffectOnSelf`, `AuraBuffEffect`, and `SkillAuraEffectOnSelf` of the aura skill's list. A `Buff` buff, such as a herald's (2266 to 2281), reads no `AuraEffect`. Each skill's buff is scaled **before** buffs of one name merge, so `mergeBuff` keeps each mod's largest scaled value.
+- **Scaling a mod** (`Classes/ModStore.lua` `ScaleAddMod`, 45 to 80). At a scale of 1 the mod is added unchanged. Otherwise, a high-precision mod (`Modules/Data.lua` 430 on; of the engine's buff rows only `CritChance` BASE, precision 2) or one whose value is not whole (precision 1) becomes `floor(value x scale x 10^p) / 10^p`. Any other becomes `modf(round(value x scale, 2))`, its integer part.
+- **The main skill's own aura.** Smite's added lightning damage is a `GlobalEffect` aura in PoB's stat map (`Data/Skills/act_str.lua` 10329 to 10334), and Smite is typed `Aura`. So the aura effect scales it as any other aura. P3-10 maps these stats through the hit; they stayed unscaled because the aura effect was unmapped.
+
+### The engine
+
+- **`loom_calc::poe1::skill_modifiers`** (new). `STATS` maps seven stats to `Poe1Quantity::ReservationEfficiency(None | Some(pool))`, `Reserved(None)`, and `NonCurseAuraEffect`. Each is `Increased` and unconditional; the two doubled stats have scale -2. The calc result v1 names are `poe1.reservation-efficiency[.<pool>]`, `poe1.reserved[.<pool>]`, and `poe1.non-curse-aura-effect` (additive). `Totals::read` sums them once the passives, items, and config are in; `collect` calls `gems` after those.
+- **`poe1::gems`.** Each reserving skill takes `Totals::reservation(pool)`: PoB's `inc`, and its efficiency, the pool's and the generic summed, at least -100. At -100 PoB divides by 0, so that skill's reservation is a reason (`reservation-efficiency`). Each aura's rows are scaled by `Totals::buff_scale` with `skill_modifiers::scale` before the merge. The merge is now per row, as PoB's per mod. A buff is never scaled by aura effect.
+- **The main skill.** `collect::gems` scales the main skill's own aura stats (`MAIN_SKILL_AURA_STATS`: Smite's two) by the same scale before `SkillMapping` reads them. Smite is the only vetted skill with `GlobalEffect` stats that reach the hit.
+- **Left as reasons** (`gems::DEPENDS_ON`):
+  - "#% increased Mana (Life) Reservation of Skills" (`base_mana_reservation_+%`, `base_life_reservation_+%`). PoB tags them with the `Aura` type (`ModParser.lua` 221, 225), so it would not apply them to a herald or Arctic Armour, while the game's text names every skill. Applying either reading without evidence of the game's would be a guess.
+  - "#% increased Effect of Buffs on you" (`buff_effect_on_self_+%`). PoB also reads it for Onslaught, Arcane Surge, and other buffs (`CalcPerform.lua` 676 to 826), which `poe1::buffs` and `poe1::charges` do not scale yet.
+  - "#% increased effect of Auras from your Skills" (`aura_effect_+%`), which PoB's parser does not read on a passive. Skill-specific effect and reservation stats, the MORE ones, and golem buff effect are reasons too.
+- Provenance: a scaled buff row or a reservation carries its gem's source. The modifiers that scaled it are no graph node (a documented gap, as the charges' count).
+- A maintainer-run test (`tests/skill_modifiers.rs`) checks each row's text in the real bundle. It also checks that every stat whose text names reservation or the effect of auras or buffs is a row, `Unmapped`, or the one listed `NoEffect` row (`base_aura_area_of_effect_+%`, P3-8e).
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-aura-effect-reservation-witch.xml` | Ice Nova with Zealotry and Discipline (auras) and Herald of Ice (a buff), each reserving a percentage of mana. Custom lines: 23% increased effect of non-curse auras (Zealotry's more damage and crit, Discipline's energy shield; not the herald's added damage), 13% increased mana and 7% increased generic reservation efficiency, and 8% reduced reservation of skills (each reservation x 0.92 / 1.2). Every target equals PoB's |
+| `smite-aura-effect-reservation-templar.xml` | Smite with a normal Karui Maul, Precision and Clarity (flat mana) and Haste (a percentage). Custom lines: 10% increased effect of non-curse auras (Precision's accuracy and crit, Haste's speed, and Smite's own added lightning damage), 17% increased mana and 5% reduced generic reservation efficiency (each reservation / 1.12). Every target equals PoB's. The first quick run missed Smite's own aura (average damage 280.07 against PoB's 294.32), which led to `MAIN_SKILL_AURA_STATS` |
+
+Both fixtures use odd efficiency values. An even one, such as "12% increased Mana Reservation Efficiency of Skills", also reads as the doubled stat (6 at -2 per point), so the line is `ambiguous`. Passive nodes carry the stat by ID, so builds do not meet this.
+
+### Review
+
+`code-architecture-reviewer`: no blockers. It confirmed each PoB reading against the pinned checkout: the reservation terms and their gate, both buff paths, the scaling before `mergeBuff`, `ScaleAddMod`'s arithmetic, the text readings, and the doubled stats' sign. It also confirmed that no other reader of these mod names reaches a slice field for the modelled skills, and that Smite is the only vetted skill whose `GlobalEffect` stats reach the hit (its third, the shock chance, is `NoEffect`). It asked whether a modelled gem's own efficiency or aura effect stat would now be skipped silently. The `data-parity` table `gem_effects` refuses `AuraEffect`, `<Pool>ReservationEfficiency`, `ReservationEfficiency`, `<Pool>Reserved`, and `Reserved` in any modelled skill's or support's mods (`BLOCKED_NAMES`, P3-12h), so no such gem is in the tables. Applied in `afe6912`:
+- the divide-by-zero reason only where PoB divides (an efficiency of -100 on a base it reserves, with `inc` above -100);
+- `Totals::read` flags an effect of its quantities it cannot sum (a condition, another op, a pool's `Reserved`), and `collect` makes it a reason (`unread-skill-modifier`);
+- `Totals` read once;
+- literal powers of ten;
+- the real-bundle test also checks every stat of multi-stat descriptions.
+
+Recorded, not changed: the provenance gap above. Smite's scaled aura stat also enters the graph with its scaled value, not the gem's.
+
+### Evidence (P3-8l)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout on a clean tree: `local/p3/p3-8l/evidence.sh` at tool commit `a965d9a`. The review's `afe6912` leaves every calc document byte-identical: public and corpus were re-run and compared (`local/p3/p3-8l/review-check.sh`). P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8l-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 124 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 124 documents; 1850 complete, 334 partial, 456 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 44 registered differences (none new), 0 unexpected; 1818 fields match. **Every mechanic target met: 1816 of 1816 over 87 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8k** (`p3-8l-public-vs-p3-8k.json`, `p3-8l-corpus-poe1-26530219-vs-p3-8k.json`). No field state changes. Values changed in 8 public builds:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Ice Nova Elementalist mapping | unreserved mana | 272 | 462 | 462 |
+| Ice Nova Elementalist mapping | energy shield | 1733 | 1778 | 2255 |
+| Smite act10 | average damage | 2733 | 2819 | 31852 |
+| Smite act10 | hit DPS | 6501 | 6704 | 91370 |
+| Smite act10 | unreserved mana | 544 | 563 | 77 |
+
+The Ice Nova mapping build's unreserved mana now equals PoB's, and its energy shield (Discipline scaled) and Smite act10's damage (Smite's own aura scaled) move toward PoB's. Unreserved mana moves away from PoB's in Smite act10 and six other public builds (Animate Guardian, Cyclone, Flicker Strike, Kinetic Blast, Penance Brand, Poisonous Concoction), each `partial` or `indeterminate`. Each of these builds has `unmodelled-gem` reasons: reserving skills the engine does not model yet, which PoB counts. The efficiency lowers the modelled skills' share as PoB does, so the engine's sum moves further from PoB's total until those skills are modelled. No compared field moved away.
+
+Reasons:
+- **Public:** 61 gone in 17 builds, none added. In the eight in-scope builds, `unmapped-stat` reasons fell from 140 to 132 (every reservation efficiency and non-curse aura effect occurrence).
+- **Corpus:** 64 gone in 14 builds, none added. Unreserved mana rose in 4 builds (the same efficiency; their fields are not compared).
+
+Tests: 1261 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (`tests/skill_modifiers.rs` new).
