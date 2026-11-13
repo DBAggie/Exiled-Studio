@@ -304,7 +304,7 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
-## Decisions in P3-12i (PR #TBD; socket colour quality; evidence `docs/phase-3/other-gems.md`, "P3-12i")
+## Decisions in P3-12i (PR #91; socket colour quality; evidence `docs/phase-3/other-gems.md`, "P3-12i")
 - **The colour as stored.** `GrantedEffect.attribute` keeps the game's number (as the interpolation number); the calc gives it its meaning (1 R, 2 G, 3 B, others none), equal to PoB's `color` (`data-parity`: 1,508 values, 0 differences). Optional: PoE2 has no column, an older bundle no field (`no-colour`, a reason only where it matters).
 - **No new extraction.** The extractor writes every column, so P3-12g's extract had `Attribute`; it was converted again (`local/p3/p3-12i/bundle-poe1-a`).
 - **PoB's index rule exactly:** every gem of the earlier groups of the same slot counts (disabled and unknown gems too); only typed groups of the active set (the active set must have no untyped group, as for the main skill). The colour is the gem's first granted effect's (PoB's `grantedEffect`, else `gemData.grantedEffect`).
