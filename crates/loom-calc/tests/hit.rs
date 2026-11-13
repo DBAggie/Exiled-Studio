@@ -1989,3 +1989,76 @@ fn charge_modifiers_should_count_as_pob_does() {
         FieldState::Complete
     );
 }
+
+/// More charge modifier cases (P3-8d review): frenzy and endurance, a
+/// negative maximum, crit multiplier per charge. Constants: 3 charges of
+/// each kind; a frenzy charge gives 4% increased cast speed and 4% more
+/// damage.
+#[test]
+fn charge_modifiers_of_every_kind_should_count() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |checks: &[&str], lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        for name in checks {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    // Two frenzy charges from a minimum, no check: 8% increased cast
+    // speed, 1 / (0.5 / round(1.08, 2)).
+    let r = with(&[], &[("base_minimum_frenzy_charges", 2)]);
+    assert_eq!(value(&r, Field::Speed), 1.0 / (0.5 / 1.08));
+    // Endurance charges have no effect of their own on a slice field; a
+    // modifier per charge does: 3 x 5% = 15% increased damage.
+    let per = with(
+        &["useEnduranceCharges"],
+        &[("damage_+%_per_endurance_charge", 5)],
+    );
+    let flat = with(&[], &[("damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    // A negative maximum stops at 0 charges.
+    let r = with(&["usePowerCharges"], &[("max_power_charges", -5)]);
+    assert_eq!(
+        value(&r, Field::CritChance),
+        value(&bare, Field::CritChance)
+    );
+    // +10% crit multiplier per power charge, 3 charges: 150 + 30.
+    let r = with(
+        &["usePowerCharges"],
+        &[("critical_strike_multiplier_+_per_power_charge", 10)],
+    );
+    assert_eq!(value(&r, Field::CritMultiplier), 1.8);
+}

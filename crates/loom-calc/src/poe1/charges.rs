@@ -506,8 +506,18 @@ mod tests {
         for id in ids {
             assert!(!names_a_charge(id), "{id}: revisit poe1::charges");
         }
-        // The charge modifiers map only to their own quantity, read here.
+        // The charge modifiers map only to their own quantity, read here,
+        // and no other table holds one (the mapping asks them first).
         assert!(MODIFIERS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, _, _) in MODIFIERS {
+            let elsewhere = HIT_ROWS
+                .iter()
+                .map(|r| r.0)
+                .chain(ROWS.iter().map(|r| r.0))
+                .chain(NO_EFFECT.iter().map(|r| r.0))
+                .any(|other| other == *id);
+            assert!(!elsewhere, "{id}");
+        }
         for (id, _) in NO_EFFECT {
             assert!(
                 !names_a_charge(id) || NO_EFFECT_CHARGE_ROWS.contains(id),
