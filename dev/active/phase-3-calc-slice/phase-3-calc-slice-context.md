@@ -320,7 +320,8 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 
 ## Next PRs (worktrees on this machine; each a cascade on the previous branch)
 - **P3-8d done (PR #93):** decisions in `docs/phase-3/stat-mapping.md`, "P3-8d": the charge modifiers' meaning lives in `charges::MODIFIERS` (asked before the mapping's rows, disjoint from them by a test), read after every other source; a minimum counts without the check, as PoB; the constant effects keep the `use` input as their source (a label gap, documented).
-- **P3-8e** `D:/POE Dev/loom-wt-8e`, branch `feat/p3-8e-stat-batch` (commit `e094d76`): `area_damage_+%` (`Damage` INC area), `base_spell_critical_strike_multiplier_+` (spell crit multiplier); `NoEffect`: three area-of-effect stats and `light_radius_+%` (guarded by four "light radius also applies" stats); fixture `ice-nova-area-spell-crit-witch.xml` matched PoB.
+- **P3-8e done (PR #TBD):** `docs/phase-3/stat-mapping.md`, "P3-8e": area of effect reaches no slice field (every PoB reader checked); light radius `NoEffect` guarded by its four "also applies" stats.
+- **P3-8f next:** weapon conditions (handoff Next action).
 - After them: gem levels need a design (the main skill reads the build's gem-level stats; PoB's `GemProperty` keywords against gem tags); skill-keyword conditions ("with Cold Skills") need keyword flags in the engine.
 
 ## Plan for P3-12h (other gems, first PR: inert gems, reservation, auras and buffs)

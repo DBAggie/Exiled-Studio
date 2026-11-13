@@ -148,3 +148,39 @@ Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p
 **Against P3-12j** (`p3-8d-public-vs-p3-12j.json`, `p3-8d-corpus-poe1-26530219-vs-p3-12j.json`). No field state changes. 16 values in 5 public builds change, every one closer to PoB's: the two in-scope Ice Nova Elementalist builds (campaign and mapping: average damage, crit chance, crit multiplier, hit DPS), Boneshatter, Elemental Hit, and Kinetic Blast. 102 reasons gone in 23 public builds, none added; corpus 38 gone, none added, no value change.
 
 Tests: 1209 workspace tests, clippy, fmt, wasm32.
+
+## P3-8e: area damage, spell crit multiplier, area and light radius
+
+Six stats from the in-scope Ice Nova builds' passives and gems, each read as PoB v2.67.2 reads it:
+
+| Stat | PoB | The engine |
+|---|---|---|
+| `area_damage_+%` | `Damage` INC with `ModFlag.Area` (`Data/SkillStatMap.lua` 779) | hit row, `Damage` INC, area |
+| `base_spell_critical_strike_multiplier_+` ("+#% to Critical Strike Multiplier for Spell Damage") | `CritMultiplier` BASE with "for spell damage" (`ModFlag.Spell`; `Modules/ModParser.lua` 748, 968) | hit row, `CritMultiplier` BASE, spell |
+| `base_skill_area_of_effect_+%`, `base_aura_area_of_effect_+%`, `spell_area_of_effect_+%` | `AreaOfEffect` INC (`SkillStatMap.lua` 573 to 577), which feeds only radius outputs (`Modules/CalcOffence.lua` 345 to 455, 1370) | `NoEffect` (`area`) |
+| `light_radius_+%` | `LightRadius` INC; it reaches a slice field only through `LightRadiusAppliesToDamage` (`CalcOffence.lua` 746), `LightRadiusAppliesToAccuracy` (732), and Eclipse Solaris's fire damage per 1% light radius (`ModParser.lua` 2436) | `NoEffect` (`light-radius`), with those four stats as `NO_EFFECT_DEPENDS_ON` guards (they stay `Unmapped`: a test). The game's other light radius stats (to area of effect, with energy shield, while phasing) reach no slice field and stay `Unmapped` |
+
+No slice field reads area of effect (`docs/phase-3/slice-fields.json`).
+
+### Mechanic fixture
+
+`ice-nova-area-spell-crit-witch.xml`: Ice Nova with custom lines for all six stats ("20% increased Area Damage", "+30% to Critical Strike Multiplier for Spell Damage", "15% increased Area of Effect", "Spell Skills have 10% increased Area of Effect", "10% increased Area of Effect of Aura Skills", "20% increased Light Radius"). Its average damage, hit DPS, and crit multiplier change; no other field does; no reason is left. The first run matched PoB on every target.
+
+### Review
+
+`code-architecture-reviewer`: the mapping is right; every PoB reader of area of effect and light radius was checked, and the guard list is complete for PoB. Applied: assertions for the two rows in the mapping tests, comments moved back to their rows, the guards' reasons in `NO_EFFECT_DEPENDS_ON`'s doc, and this section.
+
+### Evidence
+
+Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p3/p3-8e/evidence.sh` ran at tool commit `0b9a946`; the review's `cc8dbf1` changes tests and comments only. P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8e-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 111 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 111 documents; 1559 complete, 334 partial, 435 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 33 registered differences (unchanged), 0 unexpected; 1535 fields match. **Every mechanic target met: 1525 of 1525 over 74 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8d.** No field state changes. 6 values change, in the two in-scope Ice Nova Elementalist builds, all closer to PoB's; the campaign build's crit multiplier now equals PoB's (2.4). 83 reasons gone in 22 public builds, none added; corpus 57 gone, none added, no value change.
+
+Tests: 1209 workspace tests, clippy, fmt, wasm32.
