@@ -389,8 +389,126 @@ On `smite-charges-templar.xml` the attack rate, `TotalDPS`, and its breakdown to
 
 ### Follow-ups
 
+Shock, rage, cold exposure, Onslaught, culling strike, and the bandit are done in P3-12f (below).
+
 - **Shock** (`conditionEnemyShocked`, `conditionShockEffect`, all 7 in-scope builds). PoB gives a shocked enemy increased damage taken equal to the shock's effect: the configured `ShockVal`, at most 50, floored to its precision (`CalcPerform.lua` 3545 to 3640). The engine has no enemy damage taken in the hit yet; that comes first.
 - **Rage** (`multiplierRage`). It acts only with `Condition:CanGainRage` or `RageRegen`, which about 25 modifier texts set (`ModParser.lua` 2201 to 2585, 5517 to 5539). Each needs its stat ID before rage can join `NAMED_ONLY` or be modelled (more attack damage per rage).
 - **Cold exposure** (`conditionEnemyColdExposure`). It needs `CanApplyColdExposure`, also set by modifiers; same approach.
 - **A block's `enabled` attribute** written with a character reference: XML reads it, PoB reads the reference as nothing. This is contrived and not in any fixture; apply P3-12d's raw-attribute check if one appears.
 - **Onslaught and culling strike** (the Smite builds' custom lines), the bandit, the pantheon, and the minion's aura.
+
+## P3-12f: the enemy's damage taken, shock, the boss kind, delirium, the bandit, Onslaught, rage, exposure
+
+Several steps in one PR (maintainer, 2026-11-12: as many of the remaining tasks as fit). The pantheon was looked at and left: its souls' stats are game data the bundle does not carry yet (Follow-ups).
+
+### The enemy's damage taken in the hit
+
+**PoB** (`Modules/CalcOffence.lua` 3515 to 3620, the effective mode, PoB's main view): each damage type's hit is multiplied by `effMult = (1 + takenInc / 100) x takenMore x (1 - effectiveResist / 100)`.
+- `takenInc` is the enemy's `DamageTaken` and `<Type>DamageTaken` INC, plus `ElementalDamageTaken` for an elemental type and projectile or trap and mine damage taken for such skills.
+- `takenMore` is their MORE product (`ModDB:More`: each name's product rounded to two decimals).
+- For physical damage the "resistance" is the armour's reduction, computed on the hit before `effMult`.
+
+**The engine.** One new quantity, `Poe1Quantity::EnemyDamageTaken` (PoB's `DamageTaken` on the enemy, every type). `hit::passes` multiplies each type's enemy effect by `(1 + inc / 100) x more` of it, in PoB's order, only when the store holds such an effect (a hit without one keeps its graph). Only `poe1::damage_taken` adds such effects. Damage taken of one type, elemental, projectile, or trap and mine damage taken come only from modifiers, so from stats: no mapping produces them (a test).
+
+### Shock
+
+**PoB.**
+- `conditionEnemyShocked` (`ConfigOptions.lua` 1943) sets the enemy's `Condition:Shocked` and `Condition:ShockedConfig`.
+- `conditionShockEffect` (1947), a count, sets the enemy's `ShockVal` BASE, only while `ShockedConfig`.
+- `calcs.perform` (`CalcPerform.lua` 3545 to 3640): the shock is `floor(min(max(override, ShockVal), max))`. `override` is the strongest guaranteed shock (`ShockBase`, `ShockOverride`, `ShockMinimum`: modifiers); `max` is the `ShockMax` override, else 50 plus each active skill's `ShockMax` (`ailmentData.Shock`, `Modules/Data.lua` 427, precision 0). The enemy takes `DamageTaken` INC equal to it (per stack with `ShockCanStack`, a modifier's flag).
+- Nothing happens when the enemy is already shocked, immune, or avoids shock: enemy modifiers only.
+- The guard `ShockVal > 0 or modDB:Sum(...)` is always true in Lua (0 is true), so with no configured effect the shock is 0.
+
+**The engine** (`loom_calc::poe1::damage_taken`): with the check on, the effect is the count (the input, else its placeholder; 0 unset), clamped to 0..50 and floored, as `EnemyDamageTaken` INC. A check that is not a boolean, or an effect that is not a finite number, is a reason under its input. A check's placeholder is not applied (PoB applies placeholders to counts only). Everything else that sets a shock is a modifier: no mapped row names shock or damage taken, and the `NoEffect` rows that do (two ailment chances, shock on you, damage taken by you as another type) are listed and checked (a test).
+
+### The boss kind and delirium
+
+- **`enemyIsBoss`.** The Uber kind gives the enemy `DamageTaken` MORE -70 (`ConfigOptions.lua` 2190). The kinds' other modifiers reach no slice field (conditions and multipliers modifiers read, warcry power, the ailment threshold; `poe1::enemy` module docs). The enemy model already modelled the kinds' placeholders (P3-11), so a string kind is no longer a reason.
+  - PoB's loader spells a string kind its own way (`Classes/ConfigTab.lua` 853 to 855): lower case, each word capitalised, then "Uber Atziri" read as "Boss" and "Shaper" and "Sirus" as "Pinnacle". The enemy model does the same (`BossKind::of_pob`).
+  - A kind PoB does not know stays the enemy model's reason on the hit (read as the default kind, never Uber); a number stays a reason.
+  - The enemy model now reads the last input of a name, as PoB's input table does; it read the first (review). PoB never writes a name twice, so no fixture changes.
+- **`deliriousPercentage`** (2222 to 2243): 20% to 100% give the enemy `DamageTaken` MORE -16 to -80, and `Damage` INC 6 to 30, the enemy's damage, which only PoB's damage-taken estimates read. "None" (`0`) gives nothing. Another value is a reason.
+- With both, PoB multiplies the two in one name and rounds: `round(0.3 x 0.2, 2) = 0.06` (a test).
+
+### The bandit
+
+**PoB.** `calcs.initModDB` (`CalcSetup.lua` 663 to 672) reads `env.configInput.bandit`: Alira `ElementalResist` BASE 15, Kraityn 8% increased movement speed, Oak `Life` BASE 40, anything else one passive point. Kraityn and the passive point reach no slice field.
+
+Which value PoB reads:
+- PoB loads the `<Build>` element first (`buildMode:LoadDB`) and copies its `bandit` attribute into the config's first set (`Modules/Build.lua` 648 to 651).
+- `ConfigTab:Load` then replaces every set; each new set holds the list's default, "None" (`Classes/ConfigTab.lua` 1290 to 1296).
+- So with a `<Config>` element the attribute is never read, and a set without the input has no bandit.
+
+**The engine** (`collect::choices`): with a typed config set, the active set's last `bandit` input acts (none: no bandit), and the attribute is ignored. A value outside the four is a reason under the input. With no set, the domain cannot tell a build without a `<Config>` element (the attribute counts) from an empty one (it does not), so an attribute other than "None" stays a reason. The pantheon is unchanged.
+
+### Onslaught
+
+**PoB.** `buffOnslaught` (`ConfigOptions.lua` 1010) sets `Condition:Onslaught`; `CalcSetup.lua` (97) turns it into the `Onslaught` flag. `CalcPerform.lua` (682 to 711) then gives `floor(20 x (1 + inc / 100))` increased attack, cast, and movement speed, `inc` the `OnslaughtEffect` and `BuffEffectOnSelf` sums (and an active Silver Flask's effect).
+
+**The engine** (`loom_calc::poe1::buffs`): with the check on, `Speed` INC 20 for attacks and casts. The stats that change the effect (`buff_effect_on_self_+%`, `onslaught_effect_+%`, `map_monster_and_player_onslaught_effect_+%`) must stay reasons (a test, and the real-bundle check); an active flask is already a reason.
+
+### Rage and exposure in `NAMED_ONLY`
+
+Both inputs act only with a condition that modifiers set, as `conditionConvergence` (P3-12a):
+
+| Input | PoB's effect | Acts only with | Set by |
+|---|---|---|---|
+| `multiplierRage` | `Multiplier:RageStack` (line 1074), read in `CalcPerform.lua` 914 to 935 (rage's more attack damage and speed) | `Condition:CanGainRage` or `RageRegen` above 0 | Modifiers (`ModParser.lua` 2201 to 2585, 5517 to 5539) and skill data (Chain Hook, Vengeful Cry, a curse's stun rage, the Spirit of Akoya tattoo) |
+| `conditionEnemyColdExposure`, `conditionEnemyFireExposure`, `conditionEnemyLightningExposure` | The enemy's `<Type>Exposure` BASE -10 (lines 1973 to 1981) | The player's `Condition:CanApply<Type>Exposure` (`CalcPerform.lua` 398 to 408): `<Type>ExposureChance` above 0 on the main skill or the character | Modifiers (`ModParser.lua` 850 to 855, 4246 to 4320, 4546) and `elementalArmyExposureType` (itself a reason) |
+
+The stats behind those modifiers were found by their text in the bundle's stat descriptions (the game's own text) and matched to PoB's: 39 for rage (gaining rage on hit, kill, warcry, crit, flask use, when hit, from mana spent; regenerating it per life or mana regeneration; the skills' stats) and 28 for exposure (the chance and on-hit forms, socketed, devotion, curse-cast, graft, minion, and Summon Arbalists variants). They join `DEPENDS_ON`: each must stay `Unmapped` through every mapping (a test), and each is a stat of the real bundle (the maintainer-run test). A further test checks that no mapped row names rage or exposure; the two `NoEffect` rows that do (rage's loss delay; mana regeneration after inflicting exposure) are listed. PoB's skills that expose set the exposure itself, not the chance: they are other gems, reasons.
+
+### Culling strike
+
+The Smite builds' custom line "Culling Strike" resolves to `kill_enemy_on_hit_if_under_10%_life`. PoB reads it as `CullPercent` MAX 10 (`ModParser.lua` 5066), which reaches only `CullMultiplier`, and that only `CullingDPS` and `CombinedDPS` (`CalcOffence.lua` 3332 to 3339, 6289 to 6292). It is a `NoEffect` row (`culling`).
+
+### What changes
+
+- **Public builds.** Values change in 9 builds, all in `Partial` fields: 22 values, each closer to PoB's, 6 now equal (`p3-12f-public-vs-p3-12e.json`):
+
+| Builds | Change |
+|---|---|
+| The 4 Smite builds | Average damage and DPS: a 20% shock (Smite act1: 760.3 against PoB's 919.6, was 524.3) |
+| Shock Nova, Kinetic Blast | Average damage and DPS: a configured shock; Kinetic Blast also Onslaught and Alira |
+| Elemental Hit | Attack rate and DPS: Onslaught |
+| Winter Orb, Arakaali's spider, Kinetic Blast | Resistances: Alira (Winter Orb's three now equal PoB's) |
+
+- **Reasons.** 85 are gone and none added, in 28 builds: `conditionEnemyShocked` (16), `conditionShockEffect` (11), `multiplierRage` (11), the bandit (9 inputs, 10 attributes), `buffOnslaught` (7), the exposures (11), `enemyIsBoss` (5), culling strike (5 lines).
+- **The 7 in-scope builds.** Their config reasons fall to the pantheon (two inputs, two choices) for all seven, and the Lightning Golem's Wrath for Ice Nova. Every field stays `Partial`, through other gems, unmapped stats, and unresolved lines.
+- **Corpus.** Four builds' values change, all 11 values closer to PoB's, 3 now equal: Alira's resistances in three builds, a shock in one. Reasons: 40 gone, none added, in 18 builds.
+
+### Evidence
+
+2026-11-13, Windows. Tool commit `6b8bb87` (the calc runs record the tree as dirty: only `CLAUDE.md`, `docs/plan/ACTION-PLAN.md`, and the task files had uncommitted edits; no code). Inputs are P3-12e's (bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`), with a new oracle run for the three new fixtures. Summaries are in `docs/phase-3/config-inputs/p3-12f-*`.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 94 | Every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 94 | 93 documents; 1181 complete, 334 partial, 405 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-run --data-overlay`, public | 94 | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 94 | 30 differences, all registered (DIV-0001 to DIV-0030; 2 new, below), 0 unexpected, no unused entry, no missing mechanic fixture; 1159 fields match. **Every mechanic target met (1147 of 1147, 57 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | Byte-identical, no difference (exit 5) |
+| `build-round-trip`: public (fixtures, community, mechanic, PoB's 3.13 test builds) and corpus | 94, 21 | All pass |
+
+**The new fixtures and the register.**
+
+| Fixture | What it holds | Result |
+|---|---|---|
+| `ice-nova-shocked-uber-witch.xml` | A 35% shock, the Uber boss, 40% delirium, Alira | 22 of 22 equal to PoB |
+| `smite-shocked-templar.xml` | A configured 70% shock (50% applied), 20% delirium, Oak, Onslaught | Every field but the attack rate and DPS equal to PoB |
+| `ice-nova-onslaught-rage-exposure-witch.xml` | Onslaught, 30 rage, cold and fire exposure (no source of rage or exposure) | 22 of 22 equal to PoB: only Onslaught changes a field |
+
+On `smite-shocked-templar.xml` the attack rate and `TotalDPS` differ: Q11's `game-truth` difference (1000 / 667 = 1.4993 against PoB's 1.50, times the same 0.85 and 1.2 on both sides), registered as DIV-0029 and DIV-0030 with the evidence of DIV-0001. The breakdown's displayed total rounds equal (164.8). No other divergence is claimed: shock's maximum and precision, Onslaught's 20, delirium's and the Uber boss's values, and the bandit's rewards are PoB's constants, as the game describes them.
+
+**Tests** (1169 workspace tests): the damage taken in a hit (shock: cap, floor, placeholder, last input, negative; the Uber kind, its spellings, delirium, both together; reasons for bad values); Onslaught; the bandit (Alira, Oak, none, the attribute ignored beside a set, reasons); `BossKind::of_pob`; the guards (shock and damage taken, rage and exposure, Onslaught's stats). The maintainer-run real-bundle test checks every `DEPENDS_ON` stat, the new ones included. Clippy, fmt, wasm32.
+
+**Review** (`code-architecture-reviewer`): no code blocker; every rule confirmed against PoB's Lua. Applied: the enemy model reads the last input of a name; PoB's boss-kind spelling; Onslaught on an attack (the Smite fixture); one shared `last_input` helper; docs. Left: the pantheon reads the build attribute even beside a set (conservative: a reason, documented); the guards match stat-ID words, as earlier steps (the real-bundle test is the net).
+
+**Commands:** as P3-12e's, with `<out>` = `local/p3/p3-12f/evidence` (script `local/p3/p3-12f/evidence.sh`).
+
+### Follow-ups
+
+- **The pantheon** (all 7 in-scope builds; 24 public builds). PoB applies every soul of the chosen gods (`Modules/PantheonTools.lua`), each soul's modifier a stat with a value, from the game's pantheon tables (`Data/Pantheons.lua` is exported from them). The bundle needs a pantheon table first (extractor, converter, validator); then the souls' stats act through the mapping, and the choice is read from the config set as the bandit is.
+- **The Lightning Golem's Wrath** (`summonLightningGolemEnableWrath`, the Ice Nova builds), with the other gems' auras and buffs.
+- **Other config inputs** in the public builds: `conditionEnemyIgnited`, `conditionLeeching`, `conditionEnemyBlinded`, and the others listed by the calc runs.
+- **A delirium number other than 0** is a reason; PoB ignores it (no branch matches). Conservative.
