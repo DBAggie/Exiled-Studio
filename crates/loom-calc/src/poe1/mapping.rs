@@ -636,13 +636,15 @@ impl StatMapping for SkillMapping {
             StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
                 StatMap::Effects(e)
             }
-            // A gem's minion modifiers act on the minion skills it
-            // supports (P3-8j, `poe1::minions`).
+            // A gem's minion modifiers (P3-8j): only the main skill's gems
+            // are read through this mapping, so they are PoB's
+            // `MinionModifier` entries of the skill's own `skillModList`,
+            // which a redirect turns into the skill's (`poe1::minions`).
             StatMap::Effects(e)
                 if e.iter()
                     .all(|t| super::minions::is_minion_quantity(t.quantity)) =>
             {
-                StatMap::NoEffect
+                StatMap::Effects(e)
             }
             StatMap::Effects(_) => StatMap::Unmapped,
             other => other,
@@ -1040,9 +1042,9 @@ pub struct Poe1Mapping;
 /// it: anything that can change a hit or its rate through the enemy
 /// (shock, chill, exposure, intimidate, consecrated ground's effect,
 /// curses), charges' counts, rage, area, gem levels but the global ones of
-/// [`super::gem_levels`] (P3-8i), minion speed (stats
-/// redirect it to the player; minion damage is in, with its redirects in
-/// [`NO_EFFECT_DEPENDS_ON`]), and staff or shield
+/// [`super::gem_levels`] (P3-8i), minion modifiers but those of
+/// [`super::minions`] (P3-8j, with the redirects to the player), and staff
+/// or shield
 /// conditioned block and damage, fortification's maximum (PoB scales
 /// suppression, armour, evasion, and attack speed per fortification), and
 /// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also

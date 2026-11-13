@@ -34,10 +34,19 @@
 //! a redirect changes no slice field: no minion is computed.
 //!
 //! A gem's own minion stats (Minion Damage, Minion Speed, Predator,
-//! Infernal Legion) act on the minion skills it supports; the gem mapping
-//! gives them no effect ([`super::mapping::SkillMapping`]). The redirects
-//! PoB reads that the engine does not are [`DEPENDS_ON`]: they stay
-//! reasons.
+//! Infernal Legion) are minion effects too: only the main skill's gems are
+//! read through the gem mapping ([`super::mapping::SkillMapping`]), so
+//! they are the `MinionModifier` entries of PoB's `skillModList`, which
+//! `CalcOffence.lua` converts with the rest (Absolution or Dominating Blow
+//! supported by Minion Damage, with Spiritual Aid). Other groups' gems do
+//! not reach this mapping, as their minion stats do not reach the skill in
+//! PoB.
+//!
+//! The redirects PoB reads that the engine does not are [`DEPENDS_ON`]:
+//! they stay reasons. Other minion stats PoB reads as `Damage` or `Speed`
+//! INC (minion melee damage, damage on full or low life, ...) are
+//! unmapped: reasons. Every redirect row is unconditional (a test), so
+//! [`minions`] reads no condition on a redirect.
 
 use super::Poe1Quantity;
 use crate::condition::Flags;
@@ -247,11 +256,35 @@ mod tests {
     }
 
     #[test]
-    fn a_gems_minion_stats_should_have_no_effect() {
+    fn a_main_skill_gems_minion_stats_should_be_minion_effects() {
         for (stat, _) in STATS {
             assert_eq!(
                 SkillMapping.map(&StatId::new(stat)),
-                StatMap::NoEffect,
+                Poe1Mapping.map(&StatId::new(stat)),
+                "{stat}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_gems_minion_damage_should_follow_the_redirect() {
+        let gem = Source::Gem { group: 0, gem: 1 };
+        let got = redirected(vec![
+            effect(DAMAGE, Op::Increased, 30.0, gem.clone()),
+            effect(to_you(MinionValue::Damage, 100), Op::Flag, 0.0, passive(1)),
+        ]);
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].quantity, Quantity::Damage);
+        assert!((got[0].value - 30.0).abs() < 1e-9);
+        assert_eq!(got[0].source, gem);
+    }
+
+    #[test]
+    fn other_minion_damage_stats_should_stay_unmapped() {
+        for stat in ["minion_melee_damage_+%", "minion_damage_+%_on_full_life"] {
+            assert_eq!(
+                Poe1Mapping.map(&StatId::new(stat)),
+                StatMap::Unmapped,
                 "{stat}"
             );
         }
