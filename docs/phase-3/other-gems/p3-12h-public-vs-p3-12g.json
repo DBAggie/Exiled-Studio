@@ -1,0 +1,753 @@
+{
+ "builds_with_reason_changes": 28,
+ "only_after": [
+  "ice-nova-herald-of-ice-witch.xml.json",
+  "ice-nova-zealotry-discipline-witch.xml.json",
+  "smite-blood-rage-haste-templar.xml.json",
+  "smite-other-gems-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 2}}}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 4}}}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 6, \"group\": 0}}}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 12}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 20}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 21}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 28}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 29}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 31}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 34}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 29}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 34}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 9}}}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 20}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 21}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 28}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 29}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 31}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 34}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 29}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 34}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 24}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 25}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 32}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 9}}}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 6}}}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 7}}}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 6, \"group\": 0}}}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 17}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 6}}}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  }
+ },
+ "reasons_added": 26,
+ "reasons_gone": 354,
+ "state_changes": {},
+ "value_changes": {
+  "animate-guardian-guardian.xml.json": {
+   "mana-unreserved": [
+    974.0,
+    487.0
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "hit-dps": [
+    1829.584755050899,
+    2060.5032192806234
+   ],
+   "speed": [
+    1.3225075528700907,
+    1.4894259818731115
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "mana-unreserved": [
+    699.0,
+    564.0
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "hit-dps": [
+    3249.3764527729168,
+    3579.2623870645825
+   ],
+   "speed": [
+    3.2833333333333337,
+    3.6166666666666663
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "mana-unreserved": [
+    690.0,
+    517.0
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    3725.4286300000003,
+    4024.317829
+   ],
+   "hit-dps": [
+    9420.012393000003,
+    11555.541194700001
+   ],
+   "mana-unreserved": [
+    832.0,
+    -624.0
+   ],
+   "speed": [
+    2.528571428571429,
+    2.8714285714285714
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    4692.764524,
+    5069.476468
+   ],
+   "hit-dps": [
+    13072.701174,
+    15860.2192356
+   ],
+   "mana-unreserved": [
+    983.0,
+    -738.0
+   ],
+   "speed": [
+    2.7857142857142856,
+    3.1285714285714286
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    10134.613165040002,
+    10983.905361520003
+   ],
+   "energy-shield": [
+    1070.0,
+    1395.0
+   ],
+   "hit-dps": [
+    29535.15836668801,
+    32010.23848214401
+   ],
+   "mana-unreserved": [
+    939.0,
+    272.0
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    53.8895419902,
+    67.2090014594196
+   ],
+   "crit-chance": [
+    30.11265,
+    38.988477
+   ],
+   "hit-chance": [
+    90.0,
+    99.0
+   ],
+   "hit-dps": [
+    146.6027325109742,
+    182.8373910670232
+   ],
+   "mana-unreserved": [
+    3576.0,
+    3409.0
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "mana-unreserved": [
+    1416.0,
+    1062.0
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "mana-unreserved": [
+    943.0,
+    921.0
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "average-damage": [
+    760.28053,
+    919.64952888
+   ],
+   "crit-chance": [
+    5.6,
+    7.247999999999999
+   ],
+   "hit-chance": [
+    40.0,
+    48.0
+   ],
+   "hit-dps": [
+    1060.5329943270367,
+    1282.840517558111
+   ],
+   "mana-unreserved": [
+    711.0,
+    631.0
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "hit-dps": [
+    3550.7270901482916,
+    3749.091732056017
+   ],
+   "mana-unreserved": [
+    726.0,
+    544.0
+   ],
+   "speed": [
+    1.7963400236127511,
+    1.896694214876033
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "average-damage": [
+    904.385751946875,
+    1135.9690760137498
+   ],
+   "crit-chance": [
+    5.74,
+    7.751999999999999
+   ],
+   "hit-chance": [
+    41.0,
+    51.0
+   ],
+   "hit-dps": [
+    1261.548720100629,
+    1584.5896851360633
+   ],
+   "mana-unreserved": [
+    711.0,
+    637.0
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "hit-dps": [
+    2506.4749941381588,
+    2623.7369821680145
+   ],
+   "speed": [
+    1.7160566706021252,
+    1.7963400236127511
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "mana-unreserved": [
+    631.0,
+    315.0
+   ]
+  }
+ }
+}
