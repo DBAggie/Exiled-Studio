@@ -838,9 +838,11 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "leech",
     ),
     ("base_movement_velocity_+%", "movement-speed"),
+    // Area of effect (P3-8e): PoB's `AreaOfEffect` feeds only radius
+    // outputs (`CalcOffence.lua` 345 to 455, 1370), none a slice field.
+    ("base_skill_area_of_effect_+%", "area"),
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
-    ("base_skill_area_of_effect_+%", "area"),
     ("base_skill_effect_duration", "skill-duration"),
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
@@ -1030,9 +1032,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     ("shocked_effect_on_self_+%", "ailment-on-self"),
     ("smite_lightning_target_range", "targeting"),
+    ("spell_area_of_effect_+%", "area"),
     // Melee Physical Damage's more damage with poison and bleeding: no
     // ailment is in the slice.
-    ("spell_area_of_effect_+%", "area"),
     (
         "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
         "ailment-damage",
@@ -1068,6 +1070,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// `minion_damage_modifiers_apply_to_all_damage_at_%_value`); none has a
 /// description or a PoB row, so no line resolves to them, and they are
 /// `Unmapped` anyway.
+///
+/// Light radius (P3-8e) reaches a slice field only through
+/// `LightRadiusAppliesToDamage` (`Damage` INC, `CalcOffence.lua` 746),
+/// `LightRadiusAppliesToAccuracy` (`Accuracy` INC, 732), and Eclipse
+/// Solaris's fire damage per 1% light radius (`ModParser.lua` 2436); their
+/// stats are the guards. The game's other light radius stats (applying to
+/// area of effect, scaling with energy shield, while phased) reach no slice
+/// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value",
@@ -1968,6 +1978,14 @@ mod tests {
                 1.0,
                 all(Flags::ATTACK).with_any(Flags::ELEMENTAL)
             )]
+        );
+        assert_eq!(
+            hit("area_damage_+%"),
+            [(Quantity::Damage, Op::Increased, 1.0, all(Flags::AREA))]
+        );
+        assert_eq!(
+            hit("base_spell_critical_strike_multiplier_+"),
+            [(Quantity::CritMultiplier, Op::Base, 1.0, all(Flags::SPELL))]
         );
         assert_eq!(
             hit("melee_physical_damage_+%"),
