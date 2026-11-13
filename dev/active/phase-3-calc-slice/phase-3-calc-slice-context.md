@@ -312,7 +312,7 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 - **Supports too** (PoB's `CalcSetup.lua` 1578): the reason covers the main skill's and buffs' applied supports; an inert skill's quality reaches nothing.
 - **`melee_physical_damage_+%`** became a hit row because a matching socket gives Melee Physical Damage quality (the Smite fixture showed it).
 
-## Decisions in P3-12j (PR #TBD; the custom "Onslaught" line; evidence `docs/phase-3/config-inputs.md`, "P3-12j")
+## Decisions in P3-12j (PR #92; the custom "Onslaught" line; evidence `docs/phase-3/config-inputs.md`, "P3-12j")
 - **"Onslaught" is a game text**, ambiguous between the character's stat (item mod rows) and a Silver Flask's display stat (none). P3-12c called it PoB shorthand; it is not.
 - **The custom-line rule** (`resolve_custom_line`): the only global reading an item-domain mod row backs. A prior, documented as such; local readings excluded after the first run took a weapon-local crit stat for a character-wide line.
 - **A flag quantity, read once:** `Poe1Quantity::Onslaught`; `poe1::buffs` reads it after every other source (`Ingest::effects`), so any number of sources give Onslaught once, as PoB's flag.
