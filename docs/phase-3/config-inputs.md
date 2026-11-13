@@ -449,6 +449,8 @@ Which value PoB reads:
 
 ### Rage and exposure in `NAMED_ONLY`
 
+(Since P3-8k the exposure checks have their effect, `poe1::exposure`, and their stats moved to `exposure::DEPENDS_ON` or became its rows: `docs/phase-3/stat-mapping.md`, "P3-8k". Rage stays as below.)
+
 Both inputs act only with a condition that modifiers set, as `conditionConvergence` (P3-12a):
 
 | Input | PoB's effect | Acts only with | Set by |

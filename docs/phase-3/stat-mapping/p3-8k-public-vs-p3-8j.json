@@ -1,0 +1,132 @@
+{
+ "builds_with_reason_changes": 12,
+ "only_after": [
+  "ice-nova-exposure-witch.xml.json",
+  "ice-nova-guaranteed-shock-witch.xml.json",
+  "smite-exposure-shock-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"elementalArmyExposureType\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30969}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32477}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44179}}, \"stat\": \"chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"elementalArmyExposureType\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"all_damage_can_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"always_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"shock_minimum_damage_taken_increase_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38207}}, \"stat\": \"chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58998}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61259}}, \"stat\": \"exposure_you_inflict_applies_extra_%_to_affected_resistance\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13961}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 26557}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"all_damage_can_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"always_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"shock_minimum_damage_taken_increase_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38207}}, \"stat\": \"chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41251}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58998}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61259}}, \"stat\": \"exposure_you_inflict_applies_extra_%_to_affected_resistance\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41251}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"all_damage_can_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"always_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"shock_minimum_damage_taken_increase_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58998}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61259}}, \"stat\": \"exposure_you_inflict_applies_extra_%_to_affected_resistance\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 63268}}, \"stat\": \"fire_exposure_you_inflict_applies_extra_fire_resistance_+%\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 5}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 45317}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 4, \"line\": 16}}, \"stat\": \"non_damaging_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"all_damage_can_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"always_shock\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27038}}, \"stat\": \"shock_minimum_damage_taken_increase_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38207}}, \"stat\": \"chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58998}}, \"stat\": \"lightning_ailment_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61259}}, \"stat\": \"exposure_you_inflict_applies_extra_%_to_affected_resistance\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 36,
+ "state_changes": {},
+ "value_changes": {
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    11642.0635968,
+    24026.308747895997
+   ],
+   "hit-dps": [
+    37254.60350976001,
+    76884.1879932672
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    62401.81503584,
+    147034.27667819802
+   ],
+   "hit-dps": [
+    186313.990607008,
+    439002.3403677626
+   ]
+  }
+ }
+}

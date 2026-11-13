@@ -52,6 +52,20 @@
 //! set after this check (`ModParser.lua` 1081 to 1083), not as the cold
 //! one's own pattern. A gem's chance (PoB's `skillModList`) is a reason
 //! through the gem mapping ([`super::mapping::SkillMapping`]).
+//!
+//! **The chances are read unconditionally, as PoB reads them** (the
+//! review asked whether this is looser than the game). In the game "Cold
+//! Skills have a #% chance" applies only through cold skills, and "...
+//! with Cold Damage" only through hits that deal cold damage. But the
+//! check is the user's statement that the enemy *is* exposed, and the
+//! chance is PoB's gate on whether the character can expose it at all.
+//! Exposure is a debuff on the enemy, so once any of the character's
+//! skills applies it, every hit meets it, the main skill's too, whatever
+//! its type. So no value the game gives differs; no divergence entry.
+//!
+//! Provenance: the -10 carries the check's source and each extra its own;
+//! the chance that let the check apply is no graph node (a documented
+//! gap, as the shock's minimum sources).
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
@@ -106,8 +120,10 @@ type ExposureRow = (&'static str, &'static [Poe1Quantity]);
 /// - "Exposure you inflict applies an extra #% to the affected Resistance"
 ///   (2665), "Cold (Fire) Exposure you inflict applies an extra #% to Cold
 ///   (Fire) Resistance" (4267, 4268). The game writes the value with its
-///   sign; PoB's patterns read only a negative one, and every such stat
-///   rolls negative.
+///   sign; PoB's patterns (`(%-?%d+)`) match a negative value or a bare
+///   number, not one written "+5", which PoB would not parse while the
+///   engine applies it. Every such stat rolls negative, so no build meets
+///   the difference.
 pub const STATS: [ExposureRow; 8] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",

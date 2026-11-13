@@ -1,4 +1,4 @@
-Last Updated: 2026-11-13 (P3-8j: minion modifiers that also affect you)
+Last Updated: 2026-11-13 (P3-8k: the enemy's exposure and the guaranteed shock)
 
 # Phase 3: calc slice (tasks)
 
@@ -95,7 +95,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, merged into `dev` with #91; documents identical, calc time 229 to 78 ms)
   - [x] P3-8h skill keywords: `Flags::SKILL_*` from the main skill's types (PoB's `KeywordFlag`), 23 hit rows ("with Cold Skills" cast speed, crit chance, crit multiplier; damage with attack or spell skills) (PR #97, merged into `dev` as `1b15375`; `docs/phase-3/stat-mapping.md`, "P3-8h"; two mechanic fixtures; DIV-0034, DIV-0035)
   - [x] P3-8i global gem levels: `poe1::gem_levels` (23 stats, PoB's keywords and `gemIsType`), each gem's level raised in `main_skill`/`group_skills`, gems collected after config (PR #98, merged into `dev` as `5f8df17`; `docs/phase-3/stat-mapping.md`, "P3-8i"; two mechanic fixtures; DIV-0036 to DIV-0038 `game-truth`, Q11)
-  - [x] P3-8j minion modifiers that also affect you: `poe1::minions` (minion damage and speeds, the redirects of Spiritual Aid and Spiritual Command and kin, PoB's `CalcOffence.lua` 613 to 643; a main skill gem's minion stats too) (PR #99, open, base `dev`; `docs/phase-3/stat-mapping.md`, "P3-8j"; two mechanic fixtures; DIV-0039 to DIV-0041 `game-truth`, Q11)
+  - [x] P3-8j minion modifiers that also affect you: `poe1::minions` (minion damage and speeds, the redirects of Spiritual Aid and Spiritual Command and kin, PoB's `CalcOffence.lua` 613 to 643; a main skill gem's minion stats too) (PR #99, merged into `dev` as `c24146b`; `docs/phase-3/stat-mapping.md`, "P3-8j"; two mechanic fixtures; DIV-0039 to DIV-0041 `game-truth`, Q11)
+  - [x] P3-8k the enemy's exposure and the guaranteed shock: `poe1::exposure` (PoB's exposure checks with the chances that enable them, Elemental Army's type, and the extras, Mastermind of Discord's among them; the enemy's resistance in the hit), `poe1::damage_taken` (the shock's guaranteed minimums scaled by shock effect, Shaper of Storms; "Hits always Shock" and "All Damage can Shock" `NoEffect`) (PR #PRNUM, open, base `dev`; `docs/phase-3/stat-mapping.md`, "P3-8k"; three mechanic fixtures; DIV-0042 to DIV-0044 `game-truth`, Q11)
   - [ ] Next: more of the in-scope builds' unmapped stats (socketed gem levels; "with Brand/Minion Skills"; the other weapon conditions); the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); unresolved lines; Q13
 
 ## P3-14: corpus run and register

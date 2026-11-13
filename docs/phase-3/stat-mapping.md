@@ -418,3 +418,69 @@ Reasons:
 - **Corpus:** 23 gone in 3 builds, none added. One build's average damage and DPS rose (Spiritual Aid).
 
 Tests: 1239 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.
+
+## P3-8k: the enemy's exposure and the guaranteed shock
+
+The four in-scope Elementalist builds (the three Ice Nova builds and Winter Orb) take Shaper of Storms ("Hits always Shock", "Shocks from your Hits always increase Damage taken by at least 25%", "All Damage can Shock"), Mastermind of Discord ("Exposure you inflict applies an extra -25% to the affected Resistance"), the lightning ailment effect nodes, and the mastery "10% Chance to Inflict Cold Exposure on Hit with Cold Damage". These were the in-scope builds' most frequent unmapped stats after golems: 20 occurrences. Until P3-8k each was `unmapped-stat`, and the three exposure checks were `NAMED_ONLY`, guarded by their stats in `config::DEPENDS_ON`. The Ice Nova campaign and mapping builds set the shocked and cold exposure checks in their active config sets, so their damage moves toward PoB's. Winter Orb sets the cold exposure check too, but its damage is not computed (Winter Orb is not a modelled skill), so it only loses reasons.
+
+### What PoB v2.67.2 does
+
+Line numbers are the pinned checkout's (`local/oracle/pob`). Some earlier docs cite the newer legacy checkout's numbers.
+
+- **Exposure.** The checks `conditionEnemyFireExposure`, `conditionEnemyColdExposure`, and `conditionEnemyLightningExposure` (`Modules/ConfigOptions.lua` 1947 to 1955) give the enemy `<Type>Exposure` BASE -10. Each is conditioned on the player's `CanApply<Type>Exposure`. `calcs.perform` (`Modules/CalcPerform.lua` 375 to 385) sets that condition when the main skill's or the character's `<Type>ExposureChance` sums above 0. The chance's value is read nowhere else. The chance comes from modifiers ("#% Chance to Inflict Cold Exposure on Hit with Cold Damage", `ModParser.lua` 4194; "Cold Skills have a #% chance to apply Cold Exposure on Hit", 4191 to 4193; "Inflict Fire, Cold, and Lightning Exposure on Hit", 4200) and from the `elementalArmyExposureType` input (`ConfigOptions.lua` 413 to 420). PoB applies a config input whatever its `ifSkill` (`Classes/ConfigTab.lua` 1083 to 1101). Then, per type (3563 to 3589), unless Elemental Equilibrium is on and the enemy was hit by that type, PoB takes the strongest exposure on the enemy, adds each `ExtraExposure` and `Extra<Type>Exposure` BASE of the character, and makes the result the enemy's `<Type>Resist` BASE. That value is capped by `ExposureMin`'s OVERRIDE. With no override, `modDB:Override` returns no value, so `m_min(min, ...)` is `m_min(min)`. An oracle probe on the pinned runtime confirmed it: Ice Nova's damage against the default enemy's 50% cold resistance rose by the ratio of a 40% and a 15% resistance, with no error.
+- **The guaranteed shock** (3499 to 3546). The shock is `floor(min(max(override, ShockVal), max))`. `ShockVal` is the configured effect (only while the shocked check is on). For each `ShockMinimum` (3503 to 3530), `effect = value x calcLib.mod(modDB, nil, "EnemyShockEffect") x calcLib.mod(enemyDB, nil, "SelfShockEffect")`; the minimums add up into `minimum`, and `override` keeps the largest of any effect and that sum. A minimum does not set the enemy's `Condition:Shocked` (only `ShockOverride` does), so it raises the damage taken only with the check on. "#% increased Effect of Lightning Ailments", "... of Non-Damaging Ailments", and "... of Shock" are `EnemyShockEffect` INC (`ModParser.lua` 772 to 786). The flag `ChecksHighestDamage` makes PoB read the main skill's list instead (3517).
+- "Hits always Shock" (`EnemyShockChance` BASE 100) and "All Damage can Shock" (`<Type>CanShock` flags) feed only the shock chance and the shock PoB shows (`CalcOffence.lua` 4108, 5208 on). They never feed the enemy's shock in the hit.
+
+### The engine
+
+- **`loom_calc::poe1::exposure`** (new). `STATS` maps the chances to `Poe1Quantity::ExposureChance(type)` and the extras to `Poe1Quantity::ExtraExposure(None | Some(type))`; each is `Base` and unconditional. The calc result v1 names are `poe1.exposure-chance.<type>` and `poe1.extra-exposure[.<type>]`, additive. `exposure()` runs once every source is in. It turns Elemental Army's input into the chance of its type. Then, for each check that is on, when the chance of its type sums above 0, it gives the enemy `Poe1Quantity::EnemyResistance(type)` (`poe1.enemy-resistance.<type>`) `Base` -10, with the check's source, and one more per extra of every type or of that type, with the extra's source. The check alone, without a chance, gives nothing, as in PoB. A check that is not a boolean, or an Elemental Army value outside the list, is a reason.
+- **The hit** (`hit::effective_resistance`) adds the `EnemyResistance` sum to the enemy's base resistance before the maximum, only when there is one, so a hit without exposure keeps its graph.
+- **`exposure::DEPENDS_ON`** holds everything that would make the sum differ from PoB's. These stay reasons: other exposures (skills', "Nearby Enemies have Fire Exposure", Hydrosphere, Wave of Conviction, a flask, at maximum rage, on suppressing), the minimum override, Elemental Equilibrium and its effect, other chances (a gem's or minion's, socketed, devotion, curse-cast, graft), and the fire and lightning "with Fire (Lightning) Damage" chances. PoB reads those two through its generic parser with a `FireHasDamage` condition (`ModParser.lua` 1081 to 1083), not as the cold one's own pattern. The exposure stats P3-12f put in `config::DEPENDS_ON` moved here; the rows are no longer reasons.
+- **The shock** (`poe1::damage_taken`). `SHOCK_STATS` maps the three effect stats to `Poe1Quantity::ShockEffect` (`Increased`, `poe1.shock-effect`) and the minimum to `Poe1Quantity::ShockMinimum` (`Base`, `poe1.shock-minimum`). With the shocked check on, `shock()` computes PoB's value from the configured effect and the unconditional minimums, in order, each times `1 + inc / 100`. No row is `More`, so PoB's rounded more factor is 1, and no enemy modifier gives `SelfShockEffect`. The effect's source is the configured input, or the first minimum's when the minimums are stronger. The shock's other sources are no graph node, a documented gap like the charges' count. `SHOCK_DEPENDS_ON` holds Pure Elementalist's more effect, the Elementalist's "more Effect of Lightning Ailments ... if the highest Damage Type is Lightning" (its `ChecksHighestDamage` flag), conditional effects, the maximum and its override, and stacking shocks.
+- **`NoEffect`**: "Hits always Shock" and "All Damage can Shock" (`ailment-chance`).
+- `collect` now runs `exposure()` and `damage_taken()` after the buffs and the minion redirects, once every source is in. Only the enemy's quantities move, and nothing else reads them.
+- A gem's shock effect or exposure stat stays a reason through the gem mapping, as before. PoB scales a guaranteed shock by the character's `EnemyShockEffect`, not the skill's (without `ChecksHighestDamage`).
+- A maintainer-run test (`tests/exposure_shock.rs`) checks each row's text in the real bundle and that every `DEPENDS_ON` stat exists. It also checks that every stat whose text names exposure, shock, or the effect of lightning or non-damaging ailments is a row, `Unmapped`, or a listed `NoEffect` row. The exposure debuff's own description file is skipped: it words the resistance stats as exposure.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-exposure-witch.xml` | Ice Nova against an enemy exposed to cold and to fire, with a cold exposure chance and the extras -25% (every type), -5% (cold), and -7% (fire). The enemy's cold resistance is 50 - 10 - 25 - 5 = 10; the fire check has no fire chance. Every target equals PoB's |
+| `ice-nova-guaranteed-shock-witch.xml` | Ice Nova against a shocked enemy (10% configured), with a 25% minimum shock, 30% increased effect of lightning ailments, 20% of non-damaging ailments, and "Hits always Shock". The shock is 25 x 1.5 = 37.5, floored to 37. Every target equals PoB's. "All Damage can Shock" is left out: as a custom line it is `only-shadowed` (the game's only description of the stat is shadowed in its file), while passive nodes carry the stat by ID |
+| `smite-exposure-shock-templar.xml` | Smite with a normal Siege Axe against an enemy exposed to lightning and shocked (10%), Elemental Army's type set to lightning (the chance, whatever the skill), an extra -25%, a 25% minimum shock, and 20% increased effect of shock. The lightning damage meets 15% resistance, and the shock is 30. Average damage, crit, hit chance, and unreserved mana equal PoB's. Speed and DPS differ by Q11's floored attack time alone (1000 / 667 against PoB's 1.50, times the same 0.85): DIV-0042 to DIV-0044 (`game-truth`) |
+
+### Review
+
+`code-architecture-reviewer`: no blockers. It checked each PoB site (the gate, the checks, Elemental Army, the exposure and shock arithmetic, the enemy's resistance order in `CalcOffence.lua` 461 to 474, `ShockMinimum` not setting `Condition:Shocked`) and that the 26 stats moved from `config::DEPENDS_ON` are all rows or in `exposure::DEPENDS_ON`. Findings:
+- **The chances are unconditional, looser than the game** ("Cold Skills have ...", "... with Cold Damage"). Kept as PoB reads them, with the reason in the module docs: the check states that the enemy is exposed, and the chance only gates whether the character can expose it at all. Exposure is a debuff on the enemy, so once any of the character's skills applies it, every hit meets it. No value the game gives differs, so there is no divergence entry.
+- Applied: a provenance sentence in `exposure`'s docs (the chance is no graph node); the sign comment on the extras (PoB's `(%-?%d+)` does not parse "+5"; every such stat rolls negative); `config-inputs.md` points to this section.
+- Recorded, not changed: the shared `unconditional` helpers in two modules (`charges` has a third), and further tests (a resistance floor with exposure, a placeholder check). The engine sums the exposure into the same `Resistance` path the floor already reads, and placeholder checks are ignored by the same `last_input` as before.
+
+### Evidence (P3-8k)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout on a clean tree: `local/p3/p3-8k/evidence.sh` at tool commit `8c038c5`. The review's changes after it are comments and docs only. P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8k-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 122 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 122 documents; 1805 complete, 334 partial, 453 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 44 registered differences (DIV-0042 to DIV-0044 new), 0 unexpected; 1773 fields match. **Every mechanic target met: 1771 of 1771 over 85 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8j** (`p3-8k-public-vs-p3-8j.json`, `p3-8k-corpus-poe1-26530219-vs-p3-8j.json`). No field state changes. Values changed in 2 public builds, every one toward PoB's:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Ice Nova Elementalist campaign | average damage | 11642 | 24026 | 142914 |
+| Ice Nova Elementalist campaign | hit DPS | 37255 | 76884 | 563490 |
+| Ice Nova Elementalist mapping | average damage | 62402 | 147034 | 2335701 |
+| Ice Nova Elementalist mapping | hit DPS | 186314 | 439002 | 11486312 |
+
+Both builds remain far below PoB's values because of their other reasons (golems, Arcane Surge, Spell Boost, and the other gems).
+
+Reasons:
+- **Public:** 36 gone in 12 builds, none added. The builds are five Elementalist builds (Ice Nova campaign and mapping, Winter Orb, Lightning Trap, Penance Brand), builds with non-damaging ailment effect or a cold exposure chance, and two builds whose `elementalArmyExposureType` input was a reason.
+- **Corpus:** 15 gone in 8 builds, none added. No value changed.
+
+Tests: 1249 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (10, `tests/exposure_shock.rs` among them).

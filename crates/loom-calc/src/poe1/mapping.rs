@@ -1083,7 +1083,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ),
     // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
     // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
-    // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5290
+    // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
     // on), never for the enemy's shock in the hit, which only the config
     // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
     ("all_damage_can_shock", "ailment-chance"),
