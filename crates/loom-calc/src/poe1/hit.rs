@@ -110,6 +110,7 @@ use loom_domain::{Build, ItemId};
 
 use super::collect;
 use super::enemy::{self, Enemy, EnemyProblem};
+use super::gem_levels::GemLevels;
 use super::phases::{self, Valued};
 use super::skill::{self, MainSkill};
 use super::{Poe1Quantity, WeaponValue};
@@ -328,8 +329,12 @@ impl<'d> HitSkill<'d> {
 /// The build's main skill when the engine computes its hit as a self-cast
 /// spell (module docs), else `None`.
 #[must_use]
-pub fn spell_skill<'d>(build: &Build, data: &'d dyn CalcData) -> Option<SpellSkill<'d>> {
-    let skill = skill::main_skill(build, data).ok()?;
+pub fn spell_skill<'d>(
+    build: &Build,
+    data: &'d dyn CalcData,
+    levels: &GemLevels,
+) -> Option<SpellSkill<'d>> {
+    let skill = skill::main_skill(build, data, levels).ok()?;
     let group = skill.group.checked_sub(1)?;
     if !skill::active_groups(build).ok()?.get(group)?.enabled {
         return None;
@@ -369,9 +374,9 @@ fn is_area_damage(skill: &MainSkill<'_>, data: &dyn CalcData) -> bool {
 /// The build's main skill when the engine computes its hit as an attack
 /// with the weapon in the main hand (module docs), else `None`.
 #[must_use]
-pub fn attack_skill<'d>(input: &CalcInput<'d>) -> Option<AttackSkill<'d>> {
+pub fn attack_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<AttackSkill<'d>> {
     let (build, data) = (input.build, input.data);
-    let skill = skill::main_skill(build, data).ok()?;
+    let skill = skill::main_skill(build, data, levels).ok()?;
     let group = skill.group.checked_sub(1)?;
     let groups = skill::active_groups(build).ok()?;
     let main_group = groups.get(group)?;
@@ -441,12 +446,13 @@ pub fn attack_skill<'d>(input: &CalcInput<'d>) -> Option<AttackSkill<'d>> {
 }
 
 /// The main skill's hit the engine computes: a self-cast spell, else an
-/// attack (module docs).
+/// attack (module docs), its gems at the levels `levels` gives them
+/// (P3-8i).
 #[must_use]
-pub fn hit_skill<'d>(input: &CalcInput<'d>) -> Option<HitSkill<'d>> {
-    spell_skill(input.build, input.data)
+pub fn hit_skill<'d>(input: &CalcInput<'d>, levels: &GemLevels) -> Option<HitSkill<'d>> {
+    spell_skill(input.build, input.data, levels)
         .map(HitSkill::Spell)
-        .or_else(|| attack_skill(input).map(HitSkill::Attack))
+        .or_else(|| attack_skill(input, levels).map(HitSkill::Attack))
 }
 
 /// A leaf with the value of the skill (or the character) itself.
@@ -695,7 +701,10 @@ fn more(
 /// A graph error.
 pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
-    match hit_skill(&input) {
+    // The gem level modifiers as `collect` read them: every effect is in
+    // the store by now.
+    let levels = GemLevels::from_effects(calc.store().effects());
+    match hit_skill(&input, &levels) {
         None => Ok(()),
         Some(HitSkill::Spell(spell)) => spell_hit(calc, &spell),
         Some(HitSkill::Attack(attack)) => attack_hit(calc, &attack),

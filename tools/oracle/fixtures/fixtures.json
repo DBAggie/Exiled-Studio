@@ -1141,6 +1141,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "smite-templar.xml with custom lines that name a skill keyword: crit chance and multiplier with lightning skills (applied) and cold skills (not), cast speed with lightning skills (not: an attack), physical and lightning damage with attack skills (applied), fire damage with attack skills (no fire damage), lightning damage with spell skills (not) (P3-8h)."
+    },
+    {
+      "id": "ice-nova-gem-levels-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-gem-levels-witch.xml",
+      "sha256": "8ebe3f63b89a549ec7f10436f97104279f1f1c306c9afcfda4dc53fd15eef5d5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Strikes and Added Cold Damage, Herald of Ice in another group, and custom lines that raise the levels of cold, spell, herald, and fire skill gems and of critical and non-exceptional support gems: each gem gains the lines its tags match (P3-8i)."
+    },
+    {
+      "id": "smite-gem-levels-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-gem-levels-templar.xml",
+      "sha256": "b5c23d7211725c914d5e50632c051b7b07a96023365533b9ebfffc1f1d83c770",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Melee Physical Damage and a normal Siege Axe, Precision in another group, and custom lines that raise the levels of strength, aura, dexterity, melee, and physical skill gems and of non-exceptional support gems: each gem gains the lines its tags match (P3-8i)."
     }
   ]
 }

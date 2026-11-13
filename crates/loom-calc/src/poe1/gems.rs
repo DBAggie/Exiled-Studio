@@ -44,10 +44,13 @@
 //! Any other support applied to it is `unmodelled-gem`; a support that
 //! applies to no active skill of its group does nothing (as in PoB).
 //!
-//! Buff and aura effect, reservation modifiers and efficiency, gem level
-//! and quality modifiers are stats the mapping does not know ([`DEPENDS_ON`]
-//! must stay unmapped: a test), so they are reasons, and the effect of a
-//! buff here is its stat's value unscaled. A gem's quality from a socket of
+//! Buff and aura effect, reservation modifiers and efficiency, gem quality
+//! modifiers, and gem levels that depend on the socket are stats the
+//! mapping does not know ([`DEPENDS_ON`] must stay unmapped: a test), so
+//! they are reasons, and the effect of a buff here is its stat's value
+//! unscaled. Global gem levels ("+1 to Level of all Cold Skill Gems") are
+//! in each gem's level ([`super::gem_levels`], P3-8i), so a buff's stats
+//! and a skill's reservation are those of its raised level, as in PoB. A gem's quality from a socket of
 //! its colour is in its instance's quality ([`sockets`], P3-12i); a gem of
 //! a buff or of the main skill whose match is not known is
 //! `unmodelled-skill` `socket-colour-quality` (an inert skill's quality
@@ -57,6 +60,7 @@ use std::collections::BTreeMap;
 
 use loom_domain::Build;
 
+use super::gem_levels::GemLevels;
 use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
 use super::sockets;
@@ -399,7 +403,10 @@ pub const DEPENDS_ON: &[&str] = &[
 
 /// Words no mapped or `NoEffect` stat ID may hold while this module adds
 /// buffs unscaled and reservation without modifiers (a test): a skill's
-/// own effect and reservation stats, and gem levels and quality.
+/// own effect and reservation stats, and gem levels and quality. The
+/// global gem level stats are not rows: [`super::gem_levels`] maps them,
+/// and every gem here takes their levels (P3-8i); a gem level that
+/// depends on the socket stays unmapped.
 pub const GUARDED_WORDS: &[&str] = &[
     "aura_effect",
     "buff_effect",
@@ -516,13 +523,18 @@ type Merged = BTreeMap<(&'static str, &'static str), (i64, Source, &'static [Hit
 /// Adds the other gems' reservation and buffs, and their reasons (module
 /// docs). `main` is the main skill's group (0-based) and active effect
 /// when the engine computes its hit, which acts through its own path.
-pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest: &mut Ingest<'_>) {
+pub fn gems(
+    input: &CalcInput<'_>,
+    main: Option<(usize, &MainSkill<'_>)>,
+    levels: &GemLevels,
+    ingest: &mut Ingest<'_>,
+) {
     let build = input.build;
     let Ok(groups) = skill::active_groups(build) else {
         // No typed set: nothing; an untyped group is a reason of `collect`.
         return;
     };
-    let main_group = skill::main_skill(build, input.data)
+    let main_group = skill::main_skill(build, input.data, levels)
         .ok()
         .map(|m| m.group - 1);
     let matches = sockets::socket_matches(build, &groups, input.data);
@@ -547,7 +559,7 @@ pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest
             continue;
         }
         let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
-        let skills = match skill::group_skills(group, group_matches, input.data) {
+        let skills = match skill::group_skills(group, group_matches, input.data, levels) {
             Ok(s) => s,
             Err(_) => {
                 // A gem the data does not have: every enabled gem of the

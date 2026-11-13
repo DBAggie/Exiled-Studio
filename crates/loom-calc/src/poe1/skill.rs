@@ -42,8 +42,9 @@
 //!
 //! **A gem instance's stats** (`Modules/CalcTools.lua`,
 //! `calcLib.validateGemLevel` and `calcLib.buildSkillInstanceStats`): the
-//! level is the gem's, kept when the effect has that level, else clamped
-//! to `1..=#levels`; the stats are the quality stats (`modf(per 1% x
+//! level is the gem's plus the build's global gem level modifiers its
+//! tags match ([`super::gem_levels`], P3-8i: PoB's `applyGemMods`), kept
+//! when the effect has that level, else clamped to `1..=#levels`; the stats are the quality stats (`modf(per 1% x
 //! quality)`), the level's integer stats, and the stat set's constant
 //! stats, summed per stat, with the stat set's implicit stats as 1 each
 //! (PoB's `level[index] or 1`); only the first stat set counts, as PoB's
@@ -58,9 +59,12 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{Attributes, Build, Gem, SocketGroup};
 
+use super::gem_levels::GemLevels;
 use super::sockets::{SocketMatch, socket_matches};
 use crate::condition::Flags;
-use crate::input::{ActiveSkill, CalcData, EffectLevel, GrantedEffect, StatSet, StatSetLevel};
+use crate::input::{
+    ActiveSkill, CalcData, EffectLevel, GemEffect, GrantedEffect, StatSet, StatSetLevel,
+};
 use crate::quantity::DamageType;
 
 /// Why a build has no main skill the engine can name.
@@ -98,16 +102,20 @@ impl SkillProblem {
     }
 }
 
-/// One granted effect of a gem in the main group, with the gem's level
-/// and quality as the build writes them.
+/// One granted effect of a gem in a group, with the gem's level and
+/// quality as PoB uses them.
 #[derive(Debug, Clone, Copy)]
 pub struct GemEffectRef<'d> {
     /// The gem's position among the group's typed gems (0-based).
     pub gem: usize,
     /// The granted effect.
     pub effect: &'d GrantedEffect,
-    /// The gem's level.
+    /// The instance's level: the gem's, plus [`GemEffectRef::bonus`]
+    /// (PoB's `level` after `applyGemMods`).
     pub level: i64,
+    /// The levels the build's gem level modifiers add (P3-8i,
+    /// [`super::gem_levels`]).
+    pub bonus: i64,
     /// The instance's quality: the gem's, plus
     /// [`super::sockets::BONUS`] when it sits in a socket of its colour
     /// (PoB's `actualQuality`, P3-12i).
@@ -214,9 +222,20 @@ pub fn active_groups(build: &Build) -> Result<Vec<&SocketGroup>, SkillProblem> {
 /// additional ones), or `None` when the data does not have the gem.
 #[must_use]
 pub fn gem_effects<'d>(gem: &Gem, data: &'d dyn CalcData) -> Option<Vec<&'d GrantedEffect>> {
+    gem_variant(gem, data).map(|(_, effects)| effects)
+}
+
+/// [`gem_effects`] with the gem effect (the variant) the gem names: PoB's
+/// `gemData`, whose tags gem level modifiers match. A skill an item grants
+/// (no `gemId`) has none (P3-8i, [`super::gem_levels`]).
+#[must_use]
+pub fn gem_variant<'d>(
+    gem: &Gem,
+    data: &'d dyn CalcData,
+) -> Option<(Option<&'d GemEffect>, Vec<&'d GrantedEffect>)> {
     let skill = gem.skill.as_ref().map(loom_domain::SkillId::as_str);
     let Some(gem_id) = &gem.gem else {
-        return Some(vec![data.granted_effect(skill?)?]);
+        return Some((None, vec![data.granted_effect(skill?)?]));
     };
     let row = data.skill_gem(gem_id.as_str())?;
     let variant = attribute(&gem.attributes, "variantId");
@@ -236,7 +255,7 @@ pub fn gem_effects<'d>(gem: &Gem, data: &'d dyn CalcData) -> Option<Vec<&'d Gran
     {
         out.push(data.granted_effect(id.as_str())?);
     }
-    Some(out)
+    Some((Some(effect), out))
 }
 
 /// Whether PoB counts the gem's `n`-th effect (1-based) as enabled for a
@@ -338,13 +357,66 @@ fn choose<'d>(actives: &[Candidate<'d>], wanted: usize) -> Result<Candidate<'d>,
     first.ok_or(SkillProblem::NoActiveSkill)
 }
 
-/// The build's main skill (module docs).
+/// A group's enabled gems' granted effects in PoB's order: the active ones
+/// (with whether they come from a gem and whether PoB counts them only
+/// without a global effect) and the supports. Each takes its gem's level
+/// plus the levels `levels` gives the gem's tags (P3-8i: PoB's
+/// `applyGemMods`, for actives and supports alike), and its gem's quality
+/// plus its socket colour bonus.
+///
+/// # Errors
+/// [`SkillProblem::UnknownGem`].
+fn group_effects<'d>(
+    group: &SocketGroup,
+    matches: &[SocketMatch],
+    data: &'d dyn CalcData,
+    levels: &GemLevels,
+) -> Result<(Vec<Candidate<'d>>, Vec<GemEffectRef<'d>>), SkillProblem> {
+    let mut actives: Vec<Candidate<'d>> = Vec::new();
+    let mut supports: Vec<GemEffectRef<'d>> = Vec::new();
+    for (g, gem) in group.gems.typed().enumerate() {
+        if !gem.enabled {
+            continue;
+        }
+        let (variant, effects) =
+            gem_variant(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
+                gem: gem
+                    .gem
+                    .as_ref()
+                    .map(|g| g.as_str().to_owned())
+                    .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
+                    .unwrap_or_default(),
+            })?;
+        let bonus = levels.bonus(variant.map(|v| v.tags.as_slice()));
+        for (n, effect) in effects.into_iter().enumerate() {
+            let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
+            let r = GemEffectRef {
+                gem: g,
+                effect,
+                level: i64::from(*gem.level.value()) + bonus,
+                bonus,
+                quality: i64::from(*gem.quality.value()) + socket.bonus(),
+                socket,
+            };
+            if effect.support {
+                supports.push(r);
+            } else {
+                actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
+            }
+        }
+    }
+    Ok((actives, supports))
+}
+
+/// The build's main skill (module docs), its gems at the levels `levels`
+/// gives them.
 ///
 /// # Errors
 /// A [`SkillProblem`] when the build has no main skill the engine can name.
 pub fn main_skill<'d>(
     build: &Build,
     data: &'d dyn CalcData,
+    levels: &GemLevels,
 ) -> Result<MainSkill<'d>, SkillProblem> {
     let groups = active_groups(build)?;
     let count = groups.len().max(1);
@@ -358,36 +430,7 @@ pub fn main_skill<'d>(
     let all = socket_matches(build, &groups, data);
     let matches: &[SocketMatch] = all.get(index - 1).map_or(&[], Vec::as_slice);
 
-    let mut actives: Vec<Candidate<'d>> = Vec::new();
-    let mut group_supports: Vec<GemEffectRef<'d>> = Vec::new();
-    for (g, gem) in group.gems.typed().enumerate() {
-        if !gem.enabled {
-            continue;
-        }
-        let effects = gem_effects(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
-            gem: gem
-                .gem
-                .as_ref()
-                .map(|g| g.as_str().to_owned())
-                .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
-                .unwrap_or_default(),
-        })?;
-        for (n, effect) in effects.into_iter().enumerate() {
-            let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
-            let r = GemEffectRef {
-                gem: g,
-                effect,
-                level: i64::from(*gem.level.value()),
-                quality: i64::from(*gem.quality.value()) + socket.bonus(),
-                socket,
-            };
-            if effect.support {
-                group_supports.push(r);
-            } else {
-                actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
-            }
-        }
-    }
+    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
     let wanted = group
         .main_active_skill
         .as_ref()
@@ -460,37 +503,9 @@ pub fn group_skills<'d>(
     group: &SocketGroup,
     matches: &[SocketMatch],
     data: &'d dyn CalcData,
+    levels: &GemLevels,
 ) -> Result<Vec<GroupSkill<'d>>, SkillProblem> {
-    let mut actives: Vec<Candidate<'d>> = Vec::new();
-    let mut group_supports: Vec<GemEffectRef<'d>> = Vec::new();
-    for (g, gem) in group.gems.typed().enumerate() {
-        if !gem.enabled {
-            continue;
-        }
-        let effects = gem_effects(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
-            gem: gem
-                .gem
-                .as_ref()
-                .map(|g| g.as_str().to_owned())
-                .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
-                .unwrap_or_default(),
-        })?;
-        for (n, effect) in effects.into_iter().enumerate() {
-            let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
-            let r = GemEffectRef {
-                gem: g,
-                effect,
-                level: i64::from(*gem.level.value()),
-                quality: i64::from(*gem.quality.value()) + socket.bonus(),
-                socket,
-            };
-            if effect.support {
-                group_supports.push(r);
-            } else {
-                actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
-            }
-        }
-    }
+    let (actives, group_supports) = group_effects(group, matches, data, levels)?;
     let mut out = Vec::new();
     for (active_gem, _, global_off) in &actives {
         let effect = active_gem.effect;
@@ -711,11 +726,11 @@ fn set_stats(
 }
 
 /// The main skill's gem instances: the active effect's, then each applied
-/// support's, at its gem's level and quality as the build writes them.
-/// Not modelled yet: modifiers that raise gem levels or quality ("+1 to
-/// Level of all Cold Skill Gems", PoB's `GemLevel`/`GemSupportLevel`
-/// mods); their stats are unmapped, so the fields that read the skill are
-/// `Partial` while they are in the build.
+/// support's, at its [`GemEffectRef`] level and quality. Global gem level
+/// modifiers are in that level (P3-8i); gem quality modifiers and those
+/// that depend on the socket are not modelled: their stats are unmapped,
+/// so the fields that read the skill are `Partial` while they are in the
+/// build.
 #[must_use]
 pub fn instances<'d>(skill: &MainSkill<'d>, data: &'d dyn CalcData) -> Vec<Instance<'d>> {
     std::iter::once(&skill.active_gem)

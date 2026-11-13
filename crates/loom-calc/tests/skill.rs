@@ -8,15 +8,17 @@ use common::bundle;
 use loom_calc::CalcData;
 use std::collections::BTreeSet;
 
-use loom_calc::Flags;
+use loom_calc::poe1::Poe1Mapping;
+use loom_calc::poe1::gem_levels::{GemLevels, LEVEL_STATS};
 use loom_calc::poe1::skill::{
-    InstanceProblem, KEYWORD_TYPES, SkillProblem, instance, instances, keyword_flags, main_skill,
-    type_expression,
+    InstanceProblem, KEYWORD_TYPES, SkillProblem, group_skills, instance, instances, keyword_flags,
+    main_skill, type_expression,
 };
+use loom_calc::{Conditions, Effect, Flags, Source, StatMap, StatMapping};
 use loom_data::bundle::skills::{LevelStat, QualityStat};
 use loom_domain::{
     Attribute, Build, Game, Gem, GemId, Ordered, SkillId, SkillSet, SkillSetId, SocketGroup,
-    Sourced,
+    Sourced, StatId,
 };
 
 fn gem(gem_id: Option<&str>, skill: &str, level: u32, quality: i32) -> Gem {
@@ -77,7 +79,7 @@ fn the_main_skill_should_be_the_main_groups_active_gem_with_its_supports() {
         vec![group(vec![support()]), group(vec![support(), bolt(2, 0)])],
         2,
     );
-    let m = main_skill(&b, &data).unwrap();
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
     assert_eq!(m.group, 2);
     assert_eq!(m.effect().id, "TestBolt");
     assert_eq!(m.active_gem.gem, 1, "the gem's place in the group");
@@ -117,9 +119,13 @@ fn keyword_flags_should_follow_the_skills_types() {
 #[test]
 fn a_type_a_support_adds_should_give_its_keyword() {
     let mut data = bundle();
-    let base = main_skill(&build(vec![group(vec![bolt(1, 0), support()])], 1), &data)
-        .unwrap()
-        .keyword_flags();
+    let base = main_skill(
+        &build(vec![group(vec![bolt(1, 0), support()])], 1),
+        &data,
+        &GemLevels::none(),
+    )
+    .unwrap()
+    .keyword_flags();
     assert_eq!(base, Flags::NONE);
     let skills = data.skills.as_mut().unwrap();
     for e in &mut skills.granted_effects {
@@ -127,7 +133,12 @@ fn a_type_a_support_adds_should_give_its_keyword() {
             e.added_types = vec!["Cold".to_owned()];
         }
     }
-    let m = main_skill(&build(vec![group(vec![bolt(1, 0), support()])], 1), &data).unwrap();
+    let m = main_skill(
+        &build(vec![group(vec![bolt(1, 0), support()])], 1),
+        &data,
+        &GemLevels::none(),
+    )
+    .unwrap();
     assert!(m.types.contains("Cold"));
     assert_eq!(m.keyword_flags(), Flags::SKILL_COLD);
 }
@@ -137,23 +148,28 @@ fn the_main_group_should_be_clamped_and_a_missing_gem_named() {
     let data = bundle();
     // mainSocketGroup 9 of 1 group: the last.
     let b = build(vec![group(vec![bolt(1, 0)])], 9);
-    assert_eq!(main_skill(&b, &data).unwrap().group, 1);
+    assert_eq!(main_skill(&b, &data, &GemLevels::none()).unwrap().group, 1);
     let b = build(
         vec![group(vec![gem(Some("Test/Gems/Nothing"), "Nothing", 1, 0)])],
         1,
     );
     assert_eq!(
-        main_skill(&b, &data).unwrap_err(),
+        main_skill(&b, &data, &GemLevels::none()).unwrap_err(),
         SkillProblem::UnknownGem {
             gem: "Test/Gems/Nothing".to_owned()
         }
     );
     assert_eq!(
-        main_skill(&build(vec![group(vec![support()])], 1), &data).unwrap_err(),
+        main_skill(
+            &build(vec![group(vec![support()])], 1),
+            &data,
+            &GemLevels::none()
+        )
+        .unwrap_err(),
         SkillProblem::NoActiveSkill
     );
     assert_eq!(
-        main_skill(&Build::new(Game::Poe1), &data).unwrap_err(),
+        main_skill(&Build::new(Game::Poe1), &data, &GemLevels::none()).unwrap_err(),
         SkillProblem::NoSkillSet
     );
 }
@@ -164,7 +180,7 @@ fn an_item_granted_skill_should_be_found_by_its_skill_id() {
     let mut g = group(vec![gem(None, "TestStrike", 1, 0), support()]);
     g.attributes
         .push(Attribute::new("source", "Item:1:Test Ring"));
-    let m = main_skill(&build(vec![g], 1), &data).unwrap();
+    let m = main_skill(&build(vec![g], 1), &data, &GemLevels::none()).unwrap();
     assert_eq!(m.effect().id, "TestStrike");
     assert!(m.item_granted);
     // The support is not gems-only and allows attacks: it applies.
@@ -292,7 +308,7 @@ fn interpolated_level_stats_and_missing_stat_sets_should_be_problems() {
 fn the_main_skills_instances_should_use_each_gems_level_and_quality() {
     let data = bundle();
     let b = build(vec![group(vec![bolt(2, 20), support()])], 1);
-    let m = main_skill(&b, &data).unwrap();
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
     assert_eq!((m.active_gem.level, m.active_gem.quality), (2, 20));
     let is = instances(&m, &data);
     assert_eq!(is.len(), 2);
@@ -301,6 +317,115 @@ fn the_main_skills_instances_should_use_each_gems_level_and_quality() {
         ("TestBolt", Some(2), 20)
     );
     assert_eq!(is[1].effect.id.as_str(), "SupportTestDamage");
+}
+
+/// Gem level totals as the PoE1 mapping turns `stats` into effects
+/// (P3-8i).
+fn levels(stats: &[(&str, f64)]) -> GemLevels {
+    let mut effects = Vec::new();
+    for (stat, value) in stats {
+        let StatMap::Effects(templates) = Poe1Mapping.map(&StatId::new(*stat)) else {
+            panic!("{stat} is not mapped");
+        };
+        for t in templates {
+            assert_eq!(t.conditions, Conditions::none(), "{stat}");
+            effects.push(Effect {
+                quantity: t.quantity,
+                op: t.op,
+                value: value * t.scale / t.divisor,
+                conditions: t.conditions,
+                source: Source::Rule("test"),
+            });
+        }
+    }
+    GemLevels::from_effects(&effects)
+}
+
+/// The synthetic bundle with real gem tags: Test Bolt a cold spell skill
+/// gem, the support a critical support gem.
+fn tagged() -> loom_data::bundle::Bundle {
+    let mut data = bundle();
+    let tags = |t: &[&str]| t.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+    let effects = data
+        .skills
+        .as_mut()
+        .map_or(&mut [][..], |s| &mut s.gem_effects[..]);
+    assert!(!effects.is_empty());
+    for e in effects {
+        e.tags = match e.id.as_str() {
+            "TestBolt" => tags(&["intelligence", "grants_active_skill", "spell", "cold"]),
+            _ => tags(&["support", "critical", "intelligence"]),
+        };
+    }
+    data
+}
+
+/// PoB's `applyGemMods` (P3-8i): every gem whose tags match a line's
+/// keywords gains its levels, an active gem and a support alike; the level
+/// is then clamped only where the gem's rows are read.
+#[test]
+fn gem_level_modifiers_should_raise_the_gems_they_match() {
+    let data = tagged();
+    let all = levels(&[
+        ("cold_skill_gem_level_+", 1.0),
+        ("spell_skill_gem_level_+", 1.0),
+        ("fire_skill_gem_level_+", 4.0),
+        ("critical_support_gem_level_+", 2.0),
+        ("minion_skill_gem_level_+", 3.0),
+    ]);
+    let b = build(vec![group(vec![bolt(1, 0), support()])], 1);
+    let m = main_skill(&b, &data, &all).unwrap();
+    assert_eq!((m.active_gem.level, m.active_gem.bonus), (3, 2));
+    assert_eq!((m.supports[0].level, m.supports[0].bonus), (3, 2));
+    // Test Bolt has levels 1 and 2: its instance clamps 3 to 2, as
+    // `calcLib.validateGemLevel` does.
+    let is = instances(&m, &data);
+    assert_eq!(is[0].level, Some(2));
+    assert_eq!(is[1].level, Some(1));
+    // The same totals reach every group's gems.
+    let skills = group_skills(
+        b.skills
+            .sets
+            .typed()
+            .next()
+            .unwrap()
+            .groups
+            .typed()
+            .next()
+            .unwrap(),
+        &[],
+        &data,
+        &all,
+    )
+    .unwrap();
+    assert_eq!(skills[0].active_gem.level, 3);
+    assert_eq!(skills[0].supports[0].level, 3);
+    // Without modifiers, the levels the build writes.
+    let m = main_skill(&b, &data, &GemLevels::none()).unwrap();
+    assert_eq!((m.active_gem.level, m.active_gem.bonus), (1, 0));
+    // A negative total lowers the level.
+    let m = main_skill(&b, &data, &levels(&[("all_skill_gem_level_+", -1.0)])).unwrap();
+    assert_eq!(m.active_gem.level, 0);
+    assert_eq!(instances(&m, &data)[0].level, Some(1));
+}
+
+/// A skill an item grants (only `skillId`) has no gem in PoB
+/// (`data.gemForSkill` is keyed by the granted effect's table), so it gains
+/// no level (P3-8i).
+#[test]
+fn an_item_granted_skill_should_gain_no_gem_levels() {
+    let data = tagged();
+    let mut g = group(vec![gem(None, "TestStrike", 1, 0), support()]);
+    g.attributes
+        .push(Attribute::new("source", "Item:1:Test Ring"));
+    let all = levels(&[
+        ("all_skill_gem_level_+", 2.0),
+        ("critical_support_gem_level_+", 1.0),
+    ]);
+    let m = main_skill(&build(vec![g], 1), &data, &all).unwrap();
+    assert_eq!((m.active_gem.level, m.active_gem.bonus), (1, 0));
+    // The support is a gem: it gains its level.
+    assert_eq!(m.supports[0].level, 2);
 }
 
 #[test]
@@ -437,5 +562,64 @@ fn real_gems_should_have_pobs_colours() {
         ("SupportMeleePhysicalDamage", 1),
     ] {
         assert_eq!(colour(id), Some(c), "{id}");
+    }
+}
+
+/// Each gem level row's keywords are the words of the stat's English
+/// description between "Level of all" and "Gems", lower-cased, as PoB's
+/// `"([%+%-]%d+)%%? to (%a+) of all (.+) gems"` reads them (P3-8i), and
+/// every keyword names a real gem tag or one of `calcLib.gemIsType`'s
+/// words. Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_gem_level_stats_should_have_pobs_keywords() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let texts: Vec<(&str, &str)> = data
+        .stat_descriptions
+        .files()
+        .flat_map(|(_, f)| &f.descriptions)
+        .filter(|d| d.stats.len() == 1)
+        .flat_map(|d| {
+            d.variants
+                .iter()
+                .map(move |v| (d.stats[0].as_str(), v.text.as_str()))
+        })
+        .collect();
+    let tags: BTreeSet<&str> = data
+        .skills
+        .as_ref()
+        .unwrap()
+        .gem_tags
+        .iter()
+        .map(|t| t.id.as_str())
+        .collect();
+    for (stat, words) in LEVEL_STATS {
+        let found: BTreeSet<Vec<String>> = texts
+            .iter()
+            .filter(|(s, _)| *s == stat)
+            .map(|(_, text)| {
+                let rest = text
+                    .split_once(" to Level of all ")
+                    .unwrap_or_else(|| panic!("{stat}: {text}"))
+                    .1;
+                let phrase = rest
+                    .strip_suffix(" Gems")
+                    .unwrap_or_else(|| panic!("{stat}: {text}"));
+                phrase.split(' ').map(str::to_lowercase).collect()
+            })
+            .collect();
+        let want: Vec<String> = words.iter().map(|w| (*w).to_owned()).collect();
+        assert_eq!(found, BTreeSet::from([want]), "{stat}");
+        for w in words {
+            assert!(
+                tags.contains(w) || ["skill", "non-exceptional"].contains(w),
+                "{stat}: {w}"
+            );
+        }
     }
 }

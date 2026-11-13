@@ -19,6 +19,7 @@ pub mod collect;
 pub mod config;
 pub mod damage_taken;
 pub mod enemy;
+pub mod gem_levels;
 pub mod gems;
 pub mod hit;
 pub mod mapping;
@@ -96,6 +97,10 @@ pub enum Poe1Quantity {
     /// effect per reserving skill, its value PoB's per-skill amount
     /// (`CalcPerform.lua` 1975 to 1989), summed by the unreserved phase.
     Reservation(Pool, ReservationKind),
+    /// A global gem level stat of [`gem_levels::LEVEL_STATS`], by stat ID
+    /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
+    /// skills are set up, as PoB reads its `GemProperty` modifiers.
+    GemLevel(&'static str),
 }
 
 /// A pool a skill reserves.
@@ -200,6 +205,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::Onslaught => f.write_str("onslaught"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
+            Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
             Self::Reservation(pool, kind) => {
                 write!(f, "reservation.{}.{}", pool.name(), kind.name())
             }

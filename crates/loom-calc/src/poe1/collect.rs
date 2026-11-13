@@ -46,6 +46,7 @@ use loom_domain::{
     ItemId, ItemSet, LineKind, NodeId, PassiveSpec, StatId, StatLine, StatValue,
 };
 
+use super::gem_levels::GemLevels;
 use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
 use super::skill::{self, InstanceProblem};
 use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, hit};
@@ -91,8 +92,10 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
-    gems(input, ingest);
     config(build, ingest);
+    // After every source of gem level modifiers (P3-8i): PoB reads its
+    // `GemProperty` modifiers once the passives, items, and config are in.
+    gems(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
     super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
     super::buffs::buffs(active_config(build), ingest);
@@ -1051,14 +1054,20 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         }
         return;
     }
-    let hit = hit::hit_skill(input);
+    let levels = GemLevels::from_effects(ingest.effects());
+    let hit = hit::hit_skill(input, &levels);
     let modelled: Vec<_> = hit.as_ref().map_or_else(Vec::new, |h| {
         std::iter::once(&h.skill().active_gem)
             .chain(&h.skill().supports)
             .copied()
             .collect()
     });
-    super::gems::gems(input, hit.as_ref().map(|h| (h.group(), h.skill())), ingest);
+    super::gems::gems(
+        input,
+        hit.as_ref().map(|h| (h.group(), h.skill())),
+        &levels,
+        ingest,
+    );
     let Some(hit) = hit else { return };
     for r in modelled {
         let source = Source::Gem {
