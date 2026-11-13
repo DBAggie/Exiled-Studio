@@ -318,7 +318,7 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 - **A flag quantity, read once:** `Poe1Quantity::Onslaught`; `poe1::buffs` reads it after every other source (`Ingest::effects`), so any number of sources give Onslaught once, as PoB's flag.
 - **Not done:** marking a rule-taken reading as `adapted` (a domain change).
 
-## Decisions in the Phase 3 close-out (branch `feat/p3-close-out`; one PR at the maintainer's request 2026-11-13; report `docs/phase-3/phase-3-report.md`)
+## Decisions in the Phase 3 close-out (PR #104, branch `feat/p3-close-out`; one PR at the maintainer's request 2026-11-13; report `docs/phase-3/phase-3-report.md`)
 - **Q13: option (b), and PoB-only custom lines applied** (maintainer 2026-11-13): ADR-015 Amendment 2 (`custom-note`, `custom-pattern`, `loom_parser::import::poe1::custom`); `loom-parity-cli custom-lines` checks both against PoB's own parse of every fixture line (`tools/oracle/data/pob_parse_lines.lua`; `docs/phase-3/custom-lines.md`).
 - **The gate builds' other gems** (`docs/phase-3/other-gems.md`, "Phase 3 close-out"): every gem the 7 reach is modelled or inert with PoB's reason; two general rules changed (supports' global effects on inert skills; a buff's more multiplier is the character's, grouped by the main skill's own sources).
 - **Items:** an item in several slots counts in each (as PoB); abyssal sockets by the parent's count.

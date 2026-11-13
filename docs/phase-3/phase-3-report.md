@@ -1,6 +1,6 @@
 # Phase 3 report: calc slice
 
-Phase 3 of `docs/plan/ACTION-PLAN.md` ("Calc slice"), planned in `dev/completed/phase-3-calc-slice/` (plan, context, tasks; plan PR #59). Report written 2026-11-13 in the Phase 3 close-out PR (P3-14 and P3-15, with the last of P3-8 and P3-12, in one PR at the maintainer's request).
+Phase 3 of `docs/plan/ACTION-PLAN.md` ("Calc slice"), planned in `dev/completed/phase-3-calc-slice/` (plan, context, tasks; plan PR #59). Report written 2026-11-13 in the Phase 3 close-out PR (#104; P3-14 and P3-15, with the last of P3-8 and P3-12, in one PR at the maintainer's request).
 
 **Verdict: the gate is met.** Every gate item below holds on the recorded inputs (section 2). The 7 in-scope builds of the two chosen skills (Ice Nova: 3, Smite: 4) have every computed slice field `Complete`; their only differences from PoB are 20 registered entries, all one cause: the game floors a weapon's attack time to whole milliseconds and PoB does not (Q11, confirmed in game 2026-11-12). Items 4, 5, and 6 run in CI on every PR; items 1, 2, and 3 need the real game data, which stays local (Q1), so the maintainer runs them and the summaries are committed (`docs/phase-3/phase-3-report/`). The maintainer confirms the verdict by merging the PR.
 
