@@ -991,6 +991,46 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "smite-templar.xml against an intimidated, blinded, unnerved enemy: Intimidate's 10% increased attack damage taken, Blind's 20% less evasion in the chance to hit; Unnerve (spells) changes nothing on an attack; ten inputs that only set names modifiers read (P3-12g)."
+    },
+    {
+      "id": "smite-other-gems-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-other-gems-templar.xml",
+      "sha256": "6dc8edaa20b74869165c33a6b1bb8f4737ab42e5c6c4279f69012349f8882b3c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml on a Karui Maul with the other gems of an act 1 Smite setup: inert skills and supports (Ground Slam with Chance to Bleed and Ruthless, Frostblink, Leap Slam with Faster Attacks, Holy Flame Totem with Summon Phantasm), Precision and Clarity at level 2 (accuracy, increased critical strike chance, flat mana reservation), and a level 1 Precision whose buff the level 2 one outvalues (P3-12h)."
+    },
+    {
+      "id": "smite-blood-rage-haste-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-blood-rage-haste-templar.xml",
+      "sha256": "f84b2e68018cb1b08c9b4db27ac721848caaf34b435dc5373c018c2a9aabd02e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml on a Karui Maul with Blood Rage (increased attack speed), Haste (increased attack speed, 50% of mana reserved), Arctic Armour (its reservation; its effects reach no slice field), and a Haste with enableGlobal1 off that PoB does not create (P3-12h)."
+    },
+    {
+      "id": "ice-nova-zealotry-discipline-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-zealotry-discipline-witch.xml",
+      "sha256": "a3c0822700923f8d46aac4d936e9a5a050fe0a51b17a96cd2c1e7ad74841a254",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Zealotry (more spell damage, increased spell critical strike chance) and Discipline (energy shield), each reserving a percentage of mana (P3-12h)."
+    },
+    {
+      "id": "ice-nova-herald-of-ice-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-herald-of-ice-witch.xml",
+      "sha256": "d51515960fb1a4635afba54a34a02365424eaff63f1f769a58264838479b40de",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Herald of Ice twice: level 20 linked to Increased Critical Strikes (a cost multiplier on a percent reservation) and level 5 alone; the buff keeps the larger added cold damage, both reserve (P3-12h)."
     }
   ]
 }

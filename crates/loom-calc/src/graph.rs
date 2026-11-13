@@ -122,6 +122,14 @@ pub enum Node {
         /// The input.
         of: NodeIndex,
     },
+    /// [`math::ceil`]: rounded up (PoB's `m_ceil`; P3-12h, a percent
+    /// reservation).
+    Ceil {
+        /// The breakdown term.
+        term: Term,
+        /// The input.
+        of: NodeIndex,
+    },
     /// `a - b` (one IEEE subtraction).
     Difference {
         /// The breakdown term.
@@ -182,7 +190,8 @@ impl Node {
             Self::PercentFactor { of, .. }
             | Self::Floor { of, .. }
             | Self::RoundHalfUp { of, .. }
-            | Self::Trunc { of, .. } => {
+            | Self::Trunc { of, .. }
+            | Self::Ceil { of, .. } => {
                 vec![*of]
             }
             Self::Override { by, replaced } => vec![*by, *replaced],
@@ -212,6 +221,7 @@ impl Node {
             Self::Floor { of, .. } => math::floor(get(*of)),
             Self::RoundHalfUp { of, .. } => math::round_half_up(get(*of)),
             Self::Trunc { of, .. } => math::trunc(get(*of)),
+            Self::Ceil { of, .. } => math::ceil(get(*of)),
             Self::Min { a, b, .. } => math::min(get(*a), get(*b)),
             Self::Max { a, b, .. } => math::max(get(*a), get(*b)),
             Self::Difference { a, b, .. } => get(*a) - get(*b),
@@ -476,6 +486,13 @@ mod tests {
             })
             .unwrap();
         assert_eq!(g.value(trunc), Some(-2.0), "towards zero, as m_modf");
+        let ceil = g
+            .derive(Node::Ceil {
+                term: Term::Result,
+                of: negative,
+            })
+            .unwrap();
+        assert_eq!(g.value(ceil), Some(-2.0), "up, as m_ceil");
         let diff = g
             .derive(Node::Difference {
                 term: Term::Result,
@@ -510,7 +527,7 @@ mod tests {
         assert_eq!(g.value(any), Some(1.0));
         assert_eq!(g.value(over), Some(4.0));
         assert_eq!(g.value(c), Some(7.0));
-        assert_eq!(g.len(), 17);
+        assert_eq!(g.len(), 18);
         g.check().unwrap();
     }
 

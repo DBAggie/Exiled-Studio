@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12h): Smite with a normal Karui Maul (1000 ms) and Blood Rage (increased attack speed; its degeneration and leech reach no slice field), Haste (increased attack speed, 50% of mana reserved), and Arctic Armour (its effects reach no slice field; its mana reservation). A second Haste with its global effect turned off (enableGlobal1 false) is not created, so it reserves nothing.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Blood Rage" skillId="BloodRage" variantId="BloodRage" gemId="Metadata/Items/Gems/SkillGemBloodRage" level="10" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="12" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Arctic Armour" skillId="ArcticArmour" variantId="ArcticArmour" gemId="Metadata/Items/Gems/SkillGemNewArcticArmour" level="15" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="20" quality="0" enabled="true" enableGlobal1="false" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Karui Maul
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

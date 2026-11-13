@@ -409,6 +409,11 @@
           "const": "trunc"
         },
         {
+          "description": "The child rounded up (P3-12h).",
+          "type": "string",
+          "const": "ceil"
+        },
+        {
           "description": "The smaller child.",
           "type": "string",
           "const": "min"

@@ -264,6 +264,7 @@ fn node_kind_to(n: &c::Node) -> (NodeKind, Option<c::Term>) {
         c::Node::Floor { term, .. } => (NodeKind::Floor, Some(*term)),
         c::Node::RoundHalfUp { term, .. } => (NodeKind::RoundHalfUp, Some(*term)),
         c::Node::Trunc { term, .. } => (NodeKind::Trunc, Some(*term)),
+        c::Node::Ceil { term, .. } => (NodeKind::Ceil, Some(*term)),
         c::Node::Min { term, .. } => (NodeKind::Min, Some(*term)),
         c::Node::Max { term, .. } => (NodeKind::Max, Some(*term)),
         c::Node::Difference { term, .. } => (NodeKind::Difference, Some(*term)),

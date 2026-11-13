@@ -19,6 +19,7 @@ pub mod collect;
 pub mod config;
 pub mod damage_taken;
 pub mod enemy;
+pub mod gems;
 pub mod hit;
 pub mod mapping;
 pub mod pantheon;
@@ -79,6 +80,50 @@ pub enum Poe1Quantity {
     /// enemy, `calcLib.val`): they scale its base evasion before an
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
     EnemyEvasion,
+    /// A skill's reservation of a pool (P3-12h, [`gems`]): one `Base`
+    /// effect per reserving skill, its value PoB's per-skill amount
+    /// (`CalcPerform.lua` 1975 to 1989), summed by the unreserved phase.
+    Reservation(Pool, ReservationKind),
+}
+
+/// A pool a skill reserves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Pool {
+    /// Life.
+    Life,
+    /// Mana.
+    Mana,
+}
+
+impl Pool {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Life => "life",
+            Self::Mana => "mana",
+        }
+    }
+}
+
+/// How a skill reserves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ReservationKind {
+    /// An amount.
+    Flat,
+    /// A percentage of the pool.
+    Percent,
+}
+
+impl ReservationKind {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Percent => "percent",
+        }
+    }
 }
 
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
@@ -141,6 +186,9 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
+            Self::Reservation(pool, kind) => {
+                write!(f, "reservation.{}.{}", pool.name(), kind.name())
+            }
         }
     }
 }

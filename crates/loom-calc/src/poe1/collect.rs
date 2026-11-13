@@ -498,7 +498,7 @@ fn slot_kind(slot: &str) -> SlotKind {
 /// Whether a slot is in use for the item set's weapon set (PoB's
 /// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
 /// slots to set 1, every other slot to both.
-fn slot_in_use(slot: &str, second_set: bool) -> bool {
+pub(super) fn slot_in_use(slot: &str, second_set: bool) -> bool {
     if slot.contains("Swap") {
         second_set
     } else if slot.starts_with("Weapon") {
@@ -509,7 +509,7 @@ fn slot_in_use(slot: &str, second_set: bool) -> bool {
 }
 
 /// The active item set: `Items.activeItemSet` (default 1), else the first.
-fn active_set(build: &Build) -> Option<&ItemSet> {
+pub(super) fn active_item_set(build: &Build) -> Option<&ItemSet> {
     let items = &build.items;
     items
         .active_set
@@ -522,7 +522,7 @@ fn active_set(build: &Build) -> Option<&ItemSet> {
 fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
     let build = input.build;
     let mut seen: Vec<ItemId> = Vec::new();
-    if let Some(set) = active_set(build) {
+    if let Some(set) = active_item_set(build) {
         let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
         for entry in set.slots.typed() {
             let slot = entry.slot.as_str();
@@ -612,7 +612,7 @@ pub struct Hands {
 pub fn hands(input: &CalcInput<'_>) -> Hands {
     let mut hands = Hands::default();
     let build = input.build;
-    let Some(set) = active_set(build) else {
+    let Some(set) = active_item_set(build) else {
         return hands;
     };
     let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
@@ -983,15 +983,14 @@ fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'
     }
 }
 
-/// The gems of the active skill set's enabled groups. When the main skill
-/// is a hit the engine computes ([`hit::hit_skill`]: a self-cast spell or
-/// an attack), its
-/// active gem and the supports that apply act through their stats on the
-/// skill alone ([`SkillMapping`]: a stat with any other effect is
+/// The gems of the active skill set. When the main skill is a hit the
+/// engine computes ([`hit::hit_skill`]: a self-cast spell or an attack),
+/// its active gem and the supports that apply act through their stats on
+/// the skill alone ([`SkillMapping`]: a stat with any other effect is
 /// unmapped, a reason on every field), and their instance problems are
-/// reasons. Every other enabled gem (other groups, other effects of a
-/// main-group gem, supports that do not apply) is not modelled yet: a
-/// reason on every field (its auras, buffs, reservation).
+/// reasons. Every other skill of the set acts as [`super::gems`] models it
+/// (inert skills, reservation, buffs), or is a reason on every field
+/// (P3-12h; before, every other enabled gem was).
 fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let build = input.build;
     let skills = &build.skills;
@@ -1006,6 +1005,17 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         ingest.reason(UnsupportedReason::UnmodelledGem {
             source: Source::Rule("untyped-skill-group"),
         });
+        // The groups' indexes are not certain: every gem stays a reason.
+        for (g, group) in set.groups.typed().enumerate() {
+            for (i, gem) in group.gems.typed().enumerate() {
+                if group.enabled && gem.enabled {
+                    ingest.reason(UnsupportedReason::UnmodelledGem {
+                        source: Source::Gem { group: g, gem: i },
+                    });
+                }
+            }
+        }
+        return;
     }
     let hit = hit::hit_skill(input);
     let modelled: Vec<_> = hit.as_ref().map_or_else(Vec::new, |h| {
@@ -1014,30 +1024,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             .copied()
             .collect()
     });
-    let main_group = hit.as_ref().map(hit::HitSkill::group);
-    for (g, group) in set.groups.typed().enumerate() {
-        if !group.enabled {
-            continue;
-        }
-        for (i, gem) in group.gems.typed().enumerate() {
-            if !gem.enabled {
-                continue;
-            }
-            // A main-group gem is modelled when each of its effects is.
-            if main_group == Some(g)
-                && skill::gem_effects(gem, input.data).is_some_and(|effects| {
-                    effects
-                        .iter()
-                        .all(|e| modelled.iter().any(|m| m.gem == i && m.effect.id == e.id))
-                })
-            {
-                continue;
-            }
-            ingest.reason(UnsupportedReason::UnmodelledGem {
-                source: Source::Gem { group: g, gem: i },
-            });
-        }
-    }
+    super::gems::gems(input, hit.as_ref().map(|h| (h.group(), h.skill())), ingest);
     let Some(hit) = hit else { return };
     for r in modelled {
         let source = Source::Gem {

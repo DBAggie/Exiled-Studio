@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12h): a level 90 Witch casting Ice Nova (level 20) with Zealotry (more spell damage, increased spell critical strike chance) and Discipline (energy shield), each reserving a percentage of mana (50% and 35%).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Zealotry" skillId="Zealotry" variantId="Zealotry" gemId="Metadata/Items/Gems/SkillGemSpellDamageAura" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Discipline" skillId="Discipline" variantId="Discipline" gemId="Metadata/Items/Gems/SkillGemDiscipline" level="18" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config/>
+</PathOfBuilding>

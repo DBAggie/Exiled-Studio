@@ -1420,6 +1420,7 @@ export interface Node {
     | 'floor'
     | 'round-half-up'
     | 'trunc'
+    | 'ceil'
     | 'min'
     | 'max'
     | 'difference'

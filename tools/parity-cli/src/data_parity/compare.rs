@@ -250,7 +250,7 @@ impl Comparison {
     }
 
     /// Compares one value.
-    fn check(
+    pub(super) fn check(
         &mut self,
         table: &'static str,
         key: &str,
@@ -380,6 +380,12 @@ pub fn compare(
     compare_monster_levels(&mut out, properties, export);
     compare_bosses(&mut out, properties, export, bosses);
     compare_pantheons(&mut out, bundle, export)?;
+    let effects: std::collections::BTreeSet<&str> = skills
+        .granted_effects
+        .iter()
+        .map(|e| e.id.as_str())
+        .collect();
+    super::gem_effects::compare_gem_effects(&mut out, export, &effects);
     compare_passives(&mut out, bundle, passives, export, passive_scope)?;
     Ok(out)
 }

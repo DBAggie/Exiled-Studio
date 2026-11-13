@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 3,
+        "format": 4,
         "pob": {"version": "2.67.2"},
         "tree_version": "3_29",
         "skill_types": {},
@@ -42,7 +42,7 @@ fn equal_export() -> Value {
                 "types": ["TestSpell"],
                 "constant_stats": [{"stat": "test_damage_per_level", "value": 5}],
                 "quality_stats": [{"stat": "test_quality_cast_speed", "value": 0.5}],
-                "levels": {
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {
                     "1": {"values": [4.5, 9, 1], "cost": {"Mana": 6}, "critChance": 6},
                     "2": {"values": [6.25, 12.5, 2], "cost": {"Mana": 7}, "critChance": 6}
                 }
@@ -53,7 +53,7 @@ fn equal_export() -> Value {
                 "types": ["TestAttack"],
                 "constant_stats": {},
                 "quality_stats": {},
-                "levels": {}
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {}
             },
             "SupportTestDamage": {
                 "support": true,
@@ -61,7 +61,7 @@ fn equal_export() -> Value {
                 "types": {},
                 "constant_stats": {},
                 "quality_stats": {},
-                "levels": {
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {
                     "1": {"values": [20], "cost": {}, "manaMultiplier": 30, "manaReservationPercent": 25}
                 }
             }
@@ -169,7 +169,9 @@ fn equal_export_should_have_no_difference() {
     assert_eq!(comparison.differences, []);
     // Every table compared something; bundle rows PoB lacks are counted.
     for table in super::TABLES {
-        if !["character_constants", "monster_constants"].contains(&table) {
+        // `gem_effects` checks the engine's tables against skills the synthetic
+        // bundle does not have (its own tests, `gem_effects.rs`).
+        if !["character_constants", "monster_constants", "gem_effects"].contains(&table) {
             assert!(comparison.tables[table].compared > 0, "{table}");
         }
     }
@@ -275,7 +277,7 @@ fn rows_on_one_side_should_be_listed() {
     let skills = export["skills"].as_object_mut().unwrap();
     skills.insert(
         "PobOnly".to_owned(),
-        json!({"stats": {}, "types": {}, "constant_stats": {}, "quality_stats": {}, "levels": {}}),
+        json!({"stats": {}, "types": {}, "constant_stats": {}, "quality_stats": {}, "levels": {}, "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false}),
     );
     skills.remove("TestStrike");
     // A bundle level PoB does not have.
