@@ -1,0 +1,454 @@
+{
+  "contract_version": 1,
+  "protocol_version": "2025-06-18",
+  "title": "Exiled Studio MCP tools, contract v1",
+  "tools": [
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "The open build: class, level, main skill, data version, line counts, items, and lines with warnings (app-api.v1 BuildView), with the snapshot version and the calculation's status (CalcStatus). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_build",
+      "title": "Get the open build"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Every field of the latest calculation: name, value (absent when not computed), and state (complete, partial, unsupported, indeterminate), with the version it is of. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_fields",
+      "title": "List calculated fields"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "One field of the latest calculation with its provenance: the field result and every graph node it depends on (calc result document v1 FieldResult and Node, nodes keyed by index). Contributions name their source (an item line, a passive, a gem, the config). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "description": "The field's name, as list_fields gives it (life, resistance.fire, hit-dps).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field"
+        ],
+        "type": "object"
+      },
+      "name": "get_breakdown",
+      "title": "Explain a field"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "The build's items: ID, name, base, rarity, slot, and number of lines with warnings (app-api.v1 ItemSummary). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_items",
+      "title": "List items"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "One item with every line: index, text, status (matched, adapted, warning, excluded), warning code, and the game stat IDs it resolved to (app-api.v1 ItemView). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "item": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "type": "object"
+      },
+      "name": "get_item",
+      "title": "Get an item"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Every item line the application could not read: kept, shown, and not calculated (app-api.v1 WarningView). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "list_warnings",
+      "title": "List lines with warnings"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "The effect of an item edit, calculated by the application without applying it: the edited item and every field before and after (app-api.v1 ItemEditPreview). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "edit": {
+            "additionalProperties": false,
+            "description": "app-api.v1 ItemEdit: line operations on one item. `expect` gives the current text of every line an operation names (from get_item); the edit is refused as stale (APP_STALE_EDIT) when a line changed.",
+            "properties": {
+              "expect": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "line": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "line",
+                    "text"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "item": {
+                "description": "The item's ID (list_items).",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ops": {
+                "items": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "replace": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "line",
+                            "text"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "replace"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "remove": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "line"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "remove"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "set-range": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "value": {
+                              "maximum": 1,
+                              "minimum": 0,
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "line",
+                            "value"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "set-range"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "add": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "text"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "add"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "item",
+              "ops",
+              "expect"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "type": "object"
+      },
+      "name": "preview_item_edit",
+      "title": "Preview an item edit"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Asks the user to apply an item edit (app-api.v1 ChangeRequest). Refused unless the user allows change requests (APP_REQUESTS_OFF). The request waits for the user's approval in the application unless they gave a standing grant; poll get_request. An applied edit is one undoable step in the build's history.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "edit": {
+            "additionalProperties": false,
+            "description": "app-api.v1 ItemEdit: line operations on one item. `expect` gives the current text of every line an operation names (from get_item); the edit is refused as stale (APP_STALE_EDIT) when a line changed.",
+            "properties": {
+              "expect": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "line": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "line",
+                    "text"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "item": {
+                "description": "The item's ID (list_items).",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "ops": {
+                "items": {
+                  "oneOf": [
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "replace": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "text": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "line",
+                            "text"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "replace"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "remove": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "line"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "remove"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "set-range": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "line": {
+                              "minimum": 0,
+                              "type": "integer"
+                            },
+                            "value": {
+                              "maximum": 1,
+                              "minimum": 0,
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "line",
+                            "value"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "set-range"
+                      ],
+                      "type": "object"
+                    },
+                    {
+                      "additionalProperties": false,
+                      "properties": {
+                        "add": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "text"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "add"
+                      ],
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "item",
+              "ops",
+              "expect"
+            ],
+            "type": "object"
+          },
+          "note": {
+            "description": "Why, shown to the user.",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "type": "object"
+      },
+      "name": "request_item_edit",
+      "title": "Request an item edit"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "A change request's status: pending, applied, declined, or failed with its code (app-api.v1 ChangeRequest). Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "name": "get_request",
+      "title": "Get a change request"
+    }
+  ]
+}

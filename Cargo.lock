@@ -1808,8 +1808,12 @@ dependencies = [
 name = "loom-integrations"
 version = "0.0.0"
 dependencies = [
+ "getrandom 0.4.3",
  "loom-app",
  "loom-domain",
+ "loom-serialization",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

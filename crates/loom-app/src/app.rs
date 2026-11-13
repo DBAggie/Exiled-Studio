@@ -118,8 +118,8 @@ enum Msg {
         request: Box<api::ChangeRequest>,
         reply: Sender<Result<api::ChangeRequest, AppError>>,
     },
-    Permissions(api::McpPermissions),
-    Endpoint(Option<(String, String)>),
+    Permissions(api::McpPermissions, Sender<()>),
+    Endpoint(Option<(String, String)>, Sender<()>),
     Stop,
 }
 
@@ -343,15 +343,21 @@ impl App {
         self.read(|p| p.requests.iter().find(|r| r.id == id).cloned())
     }
 
-    /// Sets what MCP clients may do.
+    /// Sets what MCP clients may do; returns once it applies.
     pub fn set_permissions(&self, permissions: api::McpPermissions) {
-        let _ = self.tx.send(Msg::Permissions(permissions));
+        let (done, wait) = mpsc::channel();
+        if self.tx.send(Msg::Permissions(permissions, done)).is_ok() {
+            let _ = wait.recv();
+        }
     }
 
     /// Records the MCP server's address and token while it runs; `None`
     /// when it stops, which also ends the standing grant (decision 11).
     pub fn set_endpoint(&self, endpoint: Option<(String, String)>) {
-        let _ = self.tx.send(Msg::Endpoint(endpoint));
+        let (done, wait) = mpsc::channel();
+        if self.tx.send(Msg::Endpoint(endpoint, done)).is_ok() {
+            let _ = wait.recv();
+        }
     }
 
     /// An MCP client asks for an item edit (decision 11). Its effect is
@@ -513,17 +519,19 @@ impl Writer {
                     let result = self.request(*request);
                     let _ = reply.send(result);
                 }
-                Msg::Permissions(p) => {
+                Msg::Permissions(p, done) => {
                     self.permissions = p;
                     self.publish();
+                    let _ = done.send(());
                     self.emit(None, api::EventKind::McpChanged);
                 }
-                Msg::Endpoint(e) => {
+                Msg::Endpoint(e, done) => {
                     if e.is_none() {
                         self.permissions.standing_grant = false;
                     }
                     self.endpoint = e;
                     self.publish();
+                    let _ = done.send(());
                     self.emit(None, api::EventKind::McpChanged);
                 }
                 Msg::Stop => break,

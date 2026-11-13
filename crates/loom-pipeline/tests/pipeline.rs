@@ -146,12 +146,12 @@ fn reresolve_should_report_changed_resolutions_and_keep_the_build() {
     for entry in stored.items.entries.typed_mut() {
         if let loom_domain::ItemsEntry::Item(item) = entry {
             for line in &mut item.body.lines {
-                if let loom_domain::LineKind::Modifier(m) = &mut line.kind {
-                    if matches!(m.resolution, loom_domain::LineResolution::Resolved { .. }) {
-                        m.resolution = loom_domain::LineResolution::Unresolved(
-                            loom_domain::UnresolvedReason::NoTemplate,
-                        );
-                    }
+                if let loom_domain::LineKind::Modifier(m) = &mut line.kind
+                    && matches!(m.resolution, loom_domain::LineResolution::Resolved { .. })
+                {
+                    m.resolution = loom_domain::LineResolution::Unresolved(
+                        loom_domain::UnresolvedReason::NoTemplate,
+                    );
                 }
             }
         }
