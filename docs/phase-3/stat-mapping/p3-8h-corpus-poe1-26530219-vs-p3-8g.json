@@ -1,0 +1,41 @@
+{
+ "builds_with_reason_changes": 5,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34661}}, \"stat\": \"cast_speed_for_fire_skills_+%\"}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 8}}, \"stat\": \"lightning_critical_strike_chance_+%\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30225}}, \"stat\": \"cast_speed_for_lightning_skills_+%\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30225}}, \"stat\": \"cast_speed_for_lightning_skills_+%\"}}"
+   ]
+  },
+  "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 5,
+ "state_changes": {},
+ "value_changes": {}
+}

@@ -1,4 +1,4 @@
-Last Updated: 2026-11-13 (P3-8g: settled conditions once per calculation)
+Last Updated: 2026-11-13 (P3-8h: skill keywords)
 
 # Phase 3: calc slice (tasks)
 
@@ -87,13 +87,14 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12f the enemy's damage taken in the hit (`poe1::damage_taken`: shock, the Uber boss kind, delirium), the bandit from the config set, Onslaught (`poe1::buffs`), rage and exposure in `NAMED_ONLY` with their source stats, culling strike `NoEffect` (PR #88, merged; `docs/phase-3/config-inputs.md`, "P3-12f"; mechanic fixtures `ice-nova-shocked-uber-witch.xml`, `smite-shocked-templar.xml`, `ice-nova-onslaught-rage-exposure-witch.xml`; DIV-0029, DIV-0030; merged into `dev` as `6d1d7ac`)
   - [x] P3-12g the pantheon (bundle `poe1/pantheons.json`, `data-parity` table, `poe1::pantheon`, 41 `NoEffect` soul stats), Intimidate, Unnerve, Blind (`Poe1Quantity::EnemyEvasion`), ten inputs in `NAMED_ONLY` (PR #89, merged into `dev` as `de85329`; `docs/phase-3/config-inputs.md`, "P3-12g"; six mechanic fixtures; DIV-0031 to DIV-0033)
   - [x] P3-12h other gems, first PR: `poe1::gems` (inert skills and supports, reservation with the supports' cost multipliers, eight buff and aura skills merged per name), `Ceil` node, PoB export format 4 and `data-parity` table `gem_effects` (PR #90, merged into `dev` as `0814131`; `docs/phase-3/other-gems.md`; four mechanic fixtures)
-  - [x] P3-12i socket colour quality: the granted effect's colour in the bundle, PoB export format 5 and `data-parity` `color`, `poe1::sockets` (+10 quality in a socket of the gem's colour, PoB's index rule), `melee_physical_damage_+%` row (PR #91, open; `docs/phase-3/other-gems.md`, "P3-12i"; two mechanic fixtures)
-  - [x] P3-12j the custom "Onslaught" line: custom-line rule (the only global, item-backed reading), `Poe1Quantity::Onslaught`, Onslaught once (PR #92, open, cascade on #91; `docs/phase-3/config-inputs.md`, "P3-12j"; two mechanic fixtures)
-  - [x] P3-8d charge modifiers: `Poe1Quantity::Charge`, `charges::MODIFIERS`, PoB's count with minima and maxima (PR #93, open, cascade on #92; `docs/phase-3/stat-mapping.md`, "P3-8d"; two mechanic fixtures)
-  - [x] P3-8e area damage, spell crit multiplier, area and light radius rows (PR #94, open, cascade on #93; `docs/phase-3/stat-mapping.md`, "P3-8e"; one mechanic fixture)
-  - [x] P3-8f weapon conditions: `poe1::states` (`UsingStaff`, `UsingShield`), `STATE_ROWS` (eight stats) (PR #95, open, cascade on #94; `docs/phase-3/stat-mapping.md`, "P3-8f"; two mechanic fixtures)
-  - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, open, cascade on #95; documents identical, calc time 229 to 78 ms)
-  - [ ] Next: the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); socket colour quality (bundle: the granted effect's `Attribute`); the custom "Onslaught" line; then the in-scope builds' unmapped stats and unresolved lines; Q13
+  - [x] P3-12i socket colour quality: the granted effect's colour in the bundle, PoB export format 5 and `data-parity` `color`, `poe1::sockets` (+10 quality in a socket of the gem's colour, PoB's index rule), `melee_physical_damage_+%` row (PR #91, merged into `dev` as `0fad371`; `docs/phase-3/other-gems.md`, "P3-12i"; two mechanic fixtures)
+  - [x] P3-12j the custom "Onslaught" line: custom-line rule (the only global, item-backed reading), `Poe1Quantity::Onslaught`, Onslaught once (PR #92, merged into `dev` with #91; `docs/phase-3/config-inputs.md`, "P3-12j"; two mechanic fixtures)
+  - [x] P3-8d charge modifiers: `Poe1Quantity::Charge`, `charges::MODIFIERS`, PoB's count with minima and maxima (PR #93, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8d"; two mechanic fixtures)
+  - [x] P3-8e area damage, spell crit multiplier, area and light radius rows (PR #94, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8e"; one mechanic fixture)
+  - [x] P3-8f weapon conditions: `poe1::states` (`UsingStaff`, `UsingShield`), `STATE_ROWS` (eight stats) (PR #95, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8f"; two mechanic fixtures)
+  - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, merged into `dev` with #91; documents identical, calc time 229 to 78 ms)
+  - [x] P3-8h skill keywords: `Flags::SKILL_*` from the main skill's types (PoB's `KeywordFlag`), 23 hit rows ("with Cold Skills" cast speed, crit chance, crit multiplier; damage with attack or spell skills) (PR #TBD, open, base `dev`; `docs/phase-3/stat-mapping.md`, "P3-8h"; two mechanic fixtures; DIV-0034, DIV-0035)
+  - [ ] Next: more of the in-scope builds' unmapped stats (gem levels need a design; "with Brand/Minion Skills"; the other weapon conditions); the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); unresolved lines; Q13
 
 ## P3-14: corpus run and register
 - [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered
