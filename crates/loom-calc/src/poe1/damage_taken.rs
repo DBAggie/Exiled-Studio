@@ -207,6 +207,15 @@ mod tests {
         // Damage taken by you, as another type: not the enemy's.
         "physical_damage_taken_%_as_fire",
         "physical_damage_taken_%_as_lightning",
+        // The pantheon's souls (P3-12g): damage taken by you, its
+        // reduction, and shock on you, not the enemy's.
+        "chaos_damage_taken_+%",
+        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
+        "elemental_damage_taken_+%_if_been_hit_recently",
+        "elemental_damage_taken_+%_if_not_hit_recently",
+        "physical_damage_over_time_taken_+%_while_moving",
+        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
+        "shocked_effect_on_self_+%",
     ];
 
     /// The module's argument: no mapped stat reads or sets the enemy's
