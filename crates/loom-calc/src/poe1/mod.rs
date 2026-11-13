@@ -13,6 +13,7 @@
 //! multiplier, hit DPS. Its other hit fields, and every hit field of
 //! another kind of skill, are `Unsupported` with `NotComputed`.
 
+pub mod charges;
 pub mod collect;
 pub mod config;
 pub mod enemy;

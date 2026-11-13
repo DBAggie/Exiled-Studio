@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12d: the legacy `customMods` input)
+Last Updated: 2026-11-12 (P3-12e: the old config layout, block text, charges, fortification)
 
 # Phase 3: calc slice (tasks)
 
@@ -82,8 +82,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
   - [x] P3-12b PoB's config placeholders (PR #84, merged into `dev` as `95b53a6`; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
   - [x] P3-12c custom modifier blocks in full (PR #85, merged into `dev` as `8c2998d`; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
-  - [x] P3-12d the legacy `customMods` input (PR #86, open; `docs/phase-3/config-inputs.md`, "P3-12d"; PoB's attribute reading for a config string; lines applied by PoB's `Load` migration; build v1 input `lines`, calc result v1 source `config-input-line`; mechanic fixture `ice-nova-legacy-custom-mods-witch.xml`)
-  - [ ] Next: the old config layout; then charges, rage, fortification, shock, exposure, other gems (auras, buffs), Onslaught and culling strike
+  - [x] P3-12d the legacy `customMods` input (PR #86, merged into `dev` as `e04419f`; `docs/phase-3/config-inputs.md`, "P3-12d"; PoB's attribute reading for a config string; lines applied by PoB's `Load` migration; build v1 input `lines`, calc result v1 source `config-input-line`; mechanic fixture `ice-nova-legacy-custom-mods-witch.xml`)
+  - [x] P3-12e the old config layout (`ConfigLayout::Flat`, build v1 `layout`), block text PoB reads otherwise kept whole, power/frenzy/endurance charges (`poe1::charges`), fortification in `NAMED_ONLY` (PR #87, open; `docs/phase-3/config-inputs.md`, "P3-12e"; mechanic fixtures `ice-nova-old-config-layout-witch.xml`, `ice-nova-charges-witch.xml`, `smite-charges-templar.xml`)
+  - [ ] Next: shock (the enemy's damage taken in the hit), rage, exposure, other gems (auras, buffs), Onslaught and culling strike, bandit and pantheon
 
 ## P3-14: corpus run and register
 - [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered

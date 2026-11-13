@@ -393,6 +393,11 @@ export interface Config {
    */
   attributes?: Attribute[]
   /**
+   * How the build's format held the sets; left out for one element
+   * per set.
+   */
+  layout?: 'sets' | 'flat'
+  /**
    * The sets.
    */
   sets: ConfigSetEntry[]

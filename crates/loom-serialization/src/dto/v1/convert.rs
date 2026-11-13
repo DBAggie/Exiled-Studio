@@ -13,12 +13,12 @@ use super::DtoError;
 use super::types::{Adapted, Exclusion};
 use super::types::{
     AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
-    ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion, Entry, Game,
-    GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items, ItemsEntry,
-    JewelSocket, LineKind, LineResolution, MasteryEffect, ModSection, ModifierLine, NoBase,
-    NonFinite, Number, OpaqueNode, PassiveSpec, Passives, Poe2Choices, Prefix, PropertyValue,
-    Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup, Sourced, SpecPart, StatLine,
-    StatValue, TypedResolution, UnresolvedReason, VariantSelection,
+    ConfigLayout, ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion,
+    Entry, Game, GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items,
+    ItemsEntry, JewelSocket, LineKind, LineResolution, MasteryEffect, ModSection, ModifierLine,
+    NoBase, NonFinite, Number, OpaqueNode, PassiveSpec, Passives, Poe2Choices, Prefix,
+    PropertyValue, Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup, Sourced, SpecPart,
+    StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
 };
 
 // ---- shared ----------------------------------------------------------------
@@ -841,6 +841,10 @@ fn config_to(c: &d::Config) -> Config {
                 .collect(),
             attributes: attrs_to(&set.attributes),
         }),
+        layout: match c.layout {
+            d::ConfigLayout::Sets => ConfigLayout::Sets,
+            d::ConfigLayout::Flat => ConfigLayout::Flat,
+        },
         attributes: attrs_to(&c.attributes),
     }
 }
@@ -908,10 +912,15 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                 attributes: attrs_from(set.attributes),
             })
         })?,
+        layout: match c.layout {
+            ConfigLayout::Sets => d::ConfigLayout::Sets,
+            ConfigLayout::Flat => d::ConfigLayout::Flat,
+        },
         attributes: attrs_from(c.attributes),
     })
     .and_then(|config: d::Config| {
         config.check_custom_lines().map_err(DtoError::Domain)?;
+        config.check_layout().map_err(DtoError::Domain)?;
         Ok(config)
     })
 }

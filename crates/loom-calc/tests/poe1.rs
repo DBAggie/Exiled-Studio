@@ -775,7 +775,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "useFrenzyCharges".to_owned(),
+        name: "multiplierRage".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -1212,9 +1212,9 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "useFrenzyCharges",
+        "multiplierRage",
         "conditionEnemyShocked",
-        "buffFortification",
+        "conditionEnemyColdExposure",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
@@ -1621,6 +1621,31 @@ fn legacy_custom_mods_should_act_as_pob_migrates_them() {
         }]
     );
     assert_eq!(value_of(&r, Field::Life), life);
+
+    // PoB's layout before config sets (P3-12e): set 1 holds PoB's empty
+    // default block before the blocks read. No block read: the lines act.
+    // One block read, even an empty one, makes two: PoB discards the
+    // input, and only the block's lines act.
+    let flat = |blocks: Vec<CustomModifierBlock>| {
+        let mut b = witch(1);
+        b.config.layout = loom_domain::ConfigLayout::Flat;
+        b.config
+            .sets
+            .push(set_of(vec![legacy(text(), vec![resolved(10)])], blocks));
+        run(&b)
+    };
+    let r = flat(vec![]);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value_of(&r, Field::Life), life + 10.0);
+    for (blocks, added) in [
+        (vec![block(true, "", None)], 0.0),
+        (vec![block(false, "\n", None)], 0.0),
+        (vec![block(true, "x", Some(5))], 5.0),
+    ] {
+        let r = flat(blocks);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+        assert_eq!(value_of(&r, Field::Life), life + added);
+    }
 }
 
 #[test]

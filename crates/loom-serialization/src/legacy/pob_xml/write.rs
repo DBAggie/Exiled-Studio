@@ -2,9 +2,9 @@
 //! the attributes kept as read, in order; untyped content where it was.
 
 use loom_domain::{
-    Attributes, Build, BuildPart, Character, Config, ConfigInputKind, ConfigValue, Entry,
-    GameSpecific, Gem, Item, ItemPart, Items, ItemsEntry, OpaqueNode, Ordered, PassiveSpec,
-    Passives, Skills, Sourced, SpecPart,
+    Attributes, Build, BuildPart, Character, Config, ConfigInputKind, ConfigLayout, ConfigSet,
+    ConfigValue, Entry, GameSpecific, Gem, Item, ItemPart, Items, ItemsEntry, OpaqueNode, Ordered,
+    PassiveSpec, Passives, Skills, Sourced, SpecPart,
 };
 
 /// An XML writer that indents with tabs, as PoB does.
@@ -374,43 +374,53 @@ fn config(w: &mut Writer, c: &Config) {
         c.active.map(|x| x.0.to_string()).as_deref(),
     );
     kept(&mut a, &c.attributes);
-    w.element(1, "Config", &a, |w| {
-        w.ordered(2, &c.sets, |w, set| {
+    // PoB's layout before config sets: the one set's content directly
+    // under `<Config>`. A flat config that breaks the layout check (only a
+    // build never read through a document can) is written with set
+    // elements, so nothing is dropped.
+    let flat = c.layout == ConfigLayout::Flat && c.check_layout().is_ok();
+    w.element(1, "Config", &a, |w| match c.sets.typed().next() {
+        Some(set) if flat => set_content(w, 2, set),
+        _ => w.ordered(2, &c.sets, |w, set| {
             let mut a = vec![("id".to_owned(), set.id.0.to_string())];
             put(&mut a, "title", set.title.as_deref());
             kept(&mut a, &set.attributes);
-            w.element(2, "ConfigSet", &a, |w| {
-                w.ordered(3, &set.inputs, |w, i| {
-                    let mut a = vec![("name".to_owned(), i.name.clone())];
-                    match &i.value {
-                        ConfigValue::Boolean(b) => put(&mut a, "boolean", Some(bool_text(*b))),
-                        ConfigValue::Number(n) => {
-                            let text = n
-                                .source()
-                                .map_or_else(|| n.value().0.to_string(), str::to_owned);
-                            put(&mut a, "number", Some(&text));
-                        }
-                        ConfigValue::String(s) => put(&mut a, "string", Some(s)),
-                    }
-                    kept(&mut a, &i.attributes);
-                    let element = match i.kind {
-                        ConfigInputKind::Input => "Input",
-                        ConfigInputKind::Placeholder => "Placeholder",
-                    };
-                    // A string as PoB writes it: PoB reads a line break in
-                    // it (the legacy `customMods`) back only when raw.
-                    w.element_pob(3, element, &a, Some("string"), |_| {});
-                });
-                for b in &set.custom_modifiers {
-                    let mut a = Attrs::new();
-                    put(&mut a, "title", b.title.as_deref());
-                    put(&mut a, "enabled", Some(bool_text(b.enabled)));
-                    kept(&mut a, &b.attributes);
-                    w.text_element(3, "CustomModifierBlock", &a, &b.text);
-                }
-            });
-        });
+            w.element(2, "ConfigSet", &a, |w| set_content(w, 3, set));
+        }),
     });
+}
+
+/// A config set's inputs, placeholders, and custom modifier blocks, at
+/// `depth`.
+fn set_content(w: &mut Writer, depth: usize, set: &ConfigSet) {
+    w.ordered(depth, &set.inputs, |w, i| {
+        let mut a = vec![("name".to_owned(), i.name.clone())];
+        match &i.value {
+            ConfigValue::Boolean(b) => put(&mut a, "boolean", Some(bool_text(*b))),
+            ConfigValue::Number(n) => {
+                let text = n
+                    .source()
+                    .map_or_else(|| n.value().0.to_string(), str::to_owned);
+                put(&mut a, "number", Some(&text));
+            }
+            ConfigValue::String(s) => put(&mut a, "string", Some(s)),
+        }
+        kept(&mut a, &i.attributes);
+        let element = match i.kind {
+            ConfigInputKind::Input => "Input",
+            ConfigInputKind::Placeholder => "Placeholder",
+        };
+        // A string as PoB writes it: PoB reads a line break in
+        // it (the legacy `customMods`) back only when raw.
+        w.element_pob(depth, element, &a, Some("string"), |_| {});
+    });
+    for b in &set.custom_modifiers {
+        let mut a = Attrs::new();
+        put(&mut a, "title", b.title.as_deref());
+        put(&mut a, "enabled", Some(bool_text(b.enabled)));
+        kept(&mut a, &b.attributes);
+        w.text_element(depth, "CustomModifierBlock", &a, &b.text);
+    }
 }
 
 fn items(w: &mut Writer, items: &Items) {

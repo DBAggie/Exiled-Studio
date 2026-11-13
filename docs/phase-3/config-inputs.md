@@ -32,7 +32,7 @@ An input is listed only if PoB's calc modules (`CalcSetup.lua`, `CalcPerform.lua
 
 **What the rule depends on** (`DEPENDS_ON`). Each modifier path above starts at a game stat, and the rule holds only while that stat is a reason. The 11 stats: block if not blocked recently (4), consecrated ground's enemy damage taken and accuracy, chill's damage taken (`enemies_chilled_by_hits_take_damage_increased_by_chill_effect`, `keystone_cold_purist`), `gain_convergence_on_hitting_unique_enemy`, and Bonechill's two stats. Bonechill is the sharp case: PoB's effect is the gem's skill data (`supportBonechill`, `Data/Skills/sup_int.lua` 560; `CalcPerform.lua` 3536, cold damage taken equal to the configured chill) and its stat map ignores the two stats, so they look like candidates for `NoEffect`; classifying them so would make `conditionEnemyChilled` silent. A test asserts each of the 11 is `Unmapped` through every mapping: mapping one must revisit `NAMED_ONLY`.
 
-**Still reasons** (their own effects; later P3-12 steps): charges (`use*Charges`), `multiplierRage` (more attack damage), `buffFortification`, `conditionEnemyShocked` and `conditionShockEffect` (damage taken), `conditionEnemyColdExposure`, `summonLightningGolemEnableWrath` (a minion's aura), `customMods`, `bandit`, the pantheon, `enemyIsBoss`, and `<untyped>`: PoB's `Placeholder` values and custom modifier blocks, which the model keeps untyped. PoB applies a count input's placeholder when the input is unset (`Classes/ConfigTab.lua`, `BuildModList`), so placeholders can change a result; typing them is a follow-up.
+**Still reasons** (their own effects; later P3-12 steps; charges and fortification since P3-12e, below): charges (`use*Charges`), `multiplierRage` (more attack damage), `buffFortification`, `conditionEnemyShocked` and `conditionShockEffect` (damage taken), `conditionEnemyColdExposure`, `summonLightningGolemEnableWrath` (a minion's aura), `customMods`, `bandit`, the pantheon, `enemyIsBoss`, and `<untyped>`: PoB's `Placeholder` values and custom modifier blocks, which the model keeps untyped. PoB applies a count input's placeholder when the input is unset (`Classes/ConfigTab.lua`, `BuildModList`), so placeholders can change a result; typing them is a follow-up.
 
 **What changes:** reasons only. No value, state, or graph changes in any document (below). In the 7 in-scope builds, the config reasons fall from 18 (Ice Nova) and 19 (Smite) to 10 each; every field stays `Partial` through the remaining reasons (other gems, unmapped stats, choices, and the config inputs above).
 
@@ -268,6 +268,129 @@ Commands: as P3-12c's, with `<out>` = `local/p3/p3-12d/evidence` (script `local/
 
 ### Follow-ups
 
-- **The old config layout** (inputs directly under `<Config>`, PoB's set 1; `discrepancy-movement-speed.xml`, PoB's 3.13 test builds). There, PoB's `NewConfigSet(1)` already holds one empty default block, so one block read in that layout makes two and the migration never applies (plan review).
-- **A block's text and references:** a block's text is element text, read by XML's rule (`&#10;` a line break), while PoB reads any reference other than the five as nothing; and the writer writes a carriage return in text as `&#13;`. Not reached by any fixture; align with PoB's reading (or keep such a block whole) with the old layout.
+- **The old config layout** (inputs directly under `<Config>`, PoB's set 1; `discrepancy-movement-speed.xml`, PoB's 3.13 test builds). There, PoB's `NewConfigSet(1)` already holds one empty default block, so one block read in that layout makes two and the migration never applies (plan review). Done in P3-12e (below).
+- **A block's text and references** (done in P3-12e: such a block is kept whole): a block's text is element text, read by XML's rule (`&#10;` a line break), while PoB reads any reference other than the five as nothing; and the writer writes a carriage return in text as `&#13;`. Not reached by any fixture; align with PoB's reading (or keep such a block whole) with the old layout.
 - PoB's shorthand and grammar ("Onslaught", "more" lines, labels): reasons until the buffs are modelled.
+
+## P3-12e: the old config layout, block text, charges, fortification
+
+Several steps in one PR (maintainer, 2026-11-12: as many of the remaining Phase 3 tasks as possible). Shock, rage, and exposure were looked at and left for later steps (Follow-ups).
+
+### The old config layout
+
+**Why.** Before config sets, PoB saved inputs, placeholders, and blocks directly under `<Config>`. PoB still loads every such child into set 1 (`Classes/ConfigTab.lua`, `Load`, lines 888 to 902), creating the set with `NewConfigSet(1)`, which already holds one empty enabled block (line 1281); the blocks read are appended after it. Since P3-12c that content was one `<untyped>` reason.
+
+**The model.**
+- `loom_domain::ConfigLayout` (`Sets`, `Flat`) on `Config`. A flat config holds one set: ID 1, no title, no attributes, nothing untyped beside it. `Config::check_layout` enforces this (`DOMAIN_FLAT_CONFIG_LAYOUT`); the build document refuses a broken one both ways.
+- Build document v1 gains an optional `layout` (`"flat"`; left out for `sets`). It is additive, on P3-12b's rule. Schema and TypeScript are regenerated.
+- The PoB reader types the layout when `<Config>` has an element child and no `ConfigSet` child. A comment alone does not count. A mix of both layouts keeps its loose children untyped, because PoB's result then depends on their order.
+- The writer writes the set's content back without a set element. A flat config that breaks the check (only a build never read through a document can) is written with set elements, so nothing is dropped.
+- `kept_whole` lists such content as `Config/Input` and the like.
+
+**The rule** (`loom_calc::poe1::collect::legacy_custom_mods`). In the flat set, PoB's default empty block comes before the blocks read:
+- With no block read, the legacy `customMods` lines apply, as before.
+- With one block read, even an empty one, the set has two blocks. PoB discards the input, and only that block's lines act.
+
+### Block text PoB reads otherwise
+
+PoB reads a block's text with its own XML reader (`runtime/lua/xml.lua`):
+- it trims the text;
+- it decodes the five named entities and reads any other reference as nothing;
+- it keeps a CDATA section as a separate node.
+
+XML decodes `&#10;` as a line break and a CDATA section as text. A block whose raw content holds either is now kept whole, as P3-12d does for attribute values: it is a reason, and the text is never silently changed.
+
+### Charges
+
+`loom_calc::poe1::charges`, following PoB v2.67.2:
+- **Inputs.** `usePowerCharges`, `useFrenzyCharges`, and `useEnduranceCharges` (`ConfigOptions.lua` 900 to 917) turn each kind on.
+- **Count.** It is `override<Kind>Charges` when set (the input, else its placeholder; 0 is unset), else the maximum. The maximum is the character constant `max_<kind>_charges` (3). The count is at least 0 (`doActorCharges`, `CalcPerform.lua` 980 to 1120). PoB does not clamp an override to the maximum or round a fractional one; neither does the engine.
+- **Effects per charge**, from the character constants (`CalcSetup.lua` 625 to 630):
+
+| Charge | Effect per charge | Engine effect |
+|---|---|---|
+| Power | 50% increased critical strike chance (`critical_strike_chance_+%_per_power_charge`) | One `CritChance` increased effect, 50 x count |
+| Frenzy | 4% increased attack speed, 4% increased cast speed, 4% more damage (`base_attack_speed_+%_per_frenzy_charge`, `base_cast_speed_+%_per_frenzy_charge`, `object_inherent_damage_+%_final_per_frenzy_charge`) | `Speed` increased for attacks and casts, `Damage` more (one effect: 4 x count, as PoB's one modifier per charge kind) |
+| Endurance | 4% physical and elemental damage reduction | None: damage taken is not a slice field |
+
+- **Not known, so a reason** under the `use` input: a `use` value that is not a boolean, an override that is not a finite number, or lines on either input. PoB reads any value other than `false` as on; the engine is conservative.
+- **Source.** The `use` input is each effect's source, whichever input set the count.
+- **Why nothing else is needed.** Everything else that reads or changes a count is a modifier, so a stat: a different maximum or minimum, the "at maximum" flags, conversions to absorption, affliction, or brutal charges, and effects per charge. A test checks that no mapped row names a charge. The `NoEffect` rows that do (six: chances to gain a charge, regeneration per charge, shock immunity at maximum) are listed, each checked to reach no slice field. A second test checks that the maxima stay `Unmapped` through every mapping.
+
+### Fortification
+
+`buffFortification` and `overrideFortification` join `NAMED_ONLY`:
+- They set `Condition:Fortified` and `FortificationStacks` (`ConfigOptions.lua` 1039, 1042).
+- `CalcPerform.lua` (659 to 680) then sets the stacks, less damage taken when hit per stack (not a slice field), the `HaveMaximumFortification` flag, and one more `BuffOnSelf`; line 3889 exports the stacks to a party.
+- Every other reader is a modifier.
+- A test checks that no mapped row names fortification. The three `NoEffect` rows that do (a chance to fortify, its duration, regeneration per stack) are listed, and `base_max_fortification` stays `Unmapped`.
+
+### What changes
+
+- **Public builds.** Values change in 10 builds, all in `Partial` fields, and each moved toward PoB:
+
+| Builds | Change |
+|---|---|
+| The 3 Ice Nova builds | Crit chance: power charges |
+| The 4 Smite builds | Crit chance, attack rate, damage: power and frenzy charges |
+| Elemental Hit, Kinetic Blast, Shock Nova | Crit chance; attack rate and damage where frenzy charges are used |
+
+- **`discrepancy-movement-speed.xml`.** It is read in the old layout, and its `customMods` line ("10% increased Movement Speed", no slice field) applies. Its 17 character fields go from `Partial` to `Complete`.
+- **Reasons.** 68 are gone and 42 added in 33 builds (`p3-12e-public-vs-p3-12d.json`):
+  - gone: the charges (54), `buffFortification` (8), `<untyped>` (6);
+  - added: the individual inputs that the old layout's `<untyped>` used to hide (`enemyIsBoss`, `buffOnslaught`, `conditionLeeching`, and others).
+- **The 7 in-scope builds.** Their config reasons fall to 6 for Ice Nova (`bandit`, `conditionEnemyColdExposure`, `conditionEnemyShocked`, the pantheon (2), `summonLightningGolemEnableWrath`) and to 5 for Smite (`conditionEnemyShocked`, `conditionShockEffect`, `multiplierRage`, the pantheon (2)). Every field stays `Partial`, through other gems, unmapped stats, and these inputs.
+- **Corpus.** Two builds' values change: one build's crit chance and attack rate from charges, and one old-layout build's chaos resistance from 16 to 75, PoB's value, once its old-layout config is read. Reasons: 29 gone, 104 added in 17 builds, mostly inputs and lines the old layout's `<untyped>` used to hide.
+
+### Evidence
+
+2026-11-12, Windows. Tool commit `f33bba2`, clean. Inputs are P3-12d's (bundle `local/p3/p3-1d/bundle-poe1-a`, overlay `local/p3/p3-1d/parity-1/overlay.json`), with a new oracle run for the three new fixtures. Summaries are in `docs/phase-3/config-inputs/p3-12e-*`.
+
+| Run | Builds | Result |
+|---|---|---|
+| `oracle-run`, the whole manifest | 91 | Every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 91 | 90 documents; 1114 complete, 334 partial, 400 unsupported, 312 indeterminate. Byte-identical twice |
+| Documents against P3-12d's run | 87 | As above |
+| `calc-run --data-overlay`, public | 91 | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 91 | 28 differences, all registered (DIV-0001 to DIV-0028; 3 new, below), 0 unexpected, no unused entry, no missing mechanic fixture; 1094 fields match. **Every mechanic target met (1080 of 1080, 54 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | 21 | Byte-identical, no difference (exit 5) |
+| `build-round-trip`: public (fixtures, community, mechanic, PoB's 3.13 test builds) and corpus | All | All pass |
+
+**The new fixtures and the register.**
+
+| Fixture | What it holds | Result |
+|---|---|---|
+| `ice-nova-old-config-layout-witch.xml` | The old layout: an enemy level placeholder and a three-line `customMods` | 22 of 22 equal to PoB (life 1155, cold resistance -35, average damage 1018.57) |
+| `ice-nova-charges-witch.xml` | The three charges at their maximum | 22 of 22 equal to PoB (crit chance 18.75, cast rate 1.6, average damage 859.14) |
+| `smite-charges-templar.xml` | One power charge (the override's placeholder), two frenzy charges, one endurance charge, fortified with 10 stacks | Crit, damage, and the rest equal to PoB |
+
+On `smite-charges-templar.xml` the attack rate, `TotalDPS`, and its breakdown total differ. It is Q11's `game-truth` difference: a weapon's attack time in floored milliseconds (1000 / 667 = 1.4993 against PoB's 1.50), times the same 1.08 on both sides. These are registered as DIV-0026 to DIV-0028, with the evidence of DIV-0001 to DIV-0025 (`docs/phase-3/attack-hits.md`, "The switch"). No other divergence is claimed: the per-charge values are the game's character constants, which PoB also reads.
+
+**Negative controls** (local only, `local/p3/p3-12e/negative/`). The old-layout fixture was run with one block "+10 to maximum Life" (PoB: life 1135) and with one empty disabled block (PoB: 1125, the bare value). In both PoB discards the input, and the engine matches PoB on every field compared.
+
+**Tests** (1160 workspace tests):
+- The PoB reader: the flat layout read and written back; mixed layouts; a comment alone; references and CDATA in a block; a broken flat build exported with set elements.
+- `Config::check_layout`: ID, title, attributes, two sets, untyped content. The document refuses a broken flat config on write and on read.
+- `tests/poe1.rs`: the migration in the flat layout.
+- `tests/hit.rs`: power and frenzy counts (maximum, override, placeholder, 0, above the maximum, fractional, negative, last wins); `use` off; endurance; reasons for bad values and for lines on a charge input.
+- The charge and fortification guards.
+- Clippy, fmt, wasm32. Schema and TypeScript regenerated; UI type check.
+
+**Review** (`code-architecture-reviewer`): PoB's semantics confirmed (the flat set's default block, counts not clamped, a frenzy "more" valued 4 x count, the `Combat` condition in the default mode). Applied:
+- lines on a charge input are a reason (they were skipped);
+- the guards cover `NoEffect` rows and the maxima;
+- a non-finite override is a reason;
+- endurance looks up no constant;
+- the writer's fallback for a broken flat config;
+- a comment alone is not the flat layout;
+- tests, and the domain doc.
+
+**Commands:** as P3-12d's, with `<out>` = `local/p3/p3-12e/evidence` (script `local/p3/p3-12e/evidence.sh`), plus `build-round-trip` of `mechanic` and PoB's 3.13 test builds.
+
+### Follow-ups
+
+- **Shock** (`conditionEnemyShocked`, `conditionShockEffect`, all 7 in-scope builds). PoB gives a shocked enemy increased damage taken equal to the shock's effect: the configured `ShockVal`, at most 50, floored to its precision (`CalcPerform.lua` 3545 to 3640). The engine has no enemy damage taken in the hit yet; that comes first.
+- **Rage** (`multiplierRage`). It acts only with `Condition:CanGainRage` or `RageRegen`, which about 25 modifier texts set (`ModParser.lua` 2201 to 2585, 5517 to 5539). Each needs its stat ID before rage can join `NAMED_ONLY` or be modelled (more attack damage per rage).
+- **Cold exposure** (`conditionEnemyColdExposure`). It needs `CanApplyColdExposure`, also set by modifiers; same approach.
+- **A block's `enabled` attribute** written with a character reference: XML reads it, PoB reads the reference as nothing. This is contrived and not in any fixture; apply P3-12d's raw-attribute check if one appears.
+- **Onslaught and culling strike** (the Smite builds' custom lines), the bandit, the pantheon, and the minion's aura.

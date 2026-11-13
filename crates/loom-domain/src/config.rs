@@ -14,11 +14,45 @@ pub struct Config {
     pub active: Option<ConfigSetId>,
     /// The sets, with untyped content in place.
     pub sets: Ordered<ConfigSet>,
+    /// How the build's format held the sets.
+    pub layout: ConfigLayout,
     /// Attributes not typed.
     pub attributes: Attributes,
 }
 
+/// How a build's format held its config sets.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ConfigLayout {
+    /// Each set in its own element.
+    #[default]
+    Sets,
+    /// One set (ID 1, no title, no attributes) whose content the format
+    /// held directly, with no set element (PoB's layout before config
+    /// sets). What a planner does differently with such a set is the
+    /// calculations' concern (`loom_calc::poe1::collect`).
+    Flat,
+}
+
 impl Config {
+    /// Checks the layout: a flat config holds exactly one set, with ID 1,
+    /// no title, and no attributes, and no untyped content beside it.
+    ///
+    /// # Errors
+    /// [`DomainError::FlatConfigLayout`] when it does not.
+    pub fn check_layout(&self) -> Result<(), DomainError> {
+        if self.layout == ConfigLayout::Sets {
+            return Ok(());
+        }
+        match self.sets.entries() {
+            [crate::opaque::Entry::Typed(set)]
+                if set.id == ConfigSetId(1) && set.title.is_none() && set.attributes.is_empty() =>
+            {
+                Ok(())
+            }
+            _ => Err(DomainError::FlatConfigLayout),
+        }
+    }
+
     /// Checks that no custom modifier line continues another line (only
     /// item lines resolve over several lines).
     ///
@@ -155,4 +189,62 @@ pub enum ConfigValue {
     Number(Sourced<Number>),
     /// Text.
     String(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::opaque::OpaqueNode;
+
+    fn set(id: u32) -> ConfigSet {
+        ConfigSet {
+            id: ConfigSetId(id),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Attributes::new(),
+        }
+    }
+
+    fn flat(sets: Ordered<ConfigSet>) -> Config {
+        Config {
+            layout: ConfigLayout::Flat,
+            sets,
+            ..Config::default()
+        }
+    }
+
+    #[test]
+    fn a_flat_config_should_hold_one_set_1_without_title_or_attributes() {
+        let one = |s: ConfigSet| {
+            let mut o = Ordered::new();
+            o.push(s);
+            o
+        };
+        assert_eq!(flat(one(set(1))).check_layout(), Ok(()));
+        // The layout with set elements holds anything.
+        let mut sets = one(set(2));
+        sets.push(set(3));
+        let config = Config {
+            sets: sets.clone(),
+            ..Config::default()
+        };
+        assert_eq!(config.check_layout(), Ok(()));
+        let mut titled = set(1);
+        titled.title = Some("t".to_owned());
+        let mut attributed = set(1);
+        attributed.attributes = vec![crate::opaque::Attribute::new("x", "1")];
+        let mut opaque = one(set(1));
+        opaque.push_opaque(OpaqueNode::element("Input"));
+        for bad in [
+            Ordered::new(),
+            one(set(2)),
+            one(titled),
+            one(attributed),
+            sets,
+            opaque,
+        ] {
+            assert_eq!(flat(bad).check_layout(), Err(DomainError::FlatConfigLayout));
+        }
+    }
 }

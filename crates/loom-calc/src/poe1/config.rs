@@ -50,8 +50,9 @@
 //! The stats behind those modifiers are [`DEPENDS_ON`]: they must stay
 //! reasons (`unmapped-stat`), and mapping one (even as `NoEffect`) must
 //! revisit this table (a test checks). Inputs with their
-//! own effects (charges, rage, fortification, shock and its effect,
-//! exposure, a minion's aura, bandit and pantheon) stay reasons. Custom
+//! own effects (rage, shock and its effect, exposure, a minion's aura,
+//! bandit and pantheon) stay reasons; charges have their effects
+//! ([`super::charges`], P3-12e). Custom
 //! modifier blocks are not inputs: their lines act through their
 //! resolutions (`collect::config`, P3-12c), and so do the lines of PoB's
 //! legacy `customMods` input where PoB moves them into a block
@@ -138,6 +139,18 @@
 ///   1231); `CalcPerform.lua` (852) reads it for chaos damage taken by
 ///   you (not a slice field), only with `CanBeWithered`, a skill's or
 ///   map's flag.
+///
+/// Added in P3-12e:
+///
+/// - `buffFortification`, `overrideFortification`: `Condition:Fortified`
+///   and `FortificationStacks` OVERRIDE in combat (lines 1039, 1042).
+///   `CalcSetup.lua` (94) turns the condition into the `Fortified` flag;
+///   `CalcPerform.lua` (659 to 680) then sets the stacks (the override or
+///   the maximum), `DamageTakenWhenHit` MORE per stack (damage taken, not a
+///   slice field), the `HaveMaximumFortification` flag, and one more
+///   `BuffOnSelf`; 3889 exports the stacks to a party (not a slice
+///   field). Every other reader is a modifier (per fortification, while
+///   fortified, at maximum fortification, per buff on you).
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
@@ -157,6 +170,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "bloodSandStance",
         &["Condition:SandStance", "Condition:BloodStance"],
+    ),
+    (
+        "buffFortification",
+        &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
     ("conditionBeenHitRecently", &["Condition:BeenHitRecently"]),
     ("conditionBlockedRecently", &["Condition:BlockedRecently"]),
@@ -219,6 +236,7 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "multiplierWitheredStackCountSelf",
         &["Multiplier:WitheredStack"],
     ),
+    ("overrideFortification", &["FortificationStacks"]),
     ("projectileDistance", &["skillDist"]),
     ("sigilOfPowerStages", &["Multiplier:SigilOfPowerStage"]),
 ];
@@ -370,7 +388,6 @@ mod tests {
             "usePowerCharges",
             "useEnduranceCharges",
             "multiplierRage",
-            "buffFortification",
             "conditionEnemyShocked",
             "conditionShockEffect",
             "conditionEnemyColdExposure",
@@ -407,6 +424,45 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// Fortification (P3-12e): every reader of its names is a modifier,
+    /// and no mapped stat reads or changes it (the `NoEffect` rows that
+    /// name it are listed and reach no slice field).
+    #[test]
+    fn no_mapped_stat_should_read_fortification() {
+        use crate::ingest::StatMapping;
+        use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};
+
+        let ids = HIT_ROWS
+            .iter()
+            .map(|r| r.0)
+            .chain(ROWS.iter().map(|r| r.0))
+            .chain(LOCAL_ROWS.iter().map(|r| r.0))
+            .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        for id in ids {
+            assert!(!id.contains("fortif"), "{id}: revisit NAMED_ONLY");
+        }
+        // `NoEffect` rows naming fortification, each checked: a chance to
+        // fortify, its duration, regeneration per stack; none reaches a
+        // slice field.
+        let checked = [
+            "chance_to_fortify_on_melee_hit_+%",
+            "fortify_duration_+%",
+            "life_regeneration_per_minute_%_per_fortification",
+        ];
+        for (id, _) in crate::poe1::mapping::NO_EFFECT {
+            assert!(
+                !id.contains("fortif") || checked.contains(id),
+                "{id}: a NoEffect row naming fortification; check it and list it"
+            );
+        }
+        // The maximum stays a reason (PoB scales stats per stack).
+        assert_eq!(
+            crate::poe1::mapping::Poe1Mapping
+                .map(&loom_domain::StatId::new("base_max_fortification")),
+            crate::ingest::StatMap::Unmapped
+        );
     }
 
     #[test]
