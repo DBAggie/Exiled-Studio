@@ -1,4 +1,5 @@
-//! Buffs the config turns on (Phase 3 plan, step 12; P3-12f): Onslaught.
+//! Buffs the config turns on (Phase 3 plan, step 12; P3-12f): Onslaught;
+//! since P3-8n, Arcane Surge and Convergence.
 //!
 //! What PoB v2.67.2 does:
 //! - `buffOnslaught` (`Modules/ConfigOptions.lua` 1010 to 1012), a check,
@@ -24,6 +25,23 @@
 //! flask, which is a reason on its own (`collect`). Other sources of
 //! Onslaught (on kill, from a flask, a skill) are modifiers or other gems,
 //! reasons too.
+//!
+//! **Arcane Surge** (P3-8n). `buffArcaneSurge` (`ConfigOptions.lua` 1002)
+//! sets `Condition:ArcaneSurge`; `CalcPerform.lua` (686 to 705) then sets
+//! `AffectedByArcaneSurge` (read by Arcane Surge Support's more spell
+//! damage, a mapping row with [`super::conditions::ARCANE_SURGE`]) and
+//! gives cast `Speed` INC `(Max(ArcaneSurgeCastSpeed) or 20) x effect`,
+//! the effect `1 + (ArcaneSurgeEffect + BuffEffectOnSelf) / 100` (and a
+//! flask's share): no effect stat is mapped ([`ARCANE_SURGE_DEPENDS_ON`]),
+//! so 1. Its mana regeneration and `ArcaneSurgeDamage` (unmapped) are not
+//! here. Its source is the input.
+//!
+//! **Convergence** (P3-8n). `conditionConvergence` (1430) sets
+//! `Condition:Convergence` only with `Condition:CanGainConvergence` ("Gain
+//! Convergence when you Hit a Unique Enemy", [`Poe1Quantity::CanGainConvergence`]);
+//! `CalcSetup.lua` (108) makes it the `Convergence` flag and
+//! `CalcPerform.lua` (755 to 758) gives `ElementalDamage` MORE `floor(30 x
+//! (1 + BuffEffectOnSelf / 100))`, here 30 (`BuffEffectOnSelf` unmapped).
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
@@ -51,10 +69,104 @@ pub const DEPENDS_ON: &[&str] = &[
     "onslaught_effect_+%",
 ];
 
-/// Whether this module handles `input`.
+/// The check that grants Arcane Surge (its condition is
+/// [`super::conditions`]' too).
+pub const ARCANE_SURGE_INPUT: &str = "buffArcaneSurge";
+
+/// Arcane Surge's increased cast speed without a support (PoB's `or 20`).
+pub const ARCANE_SURGE_SPEED: f64 = 20.0;
+
+/// The stats that change Arcane Surge's effect (PoB's `ArcaneSurgeEffect`,
+/// `BuffEffectOnSelf`, and the flask's share), sorted: they must stay
+/// reasons while the engine gives the effect 1.
+pub const ARCANE_SURGE_DEPENDS_ON: &[&str] = &[
+    "additive_flask_effect_modifiers_apply_to_arcane_surge",
+    "additive_flask_effect_modifiers_apply_to_arcane_surge_at_%_value",
+    "arcane_surge_cast_speed_+%",
+    "arcane_surge_effect_+%",
+    "buff_effect_on_self_+%",
+];
+
+/// The check that gives Convergence.
+pub const CONVERGENCE_INPUT: &str = "conditionConvergence";
+
+/// Convergence's more elemental damage (`CalcPerform.lua` 756).
+pub const CONVERGENCE_MORE: f64 = 30.0;
+
+/// Whether this module handles `input` (Arcane Surge's check is
+/// [`super::conditions`]').
 #[must_use]
 pub fn is_buff_input(input: &str) -> bool {
-    input == ONSLAUGHT_INPUT
+    input == ONSLAUGHT_INPUT || input == CONVERGENCE_INPUT
+}
+
+/// A check's value: `Ok(false)` when unset or off, `Err(())` for a value
+/// that is not a boolean.
+fn check(set: Option<&ConfigSet>, input: &str) -> Result<bool, ()> {
+    match set.and_then(|set| super::config::last_input(set, input, ConfigInputKind::Input)) {
+        None | Some(ConfigValue::Boolean(false)) => Ok(false),
+        Some(ConfigValue::Boolean(true)) => Ok(true),
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => Err(()),
+    }
+}
+
+/// Arcane Surge's cast speed (module docs), with the check on.
+fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    // A value of another type: `conditions::handles` leaves it a reason.
+    if check(set, ARCANE_SURGE_INPUT) != Ok(true) {
+        return;
+    }
+    let speed = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .fold(None, |m: Option<f64>, v| {
+            Some(m.map_or(v, |m| crate::math::max(m, v)))
+        })
+        .unwrap_or(ARCANE_SURGE_SPEED);
+    ingest.effect(Effect {
+        quantity: Quantity::Speed,
+        op: Op::Increased,
+        value: speed,
+        conditions: Conditions::none().with_all(Flags::CAST),
+        source: Source::Config {
+            input: ARCANE_SURGE_INPUT.to_owned(),
+        },
+    });
+}
+
+/// Convergence's more elemental damage (module docs).
+fn convergence(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    match check(set, CONVERGENCE_INPUT) {
+        Ok(false) => {}
+        Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: CONVERGENCE_INPUT.to_owned(),
+        }),
+        Ok(true) => {
+            let can_gain = ingest.effects().iter().any(|e| {
+                e.quantity == Quantity::Poe1(Poe1Quantity::CanGainConvergence)
+                    && e.op == Op::Flag
+                    && e.value != 0.0
+                    && e.conditions == Conditions::none()
+            });
+            if can_gain {
+                ingest.effect(Effect {
+                    quantity: Quantity::Damage,
+                    op: Op::More,
+                    value: CONVERGENCE_MORE,
+                    conditions: Conditions::none().with_any(Flags::ELEMENTAL),
+                    source: Source::Config {
+                        input: CONVERGENCE_INPUT.to_owned(),
+                    },
+                });
+            }
+        }
+    }
 }
 
 /// The stat that grants Onslaught (module docs).
@@ -65,6 +177,8 @@ pub const ONSLAUGHT_STAT: &str = "base_should_have_onslaught_from_stat";
 /// (PoB reads any value other than `false` as on). Runs after every other
 /// source has been ingested.
 pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    arcane_surge(set, ingest);
+    convergence(set, ingest);
     // The last input counts; a check's placeholder is not applied.
     let mut source = match set
         .and_then(|set| super::config::last_input(set, ONSLAUGHT_INPUT, ConfigInputKind::Input))
@@ -138,7 +252,7 @@ mod tests {
             slot: ArmourSlot::Helmet,
         };
         let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
-        for stat in DEPENDS_ON {
+        for stat in DEPENDS_ON.iter().chain(ARCANE_SURGE_DEPENDS_ON) {
             for m in mappings {
                 assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
             }
@@ -147,6 +261,9 @@ mod tests {
 
     #[test]
     fn the_inputs_should_be_apart_from_the_other_tables() {
+        assert!(ARCANE_SURGE_DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
+        assert!(!super::super::config::named_only(CONVERGENCE_INPUT));
+        assert!(!super::super::config::named_only(ARCANE_SURGE_INPUT));
         assert!(!super::super::config::named_only(ONSLAUGHT_INPUT));
         assert!(!super::super::charges::is_charge_input(ONSLAUGHT_INPUT));
     }

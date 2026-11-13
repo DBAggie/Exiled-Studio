@@ -655,6 +655,7 @@ pub const fn is_hit_quantity(quantity: Quantity) -> bool {
                     | Poe1Quantity::Conversion(..)
                     | Poe1Quantity::DoubleDamageChance
                     | Poe1Quantity::Stack(..)
+                    | Poe1Quantity::ArcaneSurgeCastSpeed
             )
     )
 }
@@ -864,6 +865,18 @@ pub const STATE_ROWS: &[StateRow] = &[
     (
         "staff_block_%",
         &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+    // P3-8n: Arcane Surge Support's "more Spell Damage while you have Arcane
+    // Surge" (`Damage` MORE, `ModFlag.Spell`, `AffectedByArcaneSurge`,
+    // `sup_int.lua` 235), the config's buff (`poe1::conditions`).
+    (
+        "support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge",
+        &[(
+            Quantity::Damage,
+            Op::More,
+            Flags::SPELL,
+            conditions::ARCANE_SURGE,
+        )],
     ),
 ];
 
@@ -1077,6 +1090,27 @@ pub const ROWS: &[Row] = &[
         "cold_and_lightning_damage_resistance_%",
         &[(COLD, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
+    // P3-8n: "#% increased Effect of Consecrated Ground you create"
+    // (`ConsecratedGroundEffect` INC, `ModParser.lua` 465): the enemy's
+    // damage taken on it (`poe1::damage_taken`).
+    (
+        "consecrated_ground_effect_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ConsecratedGroundEffect),
+            Op::Increased,
+            1.0,
+        )],
+    ),
+    // P3-8n: "Consecrated Ground you create applies #% increased Damage taken
+    // to Enemies" (the enemy's `DamageTakenConsecratedGround` INC, 2901).
+    (
+        "consecrated_ground_enemy_damage_taken_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ConsecratedGroundDamageTaken),
+            Op::Increased,
+            1.0,
+        )],
+    ),
     ("dexterity_+%", &[(DEX, Op::Increased, 1.0)]),
     (
         "evasion_and_physical_damage_reduction_rating_+%",
@@ -1101,6 +1135,16 @@ pub const ROWS: &[Row] = &[
         "fire_and_lightning_damage_resistance_%",
         &[(FIRE, Op::Base, 1.0), (LIGHTNING, Op::Base, 1.0)],
     ),
+    // P3-8n: "Gain Convergence when you Hit a Unique Enemy"
+    // (`Condition:CanGainConvergence`, 2661; `poe1::buffs`).
+    (
+        "gain_convergence_on_hitting_unique_enemy",
+        &[(
+            Quantity::Poe1(Poe1Quantity::CanGainConvergence),
+            Op::Flag,
+            1.0,
+        )],
+    ),
     (
         "global_defences_+%",
         &[
@@ -1108,6 +1152,17 @@ pub const ROWS: &[Row] = &[
             (Quantity::Armour, Op::Increased, 1.0),
             (Quantity::Evasion, Op::Increased, 1.0),
         ],
+    ),
+    // P3-8n: "Enemies Ignited or Chilled by you have #% to Elemental
+    // Resistances" (the enemy's `ElementalResist` BASE while ignited or
+    // chilled, 4054; `poe1::damage_taken`).
+    (
+        "ignites_and_chill_apply_elemental_resistance_+",
+        &[(
+            Quantity::Poe1(Poe1Quantity::AilmentElementalResistance),
+            Op::Base,
+            1.0,
+        )],
     ),
     ("intelligence_+%", &[(INT, Op::Increased, 1.0)]),
     (
@@ -1124,6 +1179,23 @@ pub const ROWS: &[Row] = &[
     ),
     ("maximum_life_+%", &[(Quantity::Life, Op::Increased, 1.0)]),
     ("maximum_mana_+%", &[(Quantity::Mana, Op::Increased, 1.0)]),
+    // P3-8n: "Allocates <notable>" (`GrantedPassive`, 5485): the node's
+    // hash; `collect` adds the node.
+    (
+        "mod_granted_passive_hash",
+        &[(Quantity::Poe1(Poe1Quantity::GrantedPassive), Op::Base, 1.0)],
+    ),
+    // P3-8n: "Enemies permanently take #% increased Damage for each second
+    // they've ever been Chilled by you, up to a maximum of 10%" (3812;
+    // `poe1::damage_taken`).
+    (
+        "permanent_damage_+%_per_second_of_chill",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ChillSecondsDamageTaken),
+            Op::Base,
+            1.0,
+        )],
+    ),
     (
         "physical_damage_reduction_rating_+%",
         &[(Quantity::Armour, Op::Increased, 1.0)],
@@ -1138,6 +1210,16 @@ pub const ROWS: &[Row] = &[
         ],
     ),
     ("strength_+%", &[(STR, Op::Increased, 1.0)]),
+    // P3-8n: Arcane Surge Support's cast speed (`ArcaneSurgeCastSpeed` MAX,
+    // `Data/Skills/sup_int.lua` 232; `poe1::buffs`).
+    (
+        "support_arcane_surge_cast_speed_+%",
+        &[(
+            Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed),
+            Op::Base,
+            1.0,
+        )],
+    ),
 ];
 
 /// The Path of Exile stat-to-effect mapping: [`ROWS`]; every other stat
@@ -1314,6 +1396,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     (
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
+    ),
+    // P3-8n: "You have Consecrated Ground around you while stationary"
+    // (`Condition:OnConsecratedGround` while `Stationary`, 2902): you on
+    // consecrated ground, which only regeneration, curses on you, and
+    // modifiers read ([`NO_EFFECT_DEPENDS_ON`]); never the enemy.
+    (
+        "consecrated_ground_while_stationary_radius",
+        "consecrated-ground",
     ),
     ("console_skill_dont_chase", "display"),
     ("curse_effect_on_self_+%", "curse-on-self"),
@@ -1557,6 +1647,11 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "added_chaos_damage_%_mana_cost_if_payable",
         "hierophant_mana_cost_+%_final",
     ),
+    // P3-8n: modifiers while on consecrated ground.
+    (
+        "additional_block_%_while_on_consecrated_ground",
+        "consecrated_ground_while_stationary_radius",
+    ),
     (
         "arc_and_crackling_lance_added_cold_damage_%_mana_cost_if_payable",
         "hierophant_mana_cost_+%_final",
@@ -1565,6 +1660,10 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "armour_evasion_rating_+%_final_per_fortification_above_20",
         "base_max_fortification",
+    ),
+    (
+        "attack_and_cast_speed_+%_while_on_consecrated_ground",
+        "consecrated_ground_while_stationary_radius",
     ),
     (
         "attack_damage_+%_while_you_have_at_least_20_fortification",
@@ -1577,6 +1676,10 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "attack_speed_+%_per_fortification_above_20",
         "base_max_fortification",
+    ),
+    (
+        "damage_+%_on_consecrated_ground",
+        "consecrated_ground_while_stationary_radius",
     ),
     // P3-8n: damage per summoned golem (`PerStat` of `ActiveGolemLimit`).
     (
@@ -1610,6 +1713,18 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "spell_suppression_chance_%_per_fortification",
         "base_max_fortification",
+    ),
+    (
+        "virtual_critical_strike_chance_+%_while_on_consecrated_ground",
+        "consecrated_ground_while_stationary_radius",
+    ),
+    (
+        "your_consecrated_ground_grants_accuracy_rating_+%",
+        "consecrated_ground_while_stationary_radius",
+    ),
+    (
+        "your_consecrated_ground_grants_damage_+%",
+        "consecrated_ground_while_stationary_radius",
     ),
 ];
 
@@ -1895,6 +2010,13 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
         "local_critical_strike_chance_+%",
         &[(weapon(WeaponValue::CritChance), Op::Increased)],
     ),
+    // P3-8n: "Grants #% increased Elemental Damage per 2% Quality"
+    // (`ElementalDamage` INC per `QualityOn{SlotName}`, `div` 2,
+    // `ModParser.lua` 5759): `collect` scales it by the weapon's quality.
+    (
+        "local_elemental_damage_+%_per_2%_quality",
+        &[(weapon(WeaponValue::ElementalDamagePerQuality), Op::Base)],
+    ),
     (
         "local_maximum_added_chaos_damage",
         &[(weapon(WeaponValue::Damage(CHAOS_T, MAX)), Op::Base)],
@@ -1941,6 +2063,12 @@ pub const WEAPON_ROWS: &[WeaponRow] = &[
             (weapon(WeaponValue::Damage(PHYS, MIN)), Op::Increased),
             (weapon(WeaponValue::Damage(PHYS, MAX)), Op::Increased),
         ],
+    ),
+    // P3-8n: "Quality does not increase Physical Damage"
+    // (`AlternateQualityWeapon`, 5753; `Classes/Item.lua` 2257).
+    (
+        "local_quality_does_not_increase_physical_damage",
+        &[(weapon(WeaponValue::AlternateQuality), Op::Flag)],
     ),
     (
         "local_weapon_no_physical_damage",
@@ -2147,13 +2275,12 @@ mod tests {
         // shock's scale, `poe1::damage_taken`; mana reservation efficiency
         // since P3-8l, `poe1::skill_modifiers`; the effect of chill since
         // P3-8m, the guaranteed chill's scale.)
-        for stat in ["maximum_life_+%_if_no_life_tags_on_body_armour"] {
-            assert_eq!(
-                Poe1Mapping.map(&StatId::new(stat)),
-                StatMap::Unmapped,
-                "{stat}"
-            );
-        }
+        assert_eq!(
+            Poe1Mapping.map(&StatId::new(
+                "maximum_life_+%_if_no_life_tags_on_body_armour"
+            )),
+            StatMap::Unmapped
+        );
     }
 
     #[test]
@@ -2821,6 +2948,15 @@ mod tests {
                 vec![staff(Quantity::Damage, Op::Increased, Flags::SPELL)],
             ),
             ("staff_block_%", vec![staff(BLOCK, Op::Base, NONE)]),
+            (
+                "support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge",
+                vec![config(
+                    Quantity::Damage,
+                    Op::More,
+                    Flags::SPELL,
+                    conditions::ARCANE_SURGE,
+                )],
+            ),
         ];
         assert_eq!(STATE_ROWS.len(), expected.len());
         for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {

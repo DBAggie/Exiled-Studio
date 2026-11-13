@@ -985,14 +985,21 @@ fn weapon_data(
             what: "no-physical-damage",
         });
     }
-    let quality = sum_in(
-        calc,
-        weapon(WeaponValue::Quality),
-        Op::Base,
-        &cx,
-        Term::Step("weapon-quality"),
-        reasons,
-    )?;
+    // "Quality does not increase Physical Damage" (P3-8n, PoB's
+    // `AlternateQualityWeapon`, `Classes/Item.lua` 2257): the quality
+    // scalar is 0. Queried only when the store has the flag.
+    let alternate = flag_on(calc, weapon(WeaponValue::AlternateQuality), &cx, reasons)?;
+    let quality = match alternate {
+        Some(flag) => by_flag(calc, flag, "alternate-quality", 0.0)?,
+        None => sum_in(
+            calc,
+            weapon(WeaponValue::Quality),
+            Op::Base,
+            &cx,
+            Term::Step("weapon-quality"),
+            reasons,
+        )?,
+    };
     let mut damage = [None; 5];
     for (slot, t) in damage.iter_mut().zip(TYPES) {
         let mut range = Vec::new();

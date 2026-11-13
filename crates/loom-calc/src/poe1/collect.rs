@@ -92,6 +92,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
+    // After the items: "Allocates <notable>" (P3-8n).
+    granted_passives(input, spec, ingest);
     config(build, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
@@ -475,6 +477,59 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
     }
 }
 
+/// The nodes items grant ("Allocates <notable>", PoB's `GrantedPassive`,
+/// `CalcSetup.lua` 1287 to 1297; P3-8n): each [`Poe1Quantity::GrantedPassive`]
+/// effect's value is the node's hash, the key of the passives table. PoB
+/// adds the node to the allocated set, so a node the tree already
+/// allocates (and connects) counts once; otherwise its stats count with
+/// the node as source. PoB looks the node up by its name among notables
+/// and ascendancy nodes; the hash is the game's own reference. A hash the
+/// data does not know is indeterminate.
+fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+    let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
+        connected(input, spec.nodes.value())
+            .into_iter()
+            .filter(|n| spec.nodes.value().iter().any(|a| a.0 == *n))
+            .collect()
+    });
+    let mut granted = BTreeSet::new();
+    let hashes: Vec<f64> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::GrantedPassive)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+        })
+        .map(|e| e.value)
+        .collect();
+    for hash in hashes {
+        #[expect(
+            clippy::cast_possible_truncation,
+            clippy::cast_sign_loss,
+            reason = "a node hash below 2^16, checked"
+        )]
+        let node = (hash.fract() == 0.0 && (0.0..65536.0).contains(&hash)).then_some(hash as u32);
+        let Some(node) = node else {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "passives",
+                key: hash.to_string(),
+            });
+            continue;
+        };
+        if allocated.contains(&node) || !granted.insert(node) {
+            continue;
+        }
+        match input.data.passive_stats(node) {
+            Some(stats) => ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats)),
+            None => ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "passives",
+                key: node.to_string(),
+            }),
+        }
+    }
+}
+
 /// How an item in a slot acts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SlotKind {
@@ -788,6 +843,39 @@ fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
         }
     }
     item_lines_with(&WeaponMapping, item, ingest);
+    // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
+    // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
+    // 0.0001)`, the character's (`ModParser.lua` 5759, `ModStore`'s
+    // multiplier). Its own effect on the weapon is read by nothing else.
+    let quality = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == value(WeaponValue::Quality) && e.op == Op::Base)
+        .map(|e| e.value)
+        .sum::<f64>();
+    let per: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::ElementalDamagePerQuality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .cloned()
+        .collect();
+    let steps = (quality / 2.0 + 0.0001).floor();
+    for e in per {
+        if steps * e.value != 0.0 {
+            ingest.effect(Effect {
+                quantity: Quantity::Damage,
+                op: Op::Increased,
+                value: e.value * steps,
+                conditions: Conditions::none().with_any(crate::condition::Flags::ELEMENTAL),
+                source: e.source,
+            });
+        }
+    }
 }
 
 /// The item in an armour slot (a helmet, gloves, boots, a body armour, or

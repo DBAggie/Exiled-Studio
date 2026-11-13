@@ -117,6 +117,11 @@ type ExposureRow = (&'static str, &'static [Poe1Quantity]);
 /// - "Cold (Fire, Lightning) Skills have a #% chance to apply Cold (Fire,
 ///   Lightning) Exposure on Hit" (4191 to 4193);
 /// - "Inflict Fire, Cold, and Lightning Exposure on Hit" (4200);
+/// - "Inflict Cold (Fire, Lightning) Exposure on Hit, applying #% to Cold
+///   (Fire, Lightning) Resistance" (4251, P3-8n): `<Type>ExposureChance`
+///   100 and the enemy's `<Type>Exposure` at the line's value, here
+///   [`Poe1Quantity::ExposureOnHit`], whose being there is also the
+///   chance;
 /// - "Exposure you inflict applies an extra #% to the affected Resistance"
 ///   (2665), "Cold (Fire) Exposure you inflict applies an extra #% to Cold
 ///   (Fire) Resistance" (4267, 4268). The game writes the value with its
@@ -124,10 +129,14 @@ type ExposureRow = (&'static str, &'static [Poe1Quantity]);
 ///   number, not one written "+5", which PoB would not parse while the
 ///   engine applies it. Every such stat rolls negative, so no build meets
 ///   the difference.
-pub const STATS: [ExposureRow; 8] = [
+pub const STATS: [ExposureRow; 11] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         &[chance(DamageType::Cold)],
+    ),
+    (
+        "cold_exposure_on_hit_magnitude",
+        &[Poe1Quantity::ExposureOnHit(DamageType::Cold)],
     ),
     (
         "cold_exposure_you_inflict_applies_extra_cold_resistance_+%",
@@ -140,6 +149,10 @@ pub const STATS: [ExposureRow; 8] = [
     (
         "exposure_you_inflict_applies_extra_%_to_affected_resistance",
         &[extra(None)],
+    ),
+    (
+        "fire_exposure_on_hit_magnitude",
+        &[Poe1Quantity::ExposureOnHit(DamageType::Fire)],
     ),
     (
         "fire_exposure_you_inflict_applies_extra_fire_resistance_+%",
@@ -156,6 +169,10 @@ pub const STATS: [ExposureRow; 8] = [
             chance(DamageType::Cold),
             chance(DamageType::Lightning),
         ],
+    ),
+    (
+        "lightning_exposure_on_hit_magnitude",
+        &[Poe1Quantity::ExposureOnHit(DamageType::Lightning)],
     ),
     (
         "lightning_skill_chance_to_inflict_lightning_exposure_%",
@@ -188,11 +205,9 @@ pub const DEPENDS_ON: &[&str] = &[
     "base_inflict_lightning_exposure_on_hit_%_chance",
     "chance_to_inflict_fire_exposure_on_hit_with_fire_damage_%",
     "chance_to_inflict_lightning_exposure_on_hit_with_lightning_damage_%",
-    "cold_exposure_on_hit_magnitude",
     "elemental_equilibrium_effect_+%",
     "enemies_near_link_skill_target_have_exposure",
     "exposure_you_inflict_has_minimum_resistance_%",
-    "fire_exposure_on_hit_magnitude",
     "fire_exposure_on_hit_magnitude_vs_max_stacks_resentment_debuff",
     "graft_skill_inflict_fire_exposure_on_hit_%_chance",
     "graft_skill_inflict_lightning_exposure_on_hit_%_chance",
@@ -205,7 +220,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
     "inflict_lightning_exposure_on_hit_%_chance_at_devotion_threshold",
     "keystone_elemental_equilibrium",
-    "lightning_exposure_on_hit_magnitude",
     "local_display_nearby_enemies_have_fire_exposure",
     "local_display_socketed_gems_exposure_on_hit",
     "local_display_socketed_gems_have_elemental_equilibrium_effect_pluspercent",
@@ -284,35 +298,59 @@ fn from_config(quantity: Poe1Quantity, value: f64, input: &str) -> Effect {
 /// config set (module docs). Runs after every other source; a value the
 /// engine does not read as PoB does is a reason under its input.
 pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
-    let Some(set) = set else { return };
-    match army(set) {
-        Ok(None) => {}
-        Ok(Some(t)) => ingest.effect(from_config(chance(t), ARMY_CHANCE, ARMY_INPUT)),
-        Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
-            input: ARMY_INPUT.to_owned(),
-        }),
+    if let Some(set) = set {
+        match army(set) {
+            Ok(None) => {}
+            Ok(Some(t)) => ingest.effect(from_config(chance(t), ARMY_CHANCE, ARMY_INPUT)),
+            Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+                input: ARMY_INPUT.to_owned(),
+            }),
+        }
     }
     for (t, input) in CHECKS {
-        match last(set, input, ConfigInputKind::Input) {
-            None | Some(ConfigValue::Boolean(false)) => continue,
-            Some(ConfigValue::Boolean(true)) => {}
+        let on_hit: Vec<Effect> = bases(ingest, Poe1Quantity::ExposureOnHit(t))
+            .cloned()
+            .collect();
+        // The check's -10, when on and the type can be applied.
+        let mut candidates = Vec::new();
+        match set.and_then(|set| last(set, input, ConfigInputKind::Input)) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => {
+                // An exposure on hit is also a chance of 100 (P3-8n).
+                let can_apply = bases(ingest, chance(t)).map(|e| e.value).sum::<f64>() > 0.0
+                    || !on_hit.is_empty();
+                if can_apply {
+                    candidates.push(from_config(
+                        Poe1Quantity::EnemyResistance(t),
+                        EXPOSURE,
+                        input,
+                    ));
+                }
+            }
             // PoB reads any other value as on: not modelled, a reason.
             Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
                 ingest.reason(UnsupportedReason::UnmodelledConfig {
                     input: input.to_owned(),
                 });
-                continue;
             }
         }
-        let can_apply = bases(ingest, chance(t)).map(|e| e.value).sum::<f64>() > 0.0;
-        if !can_apply {
+        // Each exposure on hit is on the enemy (P3-8n): its line's value.
+        candidates.extend(on_hit.iter().map(|e| Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::EnemyResistance(t)),
+            op: Op::Base,
+            value: e.value,
+            conditions: Conditions::none(),
+            source: e.source.clone(),
+        }));
+        // The strongest: PoB keeps the first strictly lowest (3572 to
+        // 3577).
+        let Some(strongest) = candidates
+            .into_iter()
+            .reduce(|best, e| if e.value < best.value { e } else { best })
+        else {
             continue;
-        }
-        let mut added = vec![from_config(
-            Poe1Quantity::EnemyResistance(t),
-            EXPOSURE,
-            input,
-        )];
+        };
+        let mut added = vec![strongest];
         added.extend(
             bases(ingest, extra(None))
                 .chain(bases(ingest, extra(Some(t))))

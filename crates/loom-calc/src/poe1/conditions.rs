@@ -16,19 +16,19 @@
 //!   the `Boss`, `Pinnacle`, and `Uber` boss kinds also set (2095, 2129,
 //!   2162; the kind as [`super::enemy`] reads it, PoB's default
 //!   `Pinnacle` too);
-//! - `conditionOnConsecratedGround`: `OnConsecratedGround` (1137);
-//! - `conditionEnemyOnConsecratedGround`: the enemy's
-//!   `OnConsecratedGround` (1986);
-//! - `conditionStationary`, a count (or a boolean in older builds):
-//!   `Condition:Stationary` when above 0 (158).
+//! - `buffArcaneSurge`: `Condition:ArcaneSurge` (1002), which
+//!   `CalcPerform.lua` (686) turns into `AffectedByArcaneSurge` (the buff's
+//!   own effect is [`super::buffs`]').
 //!
 //! A value of another type (PoB would read it otherwise) leaves the
 //! condition unsettled, so an effect that needs it is a reason, and
 //! [`handles`] leaves the input to `collect`'s `unmodelled-config`.
 //!
 //! The modifiers that read these conditions are mapping rows with a state
-//! (`mapping::STATE_ROWS`); `OnConsecratedGround` is also set by a
-//! modifier while stationary ([`super::buffs`]).
+//! (`mapping::STATE_ROWS`). No modifier the engine maps sets one of them
+//! (PoB's other setters are unmapped stats). A condition a mapped
+//! modifier can also set (being on consecrated ground while stationary)
+//! is not settled here: its input stays in `config::NAMED_ONLY`.
 
 use std::collections::BTreeMap;
 
@@ -49,34 +49,24 @@ pub const AT_CLOSE_RANGE: &str = "AtCloseRange";
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// "against Unique Enemies": the enemy's `RareOrUnique`.
 pub const ENEMY_RARE_OR_UNIQUE: &str = "Enemy:RareOrUnique";
-/// You are on consecrated ground (PoB's `OnConsecratedGround`).
-pub const ON_CONSECRATED_GROUND: &str = "OnConsecratedGround";
-/// The enemy is on consecrated ground.
-pub const ENEMY_ON_CONSECRATED_GROUND: &str = "Enemy:OnConsecratedGround";
-/// "while stationary".
-pub const STATIONARY: &str = "Stationary";
+/// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
+pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
 /// The check inputs and the condition each sets (module docs), sorted by
 /// input (a test checks).
 pub const CHECKS: &[(&str, &str)] = &[
+    ("buffArcaneSurge", ARCANE_SURGE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
-    (
-        "conditionEnemyOnConsecratedGround",
-        ENEMY_ON_CONSECRATED_GROUND,
-    ),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
-    ("conditionOnConsecratedGround", ON_CONSECRATED_GROUND),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
     ("conditionShockedEnemyRecently", SHOCKED_ENEMY_RECENTLY),
 ];
 
-/// The stationary count input.
-pub const STATIONARY_INPUT: &str = "conditionStationary";
-
 /// A check's value: `Some(false)` when unset or off, `None` for a value
 /// that is not a boolean.
-fn check(set: Option<&ConfigSet>, name: &str) -> Option<bool> {
+#[must_use]
+pub fn check(set: Option<&ConfigSet>, name: &str) -> Option<bool> {
     match set.and_then(|s| last(s, name, ConfigInputKind::Input)) {
         None | Some(ConfigValue::Boolean(false)) => Some(false),
         Some(ConfigValue::Boolean(true)) => Some(true),
@@ -84,33 +74,10 @@ fn check(set: Option<&ConfigSet>, name: &str) -> Option<bool> {
     }
 }
 
-/// The stationary count: above 0 (input, else placeholder, as a count
-/// option), or `true` (an older build's boolean).
-fn stationary(set: Option<&ConfigSet>) -> Option<bool> {
-    let Some(set) = set else { return Some(false) };
-    let read = |kind| match last(set, STATIONARY_INPUT, kind) {
-        None => Some(None),
-        Some(ConfigValue::Number(n)) if n.value().0.is_finite() => {
-            Some(Some(n.value().0).filter(|v| *v != 0.0))
-        }
-        Some(ConfigValue::Boolean(b)) => Some(Some(if *b { 1.0 } else { 0.0 })),
-        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => None,
-    };
-    let value = match read(ConfigInputKind::Input)? {
-        Some(v) => Some(v),
-        None => read(ConfigInputKind::Placeholder)?,
-    };
-    Some(value.is_some_and(|v| v > 0.0))
-}
-
-/// Whether this module settles `input` from `value` (a check as a boolean,
-/// the stationary count as a number or a boolean).
+/// Whether this module settles `input` from `value` (a check as a
+/// boolean).
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
-    if input == STATIONARY_INPUT {
-        return matches!(value, ConfigValue::Boolean(_))
-            || matches!(value, ConfigValue::Number(n) if n.value().0.is_finite());
-    }
     CHECKS.iter().any(|(name, _)| *name == input) && matches!(value, ConfigValue::Boolean(_))
 }
 
@@ -119,18 +86,14 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
     let set = super::collect::active_config(input.build);
     for &(name, condition) in CHECKS {
         let mut value = check(set, name);
-        if condition == ENEMY_RARE_OR_UNIQUE {
-            let kind = enemy::enemy(input.build, input.data).kind;
-            if kind != BossKind::None {
-                value = value.map(|_| true);
-            }
+        if condition == ENEMY_RARE_OR_UNIQUE
+            && enemy::enemy(input.build, input.data).kind != BossKind::None
+        {
+            value = value.map(|_| true);
         }
         if let Some(v) = value {
             out.insert(ConditionKey::new(condition), v);
         }
-    }
-    if let Some(v) = stationary(set) {
-        out.insert(ConditionKey::new(STATIONARY), v);
     }
 }
 
@@ -144,7 +107,6 @@ mod tests {
         for (input, _) in CHECKS {
             assert!(!super::super::config::named_only(input), "{input}");
         }
-        assert!(!super::super::config::named_only(STATIONARY_INPUT));
     }
 
     #[test]
@@ -157,8 +119,7 @@ mod tests {
             "conditionAtCloseRange",
             &ConfigValue::String("x".into())
         ));
-        assert!(handles(STATIONARY_INPUT, &ConfigValue::Boolean(true)));
-        assert!(!handles(STATIONARY_INPUT, &ConfigValue::String("1".into())));
         assert!(!handles("conditionFullLife", &ConfigValue::Boolean(true)));
+        assert!(!handles("conditionStationary", &ConfigValue::Boolean(true)));
     }
 }

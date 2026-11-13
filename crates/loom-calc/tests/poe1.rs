@@ -1481,7 +1481,8 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
         "buffTailwind",
-        "buffArcaneSurge",
+        // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
+        "buffElusive",
         "summonLightningGolemEnableWrath",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
