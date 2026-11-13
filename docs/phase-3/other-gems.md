@@ -80,7 +80,16 @@ The main skill keeps its own path (its stats through `SkillMapping`); a main ski
 
 ### Evidence
 
-EVIDENCE-PLACEHOLDER
+Maintainer-run (`local/p3/p3-12h/evidence.sh`, P3-12g's bundle `local/p3/p3-12g/bundle-poe1-a`, unchanged: this PR adds no game data), calc runs from clean `0d04119`; `data-parity` from clean `f336006` (the review tightened the check after the calc runs; the engine is the same). Summaries in `docs/phase-3/other-gems/`.
+
+- **PoB data export** (format 4): two runs byte-identical.
+- **`data-parity`**: 534 differences, `uncategorized` 0 (unchanged from P3-12g); the new `gem_effects` table compares 255 values with 0 differences; two runs identical; the record `docs/phase-3/data-parity-poe1-26530219.json` replaced. The review's stricter check found one more case: Summon Phantasm adds `CreatesMinion` to its skill (its phantasm, already allowed), allowed by the same named-condition argument.
+- **Oracle**: 104 fixtures, every expectation met, 3 runs each.
+- **`calc-parity`** (`p3-12h-public-calc-parity-summary.json`): 33 registered differences (DIV-0001 to DIV-0033, unchanged), 0 unexpected, no unused entry; 1380 fields match; every mechanic target met, 1370 of 1370 over 67 fixtures, the four new ones on all their targets (the first quick run matched them too: Herald of Ice needed no `game-truth` entry).
+- **Calc runs**: public and corpus documents byte-identical over two runs; round trips pass (public and corpus).
+- **Against P3-12g** (`p3-12h-public-vs-p3-12g.json`): no field state changed; 42 values in 16 public builds changed, every one toward PoB's (6 now equal it, 36 closer, none farther); 354 reasons gone and 26 added in 28 builds (the added ones: 23 `socket-colour-quality`, and 3 `unmodelled-gem` for Arcane Surge in the Ice Nova builds' main group, which also supports the Vaal gem's other effect, Vaal Ice Nova; PoB gives its buff through that skill too, and the buff is not modelled yet). Corpus: 5 values in 5 builds (unreserved mana), 143 reasons gone, 8 added.
+- **In-scope builds**: `unmodelled-gem` reasons fell from 65 to 20 (both campaign Ice Nova builds), 17 to 10 (Ice Nova mapping), and for Smite act1, act2, act5, act10 from 10, 11, 16, 17 to 0, 4, 8, 8. **Smite act1 has no gem reason left**: its average damage, crit chance, hit chance, and unreserved mana now equal PoB's; its only reasons are the two custom lines ("Perfect Forest Warrior", Q13; "Onslaught", ambiguous), and its speed differs by the Onslaught line and Q11.
+- 1195 workspace tests, clippy, fmt, wasm32; the maintainer-run real-bundle tests (every `DEPENDS_ON` stat and every table ID in the real bundle).
 
 ### Follow-ups
 

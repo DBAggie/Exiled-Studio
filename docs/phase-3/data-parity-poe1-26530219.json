@@ -1,7 +1,7 @@
 {
   "format": 1,
   "tool": {
-    "commit": "2f084ad004fe5e37e252f3541e67cace2d7c681b",
+    "commit": "f336006827b99a68179817a285a2f76430aeae84",
     "dirty": false
   },
   "inputs": {
@@ -9,7 +9,7 @@
     "steam_build": 26530219,
     "bundle_manifest_sha256": "595dd9a7490e269b99ab2b0f570b1404fa6329bf31eb01ef513df416ac0796be",
     "data_schema": 2,
-    "pob_export_sha256": "bf056711494d2e2fba8dd61f45db46b9057a2c523d292babe4ff1deed0b2c7b5",
+    "pob_export_sha256": "5442d4045e6ed797ba9be21d2e4f74815a29a906315b82c6a67a88b763b85f15",
     "pob_version": "2.67.2",
     "tree_version": "3_29",
     "pob_runtime": "LuaJIT 2.1.1784580905",
@@ -42,6 +42,12 @@
     },
     "game_constants": {
       "compared": 42,
+      "differences": 0,
+      "pob_only_rows": 0,
+      "bundle_only_rows": 0
+    },
+    "gem_effects": {
+      "compared": 255,
       "differences": 0,
       "pob_only_rows": 0,
       "bundle_only_rows": 0
