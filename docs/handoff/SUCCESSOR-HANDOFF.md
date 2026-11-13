@@ -25,8 +25,8 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-13, P3-8e PR #TBD open, base `feat/p3-8d-charge-modifiers` (cascade: #91 <- #92 <- #93 <- this); P3-12h #90 merged into `dev`)
-- **PR P3-8e: area damage, spell crit multiplier, area and light radius (PR #TBD, open, branch `feat/p3-8e-stat-batch`, base `feat/p3-8d-charge-modifiers`; merge #91, #92, #93, then this).**
+## Current state (updated 2026-11-13, P3-8e PR #94 open, base `feat/p3-8d-charge-modifiers` (cascade: #91 <- #92 <- #93 <- this); P3-12h #90 merged into `dev`)
+- **PR P3-8e: area damage, spell crit multiplier, area and light radius (PR #94, open, branch `feat/p3-8e-stat-batch`, base `feat/p3-8d-charge-modifiers`; merge #91, #92, #93, then this).**
   - **What** (`docs/phase-3/stat-mapping.md`, "P3-8e"): hit rows `area_damage_+%` and `base_spell_critical_strike_multiplier_+`; `NoEffect` for three area-of-effect stats and `light_radius_+%`, with four "light radius also applies" stats as guards.
   - **Evidence:** oracle 111 fixtures, all met; `calc-parity` 0 unexpected, every mechanic target met (1525 of 1525, 74 fixtures, one new); 6 values in the two in-scope Ice Nova Elementalist builds closer to PoB's (the campaign build's crit multiplier now equal); 83 reasons gone, none added; corpus 57 gone. 1209 workspace tests, clippy, fmt, wasm32.
   - **Review:** `code-architecture-reviewer`; applied.
