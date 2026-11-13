@@ -1295,6 +1295,85 @@ fn onslaught_should_grant_increased_cast_speed() {
     }));
 }
 
+/// A modifier "Onslaught" (a custom line, `base_should_have_onslaught_from_stat`)
+/// gives Onslaught as the check does; any number of sources give it once,
+/// as PoB's flag (P3-12j).
+#[test]
+fn an_onslaught_modifier_should_grant_onslaught_once() {
+    let onslaught_line = || loom_domain::CustomModifierLine {
+        text: "Onslaught".to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_should_have_onslaught_from_stat"),
+                value: StatValue::Exact { min: 1, max: 1 },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |lines: usize, check: bool| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: "Onslaught\n".repeat(lines),
+                lines: (0..lines).map(|_| onslaught_line()).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        if check {
+            set.inputs.push(ConfigInput {
+                name: "buffOnslaught".to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    assert_eq!(
+        value(&with(0, false), Field::Speed),
+        value(&bare, Field::Speed)
+    );
+    // A disabled block gives nothing.
+    let mut b = build(vec![group(&["IceNova"])]);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![loom_domain::CustomModifierBlock {
+            title: None,
+            enabled: false,
+            text: "Onslaught".to_owned(),
+            lines: vec![onslaught_line()],
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    assert_eq!(value(&run(&b), Field::Speed), value(&bare, Field::Speed));
+    // 1 / (0.5 / round(1 + 20 / 100, 2)), whatever the sources.
+    for (lines, check) in [(1, false), (2, false), (1, true), (0, true)] {
+        let r = with(lines, check);
+        assert_eq!(
+            r.fields[&Field::Speed].state,
+            FieldState::Complete,
+            "{lines} {check}"
+        );
+        assert_eq!(
+            value(&r, Field::Speed),
+            1.0 / (0.5 / 1.2),
+            "{lines} {check}"
+        );
+    }
+}
+
 /// Lines on a charge input (a build document can carry them) are a reason
 /// under its name, as on any input other than `customMods` (P3-12e
 /// review).
@@ -1803,4 +1882,183 @@ fn socket_lines_should_count_only_when_part_of_the_item() {
         ]))[1],
         [Yes]
     );
+}
+
+/// Charge modifiers (P3-8d): the maximum and minimum add to PoB's count,
+/// `max(use ? (override or max) : 0, min(max, min))`, and an effect per
+/// charge acts times the count. The data's constants: 3 charges, 50%
+/// increased crit chance each; Ice Nova's base crit 5%.
+#[test]
+fn charge_modifiers_should_count_as_pob_does() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |inputs: &[(&str, f64)], use_on: bool, lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        let mut push = |name: &str, value: ConfigValue| {
+            set.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        };
+        if use_on {
+            push("usePowerCharges", ConfigValue::Boolean(true));
+        }
+        for (name, v) in inputs {
+            push(
+                name,
+                ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
+            );
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let crit = |r: &CalcResult| {
+        assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+        value(r, Field::CritChance)
+    };
+    // One more maximum: 4 charges, 5% x (1 + 200 / 100).
+    assert_eq!(crit(&with(&[], true, &[("max_power_charges", 1)])), 15.0);
+    // 10% more per charge: 3 x 60.
+    assert_eq!(
+        crit(&with(
+            &[],
+            true,
+            &[("critical_strike_chance_+%_per_power_charge", 10)]
+        )),
+        14.0
+    );
+    // A minimum without `use`: 2 charges; capped by the maximum (3).
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 2)])),
+        10.0
+    );
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 5)])),
+        12.5
+    );
+    // The override below the minimum: the minimum.
+    assert_eq!(
+        crit(&with(
+            &[("overridePowerCharges", 1.0)],
+            true,
+            &[("base_minimum_power_charges", 2)]
+        )),
+        10.0
+    );
+    // Per-charge modifiers without charges do nothing.
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let r = with(&[], false, &[("spell_damage_+%_per_power_charge", 5)]);
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&bare, Field::AverageDamage)
+    );
+    // 5% spell damage per charge with 3 charges is 15% increased spell
+    // damage.
+    let per = with(&[], true, &[("spell_damage_+%_per_power_charge", 5)]);
+    let flat = with(&[], true, &[("spell_damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    assert_eq!(
+        per.fields[&Field::AverageDamage].state,
+        FieldState::Complete
+    );
+}
+
+/// More charge modifier cases (P3-8d review): frenzy and endurance, a
+/// negative maximum, crit multiplier per charge. Constants: 3 charges of
+/// each kind; a frenzy charge gives 4% increased cast speed and 4% more
+/// damage.
+#[test]
+fn charge_modifiers_of_every_kind_should_count() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |checks: &[&str], lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        for name in checks {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    // Two frenzy charges from a minimum, no check: 8% increased cast
+    // speed, 1 / (0.5 / round(1.08, 2)).
+    let r = with(&[], &[("base_minimum_frenzy_charges", 2)]);
+    assert_eq!(value(&r, Field::Speed), 1.0 / (0.5 / 1.08));
+    // Endurance charges have no effect of their own on a slice field; a
+    // modifier per charge does: 3 x 5% = 15% increased damage.
+    let per = with(
+        &["useEnduranceCharges"],
+        &[("damage_+%_per_endurance_charge", 5)],
+    );
+    let flat = with(&[], &[("damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    // A negative maximum stops at 0 charges.
+    let r = with(&["usePowerCharges"], &[("max_power_charges", -5)]);
+    assert_eq!(
+        value(&r, Field::CritChance),
+        value(&bare, Field::CritChance)
+    );
+    // +10% crit multiplier per power charge, 3 charges: 150 + 30.
+    let r = with(
+        &["usePowerCharges"],
+        &[("critical_strike_multiplier_+_per_power_charge", 10)],
+    );
+    assert_eq!(value(&r, Field::CritMultiplier), 1.8);
 }

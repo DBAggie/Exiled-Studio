@@ -299,6 +299,25 @@ fn local_stat_should_keep_the_local_reading_on_a_carrier_base() {
     );
 }
 
+/// The custom-line rule (P3-12j): a global reading a row of one of the
+/// domains backs; a local reading, a row of another domain, or no row is
+/// not.
+#[test]
+fn backed_in_should_need_a_global_reading_and_a_row_of_the_domains() {
+    let mut mods = Mods::from_rows(vec![
+        row("local", OWN, AFFIX, "local_a", &[]),
+        row("global", OWN, AFFIX, "global_a", &[]),
+        row("monster", 9, AFFIX, "monster_a", &[]),
+    ]);
+    mods.locality.insert("local_a".to_owned(), Locality::Weapon);
+    let domains = BTreeSet::from([OWN]);
+    let backed = |stat: &str| mods.backed_in(&cand(stat, 5).stats, &domains);
+    assert!(backed("global_a"));
+    assert!(!backed("local_a"));
+    assert!(!backed("monster_a"));
+    assert!(!backed("display_a"));
+}
+
 #[test]
 fn influence_value_should_follow_the_rules() {
     let r = rules();
