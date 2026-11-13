@@ -8,12 +8,13 @@
 //! `loom_calc::poe1::phases`); the mechanic fixtures check the same
 //! against the oracle (`docs/phase-3/character-fields.md`).
 
-use loom_calc::poe1::Poe1Field;
+use loom_calc::poe1::{Poe1Data, Poe1Field};
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
     Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveLinks, Range,
     Scaling, Source, StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
 };
+use loom_data::bundle::poe1::{Pantheon, PantheonSoul};
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     Attribute, Build, ClassId, ConfigInput, ConfigSet, ConfigSetId, ConfigValue, DataVersion, Game,
@@ -43,6 +44,39 @@ const START: u32 = 100;
 struct Data {
     passives: Vec<(u32, Vec<StatAmount>)>,
     masteries: Vec<(u32, Vec<StatAmount>)>,
+    /// The pantheon (P3-12g): `None` as data without the table.
+    pantheons: Option<Vec<Pantheon>>,
+}
+
+/// Two made-up gods: a major one whose souls hold a mapped stat (life), a
+/// `NoEffect` one, and an upgrade; a minor one with a stat the mapping
+/// does not know.
+fn gods() -> Vec<Pantheon> {
+    let soul = |name: &str, stats: &[(&str, i64)]| PantheonSoul {
+        name: name.to_owned(),
+        stats: stats.iter().map(|(s, v)| ((*s).to_owned(), *v)).collect(),
+    };
+    vec![
+        Pantheon {
+            id: "TestMajor".to_owned(),
+            major: true,
+            souls: vec![
+                soul(
+                    "Soul of Test",
+                    &[("base_maximum_life", 10), ("chaos_damage_taken_+%", -5)],
+                ),
+                soul("Test Upgrade", &[("base_maximum_life", 5)]),
+            ],
+        },
+        Pantheon {
+            id: "TestMinor".to_owned(),
+            major: false,
+            souls: vec![soul(
+                "Soul of Minor",
+                &[("keystone_unknown_to_the_mapping", 1)],
+            )],
+        },
+    ]
 }
 
 impl Data {
@@ -64,6 +98,7 @@ impl Data {
                 (START, vec![]),
             ],
             masteries: vec![(77, vec![amount("maximum_mana_+%", 10)])],
+            pantheons: Some(gods()),
         }
     }
 }
@@ -187,6 +222,15 @@ impl CalcData for Data {
     fn game_constant(&self, _: &str) -> Option<(i64, i64)> {
         None
     }
+    fn poe1(&self) -> Option<&dyn Poe1Data> {
+        Some(self)
+    }
+}
+
+impl Poe1Data for Data {
+    fn pantheons(&self) -> Option<&[Pantheon]> {
+        self.pantheons.as_deref()
+    }
 }
 
 fn witch(level: u32) -> Build {
@@ -204,15 +248,18 @@ fn options(tree: Option<&str>) -> CalcOptions {
     }
 }
 
+fn run_with(b: &Build, options: &CalcOptions) -> CalcResult {
+    run_on(&Data::new(), b, options)
+}
+
 #[expect(
     clippy::unwrap_used,
     reason = "a test helper: a failure fails the test"
 )]
-fn run_with(b: &Build, options: &CalcOptions) -> CalcResult {
-    let data = Data::new();
+fn run_on(data: &Data, b: &Build, options: &CalcOptions) -> CalcResult {
     let input = CalcInput {
         build: b,
-        data: &data,
+        data,
         options,
     };
     let r = calculate(&input).unwrap();
@@ -880,6 +927,148 @@ fn the_bandit_should_be_the_config_sets_choice() {
             partial_reasons(&with(choice, None), Field::Life),
             ["unmodelled-config"]
         );
+    }
+}
+
+/// A build with one config set holding `inputs` (each a typed input).
+fn with_inputs(mut b: Build, inputs: &[(&str, ConfigValue)]) -> Build {
+    let mut config = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    };
+    for (name, value) in inputs {
+        config.inputs.push(ConfigInput {
+            name: (*name).to_owned(),
+            value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Vec::new(),
+        });
+    }
+    b.config.sets.push(config);
+    b
+}
+
+/// P3-12g: the pantheon is the active config set's two inputs, read as
+/// the bandit's; every soul of a chosen god acts through the stat mapping.
+#[test]
+fn the_pantheon_should_apply_every_soul_of_the_chosen_gods() {
+    let text = |v: &str| ConfigValue::String(v.to_owned());
+    let bare = run(&witch(1));
+    // The major god: both souls' life (10 + 5); the NoEffect stat adds
+    // nothing and no reason. The attribute beside a set is ignored.
+    let mut b = witch(1);
+    b.set_game_specific(GameSpecific::Poe1(Poe1Choices {
+        bandit: None,
+        pantheon_major: Some("Arakaali".to_owned()),
+        pantheon_minor: Some("Yugul".to_owned()),
+    }))
+    .unwrap();
+    let r = run(&with_inputs(b, &[("pantheonMajorGod", text("TestMajor"))]));
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value(&r, Field::Life), value(&bare, Field::Life) + 15.0);
+    assert!(
+        r.graph.iter().any(|(_, n, _)| matches!(
+            n,
+            Node::Contribution { source: Source::Config { input }, value, .. }
+                if input == "pantheonMajorGod" && (*value == 10.0 || *value == 5.0)
+        )),
+        "the soul's life names the input"
+    );
+    // The minor god's stat is unknown to the mapping: a reason, not dropped.
+    let r = run(&with_inputs(
+        witch(1),
+        &[
+            ("pantheonMajorGod", text("None")),
+            ("pantheonMinorGod", text("TestMinor")),
+        ],
+    ));
+    assert_eq!(partial_reasons(&r, Field::Life), ["unmapped-stat"]);
+    // "None", no input, and the last input of a name.
+    for inputs in [
+        vec![
+            ("pantheonMajorGod", text("None")),
+            ("pantheonMinorGod", text("None")),
+        ],
+        vec![],
+        vec![
+            ("pantheonMajorGod", text("TestMajor")),
+            ("pantheonMajorGod", text("None")),
+        ],
+    ] {
+        let r = run(&with_inputs(witch(1), &inputs));
+        assert_eq!(state(&r, Field::Life), StateKind::Complete);
+        assert_eq!(value(&r, Field::Life), value(&bare, Field::Life));
+    }
+    // A god the table does not hold, or a value that is not a name: a
+    // reason under the input.
+    for v in [text("Nobody"), ConfigValue::Boolean(true)] {
+        let r = run(&with_inputs(witch(1), &[("pantheonMinorGod", v)]));
+        assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
+    }
+    // Data without the table: missing data, never a silent zero.
+    let data = Data {
+        pantheons: None,
+        ..Data::new()
+    };
+    let r = run_on(
+        &data,
+        &with_inputs(witch(1), &[("pantheonMajorGod", text("TestMajor"))]),
+        &options(Some("3_29")),
+    );
+    assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
+    assert!(
+        r.reasons
+            .indeterminate
+            .contains(&IndeterminateReason::MissingData {
+                table: "pantheons",
+                key: "TestMajor".to_owned()
+            })
+    );
+    // No set: the attribute stays a reason (the domain cannot tell a build
+    // without a config element from an empty one).
+    let mut b = witch(1);
+    b.set_game_specific(GameSpecific::Poe1(Poe1Choices {
+        bandit: None,
+        pantheon_major: Some("TestMajor".to_owned()),
+        pantheon_minor: None,
+    }))
+    .unwrap();
+    assert_eq!(
+        partial_reasons(&run(&b), Field::Life),
+        ["unmodelled-choice"]
+    );
+}
+
+/// The config inputs some `NoEffect` rows rely on stay config reasons
+/// (`NO_EFFECT_DEPENDS_ON_INPUTS`, P3-12g).
+#[test]
+fn inputs_a_no_effect_row_relies_on_should_stay_reasons() {
+    use loom_calc::poe1::mapping::{NO_EFFECT, NO_EFFECT_DEPENDS_ON_INPUTS};
+    assert!(
+        NO_EFFECT_DEPENDS_ON_INPUTS
+            .windows(2)
+            .all(|w| w[0].0 < w[1].0)
+    );
+    for &(input, row) in NO_EFFECT_DEPENDS_ON_INPUTS {
+        assert!(
+            NO_EFFECT.iter().any(|(stat, _)| *stat == row),
+            "{input}: {row} is not a NO_EFFECT row"
+        );
+        for value in [
+            ConfigValue::Boolean(true),
+            ConfigValue::Number(Sourced::new(loom_domain::Number(10.0))),
+        ] {
+            let r = run(&with_inputs(witch(1), &[(input, value)]));
+            assert_eq!(
+                partial_reasons(&r, Field::Life),
+                ["unmodelled-config"],
+                "{input}: modelling it must revisit {row}"
+            );
+        }
     }
 }
 

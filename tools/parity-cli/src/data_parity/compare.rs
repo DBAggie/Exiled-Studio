@@ -1138,14 +1138,14 @@ fn compare_pantheons(out: &mut Comparison, bundle: &Bundle, export: &Export) -> 
             out.check(
                 T,
                 id,
-                &format!("soul.{}.lines", n + 1),
+                format!("soul.{}.lines", n + 1),
                 json!(lines),
                 json!(pob_soul.mods.iter().map(|m| &m.line).collect::<Vec<_>>()),
             );
             out.check(
                 T,
                 id,
-                &format!("soul.{}.values", n + 1),
+                format!("soul.{}.values", n + 1),
                 Value::Array(soul.stats.iter().map(|(_, v)| int(*v)).collect()),
                 Value::Array(
                     pob_soul

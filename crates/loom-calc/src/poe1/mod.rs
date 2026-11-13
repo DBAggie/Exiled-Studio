@@ -21,10 +21,12 @@ pub mod damage_taken;
 pub mod enemy;
 pub mod hit;
 pub mod mapping;
+pub mod pantheon;
 pub mod phases;
 pub mod skill;
 
 pub use mapping::Poe1Mapping;
+pub use pantheon::Poe1Data;
 
 use loom_domain::Game;
 
