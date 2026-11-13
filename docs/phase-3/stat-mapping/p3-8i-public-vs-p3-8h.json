@@ -1,0 +1,163 @@
+{
+ "builds_with_reason_changes": 13,
+ "only_after": [
+  "ice-nova-gem-levels-witch.xml.json",
+  "smite-gem-levels-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 13}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 3, \"line\": 13}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 12}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 13, \"line\": 14}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 18, \"line\": 19}}, \"stat\": \"minion_skill_gem_level_+\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 34, \"line\": 27}}, \"stat\": \"minion_skill_gem_level_+\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 55, \"line\": 20}}, \"stat\": \"spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 55, \"line\": 21}}, \"stat\": \"chaos_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 12}}, \"stat\": \"physical_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 15}}, \"stat\": \"physical_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 17}}, \"stat\": \"spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 18}}, \"stat\": \"physical_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 15}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 87, \"line\": 17}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 94, \"line\": 23}}, \"stat\": \"minion_skill_gem_level_+\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 19, \"line\": 14}}, \"stat\": \"all_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 18}}, \"stat\": \"fire_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 17}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60170}}, \"stat\": \"cold_skill_gem_level_+\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 17}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60170}}, \"stat\": \"cold_skill_gem_level_+\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 18}}, \"stat\": \"spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 19}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 36, \"line\": 16}}, \"stat\": \"all_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16123}}, \"stat\": \"critical_support_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60170}}, \"stat\": \"cold_skill_gem_level_+\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 10}}, \"stat\": \"all_skill_gem_level_+\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 13}}, \"stat\": \"all_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 14}}, \"stat\": \"physical_skill_gem_level_+\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 4, \"line\": 15}}, \"stat\": \"cold_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60170}}, \"stat\": \"cold_skill_gem_level_+\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 31,
+ "state_changes": {},
+ "value_changes": {
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    4024.317829,
+    4953.208904000001
+   ],
+   "hit-dps": [
+    11842.992468200002,
+    14576.586203200004
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    9458.9223456,
+    11642.0635968
+   ],
+   "hit-dps": [
+    30268.551505920004,
+    37254.60350976001
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    23523.187170000005,
+    62401.81503584
+   ],
+   "crit-chance": [
+    77.14000000000001,
+    77.995
+   ],
+   "crit-multiplier": [
+    4.25,
+    4.3100000000000005
+   ],
+   "energy-shield": [
+    1674.0,
+    1733.0
+   ],
+   "hit-dps": [
+    70233.515979,
+    186313.990607008
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "average-damage": [
+    180.549435,
+    188.222925
+   ],
+   "hit-dps": [
+    211.5441159183673,
+    220.53490372148858
+   ]
+  }
+ }
+}

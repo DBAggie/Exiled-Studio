@@ -65,7 +65,7 @@ This follows PoB's model; the game's own rounding of reservation was not tested 
 
 ### Buffs
 
-A modelled buff skill's instance stats (and its supports'), at the gem's level and quality, give the table's rows; across skills each stat keeps its largest value per buff name (two Herald of Ice gems give one buff), and the rows act on the character with the gem as source. PoB applies buffs after attributes, life, and mana (`CalcPerform.lua` 1905 against 3284): a test checks no buff row targets them. Buff and aura effect stay reasons (`DEPENDS_ON`, `GUARDED_WORDS`: `aura_effect`, `buff_effect`, gem levels and quality), so every buff acts at a scale of exactly 1, where PoB's `ScaleAddList` adds the mods unchanged.
+A modelled buff skill's instance stats (and its supports'), at the gem's level (raised by the global gem level modifiers since P3-8i) and quality, give the table's rows; across skills each stat keeps its largest value per buff name (two Herald of Ice gems give one buff), and the rows act on the character with the gem as source. PoB applies buffs after attributes, life, and mana (`CalcPerform.lua` 1905 against 3284): a test checks no buff row targets them. Buff and aura effect stay reasons (`DEPENDS_ON`, `GUARDED_WORDS`: `aura_effect`, `buff_effect`, gem levels and quality), so every buff acts at a scale of exactly 1, where PoB's `ScaleAddList` adds the mods unchanged.
 
 The main skill keeps its own path (its stats through `SkillMapping`); a main skill that reserves is a reason.
 
