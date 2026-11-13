@@ -1378,6 +1378,278 @@ fn an_onslaught_modifier_should_grant_onslaught_once() {
     }
 }
 
+/// A custom line resolved to one stat with `value`.
+fn custom_stat_line(stat: &str, value: i64) -> loom_domain::CustomModifierLine {
+    loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact {
+                    min: value,
+                    max: value,
+                },
+            }]),
+            adapted: None,
+        },
+    }
+}
+
+/// Ice Nova with custom lines and config inputs.
+fn ice_nova_with(lines: &[(&str, i64)], inputs: &[(&str, ConfigValue)]) -> CalcResult {
+    let mut b = build(vec![group(&["IceNova"])]);
+    let mut set = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![loom_domain::CustomModifierBlock {
+            title: None,
+            enabled: true,
+            text: String::new(),
+            lines: lines.iter().map(|&(s, v)| custom_stat_line(s, v)).collect(),
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    };
+    for (name, value) in inputs {
+        set.inputs.push(ConfigInput {
+            name: (*name).to_owned(),
+            value: value.clone(),
+            kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Vec::new(),
+        });
+    }
+    b.config.sets.push(set);
+    run(&b)
+}
+
+/// The enemy's exposure (P3-8k, `poe1::exposure`): the check gives -10
+/// to the enemy's resistance only with a chance of its type above 0, plus
+/// every extra of all types or of that type, before the resistance's
+/// maximum (PoB's `CalcPerform.lua` 375 to 385, 3563 to 3589).
+#[test]
+fn exposure_should_lower_the_enemys_resistance_as_pob_does() {
+    let on = || ConfigValue::Boolean(true);
+    let text = |v: &str| ConfigValue::String(v.to_owned());
+    let cold = ("conditionEnemyColdExposure", on());
+    let chance = (
+        "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
+        10,
+    );
+    let all = (
+        "exposure_you_inflict_applies_extra_%_to_affected_resistance",
+        -25,
+    );
+    let extra_cold = (
+        "cold_exposure_you_inflict_applies_extra_cold_resistance_+%",
+        -5,
+    );
+    let extra_fire = (
+        "fire_exposure_you_inflict_applies_extra_fire_resistance_+%",
+        -7,
+    );
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    for (lines, inputs, resist) in [
+        (vec![chance], vec![cold.clone()], 40.0),
+        (vec![chance, all], vec![cold.clone()], 15.0),
+        (
+            vec![chance, all, extra_cold, extra_fire],
+            vec![cold.clone()],
+            10.0,
+        ),
+        // Inflict all three; cold skills' chance.
+        (
+            vec![("inflict_all_exposure_on_hit", 1)],
+            vec![cold.clone()],
+            40.0,
+        ),
+        (
+            vec![("cold_skill_chance_to_inflict_cold_exposure_%", 25)],
+            vec![cold.clone()],
+            40.0,
+        ),
+        // Elemental Army's exposure type gives the chance.
+        (
+            vec![all],
+            vec![cold.clone(), ("elementalArmyExposureType", text("Cold"))],
+            15.0,
+        ),
+    ] {
+        let r = ice_nova_with(&lines, &inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {lines:?}");
+        }
+        assert_eq!(
+            value(&r, Field::AverageDamage).to_bits(),
+            average(100.0, 200.0, 5.0, 1.5, resist).to_bits(),
+            "{lines:?} {inputs:?}"
+        );
+    }
+    // Nothing: the check without a chance of its type, a chance without
+    // the check, another type's check, Elemental Army of another type or
+    // none, the check off.
+    for (lines, inputs) in [
+        (vec![all], vec![cold.clone()]),
+        (vec![chance, all], vec![]),
+        (
+            vec![("fire_skill_chance_to_inflict_fire_exposure_%", 25), all],
+            vec![("conditionEnemyFireExposure", on()), cold.clone()],
+        ),
+        (
+            vec![all],
+            vec![cold.clone(), ("elementalArmyExposureType", text("Fire"))],
+        ),
+        (
+            vec![all],
+            vec![
+                cold.clone(),
+                (
+                    "elementalArmyExposureType",
+                    ConfigValue::Number(Sourced::new(loom_domain::Number(0.0))),
+                ),
+            ],
+        ),
+        (
+            vec![chance, all],
+            vec![("conditionEnemyColdExposure", ConfigValue::Boolean(false))],
+        ),
+    ] {
+        let r = ice_nova_with(&lines, &inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {lines:?}");
+            assert_eq!(
+                value(&r, f).to_bits(),
+                value(&bare, f).to_bits(),
+                "{f} {lines:?}"
+            );
+        }
+    }
+    // Values PoB would read otherwise: a reason under their input.
+    for (inputs, reason) in [
+        (
+            vec![("conditionEnemyColdExposure", text("yes"))],
+            "conditionEnemyColdExposure",
+        ),
+        (
+            vec![("elementalArmyExposureType", text("Water"))],
+            "elementalArmyExposureType",
+        ),
+    ] {
+        let r = ice_nova_with(&[chance], &inputs);
+        let FieldState::Partial(p) = &r.fields[&Field::AverageDamage].state else {
+            panic!("not partial: {inputs:?}");
+        };
+        assert!(
+            p.contains(&UnsupportedReason::UnmodelledConfig {
+                input: reason.to_owned(),
+            }),
+            "{inputs:?}"
+        );
+    }
+    // A stat that would change the exposure otherwise stays a reason.
+    let r = ice_nova_with(
+        &[
+            chance,
+            ("exposure_you_inflict_has_minimum_resistance_%", -18),
+        ],
+        &[cold],
+    );
+    assert!(matches!(
+        r.fields[&Field::AverageDamage].state,
+        FieldState::Partial(_)
+    ));
+}
+
+/// The guaranteed shock (P3-8k, `poe1::damage_taken`): with the enemy
+/// shocked, the shock is `floor(min(max(minimums x (1 + inc / 100),
+/// configured), 50))`, the minimums summed (PoB's `CalcPerform.lua` 3499
+/// to 3546); without the check, nothing.
+#[test]
+fn a_guaranteed_shock_should_raise_the_shock_as_pob_does() {
+    let on = || ConfigValue::Boolean(true);
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let shocked = |effect: f64| {
+        vec![
+            ("conditionEnemyShocked", on()),
+            ("conditionShockEffect", n(effect)),
+        ]
+    };
+    let minimum = |v| ("shock_minimum_damage_taken_increase_%", v);
+    let lightning = |v| ("lightning_ailment_effect_+%", v);
+    let expected = |shock: f64| {
+        let taken = 1.0 * (1.0 + shock / 100.0);
+        let effect = taken * (1.0 - 50.0 / 100.0);
+        let hit = (100.0 / 2.0 + 200.0 / 2.0) * effect;
+        let crit_hit = ((100.0 * 1.5) / 2.0 + (200.0 * 1.5) / 2.0) * effect;
+        let average_hit = hit * (1.0 - 5.0 / 100.0) + crit_hit * 5.0 / 100.0;
+        average_hit * 100.0 / 100.0
+    };
+    for (lines, inputs, shock) in [
+        (vec![minimum(25)], shocked(10.0), 25.0),
+        // 25 x 1.5 = 37.5, floored.
+        (vec![minimum(25), lightning(50)], shocked(10.0), 37.0),
+        // The configured shock is stronger.
+        (vec![minimum(25), lightning(50)], shocked(40.0), 40.0),
+        // No configured effect: the minimum alone.
+        (
+            vec![minimum(25)],
+            vec![("conditionEnemyShocked", on())],
+            25.0,
+        ),
+        // Minimums add up; the three effect stats add up: 35 x 1.3.
+        (
+            vec![
+                minimum(25),
+                minimum(10),
+                lightning(10),
+                ("non_damaging_ailment_effect_+%", 10),
+                ("shock_effect_+%", 10),
+            ],
+            shocked(5.0),
+            45.0,
+        ),
+        // At most 50.
+        (vec![minimum(40), lightning(50)], shocked(10.0), 50.0),
+    ] {
+        let r = ice_nova_with(&lines, &inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {lines:?}");
+        }
+        assert_eq!(
+            value(&r, Field::AverageDamage).to_bits(),
+            expected(shock).to_bits(),
+            "{lines:?}"
+        );
+    }
+    // Without the check a minimum shocks nothing; "Hits always Shock" and
+    // "All Damage can Shock" reach no field.
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    for lines in [
+        vec![minimum(25), lightning(50)],
+        vec![
+            ("always_shock", 1),
+            ("all_damage_can_shock", 1),
+            minimum(25),
+        ],
+    ] {
+        let r = ice_nova_with(&lines, &[]);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {lines:?}");
+            assert_eq!(value(&r, f).to_bits(), value(&bare, f).to_bits(), "{f}");
+        }
+    }
+    // A stat that would change the shock otherwise stays a reason.
+    let r = ice_nova_with(
+        &[minimum(25), ("shock_maximum_magnitude_+", 10)],
+        &shocked(10.0),
+    );
+    assert!(matches!(
+        r.fields[&Field::AverageDamage].state,
+        FieldState::Partial(_)
+    ));
+}
+
 /// Lines on a charge input (a build document can carry them) are a reason
 /// under its name, as on any input other than `customMods` (P3-12e
 /// review).

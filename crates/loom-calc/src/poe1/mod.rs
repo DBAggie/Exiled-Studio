@@ -19,6 +19,7 @@ pub mod collect;
 pub mod config;
 pub mod damage_taken;
 pub mod enemy;
+pub mod exposure;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
@@ -84,6 +85,26 @@ pub enum Poe1Quantity {
     /// enemy, `calcLib.val`): they scale its base evasion before an
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
     EnemyEvasion,
+    /// The enemy's resistance to an elemental damage type from exposure
+    /// (PoB's `<Type>Resist` BASE on the enemy, P3-8k): `Base`, only
+    /// [`exposure`] adds them; a hit adds their sum to the enemy's base
+    /// resistance before its maximum ([`hit`]).
+    EnemyResistance(DamageType),
+    /// A chance to inflict exposure of an elemental damage type (PoB's
+    /// `<Type>ExposureChance`, P3-8k): `Base`; [`exposure`] reads only
+    /// whether the sum is above 0 (PoB's `CanApply<Type>Exposure`).
+    ExposureChance(DamageType),
+    /// "Exposure you inflict applies an extra #%" (PoB's `ExtraExposure`
+    /// with no type, `Extra<Type>Exposure` with one; P3-8k): `Base`, read
+    /// by [`exposure`].
+    ExtraExposure(Option<DamageType>),
+    /// "Shocks from your Hits always increase Damage taken by at least #%"
+    /// (PoB's `ShockMinimum`, P3-8k): `Base`, read by [`damage_taken`].
+    ShockMinimum,
+    /// The effect of the shocks you inflict (PoB's `EnemyShockEffect`,
+    /// P3-8k): `Increased`, read by [`damage_taken`] to scale a guaranteed
+    /// shock.
+    ShockEffect,
     /// Onslaught (PoB's `Condition:Onslaught`, turned into the `Onslaught`
     /// flag by `CalcSetup.lua` 97): a `Flag` effect from a stat that grants
     /// it (P3-12j); [`buffs`] gives its speed once, whatever the number of
@@ -212,6 +233,12 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
+            Self::EnemyResistance(t) => write!(f, "enemy-resistance.{}", t.name()),
+            Self::ExposureChance(t) => write!(f, "exposure-chance.{}", t.name()),
+            Self::ExtraExposure(None) => f.write_str("extra-exposure"),
+            Self::ExtraExposure(Some(t)) => write!(f, "extra-exposure.{}", t.name()),
+            Self::ShockMinimum => f.write_str("shock-minimum"),
+            Self::ShockEffect => f.write_str("shock-effect"),
             Self::Onslaught => f.write_str("onslaught"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
@@ -485,6 +512,25 @@ mod tests {
             Quantity::Poe1(Poe1Quantity::Onslaught).to_string(),
             "poe1.onslaught"
         );
+        for (q, name) in [
+            (
+                Poe1Quantity::EnemyResistance(DamageType::Cold),
+                "poe1.enemy-resistance.cold",
+            ),
+            (
+                Poe1Quantity::ExposureChance(DamageType::Fire),
+                "poe1.exposure-chance.fire",
+            ),
+            (Poe1Quantity::ExtraExposure(None), "poe1.extra-exposure"),
+            (
+                Poe1Quantity::ExtraExposure(Some(DamageType::Cold)),
+                "poe1.extra-exposure.cold",
+            ),
+            (Poe1Quantity::ShockMinimum, "poe1.shock-minimum"),
+            (Poe1Quantity::ShockEffect, "poe1.shock-effect"),
+        ] {
+            assert_eq!(Quantity::Poe1(q).to_string(), name);
+        }
         assert_eq!(
             Quantity::Poe1(Poe1Quantity::Charge(
                 charges::ChargeKind::Power,

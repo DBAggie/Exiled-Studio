@@ -12,21 +12,27 @@
 //!   `takenMore` their MORE product (`ModDB:More`, each name rounded to two
 //!   decimals). For physical damage the resistance is the armour's
 //!   reduction, computed on the hit before `effMult`.
-//! - **Shock** (`Modules/ConfigOptions.lua` 1943 to 1950): the
-//!   `conditionEnemyShocked` check sets the enemy's `Condition:Shocked`
-//!   and `Condition:ShockedConfig`; the `conditionShockEffect` count sets
-//!   the enemy's `ShockVal` BASE, only while `ShockedConfig`. Then
-//!   `calcs.perform` (`Modules/CalcPerform.lua` 3545 to 3640): the shock
-//!   is `floor(min(max(override, ShockVal), max))` (`ailmentData.Shock`:
-//!   precision 0, `Modules/Data.lua` 427), `override` the strongest
-//!   guaranteed shock (`ShockBase`, `ShockOverride`, `ShockMinimum`:
-//!   modifiers), `max` the `ShockMax` override, else 50 plus each active
-//!   skill's `ShockMax` BASE, the largest. The enemy takes `DamageTaken`
-//!   INC equal to the shock (with `ShockCanStack`, per stack: a
+//! - **Shock** (`Modules/ConfigOptions.lua` 1917 to 1924 in the pinned
+//!   checkout): the `conditionEnemyShocked` check sets the enemy's
+//!   `Condition:Shocked` and `Condition:ShockedConfig`; the
+//!   `conditionShockEffect` count sets the enemy's `ShockVal` BASE, only
+//!   while `ShockedConfig`. Then `calcs.perform` (`Modules/CalcPerform.lua`
+//!   3499 to 3546): the shock is `floor(min(max(override, ShockVal),
+//!   max))` (`ailmentData.Shock`: precision 0, `Modules/Data.lua` 427),
+//!   `override` the strongest guaranteed shock (`ShockBase`,
+//!   `ShockOverride`, `ShockMinimum`: modifiers), `max` the `ShockMax`
+//!   override, else 50 plus each active skill's `ShockMax` BASE, the
+//!   largest. A `ShockMinimum` (the Elementalist's Shaper of Storms:
+//!   "Shocks from your Hits always increase Damage taken by at least 25%")
+//!   is scaled by the character's `EnemyShockEffect` (`calcLib.mod`, no
+//!   `cfg`) and the enemy's `SelfShockEffect`, and the minimums add up;
+//!   unlike `ShockOverride` it does not shock the enemy on its own, so it
+//!   counts only with the check on. The enemy takes `DamageTaken` INC
+//!   equal to the shock while shocked (with `ShockCanStack`, per stack: a
 //!   modifier's flag). Nothing happens when the enemy is already shocked,
 //!   immune, or avoids shock (enemy modifiers only). The guard `ShockVal >
 //!   0 or modDB:Sum(...)` is always true in Lua (0 is true), so with no
-//!   configured effect the shock is 0.
+//!   configured effect and no guaranteed shock the shock is 0.
 //! - **The boss kind** (`enemyIsBoss`, `Modules/ConfigOptions.lua` 2086 to
 //!   2221): the Uber kind gives the enemy `DamageTaken` MORE -70. The
 //!   kinds' other modifiers reach no slice field ([`super::enemy`] module
@@ -59,12 +65,19 @@
 //! What the engine does: one quantity, [`Poe1Quantity::EnemyDamageTaken`]
 //! (PoB's `DamageTaken` on the enemy, every damage type), whose effects
 //! only this module adds; a hit multiplies each type's enemy effect by
-//! `(1 + inc / 100) x more` of it ([`super::hit`]). Damage taken of one
-//! type, elemental, projectile, or trap and mine damage taken, and
-//! everything else that sets a shock (a guaranteed shock, a different
-//! maximum, stacks, immunity, the enemy's shock effect) comes only from
-//! modifiers, so from stats: no mapping produces them (tests in this
-//! module), so such a stat is a reason or reaches no slice field.
+//! `(1 + inc / 100) x more` of it ([`super::hit`]). The shock (P3-8k) is
+//! PoB's from the configured effect and the guaranteed minimums of
+//! [`SHOCK_STATS`] ([`Poe1Quantity::ShockMinimum`], scaled by
+//! [`Poe1Quantity::ShockEffect`]), computed once every source is in; its
+//! effect's source is the configured effect's input, or the first
+//! minimum's when the minimum is stronger (the shock's other sources are
+//! no graph node: a documented gap, as the charges' count). Damage taken
+//! of one type, elemental, projectile, or trap and mine damage taken, and
+//! everything else that sets a shock (another guaranteed shock, a
+//! different maximum, stacks, immunity, the enemy's shock effect) comes
+//! only from modifiers, so from stats: no mapping produces them (tests in
+//! this module, [`SHOCK_DEPENDS_ON`]), so such a stat is a reason or
+//! reaches no slice field.
 
 use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
 
@@ -110,6 +123,82 @@ pub const BLIND_DEPENDS_ON: &[&str] = &["blind_effect_+%"];
 /// The largest shock without modifiers (`ailmentData.Shock.max`,
 /// `Modules/Data.lua` 427).
 pub const SHOCK_MAX: f64 = 50.0;
+
+/// One stat: its quantity and op (scale 1).
+type ShockRow = (&'static str, Poe1Quantity, Op);
+
+/// The stats of the guaranteed shock (P3-8k, module docs), sorted by stat
+/// ID. Each description is the game's, read by PoB's text:
+/// - "#% increased Effect of Lightning Ailments" (`ModParser.lua` 776:
+///   `EnemyShockEffect` and `EnemySapEffect`), "#% increased Effect of
+///   Non-Damaging Ailments" (785: every non-damaging ailment's effect),
+///   "#% increased Effect of Shock" (772): `EnemyShockEffect` INC. The
+///   other ailments' effects reach no slice field: chill slows the enemy,
+///   sap lessens its damage, and scorch, brittle, and a chill's damage
+///   taken come only from config inputs that stay reasons or from
+///   guaranteed sources that are stats PoB reads otherwise (reasons);
+/// - "Shocks from your Hits always increase Damage taken by at least #%"
+///   (2768): `ShockMinimum` BASE.
+pub const SHOCK_STATS: [ShockRow; 4] = [
+    (
+        "lightning_ailment_effect_+%",
+        Poe1Quantity::ShockEffect,
+        Op::Increased,
+    ),
+    (
+        "non_damaging_ailment_effect_+%",
+        Poe1Quantity::ShockEffect,
+        Op::Increased,
+    ),
+    ("shock_effect_+%", Poe1Quantity::ShockEffect, Op::Increased),
+    (
+        "shock_minimum_damage_taken_increase_%",
+        Poe1Quantity::ShockMinimum,
+        Op::Base,
+    ),
+];
+
+/// Stats PoB reads that would change the shock otherwise than [`shock`]
+/// does, sorted: they must stay reasons (a test checks each is `Unmapped`
+/// through every mapping; a maintainer-run test that each is a stat of
+/// the real bundle, and that every other stat whose text names shock or
+/// the effect of lightning or non-damaging ailments is a row, `Unmapped`,
+/// or a listed `NoEffect` row):
+/// - a more effect (Pure Elementalist's "30% more Effect of
+///   non-Damaging Ailments" for elemental spells) and the Elementalist's
+///   "more Effect of Lightning Ailments ... if the highest Damage Type is
+///   Lightning", whose `ChecksHighestDamage` flag makes PoB read the main
+///   skill's list instead (`CalcPerform.lua` 3517);
+/// - effects with a condition: against chilled enemies, per Elder item,
+///   per blue gem, with critical strikes, a flask's during its effect;
+/// - the maximum: "+#% to Maximum Effect of Shock" (PoB reads it per
+///   active skill, `CalcPerform.lua` 3532 to 3539) and its override;
+/// - stacking shocks (`ShockCanStack`, also in
+///   [`super::config::DEPENDS_ON`]).
+pub const SHOCK_DEPENDS_ON: &[&str] = &[
+    "keystone_pure_elementalist",
+    "lightning_ailment_effect_+%_against_chilled_enemies",
+    "lightning_ailments_effect_+%_final_if_hit_highest_lightning",
+    "local_flask_non_damaging_ailment_effect_+%_during_flask_effect",
+    "local_unique_vinktars_flask_shock_effect_+%_during_flask_effect",
+    "non_damaging_ailment_effect_+%_per_blue_skill_gem",
+    "non_damaging_ailment_effect_+%_per_equipped_elder_item",
+    "non_damaging_ailment_effect_+%_with_critical_strikes",
+    "non_damaging_ailment_effect_+%_with_critical_strikes_per_100_max_player_life",
+    "raider_shock_maximum_effect_override_%",
+    "raider_shocks_you_apply_can_stack_up_to_50_times",
+    "shock_maximum_magnitude_+",
+];
+
+/// The effects of a stat of [`SHOCK_STATS`]: `(quantity, op, scale)`.
+#[must_use]
+pub fn shock_effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
+    let i = SHOCK_STATS
+        .binary_search_by(|(id, ..)| (*id).cmp(stat))
+        .ok()?;
+    let (_, quantity, op) = SHOCK_STATS[i];
+    Some(vec![(Quantity::Poe1(quantity), op, 1.0)])
+}
 
 /// The Uber boss's less damage taken (`DamageTaken` MORE).
 pub const UBER_DAMAGE_TAKEN: f64 = -70.0;
@@ -205,14 +294,30 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
     }
 }
 
-/// The shock the config gives the enemy (module docs): `None` when the
-/// enemy is not shocked or the shock is 0, `Err` with the input whose
-/// value PoB would read otherwise than the engine.
+/// The unconditional effects on `quantity` with `op` ingested so far, in
+/// order. Every row of [`SHOCK_STATS`] is unconditional (a test), so a
+/// condition can only come from a later row, which must bring its
+/// handling here.
+fn unconditional<'a>(
+    ingest: &'a Ingest<'_>,
+    quantity: Poe1Quantity,
+    op: Op,
+) -> impl Iterator<Item = &'a Effect> {
+    ingest.effects().iter().filter(move |e| {
+        e.quantity == Quantity::Poe1(quantity) && e.op == op && e.conditions == Conditions::none()
+    })
+}
+
+/// The shock the config gives the enemy (module docs) and its source: the
+/// configured effect's input, or the first guaranteed shock's source when
+/// the guaranteed shock is stronger. `None` when the enemy is not shocked
+/// or the shock is 0, `Err` with the input whose value PoB would read
+/// otherwise than the engine.
 ///
 /// # Errors
 /// The input's name, for a check that is not a boolean or a count that
 /// is not a finite number.
-pub fn shock(set: &ConfigSet) -> Result<Option<f64>, &'static str> {
+pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source)>, &'static str> {
     match last(set, SHOCKED_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => return Ok(None),
         Some(ConfigValue::Boolean(true)) => {}
@@ -220,11 +325,44 @@ pub fn shock(set: &ConfigSet) -> Result<Option<f64>, &'static str> {
         // string: not modelled, a reason.
         Some(ConfigValue::Number(_) | ConfigValue::String(_)) => return Err(SHOCKED_INPUT),
     }
-    let value = count(set, SHOCK_EFFECT_INPUT).map_err(|()| SHOCK_EFFECT_INPUT)?;
-    // `floor(min(max(0, ShockVal), max))`: the override is 0 without a
-    // guaranteed shock, the maximum 50 without modifiers.
-    let shock = crate::math::floor(value.unwrap_or(0.0).clamp(0.0, SHOCK_MAX));
-    Ok(Some(shock).filter(|s| *s > 0.0))
+    // `ShockVal` BASE: the configured effect, 0 without one.
+    let configured = count(set, SHOCK_EFFECT_INPUT)
+        .map_err(|()| SHOCK_EFFECT_INPUT)?
+        .unwrap_or(0.0);
+    // The guaranteed shocks (`CalcPerform.lua` 3503 to 3530): each
+    // `ShockMinimum` times `calcLib.mod(modDB, nil, "EnemyShockEffect")`,
+    // `(1 + inc / 100) x round(more, 2)` (no row is `More`: 1), times the
+    // enemy's `SelfShockEffect` (1: no enemy modifier); `minimum` sums
+    // them and `override` keeps the largest of either.
+    let inc: f64 = unconditional(ingest, Poe1Quantity::ShockEffect, Op::Increased)
+        .map(|e| e.value)
+        .sum();
+    let scale = 1.0 + inc / 100.0;
+    let mut guaranteed = 0.0_f64;
+    let mut minimum = 0.0_f64;
+    let mut first = None;
+    for e in unconditional(ingest, Poe1Quantity::ShockMinimum, Op::Base) {
+        let effect = e.value * scale;
+        minimum += effect;
+        guaranteed = crate::math::max(crate::math::max(guaranteed, effect), minimum);
+        first.get_or_insert_with(|| e.source.clone());
+    }
+    // `floor(min(max(override, ShockVal), max))`, the maximum 50 without
+    // modifiers (precision 0).
+    let shock = crate::math::floor(crate::math::min(
+        crate::math::max(guaranteed, configured),
+        SHOCK_MAX,
+    ));
+    if shock <= 0.0 {
+        return Ok(None);
+    }
+    let source = match first {
+        Some(source) if guaranteed > configured => source,
+        _ => Source::Config {
+            input: SHOCK_EFFECT_INPUT.to_owned(),
+        },
+    };
+    Ok(Some((shock, source)))
 }
 
 /// Adds the enemy's damage taken from the active config set (module
@@ -238,8 +376,11 @@ pub fn damage_taken(
 ) {
     let Some(set) = set else { return };
     conditions(set, ingest);
-    match shock(set) {
-        Ok(Some(shock)) => ingest.effect(taken(Op::Increased, shock, SHOCK_EFFECT_INPUT)),
+    match shock(set, ingest) {
+        Ok(Some((shock, source))) => ingest.effect(Effect {
+            source,
+            ..taken(Op::Increased, shock, SHOCK_EFFECT_INPUT)
+        }),
         Ok(None) => {}
         Err(input) => ingest.reason(UnsupportedReason::UnmodelledConfig {
             input: input.to_owned(),
@@ -282,7 +423,10 @@ mod tests {
     /// sets the enemy's shock or damage taken.
     const NO_EFFECT_ROWS: &[&str] = &[
         // A chance to shock: PoB shocks the enemy only from its config or
-        // a guaranteed source (P3-10, P3-8c).
+        // a guaranteed source (P3-10, P3-8c; "All Damage can Shock" and
+        // "Hits always Shock", P3-8k).
+        "all_damage_can_shock",
+        "always_shock",
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -376,6 +520,166 @@ mod tests {
                 assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
             }
         }
+    }
+
+    /// The shock's rows (P3-8k): sorted, read unconditionally by the
+    /// character mapping, reasons through the gem mapping (PoB scales a
+    /// guaranteed shock by the character's `EnemyShockEffect`, not the
+    /// skill's); the stats left stay reasons through every mapping.
+    #[test]
+    fn the_shock_rows_should_be_read_as_pob_does() {
+        use crate::ingest::{StatMap, StatMapping};
+        use crate::poe1::ArmourSlot;
+        use crate::poe1::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
+        use loom_domain::StatId;
+
+        assert!(SHOCK_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(SHOCK_DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
+        for (stat, quantity, op) in SHOCK_STATS {
+            let StatMap::Effects(effects) = Poe1Mapping.map(&StatId::new(stat)) else {
+                panic!("{stat} is not mapped");
+            };
+            assert_eq!(effects.len(), 1, "{stat}");
+            assert_eq!(effects[0].quantity, Quantity::Poe1(quantity), "{stat}");
+            assert_eq!(effects[0].op, op, "{stat}");
+            assert_eq!(effects[0].conditions, Conditions::none(), "{stat}");
+            assert_eq!(
+                SkillMapping.map(&StatId::new(stat)),
+                StatMap::Unmapped,
+                "{stat}"
+            );
+            assert!(!SHOCK_DEPENDS_ON.contains(&stat), "{stat}");
+        }
+        let piece = PieceMapping {
+            slot: ArmourSlot::Helmet,
+        };
+        let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
+        for &stat in SHOCK_DEPENDS_ON {
+            for m in mappings {
+                assert_eq!(m.map(&StatId::new(stat)), StatMap::Unmapped, "{stat}");
+            }
+        }
+    }
+
+    /// PoB's arithmetic (`CalcPerform.lua` 3503 to 3546): the minimums
+    /// scaled and summed, the larger of them and the configured effect,
+    /// at most 50, floored; the source the stronger one's.
+    #[test]
+    fn the_shock_should_follow_pobs_arithmetic() {
+        use crate::poe1::Poe1Mapping;
+        use loom_domain::{ConfigInput, ConfigSetId, Number, Ordered, Sourced};
+
+        let set = |inputs: &[(&str, ConfigValue)]| {
+            let mut s = ConfigSet {
+                id: ConfigSetId(1),
+                title: None,
+                inputs: Ordered::new(),
+                custom_modifiers: Vec::new(),
+                attributes: Vec::new(),
+            };
+            for (name, value) in inputs {
+                s.inputs.push(ConfigInput {
+                    name: (*name).to_owned(),
+                    value: value.clone(),
+                    kind: ConfigInputKind::Input,
+                    lines: Vec::new(),
+                    attributes: Vec::new(),
+                });
+            }
+            s
+        };
+        let passive = |node| Source::Passive {
+            node: loom_domain::NodeId(node),
+        };
+        let effect = |quantity, op, value, source| Effect {
+            quantity: Quantity::Poe1(quantity),
+            op,
+            value,
+            conditions: Conditions::none(),
+            source,
+        };
+        let shocked = |configured: f64| {
+            set(&[
+                (SHOCKED_INPUT, ConfigValue::Boolean(true)),
+                (
+                    SHOCK_EFFECT_INPUT,
+                    ConfigValue::Number(Sourced::new(Number(configured))),
+                ),
+            ])
+        };
+        let config = Source::Config {
+            input: SHOCK_EFFECT_INPUT.to_owned(),
+        };
+        for (effects, configured, want) in [
+            (vec![], 20.0, Some((20.0, config.clone()))),
+            (
+                vec![effect(
+                    Poe1Quantity::ShockMinimum,
+                    Op::Base,
+                    25.0,
+                    passive(1),
+                )],
+                20.0,
+                Some((25.0, passive(1))),
+            ),
+            // 25 x 1.1 = 27.500000000000004, floored.
+            (
+                vec![
+                    effect(Poe1Quantity::ShockEffect, Op::Increased, 10.0, passive(2)),
+                    effect(Poe1Quantity::ShockMinimum, Op::Base, 25.0, passive(1)),
+                ],
+                20.0,
+                Some((27.0, passive(1))),
+            ),
+            // A tie keeps the configured effect's source.
+            (
+                vec![effect(
+                    Poe1Quantity::ShockMinimum,
+                    Op::Base,
+                    20.0,
+                    passive(1),
+                )],
+                20.0,
+                Some((20.0, config.clone())),
+            ),
+            // Summed minimums, the first one's source.
+            (
+                vec![
+                    effect(Poe1Quantity::ShockMinimum, Op::Base, 10.0, passive(3)),
+                    effect(Poe1Quantity::ShockMinimum, Op::Base, 25.0, passive(1)),
+                ],
+                0.0,
+                Some((35.0, passive(3))),
+            ),
+            // A conditional effect is not read (no row gives one).
+            (
+                vec![Effect {
+                    conditions: Conditions::none().with_all(crate::condition::Flags::SPELL),
+                    ..effect(Poe1Quantity::ShockMinimum, Op::Base, 25.0, passive(1))
+                }],
+                0.0,
+                None,
+            ),
+        ] {
+            let mut ingest = Ingest::new(&Poe1Mapping);
+            for e in effects.clone() {
+                ingest.effect(e);
+            }
+            assert_eq!(
+                shock(&shocked(configured), &ingest),
+                Ok(want),
+                "{effects:?}"
+            );
+        }
+        // Without the check, a minimum shocks nothing.
+        let mut ingest = Ingest::new(&Poe1Mapping);
+        ingest.effect(effect(
+            Poe1Quantity::ShockMinimum,
+            Op::Base,
+            25.0,
+            passive(1),
+        ));
+        assert_eq!(shock(&set(&[]), &ingest), Ok(None));
     }
 
     #[test]

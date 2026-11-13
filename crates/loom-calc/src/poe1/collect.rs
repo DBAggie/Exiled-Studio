@@ -97,10 +97,13 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
-    super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
     super::buffs::buffs(active_config(build), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
+    // After every source of exposure chances and extras, and of the shock
+    // effect and minimum (P3-8k).
+    super::exposure::exposure(active_config(build), ingest);
+    super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
 }
 
 /// The character's base values: class attributes, life and mana with
@@ -1199,6 +1202,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         // reasons (`poe1::damage_taken`, `poe1::buffs`, [`choices`],
         // P3-12f, P3-12g).
         if super::damage_taken::handles(&input.name, &input.value)
+            || super::exposure::handles(&input.name)
             || super::buffs::is_buff_input(&input.name)
             || input.name == BANDIT_INPUT
             || super::pantheon::is_input(&input.name)

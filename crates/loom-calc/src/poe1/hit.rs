@@ -1353,6 +1353,23 @@ fn effective_resistance(
 ) -> Result<Valued, CalcError> {
     let base = enemy.resistances[index].unwrap_or(0.0);
     let resist = leaf(calc, Source::Enemy, Quantity::Resistance(t), base)?;
+    // The enemy's `<Type>Resist` BASE sums its base and the exposure
+    // (`calcResistForType`; P3-8k, [`super::exposure`]), only when there
+    // is one, so a hit without it keeps its graph.
+    let exposure = Quantity::Poe1(Poe1Quantity::EnemyResistance(t));
+    let resist = if phases::has(calc, exposure) {
+        let exposed = sum_in(
+            calc,
+            exposure,
+            Op::Base,
+            cx,
+            Term::Step("enemy-exposure"),
+            reasons,
+        )?;
+        phases::total(calc, &[resist, exposed], Term::Step("enemy-resistance-sum"))?
+    } else {
+        resist
+    };
     let base_max = if let Some(v) = data.monster_constant(ENEMY_MAX_RESIST_STAT) {
         #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
         let v = v as f64;

@@ -1181,6 +1181,36 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite with a normal Siege Axe and custom lines: minion damage, attack speed, cast speed, and attack and cast speed, and the redirects of minion damage and of minion attack speed to you; Smite gains 20% increased damage and 16% increased attack speed, the minion cast speed reaches nothing (P3-8j)."
+    },
+    {
+      "id": "ice-nova-exposure-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-exposure-witch.xml",
+      "sha256": "3624f1157799af9723fc9638d7034d9b666a18220f956c3afa164cddb2ae6bb1",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured as exposed to cold and to fire, with custom lines: a chance to inflict cold exposure, an extra -25% to every exposure, -5% to cold exposure, and -7% to fire exposure; the enemy's cold resistance is 50 - 10 - 25 - 5 = 10, and the fire check without a fire chance gives nothing (P3-8k)."
+    },
+    {
+      "id": "ice-nova-guaranteed-shock-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-guaranteed-shock-witch.xml",
+      "sha256": "a17943777e30e9f51b066dde4382d4c01e7ebdefe91414077579e9191dad92b8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured as shocked with a 10% effect, with custom lines: a 25% minimum shock, 30% increased effect of lightning ailments, 20% increased effect of non-damaging ailments, and \"Hits always Shock\"; the guaranteed shock 25 x 1.5 = 37.5 is floored to 37, and the last line changes nothing (P3-8k)."
+    },
+    {
+      "id": "smite-exposure-shock-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-exposure-shock-templar.xml",
+      "sha256": "e8776fc499a4b6706db839237878a6e59b12f22c58e962ee70c17e1543fffc0f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked with a 10% effect, Elemental Army's exposure type set to lightning, and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock; Smite's lightning damage meets 15% resistance, and the guaranteed shock is 30 (P3-8k)."
     }
   ]
 }
