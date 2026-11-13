@@ -2769,6 +2769,19 @@ fn bitter_frost_should_chill_and_deal_only_cold_damage_as_pob_does() {
     let r = ice_nova_with(&[fire[0], fire[1], every], &chilled(20.0));
     let ratio = value(&r, Field::AverageDamage) / value(&with_fire, Field::AverageDamage);
     assert!((ratio - 1.2).abs() < 1e-12, "{ratio}");
+    // Both flags: every type's first (PoB's order), so the fire damage
+    // is not dealt (Bitter Frost) and the cold takes the chill once.
+    let r = ice_nova_with(&[fire[0], fire[1], every, keystone], &chilled(20.0));
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(20.0).to_bits()
+    );
+    // A tie between the configured and a guaranteed chill: the chill once.
+    let r = groups_with(vec![nova(), frostblink()], &[keystone], &chilled(10.0));
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(10.0).to_bits()
+    );
     // A stat that would change the chill otherwise stays a reason.
     let r = ice_nova_with(&[keystone, ("chill_minimum_slow_%", 20)], &chilled(10.0));
     assert!(matches!(

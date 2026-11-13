@@ -1281,7 +1281,7 @@ fn crit_multiplier(
     // (3115; Elemental Overload). P3-8m.
     let never = Quantity::Poe1(Poe1Quantity::NeverCrit);
     if let Some(flag) = flag_on(calc, never, cx, &mut reasons)? {
-        return Ok((by_flag(calc, flag, "never-crit", 0.0)?, reasons));
+        return Ok((by_flag(calc, flag, "never-crit-multiplier", 0.0)?, reasons));
     }
     let no_extra = Quantity::Poe1(Poe1Quantity::NoCritMultiplier);
     if let Some(flag) = flag_on(calc, no_extra, cx, &mut reasons)? {

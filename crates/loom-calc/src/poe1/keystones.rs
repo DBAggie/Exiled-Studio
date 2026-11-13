@@ -42,6 +42,14 @@
 //! settles from its crit chance. `Condition:NeverCrit` only conditions
 //! modifiers ("... if you never deal critical strikes"); no mapped row
 //! reads it (a test), so such a stat stays a reason.
+//!
+//! `CritInPast8Sec` is settled in the hit's damage passes only: another
+//! query of a stat conditioned on it ("if you've dealt a critical strike
+//! in the past 8 seconds": accuracy, damage over time) would meet it
+//! unsettled, a reason, until its own context settles it. PoB sets the
+//! condition on the skill's list and never clears it, so with dual
+//! wielding (not modelled) the main hand's crit would hold it for the off
+//! hand's pass too: a per-pass reading would then differ from PoB.
 
 use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::EffectTemplate;

@@ -242,7 +242,8 @@ pub const CHILL_DEFAULT: f64 = 10.0;
 ///   [`SHOCK_STATS`]' row): `EnemyChillEffect` INC, which scales a
 ///   skill's guaranteed chill (`CalcPerform.lua` 1394); brittle, freeze,
 ///   scorch, and sap reach no slice field without a config input or a
-///   guaranteed source that stays a reason;
+///   guaranteed source that stays a reason (scorch's resistance
+///   reduction is the one that would reach the hit);
 /// - "Enemies Chilled by your Hits have Damage taken increased by Chill
 ///   Effect" (3822): `ChillEffectIncDamageTaken`, every damage type.
 pub const CHILL_STATS: [ShockRow; 4] = [

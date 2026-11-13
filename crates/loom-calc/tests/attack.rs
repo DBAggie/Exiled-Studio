@@ -994,3 +994,34 @@ fn resolute_technique_should_always_hit_and_never_crit() {
     let got = value(&open, Field::AverageDamage);
     assert!((got - expected).abs() < 1e-9 * expected, "{got} {expected}");
 }
+
+/// Resolute Technique reads neither accuracy nor the enemy's evasion
+/// (P3-8m review): without the evasion's data the chance to hit stays
+/// complete, where the plain attack's is not. Bitter Frost on Smite: its
+/// physical damage and the lightning it converts to are both refused, so
+/// the hit deals nothing, as PoB's `canDeal`.
+#[test]
+fn resolute_technique_and_bitter_frost_should_skip_what_they_do_not_read() {
+    let no_evasion = [("enemyArmour", 0.0), ("enemyLightningResist", 0.0)];
+    let plain = run(&build("Smite", Some("1"), &AXE, &no_evasion), &AXE);
+    assert!(!matches!(
+        plain.fields[&Field::HitChance].state,
+        FieldState::Complete
+    ));
+    let b = with_lines(
+        build("Smite", Some("1"), &AXE, &no_evasion),
+        1,
+        &[("resolute_technique", 1)],
+    );
+    let r = run(&b, &AXE);
+    assert_eq!(r.fields[&Field::HitChance].state, FieldState::Complete);
+    assert_eq!(value(&r, Field::HitChance), 100.0);
+    let b = with_lines(
+        build("Smite", Some("1"), &AXE, &OPEN),
+        1,
+        &[("keystone_cold_purist", 1)],
+    );
+    let r = run(&b, &AXE);
+    assert!(partial(&r, Field::AverageDamage).is_empty());
+    assert_eq!(value(&r, Field::AverageDamage), 0.0);
+}
