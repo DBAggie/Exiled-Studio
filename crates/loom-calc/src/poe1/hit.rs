@@ -34,8 +34,11 @@
 //!    physical damage `1 - reduction / 100`, the reduction its armour
 //!    gives against the pass's average hit, `armour / (armour + hit x 5)
 //!    x 100` (`calcs.armourReductionF`), at most the monster template's
-//!    `maximum_physical_damage_reduction_%` (75). Summed over the types in
-//!    PoB's order.
+//!    `maximum_physical_damage_reduction_%` (75). The effect is then
+//!    multiplied by the enemy's damage taken, `(1 + inc / 100) x more`
+//!    (`effMult`), when the config gives it any ([`super::damage_taken`]:
+//!    shock, the Uber boss, delirium). Summed over the types in PoB's
+//!    order.
 //! 4. **Crit chance**: `min((base + added) x (1 + inc / 100) x more, 100)`,
 //!    at least 0, then times the accuracy hit chance / 100 (100 for
 //!    spells). The base is the skill's for a spell, the weapon's for an
@@ -74,9 +77,10 @@
 //!
 //! Every factor PoB applies that is 1 or 0 without a stat the mapping does
 //! not know (other conversion and gain, luck, double damage, action speed,
-//! damage taken, repeats, the enemy's block, the hit chance modifier) is
-//! left out: a stat that would change it is unmapped and makes the fields
-//! `Partial`. The default enemy's other modifiers reach no mapped stat
+//! damage taken of one type or by projectiles, traps, and mines, repeats,
+//! the enemy's block, the hit chance modifier) is left out: a stat that
+//! would change it is unmapped and makes the fields `Partial`. The default
+//! enemy's other modifiers reach no mapped stat
 //! (`poe1::enemy` module docs).
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit
@@ -1419,6 +1423,32 @@ fn armour_effect(
     difference(calc, one, share, Term::Step("enemy-effect"))
 }
 
+/// The enemy's damage taken, `(1 + inc / 100) x more` of its
+/// [`Poe1Quantity::EnemyDamageTaken`] (PoB's `DamageTaken` INC and MORE on
+/// the enemy, `CalcOffence.lua` 3521, 3522; [`super::damage_taken`]);
+/// `None` when nothing changes it, so a hit without it keeps its graph.
+fn enemy_damage_taken(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let quantity = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    if !calc
+        .store()
+        .effects()
+        .iter()
+        .any(|e| e.quantity == quantity)
+    {
+        return Ok(None);
+    }
+    let (inc, more) = modifiers(calc, quantity, cx, reasons)?;
+    Ok(Some(phases::product(
+        calc,
+        &[inc, more],
+        Term::Step("enemy-damage-taken"),
+    )?))
+}
+
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type
 /// with a resistance; `None` for physical.
 const fn resistance_index(t: DamageType) -> Option<usize> {
@@ -1727,6 +1757,7 @@ fn passes(
         ratio(shape.level.base_multiplier),
     )?;
     let conversion = conversion(calc, &cx, reasons)?;
+    let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;
     let mut hits = Vec::new();
@@ -1835,6 +1866,13 @@ fn passes(
             let effect = match effect {
                 Some(e) => e,
                 None => armour_effect(calc, enemy, data, average, reasons)?,
+            };
+            // `effMult = (1 + takenInc / 100) x takenMore x (1 -
+            // resist / 100)`; the armour's reduction is computed on the
+            // hit before it.
+            let effect = match taken {
+                Some(t) => phases::product(calc, &[t, effect], Term::Step("effective-multiplier"))?,
+                None => effect,
             };
             let against = phases::product(calc, &[average, effect], Term::Step("against-enemy"))?;
             if crit {

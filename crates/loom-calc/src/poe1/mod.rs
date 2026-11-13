@@ -13,9 +13,11 @@
 //! multiplier, hit DPS. Its other hit fields, and every hit field of
 //! another kind of skill, are `Unsupported` with `NotComputed`.
 
+pub mod buffs;
 pub mod charges;
 pub mod collect;
 pub mod config;
+pub mod damage_taken;
 pub mod enemy;
 pub mod hit;
 pub mod mapping;
@@ -67,6 +69,10 @@ pub enum Poe1Quantity {
     AttackSpeedMultiplier,
     /// The enemy's largest physical damage reduction, percent.
     MaximumPhysicalDamageReduction,
+    /// The enemy's damage taken, every damage type (PoB's `DamageTaken` on
+    /// the enemy): its `Increased` and `More` effects scale each hit
+    /// ([`damage_taken`]).
+    EnemyDamageTaken,
 }
 
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
@@ -127,6 +133,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::MaximumPhysicalDamageReduction => {
                 f.write_str("maximum-physical-damage-reduction")
             }
+            Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
         }
     }
 }
@@ -371,6 +378,10 @@ mod tests {
         for slot in ArmourSlot::ALL {
             assert_eq!(slot.row(), format!("slot.{}", slot.name()));
         }
+        assert_eq!(
+            Quantity::Poe1(Poe1Quantity::EnemyDamageTaken).to_string(),
+            "poe1.enemy-damage-taken"
+        );
         assert_eq!(
             Poe1Field::SpellSuppressionChance.name(),
             "spell-suppression-chance"

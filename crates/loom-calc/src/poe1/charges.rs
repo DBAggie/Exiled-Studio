@@ -36,6 +36,7 @@
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
+use super::config::last_input as last;
 use crate::condition::Flags;
 use crate::ingest::Ingest;
 use crate::input::CalcData;
@@ -112,16 +113,6 @@ pub fn is_charge_input(input: &str) -> bool {
     CHARGES
         .iter()
         .any(|c| c.use_input == input || c.override_input == input)
-}
-
-/// The last value of `name` of `kind` in `set` (PoB keeps inputs in a
-/// table: the last one read counts).
-fn last<'a>(set: &'a ConfigSet, name: &str, kind: ConfigInputKind) -> Option<&'a ConfigValue> {
-    set.inputs
-        .typed()
-        .filter(|i| i.kind == kind && i.name == name)
-        .last()
-        .map(|i| &i.value)
 }
 
 /// What an override input gives: `Ok(None)` when unset (absent or 0, as

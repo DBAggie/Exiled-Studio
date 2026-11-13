@@ -1,0 +1,347 @@
+{
+ "builds_with_reason_changes": 28,
+ "only_after": [
+  "ice-nova-onslaught-rage-exposure-witch.xml.json",
+  "ice-nova-shocked-uber-witch.xml.json",
+  "smite-shocked-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}"
+   ]
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 12}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyFireExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Eramir\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyLightningExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyFireExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Kraityn\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyFireExposure\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyLightningExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyShocked\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionShockEffect\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierRage\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"bandit\", \"value\": \"Alira\"}}",
+    "{\"unmodelled-config\": {\"input\": \"bandit\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffOnslaught\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyColdExposure\"}}",
+    "{\"unmodelled-config\": {\"input\": \"enemyIsBoss\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 85,
+ "state_changes": {},
+ "value_changes": {
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "resistance.cold": [
+    26.0,
+    41.0
+   ],
+   "resistance.lightning": [
+    77.0,
+    78.0
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "hit-dps": [
+    2638.190033408,
+    2936.290602154667
+   ],
+   "speed": [
+    2.95,
+    3.2833333333333337
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    41.343589596624994,
+    49.61230751594999
+   ],
+   "hit-dps": [
+    95.43108136281899,
+    134.96681507027256
+   ],
+   "resistance.fire": [
+    69.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    50.0,
+    65.0
+   ],
+   "speed": [
+    2.3082437275985663,
+    2.7204301075268815
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    5382.331499999999,
+    6727.914375
+   ],
+   "hit-dps": [
+    17582.2829,
+    21977.853625
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "average-damage": [
+    524.3313999999999,
+    760.28053
+   ],
+   "hit-dps": [
+    731.4020650531286,
+    1060.5329943270367
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    1363.203664875,
+    1976.6453140687497
+   ],
+   "hit-dps": [
+    2448.777303550546,
+    3550.7270901482916
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "average-damage": [
+    623.7143116875,
+    904.385751946875
+   ],
+   "hit-dps": [
+    870.0336000693993,
+    1261.548720100629
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "average-damage": [
+    1007.3113981875,
+    1460.6015273718751
+   ],
+   "hit-dps": [
+    1728.603444233213,
+    2506.4749941381588
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "resistance.cold": [
+    30.0,
+    45.0
+   ],
+   "resistance.fire": [
+    22.0,
+    37.0
+   ],
+   "resistance.lightning": [
+    40.0,
+    55.0
+   ]
+  }
+ }
+}

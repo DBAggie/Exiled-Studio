@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12f): smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction before the damage taken; Oak's +40 to maximum Life; Onslaught's 20% increased attack speed.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyShocked" boolean="true"/>
+			<Input name="conditionShockEffect" number="70"/>
+			<Input name="deliriousPercentage" string="20Percent"/>
+			<Input name="bandit" string="Oak"/>
+			<Input name="buffOnslaught" boolean="true"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

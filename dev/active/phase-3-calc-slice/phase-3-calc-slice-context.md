@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12d: the legacy `customMods` input)
+Last Updated: 2026-11-13 (P3-12f: the enemy's damage taken, shock, the boss kind, delirium, the bandit, Onslaught, rage, exposure)
 
 # Phase 3: calc slice (context)
 
@@ -302,6 +302,19 @@ The question as asked: where the default enemy's armour and evasion come from: P
 
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
+
+## Decisions in P3-12f (the enemy's damage taken, shock, the boss kind, delirium, the bandit, Onslaught, rage, exposure; evidence `docs/phase-3/config-inputs.md`, "P3-12f")
+- **Several steps in one PR** (maintainer 2026-11-12, again: as many tasks as fit). The pantheon was left: its souls' stats are game data the bundle does not carry (PoB's `Data/Pantheons.lua` is exported from the game); a bundle table comes first.
+- **One quantity for the enemy's damage taken** (`Poe1Quantity::EnemyDamageTaken`, PoB's `DamageTaken` on the enemy, every type), added only by `poe1::damage_taken`; per-type, elemental, projectile, and trap and mine damage taken wait for a stat that needs them (none is mapped). The hit applies it only when an effect exists, so graphs without it are unchanged.
+- **Shock as PoB computes it from the config**: `floor(clamp(effect, 0, 50))`, the count's input else its placeholder; guaranteed shocks, a different maximum, stacks, immunity are modifiers, so reasons. Delirium and the Uber kind as MORE effects of one name (PoB rounds their product).
+- **`enemyIsBoss` as a string is modelled** (its only effect on the slice beyond the enemy model's placeholders is the Uber kind's damage taken); read with PoB's loader spelling (`BossKind::of_pob`). The enemy model now reads the last input of a name, as PoB's table does (review).
+- **The bandit from the active set** (PoB's `env.configInput.bandit`; the build attribute only without a `<Config>` element, which the domain cannot tell from an empty one, so it stays a reason there). The pantheon still reads the attribute (conservative, documented).
+- **Onslaught's constant 20** (PoB's `CalcPerform.lua` 704), with its effect stats as reasons (`poe1::buffs::DEPENDS_ON`).
+- **Rage and exposure in `NAMED_ONLY`**, as `conditionConvergence`: their effects need conditions only modifiers set. The source stats were found by the game's text in the bundle's stat descriptions (39 rage, 28 exposure) and joined `DEPENDS_ON`; the real-bundle test checks each.
+- **Culling strike `NoEffect`**: `CullPercent` reaches only `CullingDPS` and `CombinedDPS`.
+
+## code-architecture-reviewer (P3-12f, 2026-11-13) summary
+No code blocker; every rule checked against PoB's Lua (shock's truthiness and count rules, `effMult`'s order and the armour before it, the MORE rounding, delirium, the bandit's loading order, Onslaught, the rage and exposure arguments, culling). Applied: the enemy model reads the last input of a name (it read the first: a duplicated `enemyIsBoss` would have differed from PoB silently); PoB's boss-kind spelling (`Shaper`, `uber`); Onslaught on an attack (the Smite fixture); one shared `last_input` helper; docs (the enemy model, the pantheon, rage's `Combat`). Not changed: the name-based guards (as earlier steps; the real-bundle test is the net); a delirium number other than 0 stays a reason (PoB ignores it: conservative).
 
 ## Decisions in P3-12e (the old config layout, block text, charges, fortification; evidence `docs/phase-3/config-inputs.md`, "P3-12e")
 - **Several steps in one PR** (maintainer 2026-11-12: "do as many of the remaining P3 tasks as possible in the next PR"): the old layout and its follow-up, then charges and fortification. Shock, rage, and exposure were checked and left: shock needs the enemy's damage taken in the hit (the engine has none yet); rage needs `CanGainRage` or `RageRegen` and exposure `CanApplyColdExposure`, each set by about 25 modifier texts that were not tied to stat IDs in this session.

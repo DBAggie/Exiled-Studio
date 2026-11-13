@@ -663,6 +663,36 @@
       "description": "smite-templar.xml using charges with counts set: one power charge (the override's placeholder), two frenzy charges (increased attack speed, more damage), one endurance charge; fortified with 10 stacks, which reach no slice field (P3-12e)."
     },
     {
+      "id": "ice-nova-shocked-uber-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-shocked-uber-witch.xml",
+      "sha256": "a768e543bea3a20581d85e6fb618355fdb69a47855395fe1b4d060e4389918b2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml against a shocked Uber boss in 40% delirium: the enemy's damage taken (35% increased from the configured shock, 70% less for the Uber boss and 32% less from delirium, one name rounded to two decimals); Alira's +15% to all elemental resistances (P3-12f)."
+    },
+    {
+      "id": "smite-shocked-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-shocked-templar.xml",
+      "sha256": "d262f8c4ee3baad9c7c564204ce2d06ccd434668a7d4aec83b9513e995eac6ca",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction computed before the damage taken; Oak's +40 to maximum Life; Onslaught's 20% increased attack speed, with the weapon's rate (P3-12f)."
+    },
+    {
+      "id": "ice-nova-onslaught-rage-exposure-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-rage-exposure-witch.xml",
+      "sha256": "31e8041f5729de86218479cd5ab48b3936f2c0d553fdaa92852e6adcf4ebecae",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Onslaught (20% increased cast speed), 30 rage, and the enemy exposed to cold and fire: rage and exposure act only with a source of rage or of exposure, which the build lacks, so only Onslaught changes a field (P3-12f)."
+    },
+    {
       "id": "ice-nova-witch.xml",
       "tier": "mechanic",
       "source": "local",

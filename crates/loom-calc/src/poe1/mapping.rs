@@ -722,7 +722,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field, whatever the build's config (54): `(stat,
+/// Stats that reach no slice field, whatever the build's config (55): `(stat,
 /// why)`, sorted by stat ID (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -823,6 +823,12 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("golem_immunity_to_elemental_damage", "minion-defence"),
     ("golem_maximum_life_+%", "minion-defence"),
     ("item_generation_can_have_multiple_crafted_mods", "crafting"),
+    // Culling Strike (PoB `CullPercent` MAX 10, `ModParser.lua` 5066): it
+    // reaches only `CullMultiplier`, which scales `CullingDPS` and
+    // `CombinedDPS` (`CalcOffence.lua` 3332 to 3339, 6289 to 6292), not
+    // the hit, its rate, or `TotalDPS` (P3-12f, the Smite builds' custom
+    // line).
+    ("kill_enemy_on_hit_if_under_10%_life", "culling"),
     (
         "life_regeneration_per_minute_%_per_fortification",
         "regeneration",

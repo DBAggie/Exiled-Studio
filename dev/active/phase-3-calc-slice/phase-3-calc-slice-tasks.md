@@ -1,4 +1,4 @@
-Last Updated: 2026-11-12 (P3-12e: the old config layout, block text, charges, fortification)
+Last Updated: 2026-11-13 (P3-12f: the enemy's damage taken, shock, the boss kind, delirium, the bandit, Onslaught, rage, exposure)
 
 # Phase 3: calc slice (tasks)
 
@@ -83,8 +83,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12b PoB's config placeholders (PR #84, merged into `dev` as `95b53a6`; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
   - [x] P3-12c custom modifier blocks in full (PR #85, merged into `dev` as `8c2998d`; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
   - [x] P3-12d the legacy `customMods` input (PR #86, merged into `dev` as `e04419f`; `docs/phase-3/config-inputs.md`, "P3-12d"; PoB's attribute reading for a config string; lines applied by PoB's `Load` migration; build v1 input `lines`, calc result v1 source `config-input-line`; mechanic fixture `ice-nova-legacy-custom-mods-witch.xml`)
-  - [x] P3-12e the old config layout (`ConfigLayout::Flat`, build v1 `layout`), block text PoB reads otherwise kept whole, power/frenzy/endurance charges (`poe1::charges`), fortification in `NAMED_ONLY` (PR #87, open; `docs/phase-3/config-inputs.md`, "P3-12e"; mechanic fixtures `ice-nova-old-config-layout-witch.xml`, `ice-nova-charges-witch.xml`, `smite-charges-templar.xml`)
-  - [ ] Next: shock (the enemy's damage taken in the hit), rage, exposure, other gems (auras, buffs), Onslaught and culling strike, bandit and pantheon
+  - [x] P3-12e the old config layout (`ConfigLayout::Flat`, build v1 `layout`), block text PoB reads otherwise kept whole, power/frenzy/endurance charges (`poe1::charges`), fortification in `NAMED_ONLY` (PR #87, merged into `dev` as `4753b28`; `docs/phase-3/config-inputs.md`, "P3-12e"; mechanic fixtures `ice-nova-old-config-layout-witch.xml`, `ice-nova-charges-witch.xml`, `smite-charges-templar.xml`)
+  - [x] P3-12f the enemy's damage taken in the hit (`poe1::damage_taken`: shock, the Uber boss kind, delirium), the bandit from the config set, Onslaught (`poe1::buffs`), rage and exposure in `NAMED_ONLY` with their source stats, culling strike `NoEffect` (PR #88, open; `docs/phase-3/config-inputs.md`, "P3-12f"; mechanic fixtures `ice-nova-shocked-uber-witch.xml`, `smite-shocked-templar.xml`, `ice-nova-onslaught-rage-exposure-witch.xml`; DIV-0029, DIV-0030)
+  - [ ] Next: the pantheon (a bundle table for its souls' stats first), other gems (auras, buffs: the Lightning Golem's Wrath), the in-scope builds' remaining config inputs
 
 ## P3-14: corpus run and register
 - [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered

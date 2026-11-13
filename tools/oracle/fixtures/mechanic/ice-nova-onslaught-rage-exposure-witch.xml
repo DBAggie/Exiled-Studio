@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12f): ice-nova-witch.xml with Onslaught (20% increased cast speed), 30 rage and the enemy exposed to cold and fire, which act only with a source of rage or of exposure (none here: no change).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="buffOnslaught" boolean="true"/>
+			<Input name="multiplierRage" number="30"/>
+			<Input name="conditionEnemyColdExposure" boolean="true"/>
+			<Input name="conditionEnemyFireExposure" boolean="true"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
