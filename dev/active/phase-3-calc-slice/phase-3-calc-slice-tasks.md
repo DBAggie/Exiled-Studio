@@ -1,4 +1,4 @@
-Last Updated: 2026-11-13 (P3-8e: area damage, spell crit multiplier, area and light radius)
+Last Updated: 2026-11-13 (P3-8g: settled conditions once per calculation)
 
 # Phase 3: calc slice (tasks)
 
@@ -91,7 +91,8 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12j the custom "Onslaught" line: custom-line rule (the only global, item-backed reading), `Poe1Quantity::Onslaught`, Onslaught once (PR #92, open, cascade on #91; `docs/phase-3/config-inputs.md`, "P3-12j"; two mechanic fixtures)
   - [x] P3-8d charge modifiers: `Poe1Quantity::Charge`, `charges::MODIFIERS`, PoB's count with minima and maxima (PR #93, open, cascade on #92; `docs/phase-3/stat-mapping.md`, "P3-8d"; two mechanic fixtures)
   - [x] P3-8e area damage, spell crit multiplier, area and light radius rows (PR #94, open, cascade on #93; `docs/phase-3/stat-mapping.md`, "P3-8e"; one mechanic fixture)
-  - [ ] P3-8f weapon conditions ("while holding a staff/shield"; handoff Next action)
+  - [x] P3-8f weapon conditions: `poe1::states` (`UsingStaff`, `UsingShield`), `STATE_ROWS` (eight stats) (PR #95, open, cascade on #94; `docs/phase-3/stat-mapping.md`, "P3-8f"; two mechanic fixtures)
+  - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, open, cascade on #95; documents identical, calc time 229 to 78 ms)
   - [ ] Next: the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); socket colour quality (bundle: the granted effect's `Attribute`); the custom "Onslaught" line; then the in-scope builds' unmapped stats and unresolved lines; Q13
 
 ## P3-14: corpus run and register

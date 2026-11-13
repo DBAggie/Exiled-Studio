@@ -1,0 +1,370 @@
+{
+ "builds_with_reason_changes": 15,
+ "only_after": [
+  "ice-nova-shield-conditions-witch.xml.json",
+  "ice-nova-staff-conditions-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 41, \"line\": 14}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"global_critical_strike_chance_+%_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36859}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39761}}, \"stat\": \"global_critical_strike_chance_+%_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39761}}, \"stat\": \"global_critical_strike_multiplier_+_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41599}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48282}}, \"stat\": \"global_critical_strike_chance_+%_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49698}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55926}}, \"stat\": \"staff_block_%\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 71, \"line\": 12}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 72, \"line\": 11}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40075}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42485}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42485}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62416}}, \"stat\": \"defences_+%_while_wielding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 65273}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"staff_block_%\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 10}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 34, \"line\": 10}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62214}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27323}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43061}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6770}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 17}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16113}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"global_critical_strike_chance_+%_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18990}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39761}}, \"stat\": \"global_critical_strike_chance_+%_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39761}}, \"stat\": \"global_critical_strike_multiplier_+_while_holding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40075}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42485}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42485}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42917}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49534}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49534}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54667}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62416}}, \"stat\": \"defences_+%_while_wielding_staff\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"staff_block_%\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 63, \"line\": 10}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27323}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 43061}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6770}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6770}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 142, \"line\": 17}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36859}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40075}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41599}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49534}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49534}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 49698}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55926}}, \"stat\": \"staff_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_block_with_staff_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"spell_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7918}}, \"stat\": \"staff_block_%\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11689}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19008}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46904}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58210}}, \"stat\": \"spell_damage_+%_while_holding_shield\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 124,
+ "state_changes": {},
+ "value_changes": {
+  "animate-guardian-guardian.xml.json": {
+   "poe1.spell-block-chance": [
+    21.0,
+    25.0
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "block-chance": [
+    0.0,
+    62.0
+   ],
+   "poe1.spell-block-chance": [
+    0.0,
+    17.0
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "armour": [
+    1681.0,
+    2092.0
+   ],
+   "block-chance": [
+    0.0,
+    28.0
+   ],
+   "energy-shield": [
+    2366.0,
+    2648.0
+   ],
+   "evasion": [
+    18.0,
+    22.0
+   ],
+   "poe1.spell-block-chance": [
+    27.0,
+    66.0
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "poe1.spell-block-chance": [
+    23.0,
+    33.0
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    12.0
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "poe1.spell-block-chance": [
+    6.0,
+    38.0
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    8605.910258400001,
+    9458.9223456
+   ],
+   "hit-dps": [
+    26924.204951280004,
+    29592.91419552
+   ],
+   "poe1.spell-block-chance": [
+    0.0,
+    14.0
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "armour": [
+    1444.0,
+    1796.0
+   ],
+   "average-damage": [
+    18210.300625440002,
+    22643.59214880001
+   ],
+   "block-chance": [
+    0.0,
+    28.0
+   ],
+   "crit-chance": [
+    68.59,
+    77.14000000000001
+   ],
+   "crit-multiplier": [
+    3.78,
+    4.08
+   ],
+   "energy-shield": [
+    1395.0,
+    1674.0
+   ],
+   "evasion": [
+    1427.0,
+    1784.0
+   ],
+   "hit-dps": [
+    53070.018965568015,
+    65989.89711936003
+   ],
+   "poe1.spell-block-chance": [
+    8.0,
+    61.0
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    22.0
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "poe1.spell-block-chance": [
+    0.0,
+    14.0
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "poe1.spell-block-chance": [
+    15.0,
+    50.0
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "poe1.spell-block-chance": [
+    0.0,
+    14.0
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    7560.548100000001,
+    8179.825500000001
+   ],
+   "block-chance": [
+    6.0,
+    59.0
+   ],
+   "hit-dps": [
+    25327.836135,
+    27402.415425
+   ],
+   "poe1.spell-block-chance": [
+    14.0,
+    25.0
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "poe1.spell-block-chance": [
+    0.0,
+    14.0
+   ]
+  }
+ }
+}

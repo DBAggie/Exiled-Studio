@@ -605,6 +605,38 @@ pub struct Hands {
     pub main: Option<(ItemId, WeaponBase)>,
     /// The off hand holds a weapon, or an item whose base is not known.
     pub off_hand_weapon: bool,
+    /// What the main hand holds (P3-8f).
+    pub main_hand: Held,
+    /// What the off hand holds (P3-8f).
+    pub off_hand: Held,
+}
+
+/// What a hand holds, as far as the engine can tell (P3-8f: PoB's
+/// weapon conditions).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum Held {
+    /// Nothing.
+    #[default]
+    Empty,
+    /// A weapon of this item class.
+    Weapon(String),
+    /// A shield (an armour base with a chance to block).
+    Shield,
+    /// Another known base (a quiver, an armour base without block).
+    Other,
+    /// An item whose base is not known, or one of several bases.
+    Unknown,
+}
+
+impl Held {
+    fn of(base: Option<ItemBase>) -> Self {
+        match base {
+            Some(ItemBase::Weapon(w)) => Self::Weapon(w.class),
+            Some(ItemBase::Armour(a)) if a.block.is_some() => Self::Shield,
+            Some(ItemBase::Armour(_) | ItemBase::Other) => Self::Other,
+            Some(ItemBase::Ambiguous) | None => Self::Unknown,
+        }
+    }
 }
 
 /// The weapon set in use's hands ([`Hands`]).
@@ -629,6 +661,7 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
             .and_then(|name| name.find(input.data));
         match slot.strip_suffix(" Swap").unwrap_or(slot) {
             "Weapon 1" => {
+                hands.main_hand = Held::of(base.clone());
                 if let Some(ItemBase::Weapon(w)) = base {
                     hands.main = Some((id, w));
                 }
@@ -636,6 +669,7 @@ pub fn hands(input: &CalcInput<'_>) -> Hands {
             "Weapon 2" => {
                 hands.off_hand_weapon =
                     !matches!(base, Some(ItemBase::Armour(_) | ItemBase::Other));
+                hands.off_hand = Held::of(base);
             }
             _ => {}
         }

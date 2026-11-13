@@ -26,6 +26,7 @@ pub mod pantheon;
 pub mod phases;
 pub mod skill;
 pub mod sockets;
+pub mod states;
 
 pub use mapping::Poe1Mapping;
 pub use pantheon::Poe1Data;
@@ -409,6 +410,13 @@ impl Ruleset for Poe1Rules {
 
     fn phases(&self) -> &[Phase] {
         &phases::PHASES
+    }
+
+    fn states(
+        &self,
+        input: &CalcInput<'_>,
+    ) -> std::collections::BTreeMap<crate::condition::ConditionKey, bool> {
+        states::states(input)
     }
 }
 
