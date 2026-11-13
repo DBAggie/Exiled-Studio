@@ -1224,7 +1224,7 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
     // The boss kind as a string is modelled (P3-12f, `poe1::damage_taken`):
     // its other modifiers reach no field but the hit; as a number it is a
     // reason.
-    for kind in ["None", "Boss", "Pinnacle", "Uber", "Shaper"] {
+    for kind in ["None", "Boss", "Pinnacle", "Uber", "Shaper", "Eramir"] {
         let r = with(vec![("enemyIsBoss", ConfigValue::String(kind.to_owned()))]);
         assert_eq!(state(&r, Field::Life), StateKind::Complete, "{kind}");
     }

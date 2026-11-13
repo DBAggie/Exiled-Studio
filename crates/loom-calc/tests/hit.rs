@@ -1027,9 +1027,49 @@ fn the_enemys_damage_taken_should_scale_each_hit_as_pob_does() {
             "{inputs:?}"
         );
     }
+    // PoB's spelling rule (`ConfigTab.lua` 853 to 855): any case, and
+    // the legacy names.
+    for (kind, taken) in [
+        ("uber", Some(0.3)),
+        ("UBER", Some(0.3)),
+        ("Shaper", None),
+        ("sirus", None),
+    ] {
+        let r = with(&[("enemyIsBoss", text(kind), input)]);
+        assert_eq!(
+            r.fields[&Field::AverageDamage].state,
+            FieldState::Complete,
+            "{kind}"
+        );
+        let expect = taken.map_or(value(&bare, Field::AverageDamage), |t| expected(1.0 * t));
+        assert_eq!(
+            value(&r, Field::AverageDamage).to_bits(),
+            expect.to_bits(),
+            "{kind}"
+        );
+    }
+    // The last input of a name counts (PoB's input table), for the boss
+    // kind and the shock alike.
+    let r = with(&[
+        ("enemyIsBoss", text("None"), input),
+        ("enemyIsBoss", text("Uber"), input),
+    ]);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(1.0 * 0.3).to_bits()
+    );
+    let r = with(&[
+        ("conditionEnemyShocked", on(), input),
+        ("conditionShockEffect", n(30.0), input),
+        ("conditionShockEffect", n(20.0), input),
+    ]);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(1.0 * (1.0 + 20.0 / 100.0)).to_bits()
+    );
     // A kind PoB does not know: the enemy model's reason on the hit, read
     // as the default kind (no damage taken).
-    let r = with(&[("enemyIsBoss", text("Shaper"), input)]);
+    let r = with(&[("enemyIsBoss", text("Eramir"), input)]);
     let FieldState::Partial(p) = &r.fields[&Field::AverageDamage].state else {
         panic!("not partial");
     };

@@ -262,7 +262,10 @@ pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
 ///
 /// The pantheon: `None` (or absent) has no effect; any other choice is
 /// not modelled yet (its souls' stats are game data the bundle does not
-/// carry yet).
+/// carry yet). PoB reads it as it reads the bandit, from the set; the
+/// engine still gives the build attribute's choice a reason even beside a
+/// set (conservative; the set's own inputs are config reasons), until the
+/// pantheon is modelled.
 fn choices(build: &Build, ingest: &mut Ingest<'_>) {
     let GameSpecific::Poe1(c) = build.game_specific() else {
         return;
@@ -299,13 +302,7 @@ fn choices(build: &Build, ingest: &mut Ingest<'_>) {
 /// The active set's bandit ([`choices`]): its last `bandit` input, "None"
 /// when it has none.
 fn bandit(set: &ConfigSet, ingest: &mut Ingest<'_>) {
-    let value = set
-        .inputs
-        .typed()
-        .filter(|i| i.kind == ConfigInputKind::Input && i.name == BANDIT_INPUT)
-        .last()
-        .map(|i| &i.value);
-    let name = match value {
+    let name = match super::config::last_input(set, BANDIT_INPUT, ConfigInputKind::Input) {
         None => return,
         Some(ConfigValue::String(s)) => s.as_str(),
         Some(_) => "",

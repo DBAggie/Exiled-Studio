@@ -54,13 +54,7 @@ pub fn is_buff_input(input: &str) -> bool {
 pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
     let Some(set) = set else { return };
     // The last input counts; a check's placeholder is not applied.
-    let value = set
-        .inputs
-        .typed()
-        .filter(|i| i.kind == ConfigInputKind::Input && i.name == ONSLAUGHT_INPUT)
-        .last()
-        .map(|i| &i.value);
-    match value {
+    match super::config::last_input(set, ONSLAUGHT_INPUT, ConfigInputKind::Input) {
         None | Some(ConfigValue::Boolean(false)) => {}
         Some(ConfigValue::Boolean(true)) => {
             for flags in [Flags::ATTACK, Flags::CAST] {

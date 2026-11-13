@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Mechanic fixture (loom, Phase 3 P3-12f): smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction before the damage taken; Oak's +40 to maximum Life.
+<!-- Mechanic fixture (loom, Phase 3 P3-12f): smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction before the damage taken; Oak's +40 to maximum Life; Onslaught's 20% increased attack speed.
      Original; not from PoB or the corpus. -->
 <PathOfBuilding>
 	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
@@ -30,6 +30,7 @@ Implicits: 0
 			<Input name="conditionShockEffect" number="70"/>
 			<Input name="deliriousPercentage" string="20Percent"/>
 			<Input name="bandit" string="Oak"/>
+			<Input name="buffOnslaught" boolean="true"/>
 		</ConfigSet>
 	</Config>
 </PathOfBuilding>

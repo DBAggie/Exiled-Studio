@@ -78,8 +78,9 @@
 //! Every factor PoB applies that is 1 or 0 without a stat the mapping does
 //! not know (other conversion and gain, luck, double damage, action speed,
 //! damage taken of one type or by projectiles, traps, and mines, repeats,
-//! the enemy's block, the hit chance modifier) is left out: a stat that would change it is unmapped and makes the fields
-//! `Partial`. The default enemy's other modifiers reach no mapped stat
+//! the enemy's block, the hit chance modifier) is left out: a stat that
+//! would change it is unmapped and makes the fields `Partial`. The default
+//! enemy's other modifiers reach no mapped stat
 //! (`poe1::enemy` module docs).
 //!
 //! **Which skills** (`spell_skill`, `attack_skill`): a spell and a hit

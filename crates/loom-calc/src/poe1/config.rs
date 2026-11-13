@@ -60,6 +60,8 @@
 //! legacy `customMods` input where PoB moves them into a block
 //! (`collect::legacy_custom_mods`, P3-12d).
 
+use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
+
 /// Config inputs whose only effect is named conditions or multipliers
 /// that modifiers read, with those names (PoB v2.67.2,
 /// `Modules/ConfigOptions.lua`), sorted by input (a test checks the
@@ -158,7 +160,7 @@
 /// (or another config input, itself a reason) set, as `conditionConvergence`:
 ///
 /// - `multiplierRage`: `Multiplier:RageStack` (line 1074), conditioned on
-///   `Condition:CanGainRage`. `CalcPerform.lua` (914 to 935) reads it, and
+///   `Condition:Combat` (on in PoB's main view) and `Condition:CanGainRage`. `CalcPerform.lua` (914 to 935) reads it, and
 ///   gives rage its effects (more attack damage, attack speed), only with
 ///   `Condition:CanGainRage` or `RageRegen` above 0, which only modifiers
 ///   set: `ModParser.lua` 2201 to 2585 and 5517 to 5539 (gaining rage on
@@ -477,6 +479,22 @@ pub const DEPENDS_ON: &[&str] = &[
     "you_and_nearby_party_members_gain_x_rage_when_you_warcry",
     "your_consecrated_ground_grants_accuracy_rating_+%",
 ];
+
+/// The value of the last input named `name` of `kind` in `set`: PoB keeps
+/// a set's inputs in a table, so the last one read counts
+/// (`Classes/ConfigTab.lua`, `Load`, 850 to 876).
+#[must_use]
+pub fn last_input<'a>(
+    set: &'a ConfigSet,
+    name: &str,
+    kind: ConfigInputKind,
+) -> Option<&'a ConfigValue> {
+    set.inputs
+        .typed()
+        .filter(|i| i.kind == kind && i.name == name)
+        .last()
+        .map(|i| &i.value)
+}
 
 /// Whether `input` only sets named conditions or multipliers that
 /// modifiers read ([`NAMED_ONLY`]).

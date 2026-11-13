@@ -677,10 +677,10 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/smite-shocked-templar.xml",
-      "sha256": "c045998af9e8bf3a8350b9b2ab3b9bbc5f5b168000f41166dcbdab9494719c0c",
+      "sha256": "d262f8c4ee3baad9c7c564204ce2d06ccd434668a7d4aec83b9513e995eac6ca",
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
-      "description": "smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction computed before the damage taken; Oak's +40 to maximum Life (P3-12f)."
+      "description": "smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction computed before the damage taken; Oak's +40 to maximum Life; Onslaught's 20% increased attack speed, with the weapon's rate (P3-12f)."
     },
     {
       "id": "ice-nova-onslaught-rage-exposure-witch.xml",

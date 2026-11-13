@@ -49,6 +49,7 @@
 use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
 
 use super::Poe1Quantity;
+use super::config::last_input as last;
 use super::enemy::{self, BossKind};
 use crate::ingest::Ingest;
 use crate::input::CalcData;
@@ -91,16 +92,6 @@ pub fn handles(input: &str, value: &ConfigValue) -> bool {
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
-}
-
-/// The last value of `name` of `kind` in `set` (PoB keeps inputs in a
-/// table: the last one read counts).
-fn last<'a>(set: &'a ConfigSet, name: &str, kind: ConfigInputKind) -> Option<&'a ConfigValue> {
-    set.inputs
-        .typed()
-        .filter(|i| i.kind == kind && i.name == name)
-        .last()
-        .map(|i| &i.value)
 }
 
 /// A count option's value (`BuildModList`: the input when set and not 0,

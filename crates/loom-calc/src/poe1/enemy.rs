@@ -21,9 +21,13 @@
 //! conditions and multipliers change only modifiers that read them, and no
 //! mapped stat does (a test checks that no mapped row has a named
 //! condition), warcries and ailments are not in the slice, and only the
-//! Uber boss takes less damage. An `enemyIsBoss` input stays
-//! `unmodelled-config`, so the Uber boss's damage taken never gives a
-//! `Complete` hit.
+//! Uber boss takes less damage, which [`super::damage_taken`] models
+//! (P3-12f): a kind given as a string is no longer a reason.
+//!
+//! PoB reads a string kind with its own spelling rule (`Classes/
+//! ConfigTab.lua` 853 to 855): lower case, each word capitalised, then
+//! "Uber Atziri" read as "Boss" and "Shaper" and "Sirus" as "Pinnacle"
+//! ([`BossKind::of_pob`]).
 
 use loom_domain::{Build, ConfigInputKind, ConfigValue};
 
@@ -102,6 +106,40 @@ impl BossKind {
             "Uber" => Some(Self::Uber),
             _ => None,
         }
+    }
+}
+
+impl BossKind {
+    /// The kind of a value as PoB's config loader reads it
+    /// (`Classes/ConfigTab.lua` 853 to 855): `lower()`, then each match of
+    /// `(%l)(%w*)` with its first letter upper-cased, then `gsub` of
+    /// "Uber Atziri" to "Boss", "Shaper" and "Sirus" to "Pinnacle" (every
+    /// occurrence, in that order).
+    #[must_use]
+    pub fn of_pob(value: &str) -> Option<Self> {
+        // Lua's `lower` and `%l`, `%w` in the C locale: ASCII only.
+        let lower = value.to_ascii_lowercase();
+        let bytes = lower.as_bytes();
+        let mut out = Vec::with_capacity(bytes.len());
+        let mut i = 0;
+        while i < bytes.len() {
+            if bytes[i].is_ascii_lowercase() {
+                out.push(bytes[i].to_ascii_uppercase());
+                i += 1;
+                while i < bytes.len() && bytes[i].is_ascii_alphanumeric() {
+                    out.push(bytes[i]);
+                    i += 1;
+                }
+            } else {
+                out.push(bytes[i]);
+                i += 1;
+            }
+        }
+        let spelled = String::from_utf8_lossy(&out)
+            .replace("Uber Atziri", "Boss")
+            .replace("Shaper", "Pinnacle")
+            .replace("Sirus", "Pinnacle");
+        Self::of(&spelled)
     }
 }
 
@@ -205,15 +243,14 @@ fn input<'a>(build: &'a Build, name: &str) -> Option<Value<'a>> {
         .active
         .and_then(|id| config.sets.typed().find(|s| s.id == id))
         .or_else(|| config.sets.typed().next())?;
-    let i = set
-        .inputs
-        .typed()
-        .find(|i| i.kind == ConfigInputKind::Input && i.name == name)?;
-    Some(match &i.value {
-        ConfigValue::Number(n) => Value::Number(n.value().0),
-        ConfigValue::String(s) => Value::Text(s.as_str()),
-        ConfigValue::Boolean(_) => Value::Other,
-    })
+    // The last one read counts (PoB's input table).
+    Some(
+        match super::config::last_input(set, name, ConfigInputKind::Input)? {
+            ConfigValue::Number(n) => Value::Number(n.value().0),
+            ConfigValue::String(s) => Value::Text(s.as_str()),
+            ConfigValue::Boolean(_) => Value::Other,
+        },
+    )
 }
 
 /// PoB's monster armour table (`src/Export/Scripts/miscdata.lua`: "The
@@ -289,7 +326,7 @@ pub fn enemy(build: &Build, data: &dyn CalcData) -> Enemy {
         // An unknown kind: PoB sets no placeholder (a build's saved ones
         // would count); the Pinnacle values are only a guess, and the
         // problem says so.
-        Some(Value::Text(t)) => BossKind::of(t).unwrap_or_else(|| {
+        Some(Value::Text(t)) => BossKind::of_pob(t).unwrap_or_else(|| {
             problems.push(EnemyProblem::UnknownBossKind {
                 value: t.to_owned(),
             });
@@ -408,6 +445,24 @@ mod tests {
     use std::collections::BTreeSet;
 
     use super::*;
+
+    #[test]
+    fn a_kind_should_be_read_with_pobs_spelling_rule() {
+        for (value, kind) in [
+            ("Uber", Some(BossKind::Uber)),
+            ("uber", Some(BossKind::Uber)),
+            ("pINNACLE", Some(BossKind::Pinnacle)),
+            ("Shaper", Some(BossKind::Pinnacle)),
+            ("SIRUS", Some(BossKind::Pinnacle)),
+            ("uber atziri", Some(BossKind::Boss)),
+            ("none", Some(BossKind::None)),
+            ("Uber Pinnacle", None),
+            ("Eramir", None),
+            ("", None),
+        ] {
+            assert_eq!(BossKind::of_pob(value), kind, "{value}");
+        }
+    }
 
     #[test]
     fn the_boss_list_should_name_each_boss_and_type_once() {
