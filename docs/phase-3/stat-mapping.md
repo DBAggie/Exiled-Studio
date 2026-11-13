@@ -80,3 +80,11 @@ Unmapped stats (`docs/phase-3/stat-mapping/p3-8c-*-coverage.json`, against P3-12
 | Corpus | 21 | 509, 1844 | 504, 1738 |
 
 Tests (1128 workspace tests, 2 new, `mapping.rs`): the three rows as PoB reads them, the same through a gem's mapping, the two `NoEffect` rows; `NO_EFFECT_DEPENDS_ON` sorted, naming `NO_EFFECT` rows, each stat `Unmapped` through the game's, gem, piece, and weapon mappings. Clippy, fmt, wasm32. Reviewed by `code-architecture-reviewer`: no blockers; each reading confirmed in PoB; the parity evidence above and the comment on the four unreachable stats applied.
+
+## P3-12g: the pantheon's soul stats
+
+The pantheon (`docs/phase-3/config-inputs.md`, "P3-12g") applies its soul stats through this mapping. All 41 (12 gods, each stat on one soul) are `NoEffect` rows, read as PoB v2.67.2 reads their lines (`Modules/ModParser.lua`): avoidance, stun, ailments and curses on you, damage taken by you and its reduction, regeneration and flasks, movement speed, the enemy's regeneration and attack speed. `NO_EFFECT` holds 96 rows.
+
+Three of them reach a slice field only through a config input, which must stay a reason: `NO_EFFECT_DEPENDS_ON_INPUTS` (`loom_calc::poe1::mapping`) lists `conditionBlinded` (for `cannot_be_blinded`), `conditionChilled` and `conditionChilledEffect` (for `chill_effectiveness_on_self_+%`), and the thirteen `playerCursedWith*` inputs (for `curse_effect_on_self_+%`); a test sets each and expects `unmodelled-config`. `additional_chaos_resistance_against_damage_over_time_%` is `ChaosResist` with `ModFlag.Dot` in PoB, outside the shown resistance.
+
+Evidence: the maintainer-run real-bundle test (every soul stat of the bundle is a `NoEffect` row); four Ice Nova mechanic fixtures with eight of the twelve gods, each equal to PoB on every target, and PoB's fields equal to the fixture without a god. The guards that list `NoEffect` rows naming charges or damage taken list the souls' rows.

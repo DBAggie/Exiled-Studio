@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 2,
+        "format": 3,
         "pob": {"version": "2.67.2"},
         "tree_version": "3_29",
         "skill_types": {},
@@ -106,6 +106,15 @@ fn equal_export() -> Value {
         "bosses": {
             "Armoured": {"armourMult": 50, "evasionMult": 0, "isUber": true},
             "Evasive": {"armourMult": 0, "evasionMult": 100, "isUber": false}
+        },
+        "pantheons": {
+            "TestMajorGod": {"isMajorGod": true, "souls": [
+                {"name": "Soul of Test", "mods": [{"line": "+10 to maximum Life", "value": [10]}]},
+                {"name": "Test Upgrade", "mods": [{"line": "", "value": [5]}, {"line": "+2 to Strength", "value": [2]}]}
+            ]},
+            "TestMinorGod": {"isMajorGod": false, "souls": [
+                {"name": "Soul of Minor Test", "mods": [{"line": "+4 to maximum Life", "value": [4]}]}
+            ]}
         },
         "tree": {
             "classes": [
@@ -874,4 +883,54 @@ fn bosses_should_compare_their_multipliers_and_uber_mark() {
     export["bosses"].as_object_mut().unwrap().remove("Evasive");
     let keys: Vec<_> = differences(&export).iter().map(|d| d.key.clone()).collect();
     assert!(keys.contains(&"Extra".to_owned()) && keys.contains(&"Evasive".to_owned()));
+}
+
+#[test]
+fn pantheons_should_compare_gods_souls_lines_and_values() {
+    assert!(differences(&equal_export()).is_empty());
+    for (path, value, field) in [
+        ("/pantheons/TestMajorGod/isMajorGod", json!(false), "major"),
+        (
+            "/pantheons/TestMajorGod/souls/1/name",
+            json!("Other"),
+            "souls",
+        ),
+        (
+            "/pantheons/TestMajorGod/souls/1/mods/0/line",
+            json!("Other line"),
+            "soul.2.lines",
+        ),
+        (
+            "/pantheons/TestMinorGod/souls/0/mods/0/value/0",
+            json!(5),
+            "soul.1.values",
+        ),
+    ] {
+        let mut export = equal_export();
+        *export.pointer_mut(path).unwrap() = value;
+        let found = differences(&export);
+        assert_eq!(
+            fields(&found),
+            [("pantheons", path.split('/').nth(2).unwrap(), field)],
+            "{path}"
+        );
+    }
+    // A god PoB has and the bundle lacks, and the other way.
+    let mut export = equal_export();
+    let minor = export["pantheons"]["TestMinorGod"].take();
+    export["pantheons"]["Extra"] = minor;
+    export["pantheons"]
+        .as_object_mut()
+        .unwrap()
+        .remove("TestMinorGod");
+    let found = differences(&export);
+    assert_eq!(fields(&found), [("pantheons", "Extra", "row")], "PoB only");
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    assert!(
+        comparison
+            .bundle_only
+            .iter()
+            .any(|b| b.table == "pantheons" && b.key == "TestMinorGod")
+    );
 }

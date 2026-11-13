@@ -33,7 +33,7 @@
 //! the resistance penalty, the enemy model's numeric inputs, and
 //! [`super::config::NAMED_ONLY`] (P3-12a), and the ones with their own
 //! effects ([`super::charges`], [`super::damage_taken`], [`super::buffs`],
-//! the bandit: P3-12e, P3-12f), pantheon choices other than none, a
+//! the bandit and the pantheon: P3-12e to P3-12g), a
 //! weapon's base properties in the off hand (dual wielding), an
 //! armour piece's percentile
 //! derived from its shown value, active flasks, abyssal sockets, and
@@ -85,7 +85,7 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     let build = input.build;
     character(input, ingest);
     resistance_penalty(build, ingest);
-    choices(build, ingest);
+    choices(build, input.data, ingest);
     let spec = active_spec(build);
     if let Some(spec) = spec {
         passives(input, spec, ingest);
@@ -245,7 +245,7 @@ pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
     ("Oak", &[(Quantity::Life, 40.0)]),
 ];
 
-/// Bandit and pantheon (P3-12f for the bandit).
+/// Bandit and pantheon (P3-12f for the bandit, P3-12g for the pantheon).
 ///
 /// PoB reads the bandit from the active config set's `bandit` input
 /// (`env.configInput.bandit`), "None" when the set has none (each new set
@@ -260,42 +260,36 @@ pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
 /// attribute other than "None" stays a reason. With only untyped sets,
 /// their `<untyped>` reason covers the choice.
 ///
-/// The pantheon: `None` (or absent) has no effect; any other choice is
-/// not modelled yet (its souls' stats are game data the bundle does not
-/// carry yet). PoB reads it as it reads the bandit, from the set; the
-/// engine still gives the build attribute's choice a reason even beside a
-/// set (conservative; the set's own inputs are config reasons), until the
-/// pantheon is modelled.
-fn choices(build: &Build, ingest: &mut Ingest<'_>) {
+/// The pantheon reads its two inputs the same way (`Modules/Build.lua`
+/// 630 to 651 copies all three attributes; [`super::pantheon`], P3-12g):
+/// with a set, the set's gods act and the attributes are ignored; with no
+/// set, an attribute other than "None" stays a reason.
+fn choices(build: &Build, data: &dyn crate::input::CalcData, ingest: &mut Ingest<'_>) {
     let GameSpecific::Poe1(c) = build.game_specific() else {
         return;
     };
     match active_config(build) {
-        Some(set) => bandit(set, ingest),
+        Some(set) => {
+            bandit(set, ingest);
+            super::pantheon::pantheon(set, data, ingest);
+        }
         None if build.config.sets.entries().is_empty() => {
-            if let Some(v) = &c.bandit
-                && v != "None"
-            {
-                ingest.reason(UnsupportedReason::UnmodelledChoice {
-                    choice: "bandit",
-                    value: v.clone(),
-                });
+            for (choice, value) in [
+                ("bandit", &c.bandit),
+                ("pantheon-major", &c.pantheon_major),
+                ("pantheon-minor", &c.pantheon_minor),
+            ] {
+                if let Some(v) = value
+                    && v != "None"
+                {
+                    ingest.reason(UnsupportedReason::UnmodelledChoice {
+                        choice,
+                        value: v.clone(),
+                    });
+                }
             }
         }
         None => {}
-    }
-    for (choice, value) in [
-        ("pantheon-major", &c.pantheon_major),
-        ("pantheon-minor", &c.pantheon_minor),
-    ] {
-        if let Some(v) = value
-            && v != "None"
-        {
-            ingest.reason(UnsupportedReason::UnmodelledChoice {
-                choice,
-                value: v.clone(),
-            });
-        }
     }
 }
 
@@ -1169,11 +1163,13 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             continue;
         }
         // The enemy's damage taken (shock, the boss kind, delirium),
-        // Onslaught, and the bandit: their own effects or reasons
-        // (`poe1::damage_taken`, `poe1::buffs`, [`choices`], P3-12f).
+        // Onslaught, the bandit, and the pantheon: their own effects or
+        // reasons (`poe1::damage_taken`, `poe1::buffs`, [`choices`],
+        // P3-12f, P3-12g).
         if super::damage_taken::handles(&input.name, &input.value)
             || super::buffs::is_buff_input(&input.name)
             || input.name == BANDIT_INPUT
+            || super::pantheon::is_input(&input.name)
         {
             continue;
         }

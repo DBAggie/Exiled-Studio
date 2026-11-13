@@ -379,6 +379,7 @@ pub fn compare(
     compare_constants(&mut out, passives, properties, export);
     compare_monster_levels(&mut out, properties, export);
     compare_bosses(&mut out, properties, export, bosses);
+    compare_pantheons(&mut out, bundle, export)?;
     compare_passives(&mut out, bundle, passives, export, passive_scope)?;
     Ok(out)
 }
@@ -1065,6 +1066,99 @@ fn compare_bosses(
             pob.map_or(Value::Null, |p| Value::Bool(p.is_uber)),
         );
     }
+}
+
+/// The stat-description scope PoB's pantheon exporter renders soul lines
+/// with (`v2.67.2:src/Export/Scripts/pantheons.lua`: `stat_descriptions.txt`).
+pub const PANTHEON_SCOPE: &str = "stat_descriptions";
+
+/// PoB's pantheon (`data.pantheons`) against the bundle's
+/// (`poe1/pantheons.json`, P3-12g), by god ID: the major mark, the souls'
+/// names in order, and each soul's mods. PoB keeps each mod as the line
+/// its exporter rendered from the stat and its value
+/// (`table.concat(describeStats(stats), ' ')`) and the value; the bundle
+/// keeps the stat. So each of the bundle's stats is rendered with the
+/// game's stat descriptions ([`PANTHEON_SCOPE`]) into PoB's form, and the
+/// lines and values are compared. A god on one side only is a difference;
+/// a bundle without the file has every PoB god on PoB's side only.
+///
+/// # Errors
+/// A message when the scope does not load.
+fn compare_pantheons(out: &mut Comparison, bundle: &Bundle, export: &Export) -> Result<(), String> {
+    const T: &str = "pantheons";
+    let gods: BTreeMap<&str, &loom_data::bundle::poe1::Pantheon> = bundle
+        .poe1
+        .as_ref()
+        .and_then(|p| p.pantheons.as_ref())
+        .into_iter()
+        .flatten()
+        .map(|g| (g.id.as_str(), g))
+        .collect();
+    out.bundle_only(
+        T,
+        gods.keys()
+            .filter(|id| !export.pantheons.contains_key(**id))
+            .map(|id| (*id).to_owned()),
+    );
+    if export.pantheons.is_empty() {
+        return Ok(());
+    }
+    let root = bundle
+        .scope_root(PANTHEON_SCOPE)
+        .map_err(|e| format!("stat descriptions {PANTHEON_SCOPE}: {e}"))?;
+    let scope = bundle
+        .stat_descriptions
+        .scope(root)
+        .map_err(|e| format!("stat descriptions {PANTHEON_SCOPE}: {e}"))?;
+    for (id, pob) in &export.pantheons {
+        let Some(god) = gods.get(id.as_str()) else {
+            out.pob_only(T, id);
+            continue;
+        };
+        out.check(T, id, "major", json!(god.major), json!(pob.is_major_god));
+        out.check(
+            T,
+            id,
+            "souls",
+            json!(god.souls.iter().map(|s| &s.name).collect::<Vec<_>>()),
+            json!(pob.souls.iter().map(|s| &s.name).collect::<Vec<_>>()),
+        );
+        for (n, (soul, pob_soul)) in god.souls.iter().zip(&pob.souls).enumerate() {
+            let lines: Vec<String> = soul
+                .stats
+                .iter()
+                .map(|(stat, value)| {
+                    let one = [StatAmount {
+                        stat: stat.clone(),
+                        value: *value,
+                    }];
+                    render(bundle, &scope, &one).join(" ")
+                })
+                .collect();
+            out.check(
+                T,
+                id,
+                format!("soul.{}.lines", n + 1),
+                json!(lines),
+                json!(pob_soul.mods.iter().map(|m| &m.line).collect::<Vec<_>>()),
+            );
+            out.check(
+                T,
+                id,
+                format!("soul.{}.values", n + 1),
+                Value::Array(soul.stats.iter().map(|(_, v)| int(*v)).collect()),
+                Value::Array(
+                    pob_soul
+                        .mods
+                        .iter()
+                        .flat_map(|m| &m.value)
+                        .map(|v| num(*v))
+                        .collect(),
+                ),
+            );
+        }
+    }
+    Ok(())
 }
 
 fn compare_monster_levels(out: &mut Comparison, properties: &PropertyTables, export: &Export) {

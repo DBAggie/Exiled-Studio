@@ -512,3 +512,100 @@ On `smite-shocked-templar.xml` the attack rate and `TotalDPS` differ: Q11's `gam
 - **The Lightning Golem's Wrath** (`summonLightningGolemEnableWrath`, the Ice Nova builds), with the other gems' auras and buffs.
 - **Other config inputs** in the public builds: `conditionEnemyIgnited`, `conditionLeeching`, `conditionEnemyBlinded`, and the others listed by the calc runs.
 - **A delirium number other than 0** is a reason; PoB ignores it (no branch matches). Conservative.
+
+## P3-12g: the pantheon; Intimidate, Unnerve, Blind; ten inputs that only set names
+
+Several steps in one PR (maintainer, 2026-11-13: as much of the remaining work as fits). The pantheon was the handoff's next step; the enemy conditions and the name-only inputs are the public builds' most frequent remaining config reasons after it. The Lightning Golem's Wrath was looked at and left: its aura is the golem's own skill, so it needs the golem gem modelled first (Follow-ups).
+
+### The pantheon as game data
+
+PoB v2.67.2 exports `Data/Pantheons.lua` from the game's `PantheonPanelLayout` (`src/Export/Scripts/pantheons.lua`). The bundle now carries the same table:
+
+| Part | Where |
+|---|---|
+| `PantheonPanelLayout` among the extractor's PoE1 roots | `tools/extractor/src/extract.rs` (`CHOICE_TABLES_POE1`) |
+| `poe1/pantheons.json` in the bundle's optional PoE1 section: `Pantheon { id, major, souls }`, each `PantheonSoul { name, stats }` | `loom_data::bundle::poe1` |
+| The converter reads the table as PoB's exporter does: rows with `IsDisabled` left out, `GodName<n>` with `Effect<n>_StatsKeys` and `Effect<n>_Values` paired in order, a soul without stats left out; a soul whose lists differ in length, or whose key is no stat, fails the conversion | `tools/parity-cli/src/pantheons.rs` |
+| The validator: every soul stat is a stat (`BUNDLE_DANGLING_REF`); IDs unique and not empty; every soul named, with a stat (`BUNDLE_VALUE_RANGE`). Shared code names no PoE1-only word: `Poe1Section::choice_stats` and `choice_domain` give the validator what to check | `loom_data::bundle::validate` |
+| PoB's `data.pantheons` in the data export (format 3): each god's major mark, its souls' names, their mods' lines and values | `tools/oracle/data/pob_data.lua` |
+| `data-parity` table `pantheons`: PoB keeps each soul's mod as the line its exporter rendered (`describeStats`), the bundle the stat; each of our stats is rendered with the game's stat descriptions into PoB's form, and the lines, values, soul names, and major marks are compared | `tools/parity-cli/src/data_parity/compare.rs` |
+
+The section is optional (P2's rule for `poe1/`): a bundle without the file still loads, and a build that chooses a god is then `Indeterminate` (`missing-data`, table `pantheons`).
+
+### The pantheon in the calc
+
+**PoB.** `calcs.initModDB` (`Modules/CalcSetup.lua` 560 to 571) reads `env.configInput.pantheonMajorGod` and `pantheonMinorGod`; for a choice other than "None" it applies `pantheon.applySoulMod` (`Modules/PantheonTools.lua`): every soul of the god, upgrades included (PoB has no input for which upgrades are unlocked), each mod's line through the mod parser. Which value PoB reads is the bandit's rule (`Modules/Build.lua` 630 to 651).
+
+**The engine** (`loom_calc::poe1::pantheon`):
+- With a typed active set, each input's last value acts; "None" or no input, nothing. The god's soul stats act through the stat mapping, as an item's would, with the config input as their source (`Source::Config`).
+- A name the table does not hold, or a value that is not a name, is a reason under the input (PoB would fail on it).
+- With no set, an attribute other than "None" stays a reason (`unmodelled-choice`), as the bandit's; beside a set the attributes are ignored (P3-12f left the pantheon's attributes a reason even beside a set).
+- `CalcData::poe1()` gives the PoE1-only tables (`Poe1Data`); it defaults to none, so data without them is `missing-data`, never a silent zero. The parity tool's overlay passes the bundle's through (the table equals PoB's).
+
+**The soul stats.** All 41 (12 gods) join `NO_EFFECT`, each read as PoB reads its line: avoidance, stun, ailments and curses on you, damage taken by you and its reduction, regeneration and flasks, movement speed, the enemy's regeneration and attack speed. Three only matter through a config input, which must stay a reason (`NO_EFFECT_DEPENDS_ON_INPUTS`, a test sets each and expects `unmodelled-config`):
+- "Cannot be Blinded": only Blind on you (`conditionBlinded`, 20% less accuracy and evasion, `CalcPerform.lua` 824 to 835);
+- "#% reduced Effect of Curses on you": only the curses the `playerCursedWith*` inputs put on you (`CalcPerform.lua` 3114);
+- "#% reduced Effect of Chill on you": only chill on you (`conditionChilled`, `conditionChilledEffect`).
+
+"+#% Chaos Resistance against Damage Over Time" is `ChaosResist` BASE with `ModFlag.Dot` (`ModParser.lua` 1001): PoB's shown resistance sums without a flag, so it never counts there. PoB drops a line its parser does not read in full; the engine reads the stat instead, and since no soul stat reaches a slice field the two agree on every field. A maintainer-run test checks that every soul stat of the real bundle is a `NoEffect` row (41 of 41).
+
+### Intimidate, Unnerve, and Blind
+
+| Input | PoB | The engine |
+|---|---|---|
+| `conditionEnemyIntimidated` | The enemy's `Condition:Intimidated` (`ConfigOptions.lua` 1956); `calcs.initModDB` (`CalcSetup.lua` 64) gives every actor, the enemy too, `DamageTaken` INC 10 with `ModFlag.Attack` while intimidated | `EnemyDamageTaken` INC 10 for attacks |
+| `conditionEnemyUnnerved` | `Condition:Unnerved` (1977); `DamageTaken` INC 10 with `ModFlag.Spell` (66) | `EnemyDamageTaken` INC 10 for spells |
+| `conditionEnemyBlinded` | `Condition:Blinded` (1834), the `Blind` flag (`CalcSetup.lua` 74); `doActorMisc` (`CalcPerform.lua` 824 to 835, run for the enemy at 3559): `Accuracy` and `Evasion` MORE `floor(-20 x effect)`, `effect` 1 plus the enemy's `BlindEffect` and `BuffEffectOnSelf` INC | New `Poe1Quantity::EnemyEvasion` MORE -20; an attack's chance to hit reads the enemy's evasion as PoB's `calcLib.val` (base, INC, MORE), then rounds |
+
+The party's variants need a party member's condition (no party is modelled). The enemy's accuracy reaches no slice field. "#% increased Blind Effect" (`blind_effect_+%`) is an `EnemyModifier` of `BlindEffect` (`ModParser.lua` 2238): it must stay a reason (`BLIND_DEPENDS_ON`, checked `Unmapped` through every mapping and a stat of the real bundle). A test checks that no mapped row, and no `NoEffect` row but "Cannot be Blinded" (on you), names Intimidate, Unnerve, or Blind: the stats that inflict them on hit are reasons, so the configured conditions are the only ones the engine applies. A check that is not a boolean is a reason under its input.
+
+### Ten inputs that only set names
+
+`NAMED_ONLY` gains, each with every reader of its names in the calc modules checked (`poe1::config` docs): `conditionCastSpellRecently`, `conditionUsedMinionSkillRecently` (each with `UsedSkillRecently`), `multiplierNonInstantSpellCastRecently`, `conditionLeeching` (no calc reader); `conditionKilledRecently` (only trigger skills read it, `CalcTriggers.lua`); the enemy's `conditionEnemyBleeding`, `conditionEnemyLowLife`, `conditionEnemyPoisoned` (no calc reader on the enemy); `conditionEnemyMaimed` (30% reduced movement speed, not a slice field); `conditionEnemyIgnited` (and `Burning`): Combustion reads it (`CalcPerform.lua` 2709 to 2716), only for a skill supported by the Combustion gem, whose stat `ignites_apply_fire_resistance_+` joins `DEPENDS_ON`, and Call the Pyre's trigger (a gem).
+
+### What changes
+
+- **Public builds** (`p3-12g-public-vs-p3-12f.json`). Ten values change in three builds, all in `Partial` fields, each closer to PoB's: Elemental Hit and Kinetic Blast (a blinded enemy: hit chance 64 to 70% and 85 to 90%, and their crit chance, average damage, and DPS), Shock Nova (an unnerved enemy: average damage and DPS 8% higher). No field changes state.
+- **Reasons.** 159 are gone and none added, in 32 builds: every pantheon reason (`pantheonMajorGod`, `pantheonMinorGod`, and the attributes' `unmodelled-choice`: none is left in any public build), the ten name-only inputs, the three enemy conditions, and five `base_stun_recovery_+%` item lines (a soul stat, now a `NoEffect` row).
+- **The 7 in-scope builds.** The four Smite builds have no config reason left; the three Ice Nova builds only the Lightning Golem's Wrath. Every field stays `Partial`, through other gems, unmapped stats, and unresolved lines.
+- **Corpus.** No value changes; 108 reasons gone, none added, in 20 builds.
+
+### Evidence
+
+2026-11-13, Windows. Tool commit `2f084ad`, clean (the review's test-only commit `cfa5f43` came after the run). Summaries are in `docs/phase-3/config-inputs/p3-12g-*`; the bundle and data-parity records are replaced (`docs/phase-3/bundle-poe1-26530219.json`, `data-parity-poe1-26530219.json`).
+
+| Run | Result |
+|---|---|
+| `check-determinism.sh` on PoE1 (clean `30e7d8a`) | Deterministic: 572 files identical in two runs; the new `PantheonPanelLayout.json` the only new table |
+| `bundle` twice | Byte-identical. Against P3-1d's bundle, only `bundle.json` and the new `poe1/pantheons.json` (12 gods; 4 disabled rows and 16 souls without stats left out). Manifest SHA-256 `595dd9a7…` |
+| `bundle-check` | Exit 0, no findings |
+| `pob_data.lua` twice (export format 3) | Byte-identical; oracle checkout clean |
+| `data-parity` twice | Byte-identical. **`pantheons`: 88 values compared, 0 differences** (each soul's rendered line equals PoB's). Every other table as P3-1d's: 534 differences, `uncategorized` 0, 314 overlay rows |
+| `oracle-run`, the whole manifest | 100 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 99 documents; 1314 complete, 334 partial, 416 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-run --data-overlay` (this bundle's overlay) | The same field states |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 33 differences, all registered (DIV-0001 to DIV-0033; 3 new, below), 0 unexpected, no unused entry; 1290 fields match. **Every mechanic target met (1280 of 1280, 63 fixtures).** Exit 5 (`incomplete`), as before |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical, no difference (exit 5) |
+| `build-round-trip`: public and corpus | All pass |
+
+**The new fixtures and the register.**
+
+| Fixture | What it holds | Result |
+|---|---|---|
+| `ice-nova-pantheon-arakaali-shakari-witch.xml`, `-solaris-yugul-`, `-lunaris-garukhan-`, `-brine-king-gruthkul-` | The four major and four minor gods most likely to touch a slice field (chaos resistance against damage over time, damage taken and its reduction, curses, shock, and Blind on you) | 22 of 22 equal to PoB each; PoB's own fields equal `ice-nova-witch.xml`'s |
+| `ice-nova-unnerve-intimidate-blind-witch.xml` | Unnerve, Intimidate, Blind, and the ten name-only inputs | 22 of 22 equal to PoB (Unnerve's 1.1) |
+| `smite-intimidate-blind-templar.xml` | The same on Smite | Every field but the attack rate and DPS equal to PoB (hit chance 26%, PoB's) |
+
+On `smite-intimidate-blind-templar.xml` the attack rate, `TotalDPS`, and its displayed breakdown total differ by Q11's `game-truth` difference (1000 / 667 = 1.4993 against PoB's 1.50, times the same 0.85), registered as DIV-0031 to DIV-0033 with DIV-0001's evidence. No other divergence is claimed: Intimidate's and Unnerve's 10%, Blind's 20%, and the souls' values are the game's, as PoB has them.
+
+**Tests** (1179 workspace tests): the converter (pairing, disabled rows, souls without stats, a table it would misread); validator mutations; `data-parity`'s `pantheons` table; the pantheon in the calc (both gods, the source, "None", the last input, an unknown god, a value that is not a name, data without the table, no set); the inputs a `NoEffect` row relies on; Unnerve and Intimidate on a spell and an attack, Blind's hit chance, Blind beside Corrosion or Brine ground (reasons); the guards (no row names Intimidate, Unnerve, or Blind; the charge and damage-taken guards list the souls' rows). Maintainer-run real-bundle tests: every soul stat is a `NoEffect` row (41, unique), every `DEPENDS_ON` and `BLIND_DEPENDS_ON` stat is a stat. Clippy, fmt, wasm32.
+
+**Review** (`code-architecture-reviewer`): no code blocker; every rule confirmed against PoB's Lua (the soul lines, the ten inputs' readers, Intimidate's and Unnerve's flags, Blind's place before the rounding). Applied: `EnemyEvasion`'s stable name tested; the soul-stat count as unique stats; Blind beside the other evasion inputs; the god looked up whatever its major mark (docs); docs and the bundle record. Left: the register's Q11 entries cite the attack-time test, as DIV-0001 to DIV-0030 do; a test for a pantheon attribute beside only untyped sets (their reason covers it, as the bandit's).
+
+**Commands:** as P3-12f's, plus the bundle and data steps (P3-1d's), with `<out>` = `local/p3/p3-12g/evidence` (script `local/p3/p3-12g/evidence.sh`).
+
+### Follow-ups
+
+- **The Lightning Golem's Wrath** (`summonLightningGolemEnableWrath`, the three Ice Nova builds): the aura is the golem's own skill (`LightningGolemWrath`, `Data/Skills/minion.lua`), so the golem gem comes first. With it, **the other gems** (`unmodelled-gem`, the largest reason left in the in-scope builds: auras, heralds, golems, buffs, curses, warcries, totems, movement skills, reservation). PoB lets a non-main skill act through its buffs (`GlobalEffect` mods of its stat maps), reservation, minions, totems, chilling areas, warcries, and curses (`CalcPerform.lua` 1261 to 1440, 1928 to 2040); which gems are inert for the slice needs those stat maps per skill.
+- **Other config inputs** in the public builds: `multiplierWitheredStackCount`, `buffLifetap`, `infusedChannellingInfusion`, `multiplierCorpseConsumedRecently`, `prideEffect`, `buffTailwind`, and the others the calc runs list.
+- **Q12** (maintainer, in game): see the handoff.

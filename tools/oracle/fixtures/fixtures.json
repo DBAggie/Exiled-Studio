@@ -931,6 +931,66 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Ice Nova with an amulet (rare, original): increased attack and cast speed on a spell (P3-8c)."
+    },
+    {
+      "id": "ice-nova-pantheon-arakaali-shakari-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-arakaali-shakari-witch.xml",
+      "sha256": "ff12e713ad65a625a59242f7015d1d2a8ac88c790a575990e8c4033c1056031a",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Arakaali and Shakari: Arakaali's chaos resistance against damage over time (PoB: a Dot-flagged ChaosResist, not the shown resistance) and damage over time taken; Shakari's chaos damage taken and poison on you; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-solaris-yugul-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-solaris-yugul-witch.xml",
+      "sha256": "8fc325f778133a1e843fe500e8eaef3f21ca472806330a89ad7990158d336eb6",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Solaris and Yugul: Solaris's physical damage reduction, area and elemental damage taken; Yugul's reflected damage, reflected hexes, and curse effect on you (no curse on you); every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-lunaris-garukhan-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-lunaris-garukhan-witch.xml",
+      "sha256": "0fec502ba810efda3a19594deab760ef392444c6bbdb3419f02b26df49a65ae8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Lunaris and Garukhan: Lunaris's per-enemy damage reduction and movement speed, projectile avoidance; Garukhan's shock on you, Blind immunity (not blinded), Maim avoidance; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-brine-king-gruthkul-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-brine-king-gruthkul-witch.xml",
+      "sha256": "3034f72fae4a7fa3f8da932f7d4b02f1b30c2165ea36062d990e8b118b41aa15",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's TheBrineKing and Gruthkul: the Brine King's stun, freeze, and chill on you; Gruthkul's damage reduction per hit taken and the enemy's attack speed; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-unnerve-intimidate-blind-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-unnerve-intimidate-blind-witch.xml",
+      "sha256": "80edc8177282bdda376522781e76eca2349aee2ddc6a37ca71c666288cb34036",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml against an unnerved, intimidated, blinded enemy: Unnerve's 10% increased spell damage taken; Intimidate (attacks) and Blind (evasion) change nothing on a spell; ten inputs that only set names modifiers read (P3-12g)."
+    },
+    {
+      "id": "smite-intimidate-blind-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-intimidate-blind-templar.xml",
+      "sha256": "6debe980d993100c145f26eee37c300724011b2b329ecc13f7b09c031a41a836",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml against an intimidated, blinded, unnerved enemy: Intimidate's 10% increased attack damage taken, Blind's 20% less evasion in the chance to hit; Unnerve (spells) changes nothing on an attack; ten inputs that only set names modifiers read (P3-12g)."
     }
   ]
 }

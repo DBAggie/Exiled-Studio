@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 2;
+pub const FORMAT: u32 = 3;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -44,6 +44,8 @@ pub struct Export {
     pub monster_constants: BTreeMap<String, f64>,
     /// `data.bosses`, by PoB's name (format 2).
     pub bosses: BTreeMap<String, Boss>,
+    /// data.pantheons, by god ID (format 3, P3-12g).
+    pub pantheons: BTreeMap<String, God>,
     /// The tree.
     pub tree: Tree,
 }
@@ -61,6 +63,41 @@ pub struct Boss {
     /// `isUber`.
     #[serde(rename = "isUber")]
     pub is_uber: bool,
+}
+
+/// A god of data.pantheons.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct God {
+    /// isMajorGod.
+    #[serde(rename = "isMajorGod")]
+    pub is_major_god: bool,
+    /// The souls, in PoB's order.
+    #[serde(deserialize_with = "list")]
+    pub souls: Vec<Soul>,
+}
+
+/// A soul of a god.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Soul {
+    /// The soul's name.
+    pub name: String,
+    /// Its mods, in PoB's order.
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<SoulMod>,
+}
+
+/// A soul's mod: the line PoB's exporter rendered from the stat and its
+/// value (describeStats), which PoB's parser reads.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SoulMod {
+    /// The line.
+    pub line: String,
+    /// The stat's values.
+    #[serde(deserialize_with = "list")]
+    pub value: Vec<f64>,
 }
 
 /// PoB's version.

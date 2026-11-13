@@ -237,6 +237,9 @@ mod tests {
         // Regeneration per charge: not a slice field.
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
         "mana_regeneration_rate_+%_per_power_charge",
+        // Flask charges (Ryslatha's soul, P3-12g): not the power, frenzy,
+        // or endurance charges this module counts.
+        "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
     ];
 
     /// The module's argument: no mapped stat reads or changes a charge,

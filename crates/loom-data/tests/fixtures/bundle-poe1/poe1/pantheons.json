@@ -1,0 +1,45 @@
+[
+ {
+  "id": "TestMajorGod",
+  "major": true,
+  "souls": [
+   {
+    "name": "Soul of Test",
+    "stats": [
+     [
+      "test_maximum_life",
+      10
+     ]
+    ]
+   },
+   {
+    "name": "Test Upgrade",
+    "stats": [
+     [
+      "test_passive_life",
+      5
+     ],
+     [
+      "test_strength",
+      2
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "id": "TestMinorGod",
+  "major": false,
+  "souls": [
+   {
+    "name": "Soul of Minor Test",
+    "stats": [
+     [
+      "test_maximum_life",
+      4
+     ]
+    ]
+   }
+  ]
+ }
+]

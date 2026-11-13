@@ -1,7 +1,7 @@
 {
   "game": "poe1",
   "steam_build": 26530219,
-  "manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b",
+  "manifest_sha256": "595dd9a7490e269b99ab2b0f570b1404fa6329bf31eb01ef513df416ac0796be",
   "files": {
     "data/active_skills.json": {
       "rows": 1941,
@@ -147,6 +147,11 @@
       "rows": 16,
       "sha256": "5c46bf2d14348d6ec20f221324f3ec5655e8b0660d301918732567a5babd63fc",
       "size": 2930
+    },
+    "poe1/pantheons.json": {
+      "rows": 12,
+      "sha256": "27c915d48ce2ea7e63cf029703d848c0f99477ef583d8d78e5bc97567fbf25aa",
+      "size": 7553
     },
     "poe1/quality_types.json": {
       "rows": 18,
@@ -419,5 +424,9 @@
   },
   "properties": {
     "dropped_rows": 0
+  },
+  "pantheons": {
+    "disabled": 4,
+    "souls_without_stats": 16
   }
 }

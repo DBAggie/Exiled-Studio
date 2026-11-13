@@ -16,8 +16,9 @@
 //! - `ItemClasses` to class IDs; the `ClientStrings` rows the game's item
 //!   rules name; the lookup tables `lookup` builds; the stat-description
 //!   files, copied as the extractor wrote them;
-//! - PoE1: `poe1/quality_types.json` (`properties::quality_types`) and
-//!   `poe1/grafts.json` (`grafts::rows`);
+//! - PoE1: `poe1/quality_types.json` (`properties::quality_types`),
+//!   `poe1/grafts.json` (`grafts::rows`), and `poe1/pantheons.json`
+//!   (`pantheons::rows`, P3-12g);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
 //!   and passive tables ([`passives`]; the extract's manifest format 5), and
@@ -46,7 +47,7 @@ use sha2::{Digest, Sha256};
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{grafts, mod_filter, poe1, poe2, properties};
+use crate::{grafts, mod_filter, pantheons, poe1, poe2, properties};
 
 mod base_properties;
 mod passives;
@@ -104,6 +105,8 @@ pub struct Summary {
     pub passives: passives::PassiveSummary,
     /// The item property and monster tables (format 2).
     pub properties: base_properties::PropertySummary,
+    /// The pantheon (PoE1, P3-12g); `None` without its table.
+    pub pantheons: Option<pantheons::PantheonSummary>,
 }
 
 /// Counters the readers fill (see [`Summary`]).
@@ -694,6 +697,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         put(&mut files, &mut rows, &target, read(&output)?, None);
     }
 
+    let mut pantheon_summary = None;
     if game == "poe1" {
         if let Some(q) = properties::quality_types(read)? {
             let q: Vec<bundle_poe1::QualityType> = q
@@ -725,6 +729,16 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 to_json(&g)?,
                 Some(n),
             );
+        }
+        if let Some((gods, summary)) = pantheons::rows(read)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::PANTHEONS,
+                to_json(&gods)?,
+                Some(gods.len()),
+            );
+            pantheon_summary = Some(summary);
         }
     }
 
@@ -774,6 +788,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         skills: skill_summary,
         passives: passive_summary,
         properties: property_summary,
+        pantheons: pantheon_summary,
     };
     files.insert(bundle::MANIFEST.to_owned(), manifest_json);
     Ok((files, summary))

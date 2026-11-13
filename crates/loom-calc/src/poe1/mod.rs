@@ -21,10 +21,12 @@ pub mod damage_taken;
 pub mod enemy;
 pub mod hit;
 pub mod mapping;
+pub mod pantheon;
 pub mod phases;
 pub mod skill;
 
 pub use mapping::Poe1Mapping;
+pub use pantheon::Poe1Data;
 
 use loom_domain::Game;
 
@@ -73,6 +75,10 @@ pub enum Poe1Quantity {
     /// the enemy): its `Increased` and `More` effects scale each hit
     /// ([`damage_taken`]).
     EnemyDamageTaken,
+    /// The enemy's evasion modifiers (PoB's `Evasion` INC and MORE on the
+    /// enemy, `calcLib.val`): they scale its base evasion before an
+    /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
+    EnemyEvasion,
 }
 
 /// A value of the weapon in the main hand (`Classes/Item.lua`, the weapon
@@ -134,6 +140,7 @@ impl core::fmt::Display for Poe1Quantity {
                 f.write_str("maximum-physical-damage-reduction")
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
+            Self::EnemyEvasion => f.write_str("enemy-evasion"),
         }
     }
 }
@@ -381,6 +388,10 @@ mod tests {
         assert_eq!(
             Quantity::Poe1(Poe1Quantity::EnemyDamageTaken).to_string(),
             "poe1.enemy-damage-taken"
+        );
+        assert_eq!(
+            Quantity::Poe1(Poe1Quantity::EnemyEvasion).to_string(),
+            "poe1.enemy-evasion"
         );
         assert_eq!(
             Poe1Field::SpellSuppressionChance.name(),

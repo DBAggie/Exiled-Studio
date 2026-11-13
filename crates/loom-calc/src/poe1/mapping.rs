@@ -722,12 +722,32 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field, whatever the build's config (55): `(stat,
-/// why)`, sorted by stat ID (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
+/// Stats that reach no slice field (96): `(stat, why)`, sorted by stat ID
+/// (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
 /// suppression, unreserved life and mana, and the main skill's hit,
-/// speed, hit chance, crit, and hit DPS) on its own.
+/// speed, hit chance, crit, and hit DPS) on its own: a few only through a
+/// config input that stays a reason ([`NO_EFFECT_DEPENDS_ON_INPUTS`]).
+///
+/// P3-12g adds the pantheon's soul stats (41; `poe1::pantheon`), each as
+/// PoB reads its line (`Modules/ModParser.lua`): avoidance, stun,
+/// ailments, curses and Blind on you, damage taken by you and its
+/// reduction, regeneration and flasks, movement speed, the enemy's
+/// regeneration and attack speed. Three of them read a config input:
+/// - "Cannot be Blinded" (`Condition:CannotBeBlinded`): only Blind on you
+///   (`conditionBlinded`) reads it, as 20% less accuracy and evasion
+///   (`CalcPerform.lua` 824 to 835);
+/// - "#% reduced Effect of Curses on you" (`CurseEffectOnSelf`): only
+///   curses on you read it, from the `playerCursedWith*` inputs
+///   (`ConfigOptions.lua` 846 to 885, `CalcPerform.lua` 3114);
+/// - "#% reduced Effect of Chill on you": only chill on you
+///   (`conditionChilled`, `conditionChilledEffect`), which slows action
+///   speed.
+///
+/// "+#% Chaos Resistance against Damage Over Time" is `ChaosResist` BASE
+/// with `ModFlag.Dot` (`ModParser.lua` 1001): PoB's shown resistance
+/// sums without a flag, so it never counts there.
 ///
 /// What is left out on purpose, so it stays `Unmapped` until a step maps
 /// it: anything that can change a hit or its rate through the enemy
@@ -747,6 +767,10 @@ pub struct Poe1Mapping;
 /// must revisit the rows it reaches; the guarantee holds only while it is
 /// unmapped.
 pub const NO_EFFECT: &[(&str, &str)] = &[
+    (
+        "%_of_your_and_your_minions_damage_cannot_be_reflected",
+        "reflect",
+    ),
     // A skill's own base radius (PoB `skill("radius")`): it sets the area
     // PoB shows, which no slice field reads (P3-9b). Increased area stays
     // unmapped, as above.
@@ -762,7 +786,16 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("add_power_charge_on_kill_%_chance", "charge-gain-chance"),
+    (
+        "additional_chaos_resistance_against_damage_over_time_%",
+        "dot-resistance",
+    ),
+    ("avoid_ailments_%_from_crit", "ailment-on-self"),
+    ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
+    ("avoid_maim_%_chance", "ailment-on-self"),
+    ("base_avoid_freeze_%", "ailment-on-self"),
+    ("base_avoid_projectiles_%_chance", "avoidance"),
     ("base_chance_to_freeze_%", "freeze"),
     // A skill's chance to shock: PoB shocks the enemy only from its config
     // or a guaranteed source (`ShockBase`, `ShockOverride`,
@@ -779,8 +812,19 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_skill_effect_duration", "skill-duration"),
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
+    ("base_stun_recovery_+%", "stun"),
+    ("cannot_be_blinded", "blind-on-self"),
+    ("cannot_be_poisoned_if_x_poisons_on_you", "ailment-on-self"),
     (
         "cannot_be_shocked_while_at_maximum_power_charges",
+        "ailment-on-self",
+    ),
+    (
+        "cannot_be_stunned_if_have_been_stunned_or_blocked_stunning_hit_in_past_2_seconds",
+        "stun",
+    ),
+    (
+        "cannot_gain_corrupted_blood_while_you_have_at_least_5_stacks",
         "ailment-on-self",
     ),
     ("cannot_have_life_leeched_from", "leech"),
@@ -799,15 +843,40 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "chance_to_gain_power_charge_when_block_%",
         "charge-gain-chance",
     ),
+    ("chaos_damage_taken_+%", "damage-taken"),
+    (
+        "chaos_damage_taken_over_time_+%_while_in_caustic_cloud",
+        "damage-taken",
+    ),
+    ("chill_effectiveness_on_self_+%", "ailment-on-self"),
     ("cold_ailment_duration_+%", "ailment-duration"),
     (
         "consecrated_ground_allies_recover_es_as_well_as_life_from_life_regeneration",
         "regeneration",
     ),
     ("console_skill_dont_chase", "display"),
+    ("curse_effect_on_self_+%", "curse-on-self"),
+    ("debuff_time_passed_+%", "ailment-on-self"),
+    ("degen_effect_+%", "damage-taken"),
     (
         "elemental_ailment_duration_on_self_+%_while_holding_shield",
         "ailment-on-self",
+    ),
+    (
+        "elemental_damage_taken_+%_if_been_hit_recently",
+        "damage-taken",
+    ),
+    (
+        "elemental_damage_taken_+%_if_not_hit_recently",
+        "damage-taken",
+    ),
+    (
+        "enemies_that_hit_you_with_attack_recently_attack_speed_+%",
+        "enemy-speed",
+    ),
+    (
+        "enemy_life_regeneration_rate_+%_for_4_seconds_on_hit",
+        "enemy-regeneration",
     ),
     (
         "energy_shield_regeneration_rate_per_minute_if_rare_or_unique_enemy_nearby",
@@ -830,12 +899,25 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // line).
     ("kill_enemy_on_hit_if_under_10%_life", "culling"),
     (
+        "life_and_energy_shield_recovery_rate_+%_if_stopped_taking_damage_over_time_recently",
+        "regeneration",
+    ),
+    (
+        "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
+        "flask",
+    ),
+    ("life_recovery_+%_from_flasks_while_on_low_life", "flask"),
+    (
         "life_regeneration_per_minute_%_per_fortification",
         "regeneration",
     ),
     ("life_regeneration_rate_per_minute_%", "regeneration"),
     (
         "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        "regeneration",
+    ),
+    (
+        "life_regeneration_rate_per_minute_%_while_stationary",
         "regeneration",
     ),
     (
@@ -864,6 +946,36 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "minion-defence",
     ),
     ("minion_maximum_life_+%", "minion-defence"),
+    ("movement_speed_+%_per_nearby_enemy", "movement-speed"),
+    (
+        "movement_speed_+%_while_on_burning_ground",
+        "movement-speed",
+    ),
+    ("no_extra_bleed_damage_while_moving", "damage-taken"),
+    (
+        "pantheon_abberath_ignite_duration_on_self_+%_final",
+        "ailment-on-self",
+    ),
+    (
+        "pantheon_shakari_self_poison_duration_+%_final",
+        "ailment-on-self",
+    ),
+    (
+        "physical_damage_over_time_taken_+%_while_moving",
+        "damage-taken",
+    ),
+    (
+        "physical_damage_reduction_%_if_only_one_enemy_nearby",
+        "damage-reduction",
+    ),
+    (
+        "physical_damage_reduction_%_per_hit_you_have_taken_recently",
+        "damage-reduction",
+    ),
+    (
+        "physical_damage_reduction_%_per_nearby_enemy",
+        "damage-reduction",
+    ),
     ("physical_damage_taken_%_as_fire", "damage-taken"),
     ("physical_damage_taken_%_as_lightning", "damage-taken"),
     ("quality_display_active_skill_area_damage_is_gem", "display"),
@@ -872,8 +984,14 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "display",
     ),
     ("rage_loss_delay_ms", "rage-duration"),
+    ("reflect_hexes_chance_%", "curse-on-self"),
     ("regenerate_energy_shield_instead_of_life", "regeneration"),
     ("revive_golems_if_killed_by_enemies_ms", "minion-defence"),
+    (
+        "self_take_no_extra_damage_from_critical_strikes_if_have_been_crit_recently",
+        "damage-taken",
+    ),
+    ("shocked_effect_on_self_+%", "ailment-on-self"),
     ("smite_lightning_target_range", "targeting"),
     // Melee Physical Damage's more damage with poison and bleeding: no
     // ailment is in the slice.
@@ -881,7 +999,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
         "ailment-damage",
     ),
+    ("take_half_area_damage_from_hit_%_chance", "damage-taken"),
+    ("unaffected_by_burning_ground", "ground-on-self"),
     ("visual_hit_effect_elemental_is_holy", "display"),
+    (
+        "while_stationary_gain_additional_physical_damage_reduction_%",
+        "damage-reduction",
+    ),
     (
         "your_consecrated_ground_effect_lingers_for_ms_after_leaving_the_area",
         "ground-duration",
@@ -931,6 +1055,35 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
         "modifiers_to_minion_damage_also_affect_you",
         "minion_damage_+%",
     ),
+];
+
+/// Config inputs that would make a [`NO_EFFECT`] row reach a slice field:
+/// `(input, row)`, sorted by input (P3-12g). A row's `NoEffect` holds only
+/// while these stay config reasons, so a build that sets one is `Partial`;
+/// modelling one must revisit the row (a test checks no step handles them).
+pub const NO_EFFECT_DEPENDS_ON_INPUTS: &[(&str, &str)] = &[
+    ("conditionBlinded", "cannot_be_blinded"),
+    ("conditionChilled", "chill_effectiveness_on_self_+%"),
+    ("conditionChilledEffect", "chill_effectiveness_on_self_+%"),
+    ("playerCursedWithAssassinsMark", "curse_effect_on_self_+%"),
+    ("playerCursedWithConductivity", "curse_effect_on_self_+%"),
+    ("playerCursedWithDespair", "curse_effect_on_self_+%"),
+    (
+        "playerCursedWithElementalWeakness",
+        "curse_effect_on_self_+%",
+    ),
+    ("playerCursedWithEnfeeble", "curse_effect_on_self_+%"),
+    ("playerCursedWithFlammability", "curse_effect_on_self_+%"),
+    ("playerCursedWithFrostbite", "curse_effect_on_self_+%"),
+    ("playerCursedWithPoachersMark", "curse_effect_on_self_+%"),
+    (
+        "playerCursedWithProjectileWeakness",
+        "curse_effect_on_self_+%",
+    ),
+    ("playerCursedWithPunishment", "curse_effect_on_self_+%"),
+    ("playerCursedWithTemporalChains", "curse_effect_on_self_+%"),
+    ("playerCursedWithVulnerability", "curse_effect_on_self_+%"),
+    ("playerCursedWithWarlordsMark", "curse_effect_on_self_+%"),
 ];
 
 impl StatMapping for Poe1Mapping {

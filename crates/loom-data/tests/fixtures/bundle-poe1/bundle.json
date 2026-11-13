@@ -147,6 +147,11 @@
    "size": 163
   },
   {
+   "path": "poe1/pantheons.json",
+   "sha256": "5c256f7cd586ee9d6812659661134bb052299fc5be11f7f676f34e989b582a73",
+   "size": 512
+  },
+  {
    "path": "poe1/quality_types.json",
    "sha256": "111b8b10a17f224fdf089bfa958fb8db20200080ad29731d83abf70ff2c09ee4",
    "size": 136

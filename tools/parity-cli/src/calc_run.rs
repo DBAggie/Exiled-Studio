@@ -476,6 +476,12 @@ impl CalcData for OverlayData<'_> {
         self.bundle.game_constant(id)
     }
 
+    fn poe1(&self) -> Option<&dyn loom_calc::poe1::Poe1Data> {
+        // The pantheon equals PoB's (`data-parity`, table `pantheons`): no
+        // overlay row substitutes it.
+        self.bundle.poe1()
+    }
+
     fn item_base(&self, name: &str) -> Option<ItemBase> {
         match self.bundle.item_base(name)? {
             ItemBase::Armour(a) => {

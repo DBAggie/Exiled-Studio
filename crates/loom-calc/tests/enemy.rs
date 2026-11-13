@@ -252,7 +252,8 @@ fn the_armour_table_should_equal_pobs_with_its_constant() {
 }
 
 /// Every stat the config rules depend on (`loom_calc::poe1::config::
-/// DEPENDS_ON`, `poe1::buffs::DEPENDS_ON`) is a stat of the real bundle: a
+/// DEPENDS_ON`, `poe1::buffs::DEPENDS_ON`, `poe1::damage_taken::
+/// BLIND_DEPENDS_ON`) is a stat of the real bundle: a
 /// misspelt ID would pass the `Unmapped` check. Maintainer-run:
 /// `LOOM_BUNDLE_DIR=<bundle> cargo test -p loom-calc --test enemy --
 /// --ignored`.
@@ -268,9 +269,45 @@ fn the_config_rules_stats_should_be_real_stats() {
     let missing: Vec<_> = loom_calc::poe1::config::DEPENDS_ON
         .iter()
         .chain(loom_calc::poe1::buffs::DEPENDS_ON)
+        .chain(loom_calc::poe1::damage_taken::BLIND_DEPENDS_ON)
         .filter(|id| !data.stats.iter().any(|s| s.id == **id))
         .collect();
     assert!(missing.is_empty(), "{missing:?}");
+}
+
+/// Every soul stat of the real bundle's pantheon (P3-12g) is a `NoEffect`
+/// row: no god changes a slice field or adds a reason, and a misspelt row
+/// would leave its stat `Unmapped` here. Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn the_real_pantheons_stats_should_be_no_effect_rows() {
+    use loom_calc::ingest::{StatMap, StatMapping};
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let gods = data
+        .poe1
+        .as_ref()
+        .and_then(|p| p.pantheons.as_ref())
+        .expect("the bundle's pantheon");
+    assert_eq!(gods.len(), 12);
+    // 41 soul stats, each on one soul only (41 rows of `NO_EFFECT`).
+    let mut stats = 0;
+    let mut unique = std::collections::BTreeSet::new();
+    for (stat, _) in gods.iter().flat_map(|g| &g.souls).flat_map(|s| &s.stats) {
+        stats += 1;
+        unique.insert(stat.as_str());
+        assert_eq!(
+            loom_calc::poe1::Poe1Mapping.map(&loom_domain::StatId::new(stat.as_str())),
+            StatMap::NoEffect,
+            "{stat}"
+        );
+    }
+    assert_eq!(stats, 41);
+    assert_eq!(unique.len(), 41);
 }
 
 /// The real PoE1 bundle's default enemy against the values PoB v2.67.2

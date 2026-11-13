@@ -93,6 +93,13 @@ pub trait CalcData {
 
     /// A game constant as `(value, divisor)`.
     fn game_constant(&self, id: &str) -> Option<(i64, i64)>;
+
+    /// The Path of Exile only tables ([`crate::poe1::Poe1Data`]; P3-12g).
+    /// `None` (the default) when the data has none: a build that needs
+    /// them is `Indeterminate` (`missing-data`), never a silent zero.
+    fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
+        None
+    }
 }
 
 /// The game's monster stats at one level ([`CalcData::monster_level`]).
@@ -399,6 +406,10 @@ impl CalcData for Bundle {
             .iter()
             .find(|c| c.id == id)
             .map(|c| (c.value, c.divisor))
+    }
+
+    fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
+        Some(self)
     }
 }
 
