@@ -102,6 +102,21 @@ dto! {
         /// Values that could not be settled.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub indeterminate: Vec<IndeterminateReason>,
+        /// Content without effect by design, shown with the result; never
+        /// a reason for a state (ADR-015 Amendment 2; additive in v1,
+        /// only in the result's own reasons).
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub notes: Vec<Note>,
+    }
+
+    /// Content without effect by design.
+    #[serde(rename_all = "kebab-case")]
+    pub enum Note {
+        /// A custom modifier line that is a label or a comment.
+        CustomNote {
+            /// The line.
+            source: Source,
+        },
     }
 
     /// A state's kind, from best to worst.

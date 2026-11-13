@@ -5,7 +5,7 @@ use loom_calc as c;
 use loom_domain as d;
 
 use super::types::{
-    CalcResult, FieldResult, IndeterminateReason, Node, NodeKind, Reasons, Source, StateKind,
+    CalcResult, FieldResult, IndeterminateReason, Node, NodeKind, Note, Reasons, Source, StateKind,
     UnsupportedReason,
 };
 use crate::dto::v1::{Adapted, Game, NonFinite, Number};
@@ -200,6 +200,15 @@ fn reasons_to<'a>(
     Reasons {
         unsupported: unsupported.into_iter().map(unsupported_to).collect(),
         indeterminate: indeterminate.into_iter().map(indeterminate_to).collect(),
+        notes: Vec::new(),
+    }
+}
+
+fn note_to(n: &c::Note) -> Note {
+    match n {
+        c::Note::CustomNote { source } => Note::CustomNote {
+            source: source_to(source),
+        },
     }
 }
 
@@ -287,7 +296,10 @@ pub(super) fn result_to(r: &c::CalcResult) -> CalcResult {
     CalcResult {
         game: game_to(r.game),
         state: state_to(r.state),
-        reasons: reasons_to(&r.reasons.partial, &r.reasons.indeterminate),
+        reasons: Reasons {
+            notes: r.reasons.notes.iter().map(note_to).collect(),
+            ..reasons_to(&r.reasons.partial, &r.reasons.indeterminate)
+        },
         fields: r.fields.iter().map(|(f, v)| field_to(*f, v)).collect(),
         graph: r.graph.iter().map(|(_, n, v)| node_to_dto(n, v)).collect(),
     }

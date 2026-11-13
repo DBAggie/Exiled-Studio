@@ -1205,6 +1205,98 @@ export type UnsupportedReason =
  * form that reads back to the same bits.
  */
 export type Number = number | NonFinite
+/**
+ * Content without effect by design.
+ */
+export type Note = {
+  'custom-note': {
+    /**
+     * The line.
+     */
+    source:
+      | 'character'
+      | {
+          item: {
+            /**
+             * The import tolerance the line needed, if any.
+             */
+            adapted?: Adapted | null
+            /**
+             * The item's ID.
+             */
+            item: number
+            /**
+             * The line's index among the item's lines.
+             */
+            line: number
+          }
+        }
+      | {
+          'item-base': {
+            /**
+             * The item's ID.
+             */
+            item: number
+          }
+        }
+      | {
+          passive: {
+            /**
+             * The node's ID.
+             */
+            node: number
+          }
+        }
+      | {
+          gem: {
+            /**
+             * The gem's index in the group.
+             */
+            gem: number
+            /**
+             * The socket group's index.
+             */
+            group: number
+          }
+        }
+      | {
+          config: {
+            /**
+             * The input's name.
+             */
+            input: string
+          }
+        }
+      | 'enemy'
+      | {
+          rule: string
+        }
+      | {
+          'custom-modifier': {
+            /**
+             * The block's index in the set.
+             */
+            block: number
+            /**
+             * The line's index among the block's lines.
+             */
+            line: number
+          }
+        }
+      | {
+          'config-input-line': {
+            /**
+             * The input's name.
+             */
+            input: string
+            /**
+             * The line's index among the input's lines.
+             */
+            line: number
+          }
+        }
+  }
+}
 
 /**
  * The document: its format, its version, and the result.
@@ -1446,6 +1538,12 @@ export interface Reasons {
    * Values that could not be settled.
    */
   indeterminate?: IndeterminateReason[]
+  /**
+   * Content without effect by design, shown with the result; never
+   * a reason for a state (ADR-015 Amendment 2; additive in v1,
+   * only in the result's own reasons).
+   */
+  notes?: Note[]
   /**
    * Content that was not modelled.
    */

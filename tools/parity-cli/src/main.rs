@@ -16,6 +16,7 @@ mod calc_parity;
 mod calc_run;
 mod calc_survey;
 mod categorize;
+mod custom_lines;
 mod data_parity;
 mod divergence;
 mod dto_hashes;
@@ -130,6 +131,14 @@ const USAGE: &str = "usage:
       dto::v1); print each document's SHA-256 and size as JSON. CI compares
       the output of Windows and Linux. Exit 1 if a document differs on a
       second run or does not read back to the same build.
+  loom-parity-cli custom-lines <bundle-dir> <pob-parse.json> --out <dir>
+      Read every custom modifier line of <pob-parse.json> (the output of
+      tools/oracle/data/pob_parse_lines.lua: each line with PoB v2.67.2's
+      parse) as a build's custom line is read (stat descriptions, then the
+      curated patterns, then the note rule; ADR-015 Amendment 2) and compare
+      with PoB's parse; write report.json to <dir>, which must not exist
+      (docs/phase-3/custom-lines.md). Exit 1 when a note is a line PoB
+      applies, or a pattern's effect differs from PoB's mods.
   loom-parity-cli data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>
       Compare the values a calculation reads (skills and their levels,
       gems, item bases, classes, character and monster constants, game
@@ -491,6 +500,29 @@ fn load_bundle(dir: &Path) -> Result<loom_data::bundle::Bundle, String> {
     }
     loom_data::bundle::Bundle::load(&source)
         .map_err(|e| format!("{}: {} ({e})", dir.display(), e.code()))
+}
+
+/// `custom-lines`: custom modifier lines against PoB's parse
+/// ([`custom_lines`]).
+fn custom_lines_cmd(bundle_dir: &Path, pob: &Path, out: &Path) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let bytes = std::fs::read(pob).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let lines: Vec<custom_lines::PobLine> =
+        serde_json::from_slice(&bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let bundle = load_bundle(bundle_dir)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data).map_err(|e| e.to_string())?;
+    let report = custom_lines::compare(&resolver, &lines);
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())? + "\n";
+    std::fs::write(out.join("report.json"), json).map_err(|e| e.to_string())?;
+    println!(
+        "{}",
+        serde_json::to_string(&report.counts).map_err(|e| e.to_string())?
+    );
+    Ok(report.passed())
 }
 
 /// `bundle-equal`: the pipeline's data from a bundle against the
@@ -1484,6 +1516,9 @@ fn main() -> ExitCode {
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
+        [cmd, bundle, pob, flag, out] if cmd == "custom-lines" && flag == "--out" => {
+            custom_lines_cmd(Path::new(bundle), Path::new(pob), Path::new(out))
+        }
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))
         }

@@ -7,8 +7,8 @@ use std::collections::BTreeMap;
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
 pub use loom_data::bundle::skills::{
-    ActiveSkill, EffectLevel, GemEffect, GrantedEffect, Reservation, Resource, SkillGem, StatSet,
-    StatSetLevel,
+    ActiveSkill, EffectLevel, FloatStat, GemEffect, GrantedEffect, Reservation, Resource, SkillGem,
+    StatSet, StatSetLevel,
 };
 use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 
@@ -130,11 +130,19 @@ pub struct PassiveKind {
 /// The mods by an implicit tag ([`CalcData::mods_by_tag`]).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ModsByTag {
-    /// The stat IDs of each mod that carries the tag (mods without stats
-    /// left out).
-    pub tagged: Vec<Vec<String>>,
+    /// Each mod that carries the tag (mods without stats left out).
+    pub tagged: Vec<TaggedMod>,
     /// Every stat ID of a mod that does not carry the tag.
     pub untagged: std::collections::BTreeSet<String>,
+}
+
+/// A mod that carries a tag ([`ModsByTag::tagged`]).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct TaggedMod {
+    /// The mod's ID.
+    pub id: String,
+    /// Its stat IDs.
+    pub stats: Vec<String>,
 }
 
 /// The first data schema whose mods carry their implicit tags.
@@ -473,8 +481,10 @@ impl CalcData for Bundle {
                 continue;
             }
             if m.implicit_tags.iter().any(|t| t == tag) {
-                out.tagged
-                    .push(m.stats.iter().map(|s| s.stat.clone()).collect());
+                out.tagged.push(TaggedMod {
+                    id: m.id.clone(),
+                    stats: m.stats.iter().map(|s| s.stat.clone()).collect(),
+                });
             } else {
                 out.untagged.extend(m.stats.iter().map(|s| s.stat.clone()));
             }

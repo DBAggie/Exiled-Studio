@@ -19,13 +19,21 @@
 //!   skill mods, or whose `SkillData` key is not a display key (each a
 //!   path the module docs exclude): none;
 //! - `types`: PoB's types (active skills) or added types (supports) a
-//!   modelled skill may not have (reservation for an inert skill, minions,
-//!   brands, warcries, triggers, totems, ...): none; `is_trigger`,
-//!   `add_minions` (Summon Phantasm's own minion only), and a support
-//!   level's `manaReservationPercent`.
+//!   modelled skill may not have (minions, brands, warcries, triggers,
+//!   totems, ... per kind; the allowances name each exception and why):
+//!   none; `is_trigger`, `add_minions` (Summon Phantasm's own minion
+//!   only), and a support level's `manaReservationPercent`.
+//!
+//! Phase 3 close-out: debuffs, curses, and warcries are kinds of their own
+//! (`effectType` `Debuff`, `Curse`, `Warcry`); rows gated by a config check
+//! (`effectCond`), by Blood Stance, or by Righteous Fire's `StatThreshold`
+//! tags are compared with those tags; a gem's own buff and aura effect
+//! stats (`gems::OWN_EFFECT_STATS`) are read by the engine, so their mods
+//! are not blocked.
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_calc::poe1::Poe1Quantity;
 use loom_calc::poe1::gems::{self, BuffStat, Kind};
 use loom_calc::{Flags, Op, Quantity};
 use serde_json::{Value, json};
@@ -72,6 +80,9 @@ const BLOCKED_NAMES: &[&str] = &[
 /// reads these keys of the skill being calculated only.
 const DISPLAY_KEYS: &[&str] = &[
     "ColdMax",
+    // The skill's own damage over time (Flame Wall, Righteous Fire, Herald
+    // of Ash's burn): no slice field reads a skill's dot (close-out).
+    "FireDot",
     "ColdMin",
     "PhysicalMax",
     "PhysicalMin",
@@ -89,11 +100,23 @@ const DISPLAY_KEYS: &[&str] = &[
     "radiusSecondaryLabel",
     "radiusTertiary",
     "radiusTertiaryLabel",
+    // Righteous Fire's own burn (close-out).
+    "RFManaMultiplier",
     "repeatFrequency",
     "setOffHandPhysicalMax",
     "setOffHandPhysicalMin",
     "showAverage",
     "thisIsNotABuff",
+    // Convocation's buff on minions only (close-out; the engine gives the
+    // character nothing of it).
+    "buffMinions",
+    "buffNotPlayer",
+    // A skill's own secondary duration and how its dot scales (close-out).
+    "dotIsSpell",
+    "durationSecondary",
+    // Herald of Ash's burn (close-out).
+    "hoaMoreBurn",
+    "hoaOverkillPercent",
 ];
 
 /// Types an inert skill may not have; a buff skill may reserve
@@ -107,7 +130,6 @@ const INERT_FORBIDDEN: &[&str] = &[
     "Aura",
     "Brand",
     "Buff",
-    "HasReservation",
     "Herald",
     "Hex",
     "Mark",
@@ -128,6 +150,113 @@ const BUFF_FORBIDDEN: &[&str] = &[
     "Trigger",
     "Warcry",
 ];
+/// Types a debuff skill may not have (close-out).
+const DEBUFF_FORBIDDEN: &[&str] = &[
+    "Aura",
+    "Brand",
+    "Buff",
+    "CreatesMinion",
+    "HasReservation",
+    "Herald",
+    "Hex",
+    "Mark",
+    "Minion",
+    "SummonsTotem",
+    "Totem",
+    "Triggered",
+    "Trigger",
+    "Warcry",
+];
+/// Types a curse skill may not have (close-out): a mark, an aura curse, a
+/// curse a totem, trap, or minion casts.
+const CURSE_FORBIDDEN: &[&str] = &[
+    "Aura",
+    "Brand",
+    "CreatesMinion",
+    "HasReservation",
+    "Mark",
+    "Minion",
+    "SummonsTotem",
+    "Totem",
+    "Triggered",
+    "Trigger",
+    "Warcry",
+];
+/// Types a warcry skill may not have (close-out).
+const WARCRY_FORBIDDEN: &[&str] = &[
+    "Aura",
+    "Brand",
+    "CreatesMinion",
+    "HasReservation",
+    "Hex",
+    "Mark",
+    "Minion",
+    "SummonsTotem",
+    "Totem",
+    "Triggered",
+    "Trigger",
+];
+
+/// Types a modelled active skill may have after all, with why
+/// (close-out): golems, Herald of Purity, and Convocation create or buff
+/// minions, whose own skills give the character nothing but Lightning
+/// Golem's Wrath (`gems::wrath`); Shockwave Support's attack is triggered
+/// and hits on its own.
+const ALLOWED_TYPES: &[(&str, &str)] = &[
+    ("Convocation", "Minion"),
+    ("HeraldOfPurity", "CreatesMinion"),
+    ("HeraldOfPurity", "Minion"),
+    ("SummonFlameGolem", "CreatesMinion"),
+    ("SummonFlameGolem", "Minion"),
+    ("SummonIceGolem", "CreatesMinion"),
+    ("SummonIceGolem", "Minion"),
+    ("SummonLightningGolem", "CreatesMinion"),
+    ("SummonLightningGolem", "Minion"),
+    ("SummonStoneGolem", "CreatesMinion"),
+    ("SummonStoneGolem", "Minion"),
+    ("SummonStoneGolemAltY", "CreatesMinion"),
+    ("SummonStoneGolemAltY", "Minion"),
+    ("SupportBluntWeaponShockwave", "Triggered"),
+];
+
+/// Active skills whose minions the engine knows (their skills give the
+/// character nothing, or Wrath, which `gems::wrath` models).
+const ALLOWED_MINIONS: &[&str] = &[
+    "HeraldOfPurity",
+    "SummonFlameGolem",
+    "SummonIceGolem",
+    "SummonLightningGolem",
+    "SummonStoneGolem",
+    "SummonStoneGolemAltY",
+];
+
+/// A skill's buff identities besides its kind's, with why: Flesh and
+/// Stone's Blood Stance mod is an `AuraDebuff` on the enemy and its Sand
+/// Stance mod a `Buff` on the character (the engine scales the Blood
+/// Stance row as an aura's, which PoB's `AuraDebuff` scale also reads).
+const EXTRA_BUFFS: &[(&str, &str)] = &[
+    ("FleshAndStone", "AuraDebuff Flesh and Stone"),
+    ("FleshAndStone", "Buff Flesh and Stone"),
+    // A warcry's `UsesWarcryPower` flag is a `Buff` of its name.
+    ("IntimidatingCry", "Buff Intimidating Cry"),
+    ("IntimidatingCry", "Warcry Intimidating Cry"),
+    ("RallyingCry", "Buff Rallying Cry"),
+    ("RallyingCry", "Warcry Rallying Cry"),
+];
+
+/// Support mods outside the buff the engine models, with why: Guardian's
+/// Blessing's reservation of 0 for an aura (`gems::NO_RESERVATION_SUPPORTS`).
+const ALLOWED_BLOCKED: &[(&str, &str)] = &[
+    // Automation's trigger of the skill it supports, whose own kind says
+    // what it does.
+    ("SupportAutomation", "triggered"),
+    ("SupportAutomation", "triggeredByAutomation"),
+    ("SupportGuardiansBlessing", "lifeReservationFlat"),
+    ("SupportGuardiansBlessing", "lifeReservationPercent"),
+    ("SupportGuardiansBlessing", "manaReservationFlat"),
+    ("SupportGuardiansBlessing", "manaReservationPercent"),
+];
+
 /// Types a modelled support may not add.
 const SUPPORT_FORBIDDEN: &[&str] = &[
     "AppliesCurse",
@@ -152,7 +281,15 @@ const SUPPORT_FORBIDDEN: &[&str] = &[
 /// field (regeneration, recharge, movement, degeneration, leech, freeze,
 /// damage taken by you).
 const NO_SLICE_NAMES: &[&str] = &[
+    "AreaOfEffect",
+    "ArcaneSurgeManaRegen",
+    "Condition:HaveColdGolem",
+    "Condition:HaveFireGolem",
+    "Condition:HaveLightningGolem",
+    "Condition:HavePhysicalGolem",
     "DamageTakenWhenHit",
+    "Dummy",
+    "FireDegen",
     "EnergyShieldRecharge",
     "FireDamageTakenWhenHit",
     "FreezeImmune",
@@ -162,6 +299,12 @@ const NO_SLICE_NAMES: &[&str] = &[
     "PhysicalDamageLifeLeech",
     "PhysicalDamageTakenWhenHit",
     "PhysicalDegen",
+    "RallyingCryAllyDamageBonusPer5Power",
+    "SelfElementalAilmentDuration",
+    "SelfFreezeChance",
+    "SelfFreezeDuration",
+    "UsesWarcryPower",
+    "takenFromStoneGolemBeforeYou",
 ];
 
 /// The `GlobalEffect` tag's fields a slice row may have: any other
@@ -174,6 +317,9 @@ const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 /// create its phantasm (`ALLOWED_ADD_MINIONS`; a minion type only counts
 /// into named conditions, as an inert skill's may).
 const ALLOWED_ADD_TYPES: &[(&str, &str)] = &[
+    // Automation triggers the skill it supports (close-out): the skill's
+    // own kind says what it does.
+    ("SupportAutomation", "Triggered"),
     ("SupportMomentum", "Buff"),
     ("SupportSummonPhantasm", "CreatesMinion"),
 ];
@@ -195,6 +341,14 @@ fn ailment_max(name: &str) -> bool {
         ]
         .iter()
         .any(|a| name == format!("{a}Max"))
+}
+
+/// PoB's tag for a `notMinionStat` mod: the actor has no parent.
+fn is_not_minion(t: &BTreeMap<String, Value>) -> bool {
+    t.get("type").and_then(Value::as_str) == Some("ActorCondition")
+        && t.get("actor").and_then(Value::as_str) == Some("parent")
+        && t.get("neg") == Some(&Value::Bool(true))
+        && t.len() == 3
 }
 
 /// A mod in a canonical form both sides share.
@@ -223,6 +377,9 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
         .tags
         .iter()
         .filter(|t| t.get("type").and_then(Value::as_str) != Some("GlobalEffect"))
+        // `notMinionStat`'s tag (`ActorCondition` `parent`, negated): the
+        // mod is not a minion's; every row here is the character's.
+        .filter(|t| !is_not_minion(t))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
     if let Some(g) = m.global_effect() {
@@ -267,6 +424,17 @@ fn pob_name(q: Quantity) -> String {
         Quantity::CritChance => "CritChance".into(),
         Quantity::Speed => "Speed".into(),
         Quantity::EnergyShield => "EnergyShield".into(),
+        Quantity::Armour => "Armour".into(),
+        Quantity::Evasion => "Evasion".into(),
+        Quantity::Poe1(Poe1Quantity::EnemyResistance(t)) => format!("{}Resist", title(t.name())),
+        Quantity::Poe1(Poe1Quantity::SkillExposure(t)) => format!("{}Exposure", title(t.name())),
+        Quantity::Poe1(Poe1Quantity::GainAs(a, b)) => {
+            format!("{}DamageGainAs{}", title(a.name()), title(b.name()))
+        }
+        Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t)) => {
+            format!("{}DamageTaken", title(t.name()))
+        }
+        Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) => "ArcaneSurgeCastSpeed".into(),
         Quantity::Damage => "Damage".into(),
         Quantity::AddedDamage(t, b) => {
             let t = t.name();
@@ -280,10 +448,114 @@ fn pob_name(q: Quantity) -> String {
     }
 }
 
+/// A word with its first letter in upper case.
+fn title(word: &str) -> String {
+    let mut c = word.chars();
+    c.next().map_or(String::new(), |f| {
+        f.to_uppercase().collect::<String>() + c.as_str()
+    })
+}
+
+/// Rows PoB writes as one mod (close-out): the three elemental
+/// resistances as `ElementalResist`, energy shield, armour, and evasion
+/// increased as `Defences`.
+fn collapse(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Option<String> {
+    use loom_calc::DamageType as D;
+    let res = |t| Quantity::Poe1(Poe1Quantity::EnemyResistance(t));
+    let same = |qs: [Quantity; 3]| {
+        effects.len() == 3
+            && effects.iter().zip(qs).all(|(e, q)| e.0 == q)
+            && effects.iter().all(|e| {
+                e.1 == effects[0].1 && e.2 == 1.0 && e.3 == Flags::NONE && e.4 == Flags::NONE
+            })
+    };
+    let kind = effects.first().map(|e| op_name(e.1))?;
+    if same([res(D::Fire), res(D::Cold), res(D::Lightning)]) {
+        return Some(format!("ElementalResist {kind} []"));
+    }
+    if same([Quantity::EnergyShield, Quantity::Armour, Quantity::Evasion]) {
+        return Some(format!("Defences {kind} []"));
+    }
+    None
+}
+
+fn op_name(op: Op) -> &'static str {
+    match op {
+        Op::Base => "BASE",
+        Op::Increased => "INC",
+        Op::More => "MORE",
+        Op::Flag => "FLAG",
+        Op::Override => "OVERRIDE",
+    }
+}
+
+/// One row of a table (`poe1::mapping::HitEffect`).
+type Row = (Quantity, Op, f64, Flags, Flags);
+
+/// Our rows of a stat as PoB's mods, with the tags its variant stands for.
+fn variant_form(b: &BuffStat) -> Vec<String> {
+    let (rows, suffix): (&[Row], String) = match b {
+        BuffStat::Rows(r) => (r, String::new()),
+        BuffStat::WhenInput {
+            condition, rows, ..
+        } => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": condition })),
+        ),
+        BuffStat::BloodStance(rows) => (
+            rows,
+            format!(" tags global {}", json!({ "effectCond": "BloodStance" })),
+        ),
+        BuffStat::Threshold(rows) => (
+            rows,
+            format!(
+                " tags {};{}",
+                json!({ "stat": "LifeUnreserved", "threshold": 2, "type": "StatThreshold" }),
+                json!({ "stat": "Mana", "threshold": 1, "type": "StatThreshold" })
+            ),
+        ),
+        BuffStat::NoSlice(_) | BuffStat::Gated(_) => return Vec::new(),
+    };
+    if let Some(one) = collapse(rows) {
+        return vec![one + &suffix];
+    }
+    our_form(rows)
+        .into_iter()
+        .zip(rows)
+        .map(|(f, row)| {
+            // Arcane Surge's cast speed: PoB's MAX mod, `unscalable`; the
+            // engine keeps the largest (`poe1::buffs`).
+            if row.0 == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed) {
+                return f.replacen(" BASE ", " MAX ", 1)
+                    + &format!(" tags global {}", json!({ "unscalable": true }));
+            }
+            f + &suffix
+        })
+        .collect()
+}
+
 fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
     effects
         .iter()
         .map(|&(q, op, divisor, all, any)| {
+            // A damage type's more or increased (Herald of Purity's
+            // `PhysicalDamage` MORE): the type is the name.
+            let typed = [
+                (Flags::PHYSICAL, "Physical"),
+                (Flags::FIRE, "Fire"),
+                (Flags::COLD, "Cold"),
+                (Flags::LIGHTNING, "Lightning"),
+                (Flags::CHAOS, "Chaos"),
+            ]
+            .into_iter()
+            .find(|(f, _)| q == Quantity::Damage && all.contains(*f));
+            let (name, all) = match typed {
+                Some((f, t)) => (
+                    format!("{t}Damage"),
+                    if all == f { Flags::NONE } else { all },
+                ),
+                None => (pob_name(q), all),
+            };
             let kind = match op {
                 Op::Base => "BASE",
                 Op::Increased => "INC",
@@ -312,7 +584,7 @@ fn our_form(effects: &[(Quantity, Op, f64, Flags, Flags)]) -> Vec<String> {
                     .contains(all);
             format!(
                 "{} {kind} [{}]{}{}",
-                pob_name(q),
+                name,
                 f.join(","),
                 if other { " other-flags" } else { "" },
                 if divisor == 1.0 {
@@ -338,6 +610,7 @@ fn check_one(
     forbidden: &[&str],
     support: bool,
 ) {
+    let own_effect: Vec<&str> = gems::OWN_EFFECT_STATS.iter().map(|(s, _)| *s).collect();
     // Global stats.
     let pob_global: BTreeSet<String> = skill
         .mods
@@ -373,7 +646,18 @@ fn check_one(
             TABLE,
             id,
             "buff",
-            strings([format!("{effect} {name}")]),
+            {
+                let extra: Vec<String> = EXTRA_BUFFS
+                    .iter()
+                    .filter(|(s, _)| *s == id)
+                    .map(|(_, b)| (*b).to_owned())
+                    .collect();
+                if extra.is_empty() {
+                    strings([format!("{effect} {name}")])
+                } else {
+                    strings(extra)
+                }
+            },
             strings(pob),
         );
     }
@@ -388,7 +672,10 @@ fn check_one(
         };
         match b {
             BuffStat::NoSlice(_) => {
+                // Only the global mods form the buff; a skill's other mods
+                // act on itself (close-out: base mods share the stat "").
                 let bad: Vec<String> = mods()
+                    .filter(|m| global(m).is_some())
                     .filter(|m| !NO_SLICE_NAMES.contains(&m.name.as_str()))
                     .map(|m| m.name.clone())
                     .collect();
@@ -400,7 +687,10 @@ fn check_one(
                     strings(bad),
                 );
             }
-            BuffStat::Gated(cond) => {
+            BuffStat::Gated(cond)
+            | BuffStat::WhenInput {
+                condition: cond, ..
+            } => {
                 let conds: BTreeSet<String> = mods()
                     .map(|m| {
                         global(m)
@@ -418,12 +708,15 @@ fn check_one(
                     strings(conds),
                 );
             }
-            BuffStat::Rows(_) => {}
+            BuffStat::Rows(_) | BuffStat::BloodStance(_) | BuffStat::Threshold(_) => {}
         }
     }
     // Rows.
     for (stat, b) in stats {
-        let BuffStat::Rows(rows) = b else { continue };
+        let ours = variant_form(b);
+        if ours.is_empty() {
+            continue;
+        }
         let pob: Vec<String> = skill
             .mods
             .iter()
@@ -434,7 +727,7 @@ fn check_one(
             TABLE,
             id,
             format!("row.{stat}"),
-            strings(our_form(rows)),
+            strings(ours),
             strings(pob),
         );
     }
@@ -450,6 +743,13 @@ fn check_one(
                 .as_ref()
                 .and_then(|v| v.get("key"))
                 .and_then(Value::as_str);
+            // A gem's own buff or aura effect stat is read by the engine.
+            if own_effect.contains(&s.stat.as_str()) {
+                continue;
+            }
+            if key.is_some_and(|k| ALLOWED_BLOCKED.contains(&(id, k))) {
+                continue;
+            }
             let bad = BLOCKED_NAMES.contains(&m.name.as_str())
                 || ailment_max(&m.name)
                 || (m.name == "SkillData" && !key.is_some_and(|k| DISPLAY_KEYS.contains(&k)));
@@ -475,6 +775,7 @@ fn check_one(
         .iter()
         .filter(|t| forbidden.contains(&t.as_str()))
         .filter(|t| !ALLOWED_ADD_TYPES.contains(&(id, t.as_str())))
+        .filter(|t| !ALLOWED_TYPES.contains(&(id, t.as_str())))
         .cloned()
         .collect();
     out.check(TABLE, id, "types", strings(Vec::new()), strings(bad));
@@ -482,7 +783,7 @@ fn check_one(
         TABLE,
         id,
         "is_trigger",
-        json!(false),
+        json!(ALLOWED_ADD_TYPES.contains(&(id, "Triggered")) && support),
         json!(skill.is_trigger),
     );
     let allowed: Vec<String> = ALLOWED_ADD_MINIONS
@@ -498,13 +799,12 @@ fn check_one(
         strings(skill.add_minions.clone()),
     );
     if !support {
-        out.check(
-            TABLE,
-            id,
-            "minions",
-            strings(Vec::new()),
-            strings(skill.minions.clone()),
-        );
+        let minions = if ALLOWED_MINIONS.contains(&id) {
+            Vec::new()
+        } else {
+            skill.minions.clone()
+        };
+        out.check(TABLE, id, "minions", strings(Vec::new()), strings(minions));
     } else {
         let percent: Vec<String> = skill
             .levels
@@ -536,22 +836,15 @@ pub fn compare_gem_effects(out: &mut Comparison, export: &Export, effects: &BTre
             out.check(TABLE, id, "row", json!("present"), Value::Null);
             continue;
         };
-        match kind {
-            Kind::Inert => check_one(out, id, skill, &[], None, INERT_FORBIDDEN, false),
-            Kind::Buff {
-                name,
-                effect,
-                stats,
-            } => check_one(
-                out,
-                id,
-                skill,
-                stats,
-                Some((name, effect.pob())),
-                BUFF_FORBIDDEN,
-                false,
-            ),
-        }
+        let forbidden = match kind {
+            Kind::Inert => INERT_FORBIDDEN,
+            Kind::Buff { .. } => BUFF_FORBIDDEN,
+            Kind::Debuff { .. } => DEBUFF_FORBIDDEN,
+            Kind::Curse { .. } => CURSE_FORBIDDEN,
+            Kind::Warcry { .. } => WARCRY_FORBIDDEN,
+        };
+        let buff = kind.buff().map(|(effect, name)| (name, effect));
+        check_one(out, id, skill, kind.stats(), buff, forbidden, false);
     }
     for (id, stats) in gems::SUPPORTS {
         if !effects.contains(id) {

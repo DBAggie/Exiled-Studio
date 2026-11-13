@@ -26,7 +26,7 @@ use crate::condition::Conditions;
 use crate::input::LineValues;
 use crate::quantity::{Op, Quantity};
 use crate::source::Source;
-use crate::state::{IndeterminateReason, Reasons, UnsupportedReason};
+use crate::state::{IndeterminateReason, Note, Reasons, UnsupportedReason};
 use crate::store::{Effect, ModStore};
 
 /// One effect a stat gives, per unit of the stat's value.
@@ -352,6 +352,11 @@ impl<'m> Ingest<'m> {
                     for s in stats {
                         self.stat(&source, s);
                     }
+                }
+                // A label or a comment: no effect, shown as a note
+                // (ADR-015 Amendment 2).
+                Resolved::Typed(TypedResolution::CustomNote) => {
+                    self.reasons.notes.insert(Note::CustomNote { source });
                 }
                 Resolved::Typed(t) => self.typed(&source, t),
             },

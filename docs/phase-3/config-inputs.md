@@ -1,6 +1,6 @@
 # Phase 3: config inputs (step 12)
 
-Plan step 12 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): each config input is modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`. Summaries: `docs/phase-3/config-inputs/`.
+Plan step 12 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): each config input is modelled, listed as not affecting the slice (with a reason and a test), or makes the fields it can reach `Partial`. Summaries: `docs/phase-3/config-inputs/`.
 
 Before this step the engine modelled two kinds of input (`resistancePenalty`, P3-6; the enemy model's numeric inputs, P3-11). Every other input of the active config set was an `unmodelled-config` reason on every computed field, whatever it did.
 
@@ -655,3 +655,14 @@ Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p
 **Against P3-12i** (`p3-12j-public-vs-p3-12i.json`, `p3-12j-corpus-poe1-26530219-vs-p3-12i.json`). No field state changes. The four in-scope Smite builds' speed and hit DPS change, all eight values closer to PoB's: Smite act1's speed is 1.5956 against PoB's 1.5948 (the remaining gap is Q11's floored attack time, `game-truth`). Their "Onslaught" reason is gone (4); none added. Smite act1's only reason left is "Perfect Forest Warrior" (Q13). Corpus: 4 legacy custom lines in 3 builds now resolve (none was "Onslaught"); 8 values in 2 builds change, each closer to PoB's or equal (4 equal: the resistances and speed of one build).
 
 Tests: 1207 workspace tests, clippy, fmt, wasm32.
+
+## Phase 3 close-out
+
+Config inputs the other gems now read (`docs/phase-3/other-gems.md`, "Phase 3 close-out"):
+- `summonLightningGolemEnableWrath` (`ConfigOptions.lua` 681): Lightning Golem's Wrath aura when a Summon Lightning Golem is modelled (`poe1::gems::wrath`); any other value is a reason.
+- `flameWallAddedDamage` (443): Flame Wall's added fire damage to projectiles (`BuffStat::WhenInput`).
+- `bloodSandStance` (643) left `config::NAMED_ONLY`: Flesh and Stone's Blood Stance row applies unless the stance is Sand (`CalcSetup.lua` 538 sets Blood Stance otherwise).
+- `conditionCritRecently` (1240) left `NAMED_ONLY` for `poe1::conditions`: "#% increased Cast Speed if you've dealt a Critical Strike Recently" reads `CritRecently`; `SkillCritRecently` stays a name only modifiers read.
+- `multiplierNearbyAlly` (1122) stays named-only for every reader but Rallying Cry's exerted attacks: with a modelled Rallying Cry and allies above 0 it is `rallying-cry-allies` (`poe1::gems`).
+
+The custom modifier lines (P3-12c, P3-12d) gained notes and patterns: `docs/phase-3/custom-lines.md` (ADR-015 Amendment 2).

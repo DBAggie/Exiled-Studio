@@ -84,8 +84,13 @@ type ModifierRow = (&'static str, Poe1Quantity, f64);
 ///   Reservation Efficiency of Skills" for the `-2%_per_1` stats, whose
 ///   descriptions double the value (`double`, `negate_and_double`): PoB
 ///   reads the line's number, so the stat acts at -2 per point;
-/// - "#% increased effect of Non-Curse Auras from your Skills".
-pub const STATS: [ModifierRow; 7] = [
+/// - "#% increased effect of Non-Curse Auras from your Skills";
+/// - "#% increased Effect of your Curses" (P3-close; PoB's `CurseEffect`
+///   INC, `ModParser.lua` "effect of your curses");
+/// - "#% increased Effect of Buffs granted by your Golems" (P3-close;
+///   PoB's `BuffEffect` INC tagged `SkillType.Golem`, `ModParser.lua`
+///   "effect of buffs granted by your golems").
+pub const STATS: [ModifierRow; 9] = [
     (
         "base_life_reservation_efficiency_+%",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Life)),
@@ -102,6 +107,8 @@ pub const STATS: [ModifierRow; 7] = [
         Poe1Quantity::ReservationEfficiency(None),
         1.0,
     ),
+    ("curse_effect_+%", Poe1Quantity::CurseEffect, 1.0),
+    ("golem_buff_effect_+%", Poe1Quantity::GolemBuffEffect, 1.0),
     (
         "mana_reservation_efficiency_-2%_per_1",
         Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)),
@@ -140,6 +147,10 @@ pub struct Totals {
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
     pub aura_effect: f64,
+    /// `BuffEffect` INC of golem skills (P3-close).
+    pub golem_buff_effect: f64,
+    /// `CurseEffect` INC (P3-close).
+    pub curse_effect: f64,
     /// An effect of these quantities that [`Self::read`] cannot sum (a
     /// condition, another op, a pool's `Reserved`): no row makes one (a
     /// test), so a later row that does is a reason, not a silent drop.
@@ -180,6 +191,8 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
+                Poe1Quantity::GolemBuffEffect => &mut t.golem_buff_effect,
+                Poe1Quantity::CurseEffect => &mut t.curse_effect,
                 Poe1Quantity::Reserved(Some(_)) => {
                     t.unread = true;
                     continue;
@@ -210,15 +223,29 @@ impl Totals {
     }
 
     /// The scale of a buff of `effect` from a skill of `types` (module
-    /// docs): `1 + inc / 100` for an aura of a skill typed `Aura` and not
-    /// `AppliesCurse`, else 1.
+    /// docs): `1 + inc / 100`, `inc` the skill's own `BuffEffect`
+    /// (`own`: its gem's stats, P3-close), plus the golems' buff effect
+    /// for a skill typed `Golem` (P3-close), plus the non-curse aura
+    /// effect for an aura of a skill typed `Aura` and not `AppliesCurse`.
     #[must_use]
-    pub fn buff_scale(&self, aura: bool, types: &BTreeSet<String>) -> f64 {
-        if aura && types.contains("Aura") && !types.contains("AppliesCurse") {
-            1.0 + self.aura_effect / 100.0
-        } else {
-            1.0
+    pub fn buff_scale(&self, aura: bool, types: &BTreeSet<String>, own: f64) -> f64 {
+        let mut inc = own;
+        if types.contains("Golem") {
+            inc += self.golem_buff_effect;
         }
+        if aura && types.contains("Aura") && !types.contains("AppliesCurse") {
+            inc += self.aura_effect;
+        }
+        1.0 + inc / 100.0
+    }
+
+    /// A curse's scale (P3-close; `CalcPerform.lua` 2619 to 2632): `(1 +
+    /// inc / 100) x more`, `inc` the `CurseEffect` INC (and the enemy's
+    /// `CurseEffectOnSelf`, which nothing the engine reads gives), `more` 1
+    /// (every MORE stat is a reason).
+    #[must_use]
+    pub fn curse_scale(&self) -> f64 {
+        1.0 + self.curse_effect / 100.0
     }
 }
 
@@ -461,6 +488,7 @@ mod tests {
             reserved: -4.0,
             aura_effect: 0.0,
             unread: false,
+            ..Totals::default()
         };
         assert_eq!(
             t.reservation(Pool::Mana),
@@ -489,12 +517,29 @@ mod tests {
                 .map(|s| (*s).to_owned())
                 .collect::<BTreeSet<_>>()
         };
-        assert_eq!(t.buff_scale(true, &types(&["Aura", "Buff"])), 1.25);
-        assert_eq!(t.buff_scale(true, &types(&["Aura", "AppliesCurse"])), 1.0);
+        assert_eq!(t.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.25);
+        assert_eq!(
+            t.buff_scale(true, &types(&["Aura", "AppliesCurse"]), 0.0),
+            1.0
+        );
         // A buff (a herald) reads no aura effect, nor an aura without the
         // type.
-        assert_eq!(t.buff_scale(false, &types(&["Aura"])), 1.0);
-        assert_eq!(t.buff_scale(true, &types(&["Buff"])), 1.0);
+        assert_eq!(t.buff_scale(false, &types(&["Aura"]), 0.0), 1.0);
+        assert_eq!(t.buff_scale(true, &types(&["Buff"]), 0.0), 1.0);
+        // P3-close: the golems' buff effect for a golem skill's buff, the
+        // skill's own on top; neither for another skill.
+        let g = Totals {
+            golem_buff_effect: 50.0,
+            ..t
+        };
+        assert_eq!(g.buff_scale(false, &types(&["Buff", "Golem"]), 20.0), 1.7);
+        assert_eq!(g.buff_scale(false, &types(&["Buff"]), 20.0), 1.2);
+        assert_eq!(g.buff_scale(true, &types(&["Aura", "Buff"]), 0.0), 1.25);
+        let c = Totals {
+            curse_effect: 30.0,
+            ..Totals::default()
+        };
+        assert_eq!(c.curse_scale(), 1.3);
     }
 
     #[test]

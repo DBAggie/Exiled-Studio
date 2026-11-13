@@ -2533,6 +2533,39 @@
           "required": [
             "catalyst-quality"
           ]
+        },
+        {
+          "description": "A custom modifier line that is a label or a comment, with no\neffect (ADR-015 Amendment 2; additive in v1, P3-close).",
+          "type": "string",
+          "const": "custom-note"
+        },
+        {
+          "description": "A custom modifier line read by a curated pattern as PoB's\nparser reads it (ADR-015 Amendment 2; additive in v1).",
+          "type": "object",
+          "properties": {
+            "custom-pattern": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "description": "The pattern's name.",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "The value as shown.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "pattern",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "custom-pattern"
+          ]
         }
       ]
     },

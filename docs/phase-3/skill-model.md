@@ -1,6 +1,6 @@
 # Phase 3: skill model (P3-9a)
 
-Plan step 9a (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill, its supports, and each gem instance's stats at its level and quality, from the game data's skill tables. No slice field changes yet: the hit fields (`AverageDamage`, `Speed`, `CritChance`, ...) are computed from this model in P3-9b (spells) and P3-10 (attacks), and enabled gems stay `unmodelled-gem` on the character fields until auras and buffs (P3-12). Decisions: context file, "Decisions in P3-9a".
+Plan step 9a (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill, its supports, and each gem instance's stats at its level and quality, from the game data's skill tables. No slice field changes yet: the hit fields (`AverageDamage`, `Speed`, `CritChance`, ...) are computed from this model in P3-9b (spells) and P3-10 (attacks), and enabled gems stay `unmodelled-gem` on the character fields until auras and buffs (P3-12). Decisions: context file, "Decisions in P3-9a".
 
 ## What is modelled (`crates/loom-calc/src/poe1/skill.rs`)
 

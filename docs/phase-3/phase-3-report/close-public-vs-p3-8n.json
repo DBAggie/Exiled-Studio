@@ -1,0 +1,1508 @@
+{
+ "builds_with_reason_changes": 29,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 17018}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31984}}, \"stat\": \"curse_effect_+%\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 7}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 11}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 8}}}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 92, \"line\": 13}}, \"stat\": \"minion_global_maximum_added_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 92, \"line\": 13}}, \"stat\": \"minion_global_minimum_added_physical_damage\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 17018}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31984}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-item\": {\"item\": 92, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 72, \"line\": 13}}, \"stat\": \"attack_speed_+%_if_have_crit_recently\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-item\": {\"item\": 72, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-item\": {\"item\": 15, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [
+    "{\"unmodelled-item\": {\"item\": 33, \"slot\": \"Flask 4\", \"what\": \"active-flask\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30767}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 5}}}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 56, \"line\": 12}}, \"stat\": \"base_avoid_shock_%\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}, \"what\": \"rallying-cry-allies\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-item\": {\"item\": 56, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 2}}}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 32, \"line\": 12}}, \"stat\": \"cannot_be_inflicted_by_corrupted_blood\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 32, \"line\": 16}}, \"stat\": \"attack_maximum_added_fire_damage_with_swords\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 32, \"line\": 16}}, \"stat\": \"attack_minimum_added_fire_damage_with_swords\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-item\": {\"item\": 32, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 72, \"line\": 14}}, \"stat\": \"minion_global_maximum_added_cold_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 72, \"line\": 14}}, \"stat\": \"minion_global_minimum_added_cold_damage\"}}",
+    "{\"unmodelled-item\": {\"item\": 72, \"slot\": \"Belt Abyssal Socket 2\", \"what\": \"abyssal-socket\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 15}}, \"what\": \"curse-limit\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}, \"what\": \"curse-limit\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 13}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 10}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 14}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 9}}}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 5}}}}",
+    "{\"unmodelled-item\": {\"item\": 22, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 12}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 13}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 19}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 26}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 27}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 21}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 33}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 12}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 13}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 19}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 26}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 27}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 21}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 23}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 33}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 35}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 33}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-item\": {\"item\": 29, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 71, \"line\": 13}}, \"stat\": \"phasing_for_4_seconds_on_kill_%\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-item\": {\"item\": 71, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 10}}, \"stat\": \"attack_maximum_added_fire_damage_with_wand\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 10}}, \"stat\": \"attack_minimum_added_fire_damage_with_wand\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 11}}, \"stat\": \"attack_maximum_added_lightning_damage_with_wand\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 11}}, \"stat\": \"attack_minimum_added_lightning_damage_with_wand\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"flameWallAddedDamage\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-item\": {\"item\": 22, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 7}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 8}}}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 10}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 14}}}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 105, \"line\": 10}}, \"stat\": \"base_avoid_shock_%\"}}",
+    "{\"unmodelled-item\": {\"item\": 166, \"slot\": \"socket 61419\", \"what\": \"jewel-limit\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-item\": {\"item\": 105, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 0}}}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 5}}}}"
+   ]
+  }
+ },
+ "reasons_added": 29,
+ "reasons_gone": 189,
+ "state_changes": {
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-chance": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-chance": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-chance": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "armour": [
+    "partial",
+    "complete"
+   ],
+   "average-damage": [
+    "partial",
+    "complete"
+   ],
+   "block-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-chance": [
+    "partial",
+    "complete"
+   ],
+   "crit-multiplier": [
+    "partial",
+    "complete"
+   ],
+   "dexterity": [
+    "partial",
+    "complete"
+   ],
+   "energy-shield": [
+    "partial",
+    "complete"
+   ],
+   "evasion": [
+    "partial",
+    "complete"
+   ],
+   "hit-chance": [
+    "partial",
+    "complete"
+   ],
+   "hit-dps": [
+    "partial",
+    "complete"
+   ],
+   "intelligence": [
+    "partial",
+    "complete"
+   ],
+   "life": [
+    "partial",
+    "complete"
+   ],
+   "life-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "mana": [
+    "partial",
+    "complete"
+   ],
+   "mana-unreserved": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-block-chance": [
+    "partial",
+    "complete"
+   ],
+   "poe1.spell-suppression-chance": [
+    "partial",
+    "complete"
+   ],
+   "resistance.chaos": [
+    "partial",
+    "complete"
+   ],
+   "resistance.cold": [
+    "partial",
+    "complete"
+   ],
+   "resistance.fire": [
+    "partial",
+    "complete"
+   ],
+   "resistance.lightning": [
+    "partial",
+    "complete"
+   ],
+   "speed": [
+    "partial",
+    "complete"
+   ],
+   "strength": [
+    "partial",
+    "complete"
+   ]
+  }
+ },
+ "value_changes": {
+  "Mirage Archer Toxic Rain.xml.json": {
+   "life": [
+    3598.0,
+    4158.0
+   ],
+   "life-unreserved": [
+    3598.0,
+    4158.0
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "life": [
+    5302.0,
+    5555.0
+   ],
+   "life-unreserved": [
+    5302.0,
+    5555.0
+   ],
+   "mana-unreserved": [
+    805.0,
+    625.0
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "life": [
+    5330.0,
+    5579.0
+   ],
+   "life-unreserved": [
+    5330.0,
+    5579.0
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "life": [
+    4825.0,
+    4907.0
+   ],
+   "life-unreserved": [
+    4825.0,
+    4907.0
+   ],
+   "mana-unreserved": [
+    577.0,
+    419.0
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "mana-unreserved": [
+    1225.0,
+    985.0
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "life": [
+    2824.0,
+    2934.0
+   ],
+   "life-unreserved": [
+    2824.0,
+    2934.0
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "life": [
+    5555.0,
+    5800.0
+   ],
+   "life-unreserved": [
+    5555.0,
+    5800.0
+   ],
+   "mana-unreserved": [
+    643.0,
+    517.0
+   ],
+   "poe1.spell-block-chance": [
+    33.0,
+    36.0
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "energy-shield": [
+    263.0,
+    268.0
+   ],
+   "intelligence": [
+    124.0,
+    140.0
+   ],
+   "life": [
+    5503.0,
+    5900.0
+   ],
+   "life-unreserved": [
+    5503.0,
+    5900.0
+   ],
+   "mana": [
+    690.0,
+    698.0
+   ],
+   "mana-unreserved": [
+    530.0,
+    374.0
+   ],
+   "resistance.chaos": [
+    20.0,
+    46.0
+   ],
+   "resistance.cold": [
+    54.0,
+    64.0
+   ],
+   "resistance.fire": [
+    61.0,
+    71.0
+   ],
+   "resistance.lightning": [
+    54.0,
+    64.0
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "armour": [
+    2139.0,
+    2485.0
+   ],
+   "energy-shield": [
+    684.0,
+    784.0
+   ],
+   "evasion": [
+    18.0,
+    21.0
+   ],
+   "life": [
+    4737.0,
+    4810.0
+   ],
+   "life-unreserved": [
+    4737.0,
+    4810.0
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "life": [
+    4250.0,
+    4327.0
+   ],
+   "life-unreserved": [
+    4250.0,
+    4327.0
+   ],
+   "mana-unreserved": [
+    1204.0,
+    773.0
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    8739.640000000001,
+    31433.97
+   ],
+   "block-chance": [
+    24.0,
+    30.0
+   ],
+   "crit-chance": [
+    34.865,
+    48.290000000000006
+   ],
+   "energy-shield": [
+    398.0,
+    525.0
+   ],
+   "evasion": [
+    17.0,
+    22.0
+   ],
+   "hit-dps": [
+    25719.512000000006,
+    115856.6322857143
+   ],
+   "life": [
+    2479.0,
+    2583.0
+   ],
+   "life-unreserved": [
+    2479.0,
+    2583.0
+   ],
+   "mana-unreserved": [
+    -624.0,
+    -832.0
+   ],
+   "speed": [
+    2.942857142857143,
+    3.685714285714286
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    48710.560927392005,
+    142914.101914812
+   ],
+   "block-chance": [
+    24.0,
+    30.0
+   ],
+   "crit-chance": [
+    58.33,
+    75.46000000000001
+   ],
+   "energy-shield": [
+    506.0,
+    641.0
+   ],
+   "evasion": [
+    18.0,
+    23.0
+   ],
+   "hit-dps": [
+    155873.79496765445,
+    563489.8875498301
+   ],
+   "life": [
+    2869.0,
+    2988.0
+   ],
+   "life-unreserved": [
+    2869.0,
+    2988.0
+   ],
+   "mana-unreserved": [
+    -738.0,
+    -983.0
+   ],
+   "poe1.spell-block-chance": [
+    14.0,
+    17.0
+   ],
+   "speed": [
+    3.2000000000000006,
+    3.9428571428571426
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "armour": [
+    1796.0,
+    2266.0
+   ],
+   "average-damage": [
+    608692.9476337943,
+    2335701.4032240002
+   ],
+   "block-chance": [
+    28.0,
+    35.0
+   ],
+   "crit-chance": [
+    82.27,
+    100.0
+   ],
+   "crit-multiplier": [
+    4.3100000000000005,
+    4.48
+   ],
+   "energy-shield": [
+    1778.0,
+    2255.0
+   ],
+   "evasion": [
+    1784.0,
+    2259.0
+   ],
+   "hit-dps": [
+    1926252.3108548303,
+    11486312.15779757
+   ],
+   "life": [
+    3914.0,
+    4111.0
+   ],
+   "life-unreserved": [
+    3914.0,
+    4111.0
+   ],
+   "poe1.spell-block-chance": [
+    61.0,
+    75.0
+   ],
+   "speed": [
+    3.164571428571429,
+    4.917714285714286
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    102.7548847530018,
+    137.82041578612888
+   ],
+   "crit-multiplier": [
+    4.0600000000000005,
+    4.18
+   ],
+   "energy-shield": [
+    1214.0,
+    1258.0
+   ],
+   "hit-dps": [
+    290.7189814646219,
+    389.92804087791643
+   ],
+   "life": [
+    3368.0,
+    3628.0
+   ],
+   "life-unreserved": [
+    3368.0,
+    3628.0
+   ],
+   "mana": [
+    3576.0,
+    3955.0
+   ],
+   "mana-unreserved": [
+    3427.0,
+    3806.0
+   ],
+   "resistance.chaos": [
+    -37.0,
+    -14.0
+   ],
+   "resistance.lightning": [
+    65.0,
+    75.0
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "hit-dps": [
+    495.76230492196873,
+    552.6530612244898
+   ],
+   "speed": [
+    1.1716686674669867,
+    1.3061224489795917
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "energy-shield": [
+    3972.0,
+    4750.0
+   ],
+   "evasion": [
+    18.0,
+    24.0
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "resistance.cold": [
+    65.0,
+    76.0
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "life": [
+    913.0,
+    930.0
+   ],
+   "life-unreserved": [
+    913.0,
+    930.0
+   ],
+   "mana-unreserved": [
+    241.0,
+    180.0
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    16264.02375,
+    21400.03125
+   ],
+   "hit-dps": [
+    63711.60237,
+    84572.9235
+   ],
+   "life": [
+    3551.0,
+    3626.0
+   ],
+   "life-unreserved": [
+    3551.0,
+    3626.0
+   ],
+   "mana": [
+    6721.0,
+    6919.0
+   ],
+   "mana-unreserved": [
+    6721.0,
+    6919.0
+   ],
+   "speed": [
+    3.917333333333333,
+    3.9520000000000004
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    15100.681274999999,
+    31850.55771376552
+   ],
+   "hit-dps": [
+    41673.95806412338,
+    91415.23707457376
+   ],
+   "mana-unreserved": [
+    563.0,
+    77.0
+   ],
+   "speed": [
+    2.75974025974026,
+    2.87012987012987
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "average-damage": [
+    1135.9690760137498,
+    1698.8626905317944
+   ],
+   "hit-dps": [
+    1812.5882009829786,
+    2710.7590628733415
+   ],
+   "mana-unreserved": [
+    637.0,
+    281.0
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "average-damage": [
+    8037.688125,
+    15433.568779729778
+   ],
+   "hit-dps": [
+    21213.992684105662,
+    42437.75878157102
+   ],
+   "mana-unreserved": [
+    721.0,
+    180.0
+   ],
+   "speed": [
+    2.639315230224321,
+    2.7497048406139317
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "armour": [
+    214.0,
+    291.0
+   ],
+   "energy-shield": [
+    430.0,
+    539.0
+   ],
+   "evasion": [
+    19.0,
+    24.0
+   ]
+  }
+ }
+}

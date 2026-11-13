@@ -212,6 +212,28 @@ impl IndeterminateReason {
     }
 }
 
+/// Content the build holds that has no effect by design, shown with the
+/// result (ADR-015 Amendment 2); it changes no state.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Note {
+    /// A custom modifier line that is a label or a comment
+    /// (`TypedResolution::CustomNote`).
+    CustomNote {
+        /// The line.
+        source: Source,
+    },
+}
+
+impl Note {
+    /// The note's stable name.
+    #[must_use]
+    pub const fn name(&self) -> &'static str {
+        match self {
+            Self::CustomNote { .. } => "custom-note",
+        }
+    }
+}
+
 /// The reasons a computation collected.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Reasons {
@@ -219,6 +241,8 @@ pub struct Reasons {
     pub partial: BTreeSet<UnsupportedReason>,
     /// Values that could not be settled.
     pub indeterminate: BTreeSet<IndeterminateReason>,
+    /// Content without effect by design; never a reason for a state.
+    pub notes: BTreeSet<Note>,
 }
 
 impl Reasons {
@@ -228,17 +252,18 @@ impl Reasons {
         Self::default()
     }
 
-    /// Whether there is no reason.
+    /// Whether there is no reason (notes are none).
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.partial.is_empty() && self.indeterminate.is_empty()
     }
 
-    /// Adds every reason of `other`.
+    /// Adds every reason and note of `other`.
     pub fn extend(&mut self, other: &Self) {
         self.partial.extend(other.partial.iter().cloned());
         self.indeterminate
             .extend(other.indeterminate.iter().cloned());
+        self.notes.extend(other.notes.iter().cloned());
     }
 
     /// The state these reasons give: `Indeterminate` if any value is

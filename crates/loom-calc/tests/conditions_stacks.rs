@@ -201,8 +201,11 @@ fn real_mods_should_carry_implicit_tags() {
         by_tag
             .tagged
             .iter()
-            .any(|m| m.contains(&"base_maximum_life".to_owned()))
+            .any(|m| m.id == "IncreasedLife6" && m.stats.iter().any(|s| s == "base_maximum_life"))
     );
+    // A crafted rare's "+# to maximum Life" is on untagged mods too: only
+    // PoB's affix record settles the condition (`poe1::states`).
+    assert!(by_tag.untagged.contains("base_maximum_life"));
     let mastery = data.mastery_effect_stats(34242).expect("Life2");
     assert!(
         mastery

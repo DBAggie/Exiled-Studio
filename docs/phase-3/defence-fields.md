@@ -1,6 +1,6 @@
 # Phase 3: core defences (P3-7)
 
-Plan step 7 (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): armour, evasion, energy shield with armour pieces, resistances, block, spell block, spell suppression. With P3-6's 8 fields, 17 of the 24 slice fields are computed; the main skill's 7 stay `not-computed`. The mechanic fixtures match PoB v2.67.2 on all 17 fields and on every breakdown PoB writes. Decisions: context file, "Decisions in P3-7".
+Plan step 7 (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): armour, evasion, energy shield with armour pieces, resistances, block, spell block, spell suppression. With P3-6's 8 fields, 17 of the 24 slice fields are computed; the main skill's 7 stay `not-computed`. The mechanic fixtures match PoB v2.67.2 on all 17 fields and on every breakdown PoB writes. Decisions: context file, "Decisions in P3-7".
 
 ## What is computed
 

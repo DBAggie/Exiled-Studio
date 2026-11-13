@@ -1,6 +1,6 @@
 # Phase 3: spell hits (P3-9b)
 
-Plan step 9b (`dev/active/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill's hit when it is a self-cast spell, against the enemy of step 11. The chosen spell is Ice Nova (Q2). Decisions: context file, "Decisions in P3-9b".
+Plan step 9b (`dev/completed/phase-3-calc-slice/phase-3-calc-slice-plan.md`): the main skill's hit when it is a self-cast spell, against the enemy of step 11. The chosen spell is Ice Nova (Q2). Decisions: context file, "Decisions in P3-9b".
 
 ## What is computed (`crates/loom-calc/src/poe1/hit.rs`)
 

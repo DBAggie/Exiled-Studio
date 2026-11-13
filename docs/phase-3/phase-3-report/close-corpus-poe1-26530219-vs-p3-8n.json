@@ -1,0 +1,435 @@
+{
+ "builds_with_reason_changes": 15,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30767}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ]
+  },
+  "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 13}}, \"stat\": \"cannot_be_inflicted_by_corrupted_blood\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 14}}, \"stat\": \"phasing_for_4_seconds_on_kill_%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"item\": {\"item\": 20, \"line\": 15}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"item\": {\"item\": 20, \"line\": 16}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-item\": {\"item\": 20, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}"
+   ]
+  },
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 10}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 12}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 9}}}}"
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}"
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 18}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 18}}}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 7}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 8}}}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"summonLightningGolemEnableWrath\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}"
+   ]
+  },
+  "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c.json": {
+   "added": [
+    "{\"unmodelled-item\": {\"item\": 45, \"slot\": \"Weapon 2\", \"what\": \"ambiguous-base\"}}"
+   ],
+   "gone": []
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 13, \"line\": 13}}, \"stat\": \"minion_global_maximum_added_cold_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 13, \"line\": 13}}, \"stat\": \"minion_global_minimum_added_cold_damage\"}}",
+    "{\"unmodelled-item\": {\"item\": 13, \"slot\": \"Belt Abyssal Socket 1\", \"what\": \"abyssal-socket\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 12}}, \"stat\": \"curse_effect_+%\"}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 9}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 10}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 9}}}}"
+   ]
+  }
+ },
+ "reasons_added": 12,
+ "reasons_gone": 60,
+ "state_changes": {},
+ "value_changes": {
+  "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e.json": {
+   "life": [
+    5151.0,
+    5331.0
+   ],
+   "life-unreserved": [
+    5151.0,
+    5331.0
+   ],
+   "resistance.chaos": [
+    16.0,
+    39.0
+   ]
+  },
+  "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed.json": {
+   "life": [
+    4731.0,
+    4901.0
+   ],
+   "life-unreserved": [
+    4731.0,
+    4901.0
+   ],
+   "resistance.chaos": [
+    -6.0,
+    31.0
+   ],
+   "resistance.cold": [
+    42.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    46.0,
+    75.0
+   ]
+  },
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "average-damage": [
+    16.8245,
+    67.02801
+   ],
+   "energy-shield": [
+    2079.0,
+    2575.0
+   ],
+   "evasion": [
+    976.0,
+    1267.0
+   ],
+   "hit-dps": [
+    509.8333333333333,
+    2031.1518181818178
+   ],
+   "life": [
+    4740.0,
+    5116.0
+   ],
+   "life-unreserved": [
+    4740.0,
+    5116.0
+   ],
+   "mana-unreserved": [
+    1057.0,
+    868.0
+   ],
+   "resistance.chaos": [
+    19.0,
+    70.0
+   ]
+  },
+  "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853.json": {
+   "life": [
+    1517.0,
+    1603.0
+   ],
+   "life-unreserved": [
+    1517.0,
+    1603.0
+   ],
+   "resistance.fire": [
+    63.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    73.0,
+    75.0
+   ]
+  },
+  "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575.json": {
+   "dexterity": [
+    117.0,
+    140.0
+   ],
+   "energy-shield": [
+    26.0,
+    27.0
+   ],
+   "evasion": [
+    24.0,
+    25.0
+   ],
+   "intelligence": [
+    88.0,
+    111.0
+   ],
+   "life": [
+    3168.0,
+    3277.0
+   ],
+   "life-unreserved": [
+    3168.0,
+    3277.0
+   ],
+   "mana": [
+    642.0,
+    653.0
+   ],
+   "mana-unreserved": [
+    642.0,
+    653.0
+   ],
+   "resistance.cold": [
+    62.0,
+    75.0
+   ],
+   "resistance.fire": [
+    49.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    64.0,
+    75.0
+   ]
+  },
+  "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b.json": {
+   "life": [
+    6251.0,
+    6389.0
+   ],
+   "life-unreserved": [
+    6251.0,
+    6389.0
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "armour": [
+    583.0,
+    793.0
+   ],
+   "energy-shield": [
+    143.0,
+    178.0
+   ],
+   "evasion": [
+    17.0,
+    23.0
+   ],
+   "resistance.cold": [
+    72.0,
+    78.0
+   ],
+   "resistance.lightning": [
+    64.0,
+    77.0
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "mana-unreserved": [
+    660.0,
+    531.0
+   ]
+  },
+  "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143.json": {
+   "life": [
+    2770.0,
+    2913.0
+   ],
+   "life-unreserved": [
+    2770.0,
+    2913.0
+   ],
+   "resistance.cold": [
+    -9.0,
+    7.0
+   ],
+   "resistance.lightning": [
+    -9.0,
+    7.0
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "resistance.cold": [
+    65.0,
+    76.0
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "mana-unreserved": [
+    613.0,
+    250.0
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "life": [
+    6639.0,
+    7116.0
+   ],
+   "life-unreserved": [
+    6639.0,
+    7116.0
+   ],
+   "mana-unreserved": [
+    662.0,
+    532.0
+   ],
+   "resistance.chaos": [
+    27.0,
+    64.0
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "mana-unreserved": [
+    987.0,
+    419.0
+   ]
+  },
+  "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c.json": {
+   "life": [
+    3050.0,
+    3185.0
+   ],
+   "life-unreserved": [
+    3050.0,
+    3185.0
+   ],
+   "resistance.cold": [
+    23.0,
+    39.0
+   ],
+   "resistance.fire": [
+    38.0,
+    54.0
+   ],
+   "resistance.lightning": [
+    -3.0,
+    13.0
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "life": [
+    3751.0,
+    3997.0
+   ],
+   "life-unreserved": [
+    3751.0,
+    3997.0
+   ],
+   "resistance.cold": [
+    45.0,
+    75.0
+   ],
+   "resistance.fire": [
+    45.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    45.0,
+    75.0
+   ]
+  }
+ }
+}

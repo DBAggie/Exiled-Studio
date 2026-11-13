@@ -1,6 +1,6 @@
 # Calc scope survey (P3-3)
 
-Phase 3 plan, step 3 (`dev/active/phase-3-calc-slice/`). `loom-parity-cli calc-survey` decides from game data and the build, never from the engine, which builds are in the calc slice's scope (plan decision 3), and lists what a calculation of them would need. This page records the rules, the run, the result, and the decisions it leaves for the maintainer.
+Phase 3 plan, step 3 (`dev/completed/phase-3-calc-slice/`). `loom-parity-cli calc-survey` decides from game data and the build, never from the engine, which builds are in the calc slice's scope (plan decision 3), and lists what a calculation of them would need. This page records the rules, the run, the result, and the decisions it leaves for the maintainer.
 
 **Result in one line:** P3-3 found 1 of 50 builds in scope (`winter-orb-elementalist`) and no attack. The maintainer then chose the skills and how to reach the minimum (2026-11-11, "P3-3b" below): **spell Ice Nova (`IceNova`, 3 in-scope builds), attack Smite (`Smite`, 4)**, all derived setups of two credited Maxroll league-start guides. The scope file is `confirmed`.
 

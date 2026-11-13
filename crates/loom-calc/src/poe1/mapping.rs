@@ -11,12 +11,14 @@
 //! Every other stat is `Unmapped`, which makes the computed fields
 //! `Partial` (never a silent zero).
 
-use loom_domain::StatId;
+use loom_domain::{StatId, TypedResolution};
 
 use crate::condition::{ConditionKey, Conditions, Flags};
-use crate::ingest::{EffectTemplate, StatMap, StatMapping};
+use crate::ingest::{EffectTemplate, StatMap, StatMapping, TypedMap};
 use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, conditions, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
+use crate::source::Source;
+use crate::store::Effect;
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
 type Row = (&'static str, &'static [(Quantity, Op, f64)]);
@@ -728,6 +730,18 @@ type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
 /// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
 /// BASE (252, 365, 375, 748).
 pub const STATE_ROWS: &[StateRow] = &[
+    // Close-out: "#% increased Cast Speed if you've dealt a Critical Strike
+    // Recently" (`Speed` INC, `ModFlag.Cast`, `Condition` `CritRecently`,
+    // ModParser.lua 1785), from the config (`poe1::conditions`).
+    (
+        "cast_speed_+%_if_have_crit_recently",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            Flags::CAST,
+            conditions::CRIT_RECENTLY,
+        )],
+    ),
     // P3-8n: "against Enemies that are on Full Life" (`ActorCondition` enemy
     // `FullLife`, ModParser.lua 1945), from the config (`poe1::conditions`).
     (
@@ -1469,9 +1483,8 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     // the maximum unless the config overrides them, `poe1::stacks`).
     ("gain_righteous_charge_on_mana_spent_%", "charge-gain"),
     ("gloves_freeze_proliferation_radius", "freeze"),
-    // P3-8n: "#% increased Effect of Buffs granted by your Golems" (`BuffEffect`
-    // tagged `SkillType.Golem`): only golem skills read it, none modelled.
-    ("golem_buff_effect_+%", "golems"),
+    // P3-close: "#% increased Effect of Buffs granted by your Golems" left this
+    // list for `poe1::skill_modifiers` (the golem gems are modelled).
     ("golem_immunity_to_elemental_damage", "minion-defence"),
     ("golem_maximum_life_+%", "minion-defence"),
     // P3-8n: mana costs (`ManaCost` MORE or BASE): no slice field reads a
@@ -1891,7 +1904,52 @@ impl StatMapping for Poe1Mapping {
                 )
             })
     }
+
+    /// The curated custom-line patterns (ADR-015 Amendment 2; their names
+    /// in `loom_parser::import::poe1::custom::PATTERNS`), as PoB's parser reads
+    /// them: each a character-wide effect from the line's source. A
+    /// pattern this mapping does not know, or a value that is not a
+    /// number, has no handler.
+    fn typed(&self, resolution: &TypedResolution, source: &Source) -> TypedMap {
+        let TypedResolution::CustomPattern { pattern, value } = resolution else {
+            return TypedMap::Unhandled;
+        };
+        let Some(&(_, quantity, op)) = CUSTOM_PATTERNS
+            .iter()
+            .find(|(name, ..)| *name == pattern.as_str())
+        else {
+            return TypedMap::Unhandled;
+        };
+        let Ok(value) = value.parse::<f64>() else {
+            return TypedMap::Unhandled;
+        };
+        TypedMap::Effects(vec![Effect {
+            quantity,
+            op,
+            value,
+            conditions: Conditions::none(),
+            source: source.clone(),
+        }])
+    }
 }
+
+/// The curated custom-line patterns' effects, by name (PoB's mod for each:
+/// `CritChance` BASE, `BlockChance` MORE, `Damage` MORE, `SpellBlockChance`
+/// MORE, from its parse of the line; `docs/phase-3/custom-lines.md`).
+pub const CUSTOM_PATTERNS: &[(&str, Quantity, Op)] = &[
+    (
+        "base-critical-strike-chance",
+        Quantity::CritChance,
+        Op::Base,
+    ),
+    ("more-block-chance", Quantity::BlockChance, Op::More),
+    ("more-damage", Quantity::Damage, Op::More),
+    (
+        "more-spell-block-chance",
+        Quantity::Poe1(Poe1Quantity::SpellBlockChance),
+        Op::More,
+    ),
+];
 
 /// What an armour piece's local stat changes on the piece: `(stat,
 /// [(value, op)])`, sorted by stat ID. PoB reads the same lines as local
@@ -2973,6 +3031,20 @@ mod tests {
                 )],
             ),
         ];
+        // Close-out: the crit-recently cast speed, first by stat ID.
+        let mut expected = expected.to_vec();
+        expected.insert(
+            0,
+            (
+                "cast_speed_+%_if_have_crit_recently",
+                vec![config(
+                    Quantity::Speed,
+                    Op::Increased,
+                    Flags::CAST,
+                    conditions::CRIT_RECENTLY,
+                )],
+            ),
+        );
         assert_eq!(STATE_ROWS.len(), expected.len());
         for ((id, rows), (want_id, want)) in STATE_ROWS.iter().zip(&expected) {
             assert_eq!(id, want_id);

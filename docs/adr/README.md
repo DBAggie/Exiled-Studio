@@ -19,7 +19,7 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [012](012-toolchain-and-repository.md) | Repository, toolchain, governance | Revised |
 | [013](013-roadmap-and-release-quality.md) | Roadmap, release quality, first milestone | Revised |
 | [014](014-error-and-observability.md) | Errors, observability, diagnostics | Accepted |
-| [015](015-stat-id-modifier-model.md) | Stat-ID-first modifier model | Accepted (new); Amendment 1 (typed resolutions, adapted lines) |
+| [015](015-stat-id-modifier-model.md) | Stat-ID-first modifier model | Accepted (new); Amendment 1 (typed resolutions, adapted lines); Amendment 2 (custom modifier notes and patterns, proposed 2026-11-13, accepted on merge) |
 | [016](016-wasm-compatible-core.md) | WASM-compatible core | Accepted (new) |
 | [017](017-mcp-reference-addon.md) | Local MCP server as reference addon | Accepted (new) |
 

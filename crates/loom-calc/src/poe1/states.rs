@@ -131,6 +131,10 @@ fn reads_life_modifiers(input: &CalcInput<'_>) -> bool {
 /// item's lines carry their stats, not their mods, so:
 /// - a line whose stat is only on mods with the tag is a Life Modifier:
 ///   `false`;
+/// - an affix PoB's `Prefix:`/`Suffix:` record names that has the tag, with
+///   all its stats among the item's lines, is a Life Modifier: `false`
+///   (a crafted rare's "+# to maximum Life" is on untagged mods too, so
+///   only the record settles it);
 /// - when no mod with the tag has every one of its stats among the item's
 ///   lines, none of its mods can have the tag: `true`;
 /// - otherwise not settled (`None`), as for an empty slot, a line that is
@@ -146,8 +150,14 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
         .filter(|id| id.0 != 0)?;
     let item = build.items.item(id)?;
     let mut stats = BTreeSet::new();
+    let mut named = BTreeSet::new();
     for line in &item.body.lines {
         match &line.kind {
+            LineKind::Spec { key, value, .. } if AFFIX_KEYS.contains(&key.as_str()) => {
+                if let Some(id) = affix_mod(value) {
+                    named.insert(id.to_owned());
+                }
+            }
             LineKind::Modifier(m) => match &m.resolution {
                 LineResolution::Resolved {
                     result: Resolved::Stats(lines),
@@ -161,25 +171,51 @@ fn no_life_modifiers_on_body_armour(input: &CalcInput<'_>) -> Option<bool> {
             _ => {}
         }
     }
-    tagless(&stats, &input.data.mods_by_tag(LIFE_TAG)?)
+    tagless(&stats, &named, &input.data.mods_by_tag(LIFE_TAG)?)
+}
+
+/// PoB's spec keys that name an item's crafted affixes (`Prefix: {range:r}
+/// <mod id>`, `Suffix: ...`; `Classes/Item.lua` `ParseRaw`).
+const AFFIX_KEYS: [&str; 2] = ["Prefix", "Suffix"];
+
+/// The mod ID a `Prefix:` or `Suffix:` value names: the value without its
+/// `{range:r}` prefix; `None` for PoB's empty affix ("None") or no ID.
+fn affix_mod(value: &str) -> Option<&str> {
+    let v = value.trim();
+    let v = match v.strip_prefix('{') {
+        Some(rest) => rest.split_once('}')?.1.trim(),
+        None => v,
+    };
+    (!v.is_empty() && v != "None").then_some(v)
 }
 
 /// Whether no mod of an item with lines of `stats` can carry the tag of
 /// `mods` ([`no_life_modifiers_on_body_armour`]'s rule): `Some(false)` when
-/// a stat is only on tagged mods, `Some(true)` when no tagged mod has all
-/// its stats among `stats`, else `None`.
-fn tagless(stats: &BTreeSet<String>, mods: &crate::input::ModsByTag) -> Option<bool> {
-    let tagged_only = stats
-        .iter()
-        .any(|s| !mods.untagged.contains(s) && mods.tagged.iter().any(|m| m.contains(s)));
-    if tagged_only {
-        return Some(false);
-    }
+/// a stat is only on tagged mods, or when an affix the item names (`named`,
+/// PoB's `Prefix:`/`Suffix:` record of the crafted mod) is a tagged mod
+/// whose stats are all among `stats` (the item has that mod's lines);
+/// `Some(true)` when no tagged mod has all its stats among `stats`, else
+/// `None`.
+fn tagless(
+    stats: &BTreeSet<String>,
+    named: &BTreeSet<String>,
+    mods: &crate::input::ModsByTag,
+) -> Option<bool> {
+    let present = |m: &crate::input::TaggedMod| m.stats.iter().all(|s| stats.contains(s));
     if mods
         .tagged
         .iter()
-        .any(|m| m.iter().all(|s| stats.contains(s)))
+        .any(|m| named.contains(&m.id) && present(m))
     {
+        return Some(false);
+    }
+    let tagged_only = stats
+        .iter()
+        .any(|s| !mods.untagged.contains(s) && mods.tagged.iter().any(|m| m.stats.contains(s)));
+    if tagged_only {
+        return Some(false);
+    }
+    if mods.tagged.iter().any(present) {
         return None;
     }
     Some(true)
@@ -188,7 +224,7 @@ fn tagless(stats: &BTreeSet<String>, mods: &crate::input::ModsByTag) -> Option<b
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input::ModsByTag;
+    use crate::input::{ModsByTag, TaggedMod};
 
     fn set(ids: &[&str]) -> BTreeSet<String> {
         ids.iter().map(|s| (*s).to_owned()).collect()
@@ -196,28 +232,58 @@ mod tests {
 
     #[test]
     fn a_body_armours_life_modifiers_should_be_settled_only_when_certain() {
+        let tagged = |id: &str, stats: &[&str]| TaggedMod {
+            id: id.to_owned(),
+            stats: stats.iter().map(|s| (*s).to_owned()).collect(),
+        };
         let mods = ModsByTag {
             tagged: vec![
-                vec!["base_maximum_life".to_owned()],
-                vec!["armour".to_owned(), "base_maximum_life".to_owned()],
-                vec!["life_regeneration".to_owned()],
+                tagged("IncreasedLife6", &["base_maximum_life"]),
+                tagged("Hybrid", &["armour", "base_maximum_life"]),
+                tagged("Regen", &["life_regeneration"]),
             ],
             untagged: set(&["armour", "fire_resistance", "base_maximum_life"]),
         };
+        let none = BTreeSet::new();
         // No tagged mod has all its stats here: no Life Modifier.
         assert_eq!(
-            tagless(&set(&["armour", "fire_resistance"]), &mods),
+            tagless(&set(&["armour", "fire_resistance"]), &none, &mods),
             Some(true)
         );
         // A stat only tagged mods carry: a Life Modifier.
         assert_eq!(
-            tagless(&set(&["armour", "life_regeneration"]), &mods),
+            tagless(&set(&["armour", "life_regeneration"]), &none, &mods),
             Some(false)
         );
         // A tagged mod's stats are all here, but an untagged mod also
         // carries them: not settled.
-        assert_eq!(tagless(&set(&["base_maximum_life"]), &mods), None);
+        assert_eq!(tagless(&set(&["base_maximum_life"]), &none, &mods), None);
+        // PoB's affix record names the tagged mod and its lines are here:
+        // a Life Modifier.
+        let named = set(&["IncreasedLife6"]);
+        assert_eq!(
+            tagless(&set(&["base_maximum_life"]), &named, &mods),
+            Some(false)
+        );
+        // A named tagged mod whose lines are not on the item settles
+        // nothing (the record and the lines disagree).
+        assert_eq!(
+            tagless(&set(&["fire_resistance"]), &named, &mods),
+            Some(true)
+        );
         // No line: no Life Modifier.
-        assert_eq!(tagless(&BTreeSet::new(), &mods), Some(true));
+        assert_eq!(tagless(&BTreeSet::new(), &none, &mods), Some(true));
+    }
+
+    #[test]
+    fn an_affix_record_should_name_its_mod() {
+        assert_eq!(
+            affix_mod("{range:0.042}IncreasedLife6"),
+            Some("IncreasedLife6")
+        );
+        assert_eq!(affix_mod(" IncreasedLife6 "), Some("IncreasedLife6"));
+        assert_eq!(affix_mod("None"), None);
+        assert_eq!(affix_mod("{range:0.5}"), None);
+        assert_eq!(affix_mod("{range:0.5"), None);
     }
 }

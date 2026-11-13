@@ -256,8 +256,65 @@ impl<'d, 'b> Resolver<'d, 'b> {
         }
     }
 
-    /// One custom modifier line, alone, in `index`'s scope.
+    /// One custom modifier line as [`Resolver::resolve_build`] reads it
+    /// (`text` as the build holds it: escapes stripped and trimmed), for
+    /// checks against PoB's parse (`docs/phase-3/custom-lines.md`).
+    #[must_use]
+    pub fn resolve_custom_text(&self, text: &str) -> LineResolution {
+        let scope = self.data.item_rules().default_scope.as_str();
+        self.indexes.get(scope).map_or(
+            LineResolution::Unresolved(UnresolvedReason::NoTemplate),
+            |index| self.resolve_custom_line(index, text),
+        )
+    }
+
+    /// One custom modifier line, alone, in `index`'s scope; with PoE1
+    /// data, a line with no single reading is then tried as a curated
+    /// pattern, then (with no template) as a note
+    /// ([`super::poe1::custom`], ADR-015 Amendment 2: PoB's custom lines,
+    /// read as its PoE1 parser reads them).
     fn resolve_custom_line(&self, index: &Index<'_>, text: &str) -> LineResolution {
+        let resolution = self.resolve_custom_stats(index, text);
+        // A pattern is tried when no description gives one reading: no
+        // template, or several ("20% more Damage" renders three unique
+        // `_final` stats, none of which PoB reads).
+        let unread = matches!(
+            resolution,
+            LineResolution::Unresolved(
+                UnresolvedReason::NoTemplate | UnresolvedReason::Ambiguous(_)
+            )
+        );
+        let poe1 = self.data.bundle().manifest.game() == Some(Game::Poe1);
+        if !unread || !poe1 {
+            return resolution;
+        }
+        if let Some(typed) = super::poe1::custom::pattern(text) {
+            return LineResolution::Resolved {
+                result: Resolved::Typed(typed),
+                adapted: None,
+            };
+        }
+        if resolution != LineResolution::Unresolved(UnresolvedReason::NoTemplate) {
+            return resolution;
+        }
+        let keystone = |t: &str| {
+            self.data.bundle().passives.as_ref().is_some_and(|p| {
+                p.passives
+                    .iter()
+                    .any(|n| n.keystone && n.name.eq_ignore_ascii_case(t))
+            })
+        };
+        if super::poe1::custom::is_note(text, keystone) {
+            return LineResolution::Resolved {
+                result: Resolved::Typed(TypedResolution::CustomNote),
+                adapted: None,
+            };
+        }
+        resolution
+    }
+
+    /// One custom modifier line through the stat descriptions.
+    fn resolve_custom_stats(&self, index: &Index<'_>, text: &str) -> LineResolution {
         let Some(composed) = index
             .resolve_lines_composed(&[text], self.data.compositions())
             .into_iter()
