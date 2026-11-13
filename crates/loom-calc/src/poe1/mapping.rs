@@ -643,6 +643,12 @@ pub const ROWS: &[Row] = &[
             (LIGHTNING, Op::Base, 1.0),
         ],
     ),
+    // "Onslaught" (PoB `ModParser.lua` 3973: `Condition:Onslaught`): a flag
+    // `poe1::buffs` turns into Onslaught's speed once (P3-12j).
+    (
+        "base_should_have_onslaught_from_stat",
+        &[(Quantity::Poe1(Poe1Quantity::Onslaught), Op::Flag, 1.0)],
+    ),
     ("base_spell_block_%", &[(SPELL_BLOCK, Op::Base, 1.0)]),
     (
         "base_spell_suppression_chance_%",

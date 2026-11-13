@@ -81,6 +81,11 @@ pub enum Poe1Quantity {
     /// enemy, `calcLib.val`): they scale its base evasion before an
     /// attack's chance to hit (Blind, [`damage_taken`]; P3-12g).
     EnemyEvasion,
+    /// Onslaught (PoB's `Condition:Onslaught`, turned into the `Onslaught`
+    /// flag by `CalcSetup.lua` 97): a `Flag` effect from a stat that grants
+    /// it (P3-12j); [`buffs`] gives its speed once, whatever the number of
+    /// sources, as PoB's flag does.
+    Onslaught,
     /// A skill's reservation of a pool (P3-12h, [`gems`]): one `Base`
     /// effect per reserving skill, its value PoB's per-skill amount
     /// (`CalcPerform.lua` 1975 to 1989), summed by the unreserved phase.
@@ -187,6 +192,7 @@ impl core::fmt::Display for Poe1Quantity {
             }
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
+            Self::Onslaught => f.write_str("onslaught"),
             Self::Reservation(pool, kind) => {
                 write!(f, "reservation.{}.{}", pool.name(), kind.name())
             }
@@ -441,6 +447,10 @@ mod tests {
         assert_eq!(
             Quantity::Poe1(Poe1Quantity::EnemyEvasion).to_string(),
             "poe1.enemy-evasion"
+        );
+        assert_eq!(
+            Quantity::Poe1(Poe1Quantity::Onslaught).to_string(),
+            "poe1.onslaught"
         );
         assert_eq!(
             Poe1Field::SpellSuppressionChance.name(),

@@ -311,6 +311,16 @@ impl Mods {
     }
 
     /// Rows with at least one of `stats`, in row order.
+    /// Whether a row of one of `domains` backs `stats` (module docs,
+    /// "Backing"): the custom-line rule ([`crate::import`], P3-12j).
+    #[must_use]
+    pub fn backed_in(&self, stats: &[ResolvedStat], domains: &BTreeSet<i64>) -> bool {
+        self.rows_for(stats)
+            .into_iter()
+            .filter_map(|n| self.row(n))
+            .any(|r| domains.contains(&r.domain) && r.backs(stats).is_some())
+    }
+
     fn rows_for(&self, stats: &[ResolvedStat]) -> BTreeSet<usize> {
         stats
             .iter()

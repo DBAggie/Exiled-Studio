@@ -1295,6 +1295,69 @@ fn onslaught_should_grant_increased_cast_speed() {
     }));
 }
 
+/// A modifier "Onslaught" (a custom line, `base_should_have_onslaught_from_stat`)
+/// gives Onslaught as the check does; any number of sources give it once,
+/// as PoB's flag (P3-12j).
+#[test]
+fn an_onslaught_modifier_should_grant_onslaught_once() {
+    let onslaught_line = || loom_domain::CustomModifierLine {
+        text: "Onslaught".to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_should_have_onslaught_from_stat"),
+                value: StatValue::Exact { min: 1, max: 1 },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |lines: usize, check: bool| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: "Onslaught\n".repeat(lines),
+                lines: (0..lines).map(|_| onslaught_line()).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        if check {
+            set.inputs.push(ConfigInput {
+                name: "buffOnslaught".to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    assert_eq!(
+        value(&with(0, false), Field::Speed),
+        value(&bare, Field::Speed)
+    );
+    // 1 / (0.5 / round(1 + 20 / 100, 2)), whatever the sources.
+    for (lines, check) in [(1, false), (2, false), (1, true), (0, true)] {
+        let r = with(lines, check);
+        assert_eq!(
+            r.fields[&Field::Speed].state,
+            FieldState::Complete,
+            "{lines} {check}"
+        );
+        assert_eq!(
+            value(&r, Field::Speed),
+            1.0 / (0.5 / 1.2),
+            "{lines} {check}"
+        );
+    }
+}
+
 /// Lines on a charge input (a build document can carry them) are a reason
 /// under its name, as on any input other than `customMods` (P3-12e
 /// review).

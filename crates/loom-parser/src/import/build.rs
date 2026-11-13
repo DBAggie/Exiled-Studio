@@ -224,9 +224,13 @@ impl<'d, 'b> Resolver<'d, 'b> {
     /// A planner applies such a line to the character, as PoB adds the
     /// parsed line to the config's modifiers
     /// (`Classes/ConfigTab.lua`, `BuildModList`): each line is read alone
-    /// in the default scope (no item base, so no mod row can settle an
-    /// ambiguous line, which stays unresolved), with the case-folding
-    /// tolerance item lines have. A ranged value stays a range.
+    /// in the default scope, with the case-folding tolerance item lines
+    /// have. A ranged value stays a range. With no item base, the item
+    /// filter cannot settle an ambiguous line; the reading is kept when it
+    /// is the only one a mod row of an item domain backs
+    /// ([`BundleData::item_domains`], P3-12j: "Onslaught" renders both
+    /// the character's stat and a flask's display stat, which no mod row
+    /// carries), else the line stays ambiguous.
     fn resolve_custom_modifiers(&self, build: &mut Build) {
         let scope = self.data.item_rules().default_scope.as_str();
         // `new` indexes every scope; were the default one not, the lines
@@ -271,9 +275,23 @@ impl<'d, 'b> Resolver<'d, 'b> {
                 adapted,
             },
             Outcome::Resolved(_) => LineResolution::Unresolved(UnresolvedReason::NoTemplate),
-            Outcome::Ambiguous(cs) => LineResolution::Unresolved(UnresolvedReason::Ambiguous(
-                cs.iter().map(stat_ids).collect(),
-            )),
+            Outcome::Ambiguous(cs) => {
+                // The readings an item's mod row could carry (P3-12j).
+                let (mods, domains) = (self.data.mods(), self.data.item_domains());
+                let kept: Vec<&Candidate> = cs
+                    .iter()
+                    .filter(|c| mods.backed_in(&c.stats, domains))
+                    .collect();
+                match kept.as_slice() {
+                    [one] if resolution.lines == 1 => LineResolution::Resolved {
+                        result: Resolved::Stats(stats(&one.stats)),
+                        adapted,
+                    },
+                    _ => LineResolution::Unresolved(UnresolvedReason::Ambiguous(
+                        cs.iter().map(stat_ids).collect(),
+                    )),
+                }
+            }
             Outcome::Unresolved(u) => LineResolution::Unresolved(reason(u)),
         }
     }

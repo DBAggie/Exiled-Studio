@@ -157,6 +157,12 @@ impl core::fmt::Debug for Ingest<'_> {
 }
 
 impl<'m> Ingest<'m> {
+    /// The effects added so far, in order.
+    #[must_use]
+    pub fn effects(&self) -> &[Effect] {
+        self.store.effects()
+    }
+
     /// An empty store over `mapping`.
     #[must_use]
     pub fn new(mapping: &'m dyn StatMapping) -> Self {
