@@ -86,6 +86,11 @@ pub enum Poe1Quantity {
     /// it (P3-12j); [`buffs`] gives its speed once, whatever the number of
     /// sources, as PoB's flag does.
     Onslaught,
+    /// A modifier of a charge kind (P3-8d): its maximum, its minimum, or an
+    /// effect per charge. Only [`charges`] reads them: it counts the
+    /// charges as PoB's `doActorCharges` and turns each per-charge effect
+    /// into its target times the count.
+    Charge(charges::ChargeKind, charges::ChargeValue),
     /// A skill's reservation of a pool (P3-12h, [`gems`]): one `Base`
     /// effect per reserving skill, its value PoB's per-skill amount
     /// (`CalcPerform.lua` 1975 to 1989), summed by the unreserved phase.
@@ -193,6 +198,7 @@ impl core::fmt::Display for Poe1Quantity {
             Self::EnemyDamageTaken => f.write_str("enemy-damage-taken"),
             Self::EnemyEvasion => f.write_str("enemy-evasion"),
             Self::Onslaught => f.write_str("onslaught"),
+            Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::Reservation(pool, kind) => {
                 write!(f, "reservation.{}.{}", pool.name(), kind.name())
             }
@@ -451,6 +457,14 @@ mod tests {
         assert_eq!(
             Quantity::Poe1(Poe1Quantity::Onslaught).to_string(),
             "poe1.onslaught"
+        );
+        assert_eq!(
+            Quantity::Poe1(Poe1Quantity::Charge(
+                charges::ChargeKind::Power,
+                charges::ChargeValue::Per(charges::PerCharge::CritMultiplier)
+            ))
+            .to_string(),
+            "poe1.charge.power.per.crit-multiplier"
         );
         assert_eq!(
             Poe1Field::SpellSuppressionChance.name(),

@@ -1883,3 +1883,109 @@ fn socket_lines_should_count_only_when_part_of_the_item() {
         [Yes]
     );
 }
+
+/// Charge modifiers (P3-8d): the maximum and minimum add to PoB's count,
+/// `max(use ? (override or max) : 0, min(max, min))`, and an effect per
+/// charge acts times the count. The data's constants: 3 charges, 50%
+/// increased crit chance each; Ice Nova's base crit 5%.
+#[test]
+fn charge_modifiers_should_count_as_pob_does() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |inputs: &[(&str, f64)], use_on: bool, lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        let mut push = |name: &str, value: ConfigValue| {
+            set.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        };
+        if use_on {
+            push("usePowerCharges", ConfigValue::Boolean(true));
+        }
+        for (name, v) in inputs {
+            push(
+                name,
+                ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
+            );
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let crit = |r: &CalcResult| {
+        assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+        value(r, Field::CritChance)
+    };
+    // One more maximum: 4 charges, 5% x (1 + 200 / 100).
+    assert_eq!(crit(&with(&[], true, &[("max_power_charges", 1)])), 15.0);
+    // 10% more per charge: 3 x 60.
+    assert_eq!(
+        crit(&with(
+            &[],
+            true,
+            &[("critical_strike_chance_+%_per_power_charge", 10)]
+        )),
+        14.0
+    );
+    // A minimum without `use`: 2 charges; capped by the maximum (3).
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 2)])),
+        10.0
+    );
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 5)])),
+        12.5
+    );
+    // The override below the minimum: the minimum.
+    assert_eq!(
+        crit(&with(
+            &[("overridePowerCharges", 1.0)],
+            true,
+            &[("base_minimum_power_charges", 2)]
+        )),
+        10.0
+    );
+    // Per-charge modifiers without charges do nothing.
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let r = with(&[], false, &[("spell_damage_+%_per_power_charge", 5)]);
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&bare, Field::AverageDamage)
+    );
+    // 5% spell damage per charge with 3 charges is 15% increased spell
+    // damage.
+    let per = with(&[], true, &[("spell_damage_+%_per_power_charge", 5)]);
+    let flat = with(&[], true, &[("spell_damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    assert_eq!(
+        per.fields[&Field::AverageDamage].state,
+        FieldState::Complete
+    );
+}

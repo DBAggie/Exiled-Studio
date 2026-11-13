@@ -1131,6 +1131,15 @@ impl StatMapping for Poe1Mapping {
                     .collect(),
             );
         }
+        if let Some((kind, value)) = super::charges::modifier(stat.as_str()) {
+            return StatMap::Effects(vec![EffectTemplate {
+                quantity: Quantity::Poe1(Poe1Quantity::Charge(kind, value)),
+                op: Op::Base,
+                scale: 1.0,
+                divisor: 1.0,
+                conditions: Conditions::none(),
+            }]);
+        }
         ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str()))
             .map_or(StatMap::Unmapped, |i| {
                 StatMap::Effects(
@@ -1538,7 +1547,6 @@ mod tests {
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
-            "max_power_charges",
             "base_max_fortification",
             "base_self_critical_strike_multiplier_-%",
         ] {

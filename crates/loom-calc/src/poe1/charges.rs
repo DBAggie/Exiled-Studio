@@ -22,20 +22,31 @@
 //!   endurance charge, which no slice field reads (damage taken).
 //!
 //! The engine has no multipliers: each effect is one effect valued per
-//! charge times the count, from its `use` input. What else reads or
-//! changes the counts (a different maximum or minimum, "at maximum"
-//! flags, conversions to absorption, affliction, or brutal charges,
-//! modifiers per charge) is a modifier, so a stat: no mapping reads or
-//! changes a charge (a test in this module), so every such stat is a
-//! reason (`unmapped-stat`) or a `NoEffect` row that reaches no slice
-//! field.
+//! charge times the count. The count is PoB's (P3-8d):
+//! `max(use ? (override or maximum) : 0, min(maximum, minimum))`, the
+//! maximum the character constant plus the modifiers' (at least 0), the
+//! minimum the modifiers' (at least 0). So a minimum gives charges without
+//! the `use` input, as in PoB.
 //!
-//! The endurance inputs change no computed field: like
+//! **Modifiers** ([`MODIFIERS`], P3-8d): the stats of the maximum, the
+//! minimum, and effects per charge map to [`Poe1Quantity::Charge`]
+//! (`Base`, unconditional); [`charges`] reads them after every other
+//! source and turns each per-charge effect into its target
+//! ([`PerCharge::target`]) times the count, with the modifier's source.
+//! What else reads or changes the counts ("at maximum" flags, conversions
+//! to absorption, affliction, or brutal charges, "maximum frenzy charges is
+//! maximum power charges", per-charge effects not in the table) is a stat
+//! the mapping does not know, so a reason (`unmapped-stat`), or a
+//! `NoEffect` row that reaches no slice field (a test in this module).
+//!
+//! The endurance charges' own effects change no computed field: like
 //! [`super::config::NAMED_ONLY`], their only other effect is a multiplier
-//! modifiers read.
+//! modifiers read; a per-endurance-charge modifier in [`MODIFIERS`] is
+//! counted.
 
 use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 
+use super::Poe1Quantity;
 use super::config::last_input as last;
 use crate::condition::Flags;
 use crate::ingest::Ingest;
@@ -45,9 +56,171 @@ use crate::source::Source;
 use crate::state::{IndeterminateReason, UnsupportedReason};
 use crate::store::{Conditions, Effect};
 
+/// A kind of charge.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ChargeKind {
+    /// Power charges.
+    Power,
+    /// Frenzy charges.
+    Frenzy,
+    /// Endurance charges.
+    Endurance,
+}
+
+impl ChargeKind {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Power => "power",
+            Self::Frenzy => "frenzy",
+            Self::Endurance => "endurance",
+        }
+    }
+}
+
+/// What a charge modifier changes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ChargeValue {
+    /// The maximum (PoB's `<Kind>ChargesMax` BASE).
+    Maximum,
+    /// The minimum (PoB's `<Kind>ChargesMin` BASE).
+    Minimum,
+    /// An effect per charge (a mod with PoB's `Multiplier:<Kind>Charge`
+    /// tag).
+    Per(PerCharge),
+}
+
+impl ChargeValue {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Maximum => "maximum",
+            Self::Minimum => "minimum",
+            Self::Per(p) => p.name(),
+        }
+    }
+}
+
+/// An effect per charge: its target.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PerCharge {
+    /// Increased damage (`Damage` INC).
+    Damage,
+    /// Increased spell damage (`Damage` INC with `ModFlag.Spell`).
+    SpellDamage,
+    /// Increased critical strike chance (`CritChance` INC).
+    CritChance,
+    /// Critical strike multiplier (`CritMultiplier` BASE).
+    CritMultiplier,
+}
+
+impl PerCharge {
+    /// Stable name.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Damage => "per.damage",
+            Self::SpellDamage => "per.spell-damage",
+            Self::CritChance => "per.crit-chance",
+            Self::CritMultiplier => "per.crit-multiplier",
+        }
+    }
+
+    /// The effect one charge has: quantity, operation, and the flags a
+    /// query needs.
+    #[must_use]
+    pub const fn target(self) -> (Quantity, Op, Flags) {
+        match self {
+            Self::Damage => (Quantity::Damage, Op::Increased, Flags::NONE),
+            Self::SpellDamage => (Quantity::Damage, Op::Increased, Flags::SPELL),
+            Self::CritChance => (Quantity::CritChance, Op::Increased, Flags::NONE),
+            Self::CritMultiplier => (Quantity::CritMultiplier, Op::Base, Flags::NONE),
+        }
+    }
+}
+
+/// The charge modifiers the engine models (module docs), sorted by stat
+/// ID, each checked against PoB v2.67.2's reading of its game text
+/// (`Modules/ModParser.lua`: "maximum power charges" `PowerChargesMax`
+/// BASE, "minimum power charges" `PowerChargesMin` BASE, and the
+/// `per power charge` tag `{ type = "Multiplier", var = "PowerCharge" }`
+/// on `Damage` INC, spell `Damage` INC, `CritChance` INC, and
+/// `CritMultiplier` BASE; the frenzy and endurance stats alike).
+pub const MODIFIERS: &[(&str, ChargeKind, ChargeValue)] = &[
+    (
+        "base_minimum_endurance_charges",
+        ChargeKind::Endurance,
+        ChargeValue::Minimum,
+    ),
+    (
+        "base_minimum_frenzy_charges",
+        ChargeKind::Frenzy,
+        ChargeValue::Minimum,
+    ),
+    (
+        "base_minimum_power_charges",
+        ChargeKind::Power,
+        ChargeValue::Minimum,
+    ),
+    (
+        "critical_strike_chance_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::CritChance),
+    ),
+    (
+        "critical_strike_multiplier_+_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::CritMultiplier),
+    ),
+    (
+        "damage_+%_per_endurance_charge",
+        ChargeKind::Endurance,
+        ChargeValue::Per(PerCharge::Damage),
+    ),
+    (
+        "damage_+%_per_frenzy_charge",
+        ChargeKind::Frenzy,
+        ChargeValue::Per(PerCharge::Damage),
+    ),
+    (
+        "damage_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::Damage),
+    ),
+    (
+        "max_endurance_charges",
+        ChargeKind::Endurance,
+        ChargeValue::Maximum,
+    ),
+    (
+        "max_frenzy_charges",
+        ChargeKind::Frenzy,
+        ChargeValue::Maximum,
+    ),
+    ("max_power_charges", ChargeKind::Power, ChargeValue::Maximum),
+    (
+        "spell_damage_+%_per_power_charge",
+        ChargeKind::Power,
+        ChargeValue::Per(PerCharge::SpellDamage),
+    ),
+];
+
+/// The charge modifier `stat` is, if any ([`MODIFIERS`]).
+#[must_use]
+pub fn modifier(stat: &str) -> Option<(ChargeKind, ChargeValue)> {
+    MODIFIERS
+        .binary_search_by(|(id, _, _)| (*id).cmp(stat))
+        .ok()
+        .map(|i| (MODIFIERS[i].1, MODIFIERS[i].2))
+}
+
 /// One kind of charge.
 #[derive(Debug, Clone, Copy)]
 pub struct Charge {
+    /// The kind.
+    pub kind: ChargeKind,
     /// The config input that uses the charges.
     pub use_input: &'static str,
     /// The config input that sets their count.
@@ -62,6 +235,7 @@ pub struct Charge {
 /// The three charges, in PoB's order.
 pub const CHARGES: &[Charge] = &[
     Charge {
+        kind: ChargeKind::Power,
         use_input: "usePowerCharges",
         override_input: "overridePowerCharges",
         max_stat: "max_power_charges",
@@ -73,6 +247,7 @@ pub const CHARGES: &[Charge] = &[
         )],
     },
     Charge {
+        kind: ChargeKind::Frenzy,
         use_input: "useFrenzyCharges",
         override_input: "overrideFrenzyCharges",
         max_stat: "max_frenzy_charges",
@@ -99,6 +274,7 @@ pub const CHARGES: &[Charge] = &[
     },
     // Physical and elemental damage reduction only: no slice field.
     Charge {
+        kind: ChargeKind::Endurance,
         use_input: "useEnduranceCharges",
         override_input: "overrideEnduranceCharges",
         max_stat: "max_endurance_charges",
@@ -129,59 +305,114 @@ fn count(value: Option<&ConfigValue>) -> Result<Option<f64>, ()> {
     }
 }
 
-/// Adds the effects of the charges the active config set uses (module
-/// docs). The effects' source is the `use` input, whichever input set
-/// the count (an override or its placeholder): the `use` input is what
-/// turns them on, and the count is part of the effect's value. A `use` input that is not a flag, or an override that is not a
+/// The `Base` sum of the unconditional effects on `Charge(kind, value)`
+/// so far, and the first one's source.
+fn modifiers(ingest: &Ingest<'_>, kind: ChargeKind, value: ChargeValue) -> (f64, Option<Source>) {
+    let mut sum = 0.0;
+    let mut first = None;
+    for e in ingest.effects() {
+        if e.quantity == Quantity::Poe1(Poe1Quantity::Charge(kind, value))
+            && e.op == Op::Base
+            && e.conditions == Conditions::none()
+        {
+            sum += e.value;
+            first.get_or_insert_with(|| e.source.clone());
+        }
+    }
+    (sum, first)
+}
+
+/// Adds the effects of the charges (module docs): from the active config
+/// set's `use` and override inputs and the charge modifiers ingested so
+/// far, so it runs after every other source. The constant effects' source
+/// is the `use` input when it is on (whichever input set the count),
+/// else the first minimum modifier's; each per-charge modifier keeps its
+/// own. A `use` input that is not a flag, or an override that is not a
 /// number, is a reason under the `use` input; a missing constant is
 /// indeterminate.
 pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<'_>) {
-    let Some(set) = set else { return };
     for charge in CHARGES {
         let reason = || UnsupportedReason::UnmodelledConfig {
             input: charge.use_input.to_owned(),
         };
-        match last(set, charge.use_input, ConfigInputKind::Input) {
-            None | Some(ConfigValue::Boolean(false)) => continue,
-            Some(ConfigValue::Boolean(true)) => {}
+        let use_on = match set.and_then(|s| last(s, charge.use_input, ConfigInputKind::Input)) {
+            None | Some(ConfigValue::Boolean(false)) => false,
+            Some(ConfigValue::Boolean(true)) => true,
             Some(ConfigValue::Number(_) | ConfigValue::String(_)) => {
                 ingest.reason(reason());
                 continue;
             }
-        }
-        // No effect on a slice field (endurance): nothing to count.
-        if charge.effects.is_empty() {
+        };
+        let per: Vec<Effect> = ingest
+            .effects()
+            .iter()
+            .filter(|e| {
+                matches!(
+                    e.quantity,
+                    Quantity::Poe1(Poe1Quantity::Charge(k, ChargeValue::Per(_))) if k == charge.kind
+                ) && e.op == Op::Base
+                    && e.conditions == Conditions::none()
+            })
+            .cloned()
+            .collect();
+        // No effect on a slice field: nothing to count.
+        if charge.effects.is_empty() && per.is_empty() {
             continue;
         }
-        // The input, else its placeholder (PoB's `BuildModList`).
-        let overridden = match count(last(set, charge.override_input, ConfigInputKind::Input)) {
-            Ok(None) => count(last(
-                set,
-                charge.override_input,
-                ConfigInputKind::Placeholder,
-            )),
-            other => other,
+        let (min, min_source) = modifiers(ingest, charge.kind, ChargeValue::Minimum);
+        let min = min.max(0.0);
+        if !use_on && min == 0.0 {
+            continue;
+        }
+        let (more, _) = modifiers(ingest, charge.kind, ChargeValue::Maximum);
+        // The input, else its placeholder (PoB's `BuildModList`); read only
+        // when the charges are used, as PoB does.
+        let overridden = if use_on {
+            match count(set.and_then(|s| last(s, charge.override_input, ConfigInputKind::Input))) {
+                Ok(None) => count(
+                    set.and_then(|s| last(s, charge.override_input, ConfigInputKind::Placeholder)),
+                ),
+                other => other,
+            }
+        } else {
+            Ok(None)
         };
-        let count = match overridden {
-            Ok(Some(n)) => n,
-            Ok(None) => match data.character_constant(charge.max_stat) {
-                #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
-                Some(max) => max as f64,
-                None => {
-                    ingest.indeterminate(IndeterminateReason::MissingData {
-                        table: "character_constants",
-                        key: charge.max_stat.to_owned(),
-                    });
-                    continue;
-                }
-            },
+        let overridden = match overridden {
+            Ok(n) => n,
             Err(()) => {
                 ingest.reason(reason());
                 continue;
             }
         };
-        // At least the minimum, 0 without modifiers.
-        let count = count.max(0.0);
+        let max = match data.character_constant(charge.max_stat) {
+            #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
+            Some(max) => (max as f64 + more).max(0.0),
+            None => {
+                ingest.indeterminate(IndeterminateReason::MissingData {
+                    table: "character_constants",
+                    key: charge.max_stat.to_owned(),
+                });
+                continue;
+            }
+        };
+        let used = if use_on {
+            overridden.unwrap_or(max)
+        } else {
+            0.0
+        };
+        let count = used.max(min.min(max));
+        if count == 0.0 {
+            continue;
+        }
+        let source = if use_on {
+            Source::Config {
+                input: charge.use_input.to_owned(),
+            }
+        } else if let Some(s) = min_source {
+            s
+        } else {
+            continue;
+        };
         for &(stat, quantity, op, flags) in charge.effects {
             match data.character_constant(stat) {
                 #[expect(clippy::cast_precision_loss, reason = "a small integer, exact as f64")]
@@ -190,15 +421,26 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
                     op,
                     value: per as f64 * count,
                     conditions: Conditions::none().with_all(flags),
-                    source: Source::Config {
-                        input: charge.use_input.to_owned(),
-                    },
+                    source: source.clone(),
                 }),
                 None => ingest.indeterminate(IndeterminateReason::MissingData {
                     table: "character_constants",
                     key: stat.to_owned(),
                 }),
             }
+        }
+        for e in per {
+            let Quantity::Poe1(Poe1Quantity::Charge(_, ChargeValue::Per(p))) = e.quantity else {
+                continue;
+            };
+            let (quantity, op, flags) = p.target();
+            ingest.effect(Effect {
+                quantity,
+                op,
+                value: e.value * count,
+                conditions: Conditions::none().with_all(flags),
+                source: e.source,
+            });
         }
     }
 }
@@ -242,10 +484,10 @@ mod tests {
         "life_flasks_gain_X_charges_every_3_seconds_if_you_have_not_used_a_life_flask_recently",
     ];
 
-    /// The module's argument: no mapped stat reads or changes a charge,
-    /// so every stat that does is a reason or reaches no slice field. The
-    /// maxima themselves stay `Unmapped` (asserted here through every
-    /// mapping, and in `mapping`'s tests).
+    /// The module's argument: no row of the mapping's tables reads or
+    /// changes a charge, so every stat that does is a reason, reaches no
+    /// slice field, or is one of [`MODIFIERS`], which map only to
+    /// [`Poe1Quantity::Charge`] (P3-8d).
     #[test]
     fn no_mapped_stat_should_read_or_change_a_charge() {
         use crate::ingest::{StatMap, StatMapping};
@@ -264,6 +506,8 @@ mod tests {
         for id in ids {
             assert!(!names_a_charge(id), "{id}: revisit poe1::charges");
         }
+        // The charge modifiers map only to their own quantity, read here.
+        assert!(MODIFIERS.windows(2).all(|w| w[0].0 < w[1].0));
         for (id, _) in NO_EFFECT {
             assert!(
                 !names_a_charge(id) || NO_EFFECT_CHARGE_ROWS.contains(id),
@@ -274,12 +518,28 @@ mod tests {
         let piece = PieceMapping {
             slot: ArmourSlot::Helmet,
         };
-        let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
+        // The maxima map only to their charge quantity.
         for c in CHARGES {
-            for m in mappings {
+            let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new(c.max_stat)) else {
+                panic!("{}", c.max_stat);
+            };
+            assert_eq!(
+                t.iter().map(|t| t.quantity).collect::<Vec<_>>(),
+                [Quantity::Poe1(Poe1Quantity::Charge(
+                    c.kind,
+                    ChargeValue::Maximum
+                ))]
+            );
+            // A gem's stats never set a maximum; an item's lines hand it
+            // to the game mapping.
+            assert_eq!(
+                SkillMapping.map(&StatId::new(c.max_stat)),
+                StatMap::Unmapped
+            );
+            for m in [&piece as &dyn StatMapping, &WeaponMapping] {
                 assert_eq!(
                     m.map(&StatId::new(c.max_stat)),
-                    StatMap::Unmapped,
+                    Poe1Mapping.map(&StatId::new(c.max_stat)),
                     "{}",
                     c.max_stat
                 );
