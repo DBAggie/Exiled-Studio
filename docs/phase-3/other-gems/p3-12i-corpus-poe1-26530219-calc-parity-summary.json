@@ -8,9 +8,9 @@
     "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
   },
   "successor": {
-    "sha256": "ec38e26eb56328dc627fff814326743b10786f958d1a304176b27473b14e7640",
+    "sha256": "67ed9b6bcf8bcc8e28053cc383a26bc01ea030049fbe79f434a0f91873114397",
     "platform": null,
-    "tool_commit": "76ec05ef98c045e032619241fe4aec52098acda5"
+    "tool_commit": "6c0eb6981dcf7817813d5eedcc9e765afb0a70c5"
   },
   "overlay": null,
   "bundle": {

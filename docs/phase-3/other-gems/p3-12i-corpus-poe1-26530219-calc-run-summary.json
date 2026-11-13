@@ -1,7 +1,7 @@
 {
   "format": 1,
   "tool": {
-    "commit": "76ec05ef98c045e032619241fe4aec52098acda5",
+    "commit": "6c0eb6981dcf7817813d5eedcc9e765afb0a70c5",
     "dirty": false
   },
   "bundle": {
@@ -56,9 +56,9 @@
   },
   "timing": {
     "builds": 21,
-    "min_micros": 619,
-    "median_micros": 1690,
-    "max_micros": 2855,
-    "total_micros": 36872
+    "min_micros": 633,
+    "median_micros": 1714,
+    "max_micros": 2932,
+    "total_micros": 36944
   }
 }
