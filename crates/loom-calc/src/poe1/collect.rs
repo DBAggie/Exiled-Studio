@@ -477,14 +477,43 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
     }
 }
 
+/// The node hashes of an item's "Allocates <notable>" line (P3-8n): its
+/// one stat `mod_granted_passive_hash`, its value the hash (one number) or
+/// the hashes the description's lookup gives the name (several nodes can
+/// share a name). `None` for any other line, which the mapping reads.
+fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Vec<i64>> {
+    let loom_domain::LineResolution::Resolved {
+        result: loom_domain::Resolved::Stats(lines),
+        ..
+    } = resolution
+    else {
+        return None;
+    };
+    let [line] = lines.as_slice() else {
+        return None;
+    };
+    if line.stat.as_str() != GRANTED_PASSIVE_STAT {
+        return None;
+    }
+    match &line.value {
+        StatValue::Exact { min, max } if min == max => Some(vec![*min]),
+        StatValue::Lookup(hashes) => Some(hashes.clone()),
+        _ => None,
+    }
+}
+
+/// "Allocates <notable>".
+const GRANTED_PASSIVE_STAT: &str = "mod_granted_passive_hash";
+
 /// The nodes items grant ("Allocates <notable>", PoB's `GrantedPassive`,
 /// `CalcSetup.lua` 1287 to 1297; P3-8n): each [`Poe1Quantity::GrantedPassive`]
-/// effect's value is the node's hash, the key of the passives table. PoB
-/// adds the node to the allocated set, so a node the tree already
-/// allocates (and connects) counts once; otherwise its stats count with
-/// the node as source. PoB looks the node up by its name among notables
-/// and ascendancy nodes; the hash is the game's own reference. A hash the
-/// data does not know is indeterminate.
+/// effect's value is a candidate node hash, the key of the passives table;
+/// a line's candidates share its source. PoB looks the node up by its name
+/// among the tree's notables and ascendancy nodes: here the one candidate
+/// the passives table has (none or several: indeterminate). PoB adds the
+/// node to the allocated set, so a node the tree already allocates (and
+/// connects) counts once; otherwise its stats count with the node as
+/// source.
 fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
     let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
         connected(input, spec.nodes.value())
@@ -493,39 +522,42 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
             .collect()
     });
     let mut granted = BTreeSet::new();
-    let hashes: Vec<f64> = ingest
-        .effects()
-        .iter()
-        .filter(|e| {
-            e.quantity == Quantity::Poe1(Poe1Quantity::GrantedPassive)
-                && e.op == Op::Base
-                && e.conditions == Conditions::none()
-        })
-        .map(|e| e.value)
-        .collect();
-    for hash in hashes {
-        #[expect(
-            clippy::cast_possible_truncation,
-            clippy::cast_sign_loss,
-            reason = "a node hash below 2^16, checked"
-        )]
-        let node = (hash.fract() == 0.0 && (0.0..65536.0).contains(&hash)).then_some(hash as u32);
-        let Some(node) = node else {
+    let mut by_line: BTreeMap<Source, Vec<f64>> = BTreeMap::new();
+    for e in ingest.effects() {
+        if e.quantity == Quantity::Poe1(Poe1Quantity::GrantedPassive)
+            && e.op == Op::Base
+            && e.conditions == Conditions::none()
+        {
+            by_line.entry(e.source.clone()).or_default().push(e.value);
+        }
+    }
+    for (source, hashes) in by_line {
+        let known: Vec<u32> = hashes
+            .iter()
+            .filter_map(|&hash| {
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    clippy::cast_sign_loss,
+                    reason = "a node hash below 2^16, checked"
+                )]
+                let node = (hash.fract() == 0.0 && (0.0..65536.0).contains(&hash))
+                    .then_some(hash as u32)?;
+                input.data.passive_stats(node).map(|_| node)
+            })
+            .collect();
+        let [node] = known.as_slice() else {
             ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "passives",
-                key: hash.to_string(),
+                key: format!("granted-passive:{source:?}"),
             });
             continue;
         };
+        let node = *node;
         if allocated.contains(&node) || !granted.insert(node) {
             continue;
         }
-        match input.data.passive_stats(node) {
-            Some(stats) => ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats)),
-            None => ingest.indeterminate(IndeterminateReason::MissingData {
-                table: "passives",
-                key: node.to_string(),
-            }),
+        if let Some(stats) = input.data.passive_stats(node) {
+            ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats));
         }
     }
 }
@@ -1098,7 +1130,29 @@ fn item_lines(item: &Item, ingest: &mut Ingest<'_>) {
 fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'_>) {
     for (index, line) in item.body.lines.iter().enumerate() {
         match &line.kind {
-            LineKind::Modifier(m) => ingest.item_line_with(mapping, item.id, index, &m.resolution),
+            LineKind::Modifier(m) => {
+                // "Allocates <notable>" (P3-8n): its value is the name's
+                // node hashes; [`granted_passives`] picks the node.
+                if let Some(hashes) = granted_passive_hashes(&m.resolution) {
+                    let source = Source::Item {
+                        item: item.id,
+                        line: index,
+                        adapted: None,
+                    };
+                    for hash in hashes {
+                        #[expect(clippy::cast_precision_loss, reason = "a node hash, below 2^53")]
+                        ingest.effect(Effect {
+                            quantity: Quantity::Poe1(Poe1Quantity::GrantedPassive),
+                            op: Op::Base,
+                            value: hash as f64,
+                            conditions: Conditions::none(),
+                            source: source.clone(),
+                        });
+                    }
+                    continue;
+                }
+                ingest.item_line_with(mapping, item.id, index, &m.resolution);
+            }
             LineKind::Unrecognized | LineKind::Spec { known: false, .. } => {
                 ingest.reason(UnsupportedReason::UnreadLine {
                     source: Source::Item {
