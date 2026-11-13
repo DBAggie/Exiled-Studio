@@ -159,6 +159,11 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# Custom modifier lines against PoB's own parse (Phase 3 close-out, ADR-015 Amendment 2; maintainer-run): every custom line
+# of the fixtures read as a build does (notes, patterns, stats, unresolved) and compared with pob-parse.json
+# (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a
+# pattern differs from PoB's mod:
+cargo run --release -p loom-parity-cli -- custom-lines <bundle-dir> docs/phase-3/custom-lines/pob-parse.json --out <dir>
 # Calc scope survey (P3-3; maintainer-run, not in CI): main skill, archetype rules, tree version, excluded mechanics
 # (docs/phase-3/calc-scope-poe1.json), and mechanic inventory per build; writes summary.json and report.json
 # (<dir> must not exist; --anonymous for the corpus); exit 0 when every chosen skill has the minimum of in-scope
