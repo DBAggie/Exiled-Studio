@@ -75,9 +75,8 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///
 /// - `OverloadedIntensity`: `Multiplier:OverloadedIntensity` (at most 3,
 ///   line 514); read by the skill stat map of the gems that grant it.
-/// - `bloodSandStance`: `Condition:SandStance` for Sand (line 654);
-///   `CalcSetup.lua` (652) adds `Condition:BloodStance` when not Sand;
-///   read by the stance skills' stats.
+/// - `bloodSandStance` moved to [`super::gems`] in the Phase 3 close-out
+///   (Flesh and Stone's Blood Stance row reads it).
 /// - `conditionBeenHitRecently`, `conditionBlockedRecently`,
 ///   `conditionChilledEnemyRecently`, `conditionFullLife`: the condition of
 ///   that name (lines 1375, 1421, 1339, 174); the calc modules read them
@@ -85,8 +84,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   or flags a modifier sets (`CalcDefence.lua` 707, 723: maximum block
 ///   if not blocked recently, from a stat); `FullLife` is set by Chaos
 ///   Inoculation (`CalcPerform.lua` 86), not read.
-/// - `conditionCritRecently`: `Condition:CritRecently` and
-///   `Condition:SkillCritRecently` (line 1251).
+/// - `conditionCritRecently` moved to [`super::conditions`] in the Phase 3
+///   close-out ("if you've dealt a Critical Strike Recently" reads it; its
+///   `SkillCritRecently` stays a name only modifiers read).
 /// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
 ///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
 ///   taken when a modifier's flag asks for it.
@@ -205,10 +205,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["Multiplier:SunscaldStack"],
     ),
     (
-        "bloodSandStance",
-        &["Condition:SandStance", "Condition:BloodStance"],
-    ),
-    (
         "buffFortification",
         &["Condition:Fortified", "Fortified", "FortificationStacks"],
     ),
@@ -221,10 +217,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionChilledEnemyRecently",
         &["Condition:ChilledEnemyRecently"],
-    ),
-    (
-        "conditionCritRecently",
-        &["Condition:CritRecently", "Condition:SkillCritRecently"],
     ),
     ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
     ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
@@ -483,6 +475,7 @@ mod tests {
             "conditionEnemyShocked",
             "conditionShockEffect",
             "summonLightningGolemEnableWrath",
+            "bloodSandStance",
             "customMods",
             "bandit",
             "pantheonMajorGod",

@@ -104,6 +104,19 @@ export type TypedResolution =
         stats: StatLine[]
       }
     }
+  | 'custom-note'
+  | {
+      'custom-pattern': {
+        /**
+         * The pattern's name.
+         */
+        pattern: string
+        /**
+         * The value as shown.
+         */
+        value: string
+      }
+    }
 /**
  * Why a line did not resolve.
  */

@@ -455,6 +455,34 @@
         "f64_bits"
       ]
     },
+    "Note": {
+      "description": "Content without effect by design.",
+      "oneOf": [
+        {
+          "description": "A custom modifier line that is a label or a comment.",
+          "type": "object",
+          "properties": {
+            "custom-note": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "description": "The line.",
+                  "$ref": "#/$defs/Source"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "source"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "custom-note"
+          ]
+        }
+      ]
+    },
     "Number": {
       "description": "A number: a JSON number when finite, otherwise its bit pattern (JSON\nhas no NaN or infinity). Finite values are written in the shortest\nform that reads back to the same bits.",
       "anyOf": [
@@ -478,6 +506,13 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/IndeterminateReason"
+          }
+        },
+        "notes": {
+          "description": "Content without effect by design, shown with the result; never\na reason for a state (ADR-015 Amendment 2; additive in v1,\nonly in the result's own reasons).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
           }
         },
         "unsupported": {

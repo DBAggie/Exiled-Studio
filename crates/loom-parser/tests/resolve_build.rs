@@ -511,6 +511,8 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
         "+5 to Shadowed Text",
         "Nothing like this",
         "+1 first half",
+        "20% more Damage",
+        "Nothing like this 7",
     ];
     let pending = || -> Vec<_> {
         texts
@@ -576,8 +578,23 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
             vec![StatId::new("test_evasion_b")],
         ])),
         unresolved(UnresolvedReason::OnlyShadowed),
-        unresolved(UnresolvedReason::NoTemplate),
+        // No template and no digit: a label, a custom note (ADR-015
+        // Amendment 2; close-out).
+        Some(LineResolution::Resolved {
+            result: Resolved::Typed(TypedResolution::CustomNote),
+            adapted: None,
+        }),
         // Half of a two-line description, read alone.
+        unresolved(UnresolvedReason::NoTemplate),
+        // No template, a curated pattern of PoB's parser.
+        Some(LineResolution::Resolved {
+            result: Resolved::Typed(TypedResolution::CustomPattern {
+                pattern: "more-damage".to_owned(),
+                value: "20".to_owned(),
+            }),
+            adapted: None,
+        }),
+        // No template, no pattern, a digit: still a reason.
         unresolved(UnresolvedReason::NoTemplate),
     ];
     let set = b.config.sets.typed().next().unwrap();

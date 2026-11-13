@@ -20,6 +20,7 @@ use crate::input::CalcInput;
 use crate::poe1;
 use crate::quantity::Quantity;
 use crate::result::{CalcResult, Field, FieldResult};
+use crate::source::Source;
 use crate::state::{FieldState, Reasons, UnsupportedReason};
 use crate::store::{ModStore, Query};
 
@@ -82,6 +83,7 @@ pub struct Calc<'a> {
     global: Reasons,
     fields: BTreeMap<Field, FieldResult>,
     states: BTreeMap<ConditionKey, bool>,
+    skill_sources: std::collections::BTreeSet<Source>,
 }
 
 impl<'a> Calc<'a> {
@@ -122,6 +124,26 @@ impl<'a> Calc<'a> {
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {
         self.fields.get(&field)
+    }
+
+    /// Names the sources whose effects form the computed skill's own list
+    /// (PoB's `skillModList` without its parent): the rules' more
+    /// multipliers round that list apart from the character's.
+    pub fn set_skill_sources(&mut self, sources: std::collections::BTreeSet<Source>) {
+        self.skill_sources = sources;
+    }
+
+    /// Whether `source` is one of [`Calc::set_skill_sources`]'.
+    #[must_use]
+    pub fn is_skill_source(&self, source: &Source) -> bool {
+        self.skill_sources.contains(source)
+    }
+
+    /// Settles a condition from a value an earlier phase computed (a
+    /// threshold on a field), for the later phases' contexts. A condition
+    /// the rules settled before the phases keeps its value.
+    pub fn settle_state(&mut self, key: ConditionKey, value: bool) {
+        self.states.entry(key).or_insert(value);
     }
 
     /// `base * increased * more` on `quantity` (or its override); see
@@ -229,6 +251,7 @@ pub fn calculate_with(
         global,
         fields: BTreeMap::new(),
         states,
+        skill_sources: std::collections::BTreeSet::new(),
     };
     for phase in rules.phases() {
         (phase.run)(&mut calc)?;

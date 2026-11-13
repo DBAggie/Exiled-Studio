@@ -616,6 +616,63 @@ fn slot_kind(slot: &str) -> SlotKind {
     }
 }
 
+/// The parent item's stat that gives it abyssal sockets ("Has # Abyssal
+/// Sockets", PoB's `AbyssalSocketCount`, `Item.lua` 2589).
+const ABYSS_SOCKETS: &str = "local_has_X_abyss_sockets";
+/// A parent item's stat that scales its socketed abyss jewels: not
+/// modelled, a reason.
+const ABYSS_JEWEL_EFFECT: &str = "local_socketed_abyss_jewel_effect_+%";
+
+/// Whether the abyssal slot `slot` ("<parent> Abyssal Socket <n>") holds
+/// an active socket (close-out): PoB's `ItemSlotControl` makes socket `n`
+/// inactive, and empties it, when the parent slot's item has fewer than
+/// `n` abyssal sockets (`ItemSlotControl.lua` 98 to 111), so its jewel
+/// counts only when `n` is at most the parent's count. `None` when that
+/// is not known: a parent line that does not resolve or settle, or one
+/// that scales its socketed abyss jewels.
+fn abyssal_active(build: &Build, set: &ItemSet, slot: &str) -> Option<bool> {
+    let (parent, n) = slot.split_once(" Abyssal Socket ")?;
+    let n: i64 = n.trim().parse().ok()?;
+    let Some(parent_id) = set
+        .slots
+        .typed()
+        .find(|e| e.slot.as_str() == parent)
+        .and_then(|e| e.item)
+        .filter(|id| id.0 != 0)
+    else {
+        return Some(false);
+    };
+    let item = build.items.item(parent_id)?;
+    let mut count = 0;
+    for line in &item.body.lines {
+        let LineKind::Modifier(m) = &line.kind else {
+            continue;
+        };
+        match &m.resolution {
+            loom_domain::LineResolution::Resolved {
+                result: loom_domain::Resolved::Stats(stats),
+                ..
+            } => {
+                for s in stats {
+                    if s.stat.as_str() == ABYSS_JEWEL_EFFECT {
+                        return None;
+                    }
+                    if s.stat.as_str() == ABYSS_SOCKETS {
+                        #[expect(clippy::cast_possible_truncation, reason = "a socket count")]
+                        let v = crate::ingest::settle(&s.value)? as i64;
+                        count += v;
+                    }
+                }
+            }
+            loom_domain::LineResolution::Excluded(loom_domain::Exclusion::NotSelected)
+            | loom_domain::LineResolution::Continues { .. }
+            | loom_domain::LineResolution::Resolved { .. } => {}
+            _ => return None,
+        }
+    }
+    Some(n <= count)
+}
+
 /// Whether a slot is in use for the item set's weapon set (PoB's
 /// `slot.weaponSet`): `... Swap` slots belong to set 2, the other weapon
 /// slots to set 1, every other slot to both.
@@ -648,11 +705,17 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
         for entry in set.slots.typed() {
             let slot = entry.slot.as_str();
             let Some(id) = entry.item else { continue };
-            // PoB writes `itemId="0"` for an empty slot.
-            if id.0 == 0 || !slot_in_use(slot, second) || seen.contains(&id) {
+            // PoB writes `itemId="0"` for an empty slot. An item a build
+            // puts in two slots counts in each, as PoB counts it per slot
+            // (`CalcSetup.lua` 701 to 722; close-out: before, it counted
+            // once). The game cannot equip one item twice; the build's
+            // slots are taken as written.
+            if id.0 == 0 || !slot_in_use(slot, second) {
                 continue;
             }
-            seen.push(id);
+            if !seen.contains(&id) {
+                seen.push(id);
+            }
             let unmodelled = |what| UnsupportedReason::UnmodelledItem {
                 item: id,
                 slot: slot.to_owned(),
@@ -665,10 +728,17 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
                     }
                     continue;
                 }
-                SlotKind::Abyssal => {
-                    ingest.reason(unmodelled("abyssal-socket"));
-                    continue;
-                }
+                SlotKind::Abyssal => match abyssal_active(build, set, slot) {
+                    // Its lines act as any jewel's (close-out).
+                    Some(true) => {}
+                    // PoB empties an abyssal slot its parent lacks
+                    // (`ItemSlotControl.lua` 98 to 111).
+                    Some(false) => continue,
+                    None => {
+                        ingest.reason(unmodelled("abyssal-socket"));
+                        continue;
+                    }
+                },
                 SlotKind::Properties => {
                     if let (Some(armour), Some(item)) = (ArmourSlot::of(slot), build.items.item(id))
                     {
@@ -694,11 +764,27 @@ fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<
     let allocated = spec.nodes.value();
     for socket in spec.jewel_sockets.typed() {
         let Some(id) = socket.item else { continue };
-        if id.0 == 0 || !allocated.contains(&socket.node) || seen.contains(&id) {
+        if id.0 == 0 || !allocated.contains(&socket.node) {
             continue;
         }
-        seen.push(id);
-        match build.items.item(id) {
+        // A jewel a build puts in several sockets counts in each, as PoB
+        // counts it per socket slot (`CalcSetup.lua` 744 to 837; close-out).
+        // PoB disables a repeat of a jewel with a limit ("Limited to"),
+        // which only unique jewels carry: not modelled, a reason.
+        let repeat = seen.contains(&id);
+        if !repeat {
+            seen.push(id);
+        }
+        let item = build.items.item(id);
+        if repeat && item.is_some_and(|i| i.body.rarity == Some(loom_domain::Rarity::Unique)) {
+            ingest.reason(UnsupportedReason::UnmodelledItem {
+                item: id,
+                slot: format!("socket {}", socket.node),
+                what: "jewel-limit",
+            });
+            continue;
+        }
+        match item {
             Some(item) => item_lines(item, ingest),
             None => ingest.reason(UnsupportedReason::UnmodelledItem {
                 item: id,
@@ -1253,7 +1339,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     );
     let Some(hit) = hit else { return };
     // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
-    let buff_scale = totals.buff_scale(true, &hit.skill().types);
+    let buff_scale = totals.buff_scale(true, &hit.skill().types, 0.0);
     for r in modelled {
         let source = Source::Gem {
             group: hit.group(),
@@ -1294,7 +1380,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
 }
 
 /// The active config set: `Config.activeConfigSet`, else the first.
-pub(super) fn active_config(build: &Build) -> Option<&ConfigSet> {
+pub(crate) fn active_config(build: &Build) -> Option<&ConfigSet> {
     let config = &build.config;
     config
         .active
@@ -1391,6 +1477,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             || super::buffs::is_buff_input(&input.name)
             || input.name == BANDIT_INPUT
             || super::pantheon::is_input(&input.name)
+            || super::gems::is_input(&input.name)
         {
             continue;
         }

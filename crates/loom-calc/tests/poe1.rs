@@ -743,7 +743,8 @@ fn items_beyond_their_lines_should_be_reasons() {
         ("Helmet", false, Some("unmodelled-item")),
         ("Weapon 1", false, Some("unmodelled-item")),
         ("Ring 3", false, Some("unmodelled-item")),
-        ("Belt Abyssal Socket 1", false, Some("unmodelled-item")),
+        // No belt, so no abyssal socket: PoB empties the slot (close-out).
+        ("Belt Abyssal Socket 1", false, None),
         ("Flask 1", true, Some("unmodelled-item")),
         ("Flask 1", false, None),
         ("Weapon 1 Swap", false, None),
@@ -1483,7 +1484,8 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
         "buffTailwind",
         // Arcane Surge's check has effects since P3-8n (`poe1::buffs`).
         "buffElusive",
-        "summonLightningGolemEnableWrath",
+        // Wrath's check has effects since the close-out (`poe1::gems`).
+        "buffUnholyMight",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {

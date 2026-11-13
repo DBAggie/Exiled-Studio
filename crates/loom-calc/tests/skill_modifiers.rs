@@ -14,7 +14,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (`ModParser.lua` 222 to 232, 457).
-const TEXTS: [(&str, &str); 7] = [
+const TEXTS: [(&str, &str); 9] = [
     (
         "base_life_reservation_efficiency_+%",
         "{0}% increased Life Reservation Efficiency of Skills",
@@ -43,18 +43,19 @@ const TEXTS: [(&str, &str); 7] = [
         "reservation_efficiency_-2%_per_1",
         "{0}% reduced Reservation Efficiency of Skills",
     ),
+    // Close-out.
+    ("curse_effect_+%", "{0}% increased Effect of your Curses"),
+    (
+        "golem_buff_effect_+%",
+        "{0}% increased Effect of Buffs granted by your Golems",
+    ),
 ];
 
 /// `NoEffect` rows whose text names reservation or the effect of auras or
 /// buffs, each checked to reach no slice field (`poe1::mapping::NO_EFFECT`'s
 /// comments): the aura skills' area of effect (P3-8e), which scales no
 /// buff.
-const NO_EFFECT_NAMING: &[&str] = &[
-    "base_aura_area_of_effect_+%",
-    // The golems' buff effect (P3-8n): only golem skills read it, and no
-    // golem gem is modelled.
-    "golem_buff_effect_+%",
-];
+const NO_EFFECT_NAMING: &[&str] = &["base_aura_area_of_effect_+%"];
 
 #[test]
 fn the_texts_should_name_the_rows() {

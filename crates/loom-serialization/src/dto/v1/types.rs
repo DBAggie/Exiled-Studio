@@ -677,6 +677,17 @@ dto! {
             /// The quality as shown.
             quality: String,
         },
+        /// A custom modifier line that is a label or a comment, with no
+        /// effect (ADR-015 Amendment 2; additive in v1, P3-close).
+        CustomNote,
+        /// A custom modifier line read by a curated pattern as PoB's
+        /// parser reads it (ADR-015 Amendment 2; additive in v1).
+        CustomPattern {
+            /// The pattern's name.
+            pattern: String,
+            /// The value as shown.
+            value: String,
+        },
     }
 
     /// One placeholder value of a property line.

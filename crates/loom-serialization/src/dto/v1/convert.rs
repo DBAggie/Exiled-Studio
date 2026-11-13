@@ -710,6 +710,13 @@ fn resolution_to(r: &d::LineResolution) -> LineResolution {
                         stats: stats_to(stats),
                         quality: quality.clone(),
                     },
+                    d::TypedResolution::CustomNote => TypedResolution::CustomNote,
+                    d::TypedResolution::CustomPattern { pattern, value } => {
+                        TypedResolution::CustomPattern {
+                            pattern: pattern.clone(),
+                            value: value.clone(),
+                        }
+                    }
                 }),
             },
             adapted: adapted.map(|a| match a {
@@ -778,6 +785,10 @@ fn resolution_from(r: LineResolution) -> Result<d::LineResolution, DtoError> {
                         stats: stats_from(stats),
                         quality,
                     },
+                    TypedResolution::CustomNote => d::TypedResolution::CustomNote,
+                    TypedResolution::CustomPattern { pattern, value } => {
+                        d::TypedResolution::CustomPattern { pattern, value }
+                    }
                 }),
             },
             adapted: adapted.map(|a| match a {

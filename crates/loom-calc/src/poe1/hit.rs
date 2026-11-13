@@ -687,7 +687,10 @@ fn more(
                 continue;
             }
         }
-        let skill = matches!(e.source, Source::Gem { .. });
+        // The skill's own list: its active gem and the supports that apply
+        // (`Calc::set_skill_sources`); another gem's buff is the
+        // character's (PoB's `modDB`; close-out).
+        let skill = calc.is_skill_source(&e.source);
         groups
             .entry((!skill, name_order(e)))
             .or_default()
@@ -740,7 +743,29 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     // The gem level modifiers as `collect` read them: every effect is in
     // the store by now.
     let levels = GemLevels::from_effects(calc.store().effects());
-    match hit_skill(&input, &levels) {
+    // Righteous Fire's threshold (`poe1::gems`, close-out): unreserved life
+    // at least 2 and mana at least 1, PoB's `StatThreshold` tags; unknown
+    // (a reason through the rows' condition) when either is not computed.
+    let life = calc.field(Field::LifeUnreserved).and_then(|f| f.value);
+    let mana = calc.field(Field::Mana).and_then(|f| f.value);
+    if let (Some(life), Some(mana)) = (life, mana) {
+        calc.settle_state(
+            ConditionKey::new(super::gems::STAT_THRESHOLD),
+            life >= 2.0 && mana >= 1.0,
+        );
+    }
+    let skill = hit_skill(&input, &levels);
+    if let Some(h) = &skill {
+        let sources = std::iter::once(&h.skill().active_gem)
+            .chain(&h.skill().supports)
+            .map(|r| Source::Gem {
+                group: h.group(),
+                gem: r.gem,
+            })
+            .collect();
+        calc.set_skill_sources(sources);
+    }
+    match skill {
         None => Ok(()),
         Some(HitSkill::Spell(spell)) => spell_hit(calc, &spell),
         Some(HitSkill::Attack(attack)) => attack_hit(calc, &attack),
@@ -786,6 +811,7 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         damage: DamageSource::Skill,
         melee_physical: None,
         crit_recently: crit.value != 0.0,
+        exert_uptime: None,
     };
     let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, None)?;
@@ -926,6 +952,11 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         "strength-per-melee-damage",
         "strength-bonus",
     )?;
+    // The rate first, as PoB (`CalcOffence.lua`: speed before damage):
+    // Intimidating Cry's uptime reads it.
+    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
+    speed_reasons.extend(&unvetted);
+    let exert_uptime = intimidating_uptime(calc, &attack.skill.types, speed, &mut reasons)?;
     let shape = HitShape {
         source: attack.source(),
         level: attack.level,
@@ -933,6 +964,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         damage: DamageSource::Weapon(&weapon.damage),
         melee_physical,
         crit_recently: crit.value != 0.0,
+        exert_uptime,
     };
     let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, Some(hit_chance))?;
@@ -947,10 +979,66 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         ],
     );
 
-    let (speed, mut speed_reasons) = attack_rate(calc, attack, weapon.rate, &cx)?;
-    speed_reasons.extend(&unvetted);
     calc.set(Field::Speed, phases::query(speed, speed_reasons));
     hit_dps(calc, average, speed)
+}
+
+/// Intimidating Cry's exerted attacks' uptime, percent (`CalcOffence.lua`
+/// 2592 to 2600; close-out): for a melee skill (PoB: the main skill's
+/// `Melee` type, not triggered, channelled, a totem's, or a retaliation)
+/// with a modelled Intimidating Cry, `min(100, min((exerts / speed) /
+/// (cooldown + cast time), 1) x 100 x stored uses)`, the cast time `1 /
+/// min(cast rate x action speed, tick rate)` (`calcWarcryCastTime`).
+/// `None` otherwise.
+fn intimidating_uptime(
+    calc: &mut Calc<'_>,
+    types: &std::collections::BTreeSet<String>,
+    speed: Valued,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    use super::gems::WarcryValue;
+    let q = |v| Quantity::Poe1(Poe1Quantity::IntimidatingCry(v));
+    let excluded = [
+        "NeverExertable",
+        "Triggered",
+        "Channel",
+        "OtherThingUsesSkill",
+        "Retaliation",
+        "SummonsTotem",
+    ];
+    if !types.contains("Melee")
+        || excluded.iter().any(|t| types.contains(*t))
+        || !phases::has(calc, q(WarcryValue::Exerts))
+    {
+        return Ok(None);
+    }
+    let cx = calc.context(Flags::NONE);
+    let term = |calc: &mut Calc<'_>, v: WarcryValue, reasons: &mut Reasons| {
+        sum_in(calc, q(v), Op::Base, &cx, Term::Step(v.name()), reasons)
+    };
+    let exerts = term(calc, WarcryValue::Exerts, reasons)?;
+    let cooldown = term(calc, WarcryValue::Cooldown, reasons)?;
+    let cast_rate = term(calc, WarcryValue::CastRate, reasons)?;
+    let stored = term(calc, WarcryValue::StoredUses, reasons)?;
+    let cast_rate = action_speed(calc, cast_rate, reasons)?;
+    let cap = phases::constant(calc, "server-tick-rate", 1.0 / SERVER_TICK_TIME)?;
+    let cast_rate = phases::pair(calc, cast_rate, cap, Term::Step("warcry-cast-rate"), true)?;
+    let one = phases::constant(calc, "one", 1.0)?;
+    let cast_time = quotient(calc, one, cast_rate, Term::Step("warcry-cast-time"))?;
+    let per_attack = quotient(calc, exerts, speed, Term::Step("exerts-per-attack-rate"))?;
+    let window = phases::total(calc, &[cooldown, cast_time], Term::Step("warcry-window"))?;
+    let ratio = quotient(calc, per_attack, window, Term::Step("exert-ratio"))?;
+    let ratio = phases::pair(calc, ratio, one, Term::Step("exert-ratio-capped"), true)?;
+    let hundred = phases::constant(calc, "hundred", 100.0)?;
+    let base = phases::product(calc, &[ratio, hundred], Term::Step("exert-uptime-base"))?;
+    let uptime = phases::product(calc, &[base, stored], Term::Step("exert-uptime-stored"))?;
+    Ok(Some(phases::pair(
+        calc,
+        uptime,
+        hundred,
+        Term::Step("exert-uptime"),
+        true,
+    )?))
 }
 
 /// The weapon's values (module docs, step 8).
@@ -1438,20 +1526,31 @@ fn action_speed(
 fn double_damage(
     calc: &mut Calc<'_>,
     cx: &QueryContext,
+    uptime: Option<Valued>,
     reasons: &mut Reasons,
 ) -> Result<Option<Valued>, CalcError> {
     let quantity = Quantity::Poe1(Poe1Quantity::DoubleDamageChance);
-    if !phases::has(calc, quantity) {
+    let has = phases::has(calc, quantity);
+    if !has && uptime.is_none() {
         return Ok(None);
     }
-    let chance = sum_in(
-        calc,
-        quantity,
-        Op::Base,
-        cx,
-        Term::Step("double-damage-chance"),
-        reasons,
-    )?;
+    let mut chance = if has {
+        sum_in(
+            calc,
+            quantity,
+            Op::Base,
+            cx,
+            Term::Step("double-damage-chance"),
+            reasons,
+        )?
+    } else {
+        phases::constant(calc, "no-double-damage-chance", 0.0)?
+    };
+    // `DoubleDamageChance + IntimidatingUpTimeRatio` (`CalcOffence.lua`
+    // 3200 to 3201), capped below.
+    if let Some(u) = uptime {
+        chance = phases::total(calc, &[chance, u], Term::Step("exerted-double-damage"))?;
+    }
     let hundred = phases::constant(calc, "hundred", 100.0)?;
     let chance = phases::pair(
         calc,
@@ -1737,6 +1836,9 @@ struct HitShape<'a> {
     /// `CritInPast8Sec` condition before the hit's damage
     /// (`CalcOffence.lua` 3184; [`keystones::CRIT_IN_PAST_8_SEC`], P3-8m).
     crit_recently: bool,
+    /// Intimidating Cry's exerted attacks' uptime, percent, which PoB adds
+    /// to the double damage chance (close-out; [`intimidating_uptime`]).
+    exert_uptime: Option<Valued>,
 }
 
 /// The skill's conversion table (module docs, step 2), when it converts:
@@ -1763,9 +1865,14 @@ fn conversion(
     };
     let global_q =
         |from: usize, to: usize| Quantity::Poe1(Poe1Quantity::Conversion(TYPES[from], TYPES[to]));
+    let gain_q =
+        |from: usize, to: usize| Quantity::Poe1(Poe1Quantity::GainAs(TYPES[from], TYPES[to]));
     let any = (0..4).any(|from| {
-        (from + 1..5)
-            .any(|to| phases::has(calc, skill_q(from, to)) || phases::has(calc, global_q(from, to)))
+        (from + 1..5).any(|to| {
+            phases::has(calc, skill_q(from, to))
+                || phases::has(calc, global_q(from, to))
+                || phases::has(calc, gain_q(from, to))
+        })
     });
     if !any {
         return Ok(None);
@@ -1788,6 +1895,16 @@ fn conversion(
     for from in 0..4 {
         let mut skill = Vec::new();
         let mut global = Vec::new();
+        // Gain as extra (close-out): `add[to] = m_max(Sum(BASE, cfg,
+        // <From>DamageGainAs<To>), 0)`; `dmgTable[to] = (globalConv +
+        // skillConv + add) / 100`, the kept share unchanged (PoB v2.67.2,
+        // `CalcOffence.lua` 1976, 2002).
+        let mut gain = Vec::new();
+        for to in from + 1..5 {
+            if phases::has(calc, gain_q(from, to)) {
+                gain.push((to, floored(calc, gain_q(from, to), "gain-as", reasons)?));
+            }
+        }
         for to in from + 1..5 {
             if phases::has(calc, skill_q(from, to)) {
                 skill.push((
@@ -1803,6 +1920,16 @@ fn conversion(
             }
         }
         if skill.is_empty() && global.is_empty() {
+            // Gain alone: its share, nothing converted.
+            let hundred = phases::constant(calc, "hundred", 100.0)?;
+            for (to, value) in gain {
+                table.share[from][to] = Some(quotient(
+                    calc,
+                    value,
+                    hundred,
+                    Term::Step("conversion-share"),
+                )?);
+            }
             continue;
         }
         let parts: Vec<Valued> = skill.iter().map(|(_, v)| *v).collect();
@@ -1821,10 +1948,23 @@ fn conversion(
             } else {
                 None
             };
+            let mut converted_to = [None; 5];
             for (to, value) in skill {
                 let value = match factor {
                     Some(f) => phases::product(calc, &[value, f], Term::Step("conversion-scaled"))?,
                     None => value,
+                };
+                converted_to[to] = Some(value);
+            }
+            for (to, converted) in converted_to.iter().enumerate().skip(from + 1) {
+                let g = gain.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
+                let value = match (*converted, g) {
+                    (None, None) => continue,
+                    (Some(k), None) => k,
+                    (None, Some(g)) => g,
+                    (Some(k), Some(g)) => {
+                        phases::total(calc, &[k, g], Term::Step("conversion-and-gain"))?
+                    }
                 };
                 table.share[from][to] = Some(quotient(
                     calc,
@@ -1879,11 +2019,24 @@ fn conversion(
         for to in from + 1..5 {
             let g = global.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
             let k = skill.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
-            let value = match (g, k) {
-                (None, None) => continue,
-                (Some(g), None) => phases::total(calc, &[g, zero], Term::Step("conversion-sum"))?,
-                (None, Some(k)) => phases::total(calc, &[zero, k], Term::Step("conversion-sum"))?,
-                (Some(g), Some(k)) => phases::total(calc, &[g, k], Term::Step("conversion-sum"))?,
+            let a = gain.iter().find(|(t, _)| *t == to).map(|(_, v)| *v);
+            let value = match (g, k, a) {
+                (None, None, None) => continue,
+                (None, None, Some(a)) => a,
+                (Some(g), None, None) => {
+                    phases::total(calc, &[g, zero], Term::Step("conversion-sum"))?
+                }
+                (None, Some(k), None) => {
+                    phases::total(calc, &[zero, k], Term::Step("conversion-sum"))?
+                }
+                (Some(g), Some(k), None) => {
+                    phases::total(calc, &[g, k], Term::Step("conversion-sum"))?
+                }
+                (g, k, Some(a)) => {
+                    let g = g.unwrap_or(zero);
+                    let k = k.unwrap_or(zero);
+                    phases::total(calc, &[g, k, a], Term::Step("conversion-sum"))?
+                }
             };
             table.share[from][to] = Some(quotient(
                 calc,
@@ -2066,7 +2219,7 @@ fn passes(
         ratio(shape.level.base_multiplier),
     )?;
     let conversion = conversion(calc, &cx, reasons)?;
-    let scaled = double_damage(calc, &cx, reasons)?;
+    let scaled = double_damage(calc, &cx, shape.exert_uptime, reasons)?;
     let taken = enemy_damage_taken(calc, &cx, reasons)?;
     let mut bases: [Option<[Valued; 2]>; 5] = [None; 5];
     let mut zero: Option<Valued> = None;

@@ -112,8 +112,19 @@ fn check(set: Option<&ConfigSet>, input: &str) -> Result<bool, ()> {
 
 /// Arcane Surge's cast speed (module docs), with the check on.
 fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    // An Arcane Surge Support's buff (`poe1::gems`, close-out): its cast
+    // speed is a gem's effect; its source is that gem.
+    let support = ingest
+        .effects()
+        .iter()
+        .find(|e| {
+            e.quantity == Quantity::Poe1(Poe1Quantity::ArcaneSurgeCastSpeed)
+                && matches!(e.source, Source::Gem { .. })
+        })
+        .map(|e| e.source.clone());
     // A value of another type: `conditions::handles` leaves it a reason.
-    if check(set, ARCANE_SURGE_INPUT) != Ok(true) {
+    let checked = check(set, ARCANE_SURGE_INPUT) == Ok(true);
+    if !checked && support.is_none() {
         return;
     }
     let speed = ingest
@@ -134,8 +145,12 @@ fn arcane_surge(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
         op: Op::Increased,
         value: speed,
         conditions: Conditions::none().with_all(Flags::CAST),
-        source: Source::Config {
-            input: ARCANE_SURGE_INPUT.to_owned(),
+        source: if checked {
+            Source::Config {
+                input: ARCANE_SURGE_INPUT.to_owned(),
+            }
+        } else {
+            support.unwrap_or(Source::Rule("arcane-surge"))
         },
     });
 }

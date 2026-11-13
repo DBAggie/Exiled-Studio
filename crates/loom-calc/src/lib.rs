@@ -50,5 +50,5 @@ pub use input::{
 pub use quantity::{Bound, DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};
 pub use source::Source;
-pub use state::{FieldState, IndeterminateReason, Reasons, StateKind, UnsupportedReason};
+pub use state::{FieldState, IndeterminateReason, Note, Reasons, StateKind, UnsupportedReason};
 pub use store::{Effect, ModStore, Query};

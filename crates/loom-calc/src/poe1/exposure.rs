@@ -42,9 +42,11 @@
 //! a hit adds their sum to the enemy's base resistance ([`super::hit`]).
 //! The check alone, without a chance, gives nothing, as in PoB.
 //!
-//! Only the config's exposure is on the enemy: every other exposure (a
-//! skill's, a stronger one, Elemental Equilibrium's), the minimum
-//! override, and the stats that would make the -10 not the strongest are
+//! The config's exposure, each exposure on hit (P3-8n), and a modelled
+//! skill's debuff ([`Poe1Quantity::SkillExposure`], Frost Bomb's; Phase 3
+//! close-out) are the candidates; the strongest wins. Every other exposure
+//! (Elemental Equilibrium's, an unmodelled skill's), the minimum override,
+//! and the stats that would change them are
 //! [`DEPENDS_ON`]: they stay reasons, so with one of them the hit fields
 //! stay `Partial` and the sum is exact. So are the fire and lightning
 //! "with Fire (Lightning) Damage" chances: PoB reads them through its
@@ -342,6 +344,18 @@ pub fn exposure(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             conditions: Conditions::none(),
             source: e.source.clone(),
         }));
+        // A skill's debuff (Frost Bomb's, `poe1::gems`; close-out): PoB's
+        // enemy `<Type>Exposure` mods, after the config's and the hits'.
+        let skill: Vec<Effect> = bases(ingest, Poe1Quantity::SkillExposure(t))
+            .map(|e| Effect {
+                quantity: Quantity::Poe1(Poe1Quantity::EnemyResistance(t)),
+                op: Op::Base,
+                value: e.value,
+                conditions: Conditions::none(),
+                source: e.source.clone(),
+            })
+            .collect();
+        candidates.extend(skill);
         // The strongest: PoB keeps the first strictly lowest (3572 to
         // 3577).
         let Some(strongest) = candidates

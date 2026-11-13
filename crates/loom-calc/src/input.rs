@@ -7,8 +7,8 @@ use std::collections::BTreeMap;
 use loom_data::bundle::Bundle;
 pub use loom_data::bundle::passives::StatAmount;
 pub use loom_data::bundle::skills::{
-    ActiveSkill, EffectLevel, GemEffect, GrantedEffect, Reservation, Resource, SkillGem, StatSet,
-    StatSetLevel,
+    ActiveSkill, EffectLevel, FloatStat, GemEffect, GrantedEffect, Reservation, Resource, SkillGem,
+    StatSet, StatSetLevel,
 };
 use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
 

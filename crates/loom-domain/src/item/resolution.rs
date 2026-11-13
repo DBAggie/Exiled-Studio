@@ -74,6 +74,22 @@ pub enum TypedResolution {
         /// allows a decimal part).
         quality: String,
     },
+    /// `custom-note` (ADR-015 Amendment 2): a custom modifier line of a
+    /// config set that is a label or a comment, not a modifier: it matches
+    /// no stat description and no curated pattern, and the note rule
+    /// recognizes it (no digit, or a comment marker first). It has no
+    /// effect; it is kept and shown.
+    CustomNote,
+    /// `custom-pattern` (ADR-015 Amendment 2): a custom modifier line of a
+    /// config set that matches no stat description but one of the curated
+    /// patterns that read it as PoB's parser does.
+    CustomPattern {
+        /// The pattern's name (`more-damage`).
+        pattern: String,
+        /// The value as the line shows it (a plain number, possibly with a
+        /// decimal part; a pattern of "less" negates it when applied).
+        value: String,
+    },
 }
 
 impl TypedResolution {
@@ -84,6 +100,8 @@ impl TypedResolution {
             Self::GrantedSkill { .. } => "granted-skill",
             Self::ItemProperty { .. } => "item-property",
             Self::CatalystQuality { .. } => "catalyst-quality",
+            Self::CustomNote => "custom-note",
+            Self::CustomPattern { .. } => "custom-pattern",
         }
     }
 }

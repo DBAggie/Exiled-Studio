@@ -24,6 +24,7 @@ pub mod build;
 pub mod bundle;
 pub mod grafts;
 pub mod mods;
+pub mod poe1;
 pub mod properties;
 pub mod tolerance;
 

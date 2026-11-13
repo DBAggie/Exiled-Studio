@@ -49,6 +49,9 @@ pub const AT_CLOSE_RANGE: &str = "AtCloseRange";
 pub const ENEMY_FULL_LIFE: &str = "Enemy:FullLife";
 /// "against Unique Enemies": the enemy's `RareOrUnique`.
 pub const ENEMY_RARE_OR_UNIQUE: &str = "Enemy:RareOrUnique";
+/// "if you've dealt a Critical Strike Recently" (PoB's `CritRecently`,
+/// from `conditionCritRecently`, `ConfigOptions.lua` 1240; close-out).
+pub const CRIT_RECENTLY: &str = "CritRecently";
 /// "while you have Arcane Surge" (PoB's `AffectedByArcaneSurge`).
 pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 
@@ -57,6 +60,7 @@ pub const ARCANE_SURGE: &str = "AffectedByArcaneSurge";
 pub const CHECKS: &[(&str, &str)] = &[
     ("buffArcaneSurge", ARCANE_SURGE),
     ("conditionAtCloseRange", AT_CLOSE_RANGE),
+    ("conditionCritRecently", CRIT_RECENTLY),
     ("conditionEnemyFullLife", ENEMY_FULL_LIFE),
     ("conditionEnemyRareOrUnique", ENEMY_RARE_OR_UNIQUE),
     ("conditionShatteredEnemyRecently", SHATTERED_ENEMY_RECENTLY),
@@ -90,6 +94,15 @@ pub fn settle(input: &CalcInput<'_>, out: &mut BTreeMap<ConditionKey, bool>) {
             && enemy::enemy(input.build, input.data).kind != BossKind::None
         {
             value = value.map(|_| true);
+        }
+        // An Arcane Surge Support's buff gives Arcane Surge too
+        // (`poe1::gems::arcane_surge_support`; close-out).
+        if condition == ARCANE_SURGE {
+            // Gem levels do not decide which supports apply.
+            let levels = super::gem_levels::GemLevels::none();
+            if super::gems::arcane_surge_support(input, &levels) {
+                value = Some(true);
+            }
         }
         if let Some(v) = value {
             out.insert(ConditionKey::new(condition), v);

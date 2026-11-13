@@ -224,6 +224,26 @@ pub enum Poe1Quantity {
     /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
     /// node's hash; `collect` adds the node's stats.
     GrantedPassive,
+    /// "#% increased Effect of Buffs granted by your Golems" (PoB's
+    /// `BuffEffect` INC tagged with the `Golem` skill type; P3-close):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for golem skills'
+    /// buffs.
+    GolemBuffEffect,
+    /// "#% increased Effect of your Curses" (PoB's `CurseEffect` INC;
+    /// P3-close): `Increased`, read by [`skill_modifiers::Totals`] for
+    /// curse gems' effect on the enemy.
+    CurseEffect,
+    /// A skill's exposure on the enemy (PoB's enemy `<Type>Exposure` BASE
+    /// from a debuff, for example Frost Bomb's; P3-close): `Base`, read by
+    /// [`exposure`], which keeps the strongest.
+    SkillExposure(DamageType),
+    /// Damage of the first type gained as extra damage of the second (PoB's
+    /// `<From>DamageGainAs<To>` BASE; P3-close): `Base`, percent, read by
+    /// [`hit`]'s conversion table.
+    GainAs(DamageType, DamageType),
+    /// Intimidating Cry's terms for its exerted attacks' uptime
+    /// ([`gems::WarcryValue`]; close-out): `Base`, read by [`hit`].
+    IntimidatingCry(gems::WarcryValue),
 }
 
 /// A pool a skill reserves.
@@ -382,6 +402,11 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
             Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
             Self::GrantedPassive => f.write_str("granted-passive"),
+            Self::GolemBuffEffect => f.write_str("golem-buff-effect"),
+            Self::CurseEffect => f.write_str("curse-effect"),
+            Self::SkillExposure(t) => write!(f, "skill-exposure.{}", t.name()),
+            Self::GainAs(from, to) => write!(f, "gain-as.{}.{}", from.name(), to.name()),
+            Self::IntimidatingCry(v) => write!(f, "intimidating-cry.{}", v.name()),
         }
     }
 }
