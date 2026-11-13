@@ -94,12 +94,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   damage: without that modifier, nothing.
 /// - `conditionCritRecently`: `Condition:CritRecently` and
 ///   `Condition:SkillCritRecently` (line 1251).
-/// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: the enemy's
-///   `Condition:Chilled`, `Condition:ChilledConfig`, `ChillVal`, and
-///   `DesiredChillVal` (never read) (lines 1899, 1907). `CalcPerform.lua` (3527) gives a chilled enemy less
-///   action speed (not a slice field); damage taken only with a modifier's
-///   flag (`ChillEffectIncDamageTaken` and the others, `ModParser.lua`
-///   3877) or Bonechill's skill data (a gem).
+/// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
+///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
+///   taken when a modifier's flag asks for it.
 /// - `conditionEnemyOnConsecratedGround`: the enemy's
 ///   `Condition:OnConsecratedGround` (line 2012); `CalcPerform.lua`
 ///   (3688) adds damage taken from `DamageTakenConsecratedGround`, which
@@ -251,14 +248,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ),
     ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
     (
-        "conditionEnemyChilled",
-        &["enemy Condition:Chilled", "enemy Condition:ChilledConfig"],
-    ),
-    (
-        "conditionEnemyChilledEffect",
-        &["enemy ChillVal", "enemy DesiredChillVal"],
-    ),
-    (
         "conditionEnemyIgnited",
         &["enemy Condition:Ignited", "enemy Condition:Burning"],
     ),
@@ -365,18 +354,11 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 /// - `consecrated_ground_enemy_damage_taken_+%`: the enemy's
 ///   `DamageTakenConsecratedGround`; `your_consecrated_ground_grants_
 ///   accuracy_rating_+%`: `ConsecratedGroundAlsoAccuracy` (4176).
-/// - `enemies_chilled_by_hits_take_damage_increased_by_chill_effect`,
-///   `keystone_cold_purist`: chill's damage taken flags (3877 to 3879).
 /// - `gain_convergence_on_hitting_unique_enemy`:
 ///   `Condition:CanGainConvergence` (2680).
-/// - `support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount`,
-///   `support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount`:
-///   Bonechill's stats. PoB's effect is the gem's skill data
-///   (`supportBonechill`, `Data/Skills/sup_int.lua` 560; `CalcPerform.lua`
-///   3536: cold damage taken equal to the configured chill), and its stat
-///   map ignores these two stats, so they are the only trace the engine
-///   sees: classifying them as `NoEffect` would make
-///   `conditionEnemyChilled` silent.
+/// - Chill's damage taken flags and Bonechill's stats: moved in P3-8m to
+///   [`super::keystones`], [`super::damage_taken::CHILL_STATS`] (mapped),
+///   and [`super::damage_taken::CHILL_DEPENDS_ON`], with the chill inputs.
 ///
 /// Added in P3-12b:
 ///
@@ -433,7 +415,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
     "consecrated_ground_enemy_damage_taken_+%",
     "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
-    "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
     "gain_1_rage_on_use_%_chance",
@@ -462,7 +443,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "ignites_apply_fire_resistance_+",
     "impale_effect_+%_max_as_distance_travelled_increases",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
-    "keystone_cold_purist",
     "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
@@ -483,8 +463,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "shield_crush_damage_+%_final_from_distance",
     "slayer_damage_+%_final_from_distance",
     "spell_block_is_maximum_if_not_blocked_recently",
-    "support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
-    "support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
     "support_rage_gain_rage_on_melee_hit_cooldown_ms",
     "support_slashing_damage_+%_final_from_distance",
     "warcry_grant_X_rage_per_5_power",

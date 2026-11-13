@@ -560,10 +560,12 @@ pub fn gems(
                 };
                 if reserves(&s.types) {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
-                        source,
+                        source: source.clone(),
                         what: "reservation",
                     });
                 }
+                // PoB's skill list holds the main skill too.
+                guaranteed_chill(&s.types, source, ingest);
                 socket_reasons(g, s, ingest);
                 continue;
             }
@@ -604,6 +606,7 @@ fn one_skill(
     if s.global_off && matches!(kind, Kind::Buff { .. }) {
         return;
     }
+    guaranteed_chill(&s.types, active_source.clone(), ingest);
     let mut supported = true;
     for sup in &s.supports {
         if support(&sup.effect.id).is_none() {
@@ -700,6 +703,45 @@ fn socket_reasons(g: usize, s: &GroupSkill<'_>, ingest: &mut Ingest<'_>) {
 /// not `ReservationBecomesCost`, `CalcPerform.lua` 1940).
 fn reserves(types: &std::collections::BTreeSet<String>) -> bool {
     types.contains("HasReservation") && !types.contains("ReservationBecomesCost")
+}
+
+/// The skill type that gives a guaranteed chill whatever the skill's
+/// modifiers (PoB's `ChillingArea`, `CalcPerform.lua` 1393).
+pub const CHILLING_AREA: &str = "ChillingArea";
+
+/// The skill type that gives one unless the skill cannot chill (PoB's
+/// `NonHitChill` without the `CannotChill` flag).
+pub const NON_HIT_CHILL: &str = "NonHitChill";
+
+/// A skill's guaranteed chill (P3-8m; PoB's `ChillOverride`,
+/// `CalcPerform.lua` 1393 to 1399): a `ChillingArea` skill adds
+/// [`Poe1Quantity::SkillChill`] at the default chill, which
+/// [`super::damage_taken::chill`] scales by the character's chill effect
+/// (the skill's own gems carry none: the `data-parity` table
+/// `gem_effects` refuses `EnemyChillEffect` in a modelled skill or
+/// support). A `NonHitChill` skill without `ChillingArea` chills unless
+/// it cannot (`CannotChill`, from modifiers the engine does not read): a
+/// reason. Every modelled `NonHitChill` skill is also `ChillingArea` (a
+/// test).
+fn guaranteed_chill(
+    types: &std::collections::BTreeSet<String>,
+    source: Source,
+    ingest: &mut Ingest<'_>,
+) {
+    if types.contains(CHILLING_AREA) {
+        ingest.effect(Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::SkillChill),
+            op: Op::Base,
+            value: super::damage_taken::CHILL_DEFAULT,
+            conditions: Conditions::none(),
+            source,
+        });
+    } else if types.contains(NON_HIT_CHILL) {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source,
+            what: "guaranteed-chill",
+        });
+    }
 }
 
 /// The skill's reservation (module docs), one effect per pool and kind.

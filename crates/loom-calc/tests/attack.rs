@@ -949,3 +949,48 @@ fn minion_modifiers_should_reach_the_attack_through_their_redirects() {
     assert_eq!(s, speed);
     assert!(a > average, "{a} {average}");
 }
+
+/// Resolute Technique on an attack (P3-8m, `poe1::keystones`): its hits
+/// cannot be evaded, so the chance to hit is 100 whatever the enemy's
+/// evasion (PoB's `CannotBeEvaded`: `AccuracyHitChance = 100`), and it
+/// never crits (crit chance and multiplier 0).
+#[test]
+fn resolute_technique_should_always_hit_and_never_crit() {
+    let evasive = [
+        ("enemyArmour", 0.0),
+        ("enemyEvasion", 1000.0),
+        ("enemyLightningResist", 0.0),
+    ];
+    let rt = |enemy: &[(&str, f64)]| {
+        let b = with_lines(
+            build("Smite", Some("1"), &AXE, enemy),
+            1,
+            &[("resolute_technique", 1)],
+        );
+        run(&b, &AXE)
+    };
+    let r = rt(&evasive);
+    for f in [
+        Field::HitChance,
+        Field::CritChance,
+        Field::CritMultiplier,
+        Field::AverageDamage,
+    ] {
+        assert!(partial(&r, f).is_empty(), "{f}");
+    }
+    assert_eq!(value(&r, Field::HitChance), 100.0);
+    assert_eq!(value(&r, Field::CritChance), 0.0);
+    assert_eq!(value(&r, Field::CritMultiplier), 0.0);
+    // The same hit against an enemy that evades nothing.
+    let open = rt(&OPEN);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        value(&open, Field::AverageDamage).to_bits()
+    );
+    // Without it, against no evasion: 5% crits at 150%.
+    let base = run(&build("Smite", Some("1"), &AXE, &OPEN), &AXE);
+    assert_eq!(value(&base, Field::HitChance), 100.0);
+    let expected = value(&base, Field::AverageDamage) / (0.95 + 1.5 * 0.05);
+    let got = value(&open, Field::AverageDamage);
+    assert!((got - expected).abs() < 1e-9 * expected, "{got} {expected}");
+}

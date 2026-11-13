@@ -14,8 +14,10 @@
 //!   attack, spell, cast, hit, projectile, `div` and `mult`, other tags),
 //!   against the table's effects in the same form;
 //! - `blocked`: PoB's other mods whose name scales buffs or reservation,
-//!   sets an ailment's maximum, adds skill mods, or whose `SkillData` key
-//!   is not a display key (each a path the module docs exclude): none;
+//!   sets an ailment's maximum, scales or sets a chill (P3-8m: the
+//!   guaranteed chill reads the character's chill effect alone), adds
+//!   skill mods, or whose `SkillData` key is not a display key (each a
+//!   path the module docs exclude): none;
 //! - `types`: PoB's types (active skills) or added types (supports) a
 //!   modelled skill may not have (reservation for an inert skill, minions,
 //!   brands, warcries, triggers, totems, ...): none; `is_trigger`,
@@ -43,6 +45,10 @@ const BLOCKED_NAMES: &[&str] = &[
     "BuffEffect",
     "BuffEffectOnPlayer",
     "BuffEffectOnSelf",
+    "ChillBase",
+    "ChillMinimum",
+    "ChillOverride",
+    "EnemyChillEffect",
     "ExtraAura",
     "ExtraAuraEffect",
     "ExtraSkillMod",

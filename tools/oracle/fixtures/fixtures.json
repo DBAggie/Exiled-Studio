@@ -1231,6 +1231,36 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite with a normal Karui Maul, Precision and Clarity (auras reserving flat mana) and Haste (an aura reserving a percentage of mana), and custom lines: 10% increased effect of non-curse auras (Precision's, Haste's, and Smite's own aura scaled), 17% increased mana reservation efficiency, and 5% reduced reservation efficiency (P3-8l)."
+    },
+    {
+      "id": "smite-resolute-technique-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-resolute-technique-templar.xml",
+      "sha256": "befe038ecdbde0dd1fba02310d25fb9f92afdc0d4432b4bd684b3b11335c56da",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Karui Maul and the Resolute Technique keystone, against an enemy configured with 2000 evasion: its hits cannot be evaded (chance to hit 100) and never crit (crit chance and multiplier 0) (P3-8m)."
+    },
+    {
+      "id": "ice-nova-elemental-overload-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-elemental-overload-witch.xml",
+      "sha256": "05f2db5242dc138650501e0ca976ed5e4c8df821d2453b34549aee54cc7cef87",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the Elemental Overload keystone and a custom line adding 10 to 20 fire damage to spells: the spell can crit, so its cold and fire damage are 40% more, and its crits deal no extra damage (crit multiplier 1) (P3-8m)."
+    },
+    {
+      "id": "ice-nova-bitter-frost-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-bitter-frost-witch.xml",
+      "sha256": "975be99f7d475290ee3ade69846f015e0ab4974222532b50c443bfb22382326c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the Bitter Frost keystone, Frostblink in a second group, an enemy configured as chilled with an 8% effect, and custom lines adding 10 to 20 fire damage to spells and 25% increased effect of chill: Frostblink's guaranteed chill 10 x 1.25 is larger, so the enemy takes 12% increased cold damage, and the fire damage is not dealt (P3-8m)."
     }
   ]
 }

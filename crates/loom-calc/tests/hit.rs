@@ -265,6 +265,7 @@ impl Data {
                 active("strike", &["Attack", "Damage", "Melee"]),
                 active("aura", &["Spell", "Aura", "Buff", "HasReservation"]),
                 active("slam", &["Attack", "Damage", "Area", "Melee"]),
+                active("chilling", &["Spell", "Area", "Cold", "ChillingArea"]),
             ],
             gems,
             gem_effects,
@@ -295,13 +296,16 @@ impl Data {
 /// - `GroundSlam`: an inert attack;
 /// - `SupportFasterAttacks`: a support of every skill, cost multiplier
 ///   150, modelled;
-/// - `SupportTestMore` (above) supports a damaging skill: not modelled.
-const OTHER_GEMS: [&str; 5] = [
+/// - `SupportTestMore` (above) supports a damaging skill: not modelled;
+/// - `Frostblink`: an inert spell typed `ChillingArea` (P3-8m): a
+///   guaranteed chill.
+const OTHER_GEMS: [&str; 6] = [
     "Precision",
     "Haste",
     "Discipline",
     "GroundSlam",
     "SupportFasterAttacks",
+    "Frostblink",
 ];
 
 fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
@@ -335,6 +339,7 @@ fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
     sets.push(stat_set("Discipline", Vec::new(), Vec::new()));
     sets.push(stat_set("GroundSlam", Vec::new(), Vec::new()));
     sets.push(stat_set("SupportFasterAttacks", Vec::new(), Vec::new()));
+    sets.push(stat_set("Frostblink", Vec::new(), Vec::new()));
     let mut support = effect("SupportFasterAttacks", None, true, 0);
     support.allowed_types = Vec::new();
     support.levels[0].cost_multiplier = 150;
@@ -351,6 +356,7 @@ fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
         ),
         effect("GroundSlam", Some("slam"), false, 0),
         support,
+        effect("Frostblink", Some("chilling"), false, 0),
     ]
 }
 
@@ -1397,7 +1403,17 @@ fn custom_stat_line(stat: &str, value: i64) -> loom_domain::CustomModifierLine {
 
 /// Ice Nova with custom lines and config inputs.
 fn ice_nova_with(lines: &[(&str, i64)], inputs: &[(&str, ConfigValue)]) -> CalcResult {
-    let mut b = build(vec![group(&["IceNova"])]);
+    groups_with(vec![group(&["IceNova"])], lines, inputs)
+}
+
+/// These groups (the first the main one) with custom lines and config
+/// inputs.
+fn groups_with(
+    groups: Vec<SocketGroup>,
+    lines: &[(&str, i64)],
+    inputs: &[(&str, ConfigValue)],
+) -> CalcResult {
+    let mut b = build(groups);
     let mut set = ConfigSet {
         id: ConfigSetId(1),
         title: None,
@@ -2556,4 +2572,207 @@ fn skill_keyword_lines_should_need_the_skills_type() {
         ),
         &with_lines("TestPhysicalNova", &[]),
     );
+}
+
+// ---------------------------------------------------------------- P3-8m
+
+/// Resolute Technique and Elemental Overload on a spell (P3-8m,
+/// `poe1::keystones`): never crit gives a crit chance and multiplier of 0
+/// (PoB's `NeverCrit`); no extra crit damage a multiplier of 1
+/// (`NoCritMultiplier`); Elemental Overload's 40% more elemental damage
+/// needs a crit chance above 0 (`CritInPast8Sec`, set before the hit).
+#[test]
+fn keystones_should_change_the_spells_hit_as_pob_does() {
+    let complete = |r: &CalcResult| {
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+        }
+    };
+    let r = ice_nova_with(&[("resolute_technique", 1)], &[]);
+    complete(&r);
+    assert_eq!(value(&r, Field::CritChance), 0.0);
+    assert_eq!(value(&r, Field::CritMultiplier), 0.0);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 0.0, 0.0, 50.0).to_bits()
+    );
+    let r = ice_nova_with(&[("keystone_elemental_overload", 1)], &[]);
+    complete(&r);
+    assert_eq!(value(&r, Field::CritChance), 5.0);
+    assert_eq!(value(&r, Field::CritMultiplier), 1.0);
+    // round(100 x 1.4), round(200 x 1.4).
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(140.0, 280.0, 5.0, 1.0, 50.0).to_bits()
+    );
+    // Never crit: no crit in the past 8 seconds, so no more damage; the
+    // multiplier is 0 (`NeverCrit` first).
+    let r = ice_nova_with(
+        &[
+            ("keystone_elemental_overload", 1),
+            ("resolute_technique", 1),
+        ],
+        &[],
+    );
+    complete(&r);
+    assert_eq!(value(&r, Field::CritMultiplier), 0.0);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        average(100.0, 200.0, 0.0, 0.0, 50.0).to_bits()
+    );
+}
+
+/// Groups, custom lines, config inputs, and the cold damage taken
+/// expected.
+type ChillCase<'a> = (
+    Vec<SocketGroup>,
+    Vec<(&'a str, i64)>,
+    Vec<(&'a str, ConfigValue)>,
+    f64,
+);
+
+/// Bitter Frost (P3-8m): the hit deals no non-cold damage (added fire
+/// damage is skipped), and a chilled enemy takes cold damage increased by
+/// the chill: the configured effect, or a chilling skill's guaranteed
+/// chill (10 times the character's chill effect), the larger, at most 30,
+/// floored (PoB's `CalcPerform.lua` 1393 to 1399, 3438 to 3546).
+#[test]
+fn bitter_frost_should_chill_and_deal_only_cold_damage_as_pob_does() {
+    let on = || ConfigValue::Boolean(true);
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let chilled = |effect: f64| {
+        vec![
+            ("conditionEnemyChilled", on()),
+            ("conditionEnemyChilledEffect", n(effect)),
+        ]
+    };
+    let keystone = ("keystone_cold_purist", 1);
+    // Cold damage taken increased by `taken`.
+    let expected = |taken: f64| {
+        let effect = (1.0 + taken / 100.0) * (1.0 - 50.0 / 100.0);
+        let hit = (100.0 / 2.0 + 200.0 / 2.0) * effect;
+        let crit_hit = ((100.0 * 1.5) / 2.0 + (200.0 * 1.5) / 2.0) * effect;
+        let average_hit = hit * (1.0 - 5.0 / 100.0) + crit_hit * 5.0 / 100.0;
+        average_hit * 100.0 / 100.0
+    };
+    let nova = || group(&["IceNova"]);
+    let frostblink = || group(&["Frostblink"]);
+    let cases: Vec<ChillCase<'_>> = vec![
+        (vec![nova()], vec![keystone], chilled(20.0), 20.0),
+        // At most 30.
+        (vec![nova()], vec![keystone], chilled(40.0), 30.0),
+        // Chilled with no effect: 0.
+        (
+            vec![nova()],
+            vec![keystone],
+            vec![("conditionEnemyChilled", on())],
+            0.0,
+        ),
+        // The effect counts only with the check.
+        (
+            vec![nova()],
+            vec![keystone],
+            vec![("conditionEnemyChilledEffect", n(20.0))],
+            0.0,
+        ),
+        // Without the keystone the chill only slows.
+        (vec![nova()], vec![], chilled(20.0), 0.0),
+        // A chilling skill chills without the config: 10.
+        (vec![nova(), frostblink()], vec![keystone], vec![], 10.0),
+        // Scaled by the character's chill effect: 10 x 1.25, floored.
+        (
+            vec![nova(), frostblink()],
+            vec![keystone, ("chill_effect_+%", 25)],
+            vec![],
+            12.0,
+        ),
+        // The three effect stats add up: 10 x 1.65.
+        (
+            vec![nova(), frostblink()],
+            vec![
+                keystone,
+                ("chill_effect_+%", 5),
+                ("cold_ailment_effect_+%", 10),
+                ("non_damaging_ailment_effect_+%", 50),
+            ],
+            vec![],
+            16.0,
+        ),
+        // The larger of the configured and the guaranteed chill.
+        (
+            vec![nova(), frostblink()],
+            vec![keystone],
+            chilled(20.0),
+            20.0,
+        ),
+        (
+            vec![nova(), frostblink()],
+            vec![keystone],
+            chilled(5.0),
+            10.0,
+        ),
+        // A disabled group creates no skill.
+        (
+            vec![nova(), {
+                let mut g = frostblink();
+                g.enabled = false;
+                g
+            }],
+            vec![keystone],
+            vec![],
+            0.0,
+        ),
+        // "Damage taken increased by Chill Effect" acts on cold damage too.
+        (
+            vec![nova()],
+            vec![(
+                "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
+                1,
+            )],
+            chilled(20.0),
+            20.0,
+        ),
+    ];
+    for (groups, lines, inputs, taken) in cases {
+        let r = groups_with(groups, &lines, &inputs);
+        for f in HIT {
+            assert_eq!(
+                r.fields[&f].state,
+                FieldState::Complete,
+                "{f} {lines:?} {inputs:?}"
+            );
+        }
+        assert_eq!(
+            value(&r, Field::AverageDamage).to_bits(),
+            expected(taken).to_bits(),
+            "{lines:?} {inputs:?}"
+        );
+    }
+    // No non-cold damage: added fire damage is skipped.
+    let fire = [
+        ("spell_minimum_added_fire_damage", 10),
+        ("spell_maximum_added_fire_damage", 20),
+    ];
+    let with_fire = ice_nova_with(&fire, &[]);
+    assert!(value(&with_fire, Field::AverageDamage) > expected(0.0));
+    let r = ice_nova_with(&[fire[0], fire[1], keystone], &[]);
+    assert_eq!(r.fields[&Field::AverageDamage].state, FieldState::Complete);
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        expected(0.0).to_bits()
+    );
+    // Every type's damage taken: the fire damage takes it too.
+    let every = (
+        "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
+        1,
+    );
+    let r = ice_nova_with(&[fire[0], fire[1], every], &chilled(20.0));
+    let ratio = value(&r, Field::AverageDamage) / value(&with_fire, Field::AverageDamage);
+    assert!((ratio - 1.2).abs() < 1e-12, "{ratio}");
+    // A stat that would change the chill otherwise stays a reason.
+    let r = ice_nova_with(&[keystone, ("chill_minimum_slow_%", 20)], &chilled(10.0));
+    assert!(matches!(
+        r.fields[&Field::AverageDamage].state,
+        FieldState::Partial(_)
+    ));
 }
