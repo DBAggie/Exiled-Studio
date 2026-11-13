@@ -17,7 +17,7 @@
 //! carries its attribute's reasons (`Calc::set_derived`).
 
 use super::{ArmourSlot, Defence, PieceValue, Poe1Field, Poe1Quantity, Pool, ReservationKind};
-use crate::condition::QueryContext;
+use crate::condition::Flags;
 use crate::engine::{Calc, Phase};
 use crate::error::CalcError;
 use crate::graph::{Node, NodeIndex, Term};
@@ -94,7 +94,7 @@ fn chain(
     order: Order,
     term: Term,
 ) -> Result<ChainParts, CalcError> {
-    let cx = QueryContext::default();
+    let cx = super::states::context(calc.input(), Flags::NONE);
     let (store, graph) = calc.parts();
     let effects = store.sum(graph, quantity, Op::Base, &cx, Term::Step("base-effects"))?;
     let mut base = 0.0 + effects.value;
@@ -352,7 +352,7 @@ pub(super) fn sum(
     term: Term,
     reasons: &mut Reasons,
 ) -> Result<Valued, CalcError> {
-    let cx = QueryContext::default();
+    let cx = super::states::context(calc.input(), Flags::NONE);
     let (store, graph) = calc.parts();
     let q = store.sum(graph, quantity, op, &cx, term)?;
     reasons.extend(&q.reasons);
@@ -475,7 +475,7 @@ fn resistances(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         let mut reasons = Reasons::new();
         let quantity = Quantity::Resistance(t);
         let base = sum(calc, quantity, Op::Base, Term::Base, &mut reasons)?;
-        let cx = QueryContext::default();
+        let cx = super::states::context(calc.input(), Flags::NONE);
         let (store, graph) = calc.parts();
         let inc = store.increased(graph, quantity, &cx)?;
         let more = store.more(graph, quantity, &cx)?;
@@ -549,7 +549,7 @@ const SUPPRESSION_CHANCE_CAP: f64 = 100.0;
 /// block", block chance equal to another) come from stats the mapping
 /// does not know, which make the fields `Partial`.
 fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
-    let cx = QueryContext::default();
+    let cx = super::states::context(calc.input(), Flags::NONE);
     let mut reasons = Reasons::new();
     let shield_q = Quantity::Poe1(Poe1Quantity::Piece(ArmourSlot::Weapon2, PieceValue::Block));
     let mut base_terms = Vec::new();
@@ -680,7 +680,7 @@ fn defence_modifier(
     terms.extend(extra_inc);
     let inc = total(calc, &terms, Term::Step("increased-sum"))?;
     let inc = factor(calc, inc, Term::Increased)?;
-    let cx = QueryContext::default();
+    let cx = super::states::context(calc.input(), Flags::NONE);
     let (store, graph) = calc.parts();
     let more = store.more(graph, quantity, &cx)?;
     reasons.extend(&more.reasons);

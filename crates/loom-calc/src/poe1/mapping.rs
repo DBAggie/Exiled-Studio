@@ -13,9 +13,9 @@
 
 use loom_domain::StatId;
 
-use crate::condition::{Conditions, Flags};
+use crate::condition::{ConditionKey, Conditions, Flags};
 use crate::ingest::{EffectTemplate, StatMap, StatMapping};
-use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue};
+use crate::poe1::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, states};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 
 /// One mapped effect: what, how, and the scale per unit of the stat.
@@ -484,6 +484,82 @@ const BLOCK: Quantity = Quantity::BlockChance;
 const SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::SpellBlockChance);
 const MAX_SPELL_BLOCK: Quantity = Quantity::Poe1(Poe1Quantity::MaximumSpellBlockChance);
 const SUPPRESSION: Quantity = Quantity::Poe1(Poe1Quantity::SpellSuppressionChance);
+
+/// A stat that applies under a named condition the build settles
+/// ([`super::states`], P3-8f): `(stat, [(quantity, op, flags, condition)])`.
+type StateRow = (&'static str, &'static [(Quantity, Op, Flags, &'static str)]);
+
+/// The weapon-condition stats (P3-8f), sorted by stat ID, each read as PoB
+/// v2.67.2 reads its game text: "while wielding a Staff" is
+/// `{ type = "Condition", var = "UsingStaff" }` (`Modules/ModParser.lua`
+/// 1619), "while holding a Shield" `UsingShield` (1598, `while holding a
+/// (%w+)`); "to block attack damage" `BlockChance`, "to block spell
+/// damage" `SpellBlockChance`, "defences" `Defences` (energy shield,
+/// armour, evasion INC), "critical strike multiplier" `CritMultiplier`
+/// BASE (252, 365, 375, 748).
+pub const STATE_ROWS: &[StateRow] = &[
+    (
+        "defences_+%_while_wielding_staff",
+        &[
+            (
+                Quantity::EnergyShield,
+                Op::Increased,
+                NONE,
+                states::USING_STAFF,
+            ),
+            (Quantity::Armour, Op::Increased, NONE, states::USING_STAFF),
+            (Quantity::Evasion, Op::Increased, NONE, states::USING_STAFF),
+        ],
+    ),
+    (
+        "global_critical_strike_chance_+%_while_holding_staff",
+        &[(
+            Quantity::CritChance,
+            Op::Increased,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "global_critical_strike_multiplier_+_while_holding_staff",
+        &[(
+            Quantity::CritMultiplier,
+            Op::Base,
+            NONE,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "shield_spell_block_%",
+        &[(SPELL_BLOCK, Op::Base, NONE, states::USING_SHIELD)],
+    ),
+    (
+        "spell_block_with_staff_%",
+        &[(SPELL_BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+    (
+        "spell_damage_+%_while_holding_shield",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::SPELL,
+            states::USING_SHIELD,
+        )],
+    ),
+    (
+        "spell_staff_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            Flags::SPELL,
+            states::USING_STAFF,
+        )],
+    ),
+    (
+        "staff_block_%",
+        &[(BLOCK, Op::Base, NONE, states::USING_STAFF)],
+    ),
+];
 
 /// The mapped stats, sorted by stat ID (a test checks the order).
 ///
@@ -1169,6 +1245,23 @@ impl StatMapping for Poe1Mapping {
                         scale: 1.0,
                         divisor,
                         conditions: Conditions::none().with_all(all).with_any(any),
+                    })
+                    .collect(),
+            );
+        }
+        if let Ok(i) = STATE_ROWS.binary_search_by(|(id, _)| (*id).cmp(stat.as_str())) {
+            return StatMap::Effects(
+                STATE_ROWS[i]
+                    .1
+                    .iter()
+                    .map(|&(quantity, op, all, state)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale: 1.0,
+                        divisor: 1.0,
+                        conditions: Conditions::none()
+                            .with_all(all)
+                            .with_state(ConditionKey::new(state), true),
                     })
                     .collect(),
             );
@@ -2086,6 +2179,33 @@ mod tests {
         assert_eq!(
             Poe1Mapping.map(&StatId::new("local_attack_speed_+%")),
             StatMap::Unmapped
+        );
+    }
+
+    /// The condition rows (P3-8f) are sorted, disjoint from the other
+    /// tables, and read only conditions `states` settles.
+    #[test]
+    fn state_rows_should_read_settled_conditions_only() {
+        assert!(STATE_ROWS.windows(2).all(|w| w[0].0 < w[1].0));
+        for (id, rows) in STATE_ROWS {
+            assert!(!HIT_ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!ROWS.iter().any(|r| r.0 == *id), "{id}");
+            assert!(!NO_EFFECT.iter().any(|r| r.0 == *id), "{id}");
+            for (_, _, _, state) in *rows {
+                assert!(
+                    [states::USING_STAFF, states::USING_SHIELD].contains(state),
+                    "{id}: {state}"
+                );
+            }
+        }
+        let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new("spell_staff_damage_+%")) else {
+            panic!("spell_staff_damage_+%");
+        };
+        assert_eq!(
+            t[0].conditions,
+            Conditions::none()
+                .with_all(Flags::SPELL)
+                .with_state(ConditionKey::new(states::USING_STAFF), true)
         );
     }
 }

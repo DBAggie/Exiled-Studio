@@ -222,6 +222,12 @@ impl CalcData for Data {
                 attack_time: 0,
                 crit_chance: 500,
             })),
+            "Test Staff" => Some(ItemBase::Weapon(WeaponBase {
+                class: "Staff".to_owned(),
+                physical: Range { min: 10, max: 20 },
+                attack_time: 800,
+                crit_chance: 500,
+            })),
             "Test Shield" => Some(ItemBase::Armour(loom_calc::ArmourBase {
                 block: Some(20),
                 ..loom_calc::ArmourBase::default()
@@ -802,4 +808,47 @@ fn another_weapon_class_and_a_base_without_attack_time() {
         panic!("not indeterminate");
     };
     assert!(format!("{reasons:?}").contains("attack_time"));
+}
+
+/// Weapon conditions (P3-8f): "while wielding a Staff" and "while holding
+/// a Shield" apply as PoB's `UsingStaff` and `UsingShield` say; an off hand
+/// of unknown base leaves `UsingShield` unsettled, a reason.
+#[test]
+fn weapon_conditions_should_follow_the_hands() {
+    let staff = [("Weapon 1", "Test Staff")];
+    let axe = [("Weapon 1", "Test Axe")];
+    let shield = [("Weapon 1", "Test Axe"), ("Weapon 2", "Test Shield")];
+    let unknown = [("Weapon 1", "Test Axe"), ("Weapon 2", "Mystery Thing")];
+    let block = |slots: &[(&str, &str)], stat: &str, field: Field| {
+        let b = with_lines(build("Smite", Some("1"), slots, &OPEN), 1, &[(stat, 10)]);
+        let r = run(&b, slots);
+        let reasons = partial(&r, field);
+        // The test skill cannot use a staff (a gem reason); no condition
+        // reason is left where the hands are known.
+        let settled = !reasons.contains(&"unmodelled-condition");
+        (value(&r, field), settled, reasons)
+    };
+    // +10% block while wielding a staff: with the staff, not the axe.
+    assert_eq!(block(&staff, "staff_block_%", Field::BlockChance).0, 10.0);
+    assert_eq!(block(&axe, "staff_block_%", Field::BlockChance).0, 0.0);
+    // +10% spell block while holding a shield.
+    let (with_shield, settled, _) = block(
+        &shield,
+        "shield_spell_block_%",
+        Field::Poe1(loom_calc::poe1::Poe1Field::SpellBlockChance),
+    );
+    let (without, _, _) = block(
+        &axe,
+        "shield_spell_block_%",
+        Field::Poe1(loom_calc::poe1::Poe1Field::SpellBlockChance),
+    );
+    assert!(settled);
+    assert_eq!(with_shield - without, 10.0);
+    // An off hand the engine cannot read: the condition is not settled.
+    let (_, _, reasons) = block(
+        &unknown,
+        "shield_spell_block_%",
+        Field::Poe1(loom_calc::poe1::Poe1Field::SpellBlockChance),
+    );
+    assert!(reasons.contains(&"unmodelled-condition"), "{reasons:?}");
 }
