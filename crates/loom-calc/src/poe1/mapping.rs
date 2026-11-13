@@ -133,6 +133,11 @@ pub const HIT_ROWS: &[HitRow] = &[
         "additional_base_critical_strike_chance",
         &[(Quantity::CritChance, Op::Base, 100.0, NONE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 779: `Damage` INC with `ModFlag.Area` (P3-8e).
+    (
+        "area_damage_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, Flags::AREA, NONE)],
+    ),
     (
         "attack_and_cast_speed_+%",
         &[(Quantity::Speed, Op::Increased, 1.0, NONE, NONE)],
@@ -210,6 +215,13 @@ pub const HIT_ROWS: &[HitRow] = &[
             NONE,
             NONE,
         )],
+    ),
+    // "+#% to Critical Strike Multiplier for Spell Damage": PoB's
+    // `CritMultiplier` BASE with "for spell damage" (`ModFlag.Spell`,
+    // `ModParser.lua` 748, 968; P3-8e).
+    (
+        "base_spell_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
     (
         "cold_damage_+%",
@@ -740,7 +752,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field (96): `(stat, why)`, sorted by stat ID
+/// Stats that reach no slice field (101): `(stat, why)`, sorted by stat ID
 /// (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -812,6 +824,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
     ("avoid_maim_%_chance", "ailment-on-self"),
+    ("base_aura_area_of_effect_+%", "area"),
     ("base_avoid_freeze_%", "ailment-on-self"),
     ("base_avoid_projectiles_%_chance", "avoidance"),
     ("base_chance_to_freeze_%", "freeze"),
@@ -827,6 +840,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("base_movement_velocity_+%", "movement-speed"),
     // A skill's effect duration (Smite's aura lasts this long after a hit;
     // PoB keeps the aura up).
+    ("base_skill_area_of_effect_+%", "area"),
     ("base_skill_effect_duration", "skill-duration"),
     ("base_smite_number_of_targets", "targeting"),
     ("base_stun_duration_+%", "stun"),
@@ -942,6 +956,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "life_regeneration_rate_per_minute_per_level",
         "regeneration",
     ),
+    ("light_radius_+%", "light-radius"),
     ("lightning_ailment_duration_+%", "ailment-duration"),
     // "Gems Socketed always have the Quality bonus from Socket Colour":
     // its effect is the gems' quality, `poe1::sockets` (P3-12i).
@@ -1017,6 +1032,7 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
     ("smite_lightning_target_range", "targeting"),
     // Melee Physical Damage's more damage with poison and bleeding: no
     // ailment is in the slice.
+    ("spell_area_of_effect_+%", "area"),
     (
         "support_melee_physical_damage_poison_and_bleeding_damage_+%_final_from_melee_hits",
         "ailment-damage",
@@ -1068,6 +1084,22 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "dominating_blow_and_absolution_additive_minion_damage_modifiers_apply_to_you_at_150%_value",
         "minion_damage_+%",
+    ),
+    (
+        "light_radius_additive_modifiers_apply_to_damage",
+        "light_radius_+%",
+    ),
+    (
+        "light_radius_increases_apply_to_accuracy",
+        "light_radius_+%",
+    ),
+    (
+        "maximum_added_fire_damage_to_attacks_per_1%_light_radius",
+        "light_radius_+%",
+    ),
+    (
+        "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
+        "light_radius_+%",
     ),
     (
         "minion_damage_increases_and_reductions_also_affects_you",

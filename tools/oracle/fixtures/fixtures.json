@@ -1091,6 +1091,16 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml without the power charge check, with +2 minimum power charges and spell damage per power charge: two charges (P3-8d)."
+    },
+    {
+      "id": "ice-nova-area-spell-crit-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-area-spell-crit-witch.xml",
+      "sha256": "71438d1a1dc04579861cd97a7acbb91bec83c836ca36f8417f9b97e34aad2e2c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines: 20% increased area damage, +30% critical strike multiplier for spell damage, and four stats that reach no slice field (area of effect, spell and aura area of effect, light radius) (P3-8e)."
     }
   ]
 }
