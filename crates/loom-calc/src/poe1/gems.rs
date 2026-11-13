@@ -491,10 +491,13 @@ type Merged = BTreeMap<(&'static str, &'static str, usize), (f64, Source, HitEff
 /// Adds the other gems' reservation and buffs, and their reasons (module
 /// docs). `main` is the main skill's group (0-based) and active effect
 /// when the engine computes its hit, which acts through its own path.
+/// `totals` are the reservation and aura effect modifiers
+/// ([`skill_modifiers::Totals::read`], once every source of them is in).
 pub fn gems(
     input: &CalcInput<'_>,
     main: Option<(usize, &MainSkill<'_>)>,
     levels: &GemLevels,
+    totals: &Totals,
     ingest: &mut Ingest<'_>,
 ) {
     let build = input.build;
@@ -506,9 +509,6 @@ pub fn gems(
         .ok()
         .map(|m| m.group - 1);
     let matches = sockets::socket_matches(build, &groups, input.data);
-    // Every source of the modifiers is in: `collect` runs this after the
-    // passives, items, and config.
-    let totals = Totals::read(ingest);
     let mut merged: Merged = BTreeMap::new();
     for (g, group) in groups.iter().enumerate() {
         let slot = group.slot.as_ref().map(|s| s.as_str());
@@ -567,7 +567,7 @@ pub fn gems(
                 socket_reasons(g, s, ingest);
                 continue;
             }
-            one_skill(input, g, s, &totals, &mut merged, ingest);
+            one_skill(input, g, s, totals, &mut merged, ingest);
         }
     }
     // Buffs in name order, each stat in ID order, each row in order.

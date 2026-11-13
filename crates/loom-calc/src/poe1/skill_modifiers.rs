@@ -140,6 +140,10 @@ pub struct Totals {
     pub reserved: f64,
     /// `AuraEffect` INC of non-curse aura skills.
     pub aura_effect: f64,
+    /// An effect of these quantities that [`Self::read`] cannot sum (a
+    /// condition, another op, a pool's `Reserved`): no row makes one (a
+    /// test), so a later row that does is a reason, not a silent drop.
+    pub unread: bool,
 }
 
 /// A skill's reservation terms for one pool (PoB's `values`, module docs).
@@ -161,15 +165,12 @@ impl ReservationTerms {
 
 impl Totals {
     /// The sums of the unconditional `Increased` effects ingested so far.
-    /// Every row is unconditional (a test), so a condition can only come
-    /// from a later row, which must bring its handling here.
+    /// Every row is unconditional (a test); any other effect of these
+    /// quantities sets [`Self::unread`].
     #[must_use]
     pub fn read(ingest: &Ingest<'_>) -> Self {
         let mut t = Self::default();
         for e in ingest.effects() {
-            if e.op != Op::Increased || e.conditions != Conditions::none() {
-                continue;
-            }
             let Quantity::Poe1(q) = e.quantity else {
                 continue;
             };
@@ -179,8 +180,16 @@ impl Totals {
                 Poe1Quantity::ReservationEfficiency(Some(Pool::Mana)) => &mut t.mana_efficiency,
                 Poe1Quantity::Reserved(None) => &mut t.reserved,
                 Poe1Quantity::NonCurseAuraEffect => &mut t.aura_effect,
+                Poe1Quantity::Reserved(Some(_)) => {
+                    t.unread = true;
+                    continue;
+                }
                 _ => continue,
             };
+            if e.op != Op::Increased || e.conditions != Conditions::none() {
+                t.unread = true;
+                continue;
+            }
             *sum += e.value;
         }
         t
@@ -233,7 +242,8 @@ pub fn scale(quantity: Quantity, op: Op, value: f64, scale: f64) -> f64 {
         (crate::math::floor(value) != value).then_some(1)
     });
     if let Some(p) = precision {
-        let power = 10f64.powi(i32::from(p));
+        // Exact powers, as literals (no platform `powi`).
+        let power = if p == 1 { 10.0 } else { 100.0 };
         return crate::math::floor(value * scale * power) / power;
     }
     // `m_modf(round(value x scale, 2))`: the integer part, toward zero.
@@ -287,8 +297,8 @@ pub fn main_skill_stat(effect: &str, stat: &str, value: i64, buff_scale: f64) ->
 }
 
 /// One skill's reservation of one pool, as PoB computes it (module docs):
-/// the flat amount and the percent. `None` when the efficiency is -100,
-/// where PoB divides by 0.
+/// the flat amount and the percent. `None` when PoB would divide by 0: an
+/// efficiency of -100 on a base it reserves (with `inc` above -100).
 #[must_use]
 pub fn reserved(
     flat: i64,
@@ -302,14 +312,15 @@ pub fn reserved(
     )]
     let (flat, percent) = (flat as f64, percent_hundredths as f64 / 100.0);
     let ReservationTerms { inc, efficiency } = terms;
-    if efficiency <= -100.0 {
-        return None;
-    }
     // `values.more` and `efficiencyMore` are 1: every MORE stat is a
     // reason.
     let (more, efficiency_more) = (1.0, 1.0);
     let applies = more > 0.0 && inc > -100.0;
     let flat_value = crate::math::floor(flat * mult);
+    let percent_value = percent * mult;
+    if applies && efficiency <= -100.0 && (flat_value != 0.0 || percent_value != 0.0) {
+        return None;
+    }
     let reserved_flat = if !applies || flat_value == 0.0 {
         0.0
     } else {
@@ -318,7 +329,6 @@ pub fn reserved(
             / efficiency_more;
         crate::math::max(crate::math::round_half_up(x), 0.0)
     };
-    let percent_value = percent * mult;
     let reserved_percent = if !applies || percent_value == 0.0 {
         0.0
     } else {
@@ -419,8 +429,14 @@ mod tests {
         assert_eq!(reserved(25, 0, 1.0, eff(30.0)), Some((19.0, 0.0)));
         // A negative efficiency raises it: 35% / 0.9 = 38.888... to 38.89.
         assert_eq!(reserved(0, 3500, 1.0, eff(-10.0)), Some((0.0, 38.89)));
-        // At -100 PoB divides by 0.
+        // At -100 PoB divides by 0, unless it reserves nothing anyway.
         assert_eq!(reserved(0, 3500, 1.0, eff(-100.0)), None);
+        assert_eq!(reserved(0, 0, 1.0, eff(-100.0)), Some((0.0, 0.0)));
+        let gone = ReservationTerms {
+            inc: -100.0,
+            efficiency: -100.0,
+        };
+        assert_eq!(reserved(30, 3500, 1.0, gone), Some((0.0, 0.0)));
         // `inc` multiplies, and at -100 or below the skill reserves nothing.
         let inc = |inc| ReservationTerms {
             inc,
@@ -444,6 +460,7 @@ mod tests {
             mana_efficiency: 10.0,
             reserved: -4.0,
             aura_effect: 0.0,
+            unread: false,
         };
         assert_eq!(
             t.reservation(Pool::Mana),
@@ -571,6 +588,23 @@ mod tests {
         assert_eq!(t.mana_efficiency, 20.0);
         assert_eq!(t.aura_effect, 10.0);
         assert_eq!(t.efficiency, 0.0);
+        // The MORE effect is not summed: it is unread.
+        assert!(t.unread);
+        let mut plain = Ingest::new(&Poe1Mapping);
+        plain.effect(effect(
+            Poe1Quantity::Reserved(None),
+            Op::Increased,
+            -8.0,
+            Conditions::none(),
+        ));
+        assert!(!Totals::read(&plain).unread);
+        plain.effect(effect(
+            Poe1Quantity::Reserved(Some(Pool::Mana)),
+            Op::Increased,
+            5.0,
+            Conditions::none(),
+        ));
+        assert!(Totals::read(&plain).unread);
     }
 
     #[test]

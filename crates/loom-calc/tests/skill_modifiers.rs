@@ -76,15 +76,18 @@ fn the_texts_should_name_the_rows() {
 fn real_reservation_and_aura_stats_should_be_covered() {
     let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
     let data = common::bundle_at(std::path::Path::new(&dir));
+    // Every stat of every description with its texts: a description of
+    // several stats names each of them, so each is checked below.
     let texts: Vec<(&str, &str)> = data
         .stat_descriptions
         .files()
         .flat_map(|(_, f)| &f.descriptions)
-        .filter(|d| d.stats.len() == 1)
         .flat_map(|d| {
-            d.variants
-                .iter()
-                .map(move |v| (d.stats[0].as_str(), v.text.as_str()))
+            d.stats.iter().flat_map(move |s| {
+                d.variants
+                    .iter()
+                    .map(move |v| (s.as_str(), v.text.as_str()))
+            })
         })
         .collect();
     for (stat, text) in TEXTS {
