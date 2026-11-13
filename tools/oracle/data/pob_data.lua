@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 4
+local FORMAT = 5
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -220,7 +220,7 @@ for id, effect in pairs(data.skills) do
 		out.cost = cost
 		levels[tostring(level)] = out
 	end
-	local skill = pick(effect, { "name", "castTime", "baseEffectiveness", "incrementalEffectiveness", "support" })
+	local skill = pick(effect, { "name", "castTime", "baseEffectiveness", "incrementalEffectiveness", "support", "color" })
 	skill.stats = stats
 	skill.types = typeNames(effect.skillTypes)
 	skill.constant_stats = statPairs(effect.constantStats)

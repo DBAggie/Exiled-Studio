@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 4;
+pub const FORMAT: u32 = 5;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -150,6 +150,11 @@ pub struct Skill {
     /// `support`.
     #[serde(default)]
     pub support: Option<bool>,
+    /// `color` (format 5, P3-12i): the game's `Attribute`, as PoB's
+    /// exporter writes it (1 strength, 2 dexterity, 3 intelligence, 4
+    /// none); absent for a skill PoB defines without one.
+    #[serde(default)]
+    pub color: Option<i64>,
     /// Stat IDs in level-value order.
     #[serde(deserialize_with = "list")]
     pub stats: Vec<String>,

@@ -9,6 +9,7 @@
 //! the oracle (`docs/phase-3/spell-hits.md`).
 
 use loom_calc::poe1::hit::spell_skill;
+use loom_calc::poe1::sockets::{ALWAYS_MATCHES, SocketMatch, socket_matches};
 use loom_calc::{
     ActiveSkill, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, EffectLevel, Field,
     FieldState, GemEffect, GrantedEffect, PassiveLinks, SkillGem, Source, StatAmount, StatSet,
@@ -17,7 +18,9 @@ use loom_calc::{
 use loom_data::bundle::skills::{FloatStat, LevelStat};
 use loom_domain::{
     Build, ClassId, ConfigInput, ConfigSet, ConfigSetId, ConfigValue, DataVersion, Game, Gem,
-    GemId, Ordered, SkillId, SkillSet, SkillSetId, SocketGroup, Sourced,
+    GemId, Item, ItemBody, ItemId, ItemLine, ItemSet, ItemSetId, ItemsEntry, LineKind,
+    LineResolution, ModSection, ModifierLine, Ordered, Resolved, SkillId, SkillSet, SkillSetId,
+    SlotEntry, SlotId, SocketGroup, Sourced, StatId, StatLine, StatValue,
 };
 
 // ---------------------------------------------------------------- data
@@ -49,6 +52,7 @@ fn effect(id: &str, active: Option<&str>, support: bool, cooldown: i64) -> Grant
         support,
         active_skill: active.map(str::to_owned),
         cast_time: if support { 0 } else { 500 },
+        attribute: None,
         allowed_types: if support {
             vec!["Damage".to_owned()]
         } else {
@@ -267,6 +271,15 @@ impl Data {
         };
         s.effects.append(&mut effects);
         s.sets.append(&mut sets);
+        // The gems' colours (P3-12i): Ice Nova blue, Precision and Faster
+        // Attacks green; the others have none (a bundle without the field).
+        for e in &mut s.effects {
+            e.attribute = match e.id.as_str() {
+                "IceNova" => Some(3),
+                "Precision" | "SupportFasterAttacks" => Some(2),
+                _ => None,
+            };
+        }
         s
     }
 }
@@ -1471,4 +1484,180 @@ fn a_main_skill_that_reserves_should_be_a_reason() {
         gem_reasons(&r),
         ["skill reservation Gem { group: 0, gem: 0 }"]
     );
+}
+
+// ------------------------------------------------- socket colour (P3-12i)
+
+fn spec(key: &str, value: &str) -> ItemLine {
+    ItemLine {
+        source: format!("{key}: {value}"),
+        kind: LineKind::Spec {
+            key: key.to_owned(),
+            value: value.to_owned(),
+            known: true,
+        },
+    }
+}
+
+fn stat_line(id: &str) -> ItemLine {
+    ItemLine {
+        source: id.to_owned(),
+        kind: LineKind::Modifier(ModifierLine {
+            text: id.to_owned(),
+            prefixes: Vec::new(),
+            section: ModSection::Explicit,
+            selected: true,
+            resolution: LineResolution::Resolved {
+                result: Resolved::Stats(vec![StatLine {
+                    stat: StatId::new(id),
+                    value: StatValue::Exact { min: 1, max: 1 },
+                }]),
+                adapted: None,
+            },
+        }),
+    }
+}
+
+/// `b` with an item of these lines in `slot` of one item set.
+fn with_item(mut b: Build, slot: &str, lines: Vec<ItemLine>) -> Build {
+    b.items.entries.push(ItemsEntry::Item(Item {
+        id: ItemId(1),
+        body: ItemBody {
+            lines,
+            ..ItemBody::default()
+        },
+        layout: Ordered::new(),
+        text_spacing: Vec::new(),
+        attributes: Vec::new(),
+    }));
+    let mut set = ItemSet {
+        id: ItemSetId(1),
+        title: None,
+        slots: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    set.slots.push(SlotEntry {
+        slot: SlotId::new(slot),
+        item: Some(ItemId(1)),
+        attributes: Vec::new(),
+    });
+    b.items.entries.push(ItemsEntry::Set(set));
+    b
+}
+
+fn in_slot(mut g: SocketGroup, slot: &str) -> SocketGroup {
+    g.slot = Some(SlotId::new(slot));
+    g
+}
+
+#[expect(
+    clippy::unwrap_used,
+    reason = "a test helper: a failure fails the test"
+)]
+fn matches(b: &Build) -> Vec<Vec<SocketMatch>> {
+    let groups = loom_calc::poe1::skill::active_groups(b).unwrap();
+    socket_matches(b, &groups, &Data::new())
+}
+
+#[test]
+fn a_gem_in_a_socket_of_its_colour_should_gain_quality() {
+    use SocketMatch::{No, Yes};
+    // Ice Nova (blue) in socket 1, Precision (green) in socket 2.
+    let gloves = |sockets: &str| {
+        with_item(
+            build(vec![in_slot(group(&["IceNova", "Precision"]), "Gloves")]),
+            "Gloves",
+            vec![spec("Sockets", sockets)],
+        )
+    };
+    assert_eq!(matches(&gloves("B-G")), [vec![Yes, Yes]]);
+    assert_eq!(matches(&gloves("G-B")), [vec![No, No]]);
+    // A white socket gives none; a missing socket none.
+    assert_eq!(matches(&gloves("W-W")), [vec![No, No]]);
+    assert_eq!(matches(&gloves("B")), [vec![Yes, No]]);
+    // Abyssal sockets count in the order.
+    assert_eq!(matches(&gloves("A-B-G")), [vec![No, No]]);
+    let data = Data::new();
+    let main = loom_calc::poe1::skill::main_skill(&gloves("B-G"), &data).unwrap();
+    assert_eq!((main.active_gem.quality, main.active_gem.socket), (10, Yes));
+    let main = loom_calc::poe1::skill::main_skill(&gloves("R-G"), &data).unwrap();
+    assert_eq!(main.active_gem.quality, 0);
+}
+
+#[test]
+fn earlier_groups_of_the_slot_should_count_every_gem() {
+    use SocketMatch::{No, Yes};
+    // Group 1 (Ice Nova, a disabled gem) takes sockets 1 and 2; group 2's
+    // Precision sits in socket 3; group 3 is in another slot, group 4 in
+    // none.
+    let mut first = group(&["IceNova", "Precision"]);
+    first.gems.typed_mut().nth(1).unwrap().enabled = false;
+    let b = with_item(
+        build(vec![
+            in_slot(first, "Gloves"),
+            in_slot(group(&["Precision"]), "Gloves"),
+            in_slot(group(&["Precision"]), "Helmet"),
+            group(&["Precision"]),
+        ]),
+        "Gloves",
+        vec![spec("Sockets", "B-R G")],
+    );
+    assert_eq!(matches(&b), [vec![Yes, No], vec![Yes], vec![No], vec![No]]);
+}
+
+#[test]
+fn items_whose_sockets_are_not_known_should_be_a_reason() {
+    use SocketMatch::{Unknown, Yes};
+    let b = |lines| {
+        with_item(
+            build(vec![
+                group(&["IceNova"]),
+                in_slot(group(&["Precision", "GroundSlam"]), "Gloves"),
+            ]),
+            "Gloves",
+            lines,
+        )
+    };
+    // "Gems Socketed always have the Quality bonus": every gem matches,
+    // whatever the colours.
+    let always = b(vec![spec("Sockets", "R-R"), stat_line(ALWAYS_MATCHES)]);
+    assert_eq!(matches(&always)[1], [Yes, Yes]);
+    assert_eq!(gem_reasons(&run(&always)), Vec::<String>::new());
+    for (lines, why) in [
+        (vec![], "no-sockets-line"),
+        (
+            vec![spec("Sockets", "G"), spec("Sockets", "G")],
+            "several-sockets-lines",
+        ),
+        (
+            vec![spec("Sockets", "G"), stat_line("local_has_X_sockets")],
+            "socket-count-line",
+        ),
+    ] {
+        let build = b(lines);
+        assert_eq!(matches(&build)[1], [Unknown(why), Unknown(why)], "{why}");
+        // Precision's quality is a reason; the inert Ground Slam's is not.
+        assert_eq!(
+            gem_reasons(&run(&build)),
+            ["skill socket-colour-quality Gem { group: 1, gem: 0 }"],
+            "{why}"
+        );
+    }
+    // A gem whose colour the data lacks (Haste) is not known in a socket.
+    let haste = with_item(
+        build(vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Haste"]), "Gloves"),
+        ]),
+        "Gloves",
+        vec![spec("Sockets", "G")],
+    );
+    assert_eq!(matches(&haste)[1], [Unknown("no-colour")]);
+    // No item in the slot: nothing matches, and nothing is a reason.
+    let empty = build(vec![
+        group(&["IceNova"]),
+        in_slot(group(&["Precision"]), "Gloves"),
+    ]);
+    assert_eq!(matches(&empty)[1], [SocketMatch::No]);
+    assert_eq!(gem_reasons(&run(&empty)), Vec::<String>::new());
 }

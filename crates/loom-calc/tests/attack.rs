@@ -39,6 +39,7 @@ fn effect(id: &str, active: &str) -> GrantedEffect {
         support: false,
         active_skill: Some(active.to_owned()),
         cast_time: 1000,
+        attribute: None,
         allowed_types: Vec::new(),
         added_types: Vec::new(),
         excluded_types: Vec::new(),

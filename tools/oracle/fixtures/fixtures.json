@@ -1031,6 +1031,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml with Herald of Ice twice: level 20 linked to Increased Critical Strikes (a cost multiplier on a percent reservation) and level 5 alone; the buff keeps the larger added cold damage, both reserve (P3-12h)."
+    },
+    {
+      "id": "ice-nova-socket-colours-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-socket-colours-witch.xml",
+      "sha256": "6884b69fb0f87b0b014ffb655b54bd47e91039aef605e02b8636086b609d1781",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with its gems in a Plate Vest socketed B-B-R-W G-B: Ice Nova and Controlled Destruction in blue sockets (+10 quality each), Increased Critical Strikes in a red socket and Faster Casting in a white one (none); a second group in the same slot from socket 5, Precision in green (+10), Haste in blue (none) (P3-12i)."
+    },
+    {
+      "id": "smite-socket-colours-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-socket-colours-templar.xml",
+      "sha256": "0c81189b95792c65fabe3b0628baf12f6d142fb9eceaecdb217c48c2706842c5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A Karui Maul socketed R-R-G holding Smite, Melee Physical Damage, and Faster Attacks, each in a socket of its colour (+10 quality each) (P3-12i)."
     }
   ]
 }

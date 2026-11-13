@@ -498,6 +498,15 @@ fn compare_skills(out: &mut Comparison, skills: &SkillTables, export: &Export) {
             Value::Array(quality),
             Value::Array(pob_quality),
         );
+        // The gem's colour (format 5, P3-12i): PoB's exporter writes
+        // `GrantedEffects.Attribute` unchanged (skills.lua:157).
+        out.check(
+            T,
+            id,
+            "color",
+            effect.attribute.map_or(Value::Null, int),
+            skill.color.map_or(Value::Null, int),
+        );
         out.bundle_only(
             T,
             (2..=effect.stat_sets.len()).map(|n| format!("{id}:stat_set.{n}")),

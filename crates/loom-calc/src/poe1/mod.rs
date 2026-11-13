@@ -25,6 +25,7 @@ pub mod mapping;
 pub mod pantheon;
 pub mod phases;
 pub mod skill;
+pub mod sockets;
 
 pub use mapping::Poe1Mapping;
 pub use pantheon::Poe1Data;

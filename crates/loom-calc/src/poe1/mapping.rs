@@ -273,6 +273,18 @@ pub const HIT_ROWS: &[HitRow] = &[
         "melee_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::MELEE, NONE)],
     ),
+    // PoB `SkillStatMap.lua` 776: `PhysicalDamage` INC with
+    // `ModFlag.Melee` (Melee Physical Damage's quality, P3-12i).
+    (
+        "melee_physical_damage_+%",
+        &[(
+            Quantity::Damage,
+            Op::Increased,
+            1.0,
+            Flags::MELEE.union(Flags::PHYSICAL),
+            NONE,
+        )],
+    ),
     (
         "minimum_added_lightning_damage_from_skill",
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
@@ -925,6 +937,10 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "regeneration",
     ),
     ("lightning_ailment_duration_+%", "ailment-duration"),
+    // "Gems Socketed always have the Quality bonus from Socket Colour":
+    // its effect is the gems' quality, `poe1::sockets` (P3-12i).
+    ("local_can_socket_gems_ignoring_colour", "sockets"),
+    // Its effect on the sockets' order is `poe1::sockets`' (a reason).
     ("local_has_X_abyss_sockets", "sockets"),
     ("mana_regeneration_rate_+%", "regeneration"),
     (
@@ -1905,6 +1921,15 @@ mod tests {
                 Op::More,
                 1.0,
                 all(Flags::ATTACK).with_any(Flags::ELEMENTAL)
+            )]
+        );
+        assert_eq!(
+            hit("melee_physical_damage_+%"),
+            [(
+                Quantity::Damage,
+                Op::Increased,
+                1.0,
+                all(Flags::MELEE | Flags::PHYSICAL)
             )]
         );
         assert_eq!(

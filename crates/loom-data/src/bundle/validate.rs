@@ -29,7 +29,8 @@
 //!   (`BUNDLE_VALUE_RANGE`); the property tables have their game's shape
 //!   (`BUNDLE_GAME_SHAPE`); the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
-//!   ascending levels (`BUNDLE_SKILL_LEVELS`); the PoE1 section's build
+//!   ascending levels (`BUNDLE_SKILL_LEVELS`); a granted effect's
+//!   attribute is 1 to 4 (`BUNDLE_VALUE_RANGE`); the PoE1 section's build
 //!   choices have unique, non-empty IDs, and their rows the shape
 //!   `poe1::Poe1Section::choice_domain` names (`BUNDLE_VALUE_RANGE`);
 //! - **smoke:** every stat-description scope the rules name is one file,
@@ -436,6 +437,13 @@ fn skill_domain(sk: &SkillTables, report: &mut Report) {
                 "BUNDLE_SKILL_LEVELS",
                 format!("granted_effects:{}", e.id),
                 "levels are not strictly ascending",
+            );
+        }
+        if let Some(a) = e.attribute.filter(|a| !(1..=4).contains(a)) {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("granted_effects:{}", e.id),
+                format!("attribute {a} is not 1 to 4"),
             );
         }
     }
