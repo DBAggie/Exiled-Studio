@@ -8,14 +8,14 @@
     "tool_commit": "0cd20184853c6cc7df5c7869ff845a94fdd827b2"
   },
   "successor": {
-    "sha256": "55d9b2b93a89ebf80f35f43ed48d11e0cbb275d4d7d3e91bc875642d88e8064a",
+    "sha256": "5d505c34efa6d98f2954b85444846d01ff93db92422881f454d91839547ce2ce",
     "platform": null,
-    "tool_commit": "0cd20184853c6cc7df5c7869ff845a94fdd827b2"
+    "tool_commit": "168a1bbe7196d1343969a7eba2bed6aff7c8102d"
   },
   "overlay": {
-    "sha256": "8f1aeb3d41d4852e7ec3157d834930a83094b02465cb59a130e5edea14d08038",
+    "sha256": "7ffbdd7ee6327e91f10d2688830053a4fc0379d5b0c4087f36de20918a7c68df",
     "platform": null,
-    "tool_commit": "0cd20184853c6cc7df5c7869ff845a94fdd827b2"
+    "tool_commit": "168a1bbe7196d1343969a7eba2bed6aff7c8102d"
   },
   "bundle": {
     "game": "poe1",

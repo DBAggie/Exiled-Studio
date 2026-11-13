@@ -36,7 +36,7 @@ The close-out PR added: the gate builds' other gems (golems and Lightning Golem'
 - **Corpus:** the maintainer's 21 PoB builds (local only, ADR-007; summaries name builds by SHA-256). Its oracle run is P3-5's (`local/p3/p3-5/evidence-p4/oracle-corpus`).
 - **Slice:** `docs/phase-3/slice-fields.json` revision 2; scope `docs/phase-3/calc-scope-poe1.json`.
 - **Register:** `docs/parity/divergence-register.json`, 71 accepted entries, all `game-truth`.
-- **Tool commit:** `0cd2018` (the close-out branch), clean tree.
+- **Tool commit:** the full script ran at `0cd2018` (the close-out branch) from a clean tree; documentation edits made while it ran mark its later summaries `dirty`, so the `calc-run`s (public, overlay, gate, corpus) and the three `calc-parity` comparisons were made again at `168a1bb` (same code, docs only after `0cd2018`) on a clean tree: every calc document byte-identical to the first run, and the committed summaries are these (`dirty: false`).
 
 ## 3. Gate verdict
 The gate is the plan's "Gate (objective, checkable)". Commands run from the repository root; the full script is `local/p3/close/evidence.sh` (local).
