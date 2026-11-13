@@ -25,8 +25,8 @@ Read in order: `README.md`, this handoff, all ADRs (000–017), `docs/plan/ACTIO
 ## How sessions work
 Each PR is done in its own fresh session; the repository is the only memory. Every PR updates this file's **Current state** and **Next action**, plus any other document it made stale (list in `AGENTS.md`, "One PR per session"). Right after `gh pr create`, before any other work, push a follow-up commit that writes the new PR number here and in every other doc that names the PR. At session start, check whether the PR named here has merged (`gh pr view <N>`) and record the merge in your own PR. If something here disagrees with the code or CI, trust the code and CI, and fix this file in your PR.
 
-## Current state (updated 2026-11-13, P3-8f PR #TBD open, base `feat/p3-8e-stat-batch` (cascade: #91 <- #92 <- #93 <- #94 <- this); P3-12h #90 merged into `dev`)
-- **PR P3-8f: weapon conditions (PR #TBD, open, branch `feat/p3-8f-weapon-conditions`, base `feat/p3-8e-stat-batch`; merge #91 to #94 first, in order).**
+## Current state (updated 2026-11-13, P3-8f PR #95 open, base `feat/p3-8e-stat-batch` (cascade: #91 <- #92 <- #93 <- #94 <- this); P3-12h #90 merged into `dev`)
+- **PR P3-8f: weapon conditions (PR #95, open, branch `feat/p3-8f-weapon-conditions`, base `feat/p3-8e-stat-batch`; merge #91 to #94 first, in order).**
   - **What** (`docs/phase-3/stat-mapping.md`, "P3-8f"): `loom_calc::poe1::states` settles `UsingStaff` and `UsingShield` from the hands in use (unknown bases leave them unsettled, a reason); every PoE1 query context comes from `states::context`; `mapping::STATE_ROWS` maps eight "while wielding a Staff / holding a Shield" stats.
   - **Evidence:** oracle 113 fixtures, all met; `calc-parity` 0 unexpected, every mechanic target met (1569 of 1569, 76 fixtures, two new); 32 values in 14 public builds closer to PoB's or equal; 124 reasons gone, none added; corpus 6 values, 11 reasons gone. Calculation time about three times longer (hands looked up per context; caching is a follow-up). 1212 workspace tests, clippy, fmt, wasm32.
   - **Review:** `code-architecture-reviewer`, no code blockers; tests applied.
