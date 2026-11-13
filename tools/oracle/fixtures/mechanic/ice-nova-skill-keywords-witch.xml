@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8h): a level 90 Witch casting Ice Nova (level 20, a cold skill) with custom lines that name a skill keyword: cast speed, crit chance, and crit multiplier with cold, elemental, fire, and lightning skills; cold damage with spell and attack skills.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				20% increased Cast Speed with Cold Skills
+10% increased Cast Speed with Elemental Skills
+30% increased Cast Speed with Fire Skills
++25% to Critical Strike Multiplier with Cold Skills
++60% to Critical Strike Multiplier with Lightning Skills
+40% increased Critical Strike Chance with Cold Skills
+25% increased Cold Damage with Spell Skills
+50% increased Cold Damage with Attack Skills
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

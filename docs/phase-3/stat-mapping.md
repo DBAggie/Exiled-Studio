@@ -239,7 +239,7 @@ Tests: 1212 workspace tests, clippy, fmt, wasm32.
 
 P3-8f settled `UsingStaff` and `UsingShield` in every query context, looking the hands up each time; the public run's calculation time rose about threefold. The core now asks the game's rules once per calculation: `Ruleset::states` (default: none) gives the named conditions the build settles, `Calc` keeps them, and `Calc::context(flags)` builds every query context with them. PoE1's rules return `poe1::states::states`. The core stays game-neutral: it holds condition names and values, never PoE1's. A condition that could differ per query (a skill's own hand) would need a per-query rule; none does yet (both conditions are the character's).
 
-### Evidence
+### Evidence (P3-8g)
 
 Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree, `local/p3/p3-8g/evidence.sh` at tool commit `4cfece7`. No fixture changes: P3-8f's oracle run is the oracle side.
 
@@ -250,3 +250,44 @@ Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree, `local/p
 | `calc-run`, corpus (21, `--anonymous`) | Byte-identical to P3-8f's. Calculation time 39 ms (P3-8f: 139 ms) |
 
 Tests: 1213 workspace tests (the engine tests' synthetic ruleset now settles its conditions through `Ruleset::states` and queries through `Calc::context`; a direct test of `Calc::context` and of the default), clippy, fmt, wasm32. Review: `code-architecture-reviewer`, no blockers; doc fixes and the direct tests applied.
+
+## P3-8h: skill keywords
+
+Lines such as "20% increased Cast Speed with Cold Skills" need the skill's **keyword**, not a damage type. PoB v2.67.2 sets `KeywordFlag.Lightning`, `.Cold`, `.Fire`, `.Chaos`, `.Physical` from the skill's types after the supports added theirs (`Modules/CalcActiveSkill.lua` 391 to 405), and never per damage pass (`Modules/CalcOffence.lua` adds only the damage over time keywords per type). So Ice Nova is a cold skill whatever its hit deals, and Smite a lightning skill although half its hit is physical.
+
+**The engine.** `Flags` (shared core) gains five skill keywords, `SKILL_PHYSICAL` to `SKILL_CHAOS` and `SKILL_ELEMENTAL`, apart from the damage type flags, which describe one part of a hit. `poe1::skill::keyword_flags` gives them from the type names (`KEYWORD_TYPES`, the game's `ActiveSkillType` IDs, which PoB's `SkillType` names match: a real-bundle test checks all five), and the spell and attack hit contexts carry the main skill's. When ailments or damage over time are computed, their contexts must take them too (PoB builds those configs from the skill's keyword flags).
+
+| Stats | PoB (`Modules/ModParser.lua`) | The engine (hit rows) |
+|---|---|---|
+| `cast_speed_for_<chaos\|cold\|fire\|lightning>_skills_+%` | "cast speed" (`Speed` INC, `ModFlag.Cast`, 754) with "with cold skills" (`KeywordFlag.Cold`, 1048 to 1052) | `Speed` INC, cast and the keyword |
+| `cast_speed_for_elemental_skills_+%` | "with elemental skills": any of the three keywords (1051) | `Speed` INC, cast, any elemental keyword |
+| `<chaos\|cold\|fire\|lightning>_critical_strike_chance_+%`, `..._multiplier_+` | `CritChance` INC, `CritMultiplier` BASE (745, 748) with the keyword | the same, with the keyword |
+| `<physical\|fire\|cold\|lightning\|chaos>_damage_with_attack_skills_+%`, `..._spell_skills_+%` | `ColdDamage` INC (701 and above) with `KeywordFlag.Attack` (978) or `.Spell` (971) | `Damage` INC with the damage type and the attack or spell flag |
+
+`SPELL` stands for both `ModFlag.Spell` and `KeywordFlag.Spell`, as `ATTACK` already did; PoB leaves the spell keyword off only for the skills its data marks `cast` (Bear Trap, Vaal Detonate Dead, three heralds, one minion skill), none a vetted spell.
+
+**Left:** "with Brand Skills" and "with Minion Skills" (PoB reads them as a `SkillType` tag; Brand is a PoE1-only word, so it is no shared flag): unmapped, reasons. No mapped stat reads the physical keyword yet.
+
+### Mechanic fixtures
+
+- `ice-nova-skill-keywords-witch.xml`: cast speed with cold (20%) and elemental (10%) skills apply, with fire skills (30%) not; +25% crit multiplier with cold skills applies, +60% with lightning skills not; 40% crit chance with cold skills; cold damage with spell skills applies, with attack skills not. Every target equals PoB's.
+- `smite-skill-keywords-templar.xml`: crit chance and multiplier with lightning skills apply, with cold skills not; cast speed with lightning skills not (an attack); physical and lightning damage with attack skills apply, fire damage with attack skills has no fire to scale, lightning damage with spell skills not. Average damage, crit chance and multiplier equal PoB's; speed and DPS differ by Q11's floored attack time alone (the same 1.27436 as `smite-intimidate-blind-templar.xml`): DIV-0034, DIV-0035 (`game-truth`).
+
+### Review
+
+`code-architecture-reviewer`: no blockers; the keyword and damage type separation checked against PoB (only the damage over time keywords are added per type). Applied: direct tests of `keyword_flags` (each type name, several, a type a support adds, the real bundle's names), `Flags::skill_keyword` for `Flags::skill`, notes on future ailment contexts, the skills PoB marks `cast`, and the unread physical keyword. The cited `ModParser.lua` lines were checked.
+
+### Evidence (P3-8h)
+
+Maintainer-run, 2026-11-13, Windows, from the main checkout on a clean tree, `local/p3/p3-8h/evidence.sh` at tool commit `ceaa1e5`; the review's `9f03533` changes tests, comments, and one name only. P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8h-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 115 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 115 documents; 1648 complete, 334 partial, 442 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 35 registered differences (two new), 0 unexpected; 1622 fields match. **Every mechanic target met: 1614 of 1614 over 78 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8g.** No field state changes. 13 values change in 5 public builds, all toward PoB's: the three in-scope Ice Nova Elementalist builds' speed (cast speed with cold skills) and DPS, the mapping build's crit multiplier (4.08 to 4.25, PoB 4.48) and average damage; Shock Nova's speed, Elemental Hit's crit multiplier. 25 reasons gone in 12 public builds (among them every `cold_critical_strike_multiplier_+`, `cast_speed_for_cold_skills_+%`, and the Smite act10 build's four `fire_damage_with_attack_skills_+%`), none added; corpus 5 gone, none added, no value change.
+
+Tests: 1218 workspace tests, clippy, fmt, wasm32, the real-bundle test.

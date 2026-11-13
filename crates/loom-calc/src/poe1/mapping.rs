@@ -43,6 +43,26 @@ const FIRE_T: DamageType = DamageType::Fire;
 const COLD_T: DamageType = DamageType::Cold;
 const LIGHTNING_T: DamageType = DamageType::Lightning;
 const CHAOS_T: DamageType = DamageType::Chaos;
+// Skill keywords (P3-8h): PoB's `KeywordFlag.<type>`, which the skill's
+// types give ([`super::skill::MainSkill::keyword_flags`]).
+const SK_FIRE: Flags = Flags::SKILL_FIRE;
+const SK_COLD: Flags = Flags::SKILL_COLD;
+const SK_LIGHTNING: Flags = Flags::SKILL_LIGHTNING;
+const SK_CHAOS: Flags = Flags::SKILL_CHAOS;
+const fn cast_with(keyword: Flags) -> Flags {
+    Flags::CAST.union(keyword)
+}
+// A damage type's damage with attack or spell skills (P3-8h).
+const ATTACK_PHYSICAL: Flags = Flags::ATTACK.union(Flags::PHYSICAL);
+const ATTACK_FIRE: Flags = Flags::ATTACK.union(Flags::FIRE);
+const ATTACK_COLD: Flags = Flags::ATTACK.union(Flags::COLD);
+const ATTACK_LIGHTNING: Flags = Flags::ATTACK.union(Flags::LIGHTNING);
+const ATTACK_CHAOS: Flags = Flags::ATTACK.union(Flags::CHAOS);
+const SPELL_PHYSICAL: Flags = Flags::SPELL.union(Flags::PHYSICAL);
+const SPELL_FIRE: Flags = Flags::SPELL.union(Flags::FIRE);
+const SPELL_COLD: Flags = Flags::SPELL.union(Flags::COLD);
+const SPELL_LIGHTNING: Flags = Flags::SPELL.union(Flags::LIGHTNING);
+const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
 
 /// The stats of hits P3-9b maps (a self-cast spell's), sorted by stat ID (a
 /// test checks the order), each read as PoB v2.67.2 reads it
@@ -114,8 +134,28 @@ const CHAOS_T: DamageType = DamageType::Chaos;
 ///   Chance" (no stat map row; `ModParser.lua` reads the text as
 ///   `CritChance` INC with `ModFlag.Melee`, its "melee" flag word).
 ///
-/// PoB tells `ModFlag.Attack` from `KeywordFlag.Attack`; both are the
-/// `ATTACK` flag here, which every attack hit has and nothing else does.
+/// P3-8h adds the stats that name a skill keyword, each read from its text
+/// by `ModParser.lua` (no stat map row):
+/// - `cast_speed_for_<chaos|cold|fire|lightning>_skills_+%`: "#% increased
+///   Cast Speed with Cold Skills" (`Speed` INC, `ModFlag.Cast`,
+///   `KeywordFlag.Cold`); `cast_speed_for_elemental_skills_+%` needs one of
+///   the fire, cold, and lightning keywords;
+/// - `<chaos|cold|fire|lightning>_critical_strike_chance_+%`,
+///   `..._multiplier_+`: "#% increased Critical Strike Chance with Cold
+///   Skills", "+#% to Critical Strike Multiplier with Cold Skills"
+///   (`CritChance` INC, `CritMultiplier` BASE, `KeywordFlag.Cold`);
+/// - `<type>_damage_with_attack_skills_+%`, `..._spell_skills_+%`: "#%
+///   increased Cold Damage with Attack Skills" (`ColdDamage` INC,
+///   `KeywordFlag.Attack` or `KeywordFlag.Spell`).
+///
+/// A keyword is the skill's (`Flags::SKILL_COLD`, from its types), not the
+/// damage type of a part of its hit (`Flags::COLD`). PoB tells
+/// `ModFlag.Attack` from `KeywordFlag.Attack`; both are the `ATTACK` flag
+/// here, which every attack hit has and nothing else does; `SPELL` stands
+/// for both spell flags likewise (PoB leaves `KeywordFlag.Spell` off only
+/// for the skills its own data marks `cast`: Bear Trap, Vaal Detonate
+/// Dead, the Heralds of Agony, Ice, and Thunder, one minion skill; none is
+/// a vetted spell, `hit::VETTED_SPELLS`, so any of them is `Partial`).
 pub const HIT_ROWS: &[HitRow] = &[
     (
         "accuracy_rating",
@@ -223,9 +263,102 @@ pub const HIT_ROWS: &[HitRow] = &[
         "base_spell_critical_strike_multiplier_+",
         &[(Quantity::CritMultiplier, Op::Base, 1.0, Flags::SPELL, NONE)],
     ),
+    // P3-8h: "#% increased Cast Speed with Chaos Skills": `Speed` INC,
+    // `ModFlag.Cast`, `KeywordFlag.Chaos` ("cast speed", "with chaos
+    // skills"; `ModParser.lua` 754, 1052); likewise below.
+    (
+        "cast_speed_for_chaos_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            cast_with(SK_CHAOS),
+            NONE,
+        )],
+    ),
+    (
+        "cast_speed_for_cold_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            cast_with(SK_COLD),
+            NONE,
+        )],
+    ),
+    // "with elemental skills": any of the three keywords (1051).
+    (
+        "cast_speed_for_elemental_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            Flags::CAST,
+            Flags::SKILL_ELEMENTAL,
+        )],
+    ),
+    (
+        "cast_speed_for_fire_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            cast_with(SK_FIRE),
+            NONE,
+        )],
+    ),
+    (
+        "cast_speed_for_lightning_skills_+%",
+        &[(
+            Quantity::Speed,
+            Op::Increased,
+            1.0,
+            cast_with(SK_LIGHTNING),
+            NONE,
+        )],
+    ),
+    // P3-8h: "#% increased Critical Strike Chance with Chaos Skills",
+    // "+#% to Critical Strike Multiplier with Chaos Skills": `CritChance`
+    // INC, `CritMultiplier` BASE with `KeywordFlag.Chaos` (745, 748); the
+    // other keywords likewise.
+    (
+        "chaos_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, SK_CHAOS, NONE)],
+    ),
+    (
+        "chaos_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_CHAOS, NONE)],
+    ),
+    // P3-8h: "#% increased Chaos Damage with Attack Skills": `ChaosDamage`
+    // INC with `KeywordFlag.Attack` (701, 978); "with Spell Skills" with
+    // `KeywordFlag.Spell` (971); the other damage types likewise.
+    (
+        "chaos_damage_with_attack_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, ATTACK_CHAOS, NONE)],
+    ),
+    (
+        "chaos_damage_with_spell_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, SPELL_CHAOS, NONE)],
+    ),
+    (
+        "cold_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, SK_COLD, NONE)],
+    ),
+    (
+        "cold_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_COLD, NONE)],
+    ),
     (
         "cold_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::COLD, NONE)],
+    ),
+    (
+        "cold_damage_with_attack_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, ATTACK_COLD, NONE)],
+    ),
+    (
+        "cold_damage_with_spell_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, SPELL_COLD, NONE)],
     ),
     (
         "critical_strike_chance_+%",
@@ -250,8 +383,24 @@ pub const HIT_ROWS: &[HitRow] = &[
         )],
     ),
     (
+        "fire_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, SK_FIRE, NONE)],
+    ),
+    (
+        "fire_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_FIRE, NONE)],
+    ),
+    (
         "fire_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::FIRE, NONE)],
+    ),
+    (
+        "fire_damage_with_attack_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, ATTACK_FIRE, NONE)],
+    ),
+    (
+        "fire_damage_with_spell_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, SPELL_FIRE, NONE)],
     ),
     (
         "global_maximum_added_cold_damage",
@@ -270,8 +419,24 @@ pub const HIT_ROWS: &[HitRow] = &[
         &[(added(LIGHTNING_T, MIN), Op::Base, 1.0, NONE, NONE)],
     ),
     (
+        "lightning_critical_strike_chance_+%",
+        &[(Quantity::CritChance, Op::Increased, 1.0, SK_LIGHTNING, NONE)],
+    ),
+    (
+        "lightning_critical_strike_multiplier_+",
+        &[(Quantity::CritMultiplier, Op::Base, 1.0, SK_LIGHTNING, NONE)],
+    ),
+    (
         "lightning_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::LIGHTNING, NONE)],
+    ),
+    (
+        "lightning_damage_with_attack_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, ATTACK_LIGHTNING, NONE)],
+    ),
+    (
+        "lightning_damage_with_spell_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, SPELL_LIGHTNING, NONE)],
     ),
     (
         "maximum_added_lightning_damage_from_skill",
@@ -304,6 +469,14 @@ pub const HIT_ROWS: &[HitRow] = &[
     (
         "physical_damage_+%",
         &[(Quantity::Damage, Op::Increased, 1.0, Flags::PHYSICAL, NONE)],
+    ),
+    (
+        "physical_damage_with_attack_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, ATTACK_PHYSICAL, NONE)],
+    ),
+    (
+        "physical_damage_with_spell_skills_+%",
+        &[(Quantity::Damage, Op::Increased, 1.0, SPELL_PHYSICAL, NONE)],
     ),
     (
         "skill_physical_damage_%_to_convert_to_lightning",
@@ -2029,6 +2202,58 @@ mod tests {
                 (INT, Op::Increased, 1.0)
             ]
         );
+    }
+
+    /// P3-8h: every "with <type> Skills" stat needs the skill's keyword;
+    /// "<type> Damage with Attack (Spell) Skills" the damage type and the
+    /// attack (spell) flag.
+    #[test]
+    fn skill_keyword_stats_should_map_as_pob_reads_them() {
+        let all = |f| Conditions::none().with_all(f);
+        let types = [
+            ("chaos", CHAOS_T),
+            ("cold", COLD_T),
+            ("fire", FIRE_T),
+            ("lightning", LIGHTNING_T),
+        ];
+        for (name, t) in types {
+            let k = Flags::skill_keyword(t);
+            assert_eq!(
+                hit(&format!("cast_speed_for_{name}_skills_+%")),
+                [(Quantity::Speed, Op::Increased, 1.0, all(Flags::CAST | k))]
+            );
+            assert_eq!(
+                hit(&format!("{name}_critical_strike_chance_+%")),
+                [(Quantity::CritChance, Op::Increased, 1.0, all(k))]
+            );
+            assert_eq!(
+                hit(&format!("{name}_critical_strike_multiplier_+")),
+                [(Quantity::CritMultiplier, Op::Base, 1.0, all(k))]
+            );
+        }
+        assert_eq!(
+            hit("cast_speed_for_elemental_skills_+%"),
+            [(
+                Quantity::Speed,
+                Op::Increased,
+                1.0,
+                all(Flags::CAST).with_any(Flags::SKILL_ELEMENTAL)
+            )]
+        );
+        for (name, t) in types.into_iter().chain([("physical", PHYS)]) {
+            for (kind, flag) in [("attack", Flags::ATTACK), ("spell", Flags::SPELL)] {
+                assert_eq!(
+                    hit(&format!("{name}_damage_with_{kind}_skills_+%")),
+                    [(
+                        Quantity::Damage,
+                        Op::Increased,
+                        1.0,
+                        all(flag | Flags::damage(t))
+                    )],
+                    "{name} {kind}"
+                );
+            }
+        }
     }
 
     #[test]

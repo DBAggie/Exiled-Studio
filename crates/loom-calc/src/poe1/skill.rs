@@ -59,7 +59,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use loom_domain::{Attributes, Build, Gem, SocketGroup};
 
 use super::sockets::{SocketMatch, socket_matches};
+use crate::condition::Flags;
 use crate::input::{ActiveSkill, CalcData, EffectLevel, GrantedEffect, StatSet, StatSetLevel};
+use crate::quantity::DamageType;
 
 /// Why a build has no main skill the engine can name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,7 +141,46 @@ impl<'d> MainSkill<'d> {
     pub const fn effect(&self) -> &'d GrantedEffect {
         self.active_gem.effect
     }
+
+    /// The skill's keyword flags (P3-8h): PoB v2.67.2 sets
+    /// `KeywordFlag.Lightning`, `.Cold`, `.Fire`, `.Chaos`, `.Physical`
+    /// from the skill's types after the supports added theirs
+    /// (`Modules/CalcActiveSkill.lua` 391 to 405), whatever damage the hit
+    /// deals; "with Cold Skills" needs the keyword.
+    ///
+    /// Only the hit's contexts take them today. PoB builds its ailment and
+    /// damage over time configs from the skill's keyword flags too (without
+    /// `Hit`; `Modules/CalcOffence.lua` 4297, 4570, 4875, 5655): when those
+    /// are computed, their contexts must take these flags as well.
+    #[must_use]
+    pub fn keyword_flags(&self) -> Flags {
+        keyword_flags(&self.types)
+    }
 }
+
+/// The skill keywords of a skill with `types` ([`MainSkill::keyword_flags`]).
+#[must_use]
+pub fn keyword_flags(types: &BTreeSet<String>) -> Flags {
+    KEYWORD_TYPES
+        .iter()
+        .filter(|(name, _)| types.contains(*name))
+        .fold(Flags::NONE, |flags, (_, t)| {
+            flags | Flags::skill_keyword(*t)
+        })
+}
+
+/// The game's skill type names that give a skill keyword (the game's
+/// `ActiveSkillType` IDs, which PoB's `SkillType` names match; a test
+/// checks them against the real bundle). No mapped stat reads the
+/// physical keyword yet (the game has no "with Physical Skills" stat the
+/// slice reaches); it is kept as PoB sets it.
+pub const KEYWORD_TYPES: [(&str, DamageType); 5] = [
+    ("Physical", DamageType::Physical),
+    ("Fire", DamageType::Fire),
+    ("Cold", DamageType::Cold),
+    ("Lightning", DamageType::Lightning),
+    ("Chaos", DamageType::Chaos),
+];
 
 /// The value of attribute `name`, if any.
 #[must_use]

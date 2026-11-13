@@ -2062,3 +2062,133 @@ fn charge_modifiers_of_every_kind_should_count() {
     );
     assert_eq!(value(&r, Field::CritMultiplier), 1.8);
 }
+
+/// The main skill alone with character-wide resolved lines (a custom
+/// modifier block).
+fn with_lines(skill: &str, lines: &[(&str, i64)]) -> CalcResult {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let mut b = build(vec![group(&[skill])]);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![loom_domain::CustomModifierBlock {
+            title: None,
+            enabled: true,
+            text: String::new(),
+            lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    run(&b)
+}
+
+/// "with Cold Skills" needs the skill's keyword (its `Cold` type), not
+/// cold damage; "Cold Damage with Spell Skills" needs the hit's cold
+/// damage and a spell (P3-8h).
+#[test]
+fn skill_keyword_lines_should_need_the_skills_type() {
+    // Every line is mapped: the fields keep the bare skill's state
+    // (Ice Nova's complete; the physical nova's waits on armour data).
+    let as_bare = |skill: &str, r: &CalcResult| {
+        let bare = with_lines(skill, &[]);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, bare.fields[&f].state, "{f:?}");
+        }
+    };
+    let same = |a: &CalcResult, b: &CalcResult| {
+        for f in HIT {
+            assert_eq!(value(a, f), value(b, f), "{f:?}");
+        }
+    };
+    assert_eq!(
+        with_lines("IceNova", &[]).fields[&Field::AverageDamage].state,
+        FieldState::Complete
+    );
+    for skill in ["IceNova", "TestPhysicalNova"] {
+        let bare = with_lines(skill, &[]);
+        // Both novas are cold skills: 20% increased cast speed,
+        // 1 / (0.5 / round(1.2, 2)); with elemental skills too.
+        for stat in [
+            "cast_speed_for_cold_skills_+%",
+            "cast_speed_for_elemental_skills_+%",
+        ] {
+            let r = with_lines(skill, &[(stat, 20)]);
+            as_bare(skill, &r);
+            assert_eq!(value(&r, Field::Speed), 1.0 / (0.5 / 1.2), "{stat}");
+        }
+        // As the global lines, the keyword's crit chance and multiplier.
+        for (keyword, global) in [
+            (
+                "cold_critical_strike_multiplier_+",
+                "base_critical_strike_multiplier_+",
+            ),
+            (
+                "cold_critical_strike_chance_+%",
+                "critical_strike_chance_+%",
+            ),
+        ] {
+            let r = with_lines(skill, &[(keyword, 30)]);
+            as_bare(skill, &r);
+            same(&r, &with_lines(skill, &[(global, 30)]));
+            assert_ne!(
+                value(&r, Field::AverageDamage),
+                value(&bare, Field::AverageDamage)
+            );
+        }
+        // Other keywords, and attack skills' damage, do nothing.
+        for stat in [
+            "cast_speed_for_fire_skills_+%",
+            "cast_speed_for_lightning_skills_+%",
+            "cast_speed_for_chaos_skills_+%",
+            "fire_critical_strike_multiplier_+",
+            "lightning_critical_strike_chance_+%",
+            "chaos_critical_strike_multiplier_+",
+            "cold_damage_with_attack_skills_+%",
+            "physical_damage_with_attack_skills_+%",
+        ] {
+            let r = with_lines(skill, &[(stat, 50)]);
+            as_bare(skill, &r);
+            same(&r, &bare);
+        }
+    }
+    // A spell's damage of its hit's type, as the plain line.
+    for (skill, keyword, global) in [
+        (
+            "IceNova",
+            "cold_damage_with_spell_skills_+%",
+            "cold_damage_+%",
+        ),
+        (
+            "TestPhysicalNova",
+            "physical_damage_with_spell_skills_+%",
+            "physical_damage_+%",
+        ),
+    ] {
+        let r = with_lines(skill, &[(keyword, 40)]);
+        as_bare(skill, &r);
+        same(&r, &with_lines(skill, &[(global, 40)]));
+        assert_ne!(
+            value(&r, Field::AverageDamage),
+            value(&with_lines(skill, &[]), Field::AverageDamage)
+        );
+    }
+    // The physical nova is a cold skill but deals no cold damage.
+    same(
+        &with_lines(
+            "TestPhysicalNova",
+            &[("cold_damage_with_spell_skills_+%", 40)],
+        ),
+        &with_lines("TestPhysicalNova", &[]),
+    );
+}

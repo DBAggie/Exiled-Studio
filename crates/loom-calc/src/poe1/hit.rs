@@ -706,7 +706,7 @@ pub fn hit(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::SPELL | Flags::CAST | Flags::HIT;
+    let mut flags = Flags::SPELL | Flags::CAST | Flags::HIT | spell.skill.keyword_flags();
     if spell.area {
         flags = flags | Flags::AREA;
     }
@@ -807,7 +807,7 @@ fn hit_dps(calc: &mut Calc<'_>, average: Valued, speed: Valued) -> Result<(), Ca
 fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcError> {
     let input = *calc.input();
     let enemy = enemy::enemy(input.build, input.data);
-    let mut flags = Flags::ATTACK | Flags::HIT;
+    let mut flags = Flags::ATTACK | Flags::HIT | attack.skill.keyword_flags();
     if attack.part.melee {
         flags = flags | Flags::MELEE;
     }

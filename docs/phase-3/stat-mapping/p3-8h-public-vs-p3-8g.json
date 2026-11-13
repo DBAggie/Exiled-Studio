@@ -1,0 +1,162 @@
+{
+ "builds_with_reason_changes": 12,
+ "only_after": [
+  "ice-nova-skill-keywords-witch.xml.json",
+  "smite-skill-keywords-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 9}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 8}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 13, \"line\": 8}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 3, \"line\": 9}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 5, \"line\": 8}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}"
+   ]
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 4, \"line\": 7}}, \"stat\": \"lightning_critical_strike_chance_+%\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 19, \"line\": 7}}, \"stat\": \"cast_speed_for_lightning_skills_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 60, \"line\": 11}}, \"stat\": \"lightning_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 60, \"line\": 12}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34661}}, \"stat\": \"cast_speed_for_fire_skills_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34661}}, \"stat\": \"cast_speed_for_fire_skills_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 38, \"line\": 11}}, \"stat\": \"cold_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 57, \"line\": 10}}, \"stat\": \"lightning_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 52407}}, \"stat\": \"lightning_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54645}}, \"stat\": \"lightning_critical_strike_multiplier_+\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30225}}, \"stat\": \"cast_speed_for_lightning_skills_+%\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14419}}, \"stat\": \"fire_damage_with_attack_skills_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30439}}, \"stat\": \"fire_damage_with_attack_skills_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34750}}, \"stat\": \"fire_damage_with_attack_skills_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 8879}}, \"stat\": \"fire_damage_with_attack_skills_+%\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44955}}, \"stat\": \"cast_speed_for_cold_skills_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 25,
+ "state_changes": {},
+ "value_changes": {
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    1051.618987055,
+    1107.4802211200001
+   ],
+   "crit-multiplier": [
+    1.92,
+    2.2800000000000002
+   ],
+   "hit-dps": [
+    3908.5172352210834,
+    4116.134821829334
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "hit-dps": [
+    11555.541194700001,
+    11842.992468200002
+   ],
+   "speed": [
+    2.8714285714285714,
+    2.942857142857143
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "hit-dps": [
+    29592.91419552,
+    30268.551505920004
+   ],
+   "speed": [
+    3.1285714285714286,
+    3.2000000000000006
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    22643.59214880001,
+    23523.187170000005
+   ],
+   "crit-multiplier": [
+    4.08,
+    4.25
+   ],
+   "hit-dps": [
+    65989.89711936003,
+    70233.515979
+   ],
+   "speed": [
+    2.9142857142857146,
+    2.9857142857142853
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "hit-dps": [
+    27402.415425,
+    28084.067550000003
+   ],
+   "speed": [
+    3.3499999999999996,
+    3.4333333333333336
+   ]
+  }
+ }
+}
