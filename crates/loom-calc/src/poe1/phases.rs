@@ -16,7 +16,7 @@
 //! Attribute bonuses read the attribute's field node, so a derived field
 //! carries its attribute's reasons (`Calc::set_derived`).
 
-use super::{ArmourSlot, Defence, PieceValue, Poe1Field, Poe1Quantity};
+use super::{ArmourSlot, Defence, PieceValue, Poe1Field, Poe1Quantity, Pool, ReservationKind};
 use crate::condition::QueryContext;
 use crate::engine::{Calc, Phase};
 use crate::error::CalcError;
@@ -835,13 +835,15 @@ fn primary_defences(calc: &mut Calc<'_>) -> Result<(), CalcError> {
 }
 
 /// Unreserved life and mana: the pool less its reservation
-/// (`doActorLifeManaReservation`: `max - reserved`). No reservation is
-/// modelled yet: every enabled gem (the only source of reservation in the
-/// slice's builds) makes the fields `Partial`, so the pool is the value.
+/// (`doActorLifeManaReservation`, `CalcPerform.lua` 526 to 560: `reserved
+/// = flat + ceil(max x percent / 100)`, `Unreserved = max - reserved`).
+/// The skills' per-skill amounts are `Reservation` effects
+/// ([`super::gems`], P3-12h); a pool no skill reserves keeps its value, as
+/// a one-term sum, so graphs without a reservation are unchanged.
 fn unreserved(calc: &mut Calc<'_>) -> Result<(), CalcError> {
-    for (field, pool) in [
-        (Field::LifeUnreserved, Field::Life),
-        (Field::ManaUnreserved, Field::Mana),
+    for (field, pool, which) in [
+        (Field::LifeUnreserved, Field::Life, Pool::Life),
+        (Field::ManaUnreserved, Field::Mana, Pool::Mana),
     ] {
         let Some((node, value, kind)) = calc
             .field(pool)
@@ -857,21 +859,87 @@ fn unreserved(calc: &mut Calc<'_>) -> Result<(), CalcError> {
         if value <= 0.0 && kind != StateKind::Indeterminate {
             continue;
         }
-        // Nothing is reserved yet (P3-9a, P3-12): the pool itself, as a
-        // one-term sum so the field has its own result node.
+        let flat_q = Quantity::Poe1(Poe1Quantity::Reservation(which, ReservationKind::Flat));
+        let percent_q = Quantity::Poe1(Poe1Quantity::Reservation(which, ReservationKind::Percent));
+        if !has(calc, flat_q) && !has(calc, percent_q) {
+            // Nothing reserved: the pool itself, as a one-term sum so the
+            // field has its own result node.
+            let node = calc.graph_mut().push(
+                Node::Sum {
+                    term: Term::Result,
+                    terms: vec![node],
+                },
+                value,
+            )?;
+            calc.set_derived(
+                field,
+                Query {
+                    value,
+                    node,
+                    reasons: Reasons::new(),
+                },
+                &[pool],
+            );
+            continue;
+        }
+        let mut reasons = Reasons::new();
+        let max = Valued { node, value };
+        let flat = sum(
+            calc,
+            flat_q,
+            Op::Base,
+            Term::Step("reserved-flat"),
+            &mut reasons,
+        )?;
+        let percent = sum(
+            calc,
+            percent_q,
+            Op::Base,
+            Term::Step("reserved-percent"),
+            &mut reasons,
+        )?;
+        // `m_ceil(max * percent / 100)`, in PoB's order.
+        let share = product(calc, &[max, percent], Term::Step("pool-times-percent"))?;
+        let hundred = constant(calc, "hundred", 100.0)?;
+        let share_value = share.value / hundred.value;
+        let share = Valued {
+            node: calc.graph_mut().push(
+                Node::Quotient {
+                    term: Term::Step("pool-share"),
+                    a: share.node,
+                    b: hundred.node,
+                },
+                share_value,
+            )?,
+            value: share_value,
+        };
+        let ceiled = math::ceil(share.value);
+        let ceiled = Valued {
+            node: calc.graph_mut().push(
+                Node::Ceil {
+                    term: Term::Step("reserved-from-percent"),
+                    of: share.node,
+                },
+                ceiled,
+            )?,
+            value: ceiled,
+        };
+        let reserved = total(calc, &[flat, ceiled], Term::Step("reserved"))?;
+        let unreserved = max.value - reserved.value;
         let node = calc.graph_mut().push(
-            Node::Sum {
+            Node::Difference {
                 term: Term::Result,
-                terms: vec![node],
+                a: max.node,
+                b: reserved.node,
             },
-            value,
+            unreserved,
         )?;
         calc.set_derived(
             field,
             Query {
-                value,
+                value: unreserved,
                 node,
-                reasons: Reasons::new(),
+                reasons,
             },
             &[pool],
         );

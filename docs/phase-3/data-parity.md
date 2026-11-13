@@ -64,11 +64,14 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 
 Evidence, sources, and key lists are in `data-parity-rules-poe1.json`.
 
+## P3-12h: table `gem_effects`
+Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB").
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 
 ## Open for the maintainer
-- The 8 Vaal transfigured gem tag differences are classed `patch-delta` without a patch-note line. Confirm, or reclassify them.
+- The 8 Vaal transfigured gem tag differences stay `patch-delta` without a patch-note line: **confirmed by the maintainer 2026-11-13** (PoB copies `GemEffects.Tags` verbatim, so only the game changed them; the tags do not enter the calc slice). Recorded in P3-12h.
 - `not-carried` is a fifth category, beside the plan's four.
 - 15 ascendancy nodes (`passives-buff-text`) need either the passive buff tables in the bundle (a format change) or a `Partial` state when allocated. P3-3 and P3-8 decide.
 

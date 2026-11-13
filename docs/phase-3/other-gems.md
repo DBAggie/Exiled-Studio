@@ -1,0 +1,99 @@
+# Other gems (Phase 3, step 12)
+
+Every enabled gem but the main skill's was a reason on every field until P3-12h (`unmodelled-gem`, the largest reason left in all 7 in-scope builds). This page records how the engine models them, PR by PR, and the evidence.
+
+## P3-12h: inert skills, reservation, auras and buffs
+
+### What PoB v2.67.2 does
+
+Every loop over `env.player.activeSkillList` in `Modules/Calc*.lua` was read. Another skill reaches the character only through:
+
+| Path | PoB | In this PR |
+|---|---|---|
+| Which skills exist | `CalcSetup.lua` 1504 to 1740: each group of the active set that is the main group, or is enabled with its slot in the weapon set in use (`slotEnabled`); each enabled gem's effects in order; an effect with a `GlobalEffect` mod only when the gem's `enableGlobal<n>` is on (1652; `enableGlobal1` defaults on, `enableGlobal2` off); the group's supports applied as for the main skill | Modelled (`skill::group_skills`, `poe1::gems`) |
+| Groups with a `source` (an item, the tree) | Rebuilt from the source (1340 to 1402) | A reason |
+| Reservation | 1928 to 2040; `doActorLifeManaReservation` 526 to 560 | Modelled (below) |
+| Buffs, auras | The skill's and its supports' mods with a `GlobalEffect` tag (`CalcActiveSkill.lua` 794 to 859), merged across skills per buff name keeping each mod's largest value (`mergeBuff`, `CalcPerform.lua` 44 to 66), scaled by buff and aura effect, applied unless `effectCond` fails (2256 to 2480) | Modelled for the skills in `SKILLS` (below) |
+| By type | Minion counts, totems, `HaveDamageableMinion`, chilling areas, herald and aura counts, `AffectedBy<Buff>` (1320 to 1430, 2112 to 2126, 2272, 2415): named multipliers and conditions only modifiers read | No effect: no mapping row reads a named condition (the row types hold flags only), so a stat that reads one is a reason |
+| By name | Warcries' exerted attacks, pacts, Blight and others' stages (2226 to 2252; `CalcOffence.lua` 2543, 2806) | None of the modelled skills is named in any calc module (checked) |
+| Curses, debuffs, minions' skills, triggers, brands, mirages | Their own code | A reason (not in the tables) |
+| Ailment maxima | `<Ailment>Max` of every skill (3534) | The `gem_effects` check refuses a modelled skill with one |
+
+A gem's quality gains 10% in a socket of its colour (`Classes/SkillsTab.lua` 1210 to 1245). The colour is the granted effect's `Attribute`, which the bundle does not carry, so a modelled gem (the main skill included) in a group whose slot holds an item with a `Sockets` line is `unmodelled-skill` `socket-colour-quality` (Follow-ups).
+
+### The tables
+
+`loom_calc::poe1::gems::SKILLS`, by granted effect ID:
+- **Inert** (nothing reaches the character): Freezing Pulse, Frostblink, Frostblink of Wintry Blast, Ground Slam, Holy Flame Totem, Ice Nova, Leap Slam, Shield Charge, Static Strike, Vaal Ice Nova.
+- **Buffs**, each with its global stats as PoB maps them:
+
+| Skill | Rows that reach the slice | Rows that reach no slice field |
+|---|---|---|
+| Precision (aura) | `accuracy_rating` Accuracy BASE; `skill_buff_grants_critical_strike_chance_+%` CritChance INC | |
+| Clarity (aura) | | mana regeneration |
+| Haste (aura) | attack speed INC (attacks), cast speed INC (casts) | movement speed |
+| Discipline (aura) | `base_maximum_energy_shield` EnergyShield BASE | recharge rate |
+| Zealotry (aura) | spell crit chance INC, spell damage MORE | |
+| Herald of Ice (buff) | added cold damage to attacks and to spells | |
+| Blood Rage (buff) | attack speed INC (attacks) | degeneration, leech |
+| Arctic Armour (buff) | | freeze immunity, damage taken when hit |
+
+`SUPPORTS`: supports whose stats act on their skill alone (Added Cold Damage, Chance to Bleed, Elemental Army, Elemental Proliferation, Faster Attacks, Fortify, Increased Critical Damage, Increased Critical Strikes, Inspiration, Intensify, Melee Physical Damage, Power Charge On Critical, Ruthless, Shockwave, Trinity, Urgent Orders), and three whose global stats reach no slice field: Infused Channelling (damage taken while channelling), Momentum (movement speed), Summon Phantasm (Phantasmal Might, which applies only with `Condition:PhantasmalMight`, set only by the modifier "Each Summoned Phantasm grants you Phantasmal Might", `ModParser.lua` 4473: its stat `summoned_phantasms_grant_buff` must stay a reason).
+
+A skill not in `SKILLS` is `unmodelled-gem`; so is a support not in `SUPPORTS` applied to a modelled skill. A support that applies to no active skill of its group does nothing, as in PoB.
+
+### The check against PoB
+
+PoB's data export goes to format 4 (`tools/oracle/data/pob_data.lua`): each skill's stat-map mods (its `statMap`, else PoB's `SkillStatMap.lua`) with their tags, its base mods, minions, and a support's added types and minions. The `data-parity` table `gem_effects` compares every table entry the bundle holds with it (`tools/parity-cli/src/data_parity/gem_effects.rs`):
+- the stats with a `GlobalEffect` mod equal the table's, and so do the buff's `effectType` and name;
+- each slice row equals PoB's mod (name, type, flags as attack, spell, cast, hit, projectile, no `div` or `mult`, no other tag);
+- no other mod scales buffs or reservation (`BuffEffect`, `AuraEffect`, `Reserved`, `ReservationEfficiency`, `SupportManaMultiplier`, `ExtraSkillMod`, ...), sets an ailment's maximum, or sets a `SkillData` key other than the skill's own data (base damage, duration, radius, stun, repeat rate, labels);
+- no forbidden type (an inert skill: no reservation, buff, aura, herald, hex, brand, warcry, trigger; a buff skill: no minion, totem, warcry, trigger; a support adds none of reservation, buff, aura, herald, totem, trigger but Momentum's `Buff`), no trigger, no minion but Summon Phantasm's phantasm, no support level that sets a percent reservation.
+
+Result: 242 values compared, 0 differences. The first run found 20, each a `SkillData` key of the skill's own data, Holy Flame Totem's `SummonsTotem` type, or Momentum's added `Buff` type; each was read in PoB and allowed with its reason in the check's lists. A maintainer-run test (`the_gem_tables_should_name_real_granted_effects`) checks that every table ID is a granted effect of the real bundle, so none escapes the check.
+
+### Reservation
+
+Per skill with `HasReservation` and not `ReservationBecomesCost` (`CalcPerform.lua` 1940), for each of its level's reservations:
+- `mult` is the applied supports' cost multipliers, each `1 + (cost_multiplier - 100) / 100` (PoB's `manaMultiplier` is the game's value less 100) as MORE, floored to 4 decimals twice (`SupportManaMultiplier` is a high-precision mod: `ModList.lua` 139 to 141, then `CalcPerform`'s `floor(.., 4)`);
+- flat: `floor(flat x mult)`, then `round(.. x (100 + inc) / 100 x more / (1 + eff / 100) / effMore, 0)`, at least 0;
+- percent: `percent x mult`, then the same, rounded to 2 decimals.
+
+`inc`, `more`, and efficiency are 1 and 0: every stat that changes them is a reason (`DEPENDS_ON`, and by name every stat ID with `reservation` or `reserves_no`: `GUARDED_WORDS`). Each skill's amount is a `Base` effect on `Poe1Quantity::Reservation(pool, flat|percent)` with the gem as its source. The unreserved phase computes `max - (flat + ceil(max x percent / 100))` (one `ceil` on the summed percent, as PoB), with a new graph node `Ceil` (calc result v1, additive as P3-12b's rule allows; schema and TypeScript regenerated). A pool no skill reserves keeps its one-term graph.
+
+This follows PoB's model; the game's own rounding of reservation was not tested in game (it would be a register entry if it differs).
+
+### Buffs
+
+A modelled buff skill's instance stats (and its supports'), at the gem's level and quality, give the table's rows; across skills each stat keeps its largest value per buff name (two Herald of Ice gems give one buff), and the rows act on the character with the gem as source. PoB applies buffs after attributes, life, and mana (`CalcPerform.lua` 1905 against 3284): a test checks no buff row targets them. Buff and aura effect stay reasons (`DEPENDS_ON`, `GUARDED_WORDS`: `aura_effect`, `buff_effect`, gem levels and quality), so every buff acts at a scale of exactly 1, where PoB's `ScaleAddList` adds the mods unchanged.
+
+The main skill keeps its own path (its stats through `SkillMapping`); a main skill that reserves is a reason.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `smite-other-gems-templar.xml` | Smite on a Karui Maul with an act 1 setup's other gems: inert skills and supports, Precision and Clarity at level 2, a level 1 Precision the level 2 one outvalues |
+| `smite-blood-rage-haste-templar.xml` | Blood Rage, Haste (50% reserved), Arctic Armour; a Haste with `enableGlobal1` off, which PoB does not create |
+| `ice-nova-zealotry-discipline-witch.xml` | Zealotry and Discipline (percent reservations, energy shield, more spell damage, spell crit) |
+| `ice-nova-herald-of-ice-witch.xml` | Herald of Ice twice: level 20 with Increased Critical Strikes (25% x 1.2 = 30%), level 5 alone (25%); one buff, two reservations |
+
+### Evidence
+
+Maintainer-run (`local/p3/p3-12h/evidence.sh`, P3-12g's bundle `local/p3/p3-12g/bundle-poe1-a`, unchanged: this PR adds no game data), calc runs from clean `0d04119`; `data-parity` from clean `f336006` (the review tightened the check after the calc runs; the engine is the same). Summaries in `docs/phase-3/other-gems/`.
+
+- **PoB data export** (format 4): two runs byte-identical.
+- **`data-parity`**: 534 differences, `uncategorized` 0 (unchanged from P3-12g); the new `gem_effects` table compares 255 values with 0 differences; two runs identical; the record `docs/phase-3/data-parity-poe1-26530219.json` replaced. The review's stricter check found one more case: Summon Phantasm adds `CreatesMinion` to its skill (its phantasm, already allowed), allowed by the same named-condition argument.
+- **Oracle**: 104 fixtures, every expectation met, 3 runs each.
+- **`calc-parity`** (`p3-12h-public-calc-parity-summary.json`): 33 registered differences (DIV-0001 to DIV-0033, unchanged), 0 unexpected, no unused entry; 1380 fields match; every mechanic target met, 1370 of 1370 over 67 fixtures, the four new ones on all their targets (the first quick run matched them too: Herald of Ice needed no `game-truth` entry).
+- **Calc runs**: public and corpus documents byte-identical over two runs; round trips pass (public and corpus).
+- **Against P3-12g** (`p3-12h-public-vs-p3-12g.json`): no field state changed; 42 values in 16 public builds changed, every one toward PoB's (6 now equal it, 36 closer, none farther); 354 reasons gone and 26 added in 28 builds (the added ones: 23 `socket-colour-quality`, and 3 `unmodelled-gem` for Arcane Surge in the Ice Nova builds' main group, which also supports the Vaal gem's other effect, Vaal Ice Nova; PoB gives its buff through that skill too, and the buff is not modelled yet). Corpus: 5 values in 5 builds (unreserved mana), 143 reasons gone, 8 added.
+- **In-scope builds**: `unmodelled-gem` reasons fell from 65 to 20 (both campaign Ice Nova builds), 17 to 10 (Ice Nova mapping), and for Smite act1, act2, act5, act10 from 10, 11, 16, 17 to 0, 4, 8, 8. **Smite act1 has no gem reason left**: its average damage, crit chance, hit chance, and unreserved mana now equal PoB's; its only reasons are the two custom lines ("Perfect Forest Warrior", Q13; "Onslaught", ambiguous), and its speed differs by the Onslaught line and Q11.
+- 1195 workspace tests, clippy, fmt, wasm32; the maintainer-run real-bundle tests (every `DEPENDS_ON` stat and every table ID in the real bundle).
+
+### Follow-ups
+
+- **Socket colour quality**: needs the granted effect's `Attribute` in the bundle (extractor and bundle), then a gem's quality +10 in a socket of its colour, for the main skill too. The maintainer confirmed the mechanic (2026-11-13): since 3.29 a gem of any colour fits any socket (before, a gem needed a socket of its colour or a white one), and a matching colour adds quality to the gem. A white socket gives no bonus (maintainer, 2026-11-13), as in PoB, where only an item whose sockets always match (Dialla's Malefaction) gives it whatever the colour.
+- **Other gems** of the in-scope builds: golems (the minion's buff, the Lightning Golem's Wrath), curses (Frostbite, Elemental Weakness), Frost Bomb's exposure, warcries (Intimidating Cry, Rallying Cry) and their exerted attacks, Herald of Ash (gain as extra), Herald of Purity (a minion), Flesh and Stone (stances), Righteous Fire, Automation, Convocation, Guardian's Blessing, Arcane Surge and Elemental Army's buffs.
+- **Buff and aura effect, reservation modifiers**: map them with the scale PoB applies (`ScaleAddMod`'s rounding) and the reservation terms.
+- **"Perfect Forest Warrior"** in the four Smite builds' active custom block (Q13, context file).

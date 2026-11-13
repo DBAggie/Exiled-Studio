@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 3
+local FORMAT = 4
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -131,6 +131,77 @@ local function statPairs(rows)
 	return out
 end
 
+-- A mod's plain fields and its tags' plain fields (format 4, P3-12h). A
+-- tag's `var`, `effectType`, `effectName`, and the like are what decide
+-- whether a skill's stat reaches the character (`GlobalEffect`, see
+-- Modules/CalcActiveSkill.lua 794 to 859).
+local function modRecord(m)
+	local out = pick(m, { "name", "type", "flags", "keywordFlags" })
+	-- A map entry that is not a mod (PoB keeps a few helper tables there)
+	-- is written as such, so the check sees it instead of skipping it.
+	out.name = out.name or "<unnamed>"
+	out.type = out.type or ""
+	if type(m.value) == "number" or type(m.value) == "boolean" or type(m.value) == "string" then
+		out.value = m.value
+	elseif type(m.value) == "table" then
+		out.value_fields = pick(m.value, { "key", "value", "type", "name" })
+	end
+	local tags = {}
+	for i, tag in ipairs(m) do
+		if type(tag) == "table" then
+			tags[i] = pick(tag, { "type", "effectType", "effectName", "var", "varList", "actor", "skillType", "neg", "allowTotemBuff", "applyNotPlayer", "applyMinions", "unscalable", "effectCond", "effectEnemyCond", "div", "limit", "stat", "modCond", "effectStackVar", "effectStackLimit", "effectStackLimitVar", "skillName", "skillId", "threshold", "thresholdStat", "ifSkillType" })
+		end
+	end
+	out.tags = tags
+	return out
+end
+
+-- The mods each stat of a skill gives, as PoB's `mergeSkillInstanceMods`
+-- (Modules/CalcTools.lua) finds them: the skill's own `statMap`, else
+-- PoB's global `data.skillStatMap` (Data/SkillStatMap.lua); and the
+-- skill's `baseMods` (stat "", for the mods every instance has). The
+-- stats are the skill's level, constant, and quality stats and its
+-- statMap keys. A stat neither map knows has no row.
+local function skillMods(effect)
+	local stats = {}
+	local seen = {}
+	local function add(stat)
+		if type(stat) == "string" and not seen[stat] then
+			seen[stat] = true
+			stats[#stats + 1] = stat
+		end
+	end
+	for _, s in ipairs(effect.stats or {}) do add(s) end
+	for _, row in ipairs(effect.constantStats or {}) do add(row[1]) end
+	for _, row in ipairs(effect.qualityStats or {}) do add(row[1]) end
+	for s in pairs(effect.statMap or {}) do
+		-- `_grantedEffect` is the back reference PoB sets (Data.lua), not a stat.
+		if s ~= "_grantedEffect" then add(s) end
+	end
+	table.sort(stats)
+	local out = {}
+	for _, stat in ipairs(stats) do
+		local map = (effect.statMap and effect.statMap[stat]) or data.skillStatMap[stat]
+		if map then
+			local mods = {}
+			for _, m in ipairs(map) do
+				if type(m) == "table" then
+					mods[#mods + 1] = modRecord(m)
+				end
+			end
+			out[#out + 1] = { stat = stat, own = (effect.statMap and effect.statMap[stat]) ~= nil, div = map.div, mult = map.mult, mods = mods }
+		end
+	end
+	local base = {}
+	for _, m in ipairs(effect.baseMods or {}) do
+		if type(m) == "table" then
+			base[#base + 1] = modRecord(m)
+		end
+	end
+	out[#out + 1] = { stat = "", own = true, mods = base }
+	return out
+end
+
 local skills = {}
 for id, effect in pairs(data.skills) do
 	local stats = list(effect.stats)
@@ -155,6 +226,15 @@ for id, effect in pairs(data.skills) do
 	skill.constant_stats = statPairs(effect.constantStats)
 	skill.quality_stats = statPairs(effect.qualityStats)
 	skill.levels = levels
+	skill.mods = skillMods(effect)
+	skill.minions = list(effect.minionList)
+	local addTypes = {}
+	for i, number in ipairs(effect.addSkillTypes or {}) do
+		addTypes[i] = skillTypeNames[number] or ("#" .. tostring(number))
+	end
+	skill.add_types = addTypes
+	skill.add_minions = list(effect.addMinionList)
+	skill.is_trigger = effect.isTrigger == true
 	skills[id] = skill
 end
 

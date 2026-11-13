@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12h): Smite with a normal Karui Maul (1000 ms) and the other gems of an act 1 Smite setup: Ground Slam with Chance to Bleed and Ruthless, Frostblink, Leap Slam with Faster Attacks, Holy Flame Totem with Summon Phantasm (inert for the character), Precision and Clarity (level 2: accuracy, increased critical strike chance, and their flat mana reservation). A second Precision at level 1 shows that one buff keeps its largest values.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Ground Slam" skillId="GroundSlam" variantId="GroundSlam" gemId="Metadata/Items/Gems/SkillGemGroundSlam" level="5" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Chance to Bleed" skillId="SupportChanceToBleed" variantId="SupportChancetoBleed" gemId="Metadata/Items/Gems/SupportGemChanceToBleed" level="5" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Ruthless" skillId="SupportRuthless" variantId="SupportRuthless" gemId="Metadata/Items/Gems/SupportGemRuthless" level="5" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Frostblink" skillId="Frostblink" variantId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" level="4" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Leap Slam" skillId="LeapSlam" variantId="LeapSlam" gemId="Metadata/Items/Gems/SkillGemLeapSlam" level="2" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Faster Attacks" skillId="SupportFasterAttacks" variantId="SupportFasterAttacks" gemId="Metadata/Items/Gems/SupportGemFasterAttack" level="3" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="2" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Clarity" skillId="Clarity" variantId="Clarity" gemId="Metadata/Items/Gems/SkillGemClarity" level="2" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="1" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Holy Flame Totem" skillId="HolyFlameTotem" variantId="HolyFlameTotem" gemId="Metadata/Items/Gems/SkillGemFlameTotem" level="4" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Summon Phantasm" skillId="SupportSummonPhantasm" variantId="SupportSummonPhantasm" gemId="Metadata/Items/Gems/SupportGemSummonGhostOnKill" level="4" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Karui Maul
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

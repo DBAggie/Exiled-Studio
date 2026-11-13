@@ -1119,6 +1119,7 @@ fn step(r: &CalcResult, field: Field, name: &str) -> Option<f64> {
             Node::Sum { term, .. }
             | Node::Product { term, .. }
             | Node::Trunc { term, .. }
+            | Node::Ceil { term, .. }
             | Node::Min { term, .. }
             | Node::Max { term, .. }
             | Node::Floor { term, .. }

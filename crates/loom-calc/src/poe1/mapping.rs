@@ -24,7 +24,7 @@ type Row = (&'static str, &'static [(Quantity, Op, f64)]);
 /// A mapped effect of a hit stat: what, how, the divisor of the stat's
 /// value, and the skill flags it needs (all of the first, one of the
 /// second when not empty).
-type HitEffect = (Quantity, Op, f64, Flags, Flags);
+pub type HitEffect = (Quantity, Op, f64, Flags, Flags);
 
 /// One mapped hit stat.
 type HitRow = (&'static str, &'static [HitEffect]);

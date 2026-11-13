@@ -185,8 +185,11 @@ impl Data {
             "SupportTestMore",
             "SupportTestPen",
         ];
-        let (gems, gem_effects) = ids.iter().map(|id| gem_row(id)).unzip();
-        Self {
+        let ids = ids.into_iter().chain(OTHER_GEMS);
+        let (gems, gem_effects) = ids.map(gem_row).unzip();
+        let mut sets = Vec::new();
+        let mut effects = other_gems(&mut sets);
+        let mut s = Self {
             effects: vec![
                 effect("IceNova", Some("nova"), false, 0),
                 effect("TestCooldownNova", Some("nova"), false, 3000),
@@ -255,12 +258,86 @@ impl Data {
             actives: vec![
                 active("nova", &["Spell", "Damage", "Area", "Cold"]),
                 active("strike", &["Attack", "Damage", "Melee"]),
+                active("aura", &["Spell", "Aura", "Buff", "HasReservation"]),
+                active("slam", &["Attack", "Damage", "Area", "Melee"]),
             ],
             gems,
             gem_effects,
             constants: true,
-        }
+        };
+        s.effects.append(&mut effects);
+        s.sets.append(&mut sets);
+        s
     }
+}
+
+/// The other gems' made-up rows (P3-12h), under the IDs `poe1::gems`
+/// models:
+/// - `Precision`: an aura, 100 accuracy, 20% increased crit chance,
+///   reserving 30 mana;
+/// - `Haste`: an aura, 10% increased attack and cast speed, reserving
+///   25.5% of mana;
+/// - `Discipline`: an aura reserving spirit (PoE2's pool, a reason);
+/// - `GroundSlam`: an inert attack;
+/// - `SupportFasterAttacks`: a support of every skill, cost multiplier
+///   150, modelled;
+/// - `SupportTestMore` (above) supports a damaging skill: not modelled.
+const OTHER_GEMS: [&str; 5] = [
+    "Precision",
+    "Haste",
+    "Discipline",
+    "GroundSlam",
+    "SupportFasterAttacks",
+];
+
+fn other_gems(sets: &mut Vec<StatSet>) -> Vec<GrantedEffect> {
+    use loom_data::bundle::skills::{Reservation, Resource};
+    let reserving = |id: &str, r: Reservation| {
+        let mut e = effect(id, Some("aura"), false, 0);
+        e.levels[0].reservations = vec![r];
+        e
+    };
+    let mana = |percent, amount| Reservation {
+        resource: Resource::Mana,
+        percent,
+        amount,
+    };
+    sets.push(stat_set(
+        "Precision",
+        Vec::new(),
+        vec![
+            int("accuracy_rating", 100),
+            int("skill_buff_grants_critical_strike_chance_+%", 20),
+        ],
+    ));
+    sets.push(stat_set(
+        "Haste",
+        Vec::new(),
+        vec![
+            int("attack_speed_+%_granted_from_skill", 10),
+            int("cast_speed_+%_granted_from_skill", 10),
+        ],
+    ));
+    sets.push(stat_set("Discipline", Vec::new(), Vec::new()));
+    sets.push(stat_set("GroundSlam", Vec::new(), Vec::new()));
+    sets.push(stat_set("SupportFasterAttacks", Vec::new(), Vec::new()));
+    let mut support = effect("SupportFasterAttacks", None, true, 0);
+    support.allowed_types = Vec::new();
+    support.levels[0].cost_multiplier = 150;
+    vec![
+        reserving("Precision", mana(false, 30)),
+        reserving("Haste", mana(true, 2550)),
+        reserving(
+            "Discipline",
+            Reservation {
+                resource: Resource::Spirit,
+                percent: false,
+                amount: 10,
+            },
+        ),
+        effect("GroundSlam", Some("slam"), false, 0),
+        support,
+    ]
 }
 
 impl CalcData for Data {
@@ -1236,4 +1313,162 @@ fn lines_on_a_charge_input_should_be_a_reason() {
     assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
         input: "usePowerCharges".to_owned(),
     }));
+}
+
+// ------------------------------------------------- other gems (P3-12h)
+
+fn gem_reasons(r: &CalcResult) -> Vec<String> {
+    let reasons = match &r.fields[&Field::Life].state {
+        FieldState::Partial(p) | FieldState::Indeterminate { partial: p, .. } => p.clone(),
+        _ => std::collections::BTreeSet::new(),
+    };
+    let mut out: Vec<String> = reasons
+        .iter()
+        .filter_map(|x| match x {
+            UnsupportedReason::UnmodelledGem { source } => Some(format!("gem {source:?}")),
+            UnsupportedReason::UnmodelledSkill { source, what } => {
+                Some(format!("skill {what} {source:?}"))
+            }
+            _ => None,
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+fn mana(r: &CalcResult) -> f64 {
+    value(r, Field::Mana)
+}
+
+#[test]
+fn an_aura_should_buff_and_reserve_and_inert_gems_should_do_nothing() {
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let r = run(&build(vec![
+        group(&["IceNova"]),
+        group(&["Precision"]),
+        group(&["Haste"]),
+        group(&["GroundSlam", "SupportFasterAttacks"]),
+    ]));
+    assert_eq!(gem_reasons(&r), Vec::<String>::new());
+    for f in [
+        Field::ManaUnreserved,
+        Field::CritChance,
+        Field::Speed,
+        Field::Life,
+    ] {
+        assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+    }
+    // 30 flat, and ceil(mana x 25.5 / 100) from the percent.
+    let m = mana(&r);
+    assert_eq!(
+        value(&r, Field::ManaUnreserved),
+        m - (30.0 + (m * 25.5 / 100.0).ceil())
+    );
+    // 20% increased crit chance; 10% increased cast speed.
+    assert_eq!(
+        value(&r, Field::CritChance),
+        value(&bare, Field::CritChance) * 1.2
+    );
+    assert_eq!(value(&r, Field::Speed), value(&bare, Field::Speed) * 1.1);
+    // The life pool is not reserved: one term, its own node.
+    assert_eq!(value(&r, Field::LifeUnreserved), value(&r, Field::Life));
+}
+
+#[test]
+fn a_supports_cost_multiplier_should_scale_the_reservation() {
+    let r = run(&build(vec![
+        group(&["IceNova"]),
+        group(&["Precision", "SupportFasterAttacks"]),
+    ]));
+    // floor(30 x 1.5) = 45.
+    assert_eq!(value(&r, Field::ManaUnreserved), mana(&r) - 45.0);
+}
+
+#[test]
+fn what_the_tables_do_not_model_should_be_reasons() {
+    // An active skill not in the table; a support not in the table on an
+    // inert skill; spirit reservation.
+    let r = run(&build(vec![
+        group(&["IceNova"]),
+        group(&["TestStrike"]),
+        group(&["GroundSlam", "SupportTestMore"]),
+        group(&["Discipline"]),
+    ]));
+    assert_eq!(
+        gem_reasons(&r),
+        [
+            "gem Gem { group: 1, gem: 0 }",
+            "gem Gem { group: 2, gem: 1 }",
+            "skill spirit-reservation Gem { group: 3, gem: 0 }",
+        ]
+    );
+    assert_eq!(
+        r.fields[&Field::ManaUnreserved].state.kind(),
+        StateKind::Partial
+    );
+}
+
+#[test]
+fn groups_pob_does_not_create_should_change_nothing() {
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let mut disabled = group(&["Precision"]);
+    disabled.enabled = false;
+    let mut swap = group(&["Precision"]);
+    swap.slot = Some(loom_domain::SlotId::new("Weapon 1 Swap"));
+    let mut off = group(&["Haste"]);
+    let mut g = gem("Haste");
+    g.attributes.push(loom_domain::Attribute {
+        name: "enableGlobal1".to_owned(),
+        value: "false".to_owned(),
+    });
+    off.gems = Ordered::new();
+    off.gems.push(g);
+    let r = run(&build(vec![group(&["IceNova"]), disabled, swap, off]));
+    assert_eq!(gem_reasons(&r), Vec::<String>::new());
+    for f in [Field::ManaUnreserved, Field::CritChance, Field::Speed] {
+        assert_eq!(value(&r, f), value(&bare, f), "{f}");
+        assert_eq!(r.fields[&f].state, FieldState::Complete, "{f}");
+    }
+}
+
+#[test]
+fn a_group_with_a_source_should_be_a_reason() {
+    let mut granted = group(&["Precision"]);
+    granted.attributes.push(loom_domain::Attribute {
+        name: "source".to_owned(),
+        value: "Item:3".to_owned(),
+    });
+    let r = run(&build(vec![group(&["IceNova"]), granted]));
+    assert_eq!(gem_reasons(&r), ["gem Gem { group: 1, gem: 0 }"]);
+}
+
+#[test]
+fn a_main_skill_that_reserves_should_be_a_reason() {
+    let mut data = Data::new();
+    for e in &mut data.effects {
+        if e.id == "IceNova" {
+            e.levels[0].reservations = vec![loom_data::bundle::skills::Reservation {
+                resource: loom_data::bundle::skills::Resource::Mana,
+                percent: false,
+                amount: 5,
+            }];
+        }
+    }
+    for a in &mut data.actives {
+        if a.id == "nova" {
+            a.types.push("HasReservation".to_owned());
+        }
+    }
+    let b = build(vec![group(&["IceNova"])]);
+    let options = CalcOptions::default();
+    let input = CalcInput {
+        build: &b,
+        data: &data,
+        options: &options,
+    };
+    let r = calculate(&input).unwrap_or_else(|e| panic!("{e}"));
+    assert_eq!(
+        gem_reasons(&r),
+        ["skill reservation Gem { group: 0, gem: 0 }"]
+    );
 }

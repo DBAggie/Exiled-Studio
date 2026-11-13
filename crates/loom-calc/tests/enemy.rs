@@ -253,7 +253,7 @@ fn the_armour_table_should_equal_pobs_with_its_constant() {
 
 /// Every stat the config rules depend on (`loom_calc::poe1::config::
 /// DEPENDS_ON`, `poe1::buffs::DEPENDS_ON`, `poe1::damage_taken::
-/// BLIND_DEPENDS_ON`) is a stat of the real bundle: a
+/// BLIND_DEPENDS_ON`, `poe1::gems::DEPENDS_ON`) is a stat of the real bundle: a
 /// misspelt ID would pass the `Unmapped` check. Maintainer-run:
 /// `LOOM_BUNDLE_DIR=<bundle> cargo test -p loom-calc --test enemy --
 /// --ignored`.
@@ -270,7 +270,31 @@ fn the_config_rules_stats_should_be_real_stats() {
         .iter()
         .chain(loom_calc::poe1::buffs::DEPENDS_ON)
         .chain(loom_calc::poe1::damage_taken::BLIND_DEPENDS_ON)
+        .chain(loom_calc::poe1::gems::DEPENDS_ON)
         .filter(|id| !data.stats.iter().any(|s| s.id == **id))
+        .collect();
+    assert!(missing.is_empty(), "{missing:?}");
+}
+
+/// Every skill and support `poe1::gems` models (P3-12h) is a granted
+/// effect of the real bundle, so `data-parity`'s `gem_effects` table
+/// (which skips entries the bundle lacks) checks each against PoB.
+/// Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn the_gem_tables_should_name_real_granted_effects() {
+    use loom_calc::CalcData;
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let missing: Vec<_> = loom_calc::poe1::gems::SKILLS
+        .iter()
+        .map(|(id, _)| *id)
+        .chain(loom_calc::poe1::gems::SUPPORTS.iter().map(|(id, _)| *id))
+        .filter(|id| data.granted_effect(id).is_none())
         .collect();
     assert!(missing.is_empty(), "{missing:?}");
 }

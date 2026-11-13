@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 3;
+pub const FORMAT: u32 = 4;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -164,6 +164,83 @@ pub struct Skill {
     pub quality_stats: Vec<StatValue>,
     /// `levels`, by level number as text.
     pub levels: BTreeMap<String, Level>,
+    /// The mods each stat gives through the skill's `statMap` or PoB's
+    /// `SkillStatMap.lua`, and the base mods (stat `""`), format 4
+    /// (P3-12h).
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<StatMods>,
+    /// `minionList` (format 4).
+    #[serde(deserialize_with = "list")]
+    pub minions: Vec<String>,
+    /// A support's `addSkillTypes`, by name (format 4).
+    #[serde(deserialize_with = "list")]
+    pub add_types: Vec<String>,
+    /// A support's `addMinionList` (format 4).
+    #[serde(deserialize_with = "list")]
+    pub add_minions: Vec<String>,
+    /// A support's `isTrigger` (format 4).
+    pub is_trigger: bool,
+}
+
+/// The mods one stat of a skill gives (format 4): PoB's
+/// `mergeSkillInstanceMods` reads `statMap[stat]`, else
+/// `data.skillStatMap[stat]`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatMods {
+    /// The stat (`""` for the skill's base mods).
+    pub stat: String,
+    #[expect(
+        dead_code,
+        reason = "read so the export is checked whole; not compared"
+    )]
+    /// From the skill's own `statMap` (else PoB's global map).
+    pub own: bool,
+    /// The map's `div`, when it has one.
+    #[serde(default)]
+    pub div: Option<f64>,
+    /// The map's `mult`, when it has one.
+    #[serde(default)]
+    pub mult: Option<f64>,
+    /// The mods.
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<ModRecord>,
+}
+
+/// One mod of a skill's stat map (format 4), plain fields only.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModRecord {
+    /// The mod's name (`Accuracy`, `CritChance`, `SkillData`, ...).
+    pub name: String,
+    /// Its type (`BASE`, `INC`, `MORE`, `FLAG`, `LIST`, ...).
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// `ModFlag` bits.
+    #[serde(default)]
+    pub flags: Option<u64>,
+    /// `KeywordFlag` bits.
+    #[serde(default, rename = "keywordFlags")]
+    pub keyword_flags: Option<u64>,
+    /// A constant value, when the mod has one.
+    #[serde(default)]
+    pub value: Option<serde_json::Value>,
+    /// A `LIST` mod's value fields (`key` and `value` for `SkillData`).
+    #[serde(default)]
+    pub value_fields: Option<BTreeMap<String, serde_json::Value>>,
+    /// The tags, in order, each with its plain fields.
+    #[serde(deserialize_with = "list")]
+    pub tags: Vec<BTreeMap<String, serde_json::Value>>,
+}
+
+impl ModRecord {
+    /// The `GlobalEffect` tag's fields, if the mod has one.
+    #[must_use]
+    pub fn global_effect(&self) -> Option<&BTreeMap<String, serde_json::Value>> {
+        self.tags
+            .iter()
+            .find(|t| t.get("type").and_then(serde_json::Value::as_str) == Some("GlobalEffect"))
+    }
 }
 
 /// One level of a skill.

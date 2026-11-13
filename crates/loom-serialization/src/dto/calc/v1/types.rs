@@ -375,6 +375,8 @@ dto! {
         RoundHalfUp,
         /// The child's integer part, towards zero.
         Trunc,
+        /// The child rounded up (P3-12h).
+        Ceil,
         /// The smaller child.
         Min,
         /// The larger child.

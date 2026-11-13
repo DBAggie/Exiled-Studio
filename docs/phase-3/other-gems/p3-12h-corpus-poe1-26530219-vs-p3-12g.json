@@ -1,0 +1,275 @@
+{
+ "builds_with_reason_changes": 15,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 31}}}}"
+   ]
+  },
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}"
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 4}}}}"
+   ]
+  },
+  "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 16}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 19}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}"
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 21}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 8}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 9}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 16}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 16}}}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 1}}}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 7}}}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 12}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 12}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 15}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 3}}}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 5}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 7}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 2}}}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 2}}}}",
+    "{\"unmodelled-gem\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}}}"
+   ]
+  }
+ },
+ "reasons_added": 8,
+ "reasons_gone": 143,
+ "state_changes": {},
+ "value_changes": {
+  "4d7d92ac906e8d053aa11da4e7ef6a84d69588e5ad2ed3f4f9d8285d6e91c853.json": {
+   "mana-unreserved": [
+    374.0,
+    187.0
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "mana-unreserved": [
+    1416.0,
+    1062.0
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "mana-unreserved": [
+    1294.0,
+    970.0
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "mana-unreserved": [
+    711.0,
+    533.0
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "mana-unreserved": [
+    1271.0,
+    953.0
+   ]
+  }
+ }
+}

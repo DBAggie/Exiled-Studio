@@ -159,7 +159,8 @@ impl Document {
                 NodeKind::PercentFactor
                 | NodeKind::Floor
                 | NodeKind::RoundHalfUp
-                | NodeKind::Trunc => (Some(1), true),
+                | NodeKind::Trunc
+                | NodeKind::Ceil => (Some(1), true),
                 NodeKind::Sum | NodeKind::Product | NodeKind::Any => (None, true),
             };
             if arity.is_some_and(|a| a != n.children.len()) {

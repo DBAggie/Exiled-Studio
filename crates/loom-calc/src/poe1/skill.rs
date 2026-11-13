@@ -378,6 +378,96 @@ pub fn main_skill<'d>(
     })
 }
 
+/// One active effect of a socket group with the supports that apply to it
+/// (P3-12h: every group's skills, not only the main one's).
+#[derive(Debug, Clone)]
+pub struct GroupSkill<'d> {
+    /// The active granted effect, with its gem.
+    pub active_gem: GemEffectRef<'d>,
+    /// Its active skill row, if it names one.
+    pub active: Option<&'d ActiveSkill>,
+    /// Whether PoB creates the skill only when the gem's `enableGlobal<n>`
+    /// is on and the effect has a global effect (`CalcSetup.lua` 1652):
+    /// `true` when the flag is off, so the skill exists only if the effect
+    /// has none.
+    pub global_off: bool,
+    /// Supports that apply, in group order, with their gems.
+    pub supports: Vec<GemEffectRef<'d>>,
+    /// The skill's types after the supports added theirs.
+    pub types: BTreeSet<String>,
+}
+
+/// The active effects of a group's enabled gems, each with the group's
+/// supports that apply to it, in PoB's order (`CalcSetup.lua` 1645 to
+/// 1740: gems in order, each gem's effects in order; supports as for the
+/// main skill, module docs). `Err` names a gem the data does not have.
+///
+/// # Errors
+/// [`SkillProblem::UnknownGem`].
+pub fn group_skills<'d>(
+    group: &SocketGroup,
+    data: &'d dyn CalcData,
+) -> Result<Vec<GroupSkill<'d>>, SkillProblem> {
+    let mut actives: Vec<Candidate<'d>> = Vec::new();
+    let mut group_supports: Vec<GemEffectRef<'d>> = Vec::new();
+    for (g, gem) in group.gems.typed().enumerate() {
+        if !gem.enabled {
+            continue;
+        }
+        let effects = gem_effects(gem, data).ok_or_else(|| SkillProblem::UnknownGem {
+            gem: gem
+                .gem
+                .as_ref()
+                .map(|g| g.as_str().to_owned())
+                .or_else(|| gem.skill.as_ref().map(|s| s.as_str().to_owned()))
+                .unwrap_or_default(),
+        })?;
+        for (n, effect) in effects.into_iter().enumerate() {
+            let r = GemEffectRef {
+                gem: g,
+                effect,
+                level: i64::from(*gem.level.value()),
+                quality: i64::from(*gem.quality.value()),
+            };
+            if effect.support {
+                group_supports.push(r);
+            } else {
+                actives.push((r, gem.gem.is_some(), !global_enabled(gem, n + 1)));
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (active_gem, _, global_off) in &actives {
+        let effect = active_gem.effect;
+        let from_gem = actives
+            .iter()
+            .any(|(r, gem, _)| *gem && r.effect.id == effect.id);
+        let active = effect
+            .active_skill
+            .as_deref()
+            .and_then(|a| data.active_skill(a));
+        let minion: &[String] = active.map_or(&[], |a| a.minion_types.as_slice());
+        let mut types: BTreeSet<String> = active
+            .map(|a| a.types.iter().cloned().collect())
+            .unwrap_or_default();
+        let mut applied = Vec::new();
+        for s in &group_supports {
+            if supports(s.effect, effect, from_gem, &types, minion) {
+                types.extend(s.effect.added_types.iter().cloned());
+                applied.push(*s);
+            }
+        }
+        out.push(GroupSkill {
+            active_gem: *active_gem,
+            active,
+            global_off: *global_off,
+            supports: applied,
+            types,
+        });
+    }
+    Ok(out)
+}
+
 /// Why a gem instance's stats are not all known.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum InstanceProblem {
