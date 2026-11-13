@@ -609,3 +609,47 @@ On `smite-intimidate-blind-templar.xml` the attack rate, `TotalDPS`, and its dis
 - **The Lightning Golem's Wrath** (`summonLightningGolemEnableWrath`, the three Ice Nova builds): the aura is the golem's own skill (`LightningGolemWrath`, `Data/Skills/minion.lua`), so the golem gem comes first. With it, **the other gems** (`unmodelled-gem`, the largest reason left in the in-scope builds: auras, heralds, golems, buffs, curses, warcries, totems, movement skills, reservation). PoB lets a non-main skill act through its buffs (`GlobalEffect` mods of its stat maps), reservation, minions, totems, chilling areas, warcries, and curses (`CalcPerform.lua` 1261 to 1440, 1928 to 2040); which gems are inert for the slice needs those stat maps per skill.
 - **Other config inputs** in the public builds: `multiplierWitheredStackCount`, `buffLifetap`, `infusedChannellingInfusion`, `multiplierCorpseConsumedRecently`, `prideEffect`, `buffTailwind`, and the others the calc runs list.
 - **Q12** (maintainer, in game): see the handoff.
+
+## P3-12j: the "Onslaught" modifier
+
+The four in-scope Smite builds' active custom block holds the line "Onslaught". PoB reads it as `Condition:Onslaught` (`Modules/ModParser.lua` 3973), the condition the `buffOnslaught` check also sets (P3-12f), without the check's combat tag. `calcs.initModDB` turns the condition into the `Onslaught` flag (`CalcSetup.lua` 97), and `calcs.perform` gives the buff once whatever the number of sources (`CalcPerform.lua` 656 to 684).
+
+### The line
+
+"Onslaught" is a game text. Two stats render it: `base_should_have_onslaught_from_stat` (the character's Onslaught: the Synthesis implicit, a unique, two monster mods) and `silver_flask_display_onslaught` (a Silver Flask's display stat, which no mod row carries). An item line is settled by the mod-row filter with the item's base. A custom line has no base, so P3-12c left it ambiguous.
+
+**The rule** (`loom_parser::import`, `resolve_custom_line`): of an ambiguous custom line's readings, the one that is global (no stat local to an item) and backed by a mod row of an item domain (`Mods::backed_in`; the item domains are the base items' domains, so the monster and area domains are out) is the reading when it is the only one. Otherwise the line stays ambiguous. It is a prior, not PoB's parse: a player's custom line is read as something an item could carry. The first run took the weapon-local `local_critical_strike_chance` for "+1.5% to critical strike chance" in the Ice Nova builds' legacy lines (PoB: global base crit), still a reason but a misleading one; local readings are therefore excluded (`2909f75`), and that line stays ambiguous. A custom line is a modifier the player gives the character; a reading that no item can carry is a display or a monster stat. The synthetic bundle's accuracy line, read before as ambiguous, now resolves to the one reading that has a row; its evasion line, with no row for either reading, stays ambiguous (`crates/loom-parser/tests/resolve_build.rs`).
+
+### The calc
+
+- **`Poe1Quantity::Onslaught`** (calc result v1: a new quantity name, `poe1.onslaught`, additive), a flag. The stat's mapping row gives a `Flag` effect on it.
+- **`poe1::buffs`** runs after every other source. Onslaught is on when the check is on or when any unconditional `Flag` effect on the quantity exists; it then adds `Speed` INC 20 for attacks and for casts once. The source is the config input, else the first flag's source. Two lines, or a line and the check, give it once, as PoB's flag does.
+- `DEPENDS_ON` (Onslaught's effect stats) is unchanged; the guard test now allows the one flag stat.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-onslaught-modifier-witch.xml` | The custom line "Onslaught" alone, the check off: 20% increased cast speed |
+| `ice-nova-onslaught-twice-witch.xml` | The line in two blocks and the check on: the same, once (PoB's output for both fixtures is identical) |
+
+The first run of both matched PoB on every target.
+
+### Review
+
+`code-architecture-reviewer`: no blockers; PoB's reading confirmed (the tagless condition, the flag once, the check's combat tag). Applied: the global check through the locality classifier (`local_kind`), the doc notes on the rule being a prior and on the breadth of the item domains, a comment and test that every Onslaught flag is unconditional, the test modules merged, a disabled block in the test. Not done: marking a reading the rule took as `adapted` (a domain change; the line's source and the fixtures show it), a fixture with two blocks and the check off (the unit test covers it).
+
+### Evidence
+
+Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p3/p3-12j/evidence.sh` (tool commit `36c46b4`, before the rebase on #91's tip: the oracle run only, which has no engine code) and `local/p3/p3-12j/evidence-calc.sh` (tool commit `2909f75`: the calc runs and `calc-parity`; the review's `962ea42` changes no result). No game data changes: P3-12i's bundle and overlay. Summaries in `docs/phase-3/config-inputs/p3-12j-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 108 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 108 documents; 1493 complete, 334 partial, 429 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public, with the overlay run, the register, and the manifest | 33 differences, all registered (unchanged), 0 unexpected; 1469 fields match. **Every mechanic target met: 1459 of 1459 over 71 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-12i** (`p3-12j-public-vs-p3-12i.json`, `p3-12j-corpus-poe1-26530219-vs-p3-12i.json`). No field state changes. The four in-scope Smite builds' speed and hit DPS change, all eight values closer to PoB's: Smite act1's speed is 1.5956 against PoB's 1.5948 (the remaining gap is Q11's floored attack time, `game-truth`). Their "Onslaught" reason is gone (4); none added. Smite act1's only reason left is "Perfect Forest Warrior" (Q13). Corpus: 4 legacy custom lines in 3 builds now resolve (none was "Onslaught"); 8 values in 2 builds change, each closer to PoB's or equal (4 equal: the resistances and speed of one build).
+
+Tests: 1207 workspace tests, clippy, fmt, wasm32.

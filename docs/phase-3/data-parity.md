@@ -19,7 +19,7 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 
 | Table | Compared | Differences | PoB-only rows | Bundle-only (listed, not gating) |
 |---|---|---|---|---|
-| skills | 495,396 | 205 | 13 | 11,332 (effects, levels, 35 effects' additional stat sets) |
+| skills | 496,904 (P3-12i; 495,396 before the colour) | 205 | 13 | 11,332 (effects, levels, 35 effects' additional stat sets) |
 | passives | 27,168 | 214 | 0 | 2,310 |
 | bases | 6,550 | 5 | 5 | 10 |
 | gems | 5,220 | 8 | 0 | 422 |
@@ -66,6 +66,9 @@ Evidence, sources, and key lists are in `data-parity-rules-poe1.json`.
 
 ## P3-12h: table `gem_effects`
 Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB").
+
+## P3-12i: the skills' `color`
+The bundle carries each granted effect's colour (`attribute`, the game's `GrantedEffects.Attribute` as stored); PoB's export (format 5) writes each skill's `color`, which its exporter copies from the same column (`src/Export/Scripts/skills.lua` 157). Table `skills`, field `color`: 1,508 values compared (every skill both sides hold), 0 differences; the other counts are unchanged (534 differences, `uncategorized` 0). Two PoB skills without a colour (`HarvestNessaCrabScreechDebuff`, `HarvestRhexScreechDebuff`) are among the 13 PoB-only rows.
 
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.

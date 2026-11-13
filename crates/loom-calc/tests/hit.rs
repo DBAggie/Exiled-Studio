@@ -9,6 +9,7 @@
 //! the oracle (`docs/phase-3/spell-hits.md`).
 
 use loom_calc::poe1::hit::spell_skill;
+use loom_calc::poe1::sockets::{ALWAYS_MATCHES, SocketMatch, socket_matches};
 use loom_calc::{
     ActiveSkill, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, EffectLevel, Field,
     FieldState, GemEffect, GrantedEffect, PassiveLinks, SkillGem, Source, StatAmount, StatSet,
@@ -17,7 +18,9 @@ use loom_calc::{
 use loom_data::bundle::skills::{FloatStat, LevelStat};
 use loom_domain::{
     Build, ClassId, ConfigInput, ConfigSet, ConfigSetId, ConfigValue, DataVersion, Game, Gem,
-    GemId, Ordered, SkillId, SkillSet, SkillSetId, SocketGroup, Sourced,
+    GemId, Item, ItemBody, ItemId, ItemLine, ItemSet, ItemSetId, ItemsEntry, LineKind,
+    LineResolution, ModSection, ModifierLine, Ordered, Resolved, SkillId, SkillSet, SkillSetId,
+    SlotEntry, SlotId, SocketGroup, Sourced, StatId, StatLine, StatValue,
 };
 
 // ---------------------------------------------------------------- data
@@ -49,6 +52,7 @@ fn effect(id: &str, active: Option<&str>, support: bool, cooldown: i64) -> Grant
         support,
         active_skill: active.map(str::to_owned),
         cast_time: if support { 0 } else { 500 },
+        attribute: None,
         allowed_types: if support {
             vec!["Damage".to_owned()]
         } else {
@@ -267,6 +271,15 @@ impl Data {
         };
         s.effects.append(&mut effects);
         s.sets.append(&mut sets);
+        // The gems' colours (P3-12i): Ice Nova blue, Precision and Faster
+        // Attacks green; the others have none (a bundle without the field).
+        for e in &mut s.effects {
+            e.attribute = match e.id.as_str() {
+                "IceNova" => Some(3),
+                "Precision" | "SupportFasterAttacks" => Some(2),
+                _ => None,
+            };
+        }
         s
     }
 }
@@ -1282,6 +1295,85 @@ fn onslaught_should_grant_increased_cast_speed() {
     }));
 }
 
+/// A modifier "Onslaught" (a custom line, `base_should_have_onslaught_from_stat`)
+/// gives Onslaught as the check does; any number of sources give it once,
+/// as PoB's flag (P3-12j).
+#[test]
+fn an_onslaught_modifier_should_grant_onslaught_once() {
+    let onslaught_line = || loom_domain::CustomModifierLine {
+        text: "Onslaught".to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new("base_should_have_onslaught_from_stat"),
+                value: StatValue::Exact { min: 1, max: 1 },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |lines: usize, check: bool| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: "Onslaught\n".repeat(lines),
+                lines: (0..lines).map(|_| onslaught_line()).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        if check {
+            set.inputs.push(ConfigInput {
+                name: "buffOnslaught".to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    assert_eq!(
+        value(&with(0, false), Field::Speed),
+        value(&bare, Field::Speed)
+    );
+    // A disabled block gives nothing.
+    let mut b = build(vec![group(&["IceNova"])]);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![loom_domain::CustomModifierBlock {
+            title: None,
+            enabled: false,
+            text: "Onslaught".to_owned(),
+            lines: vec![onslaught_line()],
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    assert_eq!(value(&run(&b), Field::Speed), value(&bare, Field::Speed));
+    // 1 / (0.5 / round(1 + 20 / 100, 2)), whatever the sources.
+    for (lines, check) in [(1, false), (2, false), (1, true), (0, true)] {
+        let r = with(lines, check);
+        assert_eq!(
+            r.fields[&Field::Speed].state,
+            FieldState::Complete,
+            "{lines} {check}"
+        );
+        assert_eq!(
+            value(&r, Field::Speed),
+            1.0 / (0.5 / 1.2),
+            "{lines} {check}"
+        );
+    }
+}
+
 /// Lines on a charge input (a build document can carry them) are a reason
 /// under its name, as on any input other than `customMods` (P3-12e
 /// review).
@@ -1471,4 +1563,502 @@ fn a_main_skill_that_reserves_should_be_a_reason() {
         gem_reasons(&r),
         ["skill reservation Gem { group: 0, gem: 0 }"]
     );
+}
+
+// ------------------------------------------------- socket colour (P3-12i)
+
+fn spec(key: &str, value: &str) -> ItemLine {
+    ItemLine {
+        source: format!("{key}: {value}"),
+        kind: LineKind::Spec {
+            key: key.to_owned(),
+            value: value.to_owned(),
+            known: true,
+        },
+    }
+}
+
+fn stat_line(id: &str) -> ItemLine {
+    ItemLine {
+        source: id.to_owned(),
+        kind: LineKind::Modifier(ModifierLine {
+            text: id.to_owned(),
+            prefixes: Vec::new(),
+            section: ModSection::Explicit,
+            selected: true,
+            resolution: LineResolution::Resolved {
+                result: Resolved::Stats(vec![StatLine {
+                    stat: StatId::new(id),
+                    value: StatValue::Exact { min: 1, max: 1 },
+                }]),
+                adapted: None,
+            },
+        }),
+    }
+}
+
+/// `b` with an item of these lines in `slot` of one item set.
+fn with_item(mut b: Build, slot: &str, lines: Vec<ItemLine>) -> Build {
+    b.items.entries.push(ItemsEntry::Item(Item {
+        id: ItemId(1),
+        body: ItemBody {
+            lines,
+            ..ItemBody::default()
+        },
+        layout: Ordered::new(),
+        text_spacing: Vec::new(),
+        attributes: Vec::new(),
+    }));
+    let mut set = ItemSet {
+        id: ItemSetId(1),
+        title: None,
+        slots: Ordered::new(),
+        attributes: Vec::new(),
+    };
+    set.slots.push(SlotEntry {
+        slot: SlotId::new(slot),
+        item: Some(ItemId(1)),
+        attributes: Vec::new(),
+    });
+    b.items.entries.push(ItemsEntry::Set(set));
+    b
+}
+
+fn in_slot(mut g: SocketGroup, slot: &str) -> SocketGroup {
+    g.slot = Some(SlotId::new(slot));
+    g
+}
+
+#[expect(
+    clippy::unwrap_used,
+    reason = "a test helper: a failure fails the test"
+)]
+fn matches(b: &Build) -> Vec<Vec<SocketMatch>> {
+    let groups = loom_calc::poe1::skill::active_groups(b).unwrap();
+    socket_matches(b, &groups, &Data::new())
+}
+
+#[test]
+fn a_gem_in_a_socket_of_its_colour_should_gain_quality() {
+    use SocketMatch::{No, Yes};
+    // Ice Nova (blue) in socket 1, Precision (green) in socket 2.
+    let gloves = |sockets: &str| {
+        with_item(
+            build(vec![in_slot(group(&["IceNova", "Precision"]), "Gloves")]),
+            "Gloves",
+            vec![spec("Sockets", sockets)],
+        )
+    };
+    assert_eq!(matches(&gloves("B-G")), [vec![Yes, Yes]]);
+    assert_eq!(matches(&gloves("G-B")), [vec![No, No]]);
+    // A white socket gives none; a missing socket none.
+    assert_eq!(matches(&gloves("W-W")), [vec![No, No]]);
+    assert_eq!(matches(&gloves("B")), [vec![Yes, No]]);
+    // Abyssal sockets count in the order.
+    assert_eq!(matches(&gloves("A-B-G")), [vec![No, No]]);
+    let data = Data::new();
+    let main = loom_calc::poe1::skill::main_skill(&gloves("B-G"), &data).unwrap();
+    assert_eq!((main.active_gem.quality, main.active_gem.socket), (10, Yes));
+    let main = loom_calc::poe1::skill::main_skill(&gloves("R-G"), &data).unwrap();
+    assert_eq!(main.active_gem.quality, 0);
+}
+
+#[test]
+fn earlier_groups_of_the_slot_should_count_every_gem() {
+    use SocketMatch::{No, Yes};
+    // Group 1 (Ice Nova, a disabled gem) takes sockets 1 and 2; group 2's
+    // Precision sits in socket 3; group 3 is in another slot, group 4 in
+    // none.
+    let mut first = group(&["IceNova", "Precision"]);
+    first.gems.typed_mut().nth(1).unwrap().enabled = false;
+    let b = with_item(
+        build(vec![
+            in_slot(first, "Gloves"),
+            in_slot(group(&["Precision"]), "Gloves"),
+            in_slot(group(&["Precision"]), "Helmet"),
+            group(&["Precision"]),
+        ]),
+        "Gloves",
+        vec![spec("Sockets", "B-R G")],
+    );
+    assert_eq!(matches(&b), [vec![Yes, No], vec![Yes], vec![No], vec![No]]);
+}
+
+#[test]
+fn items_whose_sockets_are_not_known_should_be_a_reason() {
+    use SocketMatch::{Unknown, Yes};
+    let b = |lines| {
+        with_item(
+            build(vec![
+                group(&["IceNova"]),
+                in_slot(group(&["Precision", "GroundSlam"]), "Gloves"),
+            ]),
+            "Gloves",
+            lines,
+        )
+    };
+    // "Gems Socketed always have the Quality bonus": every gem matches,
+    // whatever the colours.
+    let always = b(vec![spec("Sockets", "R-R"), stat_line(ALWAYS_MATCHES)]);
+    assert_eq!(matches(&always)[1], [Yes, Yes]);
+    assert_eq!(gem_reasons(&run(&always)), Vec::<String>::new());
+    for (lines, why) in [
+        (vec![], "no-sockets-line"),
+        (
+            vec![spec("Sockets", "G"), spec("Sockets", "G")],
+            "several-sockets-lines",
+        ),
+        (
+            vec![spec("Sockets", "G"), stat_line("local_has_X_sockets")],
+            "socket-count-line",
+        ),
+    ] {
+        let build = b(lines);
+        assert_eq!(matches(&build)[1], [Unknown(why), Unknown(why)], "{why}");
+        // Precision's quality is a reason; the inert Ground Slam's is not.
+        assert_eq!(
+            gem_reasons(&run(&build)),
+            ["skill socket-colour-quality Gem { group: 1, gem: 0 }"],
+            "{why}"
+        );
+    }
+    // A gem whose colour the data lacks (Haste) is not known in a socket.
+    let haste = with_item(
+        build(vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Haste"]), "Gloves"),
+        ]),
+        "Gloves",
+        vec![spec("Sockets", "G")],
+    );
+    assert_eq!(matches(&haste)[1], [Unknown("no-colour")]);
+    // No item in the slot: nothing matches, and nothing is a reason.
+    let empty = build(vec![
+        group(&["IceNova"]),
+        in_slot(group(&["Precision"]), "Gloves"),
+    ]);
+    assert_eq!(matches(&empty)[1], [SocketMatch::No]);
+    assert_eq!(gem_reasons(&run(&empty)), Vec::<String>::new());
+}
+
+/// The review's cases (P3-12i): a disabled earlier group and a gem the
+/// data does not have still take their sockets; untyped gem content makes
+/// the rest of the slot unknown; the last entry of a slot name holds the
+/// item; an empty slot, an item the build does not have, and a white
+/// socket for a gem without a colour.
+#[test]
+fn the_socket_index_should_follow_pobs_count() {
+    use SocketMatch::{No, Unknown, Yes};
+    let gloves = |groups: Vec<SocketGroup>, sockets: &str| {
+        with_item(build(groups), "Gloves", vec![spec("Sockets", sockets)])
+    };
+    // A disabled group counts its gems.
+    let mut off = in_slot(group(&["IceNova"]), "Gloves");
+    off.enabled = false;
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            off,
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "B-G",
+    );
+    assert_eq!(matches(&b), [vec![No], vec![Yes], vec![Yes]]);
+    // A gem the data does not have never matches but takes its socket.
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["NotAGem", "Precision"]), "Gloves"),
+        ],
+        "G-G",
+    );
+    assert_eq!(matches(&b)[1], [No, Yes]);
+    // Untyped gem content: this group's and later groups' gems of the slot
+    // are not known.
+    let mut untyped = in_slot(group(&["Precision"]), "Gloves");
+    untyped
+        .gems
+        .push_opaque(loom_domain::OpaqueNode::element("Gem"));
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            untyped,
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "G-G-G",
+    );
+    assert_eq!(
+        matches(&b)[1..],
+        [vec![Unknown("untyped-gem")], vec![Unknown("untyped-gem")]]
+    );
+    // A gem without a colour in a white socket, or past the last socket:
+    // no match whatever its colour, so no reason.
+    let b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Haste", "Haste"]), "Gloves"),
+        ],
+        "W",
+    );
+    assert_eq!(matches(&b)[1], [No, No]);
+    // The last entry of a slot name holds the item; `itemId="0"` none.
+    let mut b = gloves(
+        vec![
+            group(&["IceNova"]),
+            in_slot(group(&["Precision"]), "Gloves"),
+        ],
+        "G",
+    );
+    let set = b
+        .items
+        .entries
+        .typed_mut()
+        .find_map(|e| match e {
+            ItemsEntry::Set(s) => Some(s),
+            ItemsEntry::Item(_) => None,
+        })
+        .unwrap();
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Gloves"),
+        item: None,
+        attributes: Vec::new(),
+    });
+    assert_eq!(matches(&b)[1], [No]);
+    // A slot naming an item the build does not have.
+    let set = b
+        .items
+        .entries
+        .typed_mut()
+        .find_map(|e| match e {
+            ItemsEntry::Set(s) => Some(s),
+            ItemsEntry::Item(_) => None,
+        })
+        .unwrap();
+    set.slots.push(SlotEntry {
+        slot: SlotId::new("Gloves"),
+        item: Some(ItemId(9)),
+        attributes: Vec::new(),
+    });
+    assert_eq!(matches(&b)[1], [Unknown("untyped-item")]);
+}
+
+/// Lines of an unselected variant are not part of the item; every
+/// rebuilding stat is unknown; the always-matching line wins over a
+/// socket rebuild, even "Has no Sockets" (PoB sets the flag after the
+/// rebuild).
+#[test]
+fn socket_lines_should_count_only_when_part_of_the_item() {
+    use SocketMatch::{Unknown, Yes};
+    let b = |lines| {
+        with_item(
+            build(vec![
+                group(&["IceNova"]),
+                in_slot(group(&["Precision"]), "Gloves"),
+            ]),
+            "Gloves",
+            lines,
+        )
+    };
+    let mut unselected = stat_line(ALWAYS_MATCHES);
+    if let LineKind::Modifier(m) = &mut unselected.kind {
+        m.resolution = LineResolution::Excluded(loom_domain::Exclusion::NotSelected);
+    }
+    assert_eq!(
+        matches(&b(vec![spec("Sockets", "G"), unselected]))[1],
+        [Yes]
+    );
+    for stat in loom_calc::poe1::sockets::REBUILDS {
+        assert_eq!(
+            matches(&b(vec![spec("Sockets", "G"), stat_line(stat)]))[1],
+            [Unknown("socket-count-line")],
+            "{stat}"
+        );
+    }
+    assert_eq!(
+        matches(&b(vec![
+            spec("Sockets", "R"),
+            stat_line("local_has_no_sockets"),
+            stat_line(ALWAYS_MATCHES),
+        ]))[1],
+        [Yes]
+    );
+}
+
+/// Charge modifiers (P3-8d): the maximum and minimum add to PoB's count,
+/// `max(use ? (override or max) : 0, min(max, min))`, and an effect per
+/// charge acts times the count. The data's constants: 3 charges, 50%
+/// increased crit chance each; Ice Nova's base crit 5%.
+#[test]
+fn charge_modifiers_should_count_as_pob_does() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |inputs: &[(&str, f64)], use_on: bool, lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        let mut push = |name: &str, value: ConfigValue| {
+            set.inputs.push(ConfigInput {
+                name: name.to_owned(),
+                value,
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        };
+        if use_on {
+            push("usePowerCharges", ConfigValue::Boolean(true));
+        }
+        for (name, v) in inputs {
+            push(
+                name,
+                ConfigValue::Number(Sourced::new(loom_domain::Number(*v))),
+            );
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let crit = |r: &CalcResult| {
+        assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+        value(r, Field::CritChance)
+    };
+    // One more maximum: 4 charges, 5% x (1 + 200 / 100).
+    assert_eq!(crit(&with(&[], true, &[("max_power_charges", 1)])), 15.0);
+    // 10% more per charge: 3 x 60.
+    assert_eq!(
+        crit(&with(
+            &[],
+            true,
+            &[("critical_strike_chance_+%_per_power_charge", 10)]
+        )),
+        14.0
+    );
+    // A minimum without `use`: 2 charges; capped by the maximum (3).
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 2)])),
+        10.0
+    );
+    assert_eq!(
+        crit(&with(&[], false, &[("base_minimum_power_charges", 5)])),
+        12.5
+    );
+    // The override below the minimum: the minimum.
+    assert_eq!(
+        crit(&with(
+            &[("overridePowerCharges", 1.0)],
+            true,
+            &[("base_minimum_power_charges", 2)]
+        )),
+        10.0
+    );
+    // Per-charge modifiers without charges do nothing.
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let r = with(&[], false, &[("spell_damage_+%_per_power_charge", 5)]);
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&bare, Field::AverageDamage)
+    );
+    // 5% spell damage per charge with 3 charges is 15% increased spell
+    // damage.
+    let per = with(&[], true, &[("spell_damage_+%_per_power_charge", 5)]);
+    let flat = with(&[], true, &[("spell_damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    assert_eq!(
+        per.fields[&Field::AverageDamage].state,
+        FieldState::Complete
+    );
+}
+
+/// More charge modifier cases (P3-8d review): frenzy and endurance, a
+/// negative maximum, crit multiplier per charge. Constants: 3 charges of
+/// each kind; a frenzy charge gives 4% increased cast speed and 4% more
+/// damage.
+#[test]
+fn charge_modifiers_of_every_kind_should_count() {
+    let line = |stat: &str, v: i64| loom_domain::CustomModifierLine {
+        text: stat.to_owned(),
+        resolution: LineResolution::Resolved {
+            result: Resolved::Stats(vec![StatLine {
+                stat: StatId::new(stat),
+                value: StatValue::Exact { min: v, max: v },
+            }]),
+            adapted: None,
+        },
+    };
+    let with = |checks: &[&str], lines: &[(&str, i64)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|(s, v)| line(s, *v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        };
+        for name in checks {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: ConfigValue::Boolean(true),
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    // Two frenzy charges from a minimum, no check: 8% increased cast
+    // speed, 1 / (0.5 / round(1.08, 2)).
+    let r = with(&[], &[("base_minimum_frenzy_charges", 2)]);
+    assert_eq!(value(&r, Field::Speed), 1.0 / (0.5 / 1.08));
+    // Endurance charges have no effect of their own on a slice field; a
+    // modifier per charge does: 3 x 5% = 15% increased damage.
+    let per = with(
+        &["useEnduranceCharges"],
+        &[("damage_+%_per_endurance_charge", 5)],
+    );
+    let flat = with(&[], &[("damage_+%", 15)]);
+    assert_eq!(
+        value(&per, Field::AverageDamage),
+        value(&flat, Field::AverageDamage)
+    );
+    // A negative maximum stops at 0 charges.
+    let r = with(&["usePowerCharges"], &[("max_power_charges", -5)]);
+    assert_eq!(
+        value(&r, Field::CritChance),
+        value(&bare, Field::CritChance)
+    );
+    // +10% crit multiplier per power charge, 3 charges: 150 + 30.
+    let r = with(
+        &["usePowerCharges"],
+        &[("critical_strike_multiplier_+_per_power_charge", 10)],
+    );
+    assert_eq!(value(&r, Field::CritMultiplier), 1.8);
 }

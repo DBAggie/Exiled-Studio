@@ -567,11 +567,10 @@ fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
             }],
             None,
         ),
-        // No base, so no mod row settles it (an item line's does).
-        unresolved(UnresolvedReason::Ambiguous(vec![
-            vec![StatId::new("test_accuracy_a")],
-            vec![StatId::new("test_accuracy_b")],
-        ])),
+        // No base for the item filter; only `test_accuracy_a` has a mod
+        // row an item can carry, so it is the reading (P3-12j).
+        stats(vec![exact("test_accuracy_a", 12)], None),
+        // Neither evasion reading has such a row: still ambiguous.
         unresolved(UnresolvedReason::Ambiguous(vec![
             vec![StatId::new("test_evasion_a")],
             vec![StatId::new("test_evasion_b")],

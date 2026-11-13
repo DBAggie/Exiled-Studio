@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 4,
+        "format": 5,
         "pob": {"version": "2.67.2"},
         "tree_version": "3_29",
         "skill_types": {},
@@ -269,6 +269,18 @@ fn each_changed_value_should_be_one_difference() {
         let found = differences(&export);
         assert_eq!(fields(&found), [expected], "{pointer}");
     }
+}
+
+/// The gem's colour (format 5): the synthetic bundle has none, so PoB's
+/// colour is one difference, and none on both sides is equal.
+#[test]
+fn a_skill_colour_should_compare_with_the_bundles_attribute() {
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["color"] = json!(3);
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "TestBolt", "color")]
+    );
 }
 
 #[test]

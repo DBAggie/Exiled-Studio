@@ -58,6 +58,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_domain::{Attributes, Build, Gem, SocketGroup};
 
+use super::sockets::{SocketMatch, socket_matches};
 use crate::input::{ActiveSkill, CalcData, EffectLevel, GrantedEffect, StatSet, StatSetLevel};
 
 /// Why a build has no main skill the engine can name.
@@ -105,8 +106,12 @@ pub struct GemEffectRef<'d> {
     pub effect: &'d GrantedEffect,
     /// The gem's level.
     pub level: i64,
-    /// The gem's quality.
+    /// The instance's quality: the gem's, plus
+    /// [`super::sockets::BONUS`] when it sits in a socket of its colour
+    /// (PoB's `actualQuality`, P3-12i).
     pub quality: i64,
+    /// Whether the gem gains the socket colour bonus.
+    pub socket: SocketMatch,
 }
 
 /// The main skill.
@@ -309,6 +314,8 @@ pub fn main_skill<'d>(
         .map_or(1, |s| *s.value() as usize);
     let index = wanted.clamp(1, count);
     let group = *groups.get(index - 1).ok_or(SkillProblem::NoActiveSkill)?;
+    let all = socket_matches(build, &groups, data);
+    let matches: &[SocketMatch] = all.get(index - 1).map_or(&[], Vec::as_slice);
 
     let mut actives: Vec<Candidate<'d>> = Vec::new();
     let mut group_supports: Vec<GemEffectRef<'d>> = Vec::new();
@@ -325,11 +332,13 @@ pub fn main_skill<'d>(
                 .unwrap_or_default(),
         })?;
         for (n, effect) in effects.into_iter().enumerate() {
+            let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {
                 gem: g,
                 effect,
                 level: i64::from(*gem.level.value()),
-                quality: i64::from(*gem.quality.value()),
+                quality: i64::from(*gem.quality.value()) + socket.bonus(),
+                socket,
             };
             if effect.support {
                 group_supports.push(r);
@@ -400,12 +409,15 @@ pub struct GroupSkill<'d> {
 /// The active effects of a group's enabled gems, each with the group's
 /// supports that apply to it, in PoB's order (`CalcSetup.lua` 1645 to
 /// 1740: gems in order, each gem's effects in order; supports as for the
-/// main skill, module docs). `Err` names a gem the data does not have.
+/// main skill, module docs). `matches` are the group's gems' socket
+/// matches ([`socket_matches`]), each adding its bonus to the gem's
+/// quality. `Err` names a gem the data does not have.
 ///
 /// # Errors
 /// [`SkillProblem::UnknownGem`].
 pub fn group_skills<'d>(
     group: &SocketGroup,
+    matches: &[SocketMatch],
     data: &'d dyn CalcData,
 ) -> Result<Vec<GroupSkill<'d>>, SkillProblem> {
     let mut actives: Vec<Candidate<'d>> = Vec::new();
@@ -423,11 +435,13 @@ pub fn group_skills<'d>(
                 .unwrap_or_default(),
         })?;
         for (n, effect) in effects.into_iter().enumerate() {
+            let socket = matches.get(g).copied().unwrap_or(SocketMatch::No);
             let r = GemEffectRef {
                 gem: g,
                 effect,
                 level: i64::from(*gem.level.value()),
-                quality: i64::from(*gem.quality.value()),
+                quality: i64::from(*gem.quality.value()) + socket.bonus(),
+                socket,
             };
             if effect.support {
                 group_supports.push(r);

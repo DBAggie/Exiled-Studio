@@ -342,6 +342,21 @@ fn skill_levels_out_of_order_should_give_their_code() {
     }
 }
 
+#[test]
+fn a_granted_effect_attribute_out_of_range_should_give_its_code() {
+    for (value, expected) in [
+        (json!(1), &[][..]),
+        (json!(4), &[][..]),
+        (json!(0), &["BUNDLE_VALUE_RANGE"][..]),
+        (json!(5), &["BUNDLE_VALUE_RANGE"][..]),
+    ] {
+        let src = edited("bundle-poe1", "data/granted_effects.json", |v| {
+            v[0]["attribute"] = value.clone();
+        });
+        assert_eq!(codes(&src), expected, "{value}");
+    }
+}
+
 /// The bundle as format 1 (no skill files), rehashed.
 fn format_1(name: &str) -> MemorySource {
     let mut src = source(name);

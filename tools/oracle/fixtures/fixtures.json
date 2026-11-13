@@ -1031,6 +1031,96 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "ice-nova-witch.xml with Herald of Ice twice: level 20 linked to Increased Critical Strikes (a cost multiplier on a percent reservation) and level 5 alone; the buff keeps the larger added cold damage, both reserve (P3-12h)."
+    },
+    {
+      "id": "ice-nova-socket-colours-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-socket-colours-witch.xml",
+      "sha256": "6884b69fb0f87b0b014ffb655b54bd47e91039aef605e02b8636086b609d1781",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with its gems in a Plate Vest socketed B-B-R-W G-B: Ice Nova and Controlled Destruction in blue sockets (+10 quality each), Increased Critical Strikes in a red socket and Faster Casting in a white one (none); a second group in the same slot from socket 5, Precision in green (+10), Haste in blue (none) (P3-12i)."
+    },
+    {
+      "id": "smite-socket-colours-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-socket-colours-templar.xml",
+      "sha256": "0c81189b95792c65fabe3b0628baf12f6d142fb9eceaecdb217c48c2706842c5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A Karui Maul socketed R-R-G holding Smite, Melee Physical Damage, and Faster Attacks, each in a socket of its colour (+10 quality each) (P3-12i)."
+    },
+    {
+      "id": "ice-nova-onslaught-modifier-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-modifier-witch.xml",
+      "sha256": "899c1c3f5e88790262a33e3a29babc8883ebdfd2fc9f4cdee4265a2fe55c3b8f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the custom modifier 'Onslaught' alone, the check off: Onslaught's 20% increased cast speed (P3-12j)."
+    },
+    {
+      "id": "ice-nova-onslaught-twice-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-twice-witch.xml",
+      "sha256": "2edbe9158a91f51d1fe7d00d831e892e43dc2fbaa4016d6dbcb12d82298e481c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the custom modifier 'Onslaught' in two blocks and the buffOnslaught check: Onslaught once (P3-12j)."
+    },
+    {
+      "id": "ice-nova-power-charge-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-power-charge-modifiers-witch.xml",
+      "sha256": "df59086fc7a7af641c1a158aa6db4bc0752b468c65ab9d2cb51226a19798a768",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with power charges used and charge modifiers as custom lines: +1 maximum (4 charges), increased damage, spell damage, crit chance, and crit multiplier per power charge (P3-8d)."
+    },
+    {
+      "id": "ice-nova-minimum-power-charges-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-minimum-power-charges-witch.xml",
+      "sha256": "ead7edd01a316ba72b01f56c1c2cfd7f02711c011022e07c48be03caa47a1389",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml without the power charge check, with +2 minimum power charges and spell damage per power charge: two charges (P3-8d)."
+    },
+    {
+      "id": "ice-nova-area-spell-crit-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-area-spell-crit-witch.xml",
+      "sha256": "71438d1a1dc04579861cd97a7acbb91bec83c836ca36f8417f9b97e34aad2e2c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines: 20% increased area damage, +30% critical strike multiplier for spell damage, and four stats that reach no slice field (area of effect, spell and aura area of effect, light radius) (P3-8e)."
+    },
+    {
+      "id": "ice-nova-staff-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-staff-conditions-witch.xml",
+      "sha256": "1a96652fb48f4a0a59ac1b9642edc74ae0fa918ee0f19b6147f490c1538cc312",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Gnarled Branch (a staff) and custom lines while wielding a staff: spell damage, crit chance and multiplier, spell block, defences (P3-8f)."
+    },
+    {
+      "id": "ice-nova-shield-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-shield-conditions-witch.xml",
+      "sha256": "4095b4e051a9b69608ead51807a5fc14969fe7376d6d541f5566faf2837dfa42",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Carved Wand and a Twig Spirit Shield and custom lines: spell damage and spell block while holding a shield; staff lines without a staff (P3-8f)."
     }
   ]
 }

@@ -333,3 +333,35 @@ fn real_gems_should_have_pobs_stats() {
         ])
     );
 }
+
+/// The real PoE1 bundle's gem colours (P3-12i): every granted effect has
+/// one, 1 to 4, and the in-scope skills and their gems have PoB's
+/// (`Data/Skills/*.lua` `color`). Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_gems_should_have_pobs_colours() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let effects = &data.skills.as_ref().unwrap().granted_effects;
+    assert!(
+        effects
+            .iter()
+            .all(|e| e.attribute.is_some_and(|a| (1..=4).contains(&a)))
+    );
+    let colour = |id: &str| data.granted_effect(id).unwrap().attribute;
+    for (id, c) in [
+        ("IceNova", 3),
+        ("Smite", 1),
+        ("Precision", 2),
+        ("Haste", 2),
+        ("SupportControlledDestruction", 3),
+        ("SupportFasterAttacks", 2),
+        ("SupportMeleePhysicalDamage", 1),
+    ] {
+        assert_eq!(colour(id), Some(c), "{id}");
+    }
+}

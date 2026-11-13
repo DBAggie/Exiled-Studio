@@ -75,8 +75,23 @@ fn poe1() -> BTreeMap<String, Vec<u8>> {
                 "AddedMinionActiveSkillTypes",
                 "StatSet1",
                 "StatSet2",
+                "Attribute",
             ],
-            &json!([["Bolt", false, [], [], [], false, false, 750, 0, [], 0, []]]),
+            &json!([[
+                "Bolt",
+                false,
+                [],
+                [],
+                [],
+                false,
+                false,
+                750,
+                0,
+                [],
+                0,
+                [],
+                3
+            ]]),
         ),
         table(
             "GrantedEffectsPerLevel",
@@ -366,6 +381,7 @@ fn poe1_shape_should_convert_with_its_columns() {
             effect.levels[1].reservations.clone(),
             effect.quality[0].stat.as_str(),
             effect.stat_sets.clone(),
+            effect.attribute,
         ),
         (
             Some("s_flag"),
@@ -382,6 +398,7 @@ fn poe1_shape_should_convert_with_its_columns() {
             }],
             "s_b",
             vec!["Bolt".to_owned()],
+            Some(3),
         )
     );
     assert_eq!(
@@ -472,6 +489,7 @@ fn poe2_shape_should_convert_with_its_columns() {
             t.granted_effects[1].levels[0].reservations.clone(),
             t.granted_effects[1].cannot_be_supported,
             t.granted_effects[0].quality[0].per_mille,
+            t.granted_effects[0].attribute,
         ),
         (
             0,
@@ -487,6 +505,7 @@ fn poe2_shape_should_convert_with_its_columns() {
             }],
             true,
             250,
+            None,
         )
     );
     let set = &t.stat_sets[0];
@@ -539,6 +558,7 @@ fn missing_required_column_should_fail_the_conversion() {
         ("ActiveSkills", "IsManuallyCasted"),
         ("SkillGems", "IsVaalVariant"),
         ("GemEffects", "GrantedEffect2"),
+        ("GrantedEffects", "Attribute"),
     ] {
         let mut files = poe1();
         without(&mut files, name, column);

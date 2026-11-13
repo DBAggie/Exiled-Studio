@@ -1,0 +1,89 @@
+{
+ "builds_with_reason_changes": 8,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 23, \"line\": 11}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 1734}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25411}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42443}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48614}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"base_minimum_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"damage_+%_per_frenzy_charge\"}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 14}}, \"stat\": \"damage_+%_per_endurance_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 1734}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"base_minimum_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"damage_+%_per_frenzy_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62595}}, \"stat\": \"damage_+%_per_endurance_charge\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 11}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 9}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 12}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 1734}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"damage_+%_per_endurance_charge\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 38, \"line\": 15}}, \"stat\": \"base_minimum_endurance_charges\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 38,
+ "state_changes": {},
+ "value_changes": {}
+}

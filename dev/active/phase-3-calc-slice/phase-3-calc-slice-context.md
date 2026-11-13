@@ -304,6 +304,26 @@ The question as asked: where the default enemy's armour and evasion come from: P
 ## code-architecture-reviewer (P3-8c, 2026-11-12) summary
 No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, the ailment chance's uses, the speed sum). Applied: the parity run on the two new fixtures with a local check that each mapped line moves PoB's value; a comment on four more redirect stats that no line resolves to. Not applied: a test for the `NO_EFFECT` count in the doc comment (P3-8a's choice, the count is documentation).
 
+## Decisions in P3-12i (PR #91; socket colour quality; evidence `docs/phase-3/other-gems.md`, "P3-12i")
+- **The colour as stored.** `GrantedEffect.attribute` keeps the game's number (as the interpolation number); the calc gives it its meaning (1 R, 2 G, 3 B, others none), equal to PoB's `color` (`data-parity`: 1,508 values, 0 differences). Optional: PoE2 has no column, an older bundle no field (`no-colour`, a reason only where it matters).
+- **No new extraction.** The extractor writes every column, so P3-12g's extract had `Attribute`; it was converted again (`local/p3/p3-12i/bundle-poe1-a`).
+- **PoB's index rule exactly:** every gem of the earlier groups of the same slot counts (disabled and unknown gems too); only typed groups of the active set (the active set must have no untyped group, as for the main skill). The colour is the gem's first granted effect's (PoB's `grantedEffect`, else `gemData.grantedEffect`).
+- **What stays a reason:** no `Sockets` line (PoB would add `socketLimit` sockets of a default colour; `socketLimit` is PoB's own directive), several lines, a socket-count line (`REBUILDS`), untyped gem content, an untyped item, no colour. Not a reason: the item set's untyped content (PoB's `SocketIdURL`; `collect` reads typed slots only; found by the first evidence run, fixed in `76ec05e`).
+- **Supports too** (PoB's `CalcSetup.lua` 1578): the reason covers the main skill's and buffs' applied supports; an inert skill's quality reaches nothing.
+- **`melee_physical_damage_+%`** became a hit row because a matching socket gives Melee Physical Damage quality (the Smite fixture showed it).
+
+## Decisions in P3-12j (PR #92; the custom "Onslaught" line; evidence `docs/phase-3/config-inputs.md`, "P3-12j")
+- **"Onslaught" is a game text**, ambiguous between the character's stat (item mod rows) and a Silver Flask's display stat (none). P3-12c called it PoB shorthand; it is not.
+- **The custom-line rule** (`resolve_custom_line`): the only global reading an item-domain mod row backs. A prior, documented as such; local readings excluded after the first run took a weapon-local crit stat for a character-wide line.
+- **A flag quantity, read once:** `Poe1Quantity::Onslaught`; `poe1::buffs` reads it after every other source (`Ingest::effects`), so any number of sources give Onslaught once, as PoB's flag.
+- **Not done:** marking a rule-taken reading as `adapted` (a domain change).
+
+## Next PRs (worktrees on this machine; each a cascade on the previous branch)
+- **P3-8d done (PR #93):** decisions in `docs/phase-3/stat-mapping.md`, "P3-8d": the charge modifiers' meaning lives in `charges::MODIFIERS` (asked before the mapping's rows, disjoint from them by a test), read after every other source; a minimum counts without the check, as PoB; the constant effects keep the `use` input as their source (a label gap, documented).
+- **P3-8e done (PR #94):** `docs/phase-3/stat-mapping.md`, "P3-8e": area of effect reaches no slice field (every PoB reader checked); light radius `NoEffect` guarded by its four "also applies" stats.
+- **P3-8f done (PR #95):** `docs/phase-3/stat-mapping.md`, "P3-8f": `poe1::states` settles `UsingStaff`/`UsingShield` in every query context; `STATE_ROWS`; unknown bases leave conditions unsettled (a reason). Follow-up done in P3-8g (PR #96): `Ruleset::states` once per calculation, `Calc::context`.
+- After them: gem levels need a design (the main skill reads the build's gem-level stats; PoB's `GemProperty` keywords against gem tags); skill-keyword conditions ("with Cold Skills") need keyword flags in the engine.
+
 ## Plan for P3-12h (other gems, first PR: inert gems, reservation, auras and buffs)
 The largest reason left in all 7 in-scope builds is `unmodelled-gem`: every enabled gem but the main skill's. PoB v2.67.2 lets another skill reach the character only through (checked: every loop over `env.player.activeSkillList` in `Modules/Calc*.lua`):
 1. **reservation** (`CalcPerform.lua` 1928 to 2040): a skill with `HasReservation` and not `ReservationBecomesCost` reserves its level's flat and percent mana or life, times `floor(SupportManaMultiplier, 4)` (each applied support's `manaMultiplier`, the game's `cost_multiplier - 100`, as MORE), `round(.., 0)` flat and `round(.., 2)` percent, scaled by `Reserved` INC and MORE and `ReservationEfficiency`; `doActorLifeManaReservation` (526 to 560): `reserved = flat + ceil(max x percent / 100)`, `Unreserved = max - reserved`;

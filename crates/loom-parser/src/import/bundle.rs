@@ -36,7 +36,7 @@
 //! - **texts:** properties, labels, compositions, and the granted-skill
 //!   wrapper, from the client texts the item rules name.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::{Bundle, ScopeRootError};
 use loom_data::stat_desc::ScopeError;
@@ -60,6 +60,7 @@ pub struct BundleData<'b> {
     tags_unknown: usize,
     skipped: usize,
     mods: Mods,
+    item_domains: BTreeSet<i64>,
     grafts: Grafts,
     gems: BTreeMap<String, String>,
     properties: Properties,
@@ -144,6 +145,7 @@ impl<'b> BundleData<'b> {
                 .collect()
         });
         let properties = Properties::new(text, texts(), qualities);
+        let item_domains = bundle.base_items.iter().map(|b| b.domain).collect();
         let compositions = text
             .compositions
             .iter()
@@ -155,6 +157,7 @@ impl<'b> BundleData<'b> {
             tags_unknown,
             skipped,
             mods,
+            item_domains,
             grafts,
             gems,
             properties,
@@ -172,6 +175,15 @@ impl<'b> BundleData<'b> {
     #[must_use]
     pub const fn mods(&self) -> &Mods {
         &self.mods
+    }
+
+    /// The mod domains of the base items: the domains of rows an item can
+    /// carry (the monster and area domains have no base item). Broad on
+    /// purpose: every item domain (flasks, jewels, ...) counts, since the
+    /// custom-line rule only asks whether some item could carry a reading.
+    #[must_use]
+    pub const fn item_domains(&self) -> &BTreeSet<i64> {
+        &self.item_domains
     }
 
     /// Bases that grant a skill.

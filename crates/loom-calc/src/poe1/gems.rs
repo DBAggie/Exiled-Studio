@@ -48,16 +48,18 @@
 //! and quality modifiers are stats the mapping does not know ([`DEPENDS_ON`]
 //! must stay unmapped: a test), so they are reasons, and the effect of a
 //! buff here is its stat's value unscaled. A gem's quality from a socket of
-//! its colour (`SkillsTab.lua` 1210 to 1245) needs the gem's colour, which
-//! the bundle does not carry: a modelled gem in a group whose slot holds an
-//! item with sockets is `unmodelled-skill` `socket-colour-quality`.
+//! its colour is in its instance's quality ([`sockets`], P3-12i); a gem of
+//! a buff or of the main skill whose match is not known is
+//! `unmodelled-skill` `socket-colour-quality` (an inert skill's quality
+//! reaches nothing).
 
 use std::collections::BTreeMap;
 
-use loom_domain::{Build, LineKind};
+use loom_domain::Build;
 
 use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
+use super::sockets;
 use super::{Poe1Quantity, Pool, ReservationKind};
 use crate::condition::Flags;
 use crate::ingest::Ingest;
@@ -507,31 +509,6 @@ fn slot_enabled(build: &Build, slot: Option<&str>) -> bool {
     super::collect::slot_in_use(slot, second)
 }
 
-/// Whether the item in the group's slot has a `Sockets` line (module docs:
-/// its gems may gain quality from a socket of their colour).
-fn socketed_item(build: &Build, slot: Option<&str>) -> bool {
-    let Some(slot) = slot else { return false };
-    let Some(set) = super::collect::active_item_set(build) else {
-        return false;
-    };
-    let Some(id) = set
-        .slots
-        .typed()
-        .find(|e| {
-            e.slot.as_str() == slot.strip_suffix(" Swap").unwrap_or(slot) || e.slot.as_str() == slot
-        })
-        .and_then(|e| e.item)
-    else {
-        return false;
-    };
-    build.items.item(id).is_some_and(|item| {
-        item.body
-            .lines
-            .iter()
-            .any(|l| matches!(&l.kind, LineKind::Spec { key, .. } if key == "Sockets"))
-    })
-}
-
 /// The largest value of each buff stat, by buff name, then stat
 /// (`mergeBuff`), with the gem it came from first and its rows.
 type Merged = BTreeMap<(&'static str, &'static str), (i64, Source, &'static [HitEffect])>;
@@ -548,6 +525,7 @@ pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest
     let main_group = skill::main_skill(build, input.data)
         .ok()
         .map(|m| m.group - 1);
+    let matches = sockets::socket_matches(build, &groups, input.data);
     let mut merged: Merged = BTreeMap::new();
     for (g, group) in groups.iter().enumerate() {
         let slot = group.slot.as_ref().map(|s| s.as_str());
@@ -568,7 +546,8 @@ pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest
             }
             continue;
         }
-        let skills = match skill::group_skills(group, input.data) {
+        let group_matches = matches.get(g).map_or(&[][..], Vec::as_slice);
+        let skills = match skill::group_skills(group, group_matches, input.data) {
             Ok(s) => s,
             Err(_) => {
                 // A gem the data does not have: every enabled gem of the
@@ -583,7 +562,6 @@ pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest
                 continue;
             }
         };
-        let socketed = socketed_item(build, slot);
         for s in &skills {
             let is_main = main.is_some_and(|(mg, m)| {
                 mg == g
@@ -599,19 +577,14 @@ pub fn gems(input: &CalcInput<'_>, main: Option<(usize, &MainSkill<'_>)>, ingest
                 };
                 if reserves(&s.types) {
                     ingest.reason(UnsupportedReason::UnmodelledSkill {
-                        source: source.clone(),
+                        source,
                         what: "reservation",
                     });
                 }
-                if socketed {
-                    ingest.reason(UnsupportedReason::UnmodelledSkill {
-                        source,
-                        what: "socket-colour-quality",
-                    });
-                }
+                socket_reasons(g, s, ingest);
                 continue;
             }
-            one_skill(input, g, s, socketed, &mut merged, ingest);
+            one_skill(input, g, s, &mut merged, ingest);
         }
     }
     // Buffs in name order, each stat in ID order: every effect is a sum
@@ -639,7 +612,6 @@ fn one_skill(
     input: &CalcInput<'_>,
     g: usize,
     s: &GroupSkill<'_>,
-    socketed: bool,
     merged: &mut Merged,
     ingest: &mut Ingest<'_>,
 ) {
@@ -675,12 +647,7 @@ fn one_skill(
     if !supported {
         return;
     }
-    if socketed {
-        ingest.reason(UnsupportedReason::UnmodelledSkill {
-            source: active_source.clone(),
-            what: "socket-colour-quality",
-        });
-    }
+    socket_reasons(g, s, ingest);
     // The skill's instance and its supports' instances: each global stat
     // of the table joins the buff.
     let instances = std::iter::once((&s.active_gem, own)).chain(
@@ -717,6 +684,24 @@ fn one_skill(
         }
     }
     reservation(s, &active_source, ingest);
+}
+
+/// A reason for each gem of the skill (its active gem and the supports
+/// that apply) whose socket colour bonus is not known
+/// ([`sockets::SocketMatch::Unknown`]): its quality may differ by
+/// [`sockets::BONUS`].
+fn socket_reasons(g: usize, s: &GroupSkill<'_>, ingest: &mut Ingest<'_>) {
+    for r in std::iter::once(&s.active_gem).chain(&s.supports) {
+        if matches!(r.socket, sockets::SocketMatch::Unknown(_)) {
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: Source::Gem {
+                    group: g,
+                    gem: r.gem,
+                },
+                what: "socket-colour-quality",
+            });
+        }
+    }
 }
 
 /// Whether a skill with these types reserves (PoB: `HasReservation` and
