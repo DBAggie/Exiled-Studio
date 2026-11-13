@@ -44,11 +44,15 @@
 //! Any other support applied to it is `unmodelled-gem`; a support that
 //! applies to no active skill of its group does nothing (as in PoB).
 //!
-//! Buff and aura effect, reservation modifiers and efficiency, gem quality
-//! modifiers, and gem levels that depend on the socket are stats the
-//! mapping does not know ([`DEPENDS_ON`] must stay unmapped: a test), so
-//! they are reasons, and the effect of a buff here is its stat's value
-//! unscaled. Global gem levels ("+1 to Level of all Cold Skill Gems") are
+//! Reservation efficiency, "Reservation of Skills", and the effect of
+//! non-curse auras are read since P3-8l ([`skill_modifiers`]): each
+//! reserving skill takes their terms, and each aura's rows are scaled as
+//! PoB's `ScaleAddMod` scales them, before buffs of one name merge. Other
+//! buff and aura effect and reservation modifiers, gem quality modifiers,
+//! and gem levels that depend on the socket are stats the mapping does not
+//! know ([`DEPENDS_ON`] must stay unmapped: a test), so they are reasons,
+//! and without them a buff acts at [`skill_modifiers`]' scale alone.
+//! Global gem levels ("+1 to Level of all Cold Skill Gems") are
 //! in each gem's level ([`super::gem_levels`], P3-8i), so a buff's stats
 //! and a skill's reservation are those of its raised level, as in PoB.
 //! A gem's quality from a socket of its colour is in its instance's
@@ -64,6 +68,7 @@ use loom_domain::Build;
 use super::gem_levels::GemLevels;
 use super::mapping::HitEffect;
 use super::skill::{self, GemEffectRef, GroupSkill, MainSkill};
+use super::skill_modifiers::{self, Totals};
 use super::sockets;
 use super::{Poe1Quantity, Pool, ReservationKind};
 use crate::condition::Flags;
@@ -373,31 +378,25 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
     ("SupportUrgentOrders", &[]),
 ];
 
-/// Stats that must stay `Unmapped` while buffs act unscaled and
-/// reservation without modifiers (module docs), sorted: the generic ones
-/// PoB reads as `BuffEffect`, `BuffEffectOnSelf`, `AuraEffect`,
-/// `Reserved`, `<Pool>Reserved`, `ReservationEfficiency`, or as no
-/// reservation, and the only setter of Phantasmal Might
+/// Stats that must stay `Unmapped` while buffs act at
+/// [`skill_modifiers`]' scale alone and reservation with its terms alone
+/// (module docs), sorted: the generic ones PoB reads as `BuffEffect`,
+/// `BuffEffectOnSelf`, `AuraEffect`, `<Pool>Reserved` (tagged `Aura`:
+/// [`skill_modifiers`]' docs), or as no reservation, and the only setter of Phantasmal Might
 /// (`ModParser.lua` 4473). Found by the game's text in the bundle's stat
 /// descriptions (a maintainer-run test checks each is in the bundle).
 /// A skill's own ("precision_aura_effect_+%", "clarity_mana_reservation_+%")
-/// and gem level stats are guarded by name ([`GUARDED_WORDS`]).
+/// and gem level stats are guarded by name ([`GUARDED_WORDS`]). The stats
+/// [`skill_modifiers::STATS`] maps left this list in P3-8l.
 pub const DEPENDS_ON: &[&str] = &[
     "aura_effect_+%",
     "aura_skill_no_reservation",
     "base_life_reservation_+%",
-    "base_life_reservation_efficiency_+%",
     "base_mana_reservation_+%",
-    "base_mana_reservation_efficiency_+%",
-    "base_reservation_+%",
-    "base_reservation_efficiency_+%",
     "base_skill_no_reservation",
     "buff_effect_on_self_+%",
     "golem_buff_effect_+%",
     "herald_effect_on_self_+%",
-    "mana_reservation_efficiency_-2%_per_1",
-    "non_curse_aura_effect_+%",
-    "reservation_efficiency_-2%_per_1",
     "skill_buff_effect_+%",
     "summoned_phantasms_grant_buff",
 ];
@@ -470,39 +469,6 @@ pub fn floor4(product: f64) -> f64 {
     crate::math::floor(inner * 10_000.0 + 0.0001) / 10_000.0
 }
 
-/// One skill's reservation of one pool, as PoB computes it with no
-/// reservation modifier (module docs): the flat amount and the percent.
-#[must_use]
-pub fn reserved(flat: i64, percent_hundredths: i64, mult: f64) -> (f64, f64) {
-    #[expect(
-        clippy::cast_precision_loss,
-        reason = "reservations are small integers, exact as f64"
-    )]
-    let (flat, percent) = (flat as f64, percent_hundredths as f64 / 100.0);
-    // `values.inc` 0, `values.more` 1, efficiency 0, `efficiencyMore` 1.
-    let (inc, more, efficiency, efficiency_more) = (0.0, 1.0, 0.0, 1.0);
-    let flat_value = crate::math::floor(flat * mult);
-    let reserved_flat = if flat_value == 0.0 {
-        0.0
-    } else {
-        let x = flat_value * (100.0 + inc) / 100.0 * more
-            / (1.0 + efficiency / 100.0)
-            / efficiency_more;
-        crate::math::max(crate::math::round_half_up(x), 0.0)
-    };
-    let percent_value = percent * mult;
-    let reserved_percent = if percent_value == 0.0 {
-        0.0
-    } else {
-        let x = percent_value * (100.0 + inc) / 100.0 * more
-            / (1.0 + efficiency / 100.0)
-            / efficiency_more;
-        // PoB's `round(x, 2)`: `floor(x x 10^2 + 0.5) / 10^2`.
-        crate::math::max(crate::math::floor(x * 100.0 + 0.5) / 100.0, 0.0)
-    };
-    (reserved_flat, reserved_percent)
-}
-
 /// Whether the item set's weapon set in use holds the group's slot (PoB's
 /// `slotEnabled`); a group without a slot is always in use.
 fn slot_enabled(build: &Build, slot: Option<&str>) -> bool {
@@ -517,17 +483,21 @@ fn slot_enabled(build: &Build, slot: Option<&str>) -> bool {
     super::collect::slot_in_use(slot, second)
 }
 
-/// The largest value of each buff stat, by buff name, then stat
-/// (`mergeBuff`), with the gem it came from first and its rows.
-type Merged = BTreeMap<(&'static str, &'static str), (i64, Source, &'static [HitEffect])>;
+/// The largest scaled value of each buff row, by buff name, then stat,
+/// then row (`mergeBuff` compares each mod after its skill's scale), with
+/// the gem it came from first and the row.
+type Merged = BTreeMap<(&'static str, &'static str, usize), (f64, Source, HitEffect)>;
 
 /// Adds the other gems' reservation and buffs, and their reasons (module
 /// docs). `main` is the main skill's group (0-based) and active effect
 /// when the engine computes its hit, which acts through its own path.
+/// `totals` are the reservation and aura effect modifiers
+/// ([`skill_modifiers::Totals::read`], once every source of them is in).
 pub fn gems(
     input: &CalcInput<'_>,
     main: Option<(usize, &MainSkill<'_>)>,
     levels: &GemLevels,
+    totals: &Totals,
     ingest: &mut Ingest<'_>,
 ) {
     let build = input.build;
@@ -597,26 +567,18 @@ pub fn gems(
                 socket_reasons(g, s, ingest);
                 continue;
             }
-            one_skill(input, g, s, &mut merged, ingest);
+            one_skill(input, g, s, totals, &mut merged, ingest);
         }
     }
-    // Buffs in name order, each stat in ID order: every effect is a sum
-    // term of integers, so the order changes no value.
-    for (value, source, rows) in merged.into_values() {
-        #[expect(
-            clippy::cast_precision_loss,
-            reason = "stat values are small integers, exact as f64"
-        )]
-        let value = value as f64;
-        for &(quantity, op, divisor, all, any) in rows {
-            ingest.effect(Effect {
-                quantity,
-                op,
-                value: value / divisor,
-                conditions: Conditions::none().with_all(all).with_any(any),
-                source: source.clone(),
-            });
-        }
+    // Buffs in name order, each stat in ID order, each row in order.
+    for (value, source, (quantity, op, _, all, any)) in merged.into_values() {
+        ingest.effect(Effect {
+            quantity,
+            op,
+            value,
+            conditions: Conditions::none().with_all(all).with_any(any),
+            source,
+        });
     }
 }
 
@@ -625,6 +587,7 @@ fn one_skill(
     input: &CalcInput<'_>,
     g: usize,
     s: &GroupSkill<'_>,
+    totals: &Totals,
     merged: &mut Merged,
     ingest: &mut Ingest<'_>,
 ) {
@@ -651,7 +614,9 @@ fn one_skill(
         }
     }
     let Kind::Buff {
-        name, stats: own, ..
+        name,
+        effect,
+        stats: own,
     } = kind
     else {
         // Inert: its supports act on it alone.
@@ -661,6 +626,9 @@ fn one_skill(
         return;
     }
     socket_reasons(g, s, ingest);
+    // PoB scales the skill's buff before buffs of one name merge
+    // (`CalcPerform.lua` 2276, 2421).
+    let buff_scale = totals.buff_scale(effect == EffectType::Aura, &s.types);
     // The skill's instance and its supports' instances: each global stat
     // of the table joins the buff.
     let instances = std::iter::once((&s.active_gem, own)).chain(
@@ -685,18 +653,29 @@ fn one_skill(
             };
             match b {
                 BuffStat::Rows(rows) => {
-                    let entry = merged
-                        .entry((name, id))
-                        .or_insert((*value, source(r.gem), rows));
-                    if *value > entry.0 {
-                        *entry = (*value, source(r.gem), rows);
+                    #[expect(
+                        clippy::cast_precision_loss,
+                        reason = "stat values are small integers, exact as f64"
+                    )]
+                    let value = *value as f64;
+                    for (i, &row) in rows.iter().enumerate() {
+                        let (quantity, op, divisor, ..) = row;
+                        let scaled =
+                            skill_modifiers::scale(quantity, op, value / divisor, buff_scale);
+                        let entry =
+                            merged
+                                .entry((name, id, i))
+                                .or_insert((scaled, source(r.gem), row));
+                        if scaled > entry.0 {
+                            *entry = (scaled, source(r.gem), row);
+                        }
                     }
                 }
                 BuffStat::NoSlice(_) | BuffStat::Gated(_) => {}
             }
         }
     }
-    reservation(s, &active_source, ingest);
+    reservation(s, &active_source, totals, ingest);
 }
 
 /// A reason for each gem of the skill (its active gem and the supports
@@ -724,7 +703,7 @@ fn reserves(types: &std::collections::BTreeSet<String>) -> bool {
 }
 
 /// The skill's reservation (module docs), one effect per pool and kind.
-fn reservation(s: &GroupSkill<'_>, source: &Source, ingest: &mut Ingest<'_>) {
+fn reservation(s: &GroupSkill<'_>, source: &Source, totals: &Totals, ingest: &mut Ingest<'_>) {
     if !reserves(&s.types) {
         return;
     }
@@ -749,10 +728,19 @@ fn reservation(s: &GroupSkill<'_>, source: &Source, ingest: &mut Ingest<'_>) {
                 continue;
             }
         };
-        let (flat, percent) = if r.percent {
-            reserved(0, r.amount, mult)
+        let terms = totals.reservation(pool);
+        let amounts = if r.percent {
+            skill_modifiers::reserved(0, r.amount, mult, terms)
         } else {
-            reserved(r.amount, 0, mult)
+            skill_modifiers::reserved(r.amount, 0, mult, terms)
+        };
+        let Some((flat, percent)) = amounts else {
+            // An efficiency of -100: PoB divides by 0.
+            ingest.reason(UnsupportedReason::UnmodelledSkill {
+                source: source.clone(),
+                what: "reservation-efficiency",
+            });
+            continue;
         };
         for (kind, value) in [
             (ReservationKind::Flat, flat),
@@ -862,18 +850,6 @@ mod tests {
                 assert_eq!(m.map(&StatId::new(*stat)), StatMap::Unmapped, "{stat}");
             }
         }
-    }
-
-    #[test]
-    fn reservation_should_round_as_pob() {
-        // Flat: floored before the round (15 x 1.3 = 19.5 gives 19).
-        assert_eq!(reserved(32, 0, 1.0), (32.0, 0.0));
-        assert_eq!(reserved(15, 0, 1.3), (19.0, 0.0));
-        // Percent: hundredths of a percent, rounded to 2 decimals.
-        assert_eq!(reserved(0, 2500, 1.2), (0.0, 30.0));
-        assert_eq!(reserved(0, 3500, 1.0), (0.0, 35.0));
-        assert_eq!(reserved(0, 2250, 1.1), (0.0, 24.75));
-        assert_eq!(reserved(0, 0, 1.5), (0.0, 0.0));
     }
 
     #[test]

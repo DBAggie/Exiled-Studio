@@ -1067,13 +1067,25 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
             .copied()
             .collect()
     });
+    // The reservation and aura effect modifiers (P3-8l): every source of
+    // them (passives, items, config) is in.
+    let totals = super::skill_modifiers::Totals::read(ingest);
+    if totals.unread {
+        ingest.reason(UnsupportedReason::UnmodelledSkill {
+            source: Source::Rule("skill-modifiers"),
+            what: "unread-skill-modifier",
+        });
+    }
     super::gems::gems(
         input,
         hit.as_ref().map(|h| (h.group(), h.skill())),
         &levels,
+        &totals,
         ingest,
     );
     let Some(hit) = hit else { return };
+    // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
+    let buff_scale = totals.buff_scale(true, &hit.skill().types);
     for r in modelled {
         let source = Source::Gem {
             group: hit.group(),
@@ -1097,12 +1109,16 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let stats: Vec<StatLine> = instance
             .stats
             .iter()
-            .map(|(stat, value)| StatLine {
-                stat: StatId::new(stat.as_str()),
-                value: StatValue::Exact {
-                    min: *value,
-                    max: *value,
-                },
+            .map(|(stat, value)| {
+                let value =
+                    super::skill_modifiers::main_skill_stat(&r.effect.id, stat, *value, buff_scale);
+                StatLine {
+                    stat: StatId::new(stat.as_str()),
+                    value: StatValue::Exact {
+                        min: value,
+                        max: value,
+                    },
+                }
             })
             .collect();
         ingest.stats_with(&SkillMapping, &source, &stats);
