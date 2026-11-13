@@ -153,8 +153,9 @@ const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
 /// `ModFlag.Attack` from `KeywordFlag.Attack`; both are the `ATTACK` flag
 /// here, which every attack hit has and nothing else does; `SPELL` stands
 /// for both spell flags likewise (PoB leaves `KeywordFlag.Spell` off only
-/// for the few skills its own data marks `cast`, none of which the engine
-/// computes).
+/// for the skills its own data marks `cast`: Bear Trap, Vaal Detonate
+/// Dead, the Heralds of Agony, Ice, and Thunder, one minion skill; none is
+/// a vetted spell, `hit::VETTED_SPELLS`, so any of them is `Partial`).
 pub const HIT_ROWS: &[HitRow] = &[
     (
         "accuracy_rating",
@@ -2216,7 +2217,7 @@ mod tests {
             ("lightning", LIGHTNING_T),
         ];
         for (name, t) in types {
-            let k = Flags::skill(t);
+            let k = Flags::skill_keyword(t);
             assert_eq!(
                 hit(&format!("cast_speed_for_{name}_skills_+%")),
                 [(Quantity::Speed, Op::Increased, 1.0, all(Flags::CAST | k))]

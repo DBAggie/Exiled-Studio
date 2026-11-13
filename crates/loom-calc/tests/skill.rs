@@ -6,8 +6,12 @@ mod common;
 
 use common::bundle;
 use loom_calc::CalcData;
+use std::collections::BTreeSet;
+
+use loom_calc::Flags;
 use loom_calc::poe1::skill::{
-    InstanceProblem, SkillProblem, instance, instances, main_skill, type_expression,
+    InstanceProblem, KEYWORD_TYPES, SkillProblem, instance, instances, keyword_flags, main_skill,
+    type_expression,
 };
 use loom_data::bundle::skills::{LevelStat, QualityStat};
 use loom_domain::{
@@ -83,6 +87,49 @@ fn the_main_skill_should_be_the_main_groups_active_gem_with_its_supports() {
     assert!(m.unapplied.is_empty());
     assert!(m.types.contains("TestSpell"));
     assert!(!m.item_granted);
+}
+
+/// P3-8h: each of the five type names gives its keyword, several give
+/// several, and other types none.
+#[test]
+fn keyword_flags_should_follow_the_skills_types() {
+    let types =
+        |names: &[&str]| -> BTreeSet<String> { names.iter().map(|n| (*n).to_owned()).collect() };
+    for (name, t) in KEYWORD_TYPES {
+        assert_eq!(
+            keyword_flags(&types(&["Spell", name])),
+            Flags::skill_keyword(t),
+            "{name}"
+        );
+    }
+    assert_eq!(
+        keyword_flags(&types(&["Attack", "Fire", "Lightning"])),
+        Flags::SKILL_FIRE | Flags::SKILL_LIGHTNING
+    );
+    assert_eq!(
+        keyword_flags(&types(&["Spell", "Area", "cold", "Elemental"])),
+        Flags::NONE
+    );
+}
+
+/// A type a support adds gives its keyword (PoB's `skillTypes` after the
+/// supports' `addSkillTypes`).
+#[test]
+fn a_type_a_support_adds_should_give_its_keyword() {
+    let mut data = bundle();
+    let base = main_skill(&build(vec![group(vec![bolt(1, 0), support()])], 1), &data)
+        .unwrap()
+        .keyword_flags();
+    assert_eq!(base, Flags::NONE);
+    let skills = data.skills.as_mut().unwrap();
+    for e in &mut skills.granted_effects {
+        if e.id == "SupportTestDamage" {
+            e.added_types = vec!["Cold".to_owned()];
+        }
+    }
+    let m = main_skill(&build(vec![group(vec![bolt(1, 0), support()])], 1), &data).unwrap();
+    assert!(m.types.contains("Cold"));
+    assert_eq!(m.keyword_flags(), Flags::SKILL_COLD);
 }
 
 #[test]
@@ -332,6 +379,33 @@ fn real_gems_should_have_pobs_stats() {
             ("visual_hit_effect_elemental_is_holy", 1),
         ])
     );
+}
+
+/// The real PoE1 bundle's skill types name every keyword type as
+/// `KEYWORD_TYPES` spells it, and Ice Nova is a cold skill, Smite a
+/// lightning one (P3-8h). Maintainer-run, as above.
+#[test]
+#[ignore = "needs the real PoE1 bundle (LOOM_BUNDLE_DIR)"]
+#[expect(
+    clippy::disallowed_methods,
+    reason = "a maintainer-run test reads the bundle named by the environment"
+)]
+fn real_skill_types_should_name_the_keyword_types() {
+    let dir = std::env::var("LOOM_BUNDLE_DIR").expect("LOOM_BUNDLE_DIR");
+    let data = common::bundle_at(std::path::Path::new(&dir));
+    let skills = data.skills.as_ref().unwrap();
+    for (name, _) in KEYWORD_TYPES {
+        assert!(
+            skills.skill_types.iter().any(|t| t.id == name),
+            "{name} is no skill type"
+        );
+    }
+    let flags = |id: &str| {
+        let active = data.active_skill(id).unwrap();
+        keyword_flags(&active.types.iter().cloned().collect())
+    };
+    assert_eq!(flags("ice_nova"), Flags::SKILL_COLD);
+    assert_eq!(flags("smite"), Flags::SKILL_LIGHTNING);
 }
 
 /// The real PoE1 bundle's gem colours (P3-12i): every granted effect has

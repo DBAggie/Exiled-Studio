@@ -107,7 +107,7 @@ impl Flags {
 
     /// The skill keyword of a damage type.
     #[must_use]
-    pub const fn skill(t: DamageType) -> Self {
+    pub const fn skill_keyword(t: DamageType) -> Self {
         match t {
             DamageType::Physical => Self::SKILL_PHYSICAL,
             DamageType::Fire => Self::SKILL_FIRE,
@@ -339,7 +339,7 @@ mod tests {
         ];
         let mut all = Flags::NONE;
         for t in types {
-            let k = Flags::skill(t);
+            let k = Flags::skill_keyword(t);
             assert!(!k.is_empty());
             assert!(!all.intersects(k), "{t:?} shares a bit");
             assert!(!k.intersects(Flags::damage(t)));
