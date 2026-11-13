@@ -1752,6 +1752,93 @@ fn a_supports_cost_multiplier_should_scale_the_reservation() {
     assert_eq!(value(&r, Field::ManaUnreserved), mana(&r) - 45.0);
 }
 
+/// The other gems' reservation and aura effect modifiers (P3-8l,
+/// `poe1::skill_modifiers`): efficiency divides each reservation, rounded
+/// as PoB rounds it; "Reservation of Skills" multiplies it; the effect of
+/// non-curse auras scales each aura's mods, each to PoB's
+/// `modf(round(value x scale, 2))`.
+#[test]
+fn reservation_and_aura_effect_modifiers_should_apply_as_pob() {
+    let auras = || {
+        build(vec![
+            group(&["IceNova"]),
+            group(&["Precision"]),
+            group(&["Haste"]),
+        ])
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    let plain = run(&auras());
+    let with = |lines: &[(&str, i64)]| {
+        let mut b = auras();
+        b.config.sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: vec![loom_domain::CustomModifierBlock {
+                title: None,
+                enabled: true,
+                text: String::new(),
+                lines: lines.iter().map(|&(s, v)| custom_stat_line(s, v)).collect(),
+                attributes: Vec::new(),
+            }],
+            attributes: Vec::new(),
+        });
+        run(&b)
+    };
+    // 13% mana and 7% generic efficiency, 8% reduced reservation:
+    // flat round(30 x 0.92 / 1.2) = round(23.0) = 23; percent
+    // round(25.5 x 0.92 / 1.2, 2) = 19.55.
+    let r = with(&[
+        ("base_mana_reservation_efficiency_+%", 13),
+        ("base_reservation_efficiency_+%", 7),
+        ("base_reservation_+%", -8),
+    ]);
+    assert_eq!(gem_reasons(&r), Vec::<String>::new());
+    assert_eq!(r.fields[&Field::ManaUnreserved].state, FieldState::Complete);
+    let m = mana(&r);
+    assert_eq!(
+        value(&r, Field::ManaUnreserved),
+        m - (23.0 + (m * 19.55 / 100.0).ceil())
+    );
+    // The doubled stat: 3 is 6% reduced efficiency, 30 / 0.94 = 31.9 to 32.
+    let r = with(&[("mana_reservation_efficiency_-2%_per_1", 3)]);
+    let m = mana(&r);
+    let percent = (25.5f64 / 0.94 * 100.0 + 0.5).floor() / 100.0;
+    assert_eq!(
+        value(&r, Field::ManaUnreserved),
+        m - (32.0 + (m * percent / 100.0).ceil())
+    );
+    // Life efficiency reserves no mana differently.
+    let r = with(&[("base_life_reservation_efficiency_+%", 40)]);
+    assert_eq!(
+        value(&r, Field::ManaUnreserved),
+        value(&plain, Field::ManaUnreserved)
+    );
+    // 25% increased effect of non-curse auras: 20% crit becomes 25%, 10%
+    // cast speed 12% (12.5 rounds to 12.5, its integer part 12).
+    let r = with(&[("non_curse_aura_effect_+%", 25)]);
+    assert_eq!(gem_reasons(&r), Vec::<String>::new());
+    assert_eq!(
+        value(&r, Field::CritChance),
+        value(&bare, Field::CritChance) * 1.25
+    );
+    assert_eq!(value(&r, Field::Speed), value(&bare, Field::Speed) * 1.12);
+    // Its reservation does not change.
+    assert_eq!(
+        value(&r, Field::ManaUnreserved),
+        value(&plain, Field::ManaUnreserved)
+    );
+    // An efficiency of -100 or below: PoB divides by 0, a reason.
+    let r = with(&[("base_reservation_efficiency_+%", -100)]);
+    assert_eq!(
+        gem_reasons(&r),
+        [
+            "skill reservation-efficiency Gem { group: 1, gem: 0 }",
+            "skill reservation-efficiency Gem { group: 2, gem: 0 }",
+        ]
+    );
+}
+
 #[test]
 fn what_the_tables_do_not_model_should_be_reasons() {
     // An active skill not in the table; a support not in the table on an

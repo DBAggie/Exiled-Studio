@@ -28,6 +28,7 @@ pub mod minions;
 pub mod pantheon;
 pub mod phases;
 pub mod skill;
+pub mod skill_modifiers;
 pub mod sockets;
 pub mod states;
 
@@ -131,6 +132,19 @@ pub enum Poe1Quantity {
     /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
     /// 150% of their value", 150); [`minions`] takes the largest.
     MinionToYou(minions::MinionValue, u16),
+    /// Reservation efficiency of a pool, or of both (PoB's
+    /// `<Pool>ReservationEfficiency` and `ReservationEfficiency`, P3-8l):
+    /// `Increased`, read by [`skill_modifiers::Totals`] for the other
+    /// gems' reservation.
+    ReservationEfficiency(Option<Pool>),
+    /// Reservation of a pool, or of both (PoB's `<Pool>Reserved` and
+    /// `Reserved`, P3-8l): `Increased`, read as
+    /// [`Self::ReservationEfficiency`].
+    Reserved(Option<Pool>),
+    /// The effect of non-curse auras from your skills (PoB's `AuraEffect`
+    /// tagged `Aura` and not `AppliesCurse`, P3-8l): `Increased`, read by
+    /// [`skill_modifiers::Totals`] to scale the other gems' auras.
+    NonCurseAuraEffect,
 }
 
 /// A pool a skill reserves.
@@ -249,6 +263,13 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Reservation(pool, kind) => {
                 write!(f, "reservation.{}.{}", pool.name(), kind.name())
             }
+            Self::ReservationEfficiency(None) => f.write_str("reservation-efficiency"),
+            Self::ReservationEfficiency(Some(pool)) => {
+                write!(f, "reservation-efficiency.{}", pool.name())
+            }
+            Self::Reserved(None) => f.write_str("reserved"),
+            Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),
+            Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
         }
     }
 }

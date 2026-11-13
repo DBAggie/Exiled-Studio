@@ -112,7 +112,10 @@ const SPELL_CHAOS: Flags = Flags::SPELL.union(Flags::CHAOS);
 /// - `minimum_added_lightning_damage_from_skill`, `maximum_...`: Smite's
 ///   aura (`Data/Skills/act_str.lua`: `LightningMin` BASE as a
 ///   `GlobalEffect` aura buff on the character, scaled by aura and buff
-///   effect, whose stats are unmapped, so the buff is its value);
+///   effect; since P3-8l the non-curse aura effect scales the stat's
+///   value before it reaches this mapping,
+///   `poe1::skill_modifiers::MAIN_SKILL_AURA_STATS`, and the other effect
+///   stats are unmapped);
 /// - `skill_physical_damage_%_to_convert_to_lightning`: the skill's
 ///   conversion (`SkillPhysicalDamageConvertToLightning` BASE);
 /// - supports' own `statMap` rows (`Data/Skills/sup_*.lua`):
@@ -1431,10 +1434,12 @@ impl StatMapping for Poe1Mapping {
         }
         // Module tables of `(quantity, op, scale)` rows, each
         // unconditional: minion modifiers (P3-8j), exposure and the shock
-        // effect and minimum (P3-8k).
+        // effect and minimum (P3-8k), the other gems' reservation and aura
+        // effect modifiers (P3-8l).
         if let Some(effects) = super::minions::effects(stat.as_str())
             .or_else(|| super::exposure::effects(stat.as_str()))
             .or_else(|| super::damage_taken::shock_effects(stat.as_str()))
+            .or_else(|| super::skill_modifiers::effects(stat.as_str()))
         {
             return StatMap::Effects(
                 effects
@@ -1859,11 +1864,11 @@ mod tests {
         }
         // Left out on purpose: they can change a slice field. (The effect
         // of lightning ailments is a row since P3-8k: the guaranteed
-        // shock's scale, `poe1::damage_taken`.)
+        // shock's scale, `poe1::damage_taken`; mana reservation efficiency
+        // since P3-8l, `poe1::skill_modifiers`.)
         for stat in [
             "chill_effect_+%",
             "maximum_life_+%_if_no_life_tags_on_body_armour",
-            "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
             "base_max_fortification",
             "base_self_critical_strike_multiplier_-%",

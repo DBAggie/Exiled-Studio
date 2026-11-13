@@ -1211,6 +1211,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked with a 10% effect, Elemental Army's exposure type set to lightning, and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock; Smite's lightning damage meets 15% resistance, and the guaranteed shock is 30 (P3-8k)."
+    },
+    {
+      "id": "ice-nova-aura-effect-reservation-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-aura-effect-reservation-witch.xml",
+      "sha256": "a84b1cbaa1088cc8fd7b8ac495f9ec400df7ca9b8426e374acadb2febdd8cfc0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Zealotry and Discipline (auras) and Herald of Ice (a buff), each reserving a percentage of mana, and custom lines: 23% increased effect of non-curse auras (Zealotry's and Discipline's mods scaled, the herald's not), 13% increased mana reservation efficiency, 7% increased reservation efficiency, and 8% reduced reservation of skills (P3-8l)."
+    },
+    {
+      "id": "smite-aura-effect-reservation-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-aura-effect-reservation-templar.xml",
+      "sha256": "2e7c38c52c82d36ee7cbf95f1eb11331e95c655272fbda8cf96f7623a443b744",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Karui Maul, Precision and Clarity (auras reserving flat mana) and Haste (an aura reserving a percentage of mana), and custom lines: 10% increased effect of non-curse auras (Precision's, Haste's, and Smite's own aura scaled), 17% increased mana reservation efficiency, and 5% reduced reservation efficiency (P3-8l)."
     }
   ]
 }

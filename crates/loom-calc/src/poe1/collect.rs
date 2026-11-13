@@ -1074,6 +1074,9 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         ingest,
     );
     let Some(hit) = hit else { return };
+    // The main skill's own aura (Smite's) is scaled as any aura (P3-8l).
+    let buff_scale =
+        super::skill_modifiers::Totals::read(ingest).buff_scale(true, &hit.skill().types);
     for r in modelled {
         let source = Source::Gem {
             group: hit.group(),
@@ -1097,12 +1100,16 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         let stats: Vec<StatLine> = instance
             .stats
             .iter()
-            .map(|(stat, value)| StatLine {
-                stat: StatId::new(stat.as_str()),
-                value: StatValue::Exact {
-                    min: *value,
-                    max: *value,
-                },
+            .map(|(stat, value)| {
+                let value =
+                    super::skill_modifiers::main_skill_stat(&r.effect.id, stat, *value, buff_scale);
+                StatLine {
+                    stat: StatId::new(stat.as_str()),
+                    value: StatValue::Exact {
+                        min: value,
+                        max: value,
+                    },
+                }
             })
             .collect();
         ingest.stats_with(&SkillMapping, &source, &stats);
