@@ -1011,7 +1011,7 @@ pub const ROWS: &[Row] = &[
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Poe1Mapping;
 
-/// Stats that reach no slice field (101): `(stat, why)`, sorted by stat ID
+/// Stats that reach no slice field (102): `(stat, why)`, sorted by stat ID
 /// (P3-8a, with later steps' rows). Each is read as PoB v2.67.2 reads its
 /// text, and none feeds a slice field (attributes, life, mana, energy
 /// shield, armour, evasion, resistances, block, spell block, spell
@@ -1040,8 +1040,9 @@ pub struct Poe1Mapping;
 ///
 /// What is left out on purpose, so it stays `Unmapped` until a step maps
 /// it: anything that can change a hit or its rate through the enemy
-/// (shock, chill, exposure, intimidate, consecrated ground's effect,
-/// curses), charges' counts, rage, area, gem levels but the global ones of
+/// (shock and exposure but the rows of [`super::damage_taken`] and
+/// [`super::exposure`] (P3-8k), chill, intimidate, consecrated ground's
+/// effect, curses), charges' counts, rage, area, gem levels but the global ones of
 /// [`super::gem_levels`] (P3-8i), minion modifiers but those of
 /// [`super::minions`] (P3-8j, with the redirects to the player), and staff
 /// or shield
@@ -1080,6 +1081,13 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "additional_chaos_resistance_against_damage_over_time_%",
         "dot-resistance",
     ),
+    // "All Damage can Shock" (PoB `<Type>CanShock` flags), "Hits always
+    // Shock" (`EnemyShockChance` BASE 100): PoB reads them only for the
+    // shock chance and the shock it shows (`CalcOffence.lua` 4108, 5208
+    // on), never for the enemy's shock in the hit, which only the config
+    // and guaranteed shocks set (P3-8k, `poe1::damage_taken`).
+    ("all_damage_can_shock", "ailment-chance"),
+    ("always_shock", "ailment-chance"),
     ("avoid_ailments_%_from_crit", "ailment-on-self"),
     ("avoid_chained_projectile_%_chance", "avoidance"),
     ("avoid_interruption_while_casting_%", "interruption"),
@@ -1421,7 +1429,13 @@ impl StatMapping for Poe1Mapping {
                 conditions: Conditions::none(),
             }]);
         }
-        if let Some(effects) = super::minions::effects(stat.as_str()) {
+        // Module tables of `(quantity, op, scale)` rows, each
+        // unconditional: minion modifiers (P3-8j), exposure and the shock
+        // effect and minimum (P3-8k).
+        if let Some(effects) = super::minions::effects(stat.as_str())
+            .or_else(|| super::exposure::effects(stat.as_str()))
+            .or_else(|| super::damage_taken::shock_effects(stat.as_str()))
+        {
             return StatMap::Effects(
                 effects
                     .into_iter()
@@ -1843,9 +1857,10 @@ mod tests {
             };
             assert_eq!(piece.map(&StatId::new(stat)), StatMap::NoEffect, "{stat}");
         }
-        // Left out on purpose: they can change a slice field.
+        // Left out on purpose: they can change a slice field. (The effect
+        // of lightning ailments is a row since P3-8k: the guaranteed
+        // shock's scale, `poe1::damage_taken`.)
         for stat in [
-            "lightning_ailment_effect_+%",
             "chill_effect_+%",
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "base_mana_reservation_efficiency_+%",

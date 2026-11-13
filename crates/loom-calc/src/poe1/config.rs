@@ -54,8 +54,9 @@
 //! reasons; charges ([`super::charges`], P3-12e), the enemy's damage
 //! taken and evasion (shock, the boss kind, delirium: P3-12f; Intimidate,
 //! Unnerve, Blind: P3-12g; [`super::damage_taken`]), the bandit
-//! ([`super::collect`], P3-12f), and the pantheon ([`super::pantheon`],
-//! P3-12g) have their effects. Custom
+//! ([`super::collect`], P3-12f), the pantheon ([`super::pantheon`],
+//! P3-12g), and the enemy's exposure and Elemental Army's exposure type
+//! ([`super::exposure`], P3-8k) have their effects. Custom
 //! modifier blocks are not inputs: their lines act through their
 //! resolutions (`collect::config`, P3-12c), and so do the lines of PoB's
 //! legacy `customMods` input where PoB moves them into a block
@@ -172,16 +173,9 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   `other.lua` 5659; `spectre.lua` 2833), through their stats. Each is
 ///   in [`DEPENDS_ON`]. A minimum rage (`MinimumRage`, line 650) is a
 ///   modifier and does not read the input.
-/// - `conditionEnemyColdExposure`, `conditionEnemyFireExposure`,
-///   `conditionEnemyLightningExposure`: the enemy's `<Type>Exposure` BASE
-///   -10 (lines 1973 to 1981), conditioned on the player's
-///   `Condition:CanApply<Type>Exposure`, which `CalcPerform.lua` (398 to
-///   408) sets only when the main skill or the character has
-///   `<Type>ExposureChance` above 0: modifiers (`ModParser.lua` 850 to
-///   855, 4246 to 4320, 4546) and the `elementalArmyExposureType` input
-///   (line 424; itself a reason). PoB's skills that expose set the
-///   exposure itself (`Data/Skills`), not the chance: other gems, reasons.
-///   The modifiers' stats are in [`DEPENDS_ON`].
+/// - The three exposure checks were here until P3-8k, which gives them
+///   their effect ([`super::exposure`]), with the exposure stats then in
+///   [`DEPENDS_ON`].
 ///
 /// Added in P3-12g, the public builds' most frequent remaining inputs
 /// (each line of `ConfigOptions.lua`, then every reader of its names in
@@ -265,20 +259,8 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["enemy ChillVal", "enemy DesiredChillVal"],
     ),
     (
-        "conditionEnemyColdExposure",
-        &["enemy ColdExposure (with CanApplyColdExposure)"],
-    ),
-    (
-        "conditionEnemyFireExposure",
-        &["enemy FireExposure (with CanApplyFireExposure)"],
-    ),
-    (
         "conditionEnemyIgnited",
         &["enemy Condition:Ignited", "enemy Condition:Burning"],
-    ),
-    (
-        "conditionEnemyLightningExposure",
-        &["enemy LightningExposure (with CanApplyLightningExposure)"],
     ),
     ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
     ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
@@ -433,11 +415,8 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   `warcry_grant_X_rage_per_5_power`, and the others listed), and the
 ///   skill stats of Chain Hook, Vengeful Cry, a curse's stun rage, Rage
 ///   support, and the Spirit of Akoya tattoo;
-/// - exposure: the stats whose text PoB reads as `<Type>ExposureChance`
-///   ("chance to inflict cold exposure on hit", "cold skills have a #%
-///   chance to apply cold exposure on hit", "inflict cold exposure on hit,
-///   applying -#% to cold resistance", the socketed, devotion, curse-cast,
-///   graft, minion, and Summon Arbalists variants).
+/// - exposure: moved in P3-8k to [`super::exposure`] (its rows and its
+///   `DEPENDS_ON`), which gives the exposure checks their effect.
 ///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
@@ -446,29 +425,17 @@ pub const DEPENDS_ON: &[&str] = &[
     "ancestral_buff_base_rage_regeneration_per_minute",
     "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
     "arrow_damage_+%_max_as_distance_travelled_increases",
-    "base_inflict_cold_exposure_on_hit_%_chance",
-    "base_inflict_fire_exposure_on_hit_%_chance",
-    "base_inflict_lightning_exposure_on_hit_%_chance",
     "berserker_gain_rage_on_attack_hit_cooldown_ms",
     "berserker_warcry_grant_X_rage_per_5_power_while_less_than_25_rage",
     "can_apply_additional_scorch",
     "chain_hook_attachment_rage_to_gain_per_hit",
     "chain_strike_gain_x_rage_if_attack_hits",
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
-    "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
-    "chance_to_inflict_fire_exposure_on_hit_with_fire_damage_%",
-    "chance_to_inflict_lightning_exposure_on_hit_with_lightning_damage_%",
-    "cold_exposure_on_hit_magnitude",
-    "cold_skill_chance_to_inflict_cold_exposure_%",
     "consecrated_ground_enemy_damage_taken_+%",
     "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
     "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
-    "enemies_near_link_skill_target_have_exposure",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
-    "fire_exposure_on_hit_magnitude",
-    "fire_exposure_on_hit_magnitude_vs_max_stacks_resentment_debuff",
-    "fire_skill_chance_to_inflict_fire_exposure_%",
     "gain_1_rage_on_use_%_chance",
     "gain_convergence_on_hitting_unique_enemy",
     "gain_max_rage_on_losing_temporal_chains_debuff",
@@ -492,29 +459,16 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_when_hit",
     "gain_x_rage_when_you_use_a_life_flask",
     "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
-    "graft_skill_inflict_fire_exposure_on_hit_%_chance",
-    "graft_skill_inflict_lightning_exposure_on_hit_%_chance",
     "ignites_apply_fire_resistance_+",
     "impale_effect_+%_max_as_distance_travelled_increases",
-    "inflict_all_exposure_on_hit",
-    "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
-    "inflict_cold_exposure_on_hit_%_chance_at_devotion_threshold",
-    "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
-    "inflict_fire_exposure_on_hit_%_chance_at_devotion_threshold",
-    "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
-    "inflict_lightning_exposure_on_hit_%_chance_at_devotion_threshold",
     "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
     "keystone_cold_purist",
     "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
-    "lightning_exposure_on_hit_magnitude",
-    "lightning_skill_chance_to_inflict_lightning_exposure_%",
-    "local_display_socketed_gems_exposure_on_hit",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
     "local_display_tattoo_trigger_level_x_akoya",
     "local_gain_X_rage_on_attack_hit_with_melee_abyss_jewel_socketed",
     "max_chance_to_block_attacks_if_not_blocked_recently",
-    "minions_inflict_exposure_on_hit_%_chance",
     "physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%",
     "player_far_shot",
     "projectile_damage_+%_max_as_distance_travelled_increases",
@@ -529,9 +483,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "shield_crush_damage_+%_final_from_distance",
     "slayer_damage_+%_final_from_distance",
     "spell_block_is_maximum_if_not_blocked_recently",
-    "summon_arbalist_chance_to_inflict_cold_exposure_on_hit_%",
-    "summon_arbalist_chance_to_inflict_fire_exposure_on_hit_%",
-    "summon_arbalist_chance_to_inflict_lightning_exposure_on_hit_%",
     "support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
     "support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
     "support_rage_gain_rage_on_melee_hit_cooldown_ms",
@@ -668,8 +619,10 @@ mod tests {
         );
     }
 
-    /// Rage and exposure (P3-12f): no mapped stat names them, and the
-    /// `NoEffect` rows that do are listed, each reaching no slice field.
+    /// Rage and exposure (P3-12f): no row of the shared tables names them,
+    /// and the `NoEffect` rows that do are listed, each reaching no slice
+    /// field. Exposure's own rows are `poe1::exposure::STATS` (P3-8k),
+    /// read only by `exposure()`.
     #[test]
     fn no_mapped_stat_should_name_rage_or_exposure() {
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, NO_EFFECT, ROWS, WEAPON_ROWS};

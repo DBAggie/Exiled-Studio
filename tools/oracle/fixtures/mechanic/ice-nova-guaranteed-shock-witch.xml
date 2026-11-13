@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8k): a level 90 Witch casting Ice Nova (level 20) against an enemy configured as shocked with a 10% effect, with custom lines: "Shocks from your Hits always increase Damage taken by at least 25%", 30% increased effect of lightning ailments, 20% increased effect of non-damaging ailments, and "Hits always Shock". The guaranteed shock is 25 x 1.5 = 37.5, floored to 37, stronger than the configured 10; the last line changes nothing. ("All Damage can Shock" is left out: its only description is shadowed in the game's file, so a custom line of it does not resolve; passive nodes carry the stat by ID.)
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyShocked" boolean="true"/>
+			<Input name="conditionShockEffect" number="10"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Shocks from your Hits always increase Damage taken by at least 25%
+30% increased Effect of Lightning Ailments
+20% increased Effect of Non-Damaging Ailments
+Hits always Shock
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>
