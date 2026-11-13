@@ -390,6 +390,10 @@ mod tests {
             "poe1.enemy-damage-taken"
         );
         assert_eq!(
+            Quantity::Poe1(Poe1Quantity::EnemyEvasion).to_string(),
+            "poe1.enemy-evasion"
+        );
+        assert_eq!(
             Poe1Field::SpellSuppressionChance.name(),
             "spell-suppression-chance"
         );

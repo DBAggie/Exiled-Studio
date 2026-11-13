@@ -294,9 +294,12 @@ fn the_real_pantheons_stats_should_be_no_effect_rows() {
         .and_then(|p| p.pantheons.as_ref())
         .expect("the bundle's pantheon");
     assert_eq!(gods.len(), 12);
+    // 41 soul stats, each on one soul only (41 rows of `NO_EFFECT`).
     let mut stats = 0;
+    let mut unique = std::collections::BTreeSet::new();
     for (stat, _) in gods.iter().flat_map(|g| &g.souls).flat_map(|s| &s.stats) {
         stats += 1;
+        unique.insert(stat.as_str());
         assert_eq!(
             loom_calc::poe1::Poe1Mapping.map(&loom_domain::StatId::new(stat.as_str())),
             StatMap::NoEffect,
@@ -304,6 +307,7 @@ fn the_real_pantheons_stats_should_be_no_effect_rows() {
         );
     }
     assert_eq!(stats, 41);
+    assert_eq!(unique.len(), 41);
 }
 
 /// The real PoE1 bundle's default enemy against the values PoB v2.67.2

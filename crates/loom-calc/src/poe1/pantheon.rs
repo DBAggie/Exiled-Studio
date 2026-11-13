@@ -69,7 +69,8 @@ pub fn is_input(name: &str) -> bool {
 }
 
 /// The active set's gods: each input's last value acts ("None", or no
-/// input, acts as no god).
+/// input, acts as no god). A god is found by its ID whatever its major
+/// mark, as PoB looks up `data.pantheons[name]` for either input.
 pub fn pantheon(set: &ConfigSet, data: &dyn CalcData, ingest: &mut Ingest<'_>) {
     for input in [MAJOR_INPUT, MINOR_INPUT] {
         let name = match super::config::last_input(set, input, ConfigInputKind::Input) {

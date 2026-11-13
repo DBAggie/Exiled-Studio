@@ -570,6 +570,24 @@ fn blind_and_intimidate_should_act_on_an_attack() {
     let average = (hit * (1.0 - 5.0 / 100.0) + crit * 5.0 / 100.0) * 100.0 / 100.0;
     assert!((value(&r, Field::AverageDamage) - average).abs() < 1e-9);
     assert!(partial(&r, Field::AverageDamage).is_empty());
+    // The enemy's other evasion inputs (Corrosion's BASE, Brine ground's
+    // INC: `ConfigOptions.lua` 1816 to 1819, 2003 to 2010) stay reasons
+    // beside Blind: modelling one must revisit `hit::accuracy_hit_chance`.
+    let mut corroded = evasive.to_vec();
+    corroded.push(("multiplierCorrosionStackCount", 2.0));
+    for (enemy, checks) in [
+        (corroded, vec!["conditionEnemyBlinded"]),
+        (
+            evasive.to_vec(),
+            vec!["conditionEnemyBlinded", "conditionEnemyOnBrineGround"],
+        ),
+    ] {
+        let r = with(&enemy, &checks);
+        assert!(
+            partial(&r, Field::HitChance).contains(&"unmodelled-config"),
+            "{checks:?}"
+        );
+    }
     let r = with(&OPEN, &["conditionEnemyUnnerved", "conditionEnemyBlinded"]);
     for f in [Field::AverageDamage, Field::HitChance, Field::HitDps] {
         assert_eq!(value(&r, f).to_bits(), value(&open, f).to_bits(), "{f}");
