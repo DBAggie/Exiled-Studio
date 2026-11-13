@@ -8,10 +8,23 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# The end-to-end test picker (Phase 4 plan, decision 14 d): fixed files
+# instead of native dialogs. Never in a release build.
+e2e = []
+
 [dependencies]
 loom-app.workspace = true
 loom-integrations.workspace = true
+loom-persistence.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 tauri = "2.12.5"
+# The file dialogs, called from Rust only (decision 10); MIT or Apache-2.0.
+tauri-plugin-dialog = "2"
+
+[dev-dependencies]
+tauri = { version = "2.12.5", features = ["test"] }
 
 [lints]
 workspace = true

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "The main window: events from the application and its own commands only. No dialog:* or fs:* permission: the Rust side opens the file dialogs (Phase 4 plan, decision 10).",
+  "windows": ["main"],
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
+}

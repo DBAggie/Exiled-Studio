@@ -7,7 +7,6 @@
 //! a reviewed diff of that file).
 
 #![expect(clippy::unwrap_used, reason = "tests; a failure should panic")]
-#![expect(clippy::panic, reason = "tests; a failure should panic")]
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
@@ -334,9 +333,8 @@ fn read_tools_should_answer_with_the_apps_projections() {
             .unwrap()
             .is_empty()
     );
-    assert_eq!(
-        f.app.snapshot().history.can_undo,
-        false,
+    assert!(
+        !f.app.snapshot().history.can_undo,
         "a preview applies nothing"
     );
 
