@@ -557,3 +557,71 @@ Reasons:
 - **Corpus:** 64 gone in 14 builds, none added. Unreserved mana rose in 4 builds (the same efficiency; their fields are not compared).
 
 Tests: 1261 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (`tests/skill_modifiers.rs` new).
+
+## P3-8m: Resolute Technique, Elemental Overload, Bitter Frost, and chill
+
+The in-scope builds take three keystones that change the hit: Resolute Technique (Smite act5 and act10), Elemental Overload (Ice Nova Elementalist campaign lab1), and Bitter Frost (`keystone_cold_purist`: the Ice Nova campaign and mapping builds, Winter Orb). Bitter Frost turns the enemy's chill into cold damage taken, so this step also computes the chill.
+
+### What PoB v2.67.2 does
+
+- **Reading** (`Modules/ModParser.lua`; the keystone node's lines, `passive_skill_stat_descriptions.txt`). Resolute Technique: "Your hits can't be Evaded" is the `CannotBeEvaded` flag (2216), "Never deal Critical Strikes" `NeverCrit` and `Condition:NeverCrit` (2219). Elemental Overload: "Skills that have dealt a Critical Strike in the past 8 seconds deal 40% more Elemental Damage with Hits and Ailments" is `ElementalDamage` MORE 40 with the `Hit` or `Ailment` keyword (992) under `Condition:CritInPast8Sec` (1307); "Your Critical Strikes do not deal extra Damage" is `NoCritMultiplier` (3517); "Ailments never count as being from Critical Strikes" reaches no slice field (2227). Bitter Frost: `ChillEffectIncColdDamageTaken` (3823), `ChillingAreaIncColdDamageTaken` in a chilling area (3824), and "Cannot deal non-Cold Damage" `DealNoPhysical`, `DealNoFire`, `DealNoLightning`, `DealNoChaos` (5256).
+- **The hit** (`Modules/CalcOffence.lua`). `CannotBeEvaded`: an attack's `AccuracyHitChance` is 100 (2162). `NeverCrit`: crit chance and multiplier 0 (2955). Otherwise `NoCritMultiplier`: multiplier 1 (3115). `CritInPast8Sec` is set when the skill's final crit chance (after the chance to hit) is not 0 (3184), before the hit's damage. A type the skill cannot deal is skipped (`canDeal`, 1874, 3319), though it still converts. A hit's damage taken sums the enemy's `DamageTaken` and `<Type>DamageTaken` INC (3403).
+- **Chill** (`Modules/CalcPerform.lua`). The `conditionEnemyChilled` check chills the enemy; `conditionEnemyChilledEffect` is its `ChillVal` (`ConfigOptions.lua` 1873 to 1884). Each active skill typed `ChillingArea` (or `NonHitChill` without `CannotChill`) adds `ChillOverride` `10 x calcLib.mod(skillModList, skillCfg, "EnemyChillEffect")` and chills the enemy (1393 to 1399). The chill is `floor(min(max(override, ChillVal), 30))` (3499 to 3546). Only a flag makes it damage taken, in order (3438 to 3445): `ChillEffectIncDamageTaken` every type; else `ChillEffectIncColdDamageTaken` cold; else the chilling area's; else Bonechill's.
+
+### The engine
+
+- **`loom_calc::poe1::keystones`** (new): `KEYSTONES` maps the three stats to flags on `Poe1Quantity::CannotBeEvaded`, `NeverCrit`, `NoCritMultiplier`, `DealNo(type)`, `ChillDamageTaken(Some(Cold))`, and Elemental Overload's `Damage` MORE 40 (`HIT`, any `ELEMENTAL`) under the state `CritInPast8Sec`. Bitter Frost's chilling-area line adds nothing after its first flag, as in PoB.
+- **`poe1::hit`**: the flags above, each queried only when an effect exists (other builds' graphs are unchanged); the passes' context holds `CritInPast8Sec` from the computed crit chance; `type_damage_taken` for a type with `Poe1Quantity::EnemyTypeDamageTaken`.
+- **`poe1::damage_taken::chill`**: with a `ChillDamageTaken` flag on, the chill from the config and from each `Poe1Quantity::SkillChill` (10, scaled by `Poe1Quantity::ChillEffect` INC), as PoB; its effect is the enemy's `EnemyDamageTaken` ("Enemies Chilled by your Hits have Damage taken increased by Chill Effect") or cold `EnemyTypeDamageTaken`. `CHILL_STATS`: `chill_effect_+%`, `cold_ailment_effect_+%`, `non_damaging_ailment_effect_+%` (also the shock's), and the every-type flag. `CHILL_DEPENDS_ON` keeps the stats that would change the chill otherwise as reasons (guaranteed and maximum chill, more and conditional effects, Bonechill). The two chill inputs leave `config::NAMED_ONLY`.
+- **`poe1::gems`**: each existing `ChillingArea` skill, the main skill too, adds `SkillChill` (Frostblink and Arctic Armour are the modelled ones, a real-bundle test); a `NonHitChill` skill without `ChillingArea` is a reason (`guaranteed-chill`). `data-parity` table `gem_effects` refuses `ChillBase`, `ChillMinimum`, `ChillOverride`, and `EnemyChillEffect` in a modelled gem, so a skill's own gems add nothing to its chill (re-run: no modelled gem has one).
+- Calc result v1 names (additive): `poe1.cannot-be-evaded`, `poe1.never-crit`, `poe1.no-crit-multiplier`, `poe1.deal-no.<type>`, `poe1.enemy-damage-taken.<type>`, `poe1.chill-damage-taken[.<type>]`, `poe1.chill-effect`, `poe1.skill-chill`.
+- Provenance: the chill's effect carries the configured input or the strongest skill's gem; the keystone flag that turns it into damage taken and the effect modifiers are no graph node (a documented gap, as the shock's).
+- A maintainer-run test (`tests/keystones_chill.rs`) checks each row's text in the real bundle and that every stat whose text names chill, the effect of cold or non-damaging ailments, evasion of hits, or never critting is a row, `Unmapped`, or a listed `NoEffect` row.
+
+### Mechanic fixtures
+
+A keystone in a fixture is allocated with the shortest path from the class start: PoB leaves a node not connected to the start unallocated (the first draft listed the keystones alone, and PoB ignored them).
+
+| Fixture | What it isolates |
+|---|---|
+| `smite-resolute-technique-templar.xml` | Smite with a normal Karui Maul and Resolute Technique against 2000 evasion: chance to hit 100, crit chance and multiplier 0 |
+| `ice-nova-elemental-overload-witch.xml` | Ice Nova with Elemental Overload and 10 to 20 added fire damage to spells: 40% more cold and fire damage, crit multiplier 1 |
+| `ice-nova-bitter-frost-witch.xml` | Ice Nova with Bitter Frost, Frostblink in a second group, the enemy chilled at 8%, 10 to 20 added fire damage to spells, and 25% increased effect of chill: chill 12 (Frostblink's 12.5, floored), 12% increased cold damage taken, no fire damage |
+
+Each equals PoB on every target.
+
+### Review
+
+`code-architecture-reviewer`: no blockers. It confirmed each PoB reading against the pinned checkout (the hit's flags and their order, `CritInPast8Sec` from the final crit chance, `canDeal` only on the hit with conversion untouched, the per-type damage taken, the guaranteed chill and the flag order, the chill's formula, Elemental Overload's keyword flags and name order), and found no way for `CritInPast8Sec` to leak as a reason. Applied in `77c1b69`: tests for Ahuana's flag before Bitter Frost's, a tie between the configured and a guaranteed chill, Resolute Technique reading no evasion data, and Bitter Frost refusing Smite's physical and converted lightning damage; the crit multiplier's never-crit node named apart; notes on where `CritInPast8Sec` is settled (another query of a stat conditioned on it meets it unsettled, a reason; PoB never clears it, so with dual wielding the main hand's crit would hold it for the off hand) and on scorch, the one ailment of the effect stats that would reach the hit.
+
+### Evidence (P3-8m)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout on a clean tree: `local/p3/p3-8m/evidence.sh` at tool commit `77c1b69`. P3-12i's bundle and overlay are used; `data-parity` re-run for the `gem_effects` guard: report identical to P3-12i's. Summaries are in `docs/phase-3/stat-mapping/p3-8m-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 127 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 127 documents; 1917 complete, 334 partial, 461 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 44 registered differences (none new), 0 unexpected; 1885 fields match. **Every mechanic target met: 1883 of 1883 over 90 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8l** (`p3-8m-public-vs-p3-8l.json`, `p3-8m-corpus-poe1-26530219-vs-p3-8l.json`). No field state changes. Values changed in 8 public builds, every one toward PoB's or equal:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Smite act5 | hit chance, crit chance, crit multiplier | 41, 5.74, 1.5 | 100, 0, 0 | 100, 0, 0 |
+| Smite act5 | average damage | 2029 | 4806 | 15434 |
+| Smite act10 | hit chance, crit chance, crit multiplier | 41, 5.74, 1.5 | 100, 0, 0 | 100, 0, 0 |
+| Smite act10 | average damage | 2819 | 6661 | 31852 |
+| Ice Nova Elementalist lab1 | crit multiplier | 1.5 | 1 | 1 |
+| Ice Nova Elementalist lab1 | average damage | 4953 | 5905 | 31434 |
+| Ice Nova Elementalist campaign | average damage | 24026 | 29702 | 142914 |
+| Ice Nova Elementalist mapping | average damage | 147034 | 177455 | 2335701 |
+
+Boneshatter and Lacerate (Resolute Technique) now equal PoB's hit chance, crit chance, and crit multiplier, and Shock Nova (Elemental Overload) its crit multiplier; their damage and DPS move toward PoB's. In the Ice Nova campaign and mapping builds the chill is 30, PoB's `CurrentChill`. Hit DPS follows average damage everywhere.
+
+Reasons:
+- **Public:** 17 gone in 14 builds, none added. In the eight in-scope builds, `unmapped-stat` reasons fell from 132 to 124.
+- **Corpus:** 7 gone in 7 builds, none added. One build's crit multiplier now equals PoB's (1); its average damage moves away (17.46 to 16.82, PoB 1645; the field is partial): the lost crit damage outweighs the 40% more on the elemental part of its hit.
+
+Tests: 1269 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (`tests/keystones_chill.rs` new).

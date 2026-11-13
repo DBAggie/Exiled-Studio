@@ -111,10 +111,11 @@ use loom_domain::{Build, ItemId};
 use super::collect;
 use super::enemy::{self, Enemy, EnemyProblem};
 use super::gem_levels::GemLevels;
+use super::keystones;
 use super::phases::{self, Valued};
 use super::skill::{self, MainSkill};
 use super::{Poe1Quantity, WeaponValue};
-use crate::condition::{Applies, Flags, QueryContext};
+use crate::condition::{Applies, ConditionKey, Flags, QueryContext};
 use crate::engine::Calc;
 use crate::error::CalcError;
 use crate::graph::{Node, Term};
@@ -562,6 +563,39 @@ fn sum_in(
     })
 }
 
+/// The flag on `quantity` in `cx` when one applies (P3-8m): its node,
+/// value 1. Queried only when the store has an effect on `quantity`, so a
+/// hit without one keeps its graph.
+fn flag_on(
+    calc: &mut Calc<'_>,
+    quantity: Quantity,
+    cx: &QueryContext,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    if !phases::has(calc, quantity) {
+        return Ok(None);
+    }
+    let (store, graph) = calc.parts();
+    let q = store.flag(graph, quantity, cx)?;
+    reasons.extend(&q.reasons);
+    Ok((q.value != 0.0).then_some(Valued {
+        node: q.node,
+        value: q.value,
+    }))
+}
+
+/// A field's value set by a flag (P3-8m): the flag times `value`, so the
+/// value's node reads the flag's sources.
+fn by_flag(
+    calc: &mut Calc<'_>,
+    flag: Valued,
+    name: &'static str,
+    value: f64,
+) -> Result<Valued, CalcError> {
+    let constant = phases::constant(calc, name, value)?;
+    phases::product(calc, &[flag, constant], Term::Result)
+}
+
 /// `1 + inc / 100` of `quantity` in `cx`.
 fn increased(
     calc: &mut Calc<'_>,
@@ -749,6 +783,7 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
         flags,
         damage: DamageSource::Skill,
         melee_physical: None,
+        crit_recently: crit.value != 0.0,
     };
     let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, None)?;
@@ -847,9 +882,18 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
 
     // Chance to hit (step 9).
     let mut hit_reasons = unvetted.clone();
-    enemy_reasons(&enemy, true, &mut hit_reasons);
-    let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
-    let hit_chance = accuracy_hit_chance(calc, &enemy, accuracy, &cx, &mut hit_reasons)?;
+    // `CannotBeEvaded`: `AccuracyHitChance = 100` (`CalcOffence.lua` 2162;
+    // Resolute Technique, P3-8m): neither accuracy nor the enemy's evasion
+    // is read.
+    let cannot_be_evaded = Quantity::Poe1(Poe1Quantity::CannotBeEvaded);
+    let hit_chance = match flag_on(calc, cannot_be_evaded, &cx, &mut hit_reasons)? {
+        Some(flag) => by_flag(calc, flag, "hits-cannot-be-evaded", 100.0)?,
+        None => {
+            enemy_reasons(&enemy, true, &mut hit_reasons);
+            let accuracy = accuracy(calc, &cx, &mut hit_reasons)?;
+            accuracy_hit_chance(calc, &enemy, accuracy, &cx, &mut hit_reasons)?
+        }
+    };
     calc.set_derived(
         Field::HitChance,
         phases::query(hit_chance, hit_reasons),
@@ -886,6 +930,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
         flags,
         damage: DamageSource::Weapon(&weapon.damage),
         melee_physical,
+        crit_recently: crit.value != 0.0,
     };
     let (hit, crit_hit) = passes(calc, &shape, &enemy, input.data, multiplier, &mut reasons)?;
     let average = average_damage(calc, hit, crit_hit, crit, Some(hit_chance))?;
@@ -1190,6 +1235,11 @@ fn crit_chance(
     cx: &QueryContext,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
+    // `NeverCrit`: 0 (`CalcOffence.lua` 2955; Resolute Technique, P3-8m).
+    let never = Quantity::Poe1(Poe1Quantity::NeverCrit);
+    if let Some(flag) = flag_on(calc, never, cx, &mut reasons)? {
+        return Ok((by_flag(calc, flag, "never-crit", 0.0)?, reasons));
+    }
     let added = sum_in(
         calc,
         Quantity::CritChance,
@@ -1227,6 +1277,16 @@ fn crit_multiplier(
     cx: &QueryContext,
 ) -> Result<(Valued, Reasons), CalcError> {
     let mut reasons = Reasons::new();
+    // `NeverCrit`: 0 (`CalcOffence.lua` 2958); else `NoCritMultiplier`: 1
+    // (3115; Elemental Overload). P3-8m.
+    let never = Quantity::Poe1(Poe1Quantity::NeverCrit);
+    if let Some(flag) = flag_on(calc, never, cx, &mut reasons)? {
+        return Ok((by_flag(calc, flag, "never-crit-multiplier", 0.0)?, reasons));
+    }
+    let no_extra = Quantity::Poe1(Poe1Quantity::NoCritMultiplier);
+    if let Some(flag) = flag_on(calc, no_extra, cx, &mut reasons)? {
+        return Ok((by_flag(calc, flag, "no-extra-crit-damage", 1.0)?, reasons));
+    }
     let mut terms = Vec::new();
     match data.character_constant(CRIT_MULTIPLIER_STAT) {
         Some(base) => {
@@ -1498,6 +1558,46 @@ fn enemy_damage_taken(
     )?))
 }
 
+/// The enemy's damage taken by a hit of type `t` when it has some of that
+/// type (P3-8m): `(1 + (inc + typeInc) / 100) x more x typeMore`, PoB's
+/// `takenInc = Sum("INC", cfg, "DamageTaken", "<Type>DamageTaken")` and
+/// `takenMore = More(cfg, "DamageTaken", "<Type>DamageTaken")`
+/// (`CalcOffence.lua` 3403, 3404), each name's more rounded on its own.
+fn type_damage_taken(
+    calc: &mut Calc<'_>,
+    cx: &QueryContext,
+    t: DamageType,
+    reasons: &mut Reasons,
+) -> Result<Valued, CalcError> {
+    let all = Quantity::Poe1(Poe1Quantity::EnemyDamageTaken);
+    let typed = Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(t));
+    let inc_all = sum_in(
+        calc,
+        all,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-damage-taken-increased"),
+        reasons,
+    )?;
+    let inc_typed = sum_in(
+        calc,
+        typed,
+        Op::Increased,
+        cx,
+        Term::Step("enemy-type-damage-taken-increased"),
+        reasons,
+    )?;
+    let sum = phases::total(calc, &[inc_all, inc_typed], Term::Step("increased-sum"))?;
+    let inc = phases::factor(calc, sum, Term::Increased)?;
+    let more_all = more(calc, all, cx, reasons)?;
+    let more_typed = more(calc, typed, cx, reasons)?;
+    phases::product(
+        calc,
+        &[inc, more_all, more_typed],
+        Term::Step("enemy-damage-taken"),
+    )
+}
+
 /// The enemy's resistance index ([`Enemy::resistances`]) of a damage type
 /// with a resistance; `None` for physical.
 const fn resistance_index(t: DamageType) -> Option<usize> {
@@ -1562,6 +1662,10 @@ struct HitShape<'a> {
     damage: DamageSource<'a>,
     /// Strength's increase of melee physical damage, percent (attacks).
     melee_physical: Option<Valued>,
+    /// Whether the skill's crit chance is not 0: PoB then sets its
+    /// `CritInPast8Sec` condition before the hit's damage
+    /// (`CalcOffence.lua` 3184; [`keystones::CRIT_IN_PAST_8_SEC`], P3-8m).
+    crit_recently: bool,
 }
 
 /// The skill's conversion table (module docs, step 2), when it converts:
@@ -1663,7 +1767,7 @@ fn calc_damage(
     extra: Flags,
     bases: &[Option<[Valued; 2]>; 5],
     conversion: Option<&Conversion>,
-    flags: Flags,
+    cx: &QueryContext,
     melee_physical: Option<Valued>,
     reasons: &mut Reasons,
     zero: &mut Option<Valued>,
@@ -1685,7 +1789,7 @@ fn calc_damage(
                 extra | Flags::damage(ty),
                 bases,
                 conversion,
-                flags,
+                cx,
                 melee_physical,
                 reasons,
                 zero,
@@ -1723,7 +1827,10 @@ fn calc_damage(
             };
         }
     };
-    let typed = calc.context(flags | extra | Flags::damage(ty));
+    let typed = QueryContext {
+        flags: cx.flags | extra | Flags::damage(ty),
+        states: cx.states.clone(),
+    };
     let bonus = melee_physical.filter(|_| typed.flags.contains(Flags::MELEE | Flags::PHYSICAL));
     let (inc, more) = match bonus {
         None => modifiers(calc, Quantity::Damage, &typed, reasons)?,
@@ -1780,8 +1887,10 @@ fn passes(
     multiplier: Valued,
     reasons: &mut Reasons,
 ) -> Result<(Valued, Valued), CalcError> {
-    let flags = shape.flags;
-    let cx = calc.context(flags);
+    let cx = calc.context(shape.flags).with_state(
+        ConditionKey::new(keystones::CRIT_IN_PAST_8_SEC),
+        shape.crit_recently,
+    );
     // Damage effectiveness and base multiplier: `stored / 10000 + 1` as
     // PoB's exporter writes them (absent: 1), one division of whole
     // numbers here, which is the nearest double to the same decimal.
@@ -1846,6 +1955,13 @@ fn passes(
             range.push(phases::total(calc, &[from_skill, from_added], Term::Base)?);
         }
         bases[t] = Some([range[0], range[1]]);
+        // `canDeal[type]` (`CalcOffence.lua` 1874, 3319; Bitter Frost,
+        // P3-8m): a type the hit cannot deal is skipped, its base kept for
+        // the types it converts to.
+        let deal_no = Quantity::Poe1(Poe1Quantity::DealNo(ty));
+        if flag_on(calc, deal_no, &cx, reasons)?.is_some() {
+            continue;
+        }
         let converted_in = conversion
             .as_ref()
             .is_some_and(|c| (0..t).any(|from| c.share[from][t].is_some_and(|s| s.value > 0.0)));
@@ -1858,7 +1974,7 @@ fn passes(
             Flags::NONE,
             &bases,
             conversion.as_ref(),
-            flags,
+            &cx,
             shape.melee_physical,
             reasons,
             &mut zero,
@@ -1880,6 +1996,12 @@ fn passes(
                 physical = true;
                 None
             }
+        };
+        // The enemy's damage taken of this type joins the hit's (P3-8m).
+        let taken = if phases::has(calc, Quantity::Poe1(Poe1Quantity::EnemyTypeDamageTaken(ty))) {
+            Some(type_damage_taken(calc, &cx, ty, reasons)?)
+        } else {
+            taken
         };
         let two = phases::constant(calc, "two", 2.0)?;
         for crit in [false, true] {

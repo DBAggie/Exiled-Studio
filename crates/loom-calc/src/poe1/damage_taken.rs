@@ -1,6 +1,6 @@
 //! The enemy's damage taken and evasion from the config (Phase 3 plan,
 //! step 12): shock, the Uber boss kind, and delirium (P3-12f);
-//! Intimidate, Unnerve, and Blind (P3-12g).
+//! Intimidate, Unnerve, and Blind (P3-12g); chill's damage taken (P3-8m).
 //!
 //! What PoB v2.67.2 does:
 //! - **The hit** (`Modules/CalcOffence.lua` 3515 to 3620, in the effective
@@ -33,6 +33,24 @@
 //!   immune, or avoids shock (enemy modifiers only). The guard `ShockVal >
 //!   0 or modDB:Sum(...)` is always true in Lua (0 is true), so with no
 //!   configured effect and no guaranteed shock the shock is 0.
+//! - **Chill** (P3-8m; `Modules/ConfigOptions.lua` 1873 to 1884): the
+//!   `conditionEnemyChilled` check sets the enemy's `Condition:Chilled`
+//!   and `ChilledConfig`; the `conditionEnemyChilledEffect` count sets
+//!   `ChillVal` BASE while `ChilledConfig`. An active skill typed
+//!   `ChillingArea`, or `NonHitChill` without `CannotChill`, adds
+//!   `ChillOverride` BASE `10 x calcLib.mod(skillModList, skillCfg,
+//!   "EnemyChillEffect")` and chills the enemy (`CalcPerform.lua` 1393 to
+//!   1399). The chill is then the shock's computation with Chill's data:
+//!   `floor(min(max(override, ChillVal), max))`, `max` 30 plus each active
+//!   skill's `ChillMax` (3499 to 3546). It slows the enemy, and only a
+//!   modifier's flag turns it into damage taken while chilled (3438 to
+//!   3445, in order): `ChillEffectIncDamageTaken` ("Enemies Chilled by
+//!   your Hits have Damage taken increased by Chill Effect") gives
+//!   `DamageTaken` INC equal to the chill; else
+//!   `ChillEffectIncColdDamageTaken` (Bitter Frost, [`super::keystones`])
+//!   `ColdDamageTaken` INC; else `ChillingAreaIncColdDamageTaken` in a
+//!   chilling area (Bitter Frost too, so never reached here); else
+//!   Bonechill's (a gem, a reason).
 //! - **The boss kind** (`enemyIsBoss`, `Modules/ConfigOptions.lua` 2086 to
 //!   2221): the Uber kind gives the enemy `DamageTaken` MORE -70. The
 //!   kinds' other modifiers reach no slice field ([`super::enemy`] module
@@ -78,6 +96,19 @@
 //! only from modifiers, so from stats: no mapping produces them (tests in
 //! this module, [`SHOCK_DEPENDS_ON`]), so such a stat is a reason or
 //! reaches no slice field.
+//!
+//! The chill (P3-8m, [`chill`]) is computed only when a flag of
+//! [`Poe1Quantity::ChillDamageTaken`] is on: from the configured effect
+//! and the skills' guaranteed chills ([`Poe1Quantity::SkillChill`], one
+//! per chilling skill [`super::gems`] models, scaled by
+//! [`Poe1Quantity::ChillEffect`]). Its effect is
+//! [`Poe1Quantity::EnemyDamageTaken`] or, for cold,
+//! [`Poe1Quantity::EnemyTypeDamageTaken`], which a hit adds only to its
+//! cold damage ([`super::hit`]); its source is the configured effect's
+//! input or the strongest guaranteed chill's gem (the flag's source and
+//! the chill's other sources are no graph node, as the shock's).
+//! Everything else that sets the chill is a stat that stays a reason
+//! ([`CHILL_DEPENDS_ON`]) or a gem the engine does not model.
 
 use loom_domain::{Build, ConfigInputKind, ConfigSet, ConfigValue};
 
@@ -87,7 +118,7 @@ use super::enemy::{self, BossKind};
 use crate::condition::Flags;
 use crate::ingest::Ingest;
 use crate::input::CalcData;
-use crate::quantity::{Op, Quantity};
+use crate::quantity::{DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::UnsupportedReason;
 use crate::store::{Conditions, Effect};
@@ -190,14 +221,106 @@ pub const SHOCK_DEPENDS_ON: &[&str] = &[
     "shock_maximum_magnitude_+",
 ];
 
-/// The effects of a stat of [`SHOCK_STATS`]: `(quantity, op, scale)`.
+/// The check that chills the enemy.
+pub const CHILLED_INPUT: &str = "conditionEnemyChilled";
+/// The count of the chill's effect.
+pub const CHILL_EFFECT_INPUT: &str = "conditionEnemyChilledEffect";
+
+/// The largest chill without modifiers (`ailmentData.Chill.max`,
+/// `Modules/Data.lua` 419).
+pub const CHILL_MAX: f64 = 30.0;
+
+/// A skill's guaranteed chill before its effect modifiers
+/// (`ailmentData.Chill.default`, `Modules/Data.lua` 419).
+pub const CHILL_DEFAULT: f64 = 10.0;
+
+/// The stats of the chill (P3-8m, module docs), sorted by stat ID. Each
+/// description is the game's, read by PoB's text:
+/// - "#% increased Effect of Chill" (`ModParser.lua` 777, 779), "#%
+///   increased Effect of Cold Ailments" (782: chill and brittle), "#%
+///   increased Effect of Non-Damaging Ailments" (785, with
+///   [`SHOCK_STATS`]' row): `EnemyChillEffect` INC, which scales a
+///   skill's guaranteed chill (`CalcPerform.lua` 1394); brittle, freeze,
+///   scorch, and sap reach no slice field without a config input or a
+///   guaranteed source that stays a reason (scorch's resistance
+///   reduction is the one that would reach the hit);
+/// - "Enemies Chilled by your Hits have Damage taken increased by Chill
+///   Effect" (3822): `ChillEffectIncDamageTaken`, every damage type.
+pub const CHILL_STATS: [ShockRow; 4] = [
+    ("chill_effect_+%", Poe1Quantity::ChillEffect, Op::Increased),
+    (
+        "cold_ailment_effect_+%",
+        Poe1Quantity::ChillEffect,
+        Op::Increased,
+    ),
+    (
+        "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
+        Poe1Quantity::ChillDamageTaken(None),
+        Op::Flag,
+    ),
+    (
+        "non_damaging_ailment_effect_+%",
+        Poe1Quantity::ChillEffect,
+        Op::Increased,
+    ),
+];
+
+/// Stats PoB reads that would change the chill otherwise than [`chill`]
+/// does, sorted: they must stay reasons (a test checks each is `Unmapped`
+/// through every mapping; a maintainer-run test that each is a stat of
+/// the real bundle, and that every other stat whose text names chill or
+/// the effect of cold or non-damaging ailments is a row, `Unmapped`, or a
+/// listed `NoEffect` row):
+/// - guaranteed chills (`ChillBase`: "Chills from your Hits always reduce
+///   Action Speed by at least #%", `ModParser.lua` 2769; near corpses,
+///   2933) and the maximum ("Your Chills can reduce Action Speed by up to
+///   a maximum of #%", 2784: `ChillMax`);
+/// - more effects (Pure Elementalist's, the Elementalist's "... for which
+///   the highest Damage Type is Cold" with `ChecksHighestDamage`, the
+///   hidden ascendancy's) and effects with a condition (while leeching
+///   mana, with critical strikes, per Elder item, per blue gem, per
+///   devotion, a flask's during its effect), and the map's effect on
+///   monsters (the enemy's `SelfChillEffect`);
+/// - Bonechill: its stats and the support a socketed item grants. PoB's
+///   effect is the gem's skill data (`supportBonechill`,
+///   `Data/Skills/sup_int.lua` 560; `CalcPerform.lua` 3444: cold damage
+///   taken equal to the chill), and its stat map ignores the two stats, so
+///   they are the only trace the engine sees (moved here from
+///   [`super::config::DEPENDS_ON`] in P3-8m).
+pub const CHILL_DEPENDS_ON: &[&str] = &[
+    "chill_effect_+%_while_mana_leeching",
+    "chill_effect_+%_with_critical_strikes",
+    "chill_minimum_slow_%",
+    "chill_minimum_slow_%_from_mastery",
+    "cold_ailments_effect_+%_final_if_hit_highest_cold",
+    "elementalist_chill_maximum_magnitude_override",
+    "enemies_near_corpses_created_recently_are_shocked_and_chilled",
+    "ice_nova_chill_minimum_slow_%",
+    "keystone_pure_elementalist",
+    "local_display_socketed_gems_supported_by_level_x_bonechill",
+    "local_flask_non_damaging_ailment_effect_+%_during_flask_effect",
+    "map_monster_non_damaging_ailment_effect_+%_on_self",
+    "non_damaging_ailment_effect_+%_per_10_devotion",
+    "non_damaging_ailment_effect_+%_per_blue_skill_gem",
+    "non_damaging_ailment_effect_+%_per_equipped_elder_item",
+    "non_damaging_ailment_effect_+%_with_critical_strikes",
+    "non_damaging_ailment_effect_+%_with_critical_strikes_per_100_max_player_life",
+    "ranger_hidden_ascendancy_non_damaging_elemental_ailment_effect_+%_final",
+    "support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
+    "support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
+];
+
+/// The effects of a stat of [`SHOCK_STATS`] and [`CHILL_STATS`]:
+/// `(quantity, op, scale)`, the shock's first.
 #[must_use]
-pub fn shock_effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
-    let i = SHOCK_STATS
-        .binary_search_by(|(id, ..)| (*id).cmp(stat))
-        .ok()?;
-    let (_, quantity, op) = SHOCK_STATS[i];
-    Some(vec![(Quantity::Poe1(quantity), op, 1.0)])
+pub fn ailment_effects(stat: &str) -> Option<Vec<(Quantity, Op, f64)>> {
+    let out: Vec<(Quantity, Op, f64)> = SHOCK_STATS
+        .iter()
+        .chain(&CHILL_STATS)
+        .filter(|(id, ..)| *id == stat)
+        .map(|&(_, quantity, op)| (Quantity::Poe1(quantity), op, 1.0))
+        .collect();
+    (!out.is_empty()).then_some(out)
 }
 
 /// The Uber boss's less damage taken (`DamageTaken` MORE).
@@ -217,8 +340,8 @@ pub const DELIRIUM: [(&str, f64); 5] = [
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
     match input {
-        SHOCKED_INPUT | SHOCK_EFFECT_INPUT | DELIRIUM_INPUT | INTIMIDATED_INPUT
-        | UNNERVED_INPUT | BLINDED_INPUT => true,
+        SHOCKED_INPUT | SHOCK_EFFECT_INPUT | CHILLED_INPUT | CHILL_EFFECT_INPUT
+        | DELIRIUM_INPUT | INTIMIDATED_INPUT | UNNERVED_INPUT | BLINDED_INPUT => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -365,15 +488,119 @@ pub fn shock(set: &ConfigSet, ingest: &Ingest<'_>) -> Result<Option<(f64, Source
     Ok(Some((shock, source)))
 }
 
-/// Adds the enemy's damage taken from the active config set (module
-/// docs). A value the engine does not read as PoB does is a reason under
-/// its input.
+/// The chill the enemy has (module docs) and its source: the configured
+/// effect's input, or the strongest guaranteed chill's source when that
+/// is stronger. `None` when the enemy is not chilled or the chill is 0.
+///
+/// # Errors
+/// The input's name, for a check that is not a boolean or a count that
+/// is not a finite number.
+pub fn chill(
+    set: Option<&ConfigSet>,
+    ingest: &Ingest<'_>,
+) -> Result<Option<(f64, Source)>, &'static str> {
+    // The check: the enemy's `Condition:Chilled` and `ChilledConfig`, and
+    // with them `ChillVal` BASE, the configured effect (0 without one).
+    let mut chilled = false;
+    let mut configured = 0.0;
+    if let Some(set) = set {
+        match last(set, CHILLED_INPUT, ConfigInputKind::Input) {
+            None | Some(ConfigValue::Boolean(false)) => {}
+            Some(ConfigValue::Boolean(true)) => {
+                chilled = true;
+                configured = count(set, CHILL_EFFECT_INPUT)
+                    .map_err(|()| CHILL_EFFECT_INPUT)?
+                    .unwrap_or(0.0);
+            }
+            // PoB reads any other value as on: not modelled, a reason.
+            Some(ConfigValue::Number(_) | ConfigValue::String(_)) => return Err(CHILLED_INPUT),
+        }
+    }
+    // The skills' guaranteed chills (`CalcPerform.lua` 1393 to 1396): each
+    // `ChillOverride` is the default chill times `calcLib.mod(skillModList,
+    // skillCfg, "EnemyChillEffect")`, `(1 + inc / 100) x round(more, 2)`
+    // (no row is `More`: 1; the skill's own gems carry none, the
+    // `data-parity` table `gem_effects`), and chills the enemy; the
+    // enemy's `SelfChillEffect` is 1 (no enemy modifier); `override`
+    // keeps the largest (3505 to 3529).
+    let inc: f64 = unconditional(ingest, Poe1Quantity::ChillEffect, Op::Increased)
+        .map(|e| e.value)
+        .sum();
+    let scale = 1.0 + inc / 100.0;
+    let mut guaranteed = 0.0_f64;
+    let mut strongest = None;
+    for e in unconditional(ingest, Poe1Quantity::SkillChill, Op::Base) {
+        chilled = true;
+        let effect = e.value * scale;
+        if strongest.is_none() || effect > guaranteed {
+            guaranteed = crate::math::max(guaranteed, effect);
+            strongest = Some(e.source.clone());
+        }
+    }
+    if !chilled {
+        return Ok(None);
+    }
+    // `floor(min(max(override, ChillVal), max))`, the maximum 30 without
+    // modifiers (precision 0).
+    let chill = crate::math::floor(crate::math::min(
+        crate::math::max(guaranteed, configured),
+        CHILL_MAX,
+    ));
+    if chill <= 0.0 {
+        return Ok(None);
+    }
+    let source = match strongest {
+        Some(source) if guaranteed > configured => source,
+        _ => Source::Config {
+            input: CHILL_EFFECT_INPUT.to_owned(),
+        },
+    };
+    Ok(Some((chill, source)))
+}
+
+/// The chill's damage taken (P3-8m, module docs): with a flag that turns
+/// the chill into damage taken, the enemy takes the chill as increased
+/// damage taken while chilled; PoB reads the flags in order
+/// (`CalcPerform.lua` 3438 to 3445): every type's first, then cold's.
+/// Without such a flag the chill only slows the enemy (no slice field).
+fn chill_damage_taken(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let flagged = |ingest: &Ingest<'_>, t| {
+        unconditional(ingest, Poe1Quantity::ChillDamageTaken(t), Op::Flag)
+            .next()
+            .is_some()
+    };
+    let quantity = if flagged(ingest, None) {
+        Poe1Quantity::EnemyDamageTaken
+    } else if flagged(ingest, Some(DamageType::Cold)) {
+        Poe1Quantity::EnemyTypeDamageTaken(DamageType::Cold)
+    } else {
+        return;
+    };
+    match chill(set, ingest) {
+        Ok(Some((chill, source))) => ingest.effect(Effect {
+            quantity: Quantity::Poe1(quantity),
+            op: Op::Increased,
+            value: chill,
+            conditions: Conditions::none(),
+            source,
+        }),
+        Ok(None) => {}
+        Err(input) => ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: input.to_owned(),
+        }),
+    }
+}
+
+/// Adds the enemy's damage taken from the active config set and the
+/// skills' guaranteed chills (module docs). A value the engine does not
+/// read as PoB does is a reason under its input.
 pub fn damage_taken(
     build: &Build,
     set: Option<&ConfigSet>,
     data: &dyn CalcData,
     ingest: &mut Ingest<'_>,
 ) {
+    chill_damage_taken(set, ingest);
     let Some(set) = set else { return };
     conditions(set, ingest);
     match shock(set, ingest) {
@@ -522,39 +749,52 @@ mod tests {
         }
     }
 
-    /// The shock's rows (P3-8k): sorted, read unconditionally by the
-    /// character mapping, reasons through the gem mapping (PoB scales a
-    /// guaranteed shock by the character's `EnemyShockEffect`, not the
-    /// skill's); the stats left stay reasons through every mapping.
+    /// The shock's rows (P3-8k) and the chill's (P3-8m): sorted, read
+    /// unconditionally by the character mapping (a stat of both tables
+    /// gives both effects, the shock's first), reasons through the gem
+    /// mapping (PoB scales a guaranteed shock or chill by the character's
+    /// effect, not the skill's); the stats left stay reasons through every
+    /// mapping.
     #[test]
-    fn the_shock_rows_should_be_read_as_pob_does() {
+    fn the_ailment_rows_should_be_read_as_pob_does() {
         use crate::ingest::{StatMap, StatMapping};
         use crate::poe1::ArmourSlot;
         use crate::poe1::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
         use loom_domain::StatId;
 
         assert!(SHOCK_STATS.windows(2).all(|w| w[0].0 < w[1].0));
+        assert!(CHILL_STATS.windows(2).all(|w| w[0].0 < w[1].0));
         assert!(SHOCK_DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
-        for (stat, quantity, op) in SHOCK_STATS {
-            let StatMap::Effects(effects) = Poe1Mapping.map(&StatId::new(stat)) else {
+        assert!(CHILL_DEPENDS_ON.windows(2).all(|w| w[0] < w[1]));
+        for (stat, ..) in SHOCK_STATS.iter().chain(&CHILL_STATS) {
+            let StatMap::Effects(effects) = Poe1Mapping.map(&StatId::new(*stat)) else {
                 panic!("{stat} is not mapped");
             };
-            assert_eq!(effects.len(), 1, "{stat}");
-            assert_eq!(effects[0].quantity, Quantity::Poe1(quantity), "{stat}");
-            assert_eq!(effects[0].op, op, "{stat}");
-            assert_eq!(effects[0].conditions, Conditions::none(), "{stat}");
+            let want: Vec<(Quantity, Op)> = SHOCK_STATS
+                .iter()
+                .chain(&CHILL_STATS)
+                .filter(|(id, ..)| id == stat)
+                .map(|&(_, q, op)| (Quantity::Poe1(q), op))
+                .collect();
+            let got: Vec<(Quantity, Op)> = effects.iter().map(|e| (e.quantity, e.op)).collect();
+            assert_eq!(got, want, "{stat}");
+            for e in &effects {
+                assert_eq!(e.conditions, Conditions::none(), "{stat}");
+                assert_eq!(e.scale, 1.0, "{stat}");
+            }
             assert_eq!(
-                SkillMapping.map(&StatId::new(stat)),
+                SkillMapping.map(&StatId::new(*stat)),
                 StatMap::Unmapped,
                 "{stat}"
             );
-            assert!(!SHOCK_DEPENDS_ON.contains(&stat), "{stat}");
+            assert!(!SHOCK_DEPENDS_ON.contains(stat), "{stat}");
+            assert!(!CHILL_DEPENDS_ON.contains(stat), "{stat}");
         }
         let piece = PieceMapping {
             slot: ArmourSlot::Helmet,
         };
         let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
-        for &stat in SHOCK_DEPENDS_ON {
+        for &stat in SHOCK_DEPENDS_ON.iter().chain(CHILL_DEPENDS_ON) {
             for m in mappings {
                 assert_eq!(m.map(&StatId::new(stat)), StatMap::Unmapped, "{stat}");
             }

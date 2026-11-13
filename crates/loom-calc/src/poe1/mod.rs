@@ -23,6 +23,7 @@ pub mod exposure;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
+pub mod keystones;
 pub mod mapping;
 pub mod minions;
 pub mod pantheon;
@@ -145,6 +146,39 @@ pub enum Poe1Quantity {
     /// tagged `Aura` and not `AppliesCurse`, P3-8l): `Increased`, read by
     /// [`skill_modifiers::Totals`] to scale the other gems' auras.
     NonCurseAuraEffect,
+    /// "Your hits can't be Evaded" (PoB's `CannotBeEvaded`, P3-8m): a
+    /// `Flag`; an attack's chance to hit is then 100 ([`hit`]).
+    CannotBeEvaded,
+    /// "Never deal Critical Strikes" (PoB's `NeverCrit`, P3-8m): a `Flag`;
+    /// the hit's crit chance and crit multiplier are then 0 ([`hit`]).
+    NeverCrit,
+    /// "Your Critical Strikes do not deal extra Damage" (PoB's
+    /// `NoCritMultiplier`, P3-8m): a `Flag`; the crit multiplier is then 1
+    /// ([`hit`]).
+    NoCritMultiplier,
+    /// "Cannot deal non-Cold Damage", per type the hit cannot deal (PoB's
+    /// `DealNo<Type>`, P3-8m): a `Flag`; the hit deals none of that type,
+    /// though its damage still converts to others ([`hit`]).
+    DealNo(DamageType),
+    /// The enemy's damage taken of one damage type (PoB's
+    /// `<Type>DamageTaken` on the enemy, P3-8m): `Increased`, only
+    /// [`damage_taken`] adds them; a hit of that type adds them to
+    /// [`Self::EnemyDamageTaken`]'s sum ([`hit`]).
+    EnemyTypeDamageTaken(DamageType),
+    /// Chill raises the enemy's damage taken by its effect (P3-8m): a
+    /// `Flag`, `None` for every type (PoB's `ChillEffectIncDamageTaken`),
+    /// `Some(Cold)` for cold (`ChillEffectIncColdDamageTaken`), read by
+    /// [`damage_taken`].
+    ChillDamageTaken(Option<DamageType>),
+    /// The effect of the chills you inflict (PoB's `EnemyChillEffect`,
+    /// P3-8m): `Increased`, read by [`damage_taken`] to scale a skill's
+    /// guaranteed chill.
+    ChillEffect,
+    /// A skill's guaranteed chill (PoB's `ChillOverride` from an active
+    /// skill typed `ChillingArea` or `NonHitChill`, P3-8m): `Base`, the
+    /// default chill (10) per skill, which [`gems`] adds and
+    /// [`damage_taken`] scales by [`Self::ChillEffect`].
+    SkillChill,
 }
 
 /// A pool a skill reserves.
@@ -270,6 +304,15 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Reserved(None) => f.write_str("reserved"),
             Self::Reserved(Some(pool)) => write!(f, "reserved.{}", pool.name()),
             Self::NonCurseAuraEffect => f.write_str("non-curse-aura-effect"),
+            Self::CannotBeEvaded => f.write_str("cannot-be-evaded"),
+            Self::NeverCrit => f.write_str("never-crit"),
+            Self::NoCritMultiplier => f.write_str("no-crit-multiplier"),
+            Self::DealNo(t) => write!(f, "deal-no.{}", t.name()),
+            Self::EnemyTypeDamageTaken(t) => write!(f, "enemy-damage-taken.{}", t.name()),
+            Self::ChillDamageTaken(None) => f.write_str("chill-damage-taken"),
+            Self::ChillDamageTaken(Some(t)) => write!(f, "chill-damage-taken.{}", t.name()),
+            Self::ChillEffect => f.write_str("chill-effect"),
+            Self::SkillChill => f.write_str("skill-chill"),
         }
     }
 }

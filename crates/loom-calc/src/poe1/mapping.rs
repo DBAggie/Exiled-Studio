@@ -1438,7 +1438,7 @@ impl StatMapping for Poe1Mapping {
         // effect modifiers (P3-8l).
         if let Some(effects) = super::minions::effects(stat.as_str())
             .or_else(|| super::exposure::effects(stat.as_str()))
-            .or_else(|| super::damage_taken::shock_effects(stat.as_str()))
+            .or_else(|| super::damage_taken::ailment_effects(stat.as_str()))
             .or_else(|| super::skill_modifiers::effects(stat.as_str()))
         {
             return StatMap::Effects(
@@ -1453,6 +1453,10 @@ impl StatMapping for Poe1Mapping {
                     })
                     .collect(),
             );
+        }
+        // Keystones that change the hit (P3-8m), some conditional.
+        if let Some(effects) = super::keystones::effects(stat.as_str()) {
+            return StatMap::Effects(effects);
         }
         if let Some(quantity) = super::gem_levels::quantity(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
@@ -1865,9 +1869,9 @@ mod tests {
         // Left out on purpose: they can change a slice field. (The effect
         // of lightning ailments is a row since P3-8k: the guaranteed
         // shock's scale, `poe1::damage_taken`; mana reservation efficiency
-        // since P3-8l, `poe1::skill_modifiers`.)
+        // since P3-8l, `poe1::skill_modifiers`; the effect of chill since
+        // P3-8m, the guaranteed chill's scale.)
         for stat in [
-            "chill_effect_+%",
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "action_speed_-%",
             "base_max_fortification",
