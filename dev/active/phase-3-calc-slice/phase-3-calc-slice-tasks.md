@@ -1,4 +1,4 @@
-Last Updated: 2026-11-13 (P3-12j: the custom "Onslaught" line)
+Last Updated: 2026-11-13 (P3-8d: charge modifiers)
 
 # Phase 3: calc slice (tasks)
 
@@ -89,7 +89,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12h other gems, first PR: `poe1::gems` (inert skills and supports, reservation with the supports' cost multipliers, eight buff and aura skills merged per name), `Ceil` node, PoB export format 4 and `data-parity` table `gem_effects` (PR #90, merged into `dev` as `0814131`; `docs/phase-3/other-gems.md`; four mechanic fixtures)
   - [x] P3-12i socket colour quality: the granted effect's colour in the bundle, PoB export format 5 and `data-parity` `color`, `poe1::sockets` (+10 quality in a socket of the gem's colour, PoB's index rule), `melee_physical_damage_+%` row (PR #91, open; `docs/phase-3/other-gems.md`, "P3-12i"; two mechanic fixtures)
   - [x] P3-12j the custom "Onslaught" line: custom-line rule (the only global, item-backed reading), `Poe1Quantity::Onslaught`, Onslaught once (PR #92, open, cascade on #91; `docs/phase-3/config-inputs.md`, "P3-12j"; two mechanic fixtures)
-  - [ ] P3-8d charge modifiers (worktree, context file "Next PRs")
+  - [x] P3-8d charge modifiers: `Poe1Quantity::Charge`, `charges::MODIFIERS`, PoB's count with minima and maxima (PR #TBD, open, cascade on #92; `docs/phase-3/stat-mapping.md`, "P3-8d"; two mechanic fixtures)
   - [ ] P3-8e area damage, spell crit multiplier, area and light radius rows (worktree)
   - [ ] Next: the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); socket colour quality (bundle: the granted effect's `Attribute`); the custom "Onslaught" line; then the in-scope builds' unmapped stats and unresolved lines; Q13
 

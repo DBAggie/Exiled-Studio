@@ -88,3 +88,63 @@ The pantheon (`docs/phase-3/config-inputs.md`, "P3-12g") applies its soul stats 
 Three of them reach a slice field only through a config input, which must stay a reason: `NO_EFFECT_DEPENDS_ON_INPUTS` (`loom_calc::poe1::mapping`) lists `conditionBlinded` (for `cannot_be_blinded`), `conditionChilled` and `conditionChilledEffect` (for `chill_effectiveness_on_self_+%`), and the thirteen `playerCursedWith*` inputs (for `curse_effect_on_self_+%`); a test sets each and expects `unmodelled-config`. `additional_chaos_resistance_against_damage_over_time_%` is `ChaosResist` with `ModFlag.Dot` in PoB, outside the shown resistance.
 
 Evidence: the maintainer-run real-bundle test (every soul stat of the bundle is a `NoEffect` row); four Ice Nova mechanic fixtures with eight of the twelve gods, each equal to PoB on every target, and PoB's fields equal to the fixture without a god. The guards that list `NoEffect` rows naming charges or damage taken list the souls' rows.
+
+## P3-8d: charge modifiers
+
+The Ice Nova builds' passives give power charges: "+1 to Maximum Power Charges", "+1 to Minimum Power Charges", and effects per charge (increased damage, spell damage, crit chance, crit multiplier). Until P3-8d each was `unmapped-stat`, and the charges (P3-12e) counted the character's constant maximum only.
+
+### What PoB v2.67.2 does
+
+`doActorCharges` (`Modules/CalcPerform.lua` 947 to 1023) counts each kind:
+- the maximum is `<Kind>ChargesMax` BASE, the character's constant plus modifiers, at least 0 (or its OVERRIDE);
+- the minimum is `<Kind>ChargesMin` BASE, at least 0;
+- the count is `max(use ? (override or maximum) : 0, min(maximum, minimum))`, so a minimum gives charges without the `use<Kind>Charges` check.
+
+A per-charge modifier is a mod with the `{ type = "Multiplier", var = "<Kind>Charge" }` tag (`Modules/ModParser.lua`), so it acts times the count.
+
+### The engine
+
+- **`Poe1Quantity::Charge(kind, value)`** (calc result v1 names such as `poe1.charge.power.maximum` and `poe1.charge.power.per.crit-multiplier`, additive): a modifier's `Base` effect, which only `charges` reads.
+- **`charges::MODIFIERS`**, each read as PoB reads its game text. `Poe1Mapping` asks this table before its rows.
+
+  | Stats | What they change |
+  |---|---|
+  | `max_power_charges`, `max_frenzy_charges`, `max_endurance_charges` | The maximum |
+  | `base_minimum_*_charges` | The minimum |
+  | `damage_+%_per_power_charge`, `damage_+%_per_frenzy_charge`, `damage_+%_per_endurance_charge` | `Damage` INC per charge |
+  | `spell_damage_+%_per_power_charge` | Spell `Damage` INC per charge |
+  | `critical_strike_chance_+%_per_power_charge` | `CritChance` INC per charge. This is also the character's constant, which still applies; the two add, as PoB's two mods do |
+  | `critical_strike_multiplier_+_per_power_charge` | `CritMultiplier` BASE per charge |
+
+- **`charges`** runs after every other source and counts as PoB does. The constant effects take the `use` input as their source, or the first minimum modifier's source when only a minimum gives charges. Each per-charge modifier keeps its own source.
+- Everything else that reads or changes a count stays a reason: "at maximum" flags, conversions to absorption, affliction, or brutal charges, "maximum frenzy charges equal maximum power charges", and per-charge stats not in the table. The module's guard test still holds for every row outside the table.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-power-charge-modifiers-witch.xml` | Power charges used, +1 maximum (4 charges), damage, spell damage, crit chance, and crit multiplier per charge |
+| `ice-nova-minimum-power-charges-witch.xml` | No `use` check; +2 minimum (2 charges) and spell damage per charge |
+
+The first run of both matched PoB on every target.
+
+Not traced: when a modifier raises the maximum, the constant effects (the power charges' crit chance, the frenzy charges' speed and damage) name the `use` input as their source, not the modifier, and a per-charge modifier with no charges gives no effect, so no breakdown shows it. Both are labels, not values (PoB's are the same).
+
+### Review
+
+`code-architecture-reviewer`: no blockers. It confirmed the count rule, each row against PoB's parser, no double count of the crit-chance-per-charge constant and stat, the conversions and flags staying reasons, gem stats staying reasons, and the order. Applied: tests for every kind (a frenzy minimum without the check, an endurance per-charge effect), a negative maximum, crit multiplier per charge, and the table's disjointness from the mapping's other tables. Not changed: the provenance of the constant effects (noted above) and splitting `charges()`.
+
+### Evidence
+
+Maintainer-run, 2026-11-13, Windows, from the worktree on a clean tree. `local/p3/p3-8d/evidence.sh` ran at tool commit `05f03f6`; the review's tests (`553947f`) change no engine code. No game data changes: P3-12i's bundle and overlay. Summaries are in `docs/phase-3/stat-mapping/p3-8d-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 110 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 110 documents; 1537 complete, 334 partial, 433 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 33 registered differences (unchanged), 0 unexpected; 1513 fields match. **Every mechanic target met: 1503 of 1503 over 73 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-12j** (`p3-8d-public-vs-p3-12j.json`, `p3-8d-corpus-poe1-26530219-vs-p3-12j.json`). No field state changes. 16 values in 5 public builds change, every one closer to PoB's: the two in-scope Ice Nova Elementalist builds (campaign and mapping: average damage, crit chance, crit multiplier, hit DPS), Boneshatter, Elemental Hit, and Kinetic Blast. 102 reasons gone in 23 public builds, none added; corpus 38 gone, none added, no value change.
+
+Tests: 1209 workspace tests, clippy, fmt, wasm32.

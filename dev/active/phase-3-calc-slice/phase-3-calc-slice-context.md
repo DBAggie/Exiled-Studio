@@ -319,7 +319,7 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 - **Not done:** marking a rule-taken reading as `adapted` (a domain change).
 
 ## Next PRs (worktrees on this machine; each a cascade on the previous branch)
-- **P3-8d** `D:/POE Dev/loom-wt-8d`, branch `feat/p3-8d-charge-modifiers` (commit `77a52eb`): `Poe1Quantity::Charge(kind, value)`; `charges::MODIFIERS` (maximum, minimum, per-charge damage, spell damage, crit chance, crit multiplier for power; damage per frenzy and endurance charge); PoB's count `max(use ? (override or max) : 0, min(max, min))`, so a minimum gives charges without the check; fixtures `ice-nova-power-charge-modifiers-witch.xml`, `ice-nova-minimum-power-charges-witch.xml` matched PoB in the quick run.
+- **P3-8d done (PR #TBD):** decisions in `docs/phase-3/stat-mapping.md`, "P3-8d": the charge modifiers' meaning lives in `charges::MODIFIERS` (asked before the mapping's rows, disjoint from them by a test), read after every other source; a minimum counts without the check, as PoB; the constant effects keep the `use` input as their source (a label gap, documented).
 - **P3-8e** `D:/POE Dev/loom-wt-8e`, branch `feat/p3-8e-stat-batch` (commit `e094d76`): `area_damage_+%` (`Damage` INC area), `base_spell_critical_strike_multiplier_+` (spell crit multiplier); `NoEffect`: three area-of-effect stats and `light_radius_+%` (guarded by four "light radius also applies" stats); fixture `ice-nova-area-spell-crit-witch.xml` matched PoB.
 - After them: gem levels need a design (the main skill reads the build's gem-level stats; PoB's `GemProperty` keywords against gem tags); skill-keyword conditions ("with Cold Skills") need keyword flags in the engine.
 
