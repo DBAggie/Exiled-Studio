@@ -625,3 +625,102 @@ Reasons:
 - **Corpus:** 7 gone in 7 builds, none added. One build's crit multiplier now equals PoB's (1); its average damage moves away (17.46 to 16.82, PoB 1645; the field is partial): the lost crit damage outweighs the 40% more on the elemental part of its hit.
 
 Tests: 1269 workspace tests, clippy, fmt, wasm32, and the real-bundle tests (`tests/keystones_chill.rs` new).
+
+## P3-8n: every stat the in-scope builds left unmapped
+
+At the maintainer's request (2026-11-13), one PR for all 56 stats the eight in-scope builds still left `unmapped-stat` after P3-8m (the three Ice Nova Elementalist, the four Smite Inquisitor, Winter Orb): 132 `unmapped-stat` reasons in P3-8l, 124 after P3-8m, 0 now. Each is read as PoB v2.67.2 reads its text or skill stat; the body armour's life modifiers are settled from the game's mod tags, which agree with PoB's text search where both decide.
+
+### What PoB v2.67.2 does, and the engine
+
+**Reaching no slice field (`NoEffect`, 23 rows).** Each traced through `ModParser.lua`, the skill stat maps, and the calc modules:
+- area of effect (`area_of_effect_+%_while_you_do_not_have_convergence`, Intensify's area per intensity), a passive's chance to shock (PoB never shocks the enemy from a chance), Intensify's display text, Arcane Surge Support's duration, threshold, and mana regeneration, Inspiration's charge gain and loss and its mana cost, Momentum's Swiftness duration, movement speed, and channelling time, mana costs (`hierophant_mana_cost_+%_final`, `skill_mana_cost_+_with_non_channelling_skills`), spirit strikes (PoB's strike targets), staff ailment damage;
+- the golems' buff effect and count (only golem skills read them; no golem gem is modelled, a test), the crits you take (`base_self_critical_strike_multiplier_-%` on the tree; a curse gem's copy is never ingested, no curse gem being modelled), curses on you lowering your resistances (the `playerCursedWith*` inputs stay reasons), fortification's maximum (read only while Fortified, by damage taken and by modifiers per fortification), consecrated ground around you while stationary (you on consecrated ground: regeneration, curses on you, and modifiers).
+- Guards (`NO_EFFECT_DEPENDS_ON`): the stats that would make one of these rows matter stay `unmapped`: damage from a mana cost (four stats), modifiers per fortification (five), damage per summoned golem, modifiers while on consecrated ground (six).
+
+**Conditions the config settles (`poe1::conditions`, new).** PoB's check options add `Condition:<name>` flags only modifiers read (`ConfigOptions.lua`); an unset or `false` check is a settled `false`. The engine settles `ShockedEnemyRecently`, `ShatteredEnemyRecently`, `AtCloseRange`, the enemy's `FullLife`, the enemy's `RareOrUnique` (also from the `Boss`, `Pinnacle`, and `Uber` kinds, PoB's default `Pinnacle` too), and `AffectedByArcaneSurge` (`buffArcaneSurge`). Rows with a state (`STATE_ROWS`): damage if shattered or shocked recently, melee damage with hits at close range (`MELEE`, `HIT`), crit chance against enemies on full life, crit multiplier against unique enemies, Arcane Surge Support's more spell damage. `conditionShockedEnemyRecently` leaves `config::NAMED_ONLY`. A condition a mapped modifier can also set (you on consecrated ground while stationary) is not settled; its input stays in `NAMED_ONLY`.
+
+**Weapon conditions (`poe1::states`).** `MainHandWeapon` (PoB's `ModFlag.Weapon`, `CalcActiveSkill.lua` 209): "Damage with Weapons Penetrates #% Fire Resistance" on attacks. `UsingStaff`: "#% increased Physical Damage with Staves" (`ModFlag.Staff` and `ModFlag.Hit`, which only an attack with a staff has).
+
+**The hit (`poe1::hit`).**
+- Action speed (`Poe1Quantity::ActionSpeed`): PoB scales a self-cast skill's rate by `calcs.actionSpeedMod` (`CalcOffence.lua` 2341, `CalcPerform.lua` 1107: `max(minimum / 100, 1 + (Temporal Chains + ActionSpeed INC) / 100)`, no minimum, maximum reduction, or Temporal Chains mapped) before the server tick cap. The stat is the game's `action_speed_-%`, negated ("#% reduced Action Speed").
+- Double damage (`DoubleDamageChance`, `CalcOffence.lua` 3196 to 3209): `ScaledDamageEffect = 1 + min(chance, 100) / 100`, a factor of `allMult` before the crit multiplier, so the armour's reduction sees it; no triple damage or double damage on crit mapped. "Spells have a #% chance to deal Double Damage" (`ModFlag.Spell`) and "#% chance to deal Double Damage".
+- Global conversion (`Conversion(from, to)`, `buildConversionTable`, 1878 to 1921): the skill's own conversion first, the other scaled to what it leaves (`(100 - skillTotal) / globalTotal` above 100%, removed when the skill's exceeds 100%), `mult = 1 - min((global + skill) / 100, 1)`. A type with only the skill's conversion keeps P3-10's nodes. "#% of Physical Damage Converted to Fire Damage".
+- Each new term is queried only when the store has an effect on it, so other hits keep their graphs.
+
+**Stacks and config multipliers (`poe1::stacks`, new).** PoB's multipliers scale a modifier by `floor(multiplier + 0.0001)`, at most its limit (`ModStore.lua` 326 to 375); the module counts each kind once every source is in and turns each modifier per stack into its target times the count, as `poe1::charges`:
+- rage (`CalcPerform.lua` 881 to 897): only with "Gain # Rage on Melee Hit" (`CanGainRage`); the maximum the character's `maximum_rage` (30) plus "+# to Maximum Rage"; the stacks the config's `multiplierRage` at most the maximum; attack `Damage` MORE `floor(stacks)` (no rage effect mapped). "Nearby Enemies are Intimidated while you have Rage" (`MultiplierThreshold` on `RageStack`, `ModParser.lua` 5031): the enemy Intimidated, once with the config's check (`poe1::damage_taken`). The other stats that gain or regenerate rage stay `config::DEPENDS_ON`.
+- Inspiration charges (972, 1061, 1095): the config's `overrideInspirationCharges` (`countAllowZero`), else the character's `maximum_righteous_charges` (5): Inspiration Support's more elemental damage and increased crit chance per charge.
+- Momentum (`CalcOffence.lua` 1005 to 1015): the config's `MomentumStacks` at most Momentum Support's maximum, else `min((maximum + extra) / 2, maximum)`; attack speed per stack.
+- Intensity: the config's `intensifyIntensity`, at most `3 +` "+# to maximum Intensity" (`Multiplier:IntensityLimit`); Intensify's more area damage per intensity.
+- Non-instant spells cast recently: the config's count; cast speed per spell.
+`multiplierRage`, `intensifyIntensity`, and `multiplierNonInstantSpellCastRecently` leave `NAMED_ONLY`.
+
+**Buffs (`poe1::buffs`).** Arcane Surge (`CalcPerform.lua` 686 to 705), with `buffArcaneSurge` on: cast `Speed` INC `(Max(ArcaneSurgeCastSpeed) or 20) x effect`, the effect 1 (its modifiers are `ARCANE_SURGE_DEPENDS_ON` guards). Convergence (`conditionConvergence` with "Gain Convergence when you Hit a Unique Enemy", `CalcSetup.lua` 108, `CalcPerform.lua` 755): elemental `Damage` MORE 30 (`BuffEffectOnSelf` unmapped). `conditionConvergence` leaves `NAMED_ONLY`.
+
+**The enemy (`poe1::damage_taken`, `poe1::exposure`).**
+- Consecrated ground (`CalcPerform.lua` 3591 to 3594), with the enemy on it (`conditionEnemyOnConsecratedGround`): `DamageTaken` INC `floor(DamageTakenConsecratedGround x (1 + ConsecratedGroundEffect / 100))`.
+- "Enemies Ignited or Chilled by you have #% to Elemental Resistances" (4054): with the enemy ignited (`conditionEnemyIgnited`) or chilled (the config's check or a skill's guaranteed chill), the enemy's fire, cold, and lightning resistance.
+- "Enemies permanently take #% increased Damage for each second they've ever been Chilled by you, up to a maximum of 10%" (3812): with the config's seconds, `num x min(floor(seconds), 10 / num)`.
+- "Inflict Cold (Fire, Lightning) Exposure on Hit, applying #% to ... Resistance" (4251): an exposure of its own and a chance of 100; the strongest of it and the config's -10 applies (PoB's minimum over the enemy's exposures, 3572 to 3577), then the extras.
+`conditionEnemyOnConsecratedGround` and `conditionEnemyIgnited` leave `NAMED_ONLY`.
+
+**Items and the tree (`poe1::collect`).**
+- "Allocates <notable>" (`GrantedPassive`, `CalcSetup.lua` 1287): the line's value is the description's lookup of the name, the candidate node hashes; the node is the one candidate the passives table has (none or several: indeterminate), added as an allocated node (once, if the tree has it already).
+- "Quality does not increase Physical Damage" (`AlternateQualityWeapon`, `Item.lua` 2257): the weapon's physical damage without its quality. "Grants #% increased Elemental Damage per 2% Quality" (5759): elemental `Damage` INC times `floor(quality / 2)`.
+
+**No Life Modifiers on the body armour.** A Life Mastery's "#% increased maximum Life if there are no Life Modifiers on Equipped Body Armour": PoB v2.67.2 reads it as an `ItemCondition` with `searchCond = "life"` (`Data/ModCache.lua` 3483): no mod line of the body armour has the text "life" (`Classes/Item.lua` 284, `FindModifierSubstring`, with its special and excluded lines). The game's rule is the mods' `life` implicit tag. Since data schema 3 the bundle carries each mod's implicit tags (the extract's `ImplicitTagsKeys`, written by `parity-cli bundle`), and `poe1::states` settles the condition from the item's lines' stats: a stat only `life`-tagged mods carry is a Life Modifier (`false`); when no `life`-tagged mod has all its stats among the lines, none can be there (`true`); otherwise, as for an empty slot, an unresolved line, or older data, it is not settled (a reason). "+# to maximum Life" stays unsettled: Crucible's weapon tree mods carry the stat without the tag. The rule is read only when a node or a chosen mastery effect carries the stat. Where both settle, the engine and PoB agree on the fixture and the in-scope builds; a build where PoB's text search and the tags differ would show as a difference in parity.
+
+### Mechanic fixtures
+
+Each isolates one group with custom lines (PoB parses the same text) and config inputs; each equals PoB on every target, but for the two Smite fixtures' attack rate, the registered Q11 difference (DIV-0045 to DIV-0051: the tooltip's Siege Axe, 580 ms against PoB's 1.73).
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-hit-conditions-witch.xml` | Damage if shattered (check on) or shocked (off) recently, crit multiplier against unique enemies (a standard boss), crit chance against enemies on full life (check on) |
+| `ice-nova-action-speed-double-damage-witch.xml` | 8% increased action speed (the cast rate x 1.08), 12% chance to deal double damage with spells |
+| `ice-nova-arcane-surge-convergence-witch.xml` | Arcane Surge Support with its buff configured, Convergence (the line and the check), cast speed per non-instant spell cast recently (2) |
+| `ice-nova-intensify-inspiration-witch.xml` | Intensify at 5 configured intensity with +1 maximum (4 applied), Inspiration at its 5 charges |
+| `ice-nova-enemy-ailments-witch.xml` | A chilled enemy's lowered resistances, damage taken per second chilled (4), consecrated ground's damage taken and effect, cold exposure on hit at -12% |
+| `ice-nova-granted-passive-staff-witch.xml` | An amulet anointed with Disciple of the Slaughter (an implicit line, as PoB writes it), a 20% quality staff with elemental damage per 2% quality |
+| `smite-rage-momentum-templar.xml` | Rage gained on melee hit with +10 maximum and 35 configured, Intimidate while you have rage, Momentum's default stacks |
+| `smite-conversion-penetration-templar.xml` | A weapon whose quality does not increase physical damage, 25% physical converted to fire after Smite's own conversion, fire penetration with weapons, melee damage at close range |
+| `life-mastery-no-life-modifiers-templar.xml` | A Life Mastery's 15% increased maximum Life with a body armour without a Life Modifier |
+
+Found on the way: an anoint is an implicit line (`Implicits: n` counts it); as an explicit line its text is ambiguous. A description shown for any value (Convergence's) imports its hidden value as 0, so its flag is read by presence. Two notables can share a name (Sanctuary: the tree's and the Inquisitor's); an anoint takes the tree's, as PoB.
+
+### Review
+
+`code-architecture-reviewer`: no blockers. It checked each reading against the pinned checkout (action speed on every self-cast skill before the tick cap, double damage in `allMult`, both overflow branches of the conversion table and P3-10's nodes kept, rage's maximum and effect, Momentum's default, Intensity's limit and the multiplier's floor, Arcane Surge's `or 20`, Convergence's condition and floor, consecrated ground's floor, the chill seconds' limit, the ignite or chill resistance, the strongest exposure, alternate quality, granted passives). Applied in `42287b6`: tests for Convergence's flag by presence and for the strongest exposure; notes on the flag helpers that read a sum (`stacks::sum`, `hit::flag_on`); the life rule's scope (tags against PoB's text search: equal here, not proven in general). Noted for later: `Bundle::mods_by_tag` scans every mod per calculation (once, gated); the stored summaries of earlier steps record data schema 2.
+
+### Evidence (P3-8n)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout: `local/p3/p3-8n/evidence.sh` at tool commit `0754de3` (the tree held only the previous run's untracked summaries). The bundle is rebuilt from P3-12g's extract at data schema 3 and differs from P3-12i's in `data/mods.json` (implicit tags) and `bundle.json` only. Summaries are in `docs/phase-3/stat-mapping/p3-8n-*`.
+
+| Run | Result |
+|---|---|
+| `bundle`, twice | Identical; `bundle-check` ok |
+| `data-parity` (P3-12i's PoB data) | Report identical to P3-12i's |
+| `oracle-run`, the whole manifest | 136 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 136 documents; 2112 complete, 334 partial, 482 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 51 registered differences (7 new: DIV-0045 to DIV-0051, Q11), 0 unexpected; 2076 fields match. **Every mechanic target met: 2078 of 2078 over 99 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference (every field indeterminate, as before) |
+| Real-bundle tests (`LOOM_BUNDLE_DIR`) | Pass (`tests/conditions_stacks.rs` new) |
+
+**In the eight in-scope builds** `unmapped-stat` fell from 124 to 0. Values (`p3-8n-public-vs-p3-8m.json`), every one toward PoB's or equal:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Ice Nova Elementalist lab1 | average damage | 5905 | 8740 | 31434 |
+| Ice Nova Elementalist campaign | average damage | 29702 | 48711 | 142914 |
+| Ice Nova Elementalist mapping | average damage, crit chance, speed | 177455, 78.0, 2.99 | 608693, 82.27, 3.16 | 2335701, 100, 4.92 |
+| Smite act2 | life | 2779 | 3072 | 3072 |
+| Smite act5 | life, average damage, speed | 2814, 4806, 2.28 | 3112, 8038, 2.64 | 3112, 15434, 2.75 |
+| Smite act10 | life, average damage, speed | 4175, 6661, 2.38 | 4478, 15101, 2.76 | 4478, 31852, 2.87 |
+
+The Smite builds' life now equals PoB's (the Life Mastery). Hit DPS follows average damage and speed.
+
+**Other public builds** (20 builds' values changed, no state changed): life toward PoB's in nine builds with the Life Mastery or an anoint; Elemental Hit, Kinetic Blast, Shock Nova, Boneshatter toward PoB's (anoints, double damage, action speed, charges from granted notables). Three move away, each from an earlier term this PR does not touch: Penance Brand's life (its increased life now sums to 116%, PoB's; an older 6.7% more term stays), Lacerate's life likewise, and the unreserved life or mana of Kinetic Fusillade, Lacerate, and Occultist Vortex (their pools rise toward PoB's while their reservation is not modelled; the fields are partial).
+
+Reasons: public 283 gone and 28 added in 29 builds; corpus 115 gone and 27 added in 19 builds. Every added reason is an `unmapped-stat` of a node an anoint now grants (shield and curse notables, minion counts, totems): the node counts, so its other stats are reasons.
+
+Tests: 1276 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.
