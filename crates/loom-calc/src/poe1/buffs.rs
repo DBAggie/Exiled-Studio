@@ -80,6 +80,9 @@ pub fn buffs(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             None
         }
     };
+    // Every Onslaught flag is unconditional: the one mapping row has no
+    // condition (`flag_tests` pins it). A conditional one would be a new
+    // row, which must come with its condition here.
     if source.is_none() {
         source = ingest
             .effects()
@@ -147,18 +150,14 @@ mod tests {
         assert!(!super::super::config::named_only(ONSLAUGHT_INPUT));
         assert!(!super::super::charges::is_charge_input(ONSLAUGHT_INPUT));
     }
-}
 
-#[cfg(test)]
-mod flag_tests {
-    use super::*;
-    use crate::ingest::{StatMap, StatMapping};
-    use crate::poe1::mapping::Poe1Mapping;
-    use loom_domain::StatId;
-
+    /// The stat's one row: an unconditional flag (`buffs` reads only
+    /// those).
     #[test]
     fn the_onslaught_stat_should_be_a_flag() {
-        let StatMap::Effects(t) = Poe1Mapping.map(&StatId::new(ONSLAUGHT_STAT)) else {
+        let StatMap::Effects(t) =
+            crate::poe1::mapping::Poe1Mapping.map(&StatId::new(ONSLAUGHT_STAT))
+        else {
             panic!("{ONSLAUGHT_STAT}");
         };
         assert_eq!(t.len(), 1);

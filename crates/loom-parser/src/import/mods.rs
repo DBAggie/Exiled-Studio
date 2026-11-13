@@ -310,14 +310,15 @@ impl Mods {
             .filter_map(|n| self.rows.get(*n))
     }
 
-    /// Rows with at least one of `stats`, in row order.
     /// Whether `stats` are global (no stat is local to an item) and a row
     /// of one of `domains` backs them (module docs, "Backing"): the
     /// custom-line rule ([`crate::import`], P3-12j). A custom line acts on
-    /// the character, so a local reading is never its reading.
+    /// the character, so a local reading is never its reading. "Local" is
+    /// the locality table's ([`Mods::locality`], from the bundle's rules), as
+    /// for the item filter: a local stat the table lacks reads as global.
     #[must_use]
     pub fn backed_in(&self, stats: &[ResolvedStat], domains: &BTreeSet<i64>) -> bool {
-        stats.iter().all(|s| !self.locality.contains_key(&s.stat))
+        self.local_kind(stats) == LocalKind::Global
             && self
                 .rows_for(stats)
                 .into_iter()
@@ -325,6 +326,7 @@ impl Mods {
                 .any(|r| domains.contains(&r.domain) && r.backs(stats).is_some())
     }
 
+    /// Rows with at least one of `stats`, in row order.
     fn rows_for(&self, stats: &[ResolvedStat]) -> BTreeSet<usize> {
         stats
             .iter()

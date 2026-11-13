@@ -178,7 +178,9 @@ impl<'b> BundleData<'b> {
     }
 
     /// The mod domains of the base items: the domains of rows an item can
-    /// carry (the monster and area domains have no base item).
+    /// carry (the monster and area domains have no base item). Broad on
+    /// purpose: every item domain (flasks, jewels, ...) counts, since the
+    /// custom-line rule only asks whether some item could carry a reading.
     #[must_use]
     pub const fn item_domains(&self) -> &BTreeSet<i64> {
         &self.item_domains

@@ -1342,6 +1342,22 @@ fn an_onslaught_modifier_should_grant_onslaught_once() {
         value(&with(0, false), Field::Speed),
         value(&bare, Field::Speed)
     );
+    // A disabled block gives nothing.
+    let mut b = build(vec![group(&["IceNova"])]);
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: vec![loom_domain::CustomModifierBlock {
+            title: None,
+            enabled: false,
+            text: "Onslaught".to_owned(),
+            lines: vec![onslaught_line()],
+            attributes: Vec::new(),
+        }],
+        attributes: Vec::new(),
+    });
+    assert_eq!(value(&run(&b), Field::Speed), value(&bare, Field::Speed));
     // 1 / (0.5 / round(1 + 20 / 100, 2)), whatever the sources.
     for (lines, check) in [(1, false), (2, false), (1, true), (0, true)] {
         let r = with(lines, check);

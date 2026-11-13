@@ -231,7 +231,11 @@ impl<'d, 'b> Resolver<'d, 'b> {
     /// item domain backs
     /// ([`BundleData::item_domains`], P3-12j: "Onslaught" renders both
     /// the character's stat and a flask's display stat, which no mod row
-    /// carries), else the line stays ambiguous.
+    /// carries), else the line stays ambiguous. This is a prior, not
+    /// PoB's parse: a player's custom line is read as something an item
+    /// could carry. It never takes a local reading, needs exactly one kept
+    /// reading, and is checked against PoB only by the fixtures and the
+    /// public and corpus runs (`docs/phase-3/config-inputs.md`, "P3-12j").
     fn resolve_custom_modifiers(&self, build: &mut Build) {
         let scope = self.data.item_rules().default_scope.as_str();
         // `new` indexes every scope; were the default one not, the lines

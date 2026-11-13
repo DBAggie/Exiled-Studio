@@ -1,0 +1,79 @@
+{
+ "builds_with_reason_changes": 4,
+ "only_after": [
+  "ice-nova-onslaught-modifier-witch.xml.json",
+  "ice-nova-onslaught-twice-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"custom-modifier\": {\"block\": 0, \"line\": 1}}}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 4,
+ "state_changes": {},
+ "value_changes": {
+  "smite-inquisitor-act1.xml.json": {
+   "hit-dps": [
+    1282.840517558111,
+    1467.4218869909328
+   ],
+   "speed": [
+    1.3949232585596223,
+    1.5956316410861866
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "hit-dps": [
+    3749.091732056017,
+    4145.821015871468
+   ],
+   "speed": [
+    1.896694214876033,
+    2.0974025974025974
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "hit-dps": [
+    1584.5896851360633,
+    1812.5882009829786
+   ],
+   "speed": [
+    1.3949232585596223,
+    1.5956316410861866
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "hit-dps": [
+    2623.7369821680145,
+    2916.8919522426527
+   ],
+   "speed": [
+    1.7963400236127511,
+    1.9970484061393152
+   ]
+  }
+ }
+}
