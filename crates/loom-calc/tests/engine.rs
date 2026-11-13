@@ -133,17 +133,17 @@ const OUTPUTS: [(Quantity, Field); 4] = [
     ),
 ];
 
-/// The context every phase queries in: a fire spell hit, `a` settled true,
-/// `b` settled false, `c` unknown.
-fn context() -> QueryContext {
-    QueryContext::with_flags(Flags::SPELL | Flags::HIT | Flags::FIRE)
-        .with_state(ConditionKey::new("a"), true)
-        .with_state(ConditionKey::new("b"), false)
+/// The context every phase queries in: a fire spell hit, with the
+/// conditions the rules settle once per calculation (`Ruleset::states`:
+/// `a` true, `b` false, `c` unknown), through `Calc::context`.
+fn context(calc: &Calc<'_>) -> QueryContext {
+    calc.context(Flags::SPELL | Flags::HIT | Flags::FIRE)
 }
 
 fn chains(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     for (quantity, field) in OUTPUTS {
-        let q = calc.chain(quantity, &context())?;
+        let cx = context(calc);
+        let q = calc.chain(quantity, &cx)?;
         calc.set(field, q);
     }
     Ok(())
@@ -249,6 +249,15 @@ impl Ruleset for Rules {
 
     fn phases(&self) -> &[Phase] {
         &PHASES
+    }
+
+    fn states(&self, _input: &CalcInput<'_>) -> std::collections::BTreeMap<ConditionKey, bool> {
+        [
+            (ConditionKey::new("a"), true),
+            (ConditionKey::new("b"), false),
+        ]
+        .into_iter()
+        .collect()
     }
 }
 

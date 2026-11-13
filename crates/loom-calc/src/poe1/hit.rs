@@ -710,7 +710,7 @@ fn spell_hit(calc: &mut Calc<'_>, spell: &SpellSkill<'_>) -> Result<(), CalcErro
     if spell.area {
         flags = flags | Flags::AREA;
     }
-    let cx = super::states::context(calc.input(), flags);
+    let cx = calc.context(flags);
     // A spell PoB's oracle has not checked: PoB computes it from its own
     // skill data too (parts, cast time overrides, skill functions, flags),
     // which the game data does not carry.
@@ -814,7 +814,7 @@ fn attack_hit(calc: &mut Calc<'_>, attack: &AttackSkill<'_>) -> Result<(), CalcE
     if attack.part.area {
         flags = flags | Flags::AREA;
     }
-    let cx = super::states::context(calc.input(), flags);
+    let cx = calc.context(flags);
     let mut unvetted = Reasons::new();
     let id = attack.skill.effect().id.as_str();
     if !VETTED_ATTACKS.contains(&id) || !attack.known_parts {
@@ -915,7 +915,7 @@ fn weapon_data(
     reasons: &mut Reasons,
 ) -> Result<WeaponData, CalcError> {
     let weapon = |v| Quantity::Poe1(Poe1Quantity::Weapon(v));
-    let cx = super::states::context(calc.input(), Flags::NONE);
+    let cx = calc.context(Flags::NONE);
     // "No Physical Damage" (PoB: the weapon's physical damage removed) is
     // not modelled; the canonical increased physical damage line carries
     // the stat as 0.
@@ -1697,7 +1697,7 @@ fn calc_damage(
             };
         }
     };
-    let typed = super::states::context(calc.input(), flags | extra | Flags::damage(ty));
+    let typed = calc.context(flags | extra | Flags::damage(ty));
     let bonus = melee_physical.filter(|_| typed.flags.contains(Flags::MELEE | Flags::PHYSICAL));
     let (inc, more) = match bonus {
         None => modifiers(calc, Quantity::Damage, &typed, reasons)?,
@@ -1755,7 +1755,7 @@ fn passes(
     reasons: &mut Reasons,
 ) -> Result<(Valued, Valued), CalcError> {
     let flags = shape.flags;
-    let cx = super::states::context(calc.input(), flags);
+    let cx = calc.context(flags);
     // Damage effectiveness and base multiplier: `stored / 10000 + 1` as
     // PoB's exporter writes them (absent: 1), one division of whole
     // numbers here, which is the nearest double to the same decimal.

@@ -411,6 +411,13 @@ impl Ruleset for Poe1Rules {
     fn phases(&self) -> &[Phase] {
         &phases::PHASES
     }
+
+    fn states(
+        &self,
+        input: &CalcInput<'_>,
+    ) -> std::collections::BTreeMap<crate::condition::ConditionKey, bool> {
+        states::states(input)
+    }
 }
 
 #[cfg(test)]
