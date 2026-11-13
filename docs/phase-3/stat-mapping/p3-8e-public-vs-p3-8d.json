@@ -1,0 +1,235 @@
+{
+ "builds_with_reason_changes": 22,
+ "only_after": [
+  "ice-nova-area-spell-crit-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 10}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 22}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 23, \"line\": 18}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15365}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21075}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38805}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38900}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54694}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61308}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61308}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 34, \"line\": 29}}, \"stat\": \"light_radius_+%\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20954}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64265}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14745}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21075}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38805}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38900}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 51801}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53573}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 11}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 69, \"line\": 24}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27123}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 35877}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33718}}, \"stat\": \"base_aura_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9995}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36452}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46842}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53493}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54694}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14745}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21075}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36452}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38900}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46842}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 51801}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53493}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53573}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9788}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15711}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 21075}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36452}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38805}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40927}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46842}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53493}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54694}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61308}}, \"stat\": \"area_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 61308}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 54694}}, \"stat\": \"light_radius_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 63, \"line\": 11}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36452}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 46842}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 22}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24324}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40291}}, \"stat\": \"base_skill_area_of_effect_+%\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64265}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 2, \"line\": 5}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 27, \"line\": 18}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 19}}, \"stat\": \"base_skill_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 20}}, \"stat\": \"area_damage_+%\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5935}}, \"stat\": \"base_aura_area_of_effect_+%\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14745}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 51801}}, \"stat\": \"spell_area_of_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53493}}, \"stat\": \"base_spell_critical_strike_multiplier_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 53573}}, \"stat\": \"spell_area_of_effect_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 83,
+ "state_changes": {},
+ "value_changes": {
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    6297.398996000001,
+    8605.910258400001
+   ],
+   "crit-multiplier": [
+    1.7,
+    2.4
+   ],
+   "hit-dps": [
+    19701.862573200004,
+    26924.204951280004
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    14555.070978000002,
+    18210.300625440002
+   ],
+   "crit-multiplier": [
+    3.23,
+    3.78
+   ],
+   "hit-dps": [
+    42417.63542160001,
+    53070.018965568015
+   ]
+  }
+ }
+}

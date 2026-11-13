@@ -1,0 +1,89 @@
+{
+ "builds_with_reason_changes": 6,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62214}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6770}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 6770}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 6}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 6}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_spell_block_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62214}}, \"stat\": \"shield_spell_block_%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 11,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    25.0
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "poe1.spell-block-chance": [
+    0.0,
+    14.0
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "poe1.spell-block-chance": [
+    19.0,
+    25.0
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    12.0
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    12.0
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "poe1.spell-block-chance": [
+    8.0,
+    15.0
+   ]
+  }
+ }
+}

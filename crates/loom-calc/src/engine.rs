@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 use loom_domain::Game;
 
-use crate::condition::QueryContext;
+use crate::condition::{ConditionKey, Flags, QueryContext};
 use crate::error::CalcError;
 use crate::graph::Graph;
 use crate::ingest::{Ingest, StatMapping};
@@ -61,6 +61,16 @@ pub trait Ruleset {
 
     /// The phases, in order.
     fn phases(&self) -> &[Phase];
+
+    /// The named conditions the build settles (P3-8g), computed once per
+    /// calculation, after `collect` and before the phases; every query
+    /// context a phase builds with [`Calc::context`] holds a copy. They are
+    /// build-wide: a condition that differs per skill or per hand needs
+    /// another hook. The default settles none.
+    fn states(&self, input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
+        let _ = input;
+        BTreeMap::new()
+    }
 }
 
 /// The state phases work on.
@@ -71,9 +81,20 @@ pub struct Calc<'a> {
     graph: Graph,
     global: Reasons,
     fields: BTreeMap<Field, FieldResult>,
+    states: BTreeMap<ConditionKey, bool>,
 }
 
 impl<'a> Calc<'a> {
+    /// A query context with `flags` and the conditions the rules settled
+    /// for this calculation ([`Ruleset::states`]).
+    #[must_use]
+    pub fn context(&self, flags: Flags) -> QueryContext {
+        QueryContext {
+            flags,
+            states: self.states.clone(),
+        }
+    }
+
     /// The input.
     #[must_use]
     pub const fn input(&self) -> &CalcInput<'a> {
@@ -200,12 +221,14 @@ pub fn calculate_with(
     rules.collect(input, &mut ingest)?;
     let (store, global) = ingest.finish();
     poll(cancel)?;
+    let states = rules.states(input);
     let mut calc = Calc {
         input,
         store,
         graph: Graph::new(),
         global,
         fields: BTreeMap::new(),
+        states,
     };
     for phase in rules.phases() {
         (phase.run)(&mut calc)?;

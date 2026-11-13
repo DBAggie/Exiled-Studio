@@ -133,17 +133,17 @@ const OUTPUTS: [(Quantity, Field); 4] = [
     ),
 ];
 
-/// The context every phase queries in: a fire spell hit, `a` settled true,
-/// `b` settled false, `c` unknown.
-fn context() -> QueryContext {
-    QueryContext::with_flags(Flags::SPELL | Flags::HIT | Flags::FIRE)
-        .with_state(ConditionKey::new("a"), true)
-        .with_state(ConditionKey::new("b"), false)
+/// The context every phase queries in: a fire spell hit, with the
+/// conditions the rules settle once per calculation (`Ruleset::states`:
+/// `a` true, `b` false, `c` unknown), through `Calc::context`.
+fn context(calc: &Calc<'_>) -> QueryContext {
+    calc.context(Flags::SPELL | Flags::HIT | Flags::FIRE)
 }
 
 fn chains(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     for (quantity, field) in OUTPUTS {
-        let q = calc.chain(quantity, &context())?;
+        let cx = context(calc);
+        let q = calc.chain(quantity, &cx)?;
         calc.set(field, q);
     }
     Ok(())
@@ -249,6 +249,15 @@ impl Ruleset for Rules {
 
     fn phases(&self) -> &[Phase] {
         &PHASES
+    }
+
+    fn states(&self, _input: &CalcInput<'_>) -> std::collections::BTreeMap<ConditionKey, bool> {
+        [
+            (ConditionKey::new("a"), true),
+            (ConditionKey::new("b"), false),
+        ]
+        .into_iter()
+        .collect()
     }
 }
 
@@ -427,6 +436,63 @@ fn an_unmapped_stat_should_make_fields_partial_never_a_silent_zero() {
     );
 }
 
+/// A phase that checks `Calc::context`: the flags as given, and the
+/// rules' settled conditions (none for a ruleset that keeps the default).
+const CONTEXT_CHECK: Phase = Phase {
+    name: "context-check",
+    run: |calc| {
+        let cx = calc.context(Flags::SPELL);
+        assert_eq!(cx.flags, Flags::SPELL);
+        assert!(cx.states.is_empty());
+        Ok(())
+    },
+};
+
+#[test]
+fn calc_context_should_hold_the_rules_settled_conditions() {
+    let b = build(Game::Poe1);
+    let data = Data(version(Game::Poe1));
+    let options = CalcOptions::default();
+    let input = CalcInput {
+        build: &b,
+        data: &data,
+        options: &options,
+    };
+    struct Settled;
+    impl Ruleset for Settled {
+        fn game(&self) -> Game {
+            Game::Poe1
+        }
+        fn slice(&self) -> &[Field] {
+            &[]
+        }
+        fn mapping(&self) -> &dyn StatMapping {
+            &Mapping
+        }
+        fn collect(&self, _: &CalcInput<'_>, _: &mut Ingest<'_>) -> Result<(), CalcError> {
+            Ok(())
+        }
+        fn phases(&self) -> &[Phase] {
+            const CHECK: Phase = Phase {
+                name: "settled",
+                run: |calc| {
+                    assert_eq!(
+                        calc.context(Flags::HIT),
+                        QueryContext::with_flags(Flags::HIT)
+                            .with_state(ConditionKey::new("a"), true)
+                    );
+                    Ok(())
+                },
+            };
+            &[CHECK]
+        }
+        fn states(&self, _: &CalcInput<'_>) -> std::collections::BTreeMap<ConditionKey, bool> {
+            std::iter::once((ConditionKey::new("a"), true)).collect()
+        }
+    }
+    calculate_with(&input, &Settled, &|| false).unwrap();
+}
+
 #[test]
 fn reasons_should_show_on_the_result_when_no_field_is_computed() {
     struct Nothing;
@@ -445,7 +511,7 @@ fn reasons_should_show_on_the_result_when_no_field_is_computed() {
             Ok(())
         }
         fn phases(&self) -> &[Phase] {
-            &[]
+            &[CONTEXT_CHECK]
         }
     }
     let b = build(Game::Poe1);
