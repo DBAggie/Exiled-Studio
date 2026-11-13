@@ -871,6 +871,220 @@ fn charges_should_act_as_pob_counts_them() {
     }
 }
 
+/// The enemy's damage taken from the config (P3-12f,
+/// `poe1::damage_taken`): shock, the Uber boss kind, delirium. Each hit's
+/// enemy effect is `(1 + inc / 100) x more x (1 - resist / 100)`.
+#[test]
+fn the_enemys_damage_taken_should_scale_each_hit_as_pob_does() {
+    use loom_domain::ConfigInputKind;
+
+    let with = |inputs: &[(&str, ConfigValue, ConfigInputKind)]| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value, kind) in inputs {
+            set.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: value.clone(),
+                kind: *kind,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let on = || ConfigValue::Boolean(true);
+    let n = |v: f64| ConfigValue::Number(Sourced::new(loom_domain::Number(v)));
+    let text = |v: &str| ConfigValue::String(v.to_owned());
+    let input = ConfigInputKind::Input;
+    let placeholder = ConfigInputKind::Placeholder;
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    // PoB's order: `effMult = (1 + inc / 100) x more`, then `x (1 -
+    // resist / 100)`; each pass's average times it.
+    let expected = |taken: f64| {
+        let effect = taken * (1.0 - 50.0 / 100.0);
+        let hit = (100.0 / 2.0 + 200.0 / 2.0) * effect;
+        let crit_hit = ((100.0 * 1.5) / 2.0 + (200.0 * 1.5) / 2.0) * effect;
+        let average_hit = hit * (1.0 - 5.0 / 100.0) + crit_hit * 5.0 / 100.0;
+        average_hit * 100.0 / 100.0
+    };
+    let shocked = |effect: ConfigValue, kind| {
+        vec![
+            ("conditionEnemyShocked", on(), input),
+            ("conditionShockEffect", effect, kind),
+        ]
+    };
+    // A shock: its effect, at most 50, floored; the input, else its
+    // placeholder (0 is unset).
+    for (inputs, taken) in [
+        (shocked(n(20.0), input), 1.0 * (1.0 + 20.0 / 100.0)),
+        (shocked(n(70.0), input), 1.0 * (1.0 + 50.0 / 100.0)),
+        (shocked(n(20.7), input), 1.0 * (1.0 + 20.0 / 100.0)),
+        (shocked(n(30.0), placeholder), 1.0 * (1.0 + 30.0 / 100.0)),
+        (
+            vec![
+                ("conditionEnemyShocked", on(), input),
+                ("conditionShockEffect", n(0.0), input),
+                ("conditionShockEffect", n(30.0), placeholder),
+            ],
+            1.0 * (1.0 + 30.0 / 100.0),
+        ),
+        // The Uber boss: 70% less (one name, rounded to two decimals).
+        (vec![("enemyIsBoss", text("Uber"), input)], 1.0 * 0.3),
+        // Both: increased times more.
+        (
+            vec![
+                ("conditionEnemyShocked", on(), input),
+                ("conditionShockEffect", n(20.0), input),
+                ("enemyIsBoss", text("Uber"), input),
+            ],
+            1.0 * (1.0 + 20.0 / 100.0) * 0.3,
+        ),
+        // Delirium; with the Uber boss, one name: round(0.3 x 0.2, 2).
+        (
+            vec![("deliriousPercentage", text("40Percent"), input)],
+            1.0 * 0.68,
+        ),
+        (
+            vec![
+                ("enemyIsBoss", text("Uber"), input),
+                ("deliriousPercentage", text("100Percent"), input),
+            ],
+            1.0 * 0.06,
+        ),
+    ] {
+        let r = with(&inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {inputs:?}");
+        }
+        assert_eq!(
+            value(&r, Field::AverageDamage).to_bits(),
+            expected(taken).to_bits(),
+            "{inputs:?}"
+        );
+        assert_eq!(
+            value(&r, Field::CritChance),
+            value(&bare, Field::CritChance)
+        );
+    }
+    // No shock: not shocked, no effect, a negative effect; the Pinnacle
+    // kind and delirium's "None" give nothing either.
+    for inputs in [
+        vec![("conditionShockEffect", n(20.0), input)],
+        vec![("conditionEnemyShocked", on(), input)],
+        shocked(n(-10.0), input),
+        vec![
+            ("conditionEnemyShocked", ConfigValue::Boolean(false), input),
+            ("conditionShockEffect", n(20.0), input),
+        ],
+        // The default kind given (the others' resistances differ).
+        vec![("enemyIsBoss", text("Pinnacle"), input)],
+        vec![("deliriousPercentage", n(0.0), input)],
+        // A check's placeholder is not applied (PoB applies placeholders
+        // to count options only).
+        vec![
+            ("conditionEnemyShocked", on(), placeholder),
+            ("conditionShockEffect", n(20.0), input),
+        ],
+    ] {
+        let r = with(&inputs);
+        for f in HIT {
+            assert_eq!(r.fields[&f].state, FieldState::Complete, "{f} {inputs:?}");
+            assert_eq!(value(&r, f).to_bits(), value(&bare, f).to_bits(), "{f}");
+        }
+    }
+    // Values PoB would read otherwise: a reason under their input.
+    for (inputs, reason) in [
+        (
+            vec![("conditionEnemyShocked", n(1.0), input)],
+            "conditionEnemyShocked",
+        ),
+        (shocked(text("20"), input), "conditionShockEffect"),
+        (shocked(n(f64::NAN), input), "conditionShockEffect"),
+        (
+            vec![("deliriousPercentage", text("50Percent"), input)],
+            "deliriousPercentage",
+        ),
+        (
+            vec![("deliriousPercentage", on(), input)],
+            "deliriousPercentage",
+        ),
+    ] {
+        let r = with(&inputs);
+        let FieldState::Partial(p) = &r.fields[&Field::AverageDamage].state else {
+            panic!("{inputs:?}: not partial");
+        };
+        assert!(
+            p.contains(&UnsupportedReason::UnmodelledConfig {
+                input: reason.to_owned(),
+            }),
+            "{inputs:?}"
+        );
+    }
+    // A kind PoB does not know: the enemy model's reason on the hit, read
+    // as the default kind (no damage taken).
+    let r = with(&[("enemyIsBoss", text("Shaper"), input)]);
+    let FieldState::Partial(p) = &r.fields[&Field::AverageDamage].state else {
+        panic!("not partial");
+    };
+    assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+        input: "enemyIsBoss".to_owned(),
+    }));
+    assert_eq!(
+        value(&r, Field::AverageDamage).to_bits(),
+        value(&bare, Field::AverageDamage).to_bits()
+    );
+}
+
+/// Onslaught (P3-12f, `poe1::buffs`): 20% increased attack and cast
+/// speed; any value other than a boolean is a reason.
+#[test]
+fn onslaught_should_grant_increased_cast_speed() {
+    let with = |value: ConfigValue| {
+        let mut b = build(vec![group(&["IceNova"])]);
+        let mut set = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        set.inputs.push(ConfigInput {
+            name: "buffOnslaught".to_owned(),
+            value,
+            kind: loom_domain::ConfigInputKind::Input,
+            lines: Vec::new(),
+            attributes: Vec::new(),
+        });
+        b.config.sets.push(set);
+        run(&b)
+    };
+    let bare = run(&build(vec![group(&["IceNova"])]));
+    // 1 / (0.5 / round(1 + 20 / 100, 2)).
+    let r = with(ConfigValue::Boolean(true));
+    assert_eq!(r.fields[&Field::Speed].state, FieldState::Complete);
+    assert_eq!(value(&r, Field::Speed), 1.0 / (0.5 / 1.2));
+    assert_eq!(
+        value(&r, Field::AverageDamage),
+        value(&bare, Field::AverageDamage)
+    );
+    let r = with(ConfigValue::Boolean(false));
+    assert_eq!(value(&r, Field::Speed), value(&bare, Field::Speed));
+    let r = with(ConfigValue::String("true".to_owned()));
+    let FieldState::Partial(p) = &r.fields[&Field::Speed].state else {
+        panic!("not partial");
+    };
+    assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+        input: "buffOnslaught".to_owned(),
+    }));
+}
+
 /// Lines on a charge input (a build document can carry them) are a reason
 /// under its name, as on any input other than `customMods` (P3-12e
 /// review).

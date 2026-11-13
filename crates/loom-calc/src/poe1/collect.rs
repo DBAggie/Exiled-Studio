@@ -31,8 +31,10 @@
 //! Not modelled yet, each a reason on every computed field: other enabled
 //! gems (auras, buffs, reservation: P3-12), config inputs other than
 //! the resistance penalty, the enemy model's numeric inputs, and
-//! [`super::config::NAMED_ONLY`] (P3-12a), bandit and pantheon choices other than
-//! none, a weapon's base properties in the off hand (dual wielding), an
+//! [`super::config::NAMED_ONLY`] (P3-12a), and the ones with their own
+//! effects ([`super::charges`], [`super::damage_taken`], [`super::buffs`],
+//! the bandit: P3-12e, P3-12f), pantheon choices other than none, a
+//! weapon's base properties in the off hand (dual wielding), an
 //! armour piece's percentile
 //! derived from its shown value, active flasks, abyssal sockets, and
 //! slots other than the known ones.
@@ -92,6 +94,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     gems(input, ingest);
     config(build, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
+    super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
+    super::buffs::buffs(active_config(build), ingest);
 }
 
 /// The character's base values: class attributes, life and mana with
@@ -220,15 +224,64 @@ fn resistance_penalty(build: &Build, ingest: &mut Ingest<'_>) {
     }
 }
 
-/// Bandit and pantheon: `None` (or absent) has no effect on the slice
-/// (PoB adds one passive point for no bandit); any other choice is not
-/// modelled yet.
+/// The config input of the bandit choice.
+pub const BANDIT_INPUT: &str = "bandit";
+
+/// The bandit choices and their effects on the slice (PoB v2.67.2,
+/// `Modules/CalcSetup.lua` 663 to 672): Alira `ElementalResist` BASE 15,
+/// Oak `Life` BASE 40; Kraityn (movement speed) and none (one passive
+/// point) reach no slice field.
+pub const BANDITS: [(&str, &[(Quantity, f64)]); 4] = [
+    (
+        "Alira",
+        &[
+            (Quantity::Resistance(DamageType::Fire), 15.0),
+            (Quantity::Resistance(DamageType::Cold), 15.0),
+            (Quantity::Resistance(DamageType::Lightning), 15.0),
+        ],
+    ),
+    ("Kraityn", &[]),
+    ("None", &[]),
+    ("Oak", &[(Quantity::Life, 40.0)]),
+];
+
+/// Bandit and pantheon (P3-12f for the bandit).
+///
+/// PoB reads the bandit from the active config set's `bandit` input
+/// (`env.configInput.bandit`), "None" when the set has none (each new set
+/// holds the list's default, `Classes/ConfigTab.lua` 1290 to 1296). The
+/// build element's `bandit` attribute is read only for a build without a
+/// config element (`Modules/Build.lua` 648 to 651, before the sections
+/// load; `ConfigTab:Load` replaces the sets). So with a config set the
+/// engine applies the set's choice ([`BANDITS`]; another value is a
+/// reason under the input), and ignores the attribute. With no set, the
+/// build may have had no config element (the attribute counts) or an
+/// empty one (it does not): the domain does not tell them apart, so an
+/// attribute other than "None" stays a reason. With only untyped sets,
+/// their `<untyped>` reason covers the choice.
+///
+/// The pantheon: `None` (or absent) has no effect; any other choice is
+/// not modelled yet (its souls' stats are game data the bundle does not
+/// carry yet).
 fn choices(build: &Build, ingest: &mut Ingest<'_>) {
     let GameSpecific::Poe1(c) = build.game_specific() else {
         return;
     };
+    match active_config(build) {
+        Some(set) => bandit(set, ingest),
+        None if build.config.sets.entries().is_empty() => {
+            if let Some(v) = &c.bandit
+                && v != "None"
+            {
+                ingest.reason(UnsupportedReason::UnmodelledChoice {
+                    choice: "bandit",
+                    value: v.clone(),
+                });
+            }
+        }
+        None => {}
+    }
     for (choice, value) in [
-        ("bandit", &c.bandit),
         ("pantheon-major", &c.pantheon_major),
         ("pantheon-minor", &c.pantheon_minor),
     ] {
@@ -240,6 +293,39 @@ fn choices(build: &Build, ingest: &mut Ingest<'_>) {
                 value: v.clone(),
             });
         }
+    }
+}
+
+/// The active set's bandit ([`choices`]): its last `bandit` input, "None"
+/// when it has none.
+fn bandit(set: &ConfigSet, ingest: &mut Ingest<'_>) {
+    let value = set
+        .inputs
+        .typed()
+        .filter(|i| i.kind == ConfigInputKind::Input && i.name == BANDIT_INPUT)
+        .last()
+        .map(|i| &i.value);
+    let name = match value {
+        None => return,
+        Some(ConfigValue::String(s)) => s.as_str(),
+        Some(_) => "",
+    };
+    let Some((_, effects)) = BANDITS.iter().find(|(b, _)| *b == name) else {
+        ingest.reason(UnsupportedReason::UnmodelledConfig {
+            input: BANDIT_INPUT.to_owned(),
+        });
+        return;
+    };
+    for &(quantity, value) in *effects {
+        ingest.effect(Effect {
+            quantity,
+            op: Op::Base,
+            value,
+            conditions: Conditions::none(),
+            source: Source::Config {
+                input: BANDIT_INPUT.to_owned(),
+            },
+        });
     }
 }
 
@@ -1085,6 +1171,15 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if super::charges::is_charge_input(&input.name) {
             continue;
         }
+        // The enemy's damage taken (shock, the boss kind, delirium),
+        // Onslaught, and the bandit: their own effects or reasons
+        // (`poe1::damage_taken`, `poe1::buffs`, [`choices`], P3-12f).
+        if super::damage_taken::handles(&input.name, &input.value)
+            || super::buffs::is_buff_input(&input.name)
+            || input.name == BANDIT_INPUT
+        {
+            continue;
+        }
         // Named conditions, multipliers, and distances only modifiers
         // read, and the enemy's damage: no computed field changes, for an
         // input or a placeholder (`poe1::config`, P3-12a, P3-12b).
@@ -1104,13 +1199,11 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
             continue;
         }
-        // The enemy model's numeric inputs (`poe1::enemy`): no computed
-        // field reads the enemy yet, and the hit fields will take its
-        // problems as their reasons (P3-9b). `enemyIsBoss` stays a reason:
-        // its kind also gives modifiers the engine does not ingest yet
-        // (`poe1::enemy` module docs).
+        // The enemy model's numeric inputs (`poe1::enemy`): the hit fields
+        // take its problems as their reasons (P3-9b). `enemyIsBoss` as a
+        // string is above; as a number it is a reason.
         if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str())
-            && input.name != "enemyIsBoss"
+            && input.name != super::damage_taken::BOSS_INPUT
             && matches!(input.value, ConfigValue::Number(_))
         {
             continue;

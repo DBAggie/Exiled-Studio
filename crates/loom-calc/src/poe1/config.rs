@@ -50,9 +50,11 @@
 //! The stats behind those modifiers are [`DEPENDS_ON`]: they must stay
 //! reasons (`unmapped-stat`), and mapping one (even as `NoEffect`) must
 //! revisit this table (a test checks). Inputs with their
-//! own effects (rage, shock and its effect, exposure, a minion's aura,
-//! bandit and pantheon) stay reasons; charges have their effects
-//! ([`super::charges`], P3-12e). Custom
+//! own effects (a minion's aura, the pantheon, and every input not
+//! listed) stay reasons; charges ([`super::charges`], P3-12e), the
+//! enemy's damage taken (shock, the boss kind, delirium:
+//! [`super::damage_taken`], P3-12f), and the bandit
+//! ([`super::collect`], P3-12f) have their effects. Custom
 //! modifier blocks are not inputs: their lines act through their
 //! resolutions (`collect::config`, P3-12c), and so do the lines of PoB's
 //! legacy `customMods` input where PoB moves them into a block
@@ -151,6 +153,32 @@
 ///   `BuffOnSelf`; 3889 exports the stacks to a party (not a slice
 ///   field). Every other reader is a modifier (per fortification, while
 ///   fortified, at maximum fortification, per buff on you).
+///
+/// Added in P3-12f, inputs whose effect needs a condition only modifiers
+/// (or another config input, itself a reason) set, as `conditionConvergence`:
+///
+/// - `multiplierRage`: `Multiplier:RageStack` (line 1074), conditioned on
+///   `Condition:CanGainRage`. `CalcPerform.lua` (914 to 935) reads it, and
+///   gives rage its effects (more attack damage, attack speed), only with
+///   `Condition:CanGainRage` or `RageRegen` above 0, which only modifiers
+///   set: `ModParser.lua` 2201 to 2585 and 5517 to 5539 (gaining rage on
+///   hit, kill, warcry, crit, flask use, when hit, from mana spent;
+///   regenerating it per life or mana regeneration), and the skill data of
+///   Chain Hook, Vengeful Cry, a curse's stun rage, and the Spirit of
+///   Akoya tattoo (`Data/Skills/act_str.lua` 1780, 12400, 13020;
+///   `other.lua` 5659; `spectre.lua` 2833), through their stats. Each is
+///   in [`DEPENDS_ON`]. A minimum rage (`MinimumRage`, line 650) is a
+///   modifier and does not read the input.
+/// - `conditionEnemyColdExposure`, `conditionEnemyFireExposure`,
+///   `conditionEnemyLightningExposure`: the enemy's `<Type>Exposure` BASE
+///   -10 (lines 1973 to 1981), conditioned on the player's
+///   `Condition:CanApply<Type>Exposure`, which `CalcPerform.lua` (398 to
+///   408) sets only when the main skill or the character has
+///   `<Type>ExposureChance` above 0: modifiers (`ModParser.lua` 850 to
+///   855, 4246 to 4320, 4546) and the `elementalArmyExposureType` input
+///   (line 424; itself a reason). PoB's skills that expose set the
+///   exposure itself (`Data/Skills`), not the chance: other gems, reasons.
+///   The modifiers' stats are in [`DEPENDS_ON`].
 pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     ("OverloadedIntensity", &["Multiplier:OverloadedIntensity"]),
     ("ScorchStacks", &["enemy Multiplier:ScorchStacks"]),
@@ -195,6 +223,18 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         &["enemy ChillVal", "enemy DesiredChillVal"],
     ),
     (
+        "conditionEnemyColdExposure",
+        &["enemy ColdExposure (with CanApplyColdExposure)"],
+    ),
+    (
+        "conditionEnemyFireExposure",
+        &["enemy FireExposure (with CanApplyFireExposure)"],
+    ),
+    (
+        "conditionEnemyLightningExposure",
+        &["enemy LightningExposure (with CanApplyLightningExposure)"],
+    ),
+    (
         "conditionEnemyOnConsecratedGround",
         &["enemy Condition:OnConsecratedGround"],
     ),
@@ -231,6 +271,10 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
+    ),
+    (
+        "multiplierRage",
+        &["Multiplier:RageStack (with CanGainRage)"],
     ),
     (
         "multiplierWitheredStackCountSelf",
@@ -318,37 +362,119 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   reads `Multiplier:HallowingFlameStacksRemovedByAlly` (`ModParser.lua`
 ///   2898).
 ///
+/// Added in P3-12f (PoB's lines in [`NAMED_ONLY`]'s rows), each found by
+/// its description in the bundle's stat descriptions (the game's text)
+/// and matched to PoB's text or skill data:
+///
+/// - rage: the stats that gain or regenerate rage (`gain_rage_on_hit`,
+///   `gain_x_rage_on_*`, `regenerate_1_rage_per_x_*_regeneration`,
+///   `warcry_grant_X_rage_per_5_power`, and the others listed), and the
+///   skill stats of Chain Hook, Vengeful Cry, a curse's stun rage, Rage
+///   support, and the Spirit of Akoya tattoo;
+/// - exposure: the stats whose text PoB reads as `<Type>ExposureChance`
+///   ("chance to inflict cold exposure on hit", "cold skills have a #%
+///   chance to apply cold exposure on hit", "inflict cold exposure on hit,
+///   applying -#% to cold resistance", the socketed, devotion, curse-cast,
+///   graft, minion, and Summon Arbalists variants).
+///
 /// Each is a stat of the real bundle (a maintainer-run test,
 /// `tests/enemy.rs`), so a misspelt ID cannot pass as `Unmapped`.
 pub const DEPENDS_ON: &[&str] = &[
     "additional_spell_block_%_if_havent_blocked_recently",
+    "ancestral_buff_base_rage_regeneration_per_minute",
     "arrow_critical_strike_chance_+%_max_as_distance_travelled_increases",
     "arrow_damage_+%_max_as_distance_travelled_increases",
+    "base_inflict_cold_exposure_on_hit_%_chance",
+    "base_inflict_fire_exposure_on_hit_%_chance",
+    "base_inflict_lightning_exposure_on_hit_%_chance",
+    "berserker_gain_rage_on_attack_hit_cooldown_ms",
+    "berserker_warcry_grant_X_rage_per_5_power_while_less_than_25_rage",
     "can_apply_additional_scorch",
+    "chain_hook_attachment_rage_to_gain_per_hit",
+    "chain_strike_gain_x_rage_if_attack_hits",
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
+    "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
+    "chance_to_inflict_fire_exposure_on_hit_with_fire_damage_%",
+    "chance_to_inflict_lightning_exposure_on_hit_with_lightning_damage_%",
+    "cold_exposure_on_hit_magnitude",
+    "cold_skill_chance_to_inflict_cold_exposure_%",
     "consecrated_ground_enemy_damage_taken_+%",
     "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
     "enemies_chilled_by_hits_take_damage_increased_by_chill_effect",
+    "enemies_near_link_skill_target_have_exposure",
+    "enemy_grant_X_rage_on_stun",
+    "enemy_rage_regeneration_on_stun",
+    "fire_exposure_on_hit_magnitude",
+    "fire_exposure_on_hit_magnitude_vs_max_stacks_resentment_debuff",
+    "fire_skill_chance_to_inflict_fire_exposure_%",
+    "gain_1_rage_on_use_%_chance",
     "gain_convergence_on_hitting_unique_enemy",
+    "gain_max_rage_on_losing_temporal_chains_debuff",
     "gain_player_far_shot_while_do_not_have_iron_reflexes",
+    "gain_rage_on_hit",
+    "gain_rage_on_hit_%_chance",
+    "gain_rage_on_hitting_rare_unique_enemy_%",
+    "gain_rage_on_hitting_rare_unique_enemy_with_tinctured_weapon_%",
+    "gain_rage_on_kill",
+    "gain_rage_when_you_use_a_warcry",
+    "gain_x_rage_on_attack_crit",
+    "gain_x_rage_on_attack_hit",
+    "gain_x_rage_on_bow_hit",
+    "gain_x_rage_on_hit_with_axes",
+    "gain_x_rage_on_hit_with_axes_swords",
+    "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
+    "gain_x_rage_on_hit_with_tinctured_weapons",
+    "gain_x_rage_on_melee_crit",
+    "gain_x_rage_on_melee_hit",
+    "gain_x_rage_per_200_mana_spent",
+    "gain_x_rage_when_hit",
+    "gain_x_rage_when_you_use_a_life_flask",
+    "glove_implicit_gain_rage_on_attack_hit_cooldown_ms",
+    "graft_skill_inflict_fire_exposure_on_hit_%_chance",
+    "graft_skill_inflict_lightning_exposure_on_hit_%_chance",
     "impale_effect_+%_max_as_distance_travelled_increases",
+    "inflict_all_exposure_on_hit",
+    "inflict_cold_exposure_if_cast_frostbite_in_past_10_seconds",
+    "inflict_cold_exposure_on_hit_%_chance_at_devotion_threshold",
+    "inflict_fire_exposure_if_cast_flammability_in_past_10_seconds",
+    "inflict_fire_exposure_on_hit_%_chance_at_devotion_threshold",
+    "inflict_lightning_exposure_if_cast_conductivity_in_past_10_seconds",
+    "inflict_lightning_exposure_on_hit_%_chance_at_devotion_threshold",
+    "kaoms_primacy_gain_rage_on_attack_crit_cooldown_ms",
     "keystone_cold_purist",
     "keystone_point_blank",
     "lancing_steel_damage_+%_at_close_range",
+    "lightning_exposure_on_hit_magnitude",
+    "lightning_skill_chance_to_inflict_lightning_exposure_%",
+    "local_display_socketed_gems_exposure_on_hit",
     "local_display_socketed_gems_supported_by_level_x_point_blank",
+    "local_display_tattoo_trigger_level_x_akoya",
+    "local_gain_X_rage_on_attack_hit_with_melee_abyss_jewel_socketed",
     "max_chance_to_block_attacks_if_not_blocked_recently",
+    "minions_inflict_exposure_on_hit_%_chance",
     "physical_damage_%_to_add_as_lightning_damage_per_hallowing_flame_consumed_by_ally_up_to_80%",
     "player_far_shot",
     "projectile_damage_+%_max_as_distance_travelled_increases",
     "projectile_damage_+%_max_before_distance_increase",
+    "rage_warcry_gain_X_rage_per_minute_per_5_monster_power_max_25_power",
+    "rage_warcry_maximum_rage_+",
     "raider_shocks_you_apply_can_stack_up_to_50_times",
+    "regenerate_1_rage_per_x_life_regeneration",
+    "regenerate_1_rage_per_x_mana_regeneration",
+    "retaliation_skills_gain_X_rage_per_enemy_hit",
     "shattering_steel_hit_damage_+%_final_scaled_by_projectile_distance_per_ammo_consumed",
     "shield_crush_damage_+%_final_from_distance",
     "slayer_damage_+%_final_from_distance",
     "spell_block_is_maximum_if_not_blocked_recently",
+    "summon_arbalist_chance_to_inflict_cold_exposure_on_hit_%",
+    "summon_arbalist_chance_to_inflict_fire_exposure_on_hit_%",
+    "summon_arbalist_chance_to_inflict_lightning_exposure_on_hit_%",
     "support_chilling_areas_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
     "support_chills_also_grant_cold_damage_taken_+%_equal_to_slow_amount",
+    "support_rage_gain_rage_on_melee_hit_cooldown_ms",
     "support_slashing_damage_+%_final_from_distance",
+    "warcry_grant_X_rage_per_5_power",
+    "you_and_nearby_party_members_gain_x_rage_when_you_warcry",
     "your_consecrated_ground_grants_accuracy_rating_+%",
 ];
 
@@ -387,10 +513,8 @@ mod tests {
             "useFrenzyCharges",
             "usePowerCharges",
             "useEnduranceCharges",
-            "multiplierRage",
             "conditionEnemyShocked",
             "conditionShockEffect",
-            "conditionEnemyColdExposure",
             "summonLightningGolemEnableWrath",
             "customMods",
             "bandit",
@@ -463,6 +587,41 @@ mod tests {
                 .map(&loom_domain::StatId::new("base_max_fortification")),
             crate::ingest::StatMap::Unmapped
         );
+    }
+
+    /// Rage and exposure (P3-12f): no mapped stat names them, and the
+    /// `NoEffect` rows that do are listed, each reaching no slice field.
+    #[test]
+    fn no_mapped_stat_should_name_rage_or_exposure() {
+        use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, NO_EFFECT, ROWS, WEAPON_ROWS};
+
+        let names = |id: &str| {
+            id.split(|c: char| !c.is_ascii_alphanumeric())
+                .any(|w| w.eq_ignore_ascii_case("rage") || w.eq_ignore_ascii_case("exposure"))
+        };
+        let ids = HIT_ROWS
+            .iter()
+            .map(|r| r.0)
+            .chain(ROWS.iter().map(|r| r.0))
+            .chain(LOCAL_ROWS.iter().map(|r| r.0))
+            .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        for id in ids {
+            assert!(!names(id), "{id}: revisit NAMED_ONLY");
+        }
+        // Rage's loss delay (PoB `InherentRageLossDelay`): rage's loss,
+        // never its gain or effect. Mana regeneration if you inflicted
+        // exposure recently: regeneration, not a slice field.
+        let checked = [
+            "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
+            "rage_loss_delay_ms",
+        ];
+        for (id, _) in NO_EFFECT {
+            assert!(
+                !names(id) || checked.contains(id),
+                "{id}: a NoEffect row naming rage or exposure; check it and list it"
+            );
+        }
+        assert!(!names("average_damage"));
     }
 
     #[test]

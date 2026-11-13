@@ -775,7 +775,7 @@ fn gems_config_and_choices_should_be_reasons() {
         attributes: Vec::new(),
     };
     config.inputs.push(ConfigInput {
-        name: "multiplierRage".to_owned(),
+        name: "conditionEnemyBlinded".to_owned(),
         value: ConfigValue::Boolean(false),
         kind: loom_domain::ConfigInputKind::Input,
         lines: Vec::new(),
@@ -806,6 +806,81 @@ fn gems_config_and_choices_should_be_reasons() {
     }))
     .unwrap();
     assert_eq!(state(&run(&b), Field::Life), StateKind::Complete);
+}
+
+/// P3-12f: the bandit is the active config set's `bandit` input (PoB's
+/// `env.configInput.bandit`); the build element's attribute counts only
+/// without a config set, where it stays a reason.
+#[test]
+fn the_bandit_should_be_the_config_sets_choice() {
+    let with = |value: Option<ConfigValue>, attribute: Option<&str>| {
+        let mut b = witch(1);
+        b.set_game_specific(GameSpecific::Poe1(Poe1Choices {
+            bandit: attribute.map(str::to_owned),
+            pantheon_major: None,
+            pantheon_minor: None,
+        }))
+        .unwrap();
+        let mut config = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        if let Some(value) = value {
+            config.inputs.push(ConfigInput {
+                name: "bandit".to_owned(),
+                value,
+                kind: loom_domain::ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        b.config.sets.push(config);
+        run(&b)
+    };
+    let text = |v: &str| Some(ConfigValue::String(v.to_owned()));
+    let bare = run(&witch(1));
+    const COLD: Field = Field::Resistance(DamageType::Cold);
+    const LIGHTNING: Field = Field::Resistance(DamageType::Lightning);
+    const CHAOS: Field = Field::Resistance(DamageType::Chaos);
+    // Alira: +15% to all elemental resistances, the attribute ignored.
+    let r = with(text("Alira"), Some("Oak"));
+    for f in [FIRE, COLD, LIGHTNING] {
+        assert_eq!(state(&r, f), StateKind::Complete, "{f}");
+        assert_eq!(value(&r, f), value(&bare, f) + 15.0, "{f}");
+    }
+    assert_eq!(value(&r, CHAOS), value(&bare, CHAOS));
+    assert_eq!(value(&r, Field::Life), value(&bare, Field::Life));
+    // Oak: +40 to maximum life.
+    let r = with(text("Oak"), None);
+    assert_eq!(state(&r, Field::Life), StateKind::Complete);
+    assert_eq!(value(&r, Field::Life), value(&bare, Field::Life) + 40.0);
+    // Kraityn, none, and a set without the input (PoB's default, "None",
+    // whatever the attribute) reach no slice field.
+    for (choice, attribute) in [
+        (text("Kraityn"), None),
+        (text("None"), Some("Alira")),
+        (None, Some("Alira")),
+    ] {
+        let r = with(choice, attribute);
+        for f in [Field::Life, FIRE, COLD] {
+            assert_eq!(state(&r, f), StateKind::Complete, "{f}");
+            assert_eq!(value(&r, f), value(&bare, f), "{f}");
+        }
+    }
+    // Another value is a reason under the input.
+    for choice in [
+        text("Eramir"),
+        Some(ConfigValue::Boolean(true)),
+        Some(ConfigValue::Number(Sourced::new(loom_domain::Number(1.0)))),
+    ] {
+        assert_eq!(
+            partial_reasons(&with(choice, None), Field::Life),
+            ["unmodelled-config"]
+        );
+    }
 }
 
 // ------------------------------------------------------------- defences
@@ -1146,11 +1221,14 @@ fn enemy_inputs_should_be_modelled_when_the_enemy_model_reads_them() {
         ("enemyArmour", n(1000.0)),
     ]);
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
-    // The boss kind stays a reason: its other modifiers are not ingested.
-    let r = with(vec![(
-        "enemyIsBoss",
-        ConfigValue::String("Uber".to_owned()),
-    )]);
+    // The boss kind as a string is modelled (P3-12f, `poe1::damage_taken`):
+    // its other modifiers reach no field but the hit; as a number it is a
+    // reason.
+    for kind in ["None", "Boss", "Pinnacle", "Uber", "Shaper"] {
+        let r = with(vec![("enemyIsBoss", ConfigValue::String(kind.to_owned()))]);
+        assert_eq!(state(&r, Field::Life), StateKind::Complete, "{kind}");
+    }
+    let r = with(vec![("enemyIsBoss", n(1.0))]);
     assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
     let r = with(vec![("enemyLevel", ConfigValue::Boolean(true))]);
     assert_eq!(partial_reasons(&r, Field::Life), ["unmodelled-config"]);
@@ -1212,9 +1290,9 @@ fn inputs_that_only_set_named_conditions_should_not_be_reasons() {
     assert_eq!(state(&r, FIRE), StateKind::Complete);
     // An input with its own effects stays a reason, alone or beside them.
     for input in [
-        "multiplierRage",
-        "conditionEnemyShocked",
-        "conditionEnemyColdExposure",
+        "conditionEnemyBlinded",
+        "conditionEnemyIgnited",
+        "conditionLeeching",
     ] {
         let r = with(vec![("conditionFullLife", yes()), (input, yes())]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
@@ -1280,7 +1358,7 @@ fn placeholders_should_be_classified_as_their_inputs() {
     assert_eq!(state(&r, Field::Life), StateKind::Complete);
     // Any other placeholder is a reason under its input's name; a
     // `resistancePenalty` placeholder is not the modelled input.
-    for name in ["conditionShockEffect", "resistancePenalty"] {
+    for name in ["conditionEnemyBlinded", "resistancePenalty"] {
         let r = with(vec![(name, 20.0, placeholder)]);
         let FieldState::Partial(p) = &r.fields[&Field::Life].state else {
             panic!("{name}: not partial");
