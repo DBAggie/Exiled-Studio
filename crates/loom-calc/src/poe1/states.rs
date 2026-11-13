@@ -50,7 +50,11 @@ pub const MAIN_HAND_WEAPON: &str = "MainHandWeapon";
 /// "life" (`Classes/Item.lua` 284 to 320, `FindModifierSubstring`, with
 /// its special and excluded lines). The game's rule is the mods' `life`
 /// tag, which the engine reads instead, settling only what the tags
-/// decide ([`no_life_modifiers_on_body_armour`]).
+/// decide ([`no_life_modifiers_on_body_armour`]). The two rules agree on
+/// the P3-8n fixture and the in-scope builds; they are not proven equal in
+/// general (a line with the text "life" on an untagged mod, or a tagged mod
+/// whose text lacks it, would differ), so a build where they differ shows
+/// in parity and needs its divergence entry then.
 pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour";
 
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].

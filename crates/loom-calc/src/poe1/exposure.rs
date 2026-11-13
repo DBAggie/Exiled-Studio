@@ -376,6 +376,63 @@ mod tests {
     use crate::poe1::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
     use loom_domain::StatId;
 
+    fn set(inputs: &[(&str, ConfigValue)]) -> ConfigSet {
+        use loom_domain::{ConfigInput, ConfigSetId, Ordered};
+        let mut s = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            s.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: value.clone(),
+                kind: ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        s
+    }
+
+    /// An exposure on hit (P3-8n) is on the enemy without the check, and
+    /// the strongest of it and the check's -10 applies (PoB keeps the
+    /// lowest), then the extras.
+    #[test]
+    fn the_strongest_exposure_should_apply() {
+        let on_hit = |value| Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::ExposureOnHit(DamageType::Cold)),
+            op: Op::Base,
+            value,
+            conditions: Conditions::none(),
+            source: Source::Character,
+        };
+        let cold = |ingest: &Ingest<'_>| {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| {
+                    e.quantity == Quantity::Poe1(Poe1Quantity::EnemyResistance(DamageType::Cold))
+                })
+                .map(|e| e.value)
+                .collect::<Vec<_>>()
+        };
+        let check = set(&[("conditionEnemyColdExposure", ConfigValue::Boolean(true))]);
+        let none = set(&[]);
+        for (config, value, want) in [
+            (&none, -12.0, -12.0),
+            (&check, -12.0, -12.0),
+            (&check, -5.0, EXPOSURE),
+        ] {
+            let mut ingest = Ingest::new(&Poe1Mapping);
+            ingest.effect(on_hit(value));
+            exposure(Some(config), &mut ingest);
+            assert_eq!(cold(&ingest), [want], "{value}");
+        }
+    }
+
     #[test]
     fn stats_should_be_sorted_and_unique() {
         assert!(STATS.windows(2).all(|w| w[0].0 < w[1].0));

@@ -564,7 +564,9 @@ fn sum_in(
 }
 
 /// The flag on `quantity` in `cx` when one applies (P3-8m): its node,
-/// value 1. Queried only when the store has an effect on `quantity`, so a
+/// value 1. A flag whose sum is 0 is off: every flag read here has a
+/// description shown only for a value of at least 1 (P3-8n: a flag shown
+/// for any value is read by presence, as Convergence's in `poe1::buffs`). Queried only when the store has an effect on `quantity`, so a
 /// hit without one keeps its graph.
 fn flag_on(
     calc: &mut Calc<'_>,

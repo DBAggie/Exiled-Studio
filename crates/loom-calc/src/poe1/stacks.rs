@@ -276,7 +276,11 @@ fn count(set: Option<&ConfigSet>, name: &str, allow_zero: bool) -> Result<Option
 }
 
 /// The `Base` sum of the unconditional effects on `Stack(kind, value)` so
-/// far, and the first one's source.
+/// far, and the first one's source. A flag counts when the sum is not 0:
+/// rage's flags have a description that shows them only for a value of at
+/// least 1. A flag whose description shows it for any value (the import
+/// then assumes 0, as Convergence's, `poe1::buffs`) must be read by
+/// presence instead.
 fn sum(ingest: &Ingest<'_>, kind: StackKind, value: StackValue) -> (f64, Option<Source>) {
     let mut total = 0.0;
     let mut first = None;

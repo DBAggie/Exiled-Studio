@@ -270,6 +270,57 @@ mod tests {
         assert!(!super::super::charges::is_charge_input(ONSLAUGHT_INPUT));
     }
 
+    fn set(inputs: &[(&str, ConfigValue)]) -> ConfigSet {
+        use loom_domain::{ConfigInput, ConfigSetId, Ordered};
+        let mut s = ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Vec::new(),
+        };
+        for (name, value) in inputs {
+            s.inputs.push(ConfigInput {
+                name: (*name).to_owned(),
+                value: value.clone(),
+                kind: ConfigInputKind::Input,
+                lines: Vec::new(),
+                attributes: Vec::new(),
+            });
+        }
+        s
+    }
+
+    /// Convergence (P3-8n): the "Gain Convergence" line's presence is the
+    /// flag, whatever its (hidden, assumed 0) value; the check alone gives
+    /// nothing.
+    #[test]
+    fn convergence_should_need_the_line_and_the_check() {
+        let flag = Effect {
+            quantity: Quantity::Poe1(Poe1Quantity::CanGainConvergence),
+            op: Op::Flag,
+            value: 0.0,
+            conditions: Conditions::none(),
+            source: Source::Character,
+        };
+        let more = |ingest: &Ingest<'_>| {
+            ingest
+                .effects()
+                .iter()
+                .filter(|e| e.quantity == Quantity::Damage && e.op == Op::More)
+                .map(|e| e.value)
+                .collect::<Vec<_>>()
+        };
+        let on = set(&[(CONVERGENCE_INPUT, ConfigValue::Boolean(true))]);
+        let mut with_line = Ingest::new(&Poe1Mapping);
+        with_line.effect(flag);
+        buffs(Some(&on), &mut with_line);
+        assert_eq!(more(&with_line), [CONVERGENCE_MORE]);
+        let mut without = Ingest::new(&Poe1Mapping);
+        buffs(Some(&on), &mut without);
+        assert!(more(&without).is_empty());
+    }
+
     /// The stat's one row: an unconditional flag (`buffs` reads only
     /// those).
     #[test]
