@@ -636,6 +636,16 @@ impl StatMapping for SkillMapping {
             StatMap::Effects(e) if e.iter().all(|t| is_hit_quantity(t.quantity)) => {
                 StatMap::Effects(e)
             }
+            // A gem's minion modifiers (P3-8j): only the main skill's gems
+            // are read through this mapping, so they are PoB's
+            // `MinionModifier` entries of the skill's own `skillModList`,
+            // which a redirect turns into the skill's (`poe1::minions`).
+            StatMap::Effects(e)
+                if e.iter()
+                    .all(|t| super::minions::is_minion_quantity(t.quantity)) =>
+            {
+                StatMap::Effects(e)
+            }
             StatMap::Effects(_) => StatMap::Unmapped,
             other => other,
         }
@@ -1032,9 +1042,9 @@ pub struct Poe1Mapping;
 /// it: anything that can change a hit or its rate through the enemy
 /// (shock, chill, exposure, intimidate, consecrated ground's effect,
 /// curses), charges' counts, rage, area, gem levels but the global ones of
-/// [`super::gem_levels`] (P3-8i), minion speed (stats
-/// redirect it to the player; minion damage is in, with its redirects in
-/// [`NO_EFFECT_DEPENDS_ON`]), and staff or shield
+/// [`super::gem_levels`] (P3-8i), minion modifiers but those of
+/// [`super::minions`] (P3-8j, with the redirects to the player), and staff
+/// or shield
 /// conditioned block and damage, fortification's maximum (PoB scales
 /// suppression, armour, evasion, and attack speed per fortification), and
 /// `base_self_critical_strike_multiplier_-%` (PoB's skill stat map also
@@ -1225,11 +1235,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
         "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
         "regeneration",
     ),
-    // "Minions deal #% increased Damage" (PoB `MinionModifier` LIST of
-    // `Damage` INC): only a minion's own calculation reads it, and no
-    // minion is in the slice; it reaches the character only through the
-    // stats in `NO_EFFECT_DEPENDS_ON`, which stay reasons (P3-8c).
-    ("minion_damage_+%", "minion-damage"),
     (
         "minion_life_regeneration_rate_per_minute_%",
         "minion-defence",
@@ -1308,18 +1313,9 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// in the build; mapping one (even as `NoEffect`) must revisit the row (a
 /// test checks each is `Unmapped` through every mapping).
 ///
-/// The minion damage redirects are every stat whose description says
-/// increases to minion damage also affect you (`stat_descriptions.txt`,
-/// "Minion Damage also affect"; the skill stat
-/// `active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value`):
-/// PoB reads them as `MinionDamageAppliesToPlayer` (`ModParser.lua` 3455
-/// to 3459, `Data/SkillStatMap.lua` 905), which `CalcOffence.lua` 613
-/// turns into the player's increased damage. Four more stats in the stats
-/// table name the same redirect (`minion_damage_also_affect_you`,
-/// `minion_damage_modifiers_apply_to_you_at_%_value`, its `150%` twin,
-/// `minion_damage_modifiers_apply_to_all_damage_at_%_value`); none has a
-/// description or a PoB row, so no line resolves to them, and they are
-/// `Unmapped` anyway.
+/// The minion damage redirects were guards here until P3-8j, which maps
+/// minion damage and the redirects PoB reads (`poe1::minions`; the ones it
+/// does not map are `minions::DEPENDS_ON`).
 ///
 /// Light radius (P3-8e) reaches a slice field only through
 /// `LightRadiusAppliesToDamage` (`Damage` INC, `CalcOffence.lua` 746),
@@ -1329,22 +1325,6 @@ pub const NO_EFFECT: &[(&str, &str)] = &[
 /// area of effect, scaling with energy shield, while phased) reach no slice
 /// field and stay `Unmapped`.
 pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
-    (
-        "active_skill_additive_minion_damage_modifiers_apply_to_all_damage_at_%_value",
-        "minion_damage_+%",
-    ),
-    (
-        "additive_minion_damage_modifiers_apply_to_you_at_%_value",
-        "minion_damage_+%",
-    ),
-    (
-        "additive_minion_damage_modifiers_apply_to_you_at_150%_value",
-        "minion_damage_+%",
-    ),
-    (
-        "dominating_blow_and_absolution_additive_minion_damage_modifiers_apply_to_you_at_150%_value",
-        "minion_damage_+%",
-    ),
     (
         "light_radius_additive_modifiers_apply_to_damage",
         "light_radius_+%",
@@ -1360,14 +1340,6 @@ pub const NO_EFFECT_DEPENDS_ON: &[(&str, &str)] = &[
     (
         "minimum_added_fire_damage_to_attacks_per_1%_light_radius",
         "light_radius_+%",
-    ),
-    (
-        "minion_damage_increases_and_reductions_also_affects_you",
-        "minion_damage_+%",
-    ),
-    (
-        "modifiers_to_minion_damage_also_affect_you",
-        "minion_damage_+%",
     ),
 ];
 
@@ -1448,6 +1420,20 @@ impl StatMapping for Poe1Mapping {
                 divisor: 1.0,
                 conditions: Conditions::none(),
             }]);
+        }
+        if let Some(effects) = super::minions::effects(stat.as_str()) {
+            return StatMap::Effects(
+                effects
+                    .into_iter()
+                    .map(|(quantity, op, scale)| EffectTemplate {
+                        quantity,
+                        op,
+                        scale,
+                        divisor: 1.0,
+                        conditions: Conditions::none(),
+                    })
+                    .collect(),
+            );
         }
         if let Some(quantity) = super::gem_levels::quantity(stat.as_str()) {
             return StatMap::Effects(vec![EffectTemplate {
@@ -1861,7 +1847,6 @@ mod tests {
         for stat in [
             "lightning_ailment_effect_+%",
             "chill_effect_+%",
-            "minion_attack_speed_+%",
             "maximum_life_+%_if_no_life_tags_on_body_armour",
             "base_mana_reservation_efficiency_+%",
             "action_speed_-%",
@@ -1936,13 +1921,15 @@ mod tests {
                 "{stat}"
             );
         }
-        for stat in ["minion_damage_+%", "chance_to_freeze_shock_ignite_%"] {
-            assert_eq!(
-                Poe1Mapping.map(&StatId::new(stat)),
-                StatMap::NoEffect,
-                "{stat}"
-            );
-        }
+        assert_eq!(
+            Poe1Mapping.map(&StatId::new("chance_to_freeze_shock_ignite_%")),
+            StatMap::NoEffect
+        );
+        // P3-8j: minion damage is a minion modifier (`poe1::minions`).
+        assert!(matches!(
+            Poe1Mapping.map(&StatId::new("minion_damage_+%")),
+            StatMap::Effects(_)
+        ));
     }
 
     #[test]

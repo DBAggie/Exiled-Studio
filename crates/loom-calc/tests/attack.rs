@@ -906,3 +906,46 @@ fn weapon_conditions_should_cover_warstaves_swaps_and_unknown_hands() {
     );
     assert!(reasons.contains(&"unmodelled-condition"), "{reasons:?}");
 }
+
+/// Minion modifiers reach the attack through their redirects only (P3-8j,
+/// `loom_calc::poe1::minions`): minion attack speed with "Increases and
+/// Reductions to Minion Attack Speed also affect you", minion damage with
+/// its own redirect; minion cast speed never reaches an attack.
+#[test]
+fn minion_modifiers_should_reach_the_attack_through_their_redirects() {
+    let hit = |stats: &[(&str, i64)]| {
+        let b = with_lines(build("Smite", Some("1"), &AXE, &OPEN), 1, stats);
+        let r = run(&b, &AXE);
+        assert!(partial(&r, Field::Speed).is_empty());
+        assert!(partial(&r, Field::AverageDamage).is_empty());
+        (value(&r, Field::Speed), value(&r, Field::AverageDamage))
+    };
+    let minion = [
+        ("minion_attack_speed_+%", 10),
+        ("minion_cast_speed_+%", 30),
+        ("minion_damage_+%", 20),
+    ];
+    let (speed, average) = hit(&[]);
+    // Without a redirect, nothing changes.
+    assert_eq!(hit(&minion), (speed, average));
+    // The attack speed redirect: 10% increased attack speed, after the
+    // weapon's floored time; the damage stays.
+    let mut with = minion.to_vec();
+    with.push((
+        "additive_modifiers_to_minion_attack_speed_also_affect_you",
+        1,
+    ));
+    let (s, a) = hit(&with);
+    assert!((s - speed * 1.1).abs() < 1e-9, "{s} {speed}");
+    assert_eq!(a, average);
+    // The cast speed redirect reaches no attack.
+    let mut with = minion.to_vec();
+    with.push(("additive_modifiers_to_minion_cast_speed_also_affect_you", 1));
+    assert_eq!(hit(&with), (speed, average));
+    // The damage redirect: more damage, the same speed.
+    let mut with = minion.to_vec();
+    with.push(("minion_damage_increases_and_reductions_also_affects_you", 1));
+    let (s, a) = hit(&with);
+    assert_eq!(s, speed);
+    assert!(a > average, "{a} {average}");
+}

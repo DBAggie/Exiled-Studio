@@ -99,6 +99,8 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
     super::charges::charges(active_config(build), input.data, ingest);
     super::damage_taken::damage_taken(build, active_config(build), input.data, ingest);
     super::buffs::buffs(active_config(build), ingest);
+    // After every source of minion modifiers (P3-8j).
+    super::minions::minions(ingest);
 }
 
 /// The character's base values: class attributes, life and mana with

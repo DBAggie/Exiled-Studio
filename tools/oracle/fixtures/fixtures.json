@@ -1161,6 +1161,26 @@
       "expect": "ok",
       "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
       "description": "Smite with Melee Physical Damage and a normal Siege Axe, Precision in another group, and custom lines that raise the levels of strength, aura, dexterity, melee, and physical skill gems and of non-exceptional support gems: each gem gains the lines its tags match (P3-8i)."
+    },
+    {
+      "id": "ice-nova-minion-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-minion-modifiers-witch.xml",
+      "sha256": "3cad8711180208cdec6211a2760b4becade6048761f1ffa648aba38a1d71fc87",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with custom lines: minion damage, cast speed, and attack speed, and the redirects of minion damage (also at 150% of their value: the larger counts) and of minion cast speed to you; Ice Nova gains 30% increased damage and 10% increased cast speed, the minion attack speed reaches nothing (P3-8j)."
+    },
+    {
+      "id": "smite-minion-modifiers-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-minion-modifiers-templar.xml",
+      "sha256": "a77fd243ff9ab1701633dce267089c8aa224b33ce374b7e966098c04ba24a6fb",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Siege Axe and custom lines: minion damage, attack speed, cast speed, and attack and cast speed, and the redirects of minion damage and of minion attack speed to you; Smite gains 20% increased damage and 16% increased attack speed, the minion cast speed reaches nothing (P3-8j)."
     }
   ]
 }

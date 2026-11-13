@@ -361,3 +361,60 @@ Reasons:
 - **Corpus:** 13 gone in 6 builds, none added. One build's average damage and DPS moved toward PoB's.
 
 Tests: 1226 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.
+
+## P3-8j: minion modifiers that also affect you
+
+The in-scope Smite act5 and act10 builds take Spiritual Command ("Increases and Reductions to Minion Attack Speed also affect you") and Spiritual Aid ("... Minion Damage also affect you"), with five nodes of minion attack and cast speed and Redemption's minion damage. These were the in-scope builds' most frequent unmapped stats after golems: 24 occurrences. Until P3-8j each was `unmapped-stat`, and `minion_damage_+%` was `NoEffect`, guarded by the redirects in `NO_EFFECT_DEPENDS_ON`.
+
+### What PoB v2.67.2 does
+
+- `Modules/ModParser.lua` reads "Minions deal #% increased Damage", "Minions have #% increased Attack Speed", "... Cast Speed", and "... Attack and Cast Speed" as `MinionModifier` LIST modifiers: `Damage` INC; `Speed` INC with `ModFlag.Attack`, with `ModFlag.Cast`, and with no flag. `Data/SkillStatMap.lua` 1900 to 1931 does the same for a gem's own stats.
+- It reads the redirects as flags (3455 to 3462): `MinionDamageAppliesToPlayer`, `MinionAttackSpeedAppliesToPlayer`, and `MinionCastSpeedAppliesToPlayer`. "... at #% of their value" also sets `ImprovedMinionDamageAppliesToPlayer` MAX #.
+- `Modules/CalcOffence.lua` 613 to 643 runs for the skill being computed. With a flag set, every `MinionModifier` of the skill's modifier list becomes the player's at the multiplier (the `Improved...` MAX, else 100%), keeping its source and tags. `Damage` INC stays `Damage` INC with its flags. `Speed` INC with no flag or the Attack (Cast) flag becomes `Speed` INC with `ModFlag.Attack` (`ModFlag.Cast`). Nothing is floored. Only the life redirect floors (`CalcPerform.lua` 1566), and no stat here reaches it.
+
+### The engine
+
+- **`loom_calc::poe1::minions`.** `STATS` maps the four minion stats to `Poe1Quantity::Minion(kind)` (`Increased`; calc result v1 name `poe1.minion.<kind>`, additive). It maps the four redirects (damage, damage at 150%, attack speed, cast speed) to `Poe1Quantity::MinionToYou(kind, percent)` (`poe1.minion-to-you.<kind>.<percent>`). A redirect is a `Flag` with its percent in the quantity, because a redirect line has no value: its stat value came through as 0 in the first trial.
+- **`minions()`** runs last in `collect`. For each kind with a redirect, the largest percent counts (PoB's flag with its MAX), and each minion effect of that kind becomes the character's (`Damage` INC, or `Speed` INC for attacks or casts) at that percent, with the minion effect's source and conditions. A minion effect without a redirect changes no slice field, because no minion is computed.
+- **A gem's minion stats.** Only the main skill's gems are read through `SkillMapping`, so their minion stats are the entries of PoB's `skillModList` and follow the redirects too (the review's finding). An example is Minion Damage supporting Absolution with Spiritual Aid. Other groups' gems never reach this mapping.
+- **Left as reasons** (`minions::DEPENDS_ON`, a test checks each is `Unmapped`): the Dominating Blow and Absolution redirect, the skill stat that applies minion damage to all damage, "Modifiers to Minion Damage also affect you" (PoB does not read it, so applying it would be a divergence), and `additive_minion_damage_modifiers_apply_to_you_at_%_value` (no description). Other minion stats PoB reads as `Damage` or `Speed` (minion melee damage, damage on full life) and minion modifiers that name a skill (golems, spectres) are also left as reasons. A real-bundle test checks each row's text and that every "Minion Damage / Attack Speed / Cast Speed also affect" description is a row or in `DEPENDS_ON`.
+- `minion_damage_+%` leaves `NO_EFFECT`, and its guards leave `NO_EFFECT_DEPENDS_ON`.
+
+### Mechanic fixtures
+
+| Fixture | What it isolates |
+|---|---|
+| `ice-nova-minion-modifiers-witch.xml` | Ice Nova with minion damage, cast speed, and attack speed, and the redirects of minion damage (also at 150%: the larger counts) and of minion cast speed. Ice Nova gains 30% increased damage and 10% increased cast speed; the minion attack speed reaches nothing. Every target equals PoB's |
+| `smite-minion-modifiers-templar.xml` | Smite with a normal Siege Axe, minion damage, attack, cast, and attack and cast speed, and the redirects of minion damage and of minion attack speed. Smite gains 20% increased damage and 16% increased attack speed; the minion cast speed reaches nothing. Average damage, crit, hit chance, and unreserved mana equal PoB's. Speed and DPS differ by Q11's floored attack time alone (1000 / 667 against PoB's 1.50, times the same 0.85 and 1.16): DIV-0039 to DIV-0041 (`game-truth`) |
+
+### Review
+
+`code-architecture-reviewer`: no blockers. One important finding: the first commit gave a gem's own minion stats no effect, but PoB converts the skill's own `MinionModifier` entries too. That would have been a silent drop. Applied in `373b6dc`: those stats are minion effects that `minions()` converts. Also applied: tests for a gem's minion damage and for other minion damage stats staying unmapped, a stale comment, and the module docs. The reviewer confirmed that applying the conversion globally differs from PoB's per-skill list only for modifiers tagged with a skill, which are all unmapped, and that the tag conversion (`getConvertedModTags`) changes none of the mapped stats. Recorded rather than changed: DIV-0039 to DIV-0041 name the Q11 test, which is the mechanic they register.
+
+### Evidence (P3-8j)
+
+Maintainer-run on 2026-11-13, on Windows, from the main checkout on a clean tree: `local/p3/p3-8j/evidence.sh` at tool commit `70e9864`. The review's `373b6dc` leaves every calc document byte-identical: public and corpus were re-run and compared. P3-12i's bundle and overlay are used. Summaries are in `docs/phase-3/stat-mapping/p3-8j-*`.
+
+| Run | Result |
+|---|---|
+| `oracle-run`, the whole manifest | 119 fixtures, every expectation met, 3/3 identical runs each |
+| `calc-run`, public, twice | 119 documents; 1738 complete, 334 partial, 448 unsupported, 312 indeterminate. Byte-identical twice |
+| `calc-parity`, public | 41 registered differences (DIV-0039 to DIV-0041 new), 0 unexpected; 1708 fields match. **Every mechanic target met: 1704 of 1704 over 82 fixtures** |
+| `calc-run` and `calc-parity`, corpus (21, `--anonymous`), twice | Byte-identical; no difference |
+
+**Against P3-8i** (`p3-8j-public-vs-p3-8i.json`, `p3-8j-corpus-poe1-26530219-vs-p3-8i.json`). No field state changes. Values changed in 2 public builds, every one toward PoB's:
+
+| Build | Value | Before | After | PoB |
+|---|---|---|---|---|
+| Smite act5 | average damage | 1461 | 2029 | 15434 |
+| Smite act5 | speed | 1.997 | 2.278 | 2.748 |
+| Smite act5 | hit DPS | 2917 | 4622 | 42417 |
+| Smite act10 | average damage | 1977 | 2733 | 31852 |
+| Smite act10 | speed | 2.097 | 2.378 | 2.869 |
+| Smite act10 | hit DPS | 4146 | 6501 | 91370 |
+
+Reasons:
+- **Public:** 74 gone in 5 builds (the two Smite builds, and three minion builds whose minion stats and redirects are no longer reasons), none added.
+- **Corpus:** 23 gone in 3 builds, none added. One build's average damage and DPS rose (Spiritual Aid).
+
+Tests: 1239 workspace tests, clippy, fmt, wasm32, and the real-bundle tests.

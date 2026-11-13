@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8j): Smite (level 20) with a normal Siege Axe and custom lines: minion damage, attack speed, cast speed, and attack and cast speed, with the redirects of minion damage and minion attack speed to you. Smite gains 20% increased damage and 16% increased attack speed; the minion cast speed reaches nothing.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				Minions deal 20% increased Damage
+Minions have 10% increased Attack Speed
+Minions have 10% increased Cast Speed
+Minions have 6% increased Attack and Cast Speed
+Increases and Reductions to Minion Damage also affect you
+Increases and Reductions to Minion Attack Speed also affect you
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -23,6 +23,7 @@ pub mod gem_levels;
 pub mod gems;
 pub mod hit;
 pub mod mapping;
+pub mod minions;
 pub mod pantheon;
 pub mod phases;
 pub mod skill;
@@ -101,6 +102,14 @@ pub enum Poe1Quantity {
     /// (P3-8i): `Base`, read once by [`gem_levels::GemLevels`] when the
     /// skills are set up, as PoB reads its `GemProperty` modifiers.
     GemLevel(&'static str),
+    /// A minion modifier (P3-8j): "Minions deal #% increased Damage" and
+    /// kin, `Increased`. No minion is computed; only [`minions`] reads
+    /// them, to give the character those a redirect names.
+    Minion(minions::MinionValue),
+    /// A redirect of a minion modifier kind to the character at a percent
+    /// of their value (P3-8j): a `Flag` ("... also affect you", 100; "... at
+    /// 150% of their value", 150); [`minions`] takes the largest.
+    MinionToYou(minions::MinionValue, u16),
 }
 
 /// A pool a skill reserves.
@@ -206,6 +215,10 @@ impl core::fmt::Display for Poe1Quantity {
             Self::Onslaught => f.write_str("onslaught"),
             Self::Charge(kind, value) => write!(f, "charge.{}.{}", kind.name(), value.name()),
             Self::GemLevel(stat) => write!(f, "gem-level.{stat}"),
+            Self::Minion(value) => write!(f, "minion.{}", value.name()),
+            Self::MinionToYou(value, percent) => {
+                write!(f, "minion-to-you.{}.{percent}", value.name())
+            }
             Self::Reservation(pool, kind) => {
                 write!(f, "reservation.{}.{}", pool.name(), kind.name())
             }
