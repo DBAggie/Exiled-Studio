@@ -126,17 +126,22 @@ fn last<'a>(set: &'a ConfigSet, name: &str, kind: ConfigInputKind) -> Option<&'a
 
 /// What an override input gives: `Ok(None)` when unset (absent or 0, as
 /// PoB's count options), `Err(())` for a value PoB would read otherwise
-/// than a number.
+/// than a number, or a number that is not finite.
 fn count(value: Option<&ConfigValue>) -> Result<Option<f64>, ()> {
     match value {
         None => Ok(None),
+        // A non-finite number (a build document can carry one) is not a
+        // count PoB could hold: a reason, never a silent 0.
+        Some(ConfigValue::Number(n)) if !n.value().0.is_finite() => Err(()),
         Some(ConfigValue::Number(n)) => Ok(Some(n.value().0).filter(|n| *n != 0.0)),
         Some(ConfigValue::Boolean(_) | ConfigValue::String(_)) => Err(()),
     }
 }
 
 /// Adds the effects of the charges the active config set uses (module
-/// docs). A `use` input that is not a flag, or an override that is not a
+/// docs). The effects' source is the `use` input, whichever input set
+/// the count (an override or its placeholder): the `use` input is what
+/// turns them on, and the count is part of the effect's value. A `use` input that is not a flag, or an override that is not a
 /// number, is a reason under the `use` input; a missing constant is
 /// indeterminate.
 pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest<'_>) {
@@ -152,6 +157,10 @@ pub fn charges(set: Option<&ConfigSet>, data: &dyn CalcData, ingest: &mut Ingest
                 ingest.reason(reason());
                 continue;
             }
+        }
+        // No effect on a slice field (endurance): nothing to count.
+        if charge.effects.is_empty() {
+            continue;
         }
         // The input, else its placeholder (PoB's `BuildModList`).
         let overridden = match count(last(set, charge.override_input, ConfigInputKind::Input)) {
@@ -219,10 +228,39 @@ mod tests {
         assert!(!is_charge_input("useSiphoningCharges"));
     }
 
+    /// A word of the stat ID is `charge` or `charges` (not `recharge`).
+    fn names_a_charge(id: &str) -> bool {
+        id.split(|c: char| !c.is_ascii_alphanumeric())
+            .any(|w| w == "charge" || w == "charges")
+    }
+
+    /// `NoEffect` rows that name a charge, each checked: none scales a
+    /// slice field per charge or changes a count PoB's calc reads.
+    const NO_EFFECT_CHARGE_ROWS: &[&str] = &[
+        // Chances to gain a charge: PoB's calc never reads them.
+        "add_power_charge_on_kill_%_chance",
+        // Shock on you: not a slice field.
+        "cannot_be_shocked_while_at_maximum_power_charges",
+        "chance_to_gain_power_charge_when_block_%",
+        "gain_power_charge_for_each_second_channeling_spell",
+        // Regeneration per charge: not a slice field.
+        "life_regeneration_rate_per_minute_%_per_endurance_charge",
+        "mana_regeneration_rate_+%_per_power_charge",
+    ];
+
     /// The module's argument: no mapped stat reads or changes a charge,
-    /// so every stat that does is a reason or reaches no slice field.
+    /// so every stat that does is a reason or reaches no slice field. The
+    /// maxima themselves stay `Unmapped` (asserted here through every
+    /// mapping, and in `mapping`'s tests).
     #[test]
     fn no_mapped_stat_should_read_or_change_a_charge() {
+        use crate::ingest::{StatMap, StatMapping};
+        use crate::poe1::ArmourSlot;
+        use crate::poe1::mapping::{
+            NO_EFFECT, PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping,
+        };
+        use loom_domain::StatId;
+
         let ids = HIT_ROWS
             .iter()
             .map(|r| r.0)
@@ -230,7 +268,28 @@ mod tests {
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
         for id in ids {
-            assert!(!id.contains("charge"), "{id}: revisit poe1::charges");
+            assert!(!names_a_charge(id), "{id}: revisit poe1::charges");
+        }
+        for (id, _) in NO_EFFECT {
+            assert!(
+                !names_a_charge(id) || NO_EFFECT_CHARGE_ROWS.contains(id),
+                "{id}: a NoEffect row naming a charge; check it and list it"
+            );
+        }
+        assert!(!names_a_charge("energy_shield_recharge_rate_+%"));
+        let piece = PieceMapping {
+            slot: ArmourSlot::Helmet,
+        };
+        let mappings: [&dyn StatMapping; 4] = [&Poe1Mapping, &SkillMapping, &piece, &WeaponMapping];
+        for c in CHARGES {
+            for m in mappings {
+                assert_eq!(
+                    m.map(&StatId::new(c.max_stat)),
+                    StatMap::Unmapped,
+                    "{}",
+                    c.max_stat
+                );
+            }
         }
     }
 }

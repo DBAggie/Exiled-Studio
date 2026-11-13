@@ -403,7 +403,7 @@ fn gem(n: Node<'_, '_>) -> Option<Gem> {
     })
 }
 
-/// The `<Config>` element. With no `ConfigSet` child and some content, it
+/// The `<Config>` element. With no `ConfigSet` child and some element, it
 /// is PoB's layout before config sets: PoB loads every child into set 1
 /// (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`, lines 888 to 902), read
 /// here as one flat set. A mix of both layouts keeps its loose children
@@ -412,7 +412,7 @@ fn config_of(n: Node<'_, '_>) -> Option<Config> {
     let active = number_u32(n, "activeConfigSet")?.map(|s| ConfigSetId(*s.value()));
     let attributes = rest(n, &["activeConfigSet"]);
     let is_set = |c: &Node<'_, '_>| c.is_element() && c.tag_name().name() == "ConfigSet";
-    if children(n).next().is_some() && !children(n).any(|c| is_set(&c)) {
+    if children(n).any(|c| c.is_element()) && !children(n).any(|c| is_set(&c)) {
         let (inputs, custom_modifiers) = set_content(n)?;
         let mut sets = Ordered::new();
         sets.push(ConfigSet {

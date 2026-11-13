@@ -28,9 +28,8 @@ pub enum ConfigLayout {
     Sets,
     /// One set (ID 1, no title, no attributes) whose content the format
     /// held directly, with no set element (PoB's layout before config
-    /// sets). A planner may treat such a set as one it made itself (PoB
-    /// gives it a default empty custom modifier block before the blocks it
-    /// reads): what that changes is the calculations' concern.
+    /// sets). What a planner does differently with such a set is the
+    /// calculations' concern (`loom_calc::poe1::collect`).
     Flat,
 }
 
@@ -190,4 +189,62 @@ pub enum ConfigValue {
     Number(Sourced<Number>),
     /// Text.
     String(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::opaque::OpaqueNode;
+
+    fn set(id: u32) -> ConfigSet {
+        ConfigSet {
+            id: ConfigSetId(id),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Attributes::new(),
+        }
+    }
+
+    fn flat(sets: Ordered<ConfigSet>) -> Config {
+        Config {
+            layout: ConfigLayout::Flat,
+            sets,
+            ..Config::default()
+        }
+    }
+
+    #[test]
+    fn a_flat_config_should_hold_one_set_1_without_title_or_attributes() {
+        let one = |s: ConfigSet| {
+            let mut o = Ordered::new();
+            o.push(s);
+            o
+        };
+        assert_eq!(flat(one(set(1))).check_layout(), Ok(()));
+        // The layout with set elements holds anything.
+        let mut sets = one(set(2));
+        sets.push(set(3));
+        let config = Config {
+            sets: sets.clone(),
+            ..Config::default()
+        };
+        assert_eq!(config.check_layout(), Ok(()));
+        let mut titled = set(1);
+        titled.title = Some("t".to_owned());
+        let mut attributed = set(1);
+        attributed.attributes = vec![crate::opaque::Attribute::new("x", "1")];
+        let mut opaque = one(set(1));
+        opaque.push_opaque(OpaqueNode::element("Input"));
+        for bad in [
+            Ordered::new(),
+            one(set(2)),
+            one(titled),
+            one(attributed),
+            sets,
+            opaque,
+        ] {
+            assert_eq!(flat(bad).check_layout(), Err(DomainError::FlatConfigLayout));
+        }
+    }
 }

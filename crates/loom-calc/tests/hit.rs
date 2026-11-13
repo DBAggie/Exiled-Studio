@@ -812,4 +812,94 @@ fn charges_should_act_as_pob_counts_them() {
         }));
         assert_eq!(value(&r, Field::CritChance), 5.0);
     }
+    // Counts as PoB keeps them: not clamped to the maximum, fractional
+    // kept, negative floored at the minimum (0), the last input counts.
+    for (inputs, crit) in [
+        (vec![("overridePowerCharges", n(5.0), input)], 5.0 * 3.5),
+        (vec![("overridePowerCharges", n(1.5), input)], 5.0 * 1.75),
+        (vec![("overridePowerCharges", n(-2.0), input)], 5.0),
+        (
+            vec![
+                ("overridePowerCharges", n(2.0), input),
+                ("overridePowerCharges", n(1.0), input),
+            ],
+            7.5,
+        ),
+    ] {
+        let mut all = vec![("usePowerCharges", on(), input)];
+        all.extend(inputs);
+        let r = with(&all);
+        assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+        assert!(
+            (value(&r, Field::CritChance) - crit).abs() < 1e-12,
+            "{crit}"
+        );
+    }
+    // A placeholder named like a `use` input does not turn it on (PoB
+    // applies placeholders to count options only).
+    let r = with(&[("usePowerCharges", on(), placeholder)]);
+    assert_eq!(value(&r, Field::CritChance), 5.0);
+    assert_eq!(r.fields[&Field::CritChance].state, FieldState::Complete);
+    // A non-finite override, a `use` given as text, and an override
+    // given as a flag are reasons, never a silent count.
+    for inputs in [
+        vec![
+            ("usePowerCharges", on(), input),
+            ("overridePowerCharges", n(f64::NAN), input),
+        ],
+        vec![
+            ("usePowerCharges", on(), input),
+            ("overridePowerCharges", n(f64::INFINITY), input),
+        ],
+        vec![(
+            "usePowerCharges",
+            ConfigValue::String("true".to_owned()),
+            input,
+        )],
+        vec![
+            ("usePowerCharges", on(), input),
+            ("overridePowerCharges", ConfigValue::Boolean(false), input),
+        ],
+    ] {
+        let r = with(&inputs);
+        let FieldState::Partial(p) = &r.fields[&Field::CritChance].state else {
+            panic!("not partial");
+        };
+        assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+            input: "usePowerCharges".to_owned(),
+        }));
+    }
+}
+
+/// Lines on a charge input (a build document can carry them) are a reason
+/// under its name, as on any input other than `customMods` (P3-12e
+/// review).
+#[test]
+fn lines_on_a_charge_input_should_be_a_reason() {
+    let mut b = build(vec![group(&["IceNova"])]);
+    let mut set = ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs: Ordered::new(),
+        custom_modifiers: Vec::new(),
+        attributes: Vec::new(),
+    };
+    set.inputs.push(ConfigInput {
+        name: "usePowerCharges".to_owned(),
+        value: ConfigValue::Boolean(true),
+        kind: loom_domain::ConfigInputKind::Input,
+        lines: vec![loom_domain::CustomModifierLine {
+            text: "+10 to maximum Life".to_owned(),
+            resolution: loom_domain::LineResolution::Pending,
+        }],
+        attributes: Vec::new(),
+    });
+    b.config.sets.push(set);
+    let r = run(&b);
+    let FieldState::Partial(p) = &r.fields[&Field::CritChance].state else {
+        panic!("not partial");
+    };
+    assert!(p.contains(&UnsupportedReason::UnmodelledConfig {
+        input: "usePowerCharges".to_owned(),
+    }));
 }

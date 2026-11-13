@@ -427,10 +427,11 @@ mod tests {
     }
 
     /// Fortification (P3-12e): every reader of its names is a modifier,
-    /// and no mapped stat reads or changes it (`NoEffect` rows reach no
-    /// slice field).
+    /// and no mapped stat reads or changes it (the `NoEffect` rows that
+    /// name it are listed and reach no slice field).
     #[test]
     fn no_mapped_stat_should_read_fortification() {
+        use crate::ingest::StatMapping;
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};
 
         let ids = HIT_ROWS
@@ -442,6 +443,26 @@ mod tests {
         for id in ids {
             assert!(!id.contains("fortif"), "{id}: revisit NAMED_ONLY");
         }
+        // `NoEffect` rows naming fortification, each checked: a chance to
+        // fortify, its duration, regeneration per stack; none reaches a
+        // slice field.
+        let checked = [
+            "chance_to_fortify_on_melee_hit_+%",
+            "fortify_duration_+%",
+            "life_regeneration_per_minute_%_per_fortification",
+        ];
+        for (id, _) in crate::poe1::mapping::NO_EFFECT {
+            assert!(
+                !id.contains("fortif") || checked.contains(id),
+                "{id}: a NoEffect row naming fortification; check it and list it"
+            );
+        }
+        // The maximum stays a reason (PoB scales stats per stack).
+        assert_eq!(
+            crate::poe1::mapping::Poe1Mapping
+                .map(&loom_domain::StatId::new("base_max_fortification")),
+            crate::ingest::StatMap::Unmapped
+        );
     }
 
     #[test]

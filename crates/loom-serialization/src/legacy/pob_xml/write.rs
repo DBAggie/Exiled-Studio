@@ -374,15 +374,14 @@ fn config(w: &mut Writer, c: &Config) {
         c.active.map(|x| x.0.to_string()).as_deref(),
     );
     kept(&mut a, &c.attributes);
-    w.element(1, "Config", &a, |w| match c.layout {
-        // PoB's layout before config sets: the set's content directly
-        // under `<Config>` (the layout check holds one set).
-        ConfigLayout::Flat => {
-            for set in c.sets.typed() {
-                set_content(w, 2, set);
-            }
-        }
-        ConfigLayout::Sets => w.ordered(2, &c.sets, |w, set| {
+    // PoB's layout before config sets: the one set's content directly
+    // under `<Config>`. A flat config that breaks the layout check (only a
+    // build never read through a document can) is written with set
+    // elements, so nothing is dropped.
+    let flat = c.layout == ConfigLayout::Flat && c.check_layout().is_ok();
+    w.element(1, "Config", &a, |w| match c.sets.typed().next() {
+        Some(set) if flat => set_content(w, 2, set),
+        _ => w.ordered(2, &c.sets, |w, set| {
             let mut a = vec![("id".to_owned(), set.id.0.to_string())];
             put(&mut a, "title", set.title.as_deref());
             kept(&mut a, &set.attributes);

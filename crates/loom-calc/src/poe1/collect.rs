@@ -1073,16 +1073,16 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if is_legacy_custom_mods(input) {
             continue;
         }
-        // Charges: their own effects (`poe1::charges`, P3-12e).
-        if super::charges::is_charge_input(&input.name) {
-            continue;
-        }
         // Lines on any other input: no format applies them; a build
         // document can carry them, so they are a reason, never ignored.
         if !input.lines.is_empty() {
             ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.name.clone(),
             });
+            continue;
+        }
+        // Charges: their own effects (`poe1::charges`, P3-12e).
+        if super::charges::is_charge_input(&input.name) {
             continue;
         }
         // Named conditions, multipliers, and distances only modifiers

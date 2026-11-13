@@ -418,6 +418,55 @@ fn the_old_config_layout_should_be_one_flat_set() {
     assert_eq!(b.config.sets.entries().len(), 0);
 }
 
+/// A build document refuses a flat config that breaks the layout check
+/// on read; a comment alone does not make the flat layout; a broken flat
+/// build exports with set elements, dropping nothing.
+#[test]
+fn the_flat_layout_should_be_checked_and_never_drop_content() {
+    let b = import(BASE).unwrap();
+    let json = crate::dto::v1::to_json(&b).unwrap();
+    assert!(json.contains(r#""config": {"#), "{json}");
+    let flat = json.replacen(r#""config": {"#, r#""config": {"layout": "flat","#, 1);
+    let err = crate::dto::v1::from_json(&flat).unwrap_err();
+    assert!(
+        err.to_string().contains("DOMAIN_FLAT_CONFIG_LAYOUT"),
+        "{err}"
+    );
+
+    let commented = BASE.replace(
+        r#"<Config activeConfigSet="1">"#,
+        r#"<Config activeConfigSet="1"><!-- x -->"#,
+    );
+    assert_eq!(
+        import(&commented).unwrap().config.layout,
+        loom_domain::ConfigLayout::Sets
+    );
+    let only_comment = import(&BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        "<Config><!-- x --></Config>",
+    ))
+    .unwrap();
+    assert_eq!(only_comment.config.layout, loom_domain::ConfigLayout::Sets);
+
+    let mut broken = b;
+    broken.config.layout = loom_domain::ConfigLayout::Flat;
+    let out = export(&broken);
+    assert!(
+        out.contains(r#"<ConfigSet id="1" title="Default">"#),
+        "{out}"
+    );
+    assert!(
+        out.contains(r#"<Input name="choice" string="Fire"/>"#),
+        "{out}"
+    );
+}
+
 /// Both layouts at once: the loose content stays untyped beside the sets.
 #[test]
 fn loose_config_content_beside_sets_should_stay_untyped() {
