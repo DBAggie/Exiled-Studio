@@ -50,8 +50,9 @@
 //! they are reasons, and the effect of a buff here is its stat's value
 //! unscaled. Global gem levels ("+1 to Level of all Cold Skill Gems") are
 //! in each gem's level ([`super::gem_levels`], P3-8i), so a buff's stats
-//! and a skill's reservation are those of its raised level, as in PoB. A gem's quality from a socket of
-//! its colour is in its instance's quality ([`sockets`], P3-12i); a gem of
+//! and a skill's reservation are those of its raised level, as in PoB.
+//! A gem's quality from a socket of its colour is in its instance's
+//! quality ([`sockets`], P3-12i); a gem of
 //! a buff or of the main skill whose match is not known is
 //! `unmodelled-skill` `socket-colour-quality` (an inert skill's quality
 //! reaches nothing).

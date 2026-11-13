@@ -598,7 +598,20 @@ fn real_gem_level_stats_should_have_pobs_keywords() {
         .iter()
         .map(|t| t.id.as_str())
         .collect();
+    // PoB reads a phrase that is a gem's name as that gem
+    // (`gemIdLookup`, `ModParser.lua` 3282): no row's phrase may be one.
+    let skills = data.skills.as_ref().unwrap();
+    let gem_names: BTreeSet<String> = skills
+        .gems
+        .iter()
+        .filter_map(|g| data.base_items.iter().find(|b| b.id == g.base_item))
+        .map(|b| b.name.to_lowercase())
+        .chain(skills.gem_effects.iter().map(|e| e.name.to_lowercase()))
+        .filter(|n| !n.is_empty())
+        .collect();
+    assert!(gem_names.contains("ice nova"));
     for (stat, words) in LEVEL_STATS {
+        assert!(!gem_names.contains(&words.join(" ")), "{stat}");
         let found: BTreeSet<Vec<String>> = texts
             .iter()
             .filter(|(s, _)| *s == stat)

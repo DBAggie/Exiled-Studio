@@ -44,8 +44,8 @@
 //! `calcLib.validateGemLevel` and `calcLib.buildSkillInstanceStats`): the
 //! level is the gem's plus the build's global gem level modifiers its
 //! tags match ([`super::gem_levels`], P3-8i: PoB's `applyGemMods`), kept
-//! when the effect has that level, else clamped to `1..=#levels`; the stats are the quality stats (`modf(per 1% x
-//! quality)`), the level's integer stats, and the stat set's constant
+//! when the effect has that level, else clamped to `1..=#levels`; the
+//! stats are the quality stats (`modf(per 1% x quality)`), the level's integer stats, and the stat set's constant
 //! stats, summed per stat, with the stat set's implicit stats as 1 each
 //! (PoB's `level[index] or 1`); only the first stat set counts, as PoB's
 //! exporter writes only it. Effectiveness-scaled float stats (base damage,

@@ -38,6 +38,7 @@ use std::collections::BTreeMap;
 
 use super::Poe1Quantity;
 use crate::quantity::{Op, Quantity};
+use crate::source::Source;
 use crate::store::Effect;
 
 /// The global gem level stats and their keywords (module docs), sorted by
@@ -123,10 +124,20 @@ impl GemLevels {
 
     /// The totals of the `Base` effects on [`Poe1Quantity::GemLevel`]
     /// among `effects` (the mapping gives them no conditions).
+    ///
+    /// Read twice, by `collect` once every source of these effects is in
+    /// and by the hit phase from the finished store: the steps after the
+    /// gems (charges, damage taken, buffs) add none, so both see the same
+    /// totals. Effects from a gem are left out: a gem's own stat cannot
+    /// raise the levels its stats were read at (PoB tabulates the
+    /// `GemProperty` modifiers before it creates any skill).
     #[must_use]
     pub fn from_effects(effects: &[Effect]) -> Self {
         let mut totals = BTreeMap::new();
         for e in effects {
+            if matches!(e.source, Source::Gem { .. }) {
+                continue;
+            }
             if let (Quantity::Poe1(Poe1Quantity::GemLevel(stat)), Op::Base) = (e.quantity, e.op) {
                 *totals.entry(stat).or_insert(0.0) += e.value;
             }
@@ -147,6 +158,7 @@ impl GemLevels {
                 sum += v;
             }
         }
+        debug_assert!(sum.fract() == 0.0, "gem levels are whole: {sum}");
         #[expect(
             clippy::cast_possible_truncation,
             reason = "a sum of integer stat values, far inside i64"
@@ -166,7 +178,6 @@ impl GemLevels {
 mod tests {
     use super::*;
     use crate::condition::Conditions;
-    use crate::source::Source;
 
     fn tags(t: &[&str]) -> Vec<String> {
         t.iter().map(|s| (*s).to_owned()).collect()
@@ -244,5 +255,12 @@ mod tests {
         other.op = Op::Increased;
         let levels = GemLevels::from_effects(&[other]);
         assert!(levels.is_empty());
+    }
+
+    #[test]
+    fn a_gems_own_level_stat_should_not_count() {
+        let mut own = level("all_skill_gem_level_+", 3.0);
+        own.source = Source::Gem { group: 0, gem: 1 };
+        assert!(GemLevels::from_effects(&[own]).is_empty());
     }
 }
