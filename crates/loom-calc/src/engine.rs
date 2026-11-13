@@ -63,8 +63,10 @@ pub trait Ruleset {
     fn phases(&self) -> &[Phase];
 
     /// The named conditions the build settles (P3-8g), computed once per
-    /// calculation; every query context a phase builds with
-    /// [`Calc::context`] holds them. The default settles none.
+    /// calculation, after `collect` and before the phases; every query
+    /// context a phase builds with [`Calc::context`] holds a copy. They are
+    /// build-wide: a condition that differs per skill or per hand needs
+    /// another hook. The default settles none.
     fn states(&self, input: &CalcInput<'_>) -> BTreeMap<ConditionKey, bool> {
         let _ = input;
         BTreeMap::new()
