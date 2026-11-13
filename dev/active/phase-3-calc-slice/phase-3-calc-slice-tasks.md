@@ -1,4 +1,4 @@
-Last Updated: 2026-11-13 (P3-12g: the pantheon; Intimidate, Unnerve, Blind; ten name-only inputs)
+Last Updated: 2026-11-13 (P3-12h: other gems, first PR)
 
 # Phase 3: calc slice (tasks)
 
@@ -85,8 +85,9 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-12d the legacy `customMods` input (PR #86, merged into `dev` as `e04419f`; `docs/phase-3/config-inputs.md`, "P3-12d"; PoB's attribute reading for a config string; lines applied by PoB's `Load` migration; build v1 input `lines`, calc result v1 source `config-input-line`; mechanic fixture `ice-nova-legacy-custom-mods-witch.xml`)
   - [x] P3-12e the old config layout (`ConfigLayout::Flat`, build v1 `layout`), block text PoB reads otherwise kept whole, power/frenzy/endurance charges (`poe1::charges`), fortification in `NAMED_ONLY` (PR #87, merged into `dev` as `4753b28`; `docs/phase-3/config-inputs.md`, "P3-12e"; mechanic fixtures `ice-nova-old-config-layout-witch.xml`, `ice-nova-charges-witch.xml`, `smite-charges-templar.xml`)
   - [x] P3-12f the enemy's damage taken in the hit (`poe1::damage_taken`: shock, the Uber boss kind, delirium), the bandit from the config set, Onslaught (`poe1::buffs`), rage and exposure in `NAMED_ONLY` with their source stats, culling strike `NoEffect` (PR #88, merged; `docs/phase-3/config-inputs.md`, "P3-12f"; mechanic fixtures `ice-nova-shocked-uber-witch.xml`, `smite-shocked-templar.xml`, `ice-nova-onslaught-rage-exposure-witch.xml`; DIV-0029, DIV-0030; merged into `dev` as `6d1d7ac`)
-  - [x] P3-12g the pantheon (bundle `poe1/pantheons.json`, `data-parity` table, `poe1::pantheon`, 41 `NoEffect` soul stats), Intimidate, Unnerve, Blind (`Poe1Quantity::EnemyEvasion`), ten inputs in `NAMED_ONLY` (PR #89, open; `docs/phase-3/config-inputs.md`, "P3-12g"; six mechanic fixtures; DIV-0031 to DIV-0033)
-  - [ ] Next: other gems (buffs, auras, reservation, golems and the Lightning Golem's Wrath); then the in-scope builds' unmapped stats and unresolved lines
+  - [x] P3-12g the pantheon (bundle `poe1/pantheons.json`, `data-parity` table, `poe1::pantheon`, 41 `NoEffect` soul stats), Intimidate, Unnerve, Blind (`Poe1Quantity::EnemyEvasion`), ten inputs in `NAMED_ONLY` (PR #89, merged into `dev` as `de85329`; `docs/phase-3/config-inputs.md`, "P3-12g"; six mechanic fixtures; DIV-0031 to DIV-0033)
+  - [x] P3-12h other gems, first PR: `poe1::gems` (inert skills and supports, reservation with the supports' cost multipliers, eight buff and aura skills merged per name), `Ceil` node, PoB export format 4 and `data-parity` table `gem_effects` (PR #NN, open; `docs/phase-3/other-gems.md`; four mechanic fixtures)
+  - [ ] Next: the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); socket colour quality (bundle: the granted effect's `Attribute`); the custom "Onslaught" line; then the in-scope builds' unmapped stats and unresolved lines; Q13
 
 ## P3-14: corpus run and register
 - [ ] `calc-parity` on public fixtures and corpus; every difference fixed or registered

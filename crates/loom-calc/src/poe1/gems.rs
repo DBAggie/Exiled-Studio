@@ -401,11 +401,11 @@ pub const DEPENDS_ON: &[&str] = &[
 pub const GUARDED_WORDS: &[&str] = &[
     "aura_effect",
     "buff_effect",
+    "extra_aura",
     "gem_level",
     "gem_quality",
     "phantasm",
-    "reservation",
-    "reserves_no",
+    "reserve",
 ];
 
 /// What the table says about an active skill.

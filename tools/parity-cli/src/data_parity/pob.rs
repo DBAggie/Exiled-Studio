@@ -222,10 +222,6 @@ pub struct ModRecord {
     /// `KeywordFlag` bits.
     #[serde(default, rename = "keywordFlags")]
     pub keyword_flags: Option<u64>,
-    #[expect(
-        dead_code,
-        reason = "read so the export is checked whole; not compared"
-    )]
     /// A constant value, when the mod has one.
     #[serde(default)]
     pub value: Option<serde_json::Value>,

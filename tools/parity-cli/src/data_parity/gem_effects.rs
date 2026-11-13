@@ -124,16 +124,44 @@ const BUFF_FORBIDDEN: &[&str] = &[
 ];
 /// Types a modelled support may not add.
 const SUPPORT_FORBIDDEN: &[&str] = &[
+    "AppliesCurse",
     "Aura",
+    "Brand",
     "Buff",
+    "CreatesMinion",
     "HasReservation",
     "Herald",
+    "Hex",
+    "Mark",
+    "Minion",
     "ReservationBecomesCost",
     "SummonsTotem",
     "Totem",
     "Trigger",
     "Triggered",
+    "Warcry",
 ];
+
+/// PoB mod names a `NoSlice` buff stat may give: each reaches no slice
+/// field (regeneration, recharge, movement, degeneration, leech, freeze,
+/// damage taken by you).
+const NO_SLICE_NAMES: &[&str] = &[
+    "DamageTakenWhenHit",
+    "EnergyShieldRecharge",
+    "FireDamageTakenWhenHit",
+    "FreezeImmune",
+    "LifeRegen",
+    "ManaRegen",
+    "MovementSpeed",
+    "PhysicalDamageLifeLeech",
+    "PhysicalDamageTakenWhenHit",
+    "PhysicalDegen",
+];
+
+/// The `GlobalEffect` tag's fields a slice row may have: any other
+/// (`effectCond`, `modCond`, `applyNotPlayer`, a stack variable, ...)
+/// makes PoB apply the mod only sometimes, which the engine does not model.
+const PLAIN_GLOBAL_FIELDS: &[&str] = &["effectName", "effectType", "type"];
 
 /// Types a modelled support may add after all: Momentum makes its skill a
 /// buff (its own movement-speed buff, `NoSlice`).
@@ -180,12 +208,27 @@ fn pob_form(m: &ModRecord, div: Option<f64>, mult: Option<f64>) -> String {
     }
     let rest = flags & !(1 | 2 | 4 | 16 | 1024);
     let rest_kw = kw & !(0x1_0000 | 0x2_0000);
-    let tags: Vec<String> = m
+    let mut tags: Vec<String> = m
         .tags
         .iter()
         .filter(|t| t.get("type").and_then(Value::as_str) != Some("GlobalEffect"))
         .map(|t| serde_json::to_string(t).unwrap_or_default())
         .collect();
+    if let Some(g) = m.global_effect() {
+        let extra: BTreeMap<&String, &Value> = g
+            .iter()
+            .filter(|(k, _)| !PLAIN_GLOBAL_FIELDS.contains(&k.as_str()))
+            .collect();
+        if !extra.is_empty() {
+            tags.push(format!(
+                "global {}",
+                serde_json::to_string(&extra).unwrap_or_default()
+            ));
+        }
+    }
+    if let Some(v) = &m.value {
+        tags.push(format!("value {v}"));
+    }
     format!(
         "{} {} [{}]{}{}{}{}",
         m.name,
@@ -322,6 +365,50 @@ fn check_one(
             strings([format!("{effect} {name}")]),
             strings(pob),
         );
+    }
+    // `NoSlice` and `Gated` stats: what PoB's mods are, and when.
+    for (stat, b) in stats {
+        let mods = || {
+            skill
+                .mods
+                .iter()
+                .filter(|s| s.stat == *stat)
+                .flat_map(|s| s.mods.iter())
+        };
+        match b {
+            BuffStat::NoSlice(_) => {
+                let bad: Vec<String> = mods()
+                    .filter(|m| !NO_SLICE_NAMES.contains(&m.name.as_str()))
+                    .map(|m| m.name.clone())
+                    .collect();
+                out.check(
+                    TABLE,
+                    id,
+                    format!("no_slice.{stat}"),
+                    strings(Vec::new()),
+                    strings(bad),
+                );
+            }
+            BuffStat::Gated(cond) => {
+                let conds: BTreeSet<String> = mods()
+                    .map(|m| {
+                        global(m)
+                            .and_then(|g| g.get("effectCond"))
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .to_owned()
+                    })
+                    .collect();
+                out.check(
+                    TABLE,
+                    id,
+                    format!("gated.{stat}"),
+                    strings([(*cond).to_owned()]),
+                    strings(conds),
+                );
+            }
+            BuffStat::Rows(_) => {}
+        }
     }
     // Rows.
     for (stat, b) in stats {
