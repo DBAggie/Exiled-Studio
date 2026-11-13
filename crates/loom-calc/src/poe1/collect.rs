@@ -92,11 +92,17 @@ pub fn collect(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
         passives(input, spec, ingest);
     }
     items(input, spec, ingest);
+    // After the items: "Allocates <notable>" (P3-8n).
+    granted_passives(input, spec, ingest);
     config(build, ingest);
     // After every source of gem level modifiers (P3-8i): PoB reads its
     // `GemProperty` modifiers once the passives, items, and config are in.
     gems(input, ingest);
     super::charges::charges(active_config(build), input.data, ingest);
+    // Rage, Inspiration, Momentum, Intensity, spells cast recently (P3-8n):
+    // after every source of their modifiers, before the enemy's damage
+    // taken (rage's Intimidate).
+    super::stacks::stacks(active_config(build), input.data, ingest);
     super::buffs::buffs(active_config(build), ingest);
     // After every source of minion modifiers (P3-8j).
     super::minions::minions(ingest);
@@ -471,6 +477,113 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
     }
 }
 
+/// The node hashes of an item's "Allocates <notable>" line (P3-8n): its
+/// one stat `mod_granted_passive_hash`, its value the hash (one number) or
+/// the hashes the description's lookup gives the name (several nodes can
+/// share a name). `None` for any other line, which the mapping reads.
+fn granted_passive_hashes(resolution: &loom_domain::LineResolution) -> Option<Vec<i64>> {
+    let loom_domain::LineResolution::Resolved {
+        result: loom_domain::Resolved::Stats(lines),
+        ..
+    } = resolution
+    else {
+        return None;
+    };
+    let [line] = lines.as_slice() else {
+        return None;
+    };
+    if line.stat.as_str() != GRANTED_PASSIVE_STAT {
+        return None;
+    }
+    match &line.value {
+        StatValue::Exact { min, max } if min == max => Some(vec![*min]),
+        StatValue::Lookup(hashes) => Some(hashes.clone()),
+        _ => None,
+    }
+}
+
+/// "Allocates <notable>".
+const GRANTED_PASSIVE_STAT: &str = "mod_granted_passive_hash";
+
+/// The nodes items grant ("Allocates <notable>", PoB's `GrantedPassive`,
+/// `CalcSetup.lua` 1287 to 1297; P3-8n): each [`Poe1Quantity::GrantedPassive`]
+/// effect's value is a candidate node hash, the key of the passives table;
+/// a line's candidates share its source. PoB looks the node up by its name
+/// among the tree's notables, then the ascendancy nodes
+/// (`notableMap[name] or ascendancyMap[name]`; `Classes/PassiveTree.lua`
+/// 551 to 563): here the one candidate the passives table has, or of
+/// several the one tree notable, else the one ascendancy notable (none, or
+/// two of a kind: indeterminate). PoB adds the
+/// node to the allocated set, so a node the tree already allocates (and
+/// connects) counts once; otherwise its stats count with the node as
+/// source.
+fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
+    let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
+        connected(input, spec.nodes.value())
+            .into_iter()
+            .filter(|n| spec.nodes.value().iter().any(|a| a.0 == *n))
+            .collect()
+    });
+    let mut granted = BTreeSet::new();
+    let mut by_line: BTreeMap<Source, Vec<f64>> = BTreeMap::new();
+    for e in ingest.effects() {
+        if e.quantity == Quantity::Poe1(Poe1Quantity::GrantedPassive)
+            && e.op == Op::Base
+            && e.conditions == Conditions::none()
+        {
+            by_line.entry(e.source.clone()).or_default().push(e.value);
+        }
+    }
+    for (source, hashes) in by_line {
+        let known: Vec<u32> = hashes
+            .iter()
+            .filter_map(|&hash| {
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    clippy::cast_sign_loss,
+                    reason = "a node hash below 2^16, checked"
+                )]
+                let node = (hash.fract() == 0.0 && (0.0..65536.0).contains(&hash))
+                    .then_some(hash as u32)?;
+                input.data.passive_stats(node).map(|_| node)
+            })
+            .collect();
+        // Of several, PoB's order: a tree notable, then an ascendancy node.
+        let pick = |tree: bool| -> Vec<u32> {
+            known
+                .iter()
+                .copied()
+                .filter(|&n| {
+                    input
+                        .data
+                        .passive_kind(n)
+                        .is_some_and(|k| k.notable && k.ascendancy != tree)
+                })
+                .collect()
+        };
+        let known = if known.len() > 1 {
+            let tree = pick(true);
+            if tree.is_empty() { pick(false) } else { tree }
+        } else {
+            known
+        };
+        let [node] = known.as_slice() else {
+            ingest.indeterminate(IndeterminateReason::MissingData {
+                table: "passives",
+                key: format!("granted-passive:{source:?}"),
+            });
+            continue;
+        };
+        let node = *node;
+        if allocated.contains(&node) || !granted.insert(node) {
+            continue;
+        }
+        if let Some(stats) = input.data.passive_stats(node) {
+            ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats));
+        }
+    }
+}
+
 /// How an item in a slot acts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SlotKind {
@@ -784,6 +897,39 @@ fn weapon(item: &Item, base: &WeaponBase, ingest: &mut Ingest<'_>) {
         }
     }
     item_lines_with(&WeaponMapping, item, ingest);
+    // "Grants #% increased Elemental Damage per 2% Quality" (P3-8n): PoB's
+    // `ElementalDamage` INC times `floor(QualityOn{SlotName} / 2 +
+    // 0.0001)`, the character's (`ModParser.lua` 5759, `ModStore`'s
+    // multiplier). Its own effect on the weapon is read by nothing else.
+    let quality = ingest
+        .effects()
+        .iter()
+        .filter(|e| e.quantity == value(WeaponValue::Quality) && e.op == Op::Base)
+        .map(|e| e.value)
+        .sum::<f64>();
+    let per: Vec<Effect> = ingest
+        .effects()
+        .iter()
+        .filter(|e| {
+            e.quantity == value(WeaponValue::ElementalDamagePerQuality)
+                && e.op == Op::Base
+                && e.conditions == Conditions::none()
+                && matches!(e.source, Source::Item { item: i, .. } if i == item.id)
+        })
+        .cloned()
+        .collect();
+    let steps = (quality / 2.0 + 0.0001).floor();
+    for e in per {
+        if steps * e.value != 0.0 {
+            ingest.effect(Effect {
+                quantity: Quantity::Damage,
+                op: Op::Increased,
+                value: e.value * steps,
+                conditions: Conditions::none().with_any(crate::condition::Flags::ELEMENTAL),
+                source: e.source,
+            });
+        }
+    }
 }
 
 /// The item in an armour slot (a helmet, gloves, boots, a body armour, or
@@ -1006,7 +1152,29 @@ fn item_lines(item: &Item, ingest: &mut Ingest<'_>) {
 fn item_lines_with(mapping: &dyn StatMapping, item: &Item, ingest: &mut Ingest<'_>) {
     for (index, line) in item.body.lines.iter().enumerate() {
         match &line.kind {
-            LineKind::Modifier(m) => ingest.item_line_with(mapping, item.id, index, &m.resolution),
+            LineKind::Modifier(m) => {
+                // "Allocates <notable>" (P3-8n): its value is the name's
+                // node hashes; [`granted_passives`] picks the node.
+                if let Some(hashes) = granted_passive_hashes(&m.resolution) {
+                    let source = Source::Item {
+                        item: item.id,
+                        line: index,
+                        adapted: None,
+                    };
+                    for hash in hashes {
+                        #[expect(clippy::cast_precision_loss, reason = "a node hash, below 2^53")]
+                        ingest.effect(Effect {
+                            quantity: Quantity::Poe1(Poe1Quantity::GrantedPassive),
+                            op: Op::Base,
+                            value: hash as f64,
+                            conditions: Conditions::none(),
+                            source: source.clone(),
+                        });
+                    }
+                    continue;
+                }
+                ingest.item_line_with(mapping, item.id, index, &m.resolution);
+            }
             LineKind::Unrecognized | LineKind::Spec { known: false, .. } => {
                 ingest.reason(UnsupportedReason::UnreadLine {
                     source: Source::Item {
@@ -1126,7 +1294,7 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
 }
 
 /// The active config set: `Config.activeConfigSet`, else the first.
-fn active_config(build: &Build) -> Option<&ConfigSet> {
+pub(super) fn active_config(build: &Build) -> Option<&ConfigSet> {
     let config = &build.config;
     config
         .active
@@ -1210,7 +1378,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
             continue;
         }
         // Charges: their own effects (`poe1::charges`, P3-12e).
-        if super::charges::is_charge_input(&input.name) {
+        if super::charges::is_charge_input(&input.name) || super::stacks::is_input(&input.name) {
             continue;
         }
         // The enemy's damage taken (shock, the boss kind, delirium),
@@ -1218,6 +1386,7 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         // reasons (`poe1::damage_taken`, `poe1::buffs`, [`choices`],
         // P3-12f, P3-12g).
         if super::damage_taken::handles(&input.name, &input.value)
+            || super::conditions::handles(&input.name, &input.value)
             || super::exposure::handles(&input.name)
             || super::buffs::is_buff_input(&input.name)
             || input.name == BANDIT_INPUT

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): a level 90 Witch casting Ice Nova (level 20) supported by Arcane Surge (level 20), the config's Arcane Surge and Convergence checks on, custom lines "Gain Convergence when you Hit a Unique Enemy, no more than once every 8 seconds" and "5% increased Cast Speed for each different Non-Instant Spell you've Cast Recently" with 2 such spells configured: Arcane Surge's cast speed and the support's more spell damage, 30% more elemental damage, 10% increased cast speed.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Arcane Surge" skillId="SupportArcaneSurge" variantId="SupportArcaneSurge" gemId="Metadata/Items/Gems/SupportGemArcaneSurge" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="buffArcaneSurge" boolean="true"/>
+			<Input name="conditionConvergence" boolean="true"/>
+			<Input name="multiplierNonInstantSpellCastRecently" number="2"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Gain Convergence when you Hit a Unique Enemy, no more than once every 8 seconds
+5% increased Cast Speed for each different Non-Instant Spell you've Cast Recently
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

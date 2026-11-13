@@ -73,40 +73,35 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 /// every value only sets names. The names are documentation; no code
 /// reads them.
 ///
-/// - `OverloadedIntensity`, `intensifyIntensity`: `Multiplier:
-///   OverloadedIntensity` (at most 3), `Multiplier:Intensity` (lines 514, 517); read
-///   by the skill stat map of the gems that grant intensity.
+/// - `OverloadedIntensity`: `Multiplier:OverloadedIntensity` (at most 3,
+///   line 514); read by the skill stat map of the gems that grant it.
 /// - `bloodSandStance`: `Condition:SandStance` for Sand (line 654);
 ///   `CalcSetup.lua` (652) adds `Condition:BloodStance` when not Sand;
 ///   read by the stance skills' stats.
 /// - `conditionBeenHitRecently`, `conditionBlockedRecently`,
-///   `conditionChilledEnemyRecently`, `conditionShockedEnemyRecently`,
-///   `conditionFullLife`: the condition of that name (lines 1375, 1421,
-///   1339, 1351, 174); the calc modules read them only through modifiers
+///   `conditionChilledEnemyRecently`, `conditionFullLife`: the condition of
+///   that name (lines 1375, 1421, 1339, 174); the calc modules read them
+///   only through modifiers
 ///   or flags a modifier sets (`CalcDefence.lua` 707, 723: maximum block
 ///   if not blocked recently, from a stat); `FullLife` is set by Chaos
 ///   Inoculation (`CalcPerform.lua` 86), not read.
-/// - `conditionConvergence`: `Condition:Convergence`, itself conditioned
-///   on `Condition:CanGainConvergence` (line 1441), which only a modifier
-///   sets ("Gain Convergence when you Hit a Unique Enemy", `ModParser.lua`
-///   2680). `CalcSetup.lua` (129) turns the condition into the
-///   `Convergence` flag, and `CalcPerform.lua` (789) into more elemental
-///   damage: without that modifier, nothing.
 /// - `conditionCritRecently`: `Condition:CritRecently` and
 ///   `Condition:SkillCritRecently` (line 1251).
 /// - `conditionEnemyChilled`, `conditionEnemyChilledEffect`: moved to
 ///   [`super::damage_taken`] in P3-8m, which turns the chill into damage
 ///   taken when a modifier's flag asks for it.
-/// - `conditionEnemyOnConsecratedGround`: the enemy's
-///   `Condition:OnConsecratedGround` (line 2012); `CalcPerform.lua`
-///   (3688) adds damage taken from `DamageTakenConsecratedGround`, which
-///   only a modifier gives.
 /// - `conditionOnConsecratedGround`: `Condition:OnConsecratedGround`, also
 ///   for minions (line 1148); `CalcPerform.lua` adds life regeneration
 ///   and less curse effect on you (804, 3171; not slice fields) and
 ///   accuracy from `ConsecratedGroundAlsoAccuracy` (a modifier).
 /// - `conditionStationary`: `Multiplier:StationarySeconds`, and
 ///   `Condition:Stationary` when above 0 (line 158).
+/// - Moved in P3-8n: `conditionShockedEnemyRecently` to
+///   [`super::conditions`] (its condition settled for the rows that read
+///   it); `conditionEnemyOnConsecratedGround` and `conditionEnemyIgnited`
+///   to [`super::damage_taken`]; `conditionConvergence` to
+///   [`super::buffs`]; `intensifyIntensity`, `multiplierRage`, and
+///   `multiplierNonInstantSpellCastRecently` to [`super::stacks`].
 /// - `multiplierNearbyEnemies`: `Multiplier:NearbyEnemies` and
 ///   `Condition:OnlyOneNearbyEnemy` (line 1234); the calc modules never
 ///   read them.
@@ -156,20 +151,15 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   fortified, at maximum fortification, per buff on you).
 ///
 /// Added in P3-12f, inputs whose effect needs a condition only modifiers
-/// (or another config input, itself a reason) set, as `conditionConvergence`:
+/// (or another config input, itself a reason) set:
 ///
-/// - `multiplierRage`: `Multiplier:RageStack` (line 1074), conditioned on
-///   `Condition:Combat` (on in PoB's main view) and `Condition:CanGainRage`. `CalcPerform.lua` (914 to 935) reads it, and
-///   gives rage its effects (more attack damage, attack speed), only with
-///   `Condition:CanGainRage` or `RageRegen` above 0, which only modifiers
-///   set: `ModParser.lua` 2201 to 2585 and 5517 to 5539 (gaining rage on
-///   hit, kill, warcry, crit, flask use, when hit, from mana spent;
-///   regenerating it per life or mana regeneration), and the skill data of
-///   Chain Hook, Vengeful Cry, a curse's stun rage, and the Spirit of
-///   Akoya tattoo (`Data/Skills/act_str.lua` 1780, 12400, 13020;
-///   `other.lua` 5659; `spectre.lua` 2833), through their stats. Each is
-///   in [`DEPENDS_ON`]. A minimum rage (`MinimumRage`, line 650) is a
-///   modifier and does not read the input.
+/// - `multiplierRage` was here until P3-8n, which gives rage its effect
+///   with "Gain # Rage on Melee Hit" ([`super::stacks`]). The other stats
+///   that gain or regenerate rage stay in [`DEPENDS_ON`]: with one of
+///   them, PoB's rage would differ from the engine's, so they must stay
+///   reasons (`ModParser.lua` 2201 to 2585 and 5517 to 5539; the skill
+///   data of Chain Hook, Vengeful Cry, a curse's stun rage, and the Spirit
+///   of Akoya tattoo).
 /// - The three exposure checks were here until P3-8k, which gives them
 ///   their effect ([`super::exposure`]), with the exposure stats then in
 ///   [`DEPENDS_ON`].
@@ -184,9 +174,6 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   `Condition:CastSpellRecently`, `Condition:UsedMinionSkillRecently`,
 ///   each with `Condition:UsedSkillRecently` (lines 1489, 1526); no calc
 ///   module reads them.
-/// - `multiplierNonInstantSpellCastRecently`:
-///   `Multiplier:NonInstantSpellCastRecently` (line 1493); no calc module
-///   reads it.
 /// - `conditionKilledRecently`: `Condition:KilledRecently` (line 1270);
 ///   only `CalcTriggers.lua` (1136, 1156) reads it, for trigger skills
 ///   (other gems, reasons).
@@ -198,12 +185,6 @@ use loom_domain::{ConfigInputKind, ConfigSet, ConfigValue};
 ///   calc module reads them on the enemy (`CalcSetup.lua` 73 sets
 ///   `Poisoned` from poison stacks; `CalcPerform.lua` 1605 reads the
 ///   player's `LowLife`, for flasks).
-/// - `conditionEnemyIgnited`: the enemy's `Condition:Ignited` (line 1852),
-///   which `CalcSetup.lua` (72) turns into `Condition:Burning`. Readers:
-///   Combustion (`CalcPerform.lua` 2709 to 2716: the enemy's fire
-///   resistance, only for a skill supported by the Combustion gem, whose
-///   stat `ignites_apply_fire_resistance_+` is in [`DEPENDS_ON`]) and
-///   Call the Pyre's trigger (`CalcTriggers.lua` 1371, a gem).
 /// - `conditionEnemyMaimed`: the enemy's `Condition:Maimed` (line 1825);
 ///   `CalcSetup.lua` (63) gives a maimed actor 30% reduced movement speed
 ///   (not a slice field).
@@ -241,22 +222,13 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
         "conditionChilledEnemyRecently",
         &["Condition:ChilledEnemyRecently"],
     ),
-    ("conditionConvergence", &["Condition:Convergence"]),
     (
         "conditionCritRecently",
         &["Condition:CritRecently", "Condition:SkillCritRecently"],
     ),
     ("conditionEnemyBleeding", &["enemy Condition:Bleeding"]),
-    (
-        "conditionEnemyIgnited",
-        &["enemy Condition:Ignited", "enemy Condition:Burning"],
-    ),
     ("conditionEnemyLowLife", &["enemy Condition:LowLife"]),
     ("conditionEnemyMaimed", &["enemy Condition:Maimed"]),
-    (
-        "conditionEnemyOnConsecratedGround",
-        &["enemy Condition:OnConsecratedGround"],
-    ),
     ("conditionEnemyPoisoned", &["enemy Condition:Poisoned"]),
     ("conditionFullLife", &["Condition:FullLife"]),
     ("conditionKilledRecently", &["Condition:KilledRecently"]),
@@ -264,10 +236,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "conditionOnConsecratedGround",
         &["Condition:OnConsecratedGround"],
-    ),
-    (
-        "conditionShockedEnemyRecently",
-        &["Condition:ShockedEnemyRecently"],
     ),
     (
         "conditionStationary",
@@ -287,7 +255,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
             "Multiplier:SpectralTigerCount",
         ],
     ),
-    ("intensifyIntensity", &["Multiplier:Intensity"]),
     ("meleeDistance", &["skillDist"]),
     (
         "multiplierEnemyHallowingFlame",
@@ -300,14 +267,6 @@ pub const NAMED_ONLY: &[(&str, &[&str])] = &[
     (
         "multiplierNearbyEnemies",
         &["Multiplier:NearbyEnemies", "Condition:OnlyOneNearbyEnemy"],
-    ),
-    (
-        "multiplierNonInstantSpellCastRecently",
-        &["Multiplier:NonInstantSpellCastRecently"],
-    ),
-    (
-        "multiplierRage",
-        &["Multiplier:RageStack (with CanGainRage)"],
     ),
     (
         "multiplierWitheredStackCountSelf",
@@ -351,11 +310,14 @@ pub const ENEMY_DAMAGE: &[&str] = &[
 ///   `max_chance_to_block_attacks_if_not_blocked_recently`,
 ///   `spell_block_is_maximum_if_not_blocked_recently`: block conditioned
 ///   on not `BlockedRecently` (4146, 4147; `CalcDefence.lua` 707, 723).
-/// - `consecrated_ground_enemy_damage_taken_+%`: the enemy's
-///   `DamageTakenConsecratedGround`; `your_consecrated_ground_grants_
-///   accuracy_rating_+%`: `ConsecratedGroundAlsoAccuracy` (4176).
-/// - `gain_convergence_on_hitting_unique_enemy`:
-///   `Condition:CanGainConvergence` (2680).
+/// - `your_consecrated_ground_grants_accuracy_rating_+%`:
+///   `ConsecratedGroundAlsoAccuracy` (4176), read with
+///   `conditionOnConsecratedGround`. (The enemy's consecrated ground and
+///   Convergence left in P3-8n: [`super::damage_taken`], [`super::buffs`].)
+/// - `ignites_apply_fire_resistance_+`: Combustion's fire resistance on an
+///   ignited enemy (`CalcPerform.lua` 2709 to 2716); `conditionEnemyIgnited`
+///   is [`super::damage_taken`]'s since P3-8n, and Combustion's support is
+///   not modelled.
 /// - Chill's damage taken flags and Bonechill's stats: moved in P3-8m to
 ///   [`super::keystones`], [`super::damage_taken::CHILL_STATS`] (mapped),
 ///   and [`super::damage_taken::CHILL_DEPENDS_ON`], with the chill inputs.
@@ -413,12 +375,10 @@ pub const DEPENDS_ON: &[&str] = &[
     "chain_hook_attachment_rage_to_gain_per_hit",
     "chain_strike_gain_x_rage_if_attack_hits",
     "chance_to_block_attack_damage_if_not_blocked_recently_%",
-    "consecrated_ground_enemy_damage_taken_+%",
     "deadeye_projectile_damage_+%_final_max_as_distance_travelled_increases",
     "enemy_grant_X_rage_on_stun",
     "enemy_rage_regeneration_on_stun",
     "gain_1_rage_on_use_%_chance",
-    "gain_convergence_on_hitting_unique_enemy",
     "gain_max_rage_on_losing_temporal_chains_debuff",
     "gain_player_far_shot_while_do_not_have_iron_reflexes",
     "gain_rage_on_hit",
@@ -435,7 +395,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "gain_x_rage_on_hit_with_axes_swords_1s_cooldown",
     "gain_x_rage_on_hit_with_tinctured_weapons",
     "gain_x_rage_on_melee_crit",
-    "gain_x_rage_on_melee_hit",
     "gain_x_rage_per_200_mana_spent",
     "gain_x_rage_when_hit",
     "gain_x_rage_when_you_use_a_life_flask",
@@ -563,7 +522,6 @@ mod tests {
     /// name it are listed and reach no slice field).
     #[test]
     fn no_mapped_stat_should_read_fortification() {
-        use crate::ingest::StatMapping;
         use crate::poe1::mapping::{HIT_ROWS, LOCAL_ROWS, ROWS, WEAPON_ROWS};
 
         let ids = HIT_ROWS
@@ -579,6 +537,9 @@ mod tests {
         // fortify, its duration, regeneration per stack; none reaches a
         // slice field.
         let checked = [
+            // The maximum (P3-8n): its readers per fortification are
+            // `mapping::NO_EFFECT_DEPENDS_ON` guards.
+            "base_max_fortification",
             "chance_to_fortify_on_melee_hit_+%",
             "fortify_duration_+%",
             "life_regeneration_per_minute_%_per_fortification",
@@ -589,12 +550,6 @@ mod tests {
                 "{id}: a NoEffect row naming fortification; check it and list it"
             );
         }
-        // The maximum stays a reason (PoB scales stats per stack).
-        assert_eq!(
-            crate::poe1::mapping::Poe1Mapping
-                .map(&loom_domain::StatId::new("base_max_fortification")),
-            crate::ingest::StatMap::Unmapped
-        );
     }
 
     /// Rage and exposure (P3-12f): no row of the shared tables names them,

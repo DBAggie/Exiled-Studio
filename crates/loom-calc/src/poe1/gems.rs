@@ -388,6 +388,8 @@ pub const SUPPORTS: &[(&str, &[(&str, BuffStat)])] = &[
 /// A skill's own ("precision_aura_effect_+%", "clarity_mana_reservation_+%")
 /// and gem level stats are guarded by name ([`GUARDED_WORDS`]). The stats
 /// [`skill_modifiers::STATS`] maps left this list in P3-8l.
+/// `golem_buff_effect_+%` left it in P3-8n as a `NoEffect` row: PoB tags
+/// it `SkillType.Golem`, and no golem skill is in [`SKILLS`] (a test).
 pub const DEPENDS_ON: &[&str] = &[
     "aura_effect_+%",
     "aura_skill_no_reservation",
@@ -395,7 +397,6 @@ pub const DEPENDS_ON: &[&str] = &[
     "base_mana_reservation_+%",
     "base_skill_no_reservation",
     "buff_effect_on_self_+%",
-    "golem_buff_effect_+%",
     "herald_effect_on_self_+%",
     "skill_buff_effect_+%",
     "summoned_phantasms_grant_buff",
@@ -878,9 +879,18 @@ mod tests {
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0))
             .chain(NO_EFFECT.iter().map(|r| r.0));
+        // Checked `NoEffect` rows (P3-8n): the golems' buff effect, which
+        // only golem skills read; no golem gem is modelled.
+        let checked = ["golem_buff_effect_+%"];
+        for (id, _) in SKILLS {
+            assert!(!id.to_ascii_lowercase().contains("golem"), "{id}");
+        }
         for id in ids {
             for word in GUARDED_WORDS {
-                assert!(!id.contains(word), "{id}: revisit poe1::gems");
+                assert!(
+                    !id.contains(word) || checked.contains(&id),
+                    "{id}: revisit poe1::gems"
+                );
             }
         }
         let piece = PieceMapping {

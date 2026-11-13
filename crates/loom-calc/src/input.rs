@@ -101,7 +101,44 @@ pub trait CalcData {
     fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
         None
     }
+
+    /// The mods by an implicit tag (P3-8n): the stat sets of the mods that
+    /// carry `tag`, and every stat of a mod that does not. `None` (the
+    /// default) when the data carries no implicit tags (a bundle before
+    /// data schema 3): a condition that needs them stays unsettled.
+    fn mods_by_tag(&self, _tag: &str) -> Option<ModsByTag> {
+        None
+    }
+
+    /// Whether a passive node is a notable, and whether it is an
+    /// ascendancy's (P3-8n: which node an item's "Allocates <name>"
+    /// grants). `None` (the default) when the data does not say.
+    fn passive_kind(&self, _node: u32) -> Option<PassiveKind> {
+        None
+    }
 }
+
+/// A passive node's kind ([`CalcData::passive_kind`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub struct PassiveKind {
+    /// A notable.
+    pub notable: bool,
+    /// An ascendancy's node.
+    pub ascendancy: bool,
+}
+
+/// The mods by an implicit tag ([`CalcData::mods_by_tag`]).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ModsByTag {
+    /// The stat IDs of each mod that carries the tag (mods without stats
+    /// left out).
+    pub tagged: Vec<Vec<String>>,
+    /// Every stat ID of a mod that does not carry the tag.
+    pub untagged: std::collections::BTreeSet<String>,
+}
+
+/// The first data schema whose mods carry their implicit tags.
+pub const IMPLICIT_TAGS_SCHEMA: u32 = 3;
 
 /// The game's monster stats at one level ([`CalcData::monster_level`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -411,6 +448,38 @@ impl CalcData for Bundle {
 
     fn poe1(&self) -> Option<&dyn crate::poe1::Poe1Data> {
         Some(self)
+    }
+
+    fn passive_kind(&self, node: u32) -> Option<PassiveKind> {
+        let p = self
+            .passives
+            .as_ref()?
+            .passives
+            .iter()
+            .find(|p| p.node == i64::from(node))?;
+        Some(PassiveKind {
+            notable: p.notable,
+            ascendancy: p.ascendancy.is_some(),
+        })
+    }
+
+    fn mods_by_tag(&self, tag: &str) -> Option<ModsByTag> {
+        if self.manifest.data_schema < IMPLICIT_TAGS_SCHEMA {
+            return None;
+        }
+        let mut out = ModsByTag::default();
+        for m in &self.mods {
+            if m.stats.is_empty() {
+                continue;
+            }
+            if m.implicit_tags.iter().any(|t| t == tag) {
+                out.tagged
+                    .push(m.stats.iter().map(|s| s.stat.clone()).collect());
+            } else {
+                out.untagged.extend(m.stats.iter().map(|s| s.stat.clone()));
+            }
+        }
+        Some(out)
     }
 }
 

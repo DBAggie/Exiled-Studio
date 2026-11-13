@@ -15,7 +15,7 @@ use loom_domain::StatId;
 
 /// The English text of each row's stat in `stat_descriptions.txt`, as PoB's
 /// patterns read it (module docs of each).
-const TEXTS: [(&str, &str); 12] = [
+const TEXTS: [(&str, &str); 15] = [
     (
         "chance_to_inflict_cold_exposure_on_hit_with_cold_damage_%",
         "{0}% Chance to Inflict Cold Exposure on Hit with Cold Damage",
@@ -27,6 +27,18 @@ const TEXTS: [(&str, &str); 12] = [
     (
         "cold_skill_chance_to_inflict_cold_exposure_%",
         "Cold Skills have a {0}% chance to apply Cold Exposure on Hit",
+    ),
+    (
+        "cold_exposure_on_hit_magnitude",
+        "Inflict Cold Exposure on Hit, applying {0}% to Cold Resistance",
+    ),
+    (
+        "fire_exposure_on_hit_magnitude",
+        "Inflict Fire Exposure on Hit, applying {0}% to Fire Resistance",
+    ),
+    (
+        "lightning_exposure_on_hit_magnitude",
+        "Inflict Lightning Exposure on Hit, applying {0}% to Lightning Resistance",
     ),
     (
         "exposure_you_inflict_applies_extra_%_to_affected_resistance",
@@ -69,6 +81,7 @@ const TEXTS: [(&str, &str); 12] = [
 const NO_EFFECT_NAMING: &[&str] = &[
     "all_damage_can_shock",
     "always_shock",
+    "base_chance_to_shock_%",
     "base_chance_to_shock_%_from_skill",
     "cannot_be_shocked_while_at_maximum_power_charges",
     "chance_to_freeze_shock_ignite_%",
@@ -76,6 +89,11 @@ const NO_EFFECT_NAMING: &[&str] = &[
     "mana_regeneration_rate_per_minute_%_if_inflicted_exposure_recently",
     "shocked_effect_on_self_+%",
 ];
+
+/// Rows whose text names shock but which read a condition the config
+/// settles (`poe1::conditions`, P3-8n): "if you have Shocked an Enemy
+/// Recently".
+const CONDITION_ROWS: &[&str] = &["damage_+%_if_you_have_shocked_recently"];
 
 #[test]
 fn the_texts_should_name_the_rows() {
@@ -157,6 +175,9 @@ fn real_exposure_and_shock_stats_should_be_covered() {
         match Poe1Mapping.map(&StatId::new(stat)) {
             loom_calc::StatMap::Unmapped => {}
             loom_calc::StatMap::NoEffect if NO_EFFECT_NAMING.contains(&stat) => {}
+            // A row that reads the config's condition (P3-8n), never the
+            // enemy's shock.
+            loom_calc::StatMap::Effects(_) if CONDITION_ROWS.contains(&stat) => {}
             other => wrong.push(format!("{stat}: {other:?}")),
         }
     }

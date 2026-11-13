@@ -137,6 +137,14 @@ pub const INTIMIDATED_INPUT: &str = "conditionEnemyIntimidated";
 pub const UNNERVED_INPUT: &str = "conditionEnemyUnnerved";
 /// The check that blinds the enemy.
 pub const BLINDED_INPUT: &str = "conditionEnemyBlinded";
+/// The check that puts the enemy on consecrated ground (P3-8n).
+pub const CONSECRATED_INPUT: &str = "conditionEnemyOnConsecratedGround";
+/// The check that ignites the enemy (P3-8n).
+pub const IGNITED_INPUT: &str = "conditionEnemyIgnited";
+/// The seconds the enemy has been chilled by you (P3-8n).
+pub const CHILLED_SECONDS_INPUT: &str = "multiplierChilledByYouSeconds";
+/// "... up to a maximum of 10%" (the line's text, `ModParser.lua` 3812).
+pub const CHILL_SECONDS_MAX: f64 = 10.0;
 
 /// Intimidate's and Unnerve's increased damage taken (`CalcSetup.lua` 64,
 /// 66).
@@ -340,8 +348,17 @@ pub const DELIRIUM: [(&str, f64); 5] = [
 #[must_use]
 pub fn handles(input: &str, value: &ConfigValue) -> bool {
     match input {
-        SHOCKED_INPUT | SHOCK_EFFECT_INPUT | CHILLED_INPUT | CHILL_EFFECT_INPUT
-        | DELIRIUM_INPUT | INTIMIDATED_INPUT | UNNERVED_INPUT | BLINDED_INPUT => true,
+        SHOCKED_INPUT
+        | SHOCK_EFFECT_INPUT
+        | CHILLED_INPUT
+        | CHILL_EFFECT_INPUT
+        | DELIRIUM_INPUT
+        | INTIMIDATED_INPUT
+        | UNNERVED_INPUT
+        | BLINDED_INPUT
+        | CONSECRATED_INPUT
+        | IGNITED_INPUT
+        | CHILLED_SECONDS_INPUT => true,
         BOSS_INPUT => matches!(value, ConfigValue::String(_)),
         _ => false,
     }
@@ -394,8 +411,18 @@ fn conditions(set: &ConfigSet, ingest: &mut Ingest<'_>) {
         (UNNERVED_INPUT, Flags::SPELL),
         (BLINDED_INPUT, Flags::NONE),
     ];
+    // "Nearby Enemies are Intimidated while you have Rage" (P3-8n,
+    // `poe1::stacks`): the same flag as the config's, so once.
+    let rage = super::stacks::intimidates(Some(set), ingest);
     for (input, flag) in checks {
         match check(set, input) {
+            Ok(false) if input == INTIMIDATED_INPUT && rage.is_some() => {
+                ingest.effect(Effect {
+                    conditions: Conditions::none().with_all(flag),
+                    source: rage.clone().unwrap_or(Source::Rule("rage")),
+                    ..taken(Op::Increased, INTIMIDATE_UNNERVE_DAMAGE_TAKEN, input)
+                });
+            }
             Ok(false) => {}
             Err(()) => ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.to_owned(),
@@ -558,6 +585,134 @@ pub fn chill(
     Ok(Some((chill, source)))
 }
 
+/// Whether the enemy is chilled (PoB's `Condition:Chilled` on the enemy):
+/// the config's check (`ConfigOptions.lua` 1873) or a skill's guaranteed
+/// chill (`CalcPerform.lua` 1396), whatever its effect. `Err` with the
+/// check's name for a value that is not a boolean.
+fn chilled(set: Option<&ConfigSet>, ingest: &Ingest<'_>) -> Result<bool, &'static str> {
+    let configured = match set.and_then(|s| last(s, CHILLED_INPUT, ConfigInputKind::Input)) {
+        None | Some(ConfigValue::Boolean(false)) => false,
+        Some(ConfigValue::Boolean(true)) => true,
+        Some(ConfigValue::Number(_) | ConfigValue::String(_)) => return Err(CHILLED_INPUT),
+    };
+    Ok(configured
+        || unconditional(ingest, Poe1Quantity::SkillChill, Op::Base)
+            .next()
+            .is_some())
+}
+
+/// The enemy's states that modifiers turn into damage taken or
+/// resistance (P3-8n):
+/// - consecrated ground (`CalcPerform.lua` 3591 to 3594): with the
+///   enemy on it (the config's check), `DamageTaken` INC
+///   `floor(DamageTakenConsecratedGround x (1 + ConsecratedGroundEffect /
+///   100))`, the source the first damage taken modifier's;
+/// - "Enemies Ignited or Chilled by you have #% to Elemental Resistances"
+///   (`ModParser.lua` 4054): with the enemy ignited (the config's check;
+///   PoB sets no other ignite) or chilled ([`chilled`]), each modifier as
+///   the enemy's fire, cold, and lightning resistance;
+/// - "Enemies permanently take #% increased Damage for each second
+///   they've ever been Chilled by you, up to a maximum of 10%" (3812):
+///   with the config's seconds (a count, which also sets
+///   `ChilledByYou`, `ConfigOptions.lua` 1877), `DamageTaken` INC `num x
+///   min(floor(seconds + 0.0001), 10 / num)` (`ModStore`'s multiplier
+///   with its limit).
+fn enemy_states(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
+    let reason = |input: &str| UnsupportedReason::UnmodelledConfig {
+        input: input.to_owned(),
+    };
+    let taken: Vec<Effect> = unconditional(
+        ingest,
+        Poe1Quantity::ConsecratedGroundDamageTaken,
+        Op::Increased,
+    )
+    .cloned()
+    .collect();
+    if let Some(first) = taken.first() {
+        match set.map_or(Ok(false), |s| check(s, CONSECRATED_INPUT)) {
+            Err(()) => ingest.reason(reason(CONSECRATED_INPUT)),
+            Ok(false) => {}
+            Ok(true) => {
+                let inc: f64 =
+                    unconditional(ingest, Poe1Quantity::ConsecratedGroundEffect, Op::Increased)
+                        .map(|e| e.value)
+                        .sum();
+                let sum: f64 = taken.iter().map(|e| e.value).sum();
+                let value = crate::math::floor(sum * (1.0 + inc / 100.0));
+                if value != 0.0 {
+                    ingest.effect(Effect {
+                        source: first.source.clone(),
+                        ..taken_effect(Op::Increased, value)
+                    });
+                }
+            }
+        }
+    }
+    let resistance: Vec<Effect> =
+        unconditional(ingest, Poe1Quantity::AilmentElementalResistance, Op::Base)
+            .cloned()
+            .collect();
+    if !resistance.is_empty() {
+        let ignited = set.map_or(Ok(false), |s| check(s, IGNITED_INPUT));
+        match (ignited, chilled(set, ingest)) {
+            (Err(()), _) => ingest.reason(reason(IGNITED_INPUT)),
+            (_, Err(input)) => ingest.reason(reason(input)),
+            (Ok(i), Ok(c)) if i || c => {
+                for e in &resistance {
+                    for t in [DamageType::Fire, DamageType::Cold, DamageType::Lightning] {
+                        ingest.effect(Effect {
+                            quantity: Quantity::Poe1(Poe1Quantity::EnemyResistance(t)),
+                            op: Op::Base,
+                            value: e.value,
+                            conditions: Conditions::none(),
+                            source: e.source.clone(),
+                        });
+                    }
+                }
+            }
+            (Ok(_), Ok(_)) => {}
+        }
+    }
+    let per: Vec<Effect> = unconditional(ingest, Poe1Quantity::ChillSecondsDamageTaken, Op::Base)
+        .cloned()
+        .collect();
+    if !per.is_empty() {
+        match set.map_or(Ok(None), |s| count(s, CHILLED_SECONDS_INPUT)) {
+            Err(()) => ingest.reason(reason(CHILLED_SECONDS_INPUT)),
+            Ok(None) => {}
+            Ok(Some(seconds)) => {
+                for e in &per {
+                    if e.value == 0.0 {
+                        continue;
+                    }
+                    let mult = crate::math::min(
+                        crate::math::floor(seconds + 0.0001),
+                        CHILL_SECONDS_MAX / e.value,
+                    );
+                    let value = e.value * mult;
+                    if value != 0.0 {
+                        ingest.effect(Effect {
+                            source: e.source.clone(),
+                            ..taken_effect(Op::Increased, value)
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// An effect on the enemy's damage taken, its source to be set.
+fn taken_effect(op: Op, value: f64) -> Effect {
+    Effect {
+        quantity: Quantity::Poe1(Poe1Quantity::EnemyDamageTaken),
+        op,
+        value,
+        conditions: Conditions::none(),
+        source: Source::Rule("enemy-damage-taken"),
+    }
+}
+
 /// The chill's damage taken (P3-8m, module docs): with a flag that turns
 /// the chill into damage taken, the enemy takes the chill as increased
 /// damage taken while chilled; PoB reads the flags in order
@@ -601,6 +756,7 @@ pub fn damage_taken(
     ingest: &mut Ingest<'_>,
 ) {
     chill_damage_taken(set, ingest);
+    enemy_states(set, ingest);
     let Some(set) = set else { return };
     conditions(set, ingest);
     match shock(set, ingest) {
@@ -654,6 +810,7 @@ mod tests {
         // "Hits always Shock", P3-8k).
         "all_damage_can_shock",
         "always_shock",
+        "base_chance_to_shock_%",
         "base_chance_to_shock_%_from_skill",
         // Shock on you: not the enemy's.
         "cannot_be_shocked_while_at_maximum_power_charges",
@@ -684,8 +841,14 @@ mod tests {
             .chain(ROWS.iter().map(|r| r.0))
             .chain(LOCAL_ROWS.iter().map(|r| r.0))
             .chain(WEAPON_ROWS.iter().map(|r| r.0));
+        // The rows this module reads (P3-8n): consecrated ground's damage
+        // taken, applied with the enemy on it (`enemy_states`).
+        let read_here = ["consecrated_ground_enemy_damage_taken_+%"];
         for id in ids {
-            assert!(!names(id, &words), "{id}: revisit poe1::damage_taken");
+            assert!(
+                !names(id, &words) || read_here.contains(&id),
+                "{id}: revisit poe1::damage_taken"
+            );
         }
         for (id, _) in NO_EFFECT {
             assert!(

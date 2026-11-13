@@ -16,6 +16,7 @@
 pub mod buffs;
 pub mod charges;
 pub mod collect;
+pub mod conditions;
 pub mod config;
 pub mod damage_taken;
 pub mod enemy;
@@ -31,6 +32,7 @@ pub mod phases;
 pub mod skill;
 pub mod skill_modifiers;
 pub mod sockets;
+pub mod stacks;
 pub mod states;
 
 pub use mapping::Poe1Mapping;
@@ -179,6 +181,49 @@ pub enum Poe1Quantity {
     /// default chill (10) per skill, which [`gems`] adds and
     /// [`damage_taken`] scales by [`Self::ChillEffect`].
     SkillChill,
+    /// Action speed (PoB's `ActionSpeed`, P3-8n): `Increased`; a self-cast
+    /// skill's rate is scaled by `max(1 + inc / 100, 0)` before the server
+    /// tick cap ([`hit`]).
+    ActionSpeed,
+    /// A chance to deal double damage, percent (PoB's `DoubleDamageChance`,
+    /// P3-8n): `Base`; a hit's damage is scaled by `1 + min(chance, 100) /
+    /// 100` ([`hit`]).
+    DoubleDamageChance,
+    /// Conversion of one damage type to another that is not the skill's
+    /// own (PoB's `<From>DamageConvertTo<To>`, P3-8n): `Base`; scaled down
+    /// to what the skill's own conversion leaves ([`hit`]).
+    Conversion(DamageType, DamageType),
+    /// A config multiplier or a count of stacks, and the modifiers per
+    /// stack ([`stacks`], P3-8n).
+    Stack(stacks::StackKind, stacks::StackValue),
+    /// Arcane Surge's cast speed (PoB's `ArcaneSurgeCastSpeed` MAX,
+    /// P3-8n): `Base`, the largest read by [`buffs`] (20 without one).
+    ArcaneSurgeCastSpeed,
+    /// "Gain Convergence when you Hit a Unique Enemy" (PoB's
+    /// `Condition:CanGainConvergence`, P3-8n): a `Flag` [`buffs`] reads.
+    CanGainConvergence,
+    /// The effect of consecrated ground you create (PoB's
+    /// `ConsecratedGroundEffect`, P3-8n): `Increased`, read by
+    /// [`damage_taken`].
+    ConsecratedGroundEffect,
+    /// The damage taken consecrated ground applies to enemies (PoB's
+    /// `DamageTakenConsecratedGround` on the enemy, P3-8n): `Increased`,
+    /// read by [`damage_taken`].
+    ConsecratedGroundDamageTaken,
+    /// "Enemies Ignited or Chilled by you have #% to Elemental
+    /// Resistances" (P3-8n): `Base`, read by [`damage_taken`].
+    AilmentElementalResistance,
+    /// "Enemies permanently take #% increased Damage for each second
+    /// they've ever been Chilled by you" (P3-8n): `Base`, read by
+    /// [`damage_taken`].
+    ChillSecondsDamageTaken,
+    /// "Inflict <Type> Exposure on Hit, applying #% to <Type> Resistance"
+    /// (PoB's `<Type>ExposureChance` 100 and the enemy's `<Type>Exposure`,
+    /// P3-8n): `Base`, the exposure, read by [`exposure`].
+    ExposureOnHit(DamageType),
+    /// "Allocates <notable>" (PoB's `GrantedPassive`, P3-8n): `Base`, the
+    /// node's hash; `collect` adds the node's stats.
+    GrantedPassive,
 }
 
 /// A pool a skill reserves.
@@ -242,6 +287,14 @@ pub enum WeaponValue {
     /// `local_weapon_no_physical_damage`, which the canonical "#% increased
     /// Physical Damage" line carries as 0).
     NoPhysicalDamage,
+    /// "Quality does not increase Physical Damage" (PoB's
+    /// `AlternateQualityWeapon`, P3-8n): a `Flag`; the weapon's physical
+    /// damage then ignores its quality.
+    AlternateQuality,
+    /// "Grants #% increased Elemental Damage per 2% Quality" (P3-8n):
+    /// `Base`; `collect` turns it into the character's elemental damage
+    /// times `floor(quality / 2)`.
+    ElementalDamagePerQuality,
 }
 
 impl core::fmt::Display for WeaponValue {
@@ -253,6 +306,8 @@ impl core::fmt::Display for WeaponValue {
             Self::CritChance => f.write_str("crit-chance"),
             Self::Quality => f.write_str("quality"),
             Self::NoPhysicalDamage => f.write_str("no-physical-damage"),
+            Self::AlternateQuality => f.write_str("alternate-quality"),
+            Self::ElementalDamagePerQuality => f.write_str("elemental-damage-per-quality"),
         }
     }
 }
@@ -313,6 +368,20 @@ impl core::fmt::Display for Poe1Quantity {
             Self::ChillDamageTaken(Some(t)) => write!(f, "chill-damage-taken.{}", t.name()),
             Self::ChillEffect => f.write_str("chill-effect"),
             Self::SkillChill => f.write_str("skill-chill"),
+            Self::ActionSpeed => f.write_str("action-speed"),
+            Self::DoubleDamageChance => f.write_str("double-damage-chance"),
+            Self::Conversion(from, to) => {
+                write!(f, "conversion.{}.{}", from.name(), to.name())
+            }
+            Self::Stack(kind, value) => write!(f, "stack.{}.{}", kind.name(), value.name()),
+            Self::ArcaneSurgeCastSpeed => f.write_str("arcane-surge-cast-speed"),
+            Self::CanGainConvergence => f.write_str("can-gain-convergence"),
+            Self::ConsecratedGroundEffect => f.write_str("consecrated-ground-effect"),
+            Self::ConsecratedGroundDamageTaken => f.write_str("consecrated-ground-damage-taken"),
+            Self::AilmentElementalResistance => f.write_str("ailment-elemental-resistance"),
+            Self::ChillSecondsDamageTaken => f.write_str("chill-seconds-damage-taken"),
+            Self::ExposureOnHit(t) => write!(f, "exposure-on-hit.{}", t.name()),
+            Self::GrantedPassive => f.write_str("granted-passive"),
         }
     }
 }

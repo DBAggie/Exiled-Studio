@@ -43,6 +43,7 @@ fn mod_entry(id: &str, mod_type: Option<&str>, stats: &[(&str, i64, i64)]) -> Mo
         craft_classes: vec!["TestRing".to_owned(), "TestCharm".to_owned()],
         essence_only: false,
         essence_classes: Some(vec!["TestRing".to_owned()]),
+        implicit_tags: Vec::new(),
     }
 }
 

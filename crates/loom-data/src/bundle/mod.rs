@@ -232,6 +232,11 @@ pub struct ModEntry {
     /// Item classes an essence puts this row on, when the data says.
     #[serde(default)]
     pub essence_classes: Option<Vec<String>>,
+    /// The mod's implicit tags, by tag ID (the game's `ImplicitTagsKeys`:
+    /// `life` makes it a "Life Modifier"). Carried since data schema 3
+    /// (P3-8n); empty in an older bundle.
+    #[serde(default)]
+    pub implicit_tags: Vec<String>,
 }
 
 /// A base item.
