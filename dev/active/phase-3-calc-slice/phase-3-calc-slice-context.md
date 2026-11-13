@@ -312,12 +312,16 @@ No blockers; all five readings confirmed in PoB (the `MinionModifier` readers, t
 - **Supports too** (PoB's `CalcSetup.lua` 1578): the reason covers the main skill's and buffs' applied supports; an inert skill's quality reaches nothing.
 - **`melee_physical_damage_+%`** became a hit row because a matching socket gives Melee Physical Damage quality (the Smite fixture showed it).
 
-## P3-12j (next PR, code done in the worktree `D:/POE Dev/loom-wt-12j`, branch `feat/p3-12j-onslaught-line`)
-- PoB reads "Onslaught" as `Condition:Onslaught` (`ModParser.lua` 3973), the check's condition without the combat tag; the flag counts once (`CalcPerform.lua` 656 to 684).
-- "Onslaught" is a game text of two stats: `base_should_have_onslaught_from_stat` (item mod rows: Synthesis implicit, a unique) and `silver_flask_display_onslaught` (no mod row). Rule in `resolve_custom_line`: of an ambiguous custom line's readings, the only one a mod row of an item domain backs is the reading (`Mods::backed_in`, `BundleData::item_domains`: the base items' domains).
-- `Poe1Quantity::Onslaught` (a flag; calc result v1 name `poe1.onslaught`, additive); the stat maps to a `Flag` effect; `poe1::buffs` gives the speed once when the check or any unconditional flag is on.
-- Fixtures `ice-nova-onslaught-modifier-witch.xml`, `ice-nova-onslaught-twice-witch.xml`: both matched PoB on every target in the quick run. Doc draft: the scratch text moves into `docs/phase-3/config-inputs.md`, "P3-12j".
-- After it: power charges (maximum, minimum, per-charge stats in the Ice Nova builds) and gem levels ("+1 to Level of all Cold Skill Gems"): the in-scope builds' largest unmapped-stat groups (P3-8).
+## Decisions in P3-12j (PR #TBD; the custom "Onslaught" line; evidence `docs/phase-3/config-inputs.md`, "P3-12j")
+- **"Onslaught" is a game text**, ambiguous between the character's stat (item mod rows) and a Silver Flask's display stat (none). P3-12c called it PoB shorthand; it is not.
+- **The custom-line rule** (`resolve_custom_line`): the only global reading an item-domain mod row backs. A prior, documented as such; local readings excluded after the first run took a weapon-local crit stat for a character-wide line.
+- **A flag quantity, read once:** `Poe1Quantity::Onslaught`; `poe1::buffs` reads it after every other source (`Ingest::effects`), so any number of sources give Onslaught once, as PoB's flag.
+- **Not done:** marking a rule-taken reading as `adapted` (a domain change).
+
+## Next PRs (worktrees on this machine; each a cascade on the previous branch)
+- **P3-8d** `D:/POE Dev/loom-wt-8d`, branch `feat/p3-8d-charge-modifiers` (commit `77a52eb`): `Poe1Quantity::Charge(kind, value)`; `charges::MODIFIERS` (maximum, minimum, per-charge damage, spell damage, crit chance, crit multiplier for power; damage per frenzy and endurance charge); PoB's count `max(use ? (override or max) : 0, min(max, min))`, so a minimum gives charges without the check; fixtures `ice-nova-power-charge-modifiers-witch.xml`, `ice-nova-minimum-power-charges-witch.xml` matched PoB in the quick run.
+- **P3-8e** `D:/POE Dev/loom-wt-8e`, branch `feat/p3-8e-stat-batch` (commit `e094d76`): `area_damage_+%` (`Damage` INC area), `base_spell_critical_strike_multiplier_+` (spell crit multiplier); `NoEffect`: three area-of-effect stats and `light_radius_+%` (guarded by four "light radius also applies" stats); fixture `ice-nova-area-spell-crit-witch.xml` matched PoB.
+- After them: gem levels need a design (the main skill reads the build's gem-level stats; PoB's `GemProperty` keywords against gem tags); skill-keyword conditions ("with Cold Skills") need keyword flags in the engine.
 
 ## Plan for P3-12h (other gems, first PR: inert gems, reservation, auras and buffs)
 The largest reason left in all 7 in-scope builds is `unmodelled-gem`: every enabled gem but the main skill's. PoB v2.67.2 lets another skill reach the character only through (checked: every loop over `env.player.activeSkillList` in `Modules/Calc*.lua`):
