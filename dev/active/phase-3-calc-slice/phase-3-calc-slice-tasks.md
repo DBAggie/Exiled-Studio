@@ -93,7 +93,7 @@ Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task i
   - [x] P3-8e area damage, spell crit multiplier, area and light radius rows (PR #94, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8e"; one mechanic fixture)
   - [x] P3-8f weapon conditions: `poe1::states` (`UsingStaff`, `UsingShield`), `STATE_ROWS` (eight stats) (PR #95, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8f"; two mechanic fixtures)
   - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, merged into `dev` with #91; documents identical, calc time 229 to 78 ms)
-  - [x] P3-8h skill keywords: `Flags::SKILL_*` from the main skill's types (PoB's `KeywordFlag`), 23 hit rows ("with Cold Skills" cast speed, crit chance, crit multiplier; damage with attack or spell skills) (PR #TBD, open, base `dev`; `docs/phase-3/stat-mapping.md`, "P3-8h"; two mechanic fixtures; DIV-0034, DIV-0035)
+  - [x] P3-8h skill keywords: `Flags::SKILL_*` from the main skill's types (PoB's `KeywordFlag`), 23 hit rows ("with Cold Skills" cast speed, crit chance, crit multiplier; damage with attack or spell skills) (PR #97, open, base `dev`; `docs/phase-3/stat-mapping.md`, "P3-8h"; two mechanic fixtures; DIV-0034, DIV-0035)
   - [ ] Next: more of the in-scope builds' unmapped stats (gem levels need a design; "with Brand/Minion Skills"; the other weapon conditions); the other gems left (golems and the Lightning Golem's Wrath, curses, Frost Bomb's exposure, warcries, Herald of Ash and Purity, Flesh and Stone, Arcane Surge, Righteous Fire); unresolved lines; Q13
 
 ## P3-14: corpus run and register
