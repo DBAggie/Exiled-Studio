@@ -44,9 +44,13 @@ pub const USING_SHIELD: &str = "UsingShield";
 /// `None`), which "with Weapons" modifiers need. Not a PoB condition.
 pub const MAIN_HAND_WEAPON: &str = "MainHandWeapon";
 
-/// "if there are no Life Modifiers on Equipped Body Armour" (P3-8n): the
-/// game's condition; PoB v2.67.2 has no parser for the line (a
-/// divergence, `docs/phase-3/stat-mapping.md`, "P3-8n").
+/// "if there are no Life Modifiers on Equipped Body Armour" (P3-8n). PoB
+/// v2.67.2 reads it as an `ItemCondition` with `searchCond = "life"`
+/// (`Data/ModCache.lua` 3483): no mod line of the body armour has the text
+/// "life" (`Classes/Item.lua` 284 to 320, `FindModifierSubstring`, with
+/// its special and excluded lines). The game's rule is the mods' `life`
+/// tag, which the engine reads instead, settling only what the tags
+/// decide ([`no_life_modifiers_on_body_armour`]).
 pub const NO_LIFE_MODIFIERS_ON_BODY_ARMOUR: &str = "NoLifeModifiersOnBodyArmour";
 
 /// The stat that reads [`NO_LIFE_MODIFIERS_ON_BODY_ARMOUR`].

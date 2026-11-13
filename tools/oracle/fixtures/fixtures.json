@@ -1347,10 +1347,10 @@
       "tier": "mechanic",
       "source": "local",
       "path": "mechanic/life-mastery-no-life-modifiers-templar.xml",
-      "sha256": "55e08070c724adea09166be1bd2fe0dd7e1b7167d06f93e7625cb5c7a4afa88b",
+      "sha256": "ca95d57cba6329858e76a46be8a1a49d4e44c372d3514386d21fc53bb15cb45e",
       "expect": "ok",
       "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
-      "description": "A level 90 Templar with a Life Mastery's 15% increased maximum Life if there are no Life Modifiers on Equipped Body Armour and a rare Astral Plate with armour and fire resistance: the game applies it, PoB ignores the line (a registered divergence) (P3-8n)."
+      "description": "A level 90 Templar with a Life Mastery's 15% increased maximum Life if there are no Life Modifiers on Equipped Body Armour and a rare Astral Plate with armour and fire resistance: the condition holds, from the mods' life tags (PoB: no line with the text \"life\") (P3-8n)."
     }
   ]
 }

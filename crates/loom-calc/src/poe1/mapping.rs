@@ -801,8 +801,9 @@ pub const STATE_ROWS: &[StateRow] = &[
         )],
     ),
     // P3-8n: "#% increased maximum Life if there are no Life Modifiers on
-    // Equipped Body Armour" (the game's condition, `poe1::states`; PoB has no
-    // parser for it: a divergence).
+    // Equipped Body Armour" (`Data/ModCache.lua` 3483: an `ItemCondition`
+    // on the body armour's lines; the engine reads the mods' tags,
+    // `poe1::states`).
     (
         "maximum_life_+%_if_no_life_tags_on_body_armour",
         &[(

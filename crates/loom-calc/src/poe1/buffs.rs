@@ -148,10 +148,12 @@ fn convergence(set: Option<&ConfigSet>, ingest: &mut Ingest<'_>) {
             input: CONVERGENCE_INPUT.to_owned(),
         }),
         Ok(true) => {
+            // The line's presence is PoB's flag: its description shows it
+            // for any value (an unbounded range), so the import assumes the
+            // hidden value 0.
             let can_gain = ingest.effects().iter().any(|e| {
                 e.quantity == Quantity::Poe1(Poe1Quantity::CanGainConvergence)
                     && e.op == Op::Flag
-                    && e.value != 0.0
                     && e.conditions == Conditions::none()
             });
             if can_gain {
