@@ -28,8 +28,19 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 5,
+        "format": 6,
         "pob": {"version": "2.67.2"},
+        "base_requirements": {
+            "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
+            "Plain Test Wand": {"type": "Wand", "flask": false},
+            "Plain Test Shield": {"type": "Shield", "flask": false},
+            "Plain Test Charm": {"type": "Charm", "flask": false}
+        },
+        "mods": {
+            "TestLife1": {"affix": "", "tables": ["ItemExclusive"]},
+            "TestArmour1": {"affix": "of Test Plating", "level": 5, "type": "Suffix", "tables": ["Explicit"]},
+            "TestAccuracy1": {"affix": "Steady", "level": 12, "type": "Prefix", "tables": ["Explicit"]}
+        },
         "tree_version": "3_29",
         "skill_types": {},
         "skills": {
@@ -434,6 +445,7 @@ fn bases_should_match_one_base_by_name() {
     let found = compare::compare(&bundle, &export, SCOPE, &BOSSES)
         .unwrap()
         .differences;
+    // Its requirements agree with the first one's, so they compare as one.
     assert_eq!(fields(&found), [("bases", "Plain Test Wand", "row")]);
     // A Royale base is skipped, as PoB skips it (bases.lua:342).
     let royale = "Test/Items/Wand2Royale";
@@ -451,6 +463,99 @@ fn bases_should_match_one_base_by_name() {
             .unwrap()
             .differences,
         []
+    );
+}
+
+#[test]
+fn affixes_and_requirements_should_compare() {
+    let mut export = equal_export();
+    export["mods"]["TestArmour1"]["affix"] = json!("of Plating");
+    export["mods"]["TestAccuracy1"]["level"] = json!(11);
+    export["mods"]["TestGone1"] = json!({"affix": "Gone", "level": 1, "tables": ["Explicit"]});
+    export["mods"]["TestLife1"]["conflict"] = json!(true);
+    export["base_requirements"]["Plain Test Ring"]["dex"] = json!(12);
+    export["base_requirements"]["Plain Test Ring"]["level"] = json!(5);
+    export["base_requirements"]["Plain Test Wand"]["flask"] = json!(true);
+    export["base_requirements"]["Missing Base"] = json!({"type": "Ring", "flask": false});
+    assert_eq!(
+        fields(&differences(&export)),
+        [
+            ("base_requirements", "Missing Base", "row"),
+            ("base_requirements", "Plain Test Ring", "level"),
+            ("base_requirements", "Plain Test Ring", "dex"),
+            ("base_requirements", "Plain Test Wand", "flask"),
+            ("mod_affixes", "TestAccuracy1", "level"),
+            ("mod_affixes", "TestArmour1", "affix"),
+            ("mod_affixes", "TestGone1", "row"),
+            ("mod_affixes", "TestLife1", "pob_tables"),
+        ]
+    );
+    // An implicit's level raises the required level: floor(10 * 0.8) = 8.
+    let mut bundle = bundle("bundle-poe1");
+    bundle
+        .mods
+        .iter_mut()
+        .find(|m| m.id == "TestLife1")
+        .unwrap()
+        .level = Some(10);
+    let mut export = equal_export();
+    export["mods"]["TestLife1"]["level"] = json!(10);
+    export["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle, &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(comparison.differences, []);
+    // A second game base under the ring's name with other requirements:
+    // PoB holds one, so the row differs.
+    let mut twin = bundle
+        .base_items
+        .iter()
+        .find(|b| b.id == "Test/Items/Ring1")
+        .unwrap()
+        .clone();
+    twin.id = "Test/Items/Ring2".to_owned();
+    twin.requirements = None;
+    bundle.base_items.push(twin);
+    assert_eq!(
+        fields(
+            &compare::compare(&bundle, &export, SCOPE, &BOSSES)
+                .unwrap()
+                .differences
+        ),
+        [("base_requirements", "Plain Test Ring", "row")]
+    );
+    // PoB's values must still be one candidate's: dex 11 is neither.
+    let mut off = equal_export();
+    off["mods"]["TestLife1"]["level"] = json!(10);
+    off["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
+    off["base_requirements"]["Plain Test Ring"]["dex"] = json!(11);
+    // A variant name PoB gave the ring, with the second candidate's values
+    // (no attributes): matched by the game's name, the row differs only.
+    off["base_requirements"]["Plain Test Ring (Plain)"] =
+        json!({"type": "Ring", "flask": false, "level": 8});
+    // A variant name whose values are neither candidate's.
+    off["base_requirements"]["Plain Test Ring (Odd)"] =
+        json!({"type": "Ring", "flask": false, "str": 5});
+    let off = pob::parse(&serde_json::to_vec(&off).unwrap()).unwrap();
+    assert_eq!(
+        fields(
+            &compare::compare(&bundle, &off, SCOPE, &BOSSES)
+                .unwrap()
+                .differences
+        ),
+        [
+            ("base_requirements", "Plain Test Ring", "row"),
+            ("base_requirements", "Plain Test Ring", "values"),
+            ("base_requirements", "Plain Test Ring (Odd)", "row"),
+            ("base_requirements", "Plain Test Ring (Odd)", "values"),
+            ("base_requirements", "Plain Test Ring (Plain)", "row"),
+        ]
+    );
+    // A bundle before data schema 4 carries neither: refused, not compared.
+    bundle.manifest.data_schema = 3;
+    assert!(
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+            .unwrap_err()
+            .contains("data schema 3")
     );
 }
 

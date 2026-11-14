@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 5
+local FORMAT = 6
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -273,6 +273,58 @@ for name, base in pairs(data.itemBases) do
 	end
 end
 
+-- Every item base's requirements (data.itemBases[name].req, format 6, UX
+-- sprint B-2): the level PoB's exporter derived and the attributes it
+-- copied (src/Export/Scripts/bases.lua:276-305). `flask` says which level
+-- rule the exporter used.
+local baseRequirements = {}
+for name, base in pairs(data.itemBases) do
+	local req = type(base.req) == "table" and base.req or {}
+	baseRequirements[name] = {
+		type = base.type,
+		flask = type(base.flask) == "table",
+		level = req.level,
+		str = req.str,
+		dex = req.dex,
+		int = req.int,
+	}
+end
+
+---------------------------------------------------------------------------
+-- Item mods (format 6, UX sprint B-2): the affix name and level of each
+-- mod PoB keys by the game's mod ID, from the files Modules/Data.lua loads
+-- into data.itemMods (`Prefix:`/`Suffix:` spec lines name these keys,
+-- Classes/Item.lua 1008-1010). `Item` is a merge of the first seven and
+-- `WatchersEye` is derived, so neither is read; data.masterMods has no
+-- IDs. `tables` lists the files holding the ID, in this order; `conflict`
+-- is set when two of them disagree on the affix or level.
+---------------------------------------------------------------------------
+local MOD_TABLES = {
+	"Explicit", "ItemExclusive", "Corrupted", "Delve", "Synthesis", "Scourge", "Eldritch",
+	"Flask", "Tincture", "Graft", "Jewel", "JewelAbyss", "JewelCluster", "JewelCharm", "Foulborn",
+}
+local itemMods = {}
+for _, tableName in ipairs(MOD_TABLES) do
+	local source = data.itemMods[tableName]
+	if type(source) ~= "table" then
+		die("data.itemMods." .. tableName .. " is missing")
+	end
+	for id, mod in pairs(source) do
+		if type(id) == "string" and type(mod) == "table" then
+			local affix = type(mod.affix) == "string" and mod.affix or ""
+			local record = itemMods[id]
+			if not record then
+				itemMods[id] = { affix = affix, level = mod.level, type = mod.type, tables = { tableName } }
+			else
+				record.tables[#record.tables + 1] = tableName
+				if record.affix ~= affix or record.level ~= mod.level then
+					record.conflict = true
+				end
+			end
+		end
+	end
+end
+
 ---------------------------------------------------------------------------
 -- Monster tables and constants (src/Data/Misc.lua).
 ---------------------------------------------------------------------------
@@ -376,6 +428,8 @@ local document = {
 	skills = skills,
 	gems = gems,
 	bases = bases,
+	base_requirements = baseRequirements,
+	mods = itemMods,
 	monster_tables = monsterTables,
 	game_constants = copyMap(data.gameConstants),
 	character_constants = copyMap(data.characterConstants),

@@ -332,11 +332,12 @@ fn base_items(
         column(&t, &["Implicit_ModsKeys", "Implicit_Mods"])?,
     );
     let drop_level = col("DropLevel")?;
-    let requirements = attribute_requirements(read)?;
+    let base_ids: Vec<Option<&str>> = t.rows.iter().map(|r| Table::text(r, id)).collect();
+    let requirements = attribute_requirements(read, &base_ids)?;
     let mut item_tags = ItemTags::default();
     let (mut unknown, mut nameless) = (0, 0);
     let mut out = Vec::new();
-    for (row, r) in t.rows.iter().enumerate() {
+    for r in &t.rows {
         let (Some(i), Some(n)) = (Table::text(r, id), Table::text(r, name)) else {
             continue;
         };
@@ -377,18 +378,21 @@ fn base_items(
                 })
                 .collect(),
             drop_level: Table::int(r, drop_level),
-            requirements: requirements.get(&row).copied(),
+            requirements: requirements.get(i).copied(),
         });
     }
     Ok((out, unknown, nameless))
 }
 
-/// Base item rows (by index) to their attribute requirements, from
+/// Base item IDs to their attribute requirements, from
 /// `ComponentAttributeRequirements` (a PoE1 extraction root; empty when the
-/// extract has no such table). Rows with no requirement are left out.
+/// extract has no such table). The game keys the table by the base's ID
+/// (a string column); a row number into `BaseItemTypes` is read too, through
+/// `base_ids` (each row's ID). Rows with no requirement are left out.
 fn attribute_requirements(
     read: Read<'_>,
-) -> Result<BTreeMap<usize, AttributeRequirements>, String> {
+    base_ids: &[Option<&str>],
+) -> Result<BTreeMap<String, AttributeRequirements>, String> {
     let mut out = BTreeMap::new();
     let Some(t) = Table::read(read, "ComponentAttributeRequirements")? else {
         return Ok(out);
@@ -400,7 +404,13 @@ fn attribute_requirements(
         t.column("ReqInt")?,
     );
     for r in &t.rows {
-        let Some(row) = Table::int(r, base).and_then(|n| usize::try_from(n).ok()) else {
+        let id = Table::text(r, base).map(str::to_owned).or_else(|| {
+            Table::int(r, base)
+                .and_then(|n| usize::try_from(n).ok())
+                .and_then(|n| base_ids.get(n).copied().flatten())
+                .map(str::to_owned)
+        });
+        let Some(row) = id else {
             continue;
         };
         let req = AttributeRequirements {
@@ -986,13 +996,15 @@ mod tests {
                 {"name": "ReqStr", "references": null},
                 {"name": "ReqDex", "references": null},
                 {"name": "ReqInt", "references": null}],
-              "rows": [[4, 85, 62, 0], [5, 0, 0, 0], [null, 1, 1, 1]]}"#,
+              "rows": [[4, 85, 62, 0], [5, 0, 0, 0], [null, 1, 1, 1], [9, 1, 1, 1]]}"#,
         )]);
-        let req = attribute_requirements(&read).unwrap();
+        let ids = [None, None, None, None, Some("Base/Four"), Some("Base/Five")];
+        let req = attribute_requirements(&read, &ids).unwrap();
+        // Row 9 is past the table: no base, left out.
         assert_eq!(
             req.into_iter().collect::<Vec<_>>(),
             [(
-                4,
+                "Base/Four".to_owned(),
                 AttributeRequirements {
                     strength: 85,
                     dexterity: 62,
@@ -1000,8 +1012,28 @@ mod tests {
                 }
             )]
         );
+        // The game's layout: the key is the base's ID as a string.
+        let read = reader(&[(
+            "ComponentAttributeRequirements",
+            r#"{"table": "ComponentAttributeRequirements", "columns": [
+                {"name": "BaseItemTypesKey", "references": "BaseItemTypes", "type": "string"},
+                {"name": "ReqStr", "references": null},
+                {"name": "ReqDex", "references": null},
+                {"name": "ReqInt", "references": null}],
+              "rows": [["Metadata/Items/Armours/Shields/ShieldStr1", 11, 0, 0]]}"#,
+        )]);
+        let req = attribute_requirements(&read, &[]).unwrap();
+        assert_eq!(
+            req.get("Metadata/Items/Armours/Shields/ShieldStr1")
+                .map(|r| r.strength),
+            Some(11)
+        );
         // An extract without the table (PoE2 until checked): none.
-        assert!(attribute_requirements(&reader(&[])).unwrap().is_empty());
+        assert!(
+            attribute_requirements(&reader(&[]), &[])
+                .unwrap()
+                .is_empty()
+        );
     }
 
     #[test]

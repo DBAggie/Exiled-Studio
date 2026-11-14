@@ -1,6 +1,6 @@
 # PoB data export (Phase 3 plan, step 2)
 
-`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 3; format 2 before P3-12g had no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
+`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 6; format 5 before B-2 had no `mods` or `base_requirements`, format 2 before P3-12g no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
 
 It is maintainer-run, not in CI, and outside the oracle adapter and its protocol (it reads no build, so the adapter protocol does not apply). It runs on the pinned oracle runtime (`local/oracle/`, built by `tools/oracle/acquire.ps1` or `acquire.sh`, checked by `oracle-verify`), starts PoB with its own `HeadlessWrapper.lua`, and copies plain values from:
 
@@ -9,12 +9,14 @@ It is maintainer-run, not in CI, and outside the oracle adapter and its protocol
 | `skills` | `data.skills` (`src/Data/Skills/*.lua`): stats, per-level values, costs, crit, effectiveness, multipliers, cooldown, reservations, types, constant and quality stats |
 | `gems` | `data.gems` (`src/Data/Gems.lua`) |
 | `bases` | `data.itemBases` with `weapon` or `armour` |
+| `base_requirements` | `data.itemBases`: every base's `req` (level, str, dex, int) and whether it is a flask (format 6) |
+| `mods` | the keyed `data.itemMods` files (`src/Data/Mod*.lua`): each mod's `affix`, `level`, `type`, and the files holding it (format 6) |
 | `monster_tables`, `game_constants`, `character_constants`, `monster_constants` | `src/Data/Misc.lua` |
 | `bosses` | `data.bosses` (`src/Data/Bosses.lua`): each boss's armour and evasion multipliers and uber mark |
 | `pantheons` | `data.pantheons` (`src/Data/Pantheons.lua`): each god's major mark, its souls' names, and their mods' lines and values |
 | `tree` | `src/TreeData/<version>/tree.lua` as PoB reads it, before `PassiveTree.lua` adds display lines |
 
-No value is converted; the comparison names each conversion PoB's exporter made. Not copied: level requirements, Vaal soul costs, and stat interpolation kinds (the bundle does not carry the first two; the third stays raw until P3-9a). Writes go only to the output file: `io.open` is the oracle's write guard, and a refused write stops the run.
+No value is converted; the comparison names each conversion PoB's exporter made. Not copied: skills' level requirements, Vaal soul costs, and stat interpolation kinds (the bundle does not carry the first two; the third stays raw until P3-9a). Writes go only to the output file: `io.open` is the oracle's write guard, and a refused write stops the run.
 
 From the repository root (Git Bash on Windows; on Linux use `bin/?.so`), close stdin, with an absolute repository path in `R`:
 
@@ -25,4 +27,4 @@ R="$(cygpath -m "$PWD")"; O="$R/local/oracle"
   "$O/bin/luajit.exe" "$R/tools/oracle/data/pob_data.lua" "$R/local/p3/pob-data.json" </dev/null)
 ```
 
-`tree=<version>` picks another tree than PoB's `latestTreeVersion` (`3_29` at v2.67.2). Two runs give the same bytes (the JSON writer sorts keys), about 6.8 MB in 4 seconds.
+`tree=<version>` picks another tree than PoB's `latestTreeVersion` (`3_29` at v2.67.2). Two runs give the same bytes (the JSON writer sorts keys), about 9 MB in 4 seconds.

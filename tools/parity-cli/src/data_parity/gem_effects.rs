@@ -890,7 +890,8 @@ mod tests {
             "tree_version": "3_29",
             "skill_types": {},
             "skills": {"Precision": skill},
-            "gems": {}, "bases": {}, "monster_tables": {}, "game_constants": {},
+            "gems": {}, "bases": {}, "base_requirements": {}, "mods": {},
+            "monster_tables": {}, "game_constants": {},
             "character_constants": {}, "monster_constants": {}, "bosses": {}, "pantheons": {},
             "tree": {"classes": {}, "nodes": {}}
         });
