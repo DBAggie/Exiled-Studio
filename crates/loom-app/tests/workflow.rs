@@ -550,7 +550,10 @@ fn change_requests_should_follow_the_users_permissions() {
         r.run(api::Command::Decline { id }).unwrap();
     }
 
-    // A standing grant applies at once; revoking it takes effect next.
+    // A standing grant (only while the server runs) applies at once;
+    // revoking it takes effect next.
+    r.app
+        .set_endpoint(Some(("http://127.0.0.1:1/mcp".to_owned(), "t".to_owned())));
     r.app.set_permissions(api::McpPermissions {
         requests: true,
         standing_grant: true,
@@ -639,4 +642,114 @@ fn a_roll_edit_should_keep_the_range_through_export() {
             .any(|l| l.text == "{range:0.25}+(10-20) to maximum Life"
                 && l.status == api::LineStatus::Matched)
     );
+}
+
+#[test]
+fn a_pending_request_should_fail_when_another_build_is_opened() {
+    let dir = Scratch::new("generation");
+    let r = start(&dir.path("data"), Some(bundle_dir()), "generation");
+    let v = version(
+        &r.run(api::Command::ImportText { text: synthetic() })
+            .unwrap(),
+    );
+    r.calculated(v);
+    r.app
+        .set_endpoint(Some(("http://127.0.0.1:1/mcp".to_owned(), "t".to_owned())));
+    r.app.set_permissions(api::McpPermissions {
+        requests: true,
+        standing_grant: false,
+    });
+    let edit = replace(&r.app, "+15 to maximum Life", "+20 to maximum Life");
+    let req = r.app.request_change("client", edit, None).unwrap();
+    // The same text imported again is another build with identical lines.
+    let v = version(
+        &r.run(api::Command::ImportText { text: synthetic() })
+            .unwrap(),
+    );
+    r.calculated(v);
+    let after = r.app.request(req.id).unwrap();
+    assert_eq!(after.status, api::RequestStatus::Failed);
+    assert_eq!(after.error.unwrap().code, "APP_STALE_EDIT");
+    assert_eq!(
+        r.run(api::Command::Approve { id: req.id })
+            .unwrap_err()
+            .code,
+        "APP_REQUEST"
+    );
+}
+
+#[test]
+fn a_grant_should_not_outlive_the_server() {
+    let dir = Scratch::new("grant");
+    let r = start(&dir.path("data"), Some(bundle_dir()), "grant");
+    // No server: a grant is not kept.
+    r.app.set_permissions(api::McpPermissions {
+        requests: true,
+        standing_grant: true,
+    });
+    assert!(!r.app.mcp_status().permissions.standing_grant);
+    r.app
+        .set_endpoint(Some(("http://127.0.0.1:1/mcp".to_owned(), "t".to_owned())));
+    r.app.set_permissions(api::McpPermissions {
+        requests: true,
+        standing_grant: true,
+    });
+    assert!(r.app.mcp_status().permissions.standing_grant);
+    // A restart ends it.
+    r.app
+        .set_endpoint(Some(("http://127.0.0.1:2/mcp".to_owned(), "u".to_owned())));
+    assert!(!r.app.mcp_status().permissions.standing_grant);
+}
+
+#[test]
+fn an_edit_should_refuse_lines_that_change_the_items_structure() {
+    let dir = Scratch::new("structure");
+    let r = start(&dir.path("data"), Some(bundle_dir()), "structure");
+    let v = version(
+        &r.run(api::Command::ImportText { text: synthetic() })
+            .unwrap(),
+    );
+    r.calculated(v);
+    for text in ["Corrupted".to_owned(), "x".repeat(501)] {
+        let add = api::ItemEdit {
+            item: 1,
+            ops: vec![api::LineOp::Add { text }],
+            expect: Vec::new(),
+        };
+        assert_eq!(
+            r.run(api::Command::EditItem(add)).unwrap_err().code,
+            "APP_EDIT_LINE"
+        );
+    }
+    let many = api::ItemEdit {
+        item: 1,
+        ops: (0..51)
+            .map(|i| api::LineOp::Add {
+                text: format!("+{i} to maximum Life"),
+            })
+            .collect(),
+        expect: Vec::new(),
+    };
+    assert_eq!(
+        r.run(api::Command::EditItem(many)).unwrap_err().code,
+        "APP_EDIT_LINE"
+    );
+}
+
+#[test]
+fn a_save_should_not_recalculate() {
+    let dir = Scratch::new("save-no-calc");
+    let r = start(&dir.path("data"), Some(bundle_dir()), "save-no-calc");
+    let v = version(
+        &r.run(api::Command::ImportText { text: synthetic() })
+            .unwrap(),
+    );
+    r.calculated(v);
+    r.app
+        .execute(HostCommand::SaveAs(dir.path("b.json")))
+        .unwrap();
+    let snap = r.app.snapshot();
+    assert_eq!(snap.version, v);
+    assert_eq!(snap.calc.state, api::CalcState::Done);
+    assert!(!snap.dirty);
 }

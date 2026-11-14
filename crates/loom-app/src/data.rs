@@ -110,12 +110,14 @@ impl GameData {
                 format!("not a valid bundle ({})", report.codes().join(", ")),
             ));
         }
-        let bundle = Bundle::load(&source)
-            .map_err(|e| AppError::new(Code::Bundle, format!("{}: {e}", e.code())))?;
+        // Codes only: a message could name a path, and the error reaches
+        // MCP clients (decision 11: no file paths).
+        let bundle =
+            Bundle::load(&source).map_err(|e| AppError::new(Code::Bundle, e.code().to_owned()))?;
         let bundle: &'static Bundle = Box::leak(Box::new(bundle));
         let data: &'static BundleData<'static> = Box::leak(Box::new(BundleData::new(bundle)));
         let resolver =
-            Resolver::new(data).map_err(|e| AppError::new(Code::Bundle, e.to_string()))?;
+            Resolver::new(data).map_err(|e| AppError::new(Code::Bundle, e.code().to_owned()))?;
         let resolver: &'static Resolver<'static, 'static> = Box::leak(Box::new(resolver));
         let version = loom_parser::import::data_version(data);
         Ok(Self {

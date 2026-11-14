@@ -77,7 +77,10 @@ fn shell(test: &str) -> Shell {
     .unwrap();
     // `setup` (which starts the application) runs on the first iteration;
     // one iteration of the mock runtime, not a loop.
-    #[expect(deprecated, reason = "one iteration runs setup; never called in a loop")]
+    #[expect(
+        deprecated,
+        reason = "one iteration runs setup; never called in a loop"
+    )]
     app.run_iteration(|_, _| {});
     let (tx, events) = mpsc::channel();
     let tx = Mutex::new(tx);

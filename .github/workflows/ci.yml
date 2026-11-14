@@ -426,8 +426,18 @@ jobs:
         working-directory: ui
       - name: Build the e2e app
         run: cargo build --locked -p loom-tauri --features e2e,tauri/custom-protocol
+      # Pinned; cached between runs (a fixed version, so the cache is safe).
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: tauri-driver
+        with:
+          path: ~/.cargo-tools
+          key: tauri-driver-2.1.0-${{ runner.os }}
       - name: Install tauri-driver
-        run: cargo install --locked tauri-driver --version ^2.0
+        if: steps.tauri-driver.outputs.cache-hit != 'true'
+        run: cargo install --locked tauri-driver --version 2.1.0 --root ~/.cargo-tools
+      - name: Put tauri-driver on the path
+        shell: bash
+        run: echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
       - name: Workflow (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a ui/e2e/run.sh target/debug/loom-tauri

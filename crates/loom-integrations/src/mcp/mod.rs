@@ -5,8 +5,11 @@
 //!   POST of one JSON-RPC message gets one JSON answer (202 for a
 //!   notification); no server-sent events, so GET and DELETE get 405.
 //! - **Exposure.** `127.0.0.1` only, an ephemeral port, off until the user
-//!   starts it. One connection at a time, so tool calls (a preview is a
-//!   full calculation) are serialized.
+//!   starts it. Each connection is served on its own thread, at most
+//!   [`MAX_CONNECTIONS`] at once, and must send its whole request within
+//!   [`http::DEADLINE`], so a slow client cannot hold the server; the head
+//!   is checked before the body is read. Tool calls run one at a time (a
+//!   preview is a full calculation).
 //! - **Authentication.** A random bearer token made at each start (dead at
 //!   stop), compared in constant time. The `Host` header must name the
 //!   server's own loopback address and an `Origin` header, if sent, must
@@ -22,14 +25,17 @@ pub mod tools;
 
 use std::io;
 use std::net::{Ipv4Addr, SocketAddr, TcpListener, TcpStream};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
 use loom_app::App;
 use serde_json::{Value, json};
 
-pub use http::MAX_BODY;
+pub use http::{DEADLINE, MAX_BODY};
+
+/// The most connections served at once; more get 503.
+pub const MAX_CONNECTIONS: usize = 4;
 pub use tools::{CONTRACT_VERSION, PROTOCOL_VERSION};
 
 /// Protocol versions a client may name in `MCP-Protocol-Version`.
@@ -83,6 +89,8 @@ impl Server {
             port: addr.port(),
             token: token.clone(),
             client: Mutex::new("unknown client".to_owned()),
+            calls: Mutex::new(()),
+            open: AtomicUsize::new(0),
         });
         let thread = {
             let stop = Arc::clone(&stop);
@@ -93,8 +101,21 @@ impl Server {
                         if stop.load(Ordering::SeqCst) {
                             break;
                         }
-                        if let Ok(stream) = stream {
-                            state.serve(&stream);
+                        let Ok(stream) = stream else { continue };
+                        if state.open.fetch_add(1, Ordering::SeqCst) >= MAX_CONNECTIONS {
+                            state.open.fetch_sub(1, Ordering::SeqCst);
+                            let _ = http::respond(&stream, 503, None, b"");
+                            continue;
+                        }
+                        let conn = Arc::clone(&state);
+                        let spawned = std::thread::Builder::new()
+                            .name("loom-mcp-conn".to_owned())
+                            .spawn(move || {
+                                conn.serve(&stream);
+                                conn.open.fetch_sub(1, Ordering::SeqCst);
+                            });
+                        if spawned.is_err() {
+                            state.open.fetch_sub(1, Ordering::SeqCst);
                         }
                     }
                 })?
@@ -155,6 +176,10 @@ struct Conn {
     port: u16,
     token: String,
     client: Mutex<String>,
+    /// Held while a message is handled: tool calls run one at a time.
+    calls: Mutex<()>,
+    /// Connections being served.
+    open: AtomicUsize,
 }
 
 /// Whether an `Origin` header is a loopback origin.
@@ -171,60 +196,79 @@ fn loopback_origin(origin: &str) -> bool {
 
 impl Conn {
     fn serve(&self, stream: &TcpStream) {
-        let request = match http::read(stream) {
+        let fail = |e: http::ReadError| {
+            let status = match e {
+                http::ReadError::Malformed => 400,
+                http::ReadError::TooLarge => 413,
+                http::ReadError::NoLength => 411,
+                http::ReadError::Io => return,
+            };
+            let _ = http::respond(stream, status, None, b"");
+        };
+        let head = match http::read_head(stream) {
+            Ok(h) => h,
+            Err(e) => return fail(e),
+        };
+        // Host, Origin, token, path, and method before reading a body.
+        if let Some(status) = self.refuse(&head.request) {
+            let _ = http::respond(stream, status, None, b"");
+            return;
+        }
+        let request = match head.body() {
             Ok(r) => r,
-            Err(e) => {
-                let status = match e {
-                    http::ReadError::Malformed => 400,
-                    http::ReadError::TooLarge => 413,
-                    http::ReadError::NoLength => 411,
-                    http::ReadError::Io => return,
-                };
-                let _ = http::respond(stream, status, None, b"");
-                return;
-            }
+            Err(e) => return fail(e),
         };
         let (status, body) = self.answer(&request);
         let content_type = (!body.is_empty()).then_some("application/json");
         let _ = http::respond(stream, status, content_type, &body);
     }
 
-    fn answer(&self, request: &http::Request) -> (u16, Vec<u8>) {
+    /// Why a request's head is refused, as a status; `None` when it may
+    /// proceed.
+    fn refuse(&self, request: &http::Request) -> Option<u16> {
         // DNS rebinding: the Host must be this server's loopback address.
         let host_ok = request.header("host").is_some_and(|h| {
             h == format!("127.0.0.1:{}", self.port) || h == format!("localhost:{}", self.port)
         });
         if !host_ok {
-            return (403, Vec::new());
+            return Some(403);
         }
         if request
             .header("origin")
             .is_some_and(|o| !loopback_origin(o))
         {
-            return (403, Vec::new());
+            return Some(403);
         }
         let authorized = request
             .header("authorization")
             .and_then(|a| a.strip_prefix("Bearer "))
             .is_some_and(|t| constant_time_eq(t.as_bytes(), self.token.as_bytes()));
         if !authorized {
-            return (401, Vec::new());
+            return Some(401);
         }
         if request.target.split('?').next() != Some("/mcp") {
-            return (404, Vec::new());
+            return Some(404);
         }
         if request.method != "POST" {
-            return (405, Vec::new());
+            return Some(405);
         }
         if request
             .header("mcp-protocol-version")
             .is_some_and(|v| !ACCEPTED_VERSIONS.contains(&v))
         {
-            return (400, Vec::new());
+            return Some(400);
         }
+        None
+    }
+
+    fn answer(&self, request: &http::Request) -> (u16, Vec<u8>) {
         let Ok(message) = serde_json::from_slice::<Value>(&request.body) else {
             return (400, rpc_error(&Value::Null, -32700, "parse error"));
         };
+        let _one = self
+            .calls
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         match self.handle(&message) {
             Some(response) => (200, serde_json::to_vec(&response).unwrap_or_default()),
             None => (202, Vec::new()),

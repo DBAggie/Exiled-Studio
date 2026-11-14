@@ -4,14 +4,14 @@
 
 use std::io::{self, BufRead, BufReader, Read, Write};
 use std::net::TcpStream;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 /// The largest body read.
 pub const MAX_BODY: usize = 1024 * 1024;
 /// The largest request head (request line and headers).
 const MAX_HEAD: usize = 16 * 1024;
-/// How long a client may take to send its request.
-const READ_TIMEOUT: Duration = Duration::from_secs(10);
+/// How long a client may take to send its whole request.
+pub const DEADLINE: Duration = Duration::from_secs(10);
 
 /// A request.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,16 +50,39 @@ pub enum ReadError {
     Io,
 }
 
-/// Reads one request.
+/// A request's head, read; its body not yet.
+pub struct Head<'s> {
+    /// The request, with an empty body.
+    pub request: Request,
+    stream: &'s TcpStream,
+    reader: BufReader<io::Take<&'s TcpStream>>,
+    deadline: Instant,
+}
+
+/// Sets the read timeout to what is left of the deadline.
+fn arm(stream: &TcpStream, deadline: Instant) -> Result<(), ReadError> {
+    let left = deadline.saturating_duration_since(Instant::now());
+    if left.is_zero() {
+        return Err(ReadError::Io);
+    }
+    stream
+        .set_read_timeout(Some(left))
+        .map_err(|_| ReadError::Io)
+}
+
+/// Reads one request's head (request line and headers) within the whole
+/// request's deadline ([`DEADLINE`]): a client that trickles bytes cannot
+/// hold the connection longer.
 ///
 /// # Errors
 /// [`ReadError`].
-pub fn read(stream: &TcpStream) -> Result<Request, ReadError> {
-    let _ = stream.set_read_timeout(Some(READ_TIMEOUT));
+pub fn read_head(stream: &TcpStream) -> Result<Head<'_>, ReadError> {
+    let deadline = Instant::now() + DEADLINE;
     let mut reader = BufReader::new(stream.take((MAX_HEAD + MAX_BODY) as u64));
     let mut head = 0;
     let mut line = String::new();
     let mut next = |reader: &mut BufReader<_>, line: &mut String| -> Result<(), ReadError> {
+        arm(stream, deadline)?;
         line.clear();
         let n = reader.read_line(line).map_err(|_| ReadError::Io)?;
         head += n;
@@ -104,16 +127,44 @@ pub fn read(stream: &TcpStream) -> Result<Request, ReadError> {
     if request.header("transfer-encoding").is_some() {
         return Err(ReadError::NoLength);
     }
-    let length: usize = match request.header("content-length") {
-        None => 0,
-        Some(v) => v.parse().map_err(|_| ReadError::Malformed)?,
-    };
-    if length > MAX_BODY {
-        return Err(ReadError::TooLarge);
+    Ok(Head {
+        request,
+        stream,
+        reader,
+        deadline,
+    })
+}
+
+impl Head<'_> {
+    /// Reads the body (after the caller checked the head), within the
+    /// same deadline.
+    ///
+    /// # Errors
+    /// [`ReadError`].
+    pub fn body(mut self) -> Result<Request, ReadError> {
+        let length: usize = match self.request.header("content-length") {
+            None => 0,
+            Some(v) => v.parse().map_err(|_| ReadError::Malformed)?,
+        };
+        if length > MAX_BODY {
+            return Err(ReadError::TooLarge);
+        }
+        let mut body = vec![0; length];
+        let mut at = 0;
+        while at < length {
+            arm(self.stream, self.deadline)?;
+            let n = self
+                .reader
+                .read(body.get_mut(at..).unwrap_or_default())
+                .map_err(|_| ReadError::Io)?;
+            if n == 0 {
+                return Err(ReadError::Io);
+            }
+            at += n;
+        }
+        self.request.body = body;
+        Ok(self.request)
     }
-    let mut body = vec![0; length];
-    reader.read_exact(&mut body).map_err(|_| ReadError::Io)?;
-    Ok(Request { body, ..request })
 }
 
 /// Writes a response and closes the connection.
@@ -136,6 +187,7 @@ pub fn respond(
         405 => "Method Not Allowed",
         411 => "Length Required",
         413 => "Content Too Large",
+        503 => "Service Unavailable",
         _ => "Error",
     };
     let mut head = format!(

@@ -43,7 +43,14 @@ const session = createSlice({
   initialState: { snapshot: null, calc: null } as SessionState,
   reducers: {
     snapshot(state, action: PayloadAction<Snapshot>) {
-      state.snapshot = action.payload
+      // Refreshes can answer out of order: an older snapshot never
+      // replaces a newer one.
+      if (
+        state.snapshot === null ||
+        action.payload.version >= state.snapshot.version
+      ) {
+        state.snapshot = action.payload
+      }
     },
     calc(state, action: PayloadAction<[number, CalcResultDocumentV1] | null>) {
       state.calc = action.payload

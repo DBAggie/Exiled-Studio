@@ -50,6 +50,8 @@ pub struct Session {
     path: Option<PathBuf>,
     origin: Option<PathBuf>,
     notices: Vec<AppError>,
+    /// Bumped when another build is opened or the build is closed.
+    generation: u64,
 }
 
 fn stem(path: &Path) -> String {
@@ -74,7 +76,16 @@ impl Session {
             path: None,
             origin: None,
             notices: Vec::new(),
+            generation: 0,
         }
+    }
+
+    /// Which build is open: it changes when another build is opened (an
+    /// import, an open, a restore) or the build is closed, and never with
+    /// an edit, undo, or save.
+    #[must_use]
+    pub const fn generation(&self) -> u64 {
+        self.generation
     }
 
     /// The store.
@@ -174,6 +185,7 @@ impl Session {
         self.origin = origin;
         self.dirty = dirty;
         self.version += 1;
+        self.generation += 1;
     }
 
     /// Imports a PoB share code or XML text (atomic: on failure nothing
@@ -329,9 +341,9 @@ impl Session {
                 imported_from: self.origin.as_deref(),
             },
         )?;
+        // The build is unchanged: no new version, so no recalculation.
         self.path = Some(path.to_owned());
         self.dirty = false;
-        self.version += 1;
         Ok(path.to_owned())
     }
 
@@ -373,6 +385,7 @@ impl Session {
         self.dirty = false;
         self.notices.clear();
         self.version += 1;
+        self.generation += 1;
     }
 
     /// What a calculation of the current version needs, or why it cannot

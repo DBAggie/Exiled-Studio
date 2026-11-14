@@ -400,3 +400,39 @@ fn change_requests_should_need_the_users_permission_and_approval() {
     let stale = tool(&f, "request_item_edit", json!({"edit": edit}));
     assert_eq!(stale["structuredContent"]["code"], "APP_STALE_EDIT");
 }
+
+#[test]
+fn a_slow_client_should_not_hold_the_server() {
+    let mut f = fixture("slow");
+    // A connection that sends one byte and then nothing.
+    let mut idle = TcpStream::connect(f.server.addr()).unwrap();
+    idle.write_all(b"P").unwrap();
+    // Others are still served at once.
+    let ping = json!({"jsonrpc": "2.0", "id": 1, "method": "ping"});
+    let started = std::time::Instant::now();
+    assert_eq!(post_with(&f, &auth(&f), &ping).0, 200);
+    assert!(started.elapsed() < Duration::from_secs(5));
+    // And stopping does not wait for it.
+    let started = std::time::Instant::now();
+    f.server.stop();
+    assert!(started.elapsed() < Duration::from_secs(5));
+    drop(idle);
+}
+
+#[test]
+fn a_request_without_the_token_should_be_refused_before_its_body_is_read() {
+    let f = fixture("early");
+    let addr = f.server.addr();
+    // Announces a body it never sends: refused from the head alone.
+    let head = format!(
+        "POST /mcp HTTP/1.1
+Host: 127.0.0.1:{}
+Content-Length: 1000
+
+",
+        addr.port()
+    );
+    let started = std::time::Instant::now();
+    assert_eq!(send(addr, &head, b"").0, 401);
+    assert!(started.elapsed() < Duration::from_secs(5));
+}

@@ -100,6 +100,8 @@ struct Published {
     endpoint: Option<(String, String)>,
     recent: Vec<api::RecentEntry>,
     recovery: Vec<api::RecoveryEntry>,
+    /// The open build's generation ([`Session::generation`]).
+    generation: u64,
 }
 
 type Reply = Sender<Result<api::Outcome, AppError>>;
@@ -116,6 +118,8 @@ enum Msg {
     },
     Request {
         request: Box<api::ChangeRequest>,
+        /// The build generation its preview was made against.
+        generation: u64,
         reply: Sender<Result<api::ChangeRequest, AppError>>,
     },
     Permissions(api::McpPermissions, Sender<()>),
@@ -141,8 +145,7 @@ struct Shared {
 pub struct App {
     tx: Sender<Msg>,
     shared: Arc<Shared>,
-    writer: Option<JoinHandle<()>>,
-    worker: Option<JoinHandle<()>>,
+    threads: std::sync::Mutex<Vec<JoinHandle<()>>>,
 }
 
 impl std::fmt::Debug for App {
@@ -196,6 +199,7 @@ impl App {
             endpoint: None,
             recent: Vec::new(),
             recovery: Vec::new(),
+            generation: 0,
         };
         let shared = Arc::new(Shared {
             published: RwLock::new(published),
@@ -229,7 +233,13 @@ impl App {
                 standing_grant: false,
             },
             endpoint: None,
+            recent_list: Vec::new(),
+            recovery_list: Vec::new(),
+            request_generation: std::collections::BTreeMap::new(),
+            generation: 0,
         };
+        let mut writer = writer;
+        writer.refresh_lists();
         writer.publish();
         let writer = std::thread::Builder::new()
             .name("loom-app".to_owned())
@@ -238,8 +248,7 @@ impl App {
         Ok(Self {
             tx,
             shared,
-            writer: Some(writer),
-            worker: Some(worker),
+            threads: std::sync::Mutex::new(vec![writer, worker]),
         })
     }
 
@@ -302,15 +311,33 @@ impl App {
     /// # Errors
     /// `APP_NO_BUILD`, `APP_NO_DATA`, the edit's and calculation's codes.
     pub fn preview(&self, edit: &api::ItemEdit) -> Result<api::ItemEditPreview, AppError> {
-        let (state, data, calc) = self.read(|p| (p.state.clone(), p.data.clone(), p.calc.clone()));
+        self.preview_with_generation(edit).map(|(p, _)| p)
+    }
+
+    /// [`App::preview`], with the build generation it was made against.
+    fn preview_with_generation(
+        &self,
+        edit: &api::ItemEdit,
+    ) -> Result<(api::ItemEditPreview, u64), AppError> {
+        let (state, data, calc, version, generation) = self.read(|p| {
+            (
+                p.state.clone(),
+                p.data.clone(),
+                p.calc.clone(),
+                p.snapshot.version,
+                p.generation,
+            )
+        });
         let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
         let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
-        let version = self.read(|p| p.snapshot.version);
         let before = calc
             .as_ref()
             .filter(|(v, _, _)| *v == version)
             .map(|(_, r, _)| r.as_ref());
-        session::preview(&state, &data, edit, before, &|| false)
+        // Abandoned when the build changes meanwhile (or the app stops).
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
+        session::preview(&state, &data, edit, before, &cancel).map(|p| (p, generation))
     }
 
     /// The recent builds.
@@ -392,7 +419,7 @@ impl App {
                 "too many change requests are waiting",
             ));
         }
-        let preview = self.preview(&edit)?;
+        let (preview, generation) = self.preview_with_generation(&edit)?;
         let request = api::ChangeRequest {
             id: self.shared.requests.fetch_add(1, Ordering::Relaxed) + 1,
             client: client.chars().take(64).collect(),
@@ -406,20 +433,25 @@ impl App {
         self.tx
             .send(Msg::Request {
                 request: Box::new(request),
+                generation,
                 reply,
             })
             .map_err(|_| stopped())?;
         answer.recv().map_err(|_| stopped())?
     }
 
-    /// Stops the threads (keeping a recovery snapshot of unsaved changes).
-    pub fn stop(&mut self) {
+    /// Stops the threads, cancelling a running calculation, and keeps a
+    /// recovery snapshot of unsaved changes. Idempotent; the host calls it
+    /// on exit.
+    pub fn stop(&self) {
+        self.shared.latest.store(u64::MAX, Ordering::SeqCst);
         let _ = self.tx.send(Msg::Stop);
-        if let Some(w) = self.writer.take() {
-            let _ = w.join();
-        }
-        if let Some(w) = self.worker.take() {
-            let _ = w.join();
+        let threads = match self.threads.lock() {
+            Ok(mut t) => std::mem::take(&mut *t),
+            Err(poisoned) => std::mem::take(&mut *poisoned.into_inner()),
+        };
+        for t in threads {
+            let _ = t.join();
         }
     }
 }
@@ -442,10 +474,20 @@ fn worker(jobs: &Receiver<Job>, tx: &Sender<Msg>, shared: &Shared) {
         if cancel() {
             continue;
         }
-        let result = session::calculate(&job.state, &job.data, &cancel).and_then(|r| {
-            let doc = loom_pipeline::document(&r)?;
-            Ok((Arc::new(r), Arc::new(doc)))
-        });
+        let run = || {
+            session::calculate(&job.state, &job.data, &cancel).and_then(|r| {
+                let doc = loom_pipeline::document(&r)?;
+                Ok((Arc::new(r), Arc::new(doc)))
+            })
+        };
+        // A panic in the engine fails this calculation, not the worker.
+        let result =
+            std::panic::catch_unwind(std::panic::AssertUnwindSafe(run)).unwrap_or_else(|_| {
+                Err(AppError::layer(
+                    "CALC_PANIC",
+                    "the calculation stopped unexpectedly",
+                ))
+            });
         if tx.send(Msg::CalcDone { version, result }).is_err() {
             return;
         }
@@ -475,6 +517,14 @@ struct Writer {
     requests: Vec<api::ChangeRequest>,
     permissions: api::McpPermissions,
     endpoint: Option<(String, String)>,
+    /// The recent list and recovery snapshots, read when they can change
+    /// (not on every publish).
+    recent_list: Vec<api::RecentEntry>,
+    recovery_list: Vec<api::RecoveryEntry>,
+    /// The build generation each request's preview was made against.
+    request_generation: std::collections::BTreeMap<u64, u64>,
+    /// The generation the pending requests were last checked against.
+    generation: u64,
 }
 
 impl Writer {
@@ -515,20 +565,27 @@ impl Writer {
                     let _ = reply.send(result);
                 }
                 Msg::CalcDone { version, result } => self.calc_done(version, result),
-                Msg::Request { request, reply } => {
-                    let result = self.request(*request);
+                Msg::Request {
+                    request,
+                    generation,
+                    reply,
+                } => {
+                    let result = self.request(*request, generation);
                     let _ = reply.send(result);
                 }
-                Msg::Permissions(p, done) => {
+                Msg::Permissions(mut p, done) => {
+                    // The standing grant lives only while the server runs.
+                    if self.endpoint.is_none() {
+                        p.standing_grant = false;
+                    }
                     self.permissions = p;
                     self.publish();
                     let _ = done.send(());
                     self.emit(None, api::EventKind::McpChanged);
                 }
                 Msg::Endpoint(e, done) => {
-                    if e.is_none() {
-                        self.permissions.standing_grant = false;
-                    }
+                    // A start or a stop ends any standing grant.
+                    self.permissions.standing_grant = false;
                     self.endpoint = e;
                     self.publish();
                     let _ = done.send(());
@@ -537,11 +594,13 @@ impl Writer {
                 Msg::Stop => break,
             }
         }
-        // Unsaved changes stay recoverable; otherwise nothing is left.
+        // Unsaved changes stay recoverable; otherwise nothing is left (the
+        // lock file goes too).
         if self.session.state().is_some() && self.session.dirty() {
             self.write_recovery();
         } else {
             self.recovery.clear();
+            self.recovery.release();
         }
     }
 
@@ -587,18 +646,9 @@ impl Writer {
             requests: self.requests.clone(),
             permissions: self.permissions.clone(),
             endpoint: self.endpoint.clone(),
-            recent: self
-                .recent
-                .entries(self.session.store())
-                .into_iter()
-                .map(|e| api::RecentEntry {
-                    id: e.id(),
-                    path: e.path,
-                    name: e.name,
-                    at: e.at,
-                })
-                .collect(),
-            recovery: self.recovery_list(),
+            recent: self.recent_list.clone(),
+            recovery: self.recovery_list.clone(),
+            generation: self.session.generation(),
         };
         match self.shared.published.write() {
             Ok(mut p) => *p = published,
@@ -606,7 +656,23 @@ impl Writer {
         }
     }
 
-    fn recovery_list(&self) -> Vec<api::RecoveryEntry> {
+    /// Reads the recent list and the recovery snapshots again.
+    fn refresh_lists(&mut self) {
+        self.recent_list = self
+            .recent
+            .entries(self.session.store())
+            .into_iter()
+            .map(|e| api::RecentEntry {
+                id: e.id(),
+                path: e.path,
+                name: e.name,
+                at: e.at,
+            })
+            .collect();
+        self.recovery_list = self.read_recovery();
+    }
+
+    fn read_recovery(&self) -> Vec<api::RecoveryEntry> {
         self.recovery
             .list(self.session.store())
             .into_iter()
@@ -639,11 +705,26 @@ impl Writer {
                             data,
                         })
                         .is_ok();
+                    if !started {
+                        self.calc.error = Some(stopped());
+                    }
                 }
                 Err(e) => self.calc.error = Some(e),
             }
         } else {
             self.calc.done = None;
+        }
+        // Another build (or none): pending requests were made for the old
+        // one, so they fail as stale.
+        if self.session.generation() != self.generation {
+            self.generation = self.session.generation();
+            for r in &mut self.requests {
+                if r.status == api::RequestStatus::Pending {
+                    r.status = api::RequestStatus::Failed;
+                    r.error =
+                        Some(AppError::new(Code::StaleEdit, "another build was opened").dto());
+                }
+            }
         }
         if self.session.dirty() && self.session.state().is_some() {
             self.autosave_due
@@ -721,6 +802,7 @@ impl Writer {
                 let v = self.session.open(&path)?;
                 self.recovery.clear();
                 self.touch_recent(&path);
+                self.refresh_lists();
                 Ok(done(v))
             }
             HostCommand::SaveAs(path) => {
@@ -744,6 +826,10 @@ impl Writer {
         self.recovery.clear();
         self.autosave_due = None;
         self.touch_recent(path);
+        self.refresh_lists();
+        // A save changes no build, so no recalculation: the projection
+        // (clean, its path) and the event only.
+        self.publish();
         self.emit(
             None,
             api::EventKind::Saved {
@@ -775,11 +861,13 @@ impl Writer {
                     Ok(v) => {
                         self.recovery.clear();
                         self.touch_recent(&path);
+                        self.refresh_lists();
                         Ok(done(v))
                     }
                     Err(e) => {
                         if e.code == "PERSIST_READ" {
                             let _ = self.recent.remove(&store, &id);
+                            self.refresh_lists();
                             self.publish();
                         }
                         Err(e)
@@ -787,7 +875,7 @@ impl Writer {
                 }
             }
             api::Command::Restore { id } => {
-                if !self.recovery_list().iter().any(|r| r.id == id) {
+                if !self.read_recovery().iter().any(|r| r.id == id) {
                     return Err(AppError::new(Code::NotFound, "no such recovery snapshot"));
                 }
                 let (header, build) = self
@@ -801,10 +889,12 @@ impl Writer {
                     true,
                 );
                 let _ = self.recovery.discard(&id);
+                self.refresh_lists();
                 Ok(done(v))
             }
             api::Command::Discard { id } => {
                 self.recovery.discard(&id)?;
+                self.refresh_lists();
                 self.publish();
                 Ok(api::Outcome::Nothing)
             }
@@ -812,6 +902,14 @@ impl Writer {
                 let index = self.pending(id)?;
                 let edit = self.requests.get(index).map(|r| r.edit.clone());
                 let result = match edit {
+                    Some(_)
+                        if self.request_generation.get(&id) != Some(&self.session.generation()) =>
+                    {
+                        Err(AppError::new(
+                            Code::StaleEdit,
+                            "the request is for another build",
+                        ))
+                    }
                     Some(e) => self.session.edit(&e, Some(id)),
                     None => Err(AppError::new(Code::Request, "no such request")),
                 };
@@ -836,6 +934,7 @@ impl Writer {
             api::Command::Close => {
                 self.session.close();
                 self.recovery.clear();
+                self.refresh_lists();
                 Ok(done(self.session.version()))
             }
         }
@@ -860,7 +959,17 @@ impl Writer {
         }
     }
 
-    fn request(&mut self, request: api::ChangeRequest) -> Result<api::ChangeRequest, AppError> {
+    fn request(
+        &mut self,
+        request: api::ChangeRequest,
+        generation: u64,
+    ) -> Result<api::ChangeRequest, AppError> {
+        if generation != self.session.generation() {
+            return Err(AppError::new(
+                Code::StaleEdit,
+                "another build was opened meanwhile",
+            ));
+        }
         if !self.permissions.requests {
             return Err(AppError::new(
                 Code::RequestsOff,
@@ -879,6 +988,7 @@ impl Writer {
             ));
         }
         let id = request.id;
+        self.request_generation.insert(id, generation);
         self.requests.push(request);
         let index = self.requests.len() - 1;
         if self.permissions.standing_grant {

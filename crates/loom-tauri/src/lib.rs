@@ -387,5 +387,17 @@ pub fn run() -> tauri::Result<()> {
             Box::new(Dialogs(handle.clone()))
         },
     );
-    builder.run(tauri::generate_context!())
+    let app = builder.build(tauri::generate_context!())?;
+    app.run(|handle, event| {
+        // Tauri's exit does not drop managed state: stop the application
+        // here, so a change made since the last autosave is kept for
+        // recovery and the MCP server stops.
+        if let tauri::RunEvent::Exit = event
+            && let Some(ctx) = handle.try_state::<Ctx>()
+        {
+            drop(lock(&ctx).take());
+            ctx.app.stop();
+        }
+    });
+    Ok(())
 }

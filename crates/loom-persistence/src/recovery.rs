@@ -41,6 +41,16 @@ pub struct Header {
     pub origin: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct HeaderOnly {
+    format: String,
+    version: u32,
+    #[serde(flatten)]
+    header: Header,
+    #[serde(rename = "build")]
+    _build: serde::de::IgnoredAny,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File1 {
@@ -161,6 +171,13 @@ impl Recovery {
         let _ = std::fs::remove_file(self.file(&self.instance));
     }
 
+    /// At a clean exit with nothing to recover: releases the lock and
+    /// deletes the lock file, so lock files do not accumulate.
+    pub fn release(&self) {
+        let _ = self._lock.unlock();
+        let _ = std::fs::remove_file(self.dir.join(format!("{}.lock", self.instance)));
+    }
+
     /// The snapshots of instances that have ended, oldest first; ones that
     /// do not read are skipped (they stay on disk for the user to find).
     #[must_use]
@@ -180,7 +197,7 @@ impl Recovery {
             if id == self.instance || !valid_id(id) || self.live(id) {
                 continue;
             }
-            if let Ok((header, _)) = self.read_header(store, id) {
+            if let Ok(header) = self.header(store, id) {
                 out.push(Found {
                     id: id.to_owned(),
                     header,
@@ -207,6 +224,18 @@ impl Recovery {
             }
             Err(_) => true,
         }
+    }
+
+    /// A snapshot's header, without parsing its build.
+    fn header(&self, store: &Store, id: &str) -> Result<Header, Error> {
+        let path = self.file(id);
+        let text = store.read_file(&path)?;
+        let file: HeaderOnly = serde_json::from_str(&text)
+            .map_err(|_| PersistError::NotABuild { path: path.clone() })?;
+        if file.format != FORMAT || file.version != VERSION {
+            return Err(PersistError::NotABuild { path }.into());
+        }
+        Ok(file.header)
     }
 
     fn read_header(&self, store: &Store, id: &str) -> Result<(Header, Value), Error> {

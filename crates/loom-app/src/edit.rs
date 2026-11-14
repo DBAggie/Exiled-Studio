@@ -23,6 +23,11 @@ pub struct Edited {
     pub ends: RangeEnds,
 }
 
+/// The most operations one edit may have.
+pub const MAX_OPS: usize = 50;
+/// The longest line an edit may write.
+pub const MAX_LINE: usize = 500;
+
 /// What the edit does to one original line.
 enum Fate {
     Keep,
@@ -47,6 +52,12 @@ pub fn apply(
         .items
         .item(id)
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", edit.item)))?;
+    if edit.ops.len() > MAX_OPS {
+        return Err(AppError::new(
+            Code::EditLine,
+            format!("at most {MAX_OPS} operations"),
+        ));
+    }
     let lines = &item.body.lines;
     let expect: BTreeMap<u32, &str> = edit
         .expect
@@ -119,10 +130,14 @@ pub fn apply(
         })
         .count();
     let mut sources: Vec<String> = Vec::new();
+    let mut made: Vec<usize> = Vec::new();
     for (line, fate) in lines.iter().zip(fates) {
         match fate {
             Fate::Remove => {}
-            Fate::Text(t) => sources.push(t),
+            Fate::Text(t) => {
+                made.push(sources.len());
+                sources.push(t);
+            }
             Fate::Keep => {
                 if removed_implicits > 0
                     && matches!(&line.kind, LineKind::Spec { key, .. } if key == "Implicits")
@@ -138,16 +153,19 @@ pub fn apply(
             }
         }
     }
-    sources.extend(added);
+    for a in added {
+        made.push(sources.len());
+        sources.push(a);
+    }
 
     // The text through the export's own writer (lines joined; no spacing).
     let shell = Item {
         id: item.id,
         body: loom_domain::ItemBody {
             lines: sources
-                .into_iter()
+                .iter()
                 .map(|source| ItemLine {
-                    source,
+                    source: source.clone(),
                     kind: LineKind::Unrecognized,
                 })
                 .collect(),
@@ -159,6 +177,22 @@ pub fn apply(
     };
     let text = pob_xml::item_text(&shell);
     let mut body = pob_item::to_domain(&pob_item::read(&text));
+    // An edit changes modifier lines only: a written line that reads as a
+    // header, a spec, or a flag would change the item's structure. The
+    // reader keeps every non-empty line, so indices line up.
+    if body.lines.len() != sources.len()
+        || made.iter().any(|&i| {
+            !matches!(
+                body.lines.get(i).map(|l| &l.kind),
+                Some(LineKind::Modifier(_) | LineKind::Unrecognized)
+            )
+        })
+    {
+        return Err(AppError::new(
+            Code::EditLine,
+            "an edited line must be a modifier line",
+        ));
+    }
     let item_ends = loom_pipeline::resolve_item(data.resolver, data.data, &mut body);
     let mut body = Some(body);
 
@@ -198,10 +232,10 @@ fn editable(kind: &LineKind) -> bool {
 
 fn one_line(text: &str) -> Result<String, AppError> {
     let t = text.trim();
-    if t.is_empty() || t.contains(['\n', '\r']) {
+    if t.is_empty() || t.contains(['\n', '\r']) || t.chars().count() > MAX_LINE {
         return Err(AppError::new(
             Code::EditLine,
-            "a line must be one non-empty line",
+            "a line must be one non-empty line of at most 500 characters",
         ));
     }
     Ok(t.to_owned())
