@@ -25,6 +25,18 @@ export type LineOp =
       }
     }
   | {
+      'set-range': {
+        /**
+         * The line's index.
+         */
+        line: number
+        /**
+         * The roll, from 0 to 1.
+         */
+        value: number
+      }
+    }
+  | {
       add: {
         /**
          * The text.
@@ -32,10 +44,6 @@ export type LineOp =
         text: string
       }
     }
-/**
- * What a change was, for undo and redo labels.
- */
-export type ChangeKind = 'item-edit' | 'request-applied'
 
 /**
  * Every top-level type of the API, so one schema names them all. Never
@@ -63,9 +71,9 @@ export interface ApplicationAPIV1 {
     | {
         'open-recent': {
           /**
-           * The index in the recent list.
+           * The ID.
            */
-          index: number
+          id: string
         }
       }
     | {
@@ -100,6 +108,7 @@ export interface ApplicationAPIV1 {
           id: number
         }
       }
+    | 'export-share-code'
     | 'close'
   error: ApiError
   event: Event
@@ -142,9 +151,16 @@ export interface ApplicationAPIV1 {
   snapshot: Snapshot
 }
 /**
- * An item edit: line operations on one item.
+ * An item edit: line operations on one item. It is refused as stale
+ * (`APP_STALE_EDIT`) when the item's lines it names are not the ones
+ * it expects.
  */
 export interface ItemEdit {
+  /**
+   * The text each line the operations name had when the edit was
+   * made, by line index.
+   */
+  expect: ExpectedLine[]
   /**
    * The item's ID.
    */
@@ -154,6 +170,19 @@ export interface ItemEdit {
    * the edit.
    */
   ops: LineOp[]
+}
+/**
+ * A line's text an edit expects.
+ */
+export interface ExpectedLine {
+  /**
+   * The line's index.
+   */
+  line: number
+  /**
+   * Its text.
+   */
+  text: string
 }
 /**
  * An error.
@@ -417,9 +446,16 @@ export interface ChangeRequest {
   status: 'pending' | 'applied' | 'declined' | 'failed'
 }
 /**
- * An item edit: line operations on one item.
+ * An item edit: line operations on one item. It is refused as stale
+ * (`APP_STALE_EDIT`) when the item's lines it names are not the ones
+ * it expects.
  */
 export interface ItemEdit1 {
+  /**
+   * The text each line the operations name had when the edit was
+   * made, by line index.
+   */
+  expect: ExpectedLine[]
   /**
    * The item's ID.
    */
@@ -531,10 +567,10 @@ export interface RecentEntry {
    */
   at: number
   /**
-   * Its position in the list (the UI opens a recent build by it;
-   * the application checks it, the UI never sends a path).
+   * The ID the application issued for it (the UI opens a recent
+   * build by it and never sends a path).
    */
-  index: number
+  id: string
   /**
    * The display name.
    */
@@ -584,6 +620,13 @@ export interface Snapshot {
    */
   dirty: boolean
   history: HistoryView
+  /**
+   * Notices about the open build that are not errors (for example
+   * `APP_RESOLUTION_CHANGED`: the build's stored resolutions differ
+   * from this bundle's, so they stand and rolled values stay
+   * unsettled).
+   */
+  notices: ApiError3[]
   /**
    * The file the build was imported from, if any; never written.
    */
@@ -802,9 +845,27 @@ export interface HistoryView {
   /**
    * What redo would apply again.
    */
-  redo?: ChangeKind | null
+  redo?: HistoryEntry | null
   /**
    * What undo would revert.
    */
-  undo?: ChangeKind | null
+  undo?: HistoryEntry | null
+}
+/**
+ * One change in the history (ADR-017: an addon's change is recorded
+ * like the user's).
+ */
+export interface HistoryEntry {
+  /**
+   * The item it changed.
+   */
+  item: number
+  /**
+   * What it was.
+   */
+  kind: 'item-edit' | 'request-applied'
+  /**
+   * The change request it applied, when an MCP client asked for it.
+   */
+  request?: number | null
 }

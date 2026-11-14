@@ -364,22 +364,20 @@
           "const": "save"
         },
         {
-          "description": "Opens a recent build by its index.",
+          "description": "Opens a recent build by its ID.",
           "type": "object",
           "properties": {
             "open-recent": {
               "type": "object",
               "properties": {
-                "index": {
-                  "description": "The index in the recent list.",
-                  "type": "integer",
-                  "format": "uint32",
-                  "minimum": 0
+                "id": {
+                  "description": "The ID.",
+                  "type": "string"
                 }
               },
               "additionalProperties": false,
               "required": [
-                "index"
+                "id"
               ]
             }
           },
@@ -483,6 +481,11 @@
           "required": [
             "decline"
           ]
+        },
+        {
+          "description": "Writes the build's PoB share code.",
+          "type": "string",
+          "const": "export-share-code"
         },
         {
           "description": "Closes the build.",
@@ -706,6 +709,27 @@
         }
       ]
     },
+    "ExpectedLine": {
+      "description": "A line's text an edit expects.",
+      "type": "object",
+      "properties": {
+        "line": {
+          "description": "The line's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "Its text.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "text"
+      ]
+    },
     "FieldDelta": {
       "description": "One field before and after an edit.",
       "type": "object",
@@ -746,6 +770,36 @@
         "state-after"
       ]
     },
+    "HistoryEntry": {
+      "description": "One change in the history (ADR-017: an addon's change is recorded\nlike the user's).",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item it changed.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it was.",
+          "$ref": "#/$defs/ChangeKind"
+        },
+        "request": {
+          "description": "The change request it applied, when an MCP client asked for it.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "item"
+      ]
+    },
     "HistoryView": {
       "description": "Undo and redo.",
       "type": "object",
@@ -762,7 +816,7 @@
           "description": "What redo would apply again.",
           "anyOf": [
             {
-              "$ref": "#/$defs/ChangeKind"
+              "$ref": "#/$defs/HistoryEntry"
             },
             {
               "type": "null"
@@ -773,7 +827,7 @@
           "description": "What undo would revert.",
           "anyOf": [
             {
-              "$ref": "#/$defs/ChangeKind"
+              "$ref": "#/$defs/HistoryEntry"
             },
             {
               "type": "null"
@@ -788,9 +842,16 @@
       ]
     },
     "ItemEdit": {
-      "description": "An item edit: line operations on one item.",
+      "description": "An item edit: line operations on one item. It is refused as stale\n(`APP_STALE_EDIT`) when the item's lines it names are not the ones\nit expects.",
       "type": "object",
       "properties": {
+        "expect": {
+          "description": "The text each line the operations name had when the edit was\nmade, by line index.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExpectedLine"
+          }
+        },
         "item": {
           "description": "The item's ID.",
           "type": "integer",
@@ -808,7 +869,8 @@
       "additionalProperties": false,
       "required": [
         "item",
-        "ops"
+        "ops",
+        "expect"
       ]
     },
     "ItemEditPreview": {
@@ -1036,6 +1098,37 @@
           "additionalProperties": false,
           "required": [
             "remove"
+          ]
+        },
+        {
+          "description": "Sets a ranged line's roll, as PoB's `{range:r}` prefix (0 the\nlow end, 1 the high end), keeping the range.",
+          "type": "object",
+          "properties": {
+            "set-range": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "value": {
+                  "description": "The roll, from 0 to 1.",
+                  "type": "number",
+                  "format": "double"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-range"
           ]
         },
         {
@@ -1336,11 +1429,9 @@
           "format": "uint64",
           "minimum": 0
         },
-        "index": {
-          "description": "Its position in the list (the UI opens a recent build by it;\nthe application checks it, the UI never sends a path).",
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "id": {
+          "description": "The ID the application issued for it (the UI opens a recent\nbuild by it and never sends a path).",
+          "type": "string"
         },
         "name": {
           "description": "The display name.",
@@ -1353,7 +1444,7 @@
       },
       "additionalProperties": false,
       "required": [
-        "index",
+        "id",
         "path",
         "name",
         "at"
@@ -1455,6 +1546,13 @@
           "description": "Undo and redo.",
           "$ref": "#/$defs/HistoryView"
         },
+        "notices": {
+          "description": "Notices about the open build that are not errors (for example\n`APP_RESOLUTION_CHANGED`: the build's stored resolutions differ\nfrom this bundle's, so they stand and rolled values stay\nunsettled).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApiError"
+          }
+        },
         "origin": {
           "description": "The file the build was imported from, if any; never written.",
           "type": [
@@ -1482,7 +1580,8 @@
         "calc",
         "history",
         "dirty",
-        "data"
+        "data",
+        "notices"
       ]
     },
     "StatView": {
