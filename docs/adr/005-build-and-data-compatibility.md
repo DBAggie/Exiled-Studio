@@ -1,6 +1,6 @@
 # ADR-005: Build, Schema, and Game-Data Compatibility
 
-- Status: Accepted (revised 2026-11-08; Amendment 1, 2026-11-08)
+- Status: Accepted (revised 2026-11-08; Amendment 1, 2026-11-08; Amendment 2, proposed 2026-11-14, accepted on merge)
 - Date: 2026-02-01
 
 ## Decision
@@ -42,3 +42,20 @@ Bundles2 bundles are Oodle-compressed (Kraken/Leviathan). The Spike A survey fou
 - CI can re-check outputs from decompressed or extracted inputs, but cannot reproduce decompression itself; reproducibility rests on the recorded index hash, decoder version, and output hashes.
 - The repository and its dependency tree stay free of GPL-derived code, so the project license and the `cargo-deny` policy are unaffected.
 - The RePOE fallback stays in place for the case where extraction is blocked for other reasons.
+
+## Amendment 2 (2026-11-14): GGG's passive tree export as a pinned input
+Decided by the maintainer on 2026-11-14 in the passive tree and Phase 5 session (`dev/active/passive-tree-and-phase-5/`, questions MQ1 and MQ8, after `plan-reviewer` finding B1); proposed in that PR and accepted when the maintainer merges it.
+
+### Context
+The passive tree editor (ADR-008 Amendment 1) needs three things the game files read by our extractor do not give: the orbit radii and the angle tables that place nodes, the trees of older versions that builds still use (the corpus has builds on 3_27 and 3_28), and the tree's art. GGG publishes the PoE1 passive tree for tool developers (https://www.pathofexile.com/developer/docs/data, the export repository `grindinggear/skilltree-export`: `data.json` per release, sprite sheets in `assets/`). ADR-000 allows GGG assets "where GGG publishes them for tool developers"; this ADR said game data comes only from our extractor and bundles hold no GGG art.
+
+### Decision
+- **Pinned input.** GGG's passive tree export is an allowed input for (a) the layout constants (orbit radii, slots per orbit, and the angle tables the export documents), (b) tree packs of older tree versions, converted with node text resolved to stat IDs (ADR-015; unresolved lines quarantined), and (c) the tree's sprite sheets. It is fetched by a maintainer-run script (`tools/tree/`) at commits pinned in a committed manifest, never by application code.
+- **Provenance.** A bundle records the export's repository, commit, and the SHA-256 of every file it read, per tree pack and for the layout constants; the bundle writer refuses a checkout that does not match the pin.
+- **Sprites in bundles.** A bundle may carry the export's sprite sheets for its tree versions, unmodified, with their provenance; they are never committed to this repository and ship only inside signed bundles. The app shows GGG's third-party notice ("This product isn't affiliated with or endorsed by Grinding Gear Games in any way."). Other GGG art and audio stay excluded.
+- **Unchanged.** The game's own tree (positions from its graph files, stats as stat IDs) stays the source for the version of the game install; PoB stays a cross-check only.
+
+### Consequences
+- The data schema gains provenance blocks and tree pack files; `bundle-check` validates them.
+- If GGG withdraws the export or states terms that do not permit this use, the sprite sheets leave the bundles and the renderer's own shapes (always present as the fallback) take over; the data inputs are re-examined.
+- The maintainer accepted the remaining risk that the export states no licence (session 2026-11-14).
