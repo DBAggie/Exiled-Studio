@@ -9,7 +9,7 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [x] `plan-reviewer` on the plan; findings in the context file
 - [x] Maintainer answers on MQ1 to MQ8 (2026-11-14, context file)
 - [x] T0 ADR-008 Amendment 1, ADR-005 Amendment 2, ACTION-PLAN change, ADR README, hard rules
-- [ ] Open the draft PR; follow-up commit with the PR number
+- [x] Open the draft PR (#107); follow-up commit with the PR number
 - [ ] P5 Logs (tracing, JSON lines, rotation, redaction, correlation IDs), diagnostics export with preview, crash records
 - [ ] P1 Packaging: bundler config, version policy (0.1.0), `package` CI job (portable, AppImage smoke), WebView2 offline
 - [ ] T1a Synthetic tree fixture bundle and its generator
