@@ -339,7 +339,9 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
                 .add_filter("Path of Building build", &["xml"])
                 .set_file_name(name)
                 .blocking_save_file(),
-            Pick::BundleFolder => dialog.blocking_pick_folder(),
+            Pick::BundleFolder => dialog
+                .set_title("Choose the game data folder (the folder that holds bundle.json)")
+                .blocking_pick_folder(),
         };
         path.and_then(|p| p.into_path().ok())
     }

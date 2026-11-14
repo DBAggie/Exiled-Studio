@@ -13,7 +13,7 @@ async function imported() {
   })
   await expectAccessible()
   await r.user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
-  await screen.findByRole('heading', { name: 'Import result' })
+  await screen.findByRole('heading', { name: 'Imported build', level: 1 })
   return r
 }
 
@@ -23,10 +23,10 @@ describe('accessibility', () => {
     await expectAccessible()
 
     await user.click(screen.getByRole('button', { name: 'Open the dashboard' }))
-    await waitFor(() => screen.getByRole('button', { name: 'Explain Life' }))
+    await waitFor(() => screen.getByRole('button', { name: /^Life:/ }))
     await expectAccessible()
 
-    await user.click(screen.getByRole('button', { name: 'Explain Life' }))
+    await user.click(screen.getByRole('button', { name: /^Life:/ }))
     await screen.findByRole('heading', { name: /Why is Life/ })
     await expectAccessible()
 
@@ -40,7 +40,7 @@ describe('accessibility', () => {
     await screen.findByLabelText('Line 4 text')
     await user.click(screen.getByRole('button', { name: 'Remove line 5' }))
     await user.click(screen.getByRole('button', { name: 'Preview effect' }))
-    await screen.findByRole('heading', { name: /Effect of the edit/ })
+    await screen.findByRole('heading', { name: 'Impact of this edit' })
     await expectAccessible()
 
     await user.click(screen.getByRole('button', { name: /Warnings/ }))

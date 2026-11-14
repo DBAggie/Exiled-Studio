@@ -10,18 +10,21 @@ describe('keyboard', () => {
   it('imports, navigates, and uses the export menu without a mouse', async () => {
     const { user } = await renderApp()
     // The start screen's heading has focus; Tab reaches the import field.
-    expect(document.activeElement?.textContent).toBe('Exiled Studio')
+    expect(document.activeElement?.textContent).toBe('What do you want to do?')
     await user.tab()
     expect(document.activeElement).toBe(
-      screen.getByLabelText('Share code or XML'),
+      screen.getByLabelText('Paste a share code or build XML'),
     )
     await user.keyboard('<PathOfBuilding/>')
     await user.tab()
     expect(document.activeElement).toBe(
-      screen.getByRole('button', { name: 'Import' }),
+      screen.getByRole('button', { name: 'Import build' }),
     )
     await user.keyboard('{Enter}')
-    const review = await screen.findByRole('heading', { name: 'Import result' })
+    const review = await screen.findByRole('heading', {
+      name: 'Imported build',
+      level: 1,
+    })
     expect(document.activeElement).toBe(review)
 
     // Tab to the continue button and press Space.

@@ -1,6 +1,6 @@
 # Phase 4 report: application slice and MCP addon
 
-Phase 4 of `docs/plan/ACTION-PLAN.md` ("Application slice + MCP addon"), planned in `dev/active/phase-4-application-slice/` (plan, context with both reviews, tasks). Plan, implementation, and this report are one PR, #105, at the maintainer's request (2026-11-13: "Complete phase 4 in the fewest number of PRs possible").
+Phase 4 of `docs/plan/ACTION-PLAN.md` ("Application slice + MCP addon"), planned in `dev/completed/phase-4-application-slice/` (plan, context with both reviews, tasks). Plan, implementation, and this report are one PR, #105, at the maintainer's request (2026-11-13: "Complete phase 4 in the fewest number of PRs possible").
 
 **Verdict: the gate is met.** Gate items 1 to 5 pass in CI on Windows and Linux. Item 1b, the real application under WebDriver, passes in CI on Linux (WebKitGTK) and on Windows (WebView2) in the maintainer's run on 2026-11-13; the Windows CI job cannot create a WebDriver session on the hosted runner and runs without gating (section 3). The rest of the real-app checklist (section 5: the MCP client, zoom, target size, a screen reader) is for the maintainer and does not block the gate. The `axe-core` license exception (MPL-2.0, test-only) was approved by the maintainer 2026-11-13 (section 6).
 
@@ -43,15 +43,15 @@ Run `pnpm build` in `ui/`, then `cargo run -p loom-tauri` with `LOOM_BUNDLE_DIR`
 1. Import a PoB share code; the import result shows counts and warnings.
 2. The dashboard shows fields with states; a field without a value says why.
 3. A field's breakdown opens; Back returns.
-4. Edit an item line, preview, apply; "Recalculating" then "Calculation up to date"; Undo and Redo.
+4. Edit an item line, preview, apply; "Recalculating" then "Up to date" (the UI fidelity PR's wording; "Calculation up to date" before it); Undo and Redo.
 5. Save, close, open from the recent list; the same numbers.
 6. Export PoB XML and import it in PoB v2.67.2.
-7. Start the MCP server; `claude mcp add --transport http exiled-studio <url> --header "Authorization: Bearer <token>"`; ask the client to read the build; allow requests; approve one; undo it.
+7. Start the MCP server; `claude mcp add --scope user --transport http exiled-studio <url> --header "Authorization: Bearer <token>"` (the AI connection screen's **Copy command** button copies it with the token); ask the client to read the build; allow requests; approve one; undo it. Use `--scope user`: without it Claude Code saves the server for the project folder under the spelling of the folder it ran in, and on Windows `D:/...` and `d:/...` are different keys, so a server added from one terminal did not show in VS Code, which opens the folder as `d:/...` (found in the maintainer's run 2026-11-13). The token changes each time the server starts, so the client is re-added after each restart (decision 11).
 8. Quit with unsaved changes; start again; restore.
 9. Accessibility: zoom to 200 % (no lost content or function), target sizes, a screen-reader pass (NVDA on Windows, Orca on Linux) over the start screen, dashboard, and item editor.
 
 ## 6. Open for the maintainer
-- **`axe-core` (MPL-2.0)**: a test-only dependency of `ui/` (accessibility checks), never shipped; the exception was approved by the maintainer 2026-11-13 and is listed in `ui/scripts/check-licenses.mjs`. `lightningcss` (Vite's CSS tool, MPL-2.0) was already in the tree.
+- **`axe-core` (MPL-2.0)**: a test-only dependency of `ui/` (accessibility checks), never shipped; approved by the maintainer 2026-11-13. Since the UI fidelity PR (same day) MPL-2.0 is on the allow-list, which now holds OSI-approved licenses (maintainer decision 2026-11-13), so it needs no named exception.
 - **UI brief questions** (`docs/ui/UI-DESIGN-BRIEF.md`, section 7) stay open; this slice depends on none of them.
 
 ## 7. Known limitations (later phases)

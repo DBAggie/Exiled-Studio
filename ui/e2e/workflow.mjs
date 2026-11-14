@@ -98,13 +98,13 @@ try {
   ).sessionId
 
   step('the start screen')
-  await text('Import a Path of Building build')
+  await text('Import from Path of Building')
 
   step('import a file the user picks')
   await click(button('Open a .xml file…'), 'the import button')
-  await text('Import result')
+  await text('Item lines read')
   await click(button('Open the dashboard'), 'continue')
-  await text('Calculation up to date')
+  await text('Up to date')
 
   step('edit an item and apply it')
   await click(button('Equipment'), 'the equipment menu')
@@ -120,11 +120,11 @@ try {
   })
   await click(button('Apply'), 'apply')
   await text('Edit applied. Undo is available.')
-  await text('Calculation up to date')
+  await text('Up to date')
 
   step('undo')
   await click(button('Undo'), 'undo')
-  await text('Calculation up to date')
+  await text('Up to date')
 
   step('save (the first save asks where)')
   await click(button('Save'), 'save')
