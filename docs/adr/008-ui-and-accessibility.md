@@ -1,6 +1,6 @@
 # ADR-008: UI, UX, and Accessibility
 
-- Status: Accepted; Amendment 1 (passive tree editor before skills, proposed 2026-11-14, accepted on merge)
+- Status: Accepted; Amendment 1 (passive tree editor before skills, accepted 2026-11-14 with PR #107)
 - Date: 2026-02-01
 
 ## Decision

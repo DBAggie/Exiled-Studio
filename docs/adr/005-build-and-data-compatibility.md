@@ -1,6 +1,6 @@
 # ADR-005: Build, Schema, and Game-Data Compatibility
 
-- Status: Accepted (revised 2026-11-08; Amendment 1, 2026-11-08; Amendment 2, proposed 2026-11-14, accepted on merge)
+- Status: Accepted (revised 2026-11-08; Amendment 1, 2026-11-08; Amendment 2, accepted 2026-11-14 with PR #107)
 - Date: 2026-02-01
 
 ## Decision
