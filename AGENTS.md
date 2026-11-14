@@ -204,7 +204,8 @@ LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
 # The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
 # msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
 cargo build -p loom-tauri --features e2e,tauri/custom-protocol
-ui/e2e/run.sh target/debug/loom-tauri [<path to msedgedriver.exe>]
+ui/e2e/run.sh target/debug/loom-tauri                                   # Linux
+pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Windows (PowerShell, not Git Bash)
 ```
 
 ## Code expectations

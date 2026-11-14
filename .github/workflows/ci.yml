@@ -460,10 +460,11 @@ jobs:
           }
           Expand-Archive $zip -DestinationPath $dir -Force
           "EDGE_DRIVER=$((Join-Path $dir 'msedgedriver.exe') -replace '\\', '/')" >> $env:GITHUB_ENV
+      # PowerShell, not Git Bash (ui/e2e/run.ps1 says why).
       - name: Workflow (Windows)
         if: runner.os == 'Windows'
-        shell: bash
-        run: bash ui/e2e/run.sh target/debug/loom-tauri.exe "$EDGE_DRIVER"
+        shell: pwsh
+        run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER
 
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 

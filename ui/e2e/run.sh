@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs the real-app workflow (ui/e2e/workflow.mjs) against the built e2e
 # app: starts tauri-driver, then the script. From the repository root, in
-# CI's e2e job (Linux under xvfb-run, Windows with msedgedriver):
+# CI's e2e job on Linux, under xvfb-run (Windows uses run.ps1):
 #
 #   ui/e2e/run.sh <app binary> [<native driver>]
 set -euo pipefail
