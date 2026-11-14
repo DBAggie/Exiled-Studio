@@ -17,6 +17,6 @@ One PR (maintainer request 2026-11-13). Tick a task in the commit that does it.
 - [x] CI: `pnpm test` and `pnpm licenses:check` in `frontend`; `e2e` job
 - [x] code-architecture-reviewer run; findings applied (report section 2)
 - [x] Report `docs/phase-4/phase-4-report.md`; handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README
-- [ ] CI `e2e` passes on Windows and Linux (or the maintainer's checklist recorded; gate 1b)
+- [x] Gate 1b: CI `e2e` passes on Linux; Windows by the maintainer's run (2026-11-13); the Windows CI job runs without gating
 - [x] Maintainer: `axe-core` license exception (approved by the maintainer 2026-11-13)
 - [x] Open PR: #105 (base `dev`)
