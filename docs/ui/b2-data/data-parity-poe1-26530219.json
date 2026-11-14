@@ -1,7 +1,7 @@
 {
   "format": 1,
   "tool": {
-    "commit": "6a005cdc531afac7bc8737e632b6aa53b8d795f6",
+    "commit": "82f3c6e80950a46a243d8b775e7c5342df600bc6",
     "dirty": true
   },
   "inputs": {
@@ -13,13 +13,13 @@
     "pob_version": "2.67.2",
     "tree_version": "3_29",
     "pob_runtime": "LuaJIT 2.1.1784580905",
-    "rules_sha256": "3a4ff32fb38a5024f54bb3a1032bb895e0302b4c5edbb83fcbbbb7c05c309e62"
+    "rules_sha256": "d83a1a4762eb579ca437b171bf1a6a2214f88e7d62c6509c8d27c0281c777c12"
   },
   "tables": {
     "base_requirements": {
-      "compared": 5438,
+      "compared": 5461,
       "differences": 23,
-      "pob_only_rows": 15,
+      "pob_only_rows": 0,
       "bundle_only_rows": 0
     },
     "bases": {

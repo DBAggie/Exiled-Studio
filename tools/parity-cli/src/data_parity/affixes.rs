@@ -12,8 +12,11 @@
 //! `bases` is, its `req`: the level PoB's exporter derived from the drop
 //! level and the implicits' levels, and the attributes. Several game bases
 //! under one name (an old and a new quiver) compare as one when their
-//! values agree, else the row differs. Bundle bases PoB does not have are
-//! not listed (currency, gems, and the like).
+//! values agree. When they disagree, or PoB names a variant (`Two-Toned
+//! Boots (Armour/Evasion)`, looked up by the game's name), the row differs
+//! and PoB's values must equal one candidate's, else `values` differs too.
+//! Bundle bases PoB does not have are not listed (currency, gems, and the
+//! like).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -81,14 +84,15 @@ pub fn compare_mod_affixes(out: &mut Comparison, bundle: &Bundle, export: &Expor
     const T: &str = "mod_affixes";
     let mods: BTreeMap<&str, &ModEntry> = bundle.mods.iter().map(|m| (m.id.as_str(), m)).collect();
     for (id, pob_mod) in &export.mods {
-        if pob_mod.conflict {
-            // Two of PoB's files disagree: no single PoB value to compare.
-            out.check(T, id, "pob_tables", Value::Null, json!(pob_mod.tables));
-        }
         let Some(ours) = mods.get(id.as_str()) else {
             out.pob_only(T, id);
             continue;
         };
+        if pob_mod.conflict {
+            // Two of PoB's files disagree: no single PoB value to compare.
+            out.check(T, id, "pob_tables", Value::Null, json!(pob_mod.tables));
+            continue;
+        }
         out.check(T, id, "affix", json!(ours.name), json!(pob_mod.affix));
         #[expect(clippy::cast_precision_loss, reason = "game levels")]
         let level = ours.level.map_or(Value::Null, |l| num(l as f64));
@@ -150,23 +154,17 @@ pub fn compare_base_requirements(
         ]
     };
     for (name, req) in &export.base_requirements {
-        let candidates = by_name.get(name).map(Vec::as_slice).unwrap_or_default();
-        let Some((&first, rest)) = candidates.split_first() else {
-            out.pob_only(T, name);
-            continue;
+        // A name PoB gave a variant (module docs, [`game_name`]) is looked
+        // up by the game's name.
+        let (candidates, renamed) = match by_name.get(name) {
+            Some(c) => (c.as_slice(), None),
+            None => match game_name(name).and_then(|g| Some((by_name.get(&g)?, g))) {
+                Some((c, g)) => (c.as_slice(), Some(g)),
+                None => (&[][..], None),
+            },
         };
-        let ours = pob_form(&bundle.base_items[first]);
-        // Several game bases under one name (an old and a new quiver):
-        // PoB holds one, so they compare as one when their values agree.
-        if rest
-            .iter()
-            .any(|&i| pob_form(&bundle.base_items[i]) != ours)
-        {
-            let ids = candidates
-                .iter()
-                .map(|&i| json!(bundle.base_items[i].id))
-                .collect();
-            out.check(T, name, "row", Value::Array(ids), json!("one base"));
+        if candidates.is_empty() {
+            out.pob_only(T, name);
             continue;
         }
         let theirs = [
@@ -176,19 +174,78 @@ pub fn compare_base_requirements(
             pob(req.dex),
             pob(req.int),
         ];
-        for ((field, ours), theirs) in ["flask", "level", "str", "dex", "int"]
-            .into_iter()
-            .zip(ours)
-            .zip(theirs)
-        {
-            out.check(T, name, field, ours, theirs);
+        let forms: Vec<[Value; 5]> = candidates
+            .iter()
+            .map(|&i| pob_form(&bundle.base_items[i]))
+            .collect();
+        // One game base, or several under one name that agree (PoB holds
+        // one): field by field.
+        if renamed.is_none() && forms.iter().all(|f| *f == forms[0]) {
+            for ((field, ours), theirs) in ["flask", "level", "str", "dex", "int"]
+                .into_iter()
+                .zip(forms[0].clone())
+                .zip(theirs)
+            {
+                out.check(T, name, field, ours, theirs);
+            }
+            continue;
         }
+        // A variant name, or game bases under one name that disagree (a
+        // legacy and a current quiver): the row is PoB's choice of one of
+        // them, and PoB's values must be one candidate's.
+        let ids: Vec<Value> = candidates
+            .iter()
+            .map(|&i| json!(bundle.base_items[i].id))
+            .collect();
+        let pob_side = renamed.map_or_else(|| json!("one base"), |g| json!(format!("named {g}")));
+        out.check(T, name, "row", Value::Array(ids), pob_side);
+        // Counted as compared either way: equal when one candidate's values
+        // are PoB's, else every candidate's against PoB's.
+        let pob_values = Value::Array(theirs.to_vec());
+        let ours = if forms.contains(&theirs) {
+            pob_values.clone()
+        } else {
+            Value::Array(
+                forms
+                    .into_iter()
+                    .map(|f| Value::Array(f.to_vec()))
+                    .collect(),
+            )
+        };
+        out.check(T, name, "values", ours, pob_values);
     }
+}
+
+/// The game's name of a base PoB names by variant: `Two-Toned Boots
+/// (Armour/Evasion)` is `Two-Toned Boots` (PoB's base spec), `Energy Blade
+/// One Handed` is `Energy Blade` (`v2.67.2:src/Export/Scripts/bases.lua:118`).
+fn game_name(name: &str) -> Option<String> {
+    if let Some(stem) = name
+        .strip_suffix(" One Handed")
+        .or_else(|| name.strip_suffix(" Two Handed"))
+    {
+        return Some(stem.to_owned());
+    }
+    let (stem, rest) = name.rsplit_once(" (")?;
+    rest.ends_with(')').then(|| stem.to_owned())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::required_level;
+    use super::{game_name, required_level};
+
+    #[test]
+    fn variant_names_should_give_the_games_name() {
+        assert_eq!(
+            game_name("Two-Toned Boots (Armour/Evasion)").as_deref(),
+            Some("Two-Toned Boots")
+        );
+        assert_eq!(
+            game_name("Energy Blade Two Handed").as_deref(),
+            Some("Energy Blade")
+        );
+        assert_eq!(game_name("Plain Ring"), None);
+    }
 
     #[test]
     fn required_level_should_follow_pobs_exporter() {

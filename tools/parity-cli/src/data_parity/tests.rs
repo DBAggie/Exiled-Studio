@@ -523,6 +523,33 @@ fn affixes_and_requirements_should_compare() {
         ),
         [("base_requirements", "Plain Test Ring", "row")]
     );
+    // PoB's values must still be one candidate's: dex 11 is neither.
+    let mut off = equal_export();
+    off["mods"]["TestLife1"]["level"] = json!(10);
+    off["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
+    off["base_requirements"]["Plain Test Ring"]["dex"] = json!(11);
+    // A variant name PoB gave the ring, with the second candidate's values
+    // (no attributes): matched by the game's name, the row differs only.
+    off["base_requirements"]["Plain Test Ring (Plain)"] =
+        json!({"type": "Ring", "flask": false, "level": 8});
+    // A variant name whose values are neither candidate's.
+    off["base_requirements"]["Plain Test Ring (Odd)"] =
+        json!({"type": "Ring", "flask": false, "str": 5});
+    let off = pob::parse(&serde_json::to_vec(&off).unwrap()).unwrap();
+    assert_eq!(
+        fields(
+            &compare::compare(&bundle, &off, SCOPE, &BOSSES)
+                .unwrap()
+                .differences
+        ),
+        [
+            ("base_requirements", "Plain Test Ring", "row"),
+            ("base_requirements", "Plain Test Ring", "values"),
+            ("base_requirements", "Plain Test Ring (Odd)", "row"),
+            ("base_requirements", "Plain Test Ring (Odd)", "values"),
+            ("base_requirements", "Plain Test Ring (Plain)", "row"),
+        ]
+    );
     // A bundle before data schema 4 carries neither: refused, not compared.
     bundle.manifest.data_schema = 3;
     assert!(
