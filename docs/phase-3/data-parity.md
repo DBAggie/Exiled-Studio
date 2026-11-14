@@ -77,7 +77,14 @@ The item tooltip's Alt view shows each mod's affix name and level, and the requi
 
 `mod_affixes` compares `affix` and `level` by mod ID. `base_requirements` matches by name as `bases` does, but over every base. Several game bases under one name (an old and a new quiver) compare as one when their values in PoB's form agree; otherwise the row differs. The required level is put into PoB's form as its exporter derived it (`src/Export/Scripts/bases.lua` 276 to 293): the drop level when above 4 for a weapon or armour and above 2 for a flask, raised to `floor(level * 0.8)` of each implicit, and absent when 1. Attributes are absent when 0 (294 to 305). A bundle before data schema 4 is refused.
 
-PoB v2.67.2's export: 23,230 mods, none in conflict, every ID in the build 26530219 bundle; 1,106 bases, 15 renamed by PoB (no bundle name) and 22 names shared by several game bases (matched against the schema 3 bundle). The schema 4 run's counts and rules follow.
+**Run on the schema 4 bundle** (Steam build 26530219, 2026-11-14; summary `docs/ui/b2-data/data-parity-poe1-26530219.json`): PoB's export has 23,230 mods, none in conflict, and 1,106 bases.
+- `mod_affixes`: 46,460 values, **0 differences**; every PoB mod ID is in the bundle.
+- `base_requirements`: 5,438 values, 23 differences, all `row`, all `representation`:
+  - `base-requirements-pob-names` (15): bases PoB names by variant (Two-Toned Boots, Two-Stone Ring, the Avian Twins and Monkey Paw Talismans, Energy Blade), as `bases-pob-names`.
+  - `base-requirements-legacy-quivers` (8): a legacy and a current quiver under one name. PoB's spec writes the current one last, so `data.itemBases` holds it. Each current quiver's required level equals PoB's (checked for all 8).
+  - 14 more names shared by several game bases compare as one, because their values agree.
+- Totals: `uncategorized` 0, no failed rule; the 314 overlay rows are identical to the close-out's.
+- **The first run found a converter bug.** The game keys `ComponentAttributeRequirements` by the base's ID string, not a row number, so the bundle carried no attribute requirements: 1,293 differences, all on Str, Dex, and Int. Fixed in `tools/parity-cli/src/bundle.rs`, with a test using the game's layout; the second run has none.
 
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.

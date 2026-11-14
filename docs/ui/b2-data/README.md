@@ -1,0 +1,26 @@
+# B-2 data run: data schema 4 bundle (2026-11-14)
+
+The maintainer's run after PR #109 (B-2's data part, PR 1), on the main workstation. It is the "Maintainer action" in `dev/active/ux-improvements/b2-item-data-plan.md`, PR 1, item 5.
+
+## Inputs
+- **Game data:** Steam build **26530219**, the build every earlier bundle came from. The install had patched to 26664355 (league launch, 2026-11-13), and the extractor does not read that build: 13 tables changed layout, and the passive tree files changed format. PoB has no release for the new league, so v2.67.2 stays the oracle.
+- **The old build's files:** only the 40 files the extractor reads (the index and 39 bundle files, 114 MB), downloaded with DepotDownloader. Depot 238961, manifest `2467965126630699088` (the manifest of build 26530219 on SteamDB); the file list is the bundles the extracts of builds 26530219 and 26664355 read.
+- **Build number:** the extractor reads it from Steam's `appmanifest_238960.acf`, which a depot download has none of. A stand-in naming build 26530219 was written beside the download.
+- **Bundle:** `loom-parity-cli bundle`, twice, byte-identical. Manifest SHA-256 `32d3d74a9deac8c8d3b279d7d578145f4503b6e5e3c414f32ad6906eaf2efff2`, data schema 4, 126 MB. `bundle-check` reports no findings. Against the schema 3 bundle (P3-8n's), only `bundle.json`, `data/mods.json`, and `data/base_items.json` differ, and `data/tags.json` is new.
+- **PoB export:** format 6, two runs byte-identical.
+
+## Records
+| File | What |
+|---|---|
+| `data-parity-poe1-26530219.json` | `data-parity` summary: the new tables `mod_affixes` and `base_requirements` (`docs/phase-3/data-parity.md`, "B-2") |
+| `b2-public-calc-run-summary.json`, `b2-corpus-poe1-26530219-calc-run-summary.json` | `calc-run` on the public fixtures (136 builds) and the anonymous corpus (21) |
+| `b2-public-calc-parity-summary.json`, `b2-corpus-poe1-26530219-calc-parity-summary.json` | `calc-parity` against the oracle |
+| `b2-public-vs-close.json`, `b2-public-overlay-vs-close.json`, `b2-corpus-poe1-26530219-vs-close.json` | Each calc document compared with the Phase 3 close-out's (`docs/phase-3/phase-3-report/`) |
+
+## Result
+**No calculation changed.**
+- Every calc document of the public, overlay, and corpus runs is identical to the close-out's.
+- `calc-parity` counts are equal: 0 unexpected differences; 2,078 of 2,078 mechanic targets met over 99 fixtures.
+- Runs are byte-identical twice.
+- The calc-run summaries differ from the close-out's only in `bundle.data_schema` (3 to 4), the bundle hash, and the tool commit.
+- The tests that need a real bundle (`loom-calc`, `loom-data`, `loom-parser`, `--ignored`) pass.

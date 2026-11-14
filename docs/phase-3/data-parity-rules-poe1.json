@@ -215,6 +215,65 @@
       "count": 5
     },
     {
+      "id": "base-requirements-pob-names",
+      "category": "representation",
+      "table": "base_requirements",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "Avian Twins Talisman (Cold-To-Fire)",
+        "Avian Twins Talisman (Cold-To-Lightning)",
+        "Avian Twins Talisman (Fire-To-Cold)",
+        "Avian Twins Talisman (Fire-To-Lightning)",
+        "Avian Twins Talisman (Lightning-To-Cold)",
+        "Energy Blade One Handed",
+        "Energy Blade Two Handed",
+        "Monkey Paw Talisman (Frenzy)",
+        "Monkey Paw Talisman (Power)",
+        "Two-Stone Ring (Cold/Lightning)",
+        "Two-Stone Ring (Fire/Cold)",
+        "Two-Stone Ring (Fire/Lightning)",
+        "Two-Toned Boots (Armour/Energy Shield)",
+        "Two-Toned Boots (Armour/Evasion)",
+        "Two-Toned Boots (Evasion/Energy Shield)"
+      ],
+      "evidence": "PoB names these bases by variant in its base spec (one game name for several bases: Two-Toned Boots by defence type, Two-Stone Ring by resistance pair, the Avian Twins and Monkey Paw Talismans by effect) and Energy Blade by hand type. The bundle has them under the game's names; their requirements are not compared through PoB's names.",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/bases.lua:118",
+        "v2.67.2:src/Export/Bases/boots.txt:23",
+        "v2.67.2:src/Export/Bases/boots.txt:29",
+        "v2.67.2:src/Export/Bases/boots.txt:36",
+        "v2.67.2:src/Export/Bases/ring.txt:10-12",
+        "v2.67.2:src/Export/Bases/amulet.txt:17-23"
+      ],
+      "count": 15
+    },
+    {
+      "id": "base-requirements-legacy-quivers",
+      "category": "representation",
+      "table": "base_requirements",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "Blunt Arrow Quiver",
+        "Broadhead Arrow Quiver",
+        "Fire Arrow Quiver",
+        "Penetrating Arrow Quiver",
+        "Serrated Arrow Quiver",
+        "Sharktooth Arrow Quiver",
+        "Spike-Point Arrow Quiver",
+        "Two-Point Arrow Quiver"
+      ],
+      "evidence": "The game has a legacy quiver (Quiver<n>) and a current one (QuiverNew<n>) under each of these names, with other drop and implicit levels. PoB writes the hidden legacy rows first and the current rows after under the same name, so data.itemBases holds the current one. Each current quiver's required level in PoB's form equals PoB's (checked for all 8 in the B-2 run, docs/phase-3/data-parity.md); the bundle keeps both rows.",
+      "sources": [
+        "v2.67.2:src/Export/Bases/quiver.txt:5-11",
+        "v2.67.2:src/Export/Scripts/bases.lua:276-293"
+      ],
+      "count": 8
+    },
+    {
       "id": "character-base-speed",
       "category": "not-carried",
       "table": "character_constants",
