@@ -1,6 +1,6 @@
 # B-2 data part: modifier headers, tiers, and attribute requirements
 
-Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (uncommitted on `feat/ux-walkthrough`); the maintainer's data run and PR 2 open. Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
+Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (PR #109, branch `feat/ux-walkthrough`); the maintainer's data run and PR 2 open. Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
 
 ## Goal
 
