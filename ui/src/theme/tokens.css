@@ -1,0 +1,29 @@
+/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2). Every colour the
+   UI uses is a token here; theme/pairs.ts lists each foreground and
+   background pair the CSS combines, and a test checks their contrast
+   (WCAG 2.2 AA) and that no other CSS file writes a colour. */
+:root {
+  --c-bg: #101215;
+  --c-panel: #181b20;
+  --c-raised: #20242b;
+  --c-border: #2a2f37;
+  --c-border-strong: #6b7380;
+  --c-text: #e9e6df;
+  --c-muted: #a3a9b3;
+  --c-accent: #e8a33d;
+  --c-on-accent: #101215;
+  --c-focus: #8dc1f2;
+  --c-ok: #8fd18a;
+  --c-info: #8dc1f2;
+  --c-warn: #f0a85a;
+  --c-neutral: #b8bec8;
+  --c-danger: #f08a7a;
+  --c-rarity-normal: #c9ced6;
+  --c-rarity-magic: #8dc1f2;
+  --c-rarity-rare: #f2d97a;
+  --c-rarity-unique: #e39a6e;
+
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+}

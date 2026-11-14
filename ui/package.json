@@ -7,27 +7,39 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
+    "test": "vitest run",
+    "licenses:check": "node scripts/check-licenses.mjs",
     "lint": "oxlint --deny-warnings",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate:schema": "json2ts --input ../schemas/build.v1.schema.json --output src/generated/build.v1.ts --bannerComment \"// Generated from schemas/build.v1.schema.json by pnpm generate:schema; do not edit.\" && json2ts --input ../schemas/calc-result.v1.schema.json --output src/generated/calc-result.v1.ts --bannerComment \"// Generated from schemas/calc-result.v1.schema.json by pnpm generate:schema; do not edit.\" && prettier --write src/generated",
+    "generate:schema": "json2ts --input ../schemas/build.v1.schema.json --output src/generated/build.v1.ts --bannerComment \"// Generated from schemas/build.v1.schema.json by pnpm generate:schema; do not edit.\" && json2ts --input ../schemas/calc-result.v1.schema.json --output src/generated/calc-result.v1.ts --bannerComment \"// Generated from schemas/calc-result.v1.schema.json by pnpm generate:schema; do not edit.\" && json2ts --input ../schemas/app-api.v1.schema.json --output src/generated/app-api.v1.ts --bannerComment \"// Generated from schemas/app-api.v1.schema.json by pnpm generate:schema; do not edit.\" && prettier --write src/generated",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "2.14.0",
+    "@tauri-apps/api": "2.12.4",
+    "radix-ui": "1.8.1",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "react-redux": "9.3.1"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.12.4",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.10",
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "axe-core": "4.14.0",
+    "jsdom": "31.0.0",
     "json-schema-to-typescript": "16.0.0",
     "oxlint": "1.90.0",
     "prettier": "3.9.10",
     "typescript": "7.0.2",
-    "vite": "8.3.6"
+    "vite": "8.3.6",
+    "vitest": "5.1.0"
   },
   "license": "MIT",
   "packageManager": "pnpm@12.18.0",

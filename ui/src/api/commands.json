@@ -1,0 +1,18 @@
+[
+  "snapshot",
+  "calc_document",
+  "item",
+  "preview",
+  "execute",
+  "recent",
+  "recovery",
+  "mcp_status",
+  "set_permissions",
+  "mcp_start",
+  "mcp_stop",
+  "import_file",
+  "open_file",
+  "save_as",
+  "export_xml",
+  "choose_bundle"
+]

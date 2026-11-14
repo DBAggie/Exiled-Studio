@@ -11,6 +11,13 @@ publish.workspace = true
 [dependencies]
 loom-domain.workspace = true
 loom-app.workspace = true
+# The MCP token (ADR-017): the OS random source; MIT or Apache-2.0.
+getrandom = "0.4"
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+loom-serialization.workspace = true
 
 [lints]
 workspace = true

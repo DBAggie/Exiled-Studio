@@ -13,6 +13,7 @@ loom-domain.workspace = true
 loom-calc.workspace = true
 loom-data.workspace = true
 loom-parser.workspace = true
+loom-pipeline.workspace = true
 loom-serialization.workspace = true
 roxmltree = "0.21"
 serde.workspace = true

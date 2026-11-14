@@ -35,15 +35,14 @@ use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use loom_calc::{
-    ActiveSkill, ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CharacterBase, GemEffect,
-    GrantedEffect, ItemBase, MonsterDefences, MonsterStats, PassiveLinks, Range, SkillGem,
-    StatAmount, StatSet,
+    ActiveSkill, ArmourBase, CalcData, CharacterBase, GemEffect, GrantedEffect, ItemBase,
+    MonsterDefences, MonsterStats, PassiveLinks, Range, SkillGem, StatAmount, StatSet,
 };
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
-use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
+use loom_parser::import::{BundleData, Resolver};
 use loom_serialization::dto::calc::v1 as calc_dto;
-use loom_serialization::legacy::{pob_item, pob_xml};
+use loom_serialization::legacy::pob_xml;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -549,77 +548,40 @@ fn one(
 ) -> Result<(String, calc_dto::Document, u128), (Step, String)> {
     let text = std::str::from_utf8(&input.bytes)
         .map_err(|_| (Step::Read, "IMPORT_ENCODING".to_owned()))?;
+    // The shared pipeline (Phase 4 plan, decision 0): the application
+    // calculates through the same steps.
+    let step = |e: loom_pipeline::Error| {
+        let s = match e.step {
+            loom_pipeline::Step::Read => Step::Read,
+            loom_pipeline::Step::Resolve => Step::Resolve,
+            loom_pipeline::Step::Calculate => Step::Calculate,
+            loom_pipeline::Step::Document => Step::Document,
+        };
+        (s, e.code.to_owned())
+    };
     let mut build: Build = match input.format {
         Format::PobXml => pob_xml::import(text).map_err(|e| (Step::Read, e.code().to_owned()))?,
-        Format::BuildDocument => loom_serialization::dto::v1::from_json(text)
-            .map_err(|e| (Step::Read, e.code().to_owned()))?,
+        Format::BuildDocument => loom_pipeline::read_document(text).map_err(step)?,
     };
-    let (_, ends) = request
-        .resolver
-        .resolve_build_ranged(&mut build, |body| {
-            pob_item::item_base(body, request.data.base_names())
-                .map(|(name, fallback)| ItemBaseName { name, fallback })
-                .map_err(|e| e.name().to_owned())
-        })
-        .map_err(|e| (Step::Resolve, e.code().to_owned()))?;
-    // The same base names the resolver used, for the engine's armour
-    // pieces (the legacy format's naming rules stay in the adapter).
-    let item_bases = build
-        .items
-        .items()
-        .filter_map(|item| {
-            pob_item::item_base(&item.body, request.data.base_names())
-                .ok()
-                .map(|(name, fallback)| (item.id, BaseName { name, fallback }))
-        })
-        .collect();
-    // PoB's rules for values the text does not settle (rolls, scalings):
-    // the adapter's, from the ranges' exact ends the resolver read.
-    let item_lines = build
-        .items
-        .items()
-        .filter_map(|item| {
-            let item_ends: pob_item::LineEnds = ends
-                .get(&item.id)
-                .map(|lines| {
-                    lines
-                        .iter()
-                        .map(|(n, stats)| {
-                            (
-                                *n,
-                                stats.iter().map(|e| e.map(|e| (e.from, e.to))).collect(),
-                            )
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-            let values = pob_item::line_values(item, &item_ends);
-            (!values.is_empty()).then_some((item.id, values))
-        })
-        .collect();
-    let options = CalcOptions {
-        tree_version: request
+    let ends = loom_pipeline::resolve(request.resolver, request.data, &mut build).map_err(step)?;
+    let options = loom_pipeline::options(
+        &build,
+        request.data,
+        &ends,
+        request
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
-        item_bases,
-        item_lines,
-        ..CalcOptions::default()
-    };
+    );
     let data: &dyn CalcData = match &request.overlay {
         Some((overlay, _)) => *overlay,
         None => request.bundle,
     };
-    let input = CalcInput {
-        build: &build,
-        data,
-        options: &options,
-    };
     let start = Instant::now();
-    let result = loom_calc::calculate(&input);
+    let result = loom_pipeline::calculate(&build, data, &options, &|| false);
     let micros = start.elapsed().as_micros();
-    let result = result.map_err(|e| (Step::Calculate, e.code().to_owned()))?;
-    let json = calc_dto::to_json(&result).map_err(|e| (Step::Document, e.code().to_owned()))?;
+    let result = result.map_err(step)?;
+    let json = loom_pipeline::document(&result).map_err(step)?;
     let doc = calc_dto::from_json(&json).map_err(|e| (Step::Document, e.code().to_owned()))?;
     Ok((json, doc, micros))
 }

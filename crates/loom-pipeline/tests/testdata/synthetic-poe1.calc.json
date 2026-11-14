@@ -1,0 +1,5874 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe1",
+    "state": "indeterminate",
+    "reasons": {
+      "unsupported": [
+        {
+          "unmapped-stat": {
+            "stat": "test_accuracy_a",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 8
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_first_half",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 4,
+                "adapted": "split-section"
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_first_half",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 13
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_maximum_life",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 6
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_maximum_life",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 7,
+                "adapted": "case-folded"
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_maximum_life",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 15
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_presence",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 15
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_second_half",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 4,
+                "adapted": "split-section"
+              }
+            }
+          }
+        },
+        {
+          "unmapped-stat": {
+            "stat": "test_second_half",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 13
+              }
+            }
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 9
+              }
+            },
+            "reason": "ambiguous"
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 10
+              }
+            },
+            "reason": "no-variant-fits"
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 11
+              }
+            },
+            "reason": "only-shadowed"
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 12
+              }
+            },
+            "reason": "no-template"
+          }
+        },
+        {
+          "excluded-line": {
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 16
+              }
+            },
+            "exclusion": "custom"
+          }
+        },
+        {
+          "unhandled-kind": {
+            "kind": "catalyst-quality",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 19
+              }
+            }
+          }
+        },
+        {
+          "unhandled-kind": {
+            "kind": "item-property",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 17
+              }
+            }
+          }
+        },
+        {
+          "unhandled-kind": {
+            "kind": "item-property",
+            "source": {
+              "item": {
+                "item": 1,
+                "line": 18
+              }
+            }
+          }
+        }
+      ],
+      "indeterminate": [
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_evasion_rating"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_maximum_all_resistances_%"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_maximum_spell_block_%"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "life_per_level"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "mana_per_level"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "maximum_block_%"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "characters",
+            "key": "Scion"
+          }
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field": "strength",
+        "value": 0.0,
+        "node": 10,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "dexterity",
+        "value": 0.0,
+        "node": 21,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "intelligence",
+        "value": 0.0,
+        "node": 32,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "life",
+        "value": 1.0,
+        "node": 45,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "mana",
+        "value": 0.0,
+        "node": 57,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "energy-shield",
+        "value": 0.0,
+        "node": 167,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "armour",
+        "value": 0.0,
+        "node": 178,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "evasion",
+        "value": 0.0,
+        "node": 189,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.fire",
+        "value": -60.0,
+        "node": 75,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.cold",
+        "value": -60.0,
+        "node": 93,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.lightning",
+        "value": -60.0,
+        "node": 111,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.chaos",
+        "value": -60.0,
+        "node": 129,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "block-chance",
+        "value": 0.0,
+        "node": 140,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "life-unreserved",
+        "value": 1.0,
+        "node": 190,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "mana-unreserved",
+        "value": 0.0,
+        "node": 191,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "average-damage",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-multiplier",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-dps",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "poe1.spell-suppression-chance",
+        "value": 0.0,
+        "node": 150,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.spell-block-chance",
+        "value": 0.0,
+        "node": 147,
+        "state": "indeterminate",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "test_accuracy_a",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 8
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_first_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 6
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 7,
+                  "adapted": "case-folded"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_maximum_life",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_presence",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 15
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 4,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "unmapped-stat": {
+              "stat": "test_second_half",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 13
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 9
+                }
+              },
+              "reason": "ambiguous"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 10
+                }
+              },
+              "reason": "no-variant-fits"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 11
+                }
+              },
+              "reason": "only-shadowed"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 12
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 16
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "catalyst-quality",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 19
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 17
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "item-property",
+              "source": {
+                "item": {
+                  "item": 1,
+                  "line": 18
+                }
+              }
+            }
+          }
+        ],
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "life_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "mana_per_level"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "characters",
+              "key": "Scion"
+            }
+          }
+        ]
+      }
+    ],
+    "graph": [
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          0
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          2
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          3
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          4,
+          5
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          1,
+          6
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          7
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          8,
+          9
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          11
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          13
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          14
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          15,
+          16
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          12,
+          17
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          18
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          19,
+          20
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          22
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          24
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          25
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          26,
+          27
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          23,
+          28
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          29
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          30,
+          31
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          10,
+          33
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.life-from-strength",
+        "children": [
+          34
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          36,
+          35
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          38
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          39
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          37,
+          40,
+          41
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          42
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 1.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          43,
+          44
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          32,
+          46
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.mana-from-intelligence",
+        "children": [
+          47
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          49,
+          48
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          51
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          52
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          53,
+          54
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          50,
+          55
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "result",
+        "children": [
+          56
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.fire",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          58
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          60
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          61,
+          62
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          63,
+          64
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          59,
+          65
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          66
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          68,
+          69
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          70
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          72
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          67,
+          71
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          74,
+          73
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.cold",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          76
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          78
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          79,
+          80
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          81,
+          82
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          77,
+          83
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          84
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          86,
+          87
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          88
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          90
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          85,
+          89
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          92,
+          91
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.lightning",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          94
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          96
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          97,
+          98
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          99,
+          100
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          95,
+          101
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          102
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          104,
+          105
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          106
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          108
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          103,
+          107
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          110,
+          109
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.chaos",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          112
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          114
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          115,
+          116
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          117,
+          118
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          113,
+          119
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          120
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          122,
+          123
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          124
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          126
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          121,
+          125
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          128,
+          127
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.block-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          130
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          132
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          131,
+          133,
+          134
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.total",
+        "children": [
+          135
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "block-chance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.max",
+        "children": [
+          137,
+          138
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          136,
+          139
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          141,
+          133,
+          134
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.total",
+        "children": [
+          142
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "block-chance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.max",
+        "children": [
+          144,
+          145
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          143,
+          146
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "suppression-chance-cap"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          148,
+          149
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "tenth"
+          }
+        },
+        "value": 0.1
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          32,
+          151
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.energy-shield-from-intelligence",
+        "children": [
+          152
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "fifth"
+          }
+        },
+        "value": 0.2
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          21,
+          154
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.evasion-from-dexterity",
+        "children": [
+          155
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          157,
+          153
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          158
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          159,
+          160
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          162
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          164
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          165,
+          166
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          168
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          169
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          170,
+          171
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          173
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          175
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          176,
+          177
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          179,
+          156
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          180
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          181,
+          182
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          184
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          186
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          187,
+          188
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          45
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          57
+        ],
+        "value": 0.0
+      }
+    ]
+  }
+}

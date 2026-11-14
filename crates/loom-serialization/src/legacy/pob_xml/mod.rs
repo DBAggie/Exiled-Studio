@@ -37,6 +37,7 @@ mod tests;
 
 pub use equal::{NORMALIZATIONS, xml_equal};
 use loom_domain::Build;
+pub use write::item_text;
 
 /// Why a document did not import.
 #[derive(Debug)]
