@@ -44,6 +44,8 @@ fn mod_entry(id: &str, mod_type: Option<&str>, stats: &[(&str, i64, i64)]) -> Mo
         essence_only: false,
         essence_classes: Some(vec!["TestRing".to_owned()]),
         implicit_tags: Vec::new(),
+        name: String::new(),
+        level: None,
     }
 }
 

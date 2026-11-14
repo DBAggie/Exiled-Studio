@@ -44,6 +44,8 @@ fn rows_of_one_name_should_agree_or_be_ambiguous() {
         item_class: None,
         tags: None,
         implicits: Vec::new(),
+        drop_level: None,
+        requirements: None,
     };
     let props = b.properties.as_mut().unwrap();
     let mut same: ArmourType = props.armour_types[0].clone();

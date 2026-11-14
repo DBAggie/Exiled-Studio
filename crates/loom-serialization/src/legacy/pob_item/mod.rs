@@ -67,7 +67,7 @@ mod tests;
 mod values;
 
 pub use domain::{rarity as domain_rarity, section as domain_section, to_domain};
-pub use values::{LineEnds, line_values};
+pub use values::{LineEnds, line_values, ranged_text, shown_text};
 
 /// Item rarity, as `Rarity:` names it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -1020,4 +1020,132 @@ pub fn magic_base<'n>(name: &str, bases: impl IntoIterator<Item = &'n str>) -> B
             BaseMatch::Tie(names)
         }
     }
+}
+
+/// What a variant of a PoB item is, from its name (PoB's naming in
+/// `Data/Uniques`): a legacy version (`Pre 3.7.0`, `Pre.3.19.0`,
+/// `Pre 3.26 Crit Chance`, `Fire and Cold Damage (Pre 3.14)`), the
+/// current version (`Current`, `Frenzy Current`, or a bare version such as
+/// `3.19.0` when no variant says `Current`), or a choice the player makes
+/// (`Fire`, `Life`, `Wrath: Inc Lightning Damage`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VariantEra {
+    /// A version only earlier leagues' items have.
+    Legacy,
+    /// The version the current game makes.
+    Current,
+    /// A choice, not a version.
+    Choice,
+}
+
+/// The era of each of an item's variants, named `names` in order
+/// ([`VariantEra`]). A bare version (`3.19.0`) is the current one unless
+/// another variant says `Current`: then it is an older one (Rathpith
+/// Globe's `Pre 3.4.0`, `Pre 3.7.0`, `3.19.0`, `Current`).
+#[must_use]
+pub fn variant_eras(names: &[String]) -> Vec<VariantEra> {
+    let says_current = |n: &str| {
+        n.split_whitespace()
+            .any(|w| w.eq_ignore_ascii_case("current"))
+    };
+    let any_current = names.iter().any(|n| says_current(n));
+    names
+        .iter()
+        .map(|n| {
+            let n = n.trim();
+            if pre_version(n).is_some() {
+                VariantEra::Legacy
+            } else if says_current(n) {
+                VariantEra::Current
+            } else if is_version(n) {
+                if any_current {
+                    VariantEra::Legacy
+                } else {
+                    VariantEra::Current
+                }
+            } else {
+                VariantEra::Choice
+            }
+        })
+        .collect()
+}
+
+/// The variant (1-based) the current game makes of the item whose variant
+/// `selected` is legacy: the same choice without its `(Pre ...)` or
+/// `Pre ...` part, else the first current variant. `None` when `selected`
+/// is not legacy or nothing current matches.
+#[must_use]
+pub fn current_variant(names: &[String], selected: u32) -> Option<u32> {
+    let eras = variant_eras(names);
+    let index = usize::try_from(selected).ok()?.checked_sub(1)?;
+    if eras.get(index) != Some(&VariantEra::Legacy) {
+        return None;
+    }
+    let position = |want: &dyn Fn(usize) -> bool| {
+        (0..names.len())
+            .find(|i| want(*i))
+            .and_then(|i| u32::try_from(i + 1).ok())
+    };
+    let name = names.get(index)?.trim();
+    if let Some((start, end)) = pre_version(name) {
+        let stripped = format!(
+            "{} {}",
+            name.get(..start)
+                .unwrap_or_default()
+                .trim_end_matches([' ', '(']),
+            name.get(end..)
+                .unwrap_or_default()
+                .trim_start_matches([')', ' '])
+        );
+        let stripped = stripped.trim();
+        if !stripped.is_empty()
+            && let Some(v) = position(&|i| {
+                eras.get(i) != Some(&VariantEra::Legacy)
+                    && names
+                        .get(i)
+                        .is_some_and(|n| n.trim().eq_ignore_ascii_case(stripped))
+            })
+        {
+            return Some(v);
+        }
+    }
+    position(&|i| eras.get(i) == Some(&VariantEra::Current))
+}
+
+/// Where `Pre` and the version after it (`Pre 3.7.0`, `Pre.3.19.0`,
+/// `Pre 3.26`) sit in `name`: the start of `Pre` and the end of the
+/// version; `Pre` starts the name or follows a space or `(`.
+fn pre_version(name: &str) -> Option<(usize, usize)> {
+    let bytes = name.as_bytes();
+    let mut from = 0;
+    while let Some(found) = name.get(from..).and_then(|s| s.find("Pre")) {
+        let start = from + found;
+        let boundary = start == 0 || matches!(bytes.get(start - 1), Some(b' ' | b'('));
+        let mut at = start + 3;
+        if matches!(bytes.get(at), Some(b' ' | b'.')) {
+            at += 1;
+        }
+        let version_end = name
+            .get(at..)
+            .map(|rest| {
+                at + rest.len()
+                    - rest
+                        .trim_start_matches(|c: char| c.is_ascii_digit() || c == '.')
+                        .len()
+            })
+            .unwrap_or(at);
+        if boundary && name.get(at..version_end).is_some_and(is_version) {
+            return Some((start, version_end));
+        }
+        from = start + 3;
+    }
+    None
+}
+
+/// A version number: digits with at least one dot (`3.26`, `3.19.0`).
+fn is_version(s: &str) -> bool {
+    let s = s.trim_end_matches('.');
+    s.contains('.')
+        && s.split('.')
+            .all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
 }

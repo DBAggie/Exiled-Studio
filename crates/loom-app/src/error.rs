@@ -43,6 +43,16 @@ pub enum Code {
     /// The build's stored resolutions differ from this bundle's (a
     /// notice, not an error).
     ResolutionChanged,
+    /// A command names an item set the build does not have.
+    ItemSet,
+    /// A command names a stage (loadout) the build does not have.
+    Loadout,
+    /// A command names a skill set, socket group, or gem the build does
+    /// not have, or a value a gem cannot take.
+    Skill,
+    /// A command names a config set, input, or custom modifier block the
+    /// build does not have, or an input the page cannot set.
+    Config,
 }
 
 impl Code {
@@ -68,6 +78,10 @@ impl Code {
             Self::NoPath => "APP_NO_PATH",
             Self::Stopped => "APP_STOPPED",
             Self::ResolutionChanged => "APP_RESOLUTION_CHANGED",
+            Self::ItemSet => "APP_ITEM_SET",
+            Self::Loadout => "APP_LOADOUT",
+            Self::Skill => "APP_SKILL",
+            Self::Config => "APP_CONFIG",
         }
     }
 }

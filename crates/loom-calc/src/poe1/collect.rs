@@ -687,7 +687,7 @@ pub(super) fn slot_in_use(slot: &str, second_set: bool) -> bool {
 }
 
 /// The active item set: `Items.activeItemSet` (default 1), else the first.
-pub(super) fn active_item_set(build: &Build) -> Option<&ItemSet> {
+pub fn active_item_set(build: &Build) -> Option<&ItemSet> {
     let items = &build.items;
     items
         .active_set
@@ -695,8 +695,55 @@ pub(super) fn active_item_set(build: &Build) -> Option<&ItemSet> {
         .or_else(|| items.sets().next())
 }
 
+/// Where an item in use is.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ItemPlace {
+    /// A slot of the active item set (`Helmet`, `Flask 1`, ...).
+    Slot(String),
+    /// An allocated jewel socket of the active passive spec.
+    TreeSocket(NodeId),
+}
+
+/// The items the calculation reads, where it reads them: the active item
+/// set's slots that are in use (the weapon set the build uses, an abyssal
+/// socket its parent has), then jewels in allocated sockets of the active
+/// spec. The same choice as [`items`] makes (UX walkthrough, UX-02 and
+/// UX-03: the app marks what is in use); an item in two places is listed
+/// in each. Flasks count as in use, as equipped, whether active or not.
+#[must_use]
+pub fn items_in_use(build: &Build) -> Vec<(ItemId, ItemPlace)> {
+    let mut out = Vec::new();
+    if let Some(set) = active_item_set(build) {
+        let second = attribute(&set.attributes, "useSecondWeaponSet") == Some("true");
+        for entry in set.slots.typed() {
+            let slot = entry.slot.as_str();
+            let Some(id) = entry.item else { continue };
+            if id.0 == 0 || !slot_in_use(slot, second) {
+                continue;
+            }
+            if matches!(slot_kind(slot), SlotKind::Abyssal)
+                && abyssal_active(build, set, slot) != Some(true)
+            {
+                continue;
+            }
+            out.push((id, ItemPlace::Slot(slot.to_owned())));
+        }
+    }
+    if let Some(spec) = active_spec(build) {
+        let allocated = spec.nodes.value();
+        for socket in spec.jewel_sockets.typed() {
+            let Some(id) = socket.item else { continue };
+            if id.0 != 0 && allocated.contains(&socket.node) {
+                out.push((id, ItemPlace::TreeSocket(socket.node)));
+            }
+        }
+    }
+    out
+}
+
 /// The items in use: the active item set's slots, then jewels in
-/// allocated sockets; each item once.
+/// allocated sockets; each item once. [`items_in_use`] makes the same
+/// choice for the app; keep the two in step.
 fn items(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
     let build = input.build;
     let mut seen: Vec<ItemId> = Vec::new();
@@ -1380,7 +1427,8 @@ fn gems(input: &CalcInput<'_>, ingest: &mut Ingest<'_>) {
 }
 
 /// The active config set: `Config.activeConfigSet`, else the first.
-pub(crate) fn active_config(build: &Build) -> Option<&ConfigSet> {
+#[must_use]
+pub fn active_config(build: &Build) -> Option<&ConfigSet> {
     let config = &build.config;
     config
         .active
@@ -1455,64 +1503,87 @@ fn config(build: &Build, ingest: &mut Ingest<'_>) {
         if is_legacy_custom_mods(input) {
             continue;
         }
-        // Lines on any other input: no format applies them; a build
-        // document can carry them, so they are a reason, never ignored.
-        if !input.lines.is_empty() {
+        if input_use(input) == InputUse::Unmodelled {
             ingest.reason(UnsupportedReason::UnmodelledConfig {
                 input: input.name.clone(),
             });
-            continue;
         }
-        // Charges: their own effects (`poe1::charges`, P3-12e).
-        if super::charges::is_charge_input(&input.name) || super::stacks::is_input(&input.name) {
-            continue;
-        }
-        // The enemy's damage taken (shock, the boss kind, delirium),
-        // Onslaught, the bandit, and the pantheon: their own effects or
-        // reasons (`poe1::damage_taken`, `poe1::buffs`, [`choices`],
-        // P3-12f, P3-12g).
-        if super::damage_taken::handles(&input.name, &input.value)
-            || super::conditions::handles(&input.name, &input.value)
-            || super::exposure::handles(&input.name)
-            || super::buffs::is_buff_input(&input.name)
-            || input.name == BANDIT_INPUT
-            || super::pantheon::is_input(&input.name)
-            || super::gems::is_input(&input.name)
-        {
-            continue;
-        }
-        // Named conditions, multipliers, and distances only modifiers
-        // read, and the enemy's damage: no computed field changes, for an
-        // input or a placeholder (`poe1::config`, P3-12a, P3-12b).
-        if super::config::named_only(&input.name) || super::config::enemy_damage(&input.name) {
-            continue;
-        }
-        if input.kind == ConfigInputKind::Placeholder {
-            // PoB's `enemyIsBoss` sets these on every run; the enemy
-            // model derives them (P3-12b).
-            if !super::enemy::RESET_PLACEHOLDERS.contains(&input.name.as_str()) {
-                ingest.reason(UnsupportedReason::UnmodelledConfig {
-                    input: input.name.clone(),
-                });
-            }
-            continue;
-        }
-        if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
-            continue;
-        }
-        // The enemy model's numeric inputs (`poe1::enemy`): the hit fields
-        // take its problems as their reasons (P3-9b). `enemyIsBoss` as a
-        // string is above; as a number it is a reason.
-        if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str())
-            && input.name != super::damage_taken::BOSS_INPUT
-            && matches!(input.value, ConfigValue::Number(_))
-        {
-            continue;
-        }
-        ingest.reason(UnsupportedReason::UnmodelledConfig {
-            input: input.name.clone(),
-        });
     }
+}
+
+/// What a config input does to the engine's fields, as the calculation
+/// reads it ([`config`]): the planner's configuration page shows it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputUse {
+    /// The engine models its effect (charges, the enemy, buffs, the bandit,
+    /// the pantheon, and the others [`config`] lists), or its lines act as
+    /// custom modifiers (PoB's legacy `customMods`).
+    Applied,
+    /// It changes no computed field: it only sets names modifiers read
+    /// ([`super::config::NAMED_ONLY`]), the enemy's damage
+    /// ([`super::config::ENEMY_DAMAGE`]), or a placeholder the enemy model
+    /// derives ([`super::enemy::RESET_PLACEHOLDERS`]).
+    NoEffect,
+    /// The engine does not model it: every computed field takes it as an
+    /// `unmodelled-config` reason.
+    Unmodelled,
+}
+
+/// What `input` does to the engine's fields ([`InputUse`]).
+#[must_use]
+pub fn input_use(input: &ConfigInput) -> InputUse {
+    if is_legacy_custom_mods(input) {
+        return InputUse::Applied;
+    }
+    // Lines on any other input: no format applies them; a build document
+    // can carry them, so they are a reason, never ignored.
+    if !input.lines.is_empty() {
+        return InputUse::Unmodelled;
+    }
+    // Charges: their own effects (`poe1::charges`, P3-12e). The enemy's
+    // damage taken (shock, the boss kind, delirium), Onslaught, the
+    // bandit, and the pantheon: their own effects or reasons
+    // (`poe1::damage_taken`, `poe1::buffs`, [`choices`], P3-12f, P3-12g).
+    if super::charges::is_charge_input(&input.name)
+        || super::stacks::is_input(&input.name)
+        || super::damage_taken::handles(&input.name, &input.value)
+        || super::conditions::handles(&input.name, &input.value)
+        || super::exposure::handles(&input.name)
+        || super::buffs::is_buff_input(&input.name)
+        || input.name == BANDIT_INPUT
+        || super::pantheon::is_input(&input.name)
+        || super::gems::is_input(&input.name)
+    {
+        return InputUse::Applied;
+    }
+    // Named conditions, multipliers, and distances only modifiers read,
+    // and the enemy's damage: no computed field changes, for an input or a
+    // placeholder (`poe1::config`, P3-12a, P3-12b).
+    if super::config::named_only(&input.name) || super::config::enemy_damage(&input.name) {
+        return InputUse::NoEffect;
+    }
+    if input.kind == ConfigInputKind::Placeholder {
+        // PoB's `enemyIsBoss` sets these on every run; the enemy model
+        // derives them (P3-12b).
+        return if super::enemy::RESET_PLACEHOLDERS.contains(&input.name.as_str()) {
+            InputUse::NoEffect
+        } else {
+            InputUse::Unmodelled
+        };
+    }
+    if input.name == RESISTANCE_PENALTY_INPUT && matches!(input.value, ConfigValue::Number(_)) {
+        return InputUse::Applied;
+    }
+    // The enemy model's numeric inputs (`poe1::enemy`): the hit fields take
+    // its problems as their reasons (P3-9b). `enemyIsBoss` as a string is
+    // above; as a number it is a reason.
+    if super::enemy::ENEMY_INPUTS.contains(&input.name.as_str())
+        && input.name != super::damage_taken::BOSS_INPUT
+        && matches!(input.value, ConfigValue::Number(_))
+    {
+        return InputUse::Applied;
+    }
+    InputUse::Unmodelled
 }
 
 /// PoB's legacy custom modifier input (before custom modifier blocks).
@@ -1596,6 +1667,54 @@ mod tests {
         assert_eq!(slot_kind("Belt Abyssal Socket 1"), SlotKind::Abyssal);
         assert_eq!(slot_kind("Ring 3"), SlotKind::Other);
         assert_eq!(slot_kind("Graft 1"), SlotKind::Other);
+    }
+
+    #[test]
+    fn items_in_use_should_follow_the_active_set_and_spec() {
+        use loom_domain::{
+            Attributes, Game, ItemSetId, ItemsEntry, JewelSocket, Ordered, SlotEntry, SlotId,
+            Sourced, SpecId,
+        };
+        let set = |id: u32, slots: &[(&str, u32)]| {
+            let mut entries = Ordered::new();
+            for (slot, item) in slots {
+                entries.push(SlotEntry {
+                    slot: SlotId::new(*slot),
+                    item: Some(ItemId(*item)),
+                    attributes: Attributes::new(),
+                });
+            }
+            ItemsEntry::Set(ItemSet {
+                id: ItemSetId(id),
+                title: None,
+                slots: entries,
+                attributes: Attributes::new(),
+            })
+        };
+        let mut build = Build::new(Game::Poe1);
+        build.items.entries.push(set(1, &[("Helmet", 1)]));
+        build.items.entries.push(set(
+            2,
+            &[("Helmet", 2), ("Weapon 1 Swap", 3), ("Ring 1", 0)],
+        ));
+        build.items.active_set = Some(ItemSetId(2));
+        let mut spec = PassiveSpec::new(SpecId(1));
+        spec.nodes = Sourced::read(vec![NodeId(10)], "10");
+        for (node, item) in [(10, 4), (20, 5)] {
+            spec.jewel_sockets.push(JewelSocket {
+                node: NodeId(node),
+                item: Some(ItemId(item)),
+                attributes: Attributes::new(),
+            });
+        }
+        build.passives.specs.push(spec);
+        assert_eq!(
+            items_in_use(&build),
+            [
+                (ItemId(2), ItemPlace::Slot("Helmet".to_owned())),
+                (ItemId(4), ItemPlace::TreeSocket(NodeId(10))),
+            ]
+        );
     }
 
     #[test]

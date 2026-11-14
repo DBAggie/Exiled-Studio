@@ -144,6 +144,17 @@
             "$ref": "#/$defs/BuildPartEntry"
           }
         },
+        "league": {
+          "description": "The league the build is planned for, if chosen (additive,\naccepted 2026-11-14).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/League"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "passives": {
           "description": "Passive specs.",
           "$ref": "#/$defs/Passives"
@@ -1172,6 +1183,21 @@
           "required": [
             "opaque"
           ]
+        }
+      ]
+    },
+    "League": {
+      "description": "The league a build is planned for.",
+      "oneOf": [
+        {
+          "description": "A challenge league: legacy item versions cannot be had.",
+          "type": "string",
+          "const": "challenge"
+        },
+        {
+          "description": "Standard: legacy item versions can be had.",
+          "type": "string",
+          "const": "standard"
         }
       ]
     },

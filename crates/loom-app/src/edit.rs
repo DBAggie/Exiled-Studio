@@ -66,12 +66,14 @@ pub fn apply(
         .collect();
     let mut fates: Vec<Fate> = lines.iter().map(|_| Fate::Keep).collect();
     let mut added = Vec::new();
+    // The variant to select, written as the item's `Selected Variant` line.
+    let mut select: Option<u32> = None;
     for op in &edit.ops {
         let line = match op {
             LineOp::Replace { line, .. }
             | LineOp::Remove { line }
             | LineOp::SetRange { line, .. } => Some(*line),
-            LineOp::Add { .. } => None,
+            LineOp::Add { .. } | LineOp::SelectVariant { .. } => None,
         };
         if let Some(n) = line {
             let source = usize::try_from(n)
@@ -117,6 +119,15 @@ pub fn apply(
                 }
             }
             LineOp::Add { text } => added.push(one_line(text)?),
+            LineOp::SelectVariant { variant } => {
+                if *variant == 0 || *variant > item.body.variants.count {
+                    return Err(AppError::new(
+                        Code::EditLine,
+                        format!("the item has no variant {variant}"),
+                    ));
+                }
+                select = Some(*variant);
+            }
         }
     }
 
@@ -131,7 +142,14 @@ pub fn apply(
         .count();
     let mut sources: Vec<String> = Vec::new();
     let mut made: Vec<usize> = Vec::new();
+    let mut selected_written = false;
+    // Where a missing `Selected Variant` line goes: after the last
+    // `Variant` line (the spec lines come before the modifiers).
+    let mut after_variants = None;
     for (line, fate) in lines.iter().zip(fates) {
+        if matches!(&line.kind, LineKind::Spec { key, .. } if key == "Variant") {
+            after_variants = Some(sources.len() + 1);
+        }
         match fate {
             Fate::Remove => {}
             Fate::Text(t) => {
@@ -139,7 +157,12 @@ pub fn apply(
                 sources.push(t);
             }
             Fate::Keep => {
-                if removed_implicits > 0
+                if let Some(v) = select
+                    && matches!(&line.kind, LineKind::Spec { key, .. } if key == "Selected Variant")
+                {
+                    sources.push(format!("Selected Variant: {v}"));
+                    selected_written = true;
+                } else if removed_implicits > 0
                     && matches!(&line.kind, LineKind::Spec { key, .. } if key == "Implicits")
                 {
                     let count = item.body.implicits.unwrap_or(0);
@@ -150,6 +173,17 @@ pub fn apply(
                 } else {
                     sources.push(line.source.clone());
                 }
+            }
+        }
+    }
+    if let Some(v) = select
+        && !selected_written
+    {
+        let at = after_variants.unwrap_or(0).min(sources.len());
+        sources.insert(at, format!("Selected Variant: {v}"));
+        for m in &mut made {
+            if *m >= at {
+                *m += 1;
             }
         }
     }

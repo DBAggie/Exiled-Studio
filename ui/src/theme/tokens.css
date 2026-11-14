@@ -61,6 +61,36 @@
   --c-rarity-rare: #f2d97a;
   --c-rarity-unique: #e39a6e;
 
+  /* The game-style item tooltip and inventory (B-2): the game's text
+     colours on a near-black panel, the same in either theme; our own
+     values, never game art (ADR-000). */
+  --c-tt-bg: #0d0d10;
+  --c-tt-border: #4a3f2a;
+  --c-tt-label: #8a8a8a;
+  --c-tt-value: #ffffff;
+  --c-tt-augmented: #8888ff;
+  --c-tt-mod: #8888ff;
+  --c-tt-crafted: #b4b4ff;
+  --c-tt-enchant: #b4b4ff;
+  --c-tt-fractured: #a29162;
+  --c-tt-corrupted: #ff4a4a;
+  --c-tt-separator: #5a4a2c;
+  --c-tt-shadow: rgb(0 0 0 / 0.6);
+  --c-tt-sheen: rgb(255 255 255 / 0.06);
+  --c-inv-slot: #15151a;
+  --c-inv-slot-border: #3a3a44;
+  --c-flask-life: #b3352f;
+  --c-flask-mana: #3b5fc4;
+  --c-flask-hybrid: #8a4cb0;
+  --c-flask-utility: #4e9a5a;
+
+  /* Gem colours (the gem's attribute: strength, dexterity, intelligence,
+     none), as marks beside gem names; never game art (ADR-000). */
+  --c-gem-red: #e0705f;
+  --c-gem-green: #7cc46f;
+  --c-gem-blue: #6fa4e8;
+  --c-gem-white: #d9dde3;
+
   /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
   --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-heading:

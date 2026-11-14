@@ -289,20 +289,43 @@ impl App {
         self.read(|p| p.calc.as_ref().map(|(v, _, d)| (*v, Arc::clone(d))))
     }
 
+    /// The gems the game data offers, for a gem picker; for supports,
+    /// whether each fits socket group `group` of the active skill set.
+    ///
+    /// # Errors
+    /// `APP_NO_DATA`; `APP_NO_BUILD` or `APP_SKILL` when `group` names no
+    /// group.
+    pub fn gems(&self, group: Option<u32>) -> Result<Vec<api::GemCatalogEntry>, AppError> {
+        let (data, state) = self.read(|p| (p.data.clone(), p.state.clone()));
+        let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let found = match group {
+            Some(g) => {
+                let state =
+                    state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+                Some(crate::session::group_of(&state.build, g)?.clone())
+            }
+            None => None,
+        };
+        Ok(crate::gems::catalog(data.bundle, found.as_ref()))
+    }
+
     /// One item of the open build.
     ///
     /// # Errors
     /// `APP_NO_BUILD`, `APP_EDIT_ITEM`.
     pub fn item(&self, id: u32) -> Result<api::ItemView, AppError> {
-        let state = self
-            .read(|p| p.state.clone())
-            .ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        let (state, data) = self.read(|p| (p.state.clone(), p.data.clone()));
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
         let item = state
             .build
             .items
             .item(loom_domain::ItemId(id))
             .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {id}")))?;
-        Ok(crate::view::item_view(&state.build, item))
+        Ok(crate::view::item_view(
+            &state.build,
+            item,
+            data.as_ref().map(|d| d.bundle),
+        ))
     }
 
     /// An item edit's effect, calculated on the caller's thread with the
@@ -843,6 +866,97 @@ impl Writer {
         match command {
             api::Command::ImportText { text } => self.session.import_text(&text, None).map(done),
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
+            api::Command::UseItemSet { id } => Ok(self
+                .session
+                .use_item_set(id)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::UseLoadout { spec } => Ok(self
+                .session
+                .use_loadout(spec)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::UseSkillSet { id } => Ok(self
+                .session
+                .use_skill_set(id)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::EditGem {
+                group,
+                gem,
+                level,
+                quality,
+                enabled,
+            } => Ok(self
+                .session
+                .edit_gem(group, gem, level, quality, enabled)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::EditSocketGroup {
+                group,
+                enabled,
+                main,
+                main_gem,
+                slot,
+                label,
+            } => Ok(self
+                .session
+                .edit_socket_group(
+                    group,
+                    enabled,
+                    main,
+                    main_gem,
+                    crate::GroupPlace { slot, label },
+                )?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::AddGem { group, gem, at } => Ok(self
+                .session
+                .add_gem(group, &gem, at)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RemoveGem { group, gem } => Ok(self
+                .session
+                .remove_gem(group, gem)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::AddSocketGroup { slot, label } => Ok(self
+                .session
+                .add_socket_group(slot, label)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RemoveSocketGroup { group } => Ok(self
+                .session
+                .remove_socket_group(group)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::UseWeaponSet { second } => Ok(self
+                .session
+                .use_weapon_set(second)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SetLeague { league } => Ok(self
+                .session
+                .set_league(&league)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::UseConfigSet { id } => Ok(self
+                .session
+                .use_config_set(id)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SetConfigInput { name, value } => Ok(self
+                .session
+                .set_config_input(&name, &value)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RemoveConfigInput { name } => Ok(self
+                .session
+                .remove_config_input(&name)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::EditCustomBlock {
+                block,
+                enabled,
+                text,
+            } => Ok(self
+                .session
+                .edit_custom_block(block, enabled, text.as_deref())?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::AddCustomBlock { text } => Ok(self
+                .session
+                .add_custom_block(&text)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RemoveCustomBlock { block } => Ok(self
+                .session
+                .remove_custom_block(block)?
+                .map_or(api::Outcome::Nothing, done)),
             api::Command::Undo => Ok(self.session.undo().map_or(api::Outcome::Nothing, done)),
             api::Command::Redo => Ok(self.session.redo().map_or(api::Outcome::Nothing, done)),
             api::Command::Save => {
@@ -891,6 +1005,16 @@ impl Writer {
                 let _ = self.recovery.discard(&id);
                 self.refresh_lists();
                 Ok(done(v))
+            }
+            api::Command::ForgetRecent { id } => {
+                let store = self.session.store().clone();
+                if self.recent.find(&store, &id).is_none() {
+                    return Err(AppError::new(Code::NotFound, "no such recent build"));
+                }
+                self.recent.remove(&store, &id)?;
+                self.refresh_lists();
+                self.publish();
+                Ok(api::Outcome::Nothing)
             }
             api::Command::Discard { id } => {
                 self.recovery.discard(&id)?;

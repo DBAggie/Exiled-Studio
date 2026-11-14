@@ -37,6 +37,14 @@ export type LineOp =
       }
     }
   | {
+      'select-variant': {
+        /**
+         * The variant.
+         */
+        variant: number
+      }
+    }
+  | {
       add: {
         /**
          * The text.
@@ -44,6 +52,10 @@ export type LineOp =
         text: string
       }
     }
+/**
+ * What a variant of an item is.
+ */
+export type VariantEra = 'legacy' | 'current' | 'choice'
 
 /**
  * Every top-level type of the API, so one schema names them all. Never
@@ -65,11 +77,229 @@ export interface ApplicationAPIV1 {
     | {
         'edit-item': ItemEdit
       }
+    | {
+        'use-item-set': {
+          /**
+           * The set's ID.
+           */
+          id: number
+        }
+      }
+    | {
+        'use-loadout': {
+          /**
+           * The passive spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'use-skill-set': {
+          /**
+           * The set's ID.
+           */
+          id: number
+        }
+      }
+    | {
+        'edit-gem': {
+          /**
+           * Enables or disables the gem.
+           */
+          enabled?: boolean | null
+          /**
+           * The gem's index in the group.
+           */
+          gem: number
+          /**
+           * The socket group's index in the active skill set.
+           */
+          group: number
+          /**
+           * A new level.
+           */
+          level?: number | null
+          /**
+           * A new quality.
+           */
+          quality?: number | null
+        }
+      }
+    | {
+        'edit-socket-group': {
+          /**
+           * Enables or disables the group.
+           */
+          enabled?: boolean | null
+          /**
+           * The group's index in the active skill set.
+           */
+          group: number
+          /**
+           * Renames the group; empty for no label.
+           */
+          label?: string | null
+          /**
+           * Makes it the main skill group (`true` only).
+           */
+          main?: boolean | null
+          /**
+           * Makes this gem (by index in the group) the group's main active
+           * skill; with `main`, the build's main skill.
+           */
+          'main-gem'?: number | null
+          /**
+           * Moves the group to this equipment slot (empty: no slot).
+           */
+          slot?: string | null
+        }
+      }
+    | {
+        'add-gem': {
+          /**
+           * Its place in the group (by index); the end when absent.
+           */
+          at?: number | null
+          /**
+           * The gem, by its gem effect ID (a [`GemCatalogEntry`]'s `id`).
+           */
+          gem: string
+          /**
+           * The group's index in the active skill set.
+           */
+          group: number
+        }
+      }
+    | {
+        'remove-gem': {
+          /**
+           * The gem's index in the group.
+           */
+          gem: number
+          /**
+           * The group's index in the active skill set.
+           */
+          group: number
+        }
+      }
+    | {
+        'add-socket-group': {
+          /**
+           * Its label, if any.
+           */
+          label?: string | null
+          /**
+           * The equipment slot it is socketed in, if any.
+           */
+          slot?: string | null
+        }
+      }
+    | {
+        'remove-socket-group': {
+          /**
+           * The group's index in the active skill set.
+           */
+          group: number
+        }
+      }
+    | {
+        'use-config-set': {
+          /**
+           * The set's ID.
+           */
+          id: number
+        }
+      }
+    | {
+        'set-config-input': {
+          /**
+           * The name (PoB's option key).
+           */
+          name: string
+          /**
+           * The value.
+           */
+          value:
+            | {
+                boolean: boolean
+              }
+            | {
+                number: number
+              }
+            | {
+                text: string
+              }
+        }
+      }
+    | {
+        'remove-config-input': {
+          /**
+           * The name.
+           */
+          name: string
+        }
+      }
+    | {
+        'edit-custom-block': {
+          /**
+           * The block's index.
+           */
+          block: number
+          /**
+           * Whether it applies, if changed.
+           */
+          enabled?: boolean | null
+          /**
+           * The new text, if changed.
+           */
+          text?: string | null
+        }
+      }
+    | {
+        'add-custom-block': {
+          /**
+           * The text.
+           */
+          text: string
+        }
+      }
+    | {
+        'remove-custom-block': {
+          /**
+           * The block's index.
+           */
+          block: number
+        }
+      }
+    | {
+        'use-weapon-set': {
+          /**
+           * The second weapon set (`II`) when set.
+           */
+          second: boolean
+        }
+      }
+    | {
+        'set-league': {
+          /**
+           * The league.
+           */
+          league: 'challenge' | 'standard'
+        }
+      }
     | 'undo'
     | 'redo'
     | 'save'
     | {
         'open-recent': {
+          /**
+           * The ID.
+           */
+          id: string
+        }
+      }
+    | {
+        'forget-recent': {
           /**
            * The ID.
            */
@@ -112,6 +342,10 @@ export interface ApplicationAPIV1 {
     | 'close'
   error: ApiError
   event: Event
+  /**
+   * The gems the game data offers.
+   */
+  gems: GemCatalogEntry[]
   item: ItemView
   mcp: McpStatus
   /**
@@ -273,6 +507,36 @@ export interface ApiError2 {
   message: string
 }
 /**
+ * A gem the game data offers, for a gem picker.
+ */
+export interface GemCatalogEntry {
+  /**
+   * Its colour (red, green, blue, or white), if known.
+   */
+  colour?: string | null
+  /**
+   * For a support, when a group was named: whether it would support
+   * an active gem of that group.
+   */
+  fits?: boolean | null
+  /**
+   * The gem effect ID (the `gem` of [`Command::AddGem`]).
+   */
+  id: string
+  /**
+   * The name.
+   */
+  name: string
+  /**
+   * Whether it is a support gem.
+   */
+  support: boolean
+  /**
+   * Its tag names (Spell, Area, Cold, ...).
+   */
+  tags: string[]
+}
+/**
  * One item.
  */
 export interface ItemView {
@@ -280,6 +544,7 @@ export interface ItemView {
    * The base, if written.
    */
   base?: string | null
+  card: ItemCard
   /**
    * The item's ID.
    */
@@ -300,6 +565,131 @@ export interface ItemView {
    * The slot it is in, if any.
    */
   slot?: string | null
+}
+/**
+ * What an item card shows (UX walkthrough, UX-08).
+ */
+export interface ItemCard {
+  /**
+   * The mods PoB names on the item and the lines each made, prefixes
+   * first (the tooltip's Alt view headers); lines no mod is found
+   * for are in none.
+   */
+  affixes: AffixView[]
+  /**
+   * When the selected variant is a legacy version: the variant the
+   * current game makes instead, if one matches.
+   */
+  'current-variant'?: number | null
+  /**
+   * Flag lines (`Corrupted`, `Mirrored`), as written.
+   */
+  flags: string[]
+  /**
+   * The influences, by name.
+   */
+  influences: string[]
+  /**
+   * The item class, if written.
+   */
+  'item-class'?: string | null
+  /**
+   * The item level, as written.
+   */
+  'item-level'?: string | null
+  /**
+   * The level the item requires, as written.
+   */
+  'level-req'?: string | null
+  /**
+   * The defences and other base values written on the item
+   * (`Energy Shield: 276`), in order.
+   */
+  properties: CardProperty[]
+  /**
+   * The quality, as written (`20`).
+   */
+  quality?: string | null
+  /**
+   * What the item requires, when known.
+   */
+  requirements?: Requirements | null
+  /**
+   * The selected variant (1-based), if the item names one.
+   */
+  'selected-variant'?: number | null
+  /**
+   * The sockets, one string of colour letters per link group.
+   */
+  sockets: string[]
+  /**
+   * What each variant is, in the order of `variants`.
+   */
+  'variant-eras': VariantEra[]
+  /**
+   * The variants' names, in order (variant 1 first).
+   */
+  variants: string[]
+}
+/**
+ * One mod of an item, as the tooltip's Alt view heads its lines
+ * (`Prefix Modifier "Urchin's" — Life, Defences`).
+ */
+export interface AffixView {
+  /**
+   * Prefix or suffix.
+   */
+  kind: 'prefix' | 'suffix'
+  /**
+   * The line indices it made, in item order.
+   */
+  lines: number[]
+  /**
+   * The affix name, when the game data has one.
+   */
+  name?: string | null
+  /**
+   * Its tags as the game prints them (`Life`, `Defences`).
+   */
+  tags: string[]
+  /**
+   * Its tier on the item's base (1 is the best), when known.
+   */
+  tier?: number | null
+}
+/**
+ * One base value on an item card.
+ */
+export interface CardProperty {
+  /**
+   * The name (`Energy Shield`).
+   */
+  name: string
+  /**
+   * The value, as written.
+   */
+  value: string
+}
+/**
+ * An item's requirements: the level, and attributes above 0.
+ */
+export interface Requirements {
+  /**
+   * Dexterity (0: none).
+   */
+  dexterity: number
+  /**
+   * Intelligence (0: none).
+   */
+  intelligence: number
+  /**
+   * The level: as written on the item, else the base's drop level.
+   */
+  level?: number | null
+  /**
+   * Strength (0: none).
+   */
+  strength: number
 }
 /**
  * One source line of an item.
@@ -324,14 +714,30 @@ export interface LineView {
    */
   kind: string
   /**
+   * The modifier's marks from its prefixes: `crafted`,
+   * `fractured`, `crucible`, `scourge`, `synthesis`, `mutated`.
+   */
+  marks: string[]
+  /**
    * The numbers in the text, in order, for roll edits.
    */
   numbers: NumberSpan[]
+  /**
+   * The line as the game prints it with Alt held: each roll followed
+   * by its range (`+28(24-28) to maximum Life`); `None` when the
+   * line has no range.
+   */
+  ranged?: string | null
   /**
    * The modifier list it belongs to (`implicit`, `explicit`, ...);
    * modifier lines only.
    */
   section?: string | null
+  /**
+   * A modifier line as the game prints it, its roll applied (no
+   * markup); `None` when it is shown as written.
+   */
+  shown?: string | null
   /**
    * What the line resolved to: game stats, or a typed kind.
    */
@@ -348,6 +754,11 @@ export interface LineView {
    * The typed kind (`granted-skill`, ...), if it resolved to one.
    */
   typed?: string | null
+  /**
+   * The variants (1-based) a modifier line belongs to; empty for
+   * every variant.
+   */
+  variants: number[]
 }
 /**
  * A number in a line's text: where it is, as character offsets.
@@ -525,6 +936,7 @@ export interface ItemView1 {
    * The base, if written.
    */
   base?: string | null
+  card: ItemCard
   /**
    * The item's ID.
    */
@@ -658,6 +1070,15 @@ export interface BuildView {
    */
   completeness: string
   /**
+   * The active config set's inputs and custom modifier blocks, if
+   * the build has a config set.
+   */
+  config?: ConfigView | null
+  /**
+   * The config sets, in build order.
+   */
+  'config-sets': SetView[]
+  /**
    * The data version the build is pinned to.
    */
   'data-version'?: DataVersionView | null
@@ -666,14 +1087,35 @@ export interface BuildView {
    */
   game: string
   /**
+   * `complete` or `partial` counting only what the calculation
+   * reads: lines of items in use ([`ItemSummary::in_use`]) and the
+   * custom modifier lines. A warning on an item of another item set
+   * leaves it `complete` (UX walkthrough, UX-03).
+   */
+  'in-use-completeness': string
+  /**
+   * The item sets, in build order.
+   */
+  'item-sets': SetView[]
+  /**
    * The items, in build order.
    */
   items: ItemSummary[]
+  /**
+   * The league the build is planned for (`challenge` when not
+   * chosen).
+   */
+  league: 'challenge' | 'standard'
   /**
    * The character level, if set.
    */
   level?: number | null
   lines: LineCounts
+  /**
+   * The build's stages (PoB's loadouts: one per passive spec, with
+   * the item, skill, and config sets linked to it), in spec order.
+   */
+  loadouts: LoadoutView[]
   /**
    * The main skill's gem names, if the build has a main group.
    */
@@ -684,9 +1126,139 @@ export interface BuildView {
    */
   name: string
   /**
+   * The names of the active passive spec's allocated nodes, when the
+   * loaded game data has them: a calc result's `passive` source
+   * names its node by number.
+   */
+  'passive-names': NodeName[]
+  /**
+   * Whether the active item set uses its second weapon set (the
+   * game's weapon swap, `II`).
+   */
+  'second-weapon-set': boolean
+  /**
+   * The active skill set's socket groups, in order: a calc result's
+   * `gem` source names a group and a gem by their index here.
+   */
+  'skill-groups': SkillGroupView[]
+  /**
+   * The skill sets, in build order.
+   */
+  'skill-sets': SetView[]
+  /**
+   * The passive tree specs, in build order.
+   */
+  specs: SetView[]
+  /**
    * Lines with warnings: kept, shown, not calculated (ADR-015).
    */
   warnings: WarningView[]
+}
+/**
+ * The active config set: its inputs and custom modifier blocks.
+ */
+export interface ConfigView {
+  /**
+   * Its custom modifier blocks, in order (the index is the key).
+   */
+  blocks: CustomBlockView[]
+  /**
+   * Its inputs, in build order (the name is the key).
+   */
+  inputs: ConfigInputView[]
+  /**
+   * The set's ID.
+   */
+  set: number
+}
+/**
+ * One custom modifier block.
+ */
+export interface CustomBlockView {
+  /**
+   * Whether it applies.
+   */
+  enabled: boolean
+  /**
+   * The modifier lines read from the text, in order.
+   */
+  lines: CustomLineView[]
+  /**
+   * The text as written.
+   */
+  text: string
+  /**
+   * The title, if any.
+   */
+  title?: string | null
+}
+/**
+ * One line of a custom modifier block.
+ */
+export interface CustomLineView {
+  /**
+   * Its status: `warning` when it did not resolve (kept, not
+   * calculated, ADR-015).
+   */
+  status: 'matched' | 'adapted' | 'warning' | 'excluded' | 'continues' | 'other'
+  /**
+   * The text.
+   */
+  text: string
+  /**
+   * The typed kind it resolved to, if any (`custom-note`: a label or
+   * comment with no effect; `custom-pattern`: read as PoB reads it).
+   */
+  typed?: string | null
+}
+/**
+ * One config input.
+ */
+export interface ConfigInputView {
+  /**
+   * What it does to the computed fields.
+   */
+  effect: 'applied' | 'no-effect' | 'unmodelled'
+  /**
+   * The name, as the build's format writes it (PoB's option key).
+   */
+  name: string
+  /**
+   * Whether the value is a placeholder: the value a planner shows
+   * for an input left unset.
+   */
+  placeholder: boolean
+  /**
+   * The value.
+   */
+  value:
+    | {
+        boolean: boolean
+      }
+    | {
+        number: number
+      }
+    | {
+        text: string
+      }
+}
+/**
+ * One item set, skill set, passive spec, or config set.
+ */
+export interface SetView {
+  /**
+   * Whether the calculation uses it.
+   */
+  active: boolean
+  /**
+   * The set's ID.
+   */
+  id: number
+  /**
+   * The title as written, if any (PoB's colour codes and `{1,2}`
+   * loadout links included).
+   */
+  title?: string | null
 }
 /**
  * A data version.
@@ -718,6 +1290,22 @@ export interface ItemSummary {
    */
   id: number
   /**
+   * Whether the calculation reads it: in a slot of the active item
+   * set that is in use, or in an allocated jewel socket of the
+   * active passive spec.
+   */
+  'in-use': boolean
+  /**
+   * Its base's item class in the game data (`Bow`, `Quiver`, `Two
+   * Hand Sword`, `LifeFlask`, ...), when the base is known.
+   */
+  'item-class'?: string | null
+  /**
+   * Whether its selected variant is a legacy version of a unique
+   * (`Pre 3.7.0`): only Standard has such items.
+   */
+  legacy: boolean
+  /**
    * The name, if any.
    */
   name?: string | null
@@ -726,9 +1314,24 @@ export interface ItemSummary {
    */
   rarity?: string | null
   /**
+   * The item sets that hold it, by ID.
+   */
+  sets: number[]
+  /**
    * The slot it is in, in the active item set, if any.
    */
   slot?: string | null
+  /**
+   * Its sockets as linked groups, each a string of colours (`R`,
+   * `G`, `B`, `W`, `A` abyssal) in socket order: `R-R-G B` is
+   * `["RRG", "B"]`. Empty without a `Sockets` line.
+   */
+  sockets: string[]
+  /**
+   * The allocated jewel socket of the active spec it is in, by node
+   * number, if any.
+   */
+  'tree-socket'?: number | null
   /**
    * Its lines with warnings.
    */
@@ -761,6 +1364,120 @@ export interface LineCounts {
   warnings: number
 }
 /**
+ * A stage of the build (PoB's loadout): a passive spec and the sets
+ * linked to it, switched together.
+ */
+export interface LoadoutView {
+  /**
+   * Whether the build uses this spec and every linked set.
+   */
+  active: boolean
+  /**
+   * The linked config set, if one is.
+   */
+  'config-set'?: number | null
+  /**
+   * The linked item set, if one is.
+   */
+  'item-set'?: number | null
+  /**
+   * The linked skill set, if one is.
+   */
+  'skill-set'?: number | null
+  /**
+   * The passive spec's ID (the stage's key).
+   */
+  spec: number
+  /**
+   * The title, without colour codes and links.
+   */
+  title: string
+}
+/**
+ * A passive node's name.
+ */
+export interface NodeName {
+  /**
+   * Its name in the game data.
+   */
+  name: string
+  /**
+   * The node number.
+   */
+  node: number
+}
+/**
+ * One socket group of the active skill set.
+ */
+export interface SkillGroupView {
+  /**
+   * Whether the group is enabled.
+   */
+  enabled: boolean
+  /**
+   * Its gems, in order.
+   */
+  gems: GemView[]
+  /**
+   * The label, if any.
+   */
+  label?: string | null
+  /**
+   * Whether it is the build's main skill group.
+   */
+  main: boolean
+  /**
+   * The slot it is socketed in, if any.
+   */
+  slot?: string | null
+}
+/**
+ * One gem of a socket group.
+ */
+export interface GemView {
+  /**
+   * Its colour, when the game data knows it: `red`, `green`,
+   * `blue`, or `white`.
+   */
+  colour?: string | null
+  /**
+   * Whether the gem is enabled.
+   */
+  enabled: boolean
+  /**
+   * The level.
+   */
+  level: number
+  /**
+   * Whether it is the build's main skill (in the main group, the
+   * active skill the group's main skill names).
+   */
+  main: boolean
+  /**
+   * The name as written, if any.
+   */
+  name?: string | null
+  /**
+   * The quality.
+   */
+  quality: number
+  /**
+   * The socket it sits in, by index in its slot's item (PoB fills a
+   * slot's sockets with its groups' gems in order); `None` when the
+   * group has no slot or the item has no socket left for it.
+   */
+  socket?: number | null
+  /**
+   * Whether it is a support, when the game data knows the gem.
+   */
+  support?: boolean | null
+  /**
+   * For a support: the gems of the group (by index) it can support,
+   * as the calculation matches supports to a skill.
+   */
+  supports: number[]
+}
+/**
  * A line with a warning.
  */
 export interface WarningView {
@@ -768,6 +1485,11 @@ export interface WarningView {
    * The stable code.
    */
   code: string
+  /**
+   * Whether the line's item is in use ([`ItemSummary::in_use`]): a
+   * warning on an item not in use does not touch the calculation.
+   */
+  'in-use': boolean
   /**
    * The item's ID.
    */
@@ -857,13 +1579,23 @@ export interface HistoryView {
  */
 export interface HistoryEntry {
   /**
-   * The item it changed.
+   * The item it changed (for `item-set`: the item set it made
+   * active).
    */
   item: number
   /**
    * What it was.
    */
-  kind: 'item-edit' | 'request-applied'
+  kind:
+    | 'item-edit'
+    | 'request-applied'
+    | 'item-set'
+    | 'loadout'
+    | 'skill-set'
+    | 'skill-edit'
+    | 'config'
+    | 'league'
+    | 'weapon-set'
   /**
    * The change request it applied, when an MCP client asked for it.
    */

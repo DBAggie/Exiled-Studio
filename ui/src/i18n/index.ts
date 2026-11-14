@@ -23,6 +23,12 @@ export function tDynamic(
   return t(fallback, params)
 }
 
+/** A message by a key built at run time, else `fallback` as given (for
+ * names the catalog does not cover yet, such as a calc step's term). */
+export function tOr(key: string, fallback: string, params: Params = {}) {
+  return key in en ? t(key as MessageKey, params) : fallback
+}
+
 const numberFormat = new Intl.NumberFormat(undefined, {
   maximumFractionDigits: 2,
 })
@@ -32,9 +38,15 @@ export function formatNumber(value: number): string {
   return numberFormat.format(value)
 }
 
-/** The text for an error code. */
+/** The text for an error code: its own words, else its layer's (the code
+ * before the first `_`), else a general sentence. The code itself is
+ * shown apart, small ([ErrorCode]), for support. */
 export function errorText(code: string): string {
-  return tDynamic(`error.${code}`, 'error.generic', { code })
+  const family = `error.family.${code.split('_')[0] ?? ''}`
+  return tDynamic(
+    `error.${code}`,
+    family in en ? (family as MessageKey) : 'error.generic',
+  )
 }
 
 /** A field's label (its name when the catalog has none). */

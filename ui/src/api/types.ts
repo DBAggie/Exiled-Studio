@@ -6,17 +6,28 @@ import type {
   BuildView,
   CalcStatus,
   ChangeRequest,
+  ConfigInputView,
+  ConfigView,
+  CustomBlockView,
+  CustomLineView,
   FieldDelta,
+  GemCatalogEntry,
+  GemView,
+  HistoryEntry,
+  ItemCard,
   ItemEdit,
   ItemEditPreview,
   ItemSummary,
   ItemView,
   LineOp,
   LineView,
+  LoadoutView,
   McpPermissions,
   McpStatus,
   RecentEntry,
   RecoveryEntry,
+  SetView,
+  SkillGroupView,
   Snapshot,
   WarningView,
 } from '../generated/app-api.v1'
@@ -32,19 +43,30 @@ export type {
   CalcResultDocumentV1,
   CalcStatus,
   ChangeRequest,
+  ConfigInputView,
+  ConfigView,
+  CustomBlockView,
+  CustomLineView,
   FieldDelta,
   FieldResult,
+  GemCatalogEntry,
+  GemView,
+  HistoryEntry,
+  ItemCard,
   ItemEdit,
   ItemEditPreview,
   ItemSummary,
   ItemView,
   LineOp,
   LineView,
+  LoadoutView,
   McpPermissions,
   McpStatus,
   Node,
   RecentEntry,
   RecoveryEntry,
+  SetView,
+  SkillGroupView,
   Snapshot,
   WarningView,
 }
@@ -67,6 +89,9 @@ export interface LoomApi {
   snapshot(): Promise<Snapshot>
   calcDocument(): Promise<[number, CalcResultDocumentV1] | null>
   item(id: number): Promise<ItemView>
+  /** The gems the game data offers; for supports, whether each fits
+   * socket group `group` of the active skill set. */
+  gems(group?: number): Promise<GemCatalogEntry[]>
   preview(edit: ItemEdit): Promise<ItemEditPreview>
   execute(command: Command): Promise<Outcome>
   recent(): Promise<RecentEntry[]>
@@ -82,3 +107,8 @@ export interface LoomApi {
   chooseBundle(): Promise<Outcome>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
 }
+
+/** A config input's value: on or off, a number, or text. */
+export type ConfigValueView = ConfigInputView['value']
+/** The league a build is planned for. */
+export type League = BuildView['league']

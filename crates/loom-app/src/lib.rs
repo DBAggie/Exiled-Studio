@@ -14,13 +14,15 @@ mod app;
 mod data;
 mod edit;
 mod error;
+pub mod gems;
+pub mod loadout;
 mod session;
 mod view;
 
 pub use app::{App, Config, HostCommand, MAX_PENDING_REQUESTS, Sink};
 pub use data::{GameData, TREE_VERSIONS, tree_version};
 pub use error::{AppError, Code};
-pub use session::{HISTORY_LIMIT, Session, State, calculate, check_data, preview};
+pub use session::{GroupPlace, HISTORY_LIMIT, Session, State, calculate, check_data, preview};
 pub use view::{build_view, item_view};
 
 pub use loom_serialization::dto::app::v1 as api;

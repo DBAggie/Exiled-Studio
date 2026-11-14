@@ -85,6 +85,12 @@ pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "Ind
 /// rows (PoE1 26530219), and it would pull in about 30 unrelated tables.
 pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
 
+/// Base items' attribute requirements (B-2's tooltip: `Requires Level 65,
+/// 85 Str, 62 Dex`); nothing references the table, so it is a root. PoE1
+/// only until PoE2's install is checked for the file (a root without a file
+/// fails the run).
+pub const REQUIREMENT_TABLES_POE1: [&str; 1] = ["ComponentAttributeRequirements"];
+
 /// Tables that give item lines a stat or a skill outside the stat
 /// descriptions (Spike B PR B5x, areas 3 and 4 of the B4b verdict,
 /// `docs/spikes/spike-b-resolution.md` section 7a). PoE1
@@ -167,6 +173,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
+        roots.extend(REQUIREMENT_TABLES_POE1);
         roots.extend(ITEM_LINE_TABLES_POE1);
         roots.extend(CHOICE_TABLES_POE1);
     }
@@ -1978,6 +1985,7 @@ mod tests {
             LOOKUP_TABLES_POE1
                 .iter()
                 .chain(&MOD_SOURCE_TABLES_POE1)
+                .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
@@ -1985,6 +1993,7 @@ mod tests {
         assert!(
             MOD_SOURCE_TABLES_POE1
                 .iter()
+                .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
                 .all(|t| !poe2.contains(t))

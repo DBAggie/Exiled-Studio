@@ -37,7 +37,7 @@ describe('accessibility', () => {
     await user.click(
       screen.getByRole('button', { name: 'Edit Loom Test Band' }),
     )
-    await screen.findByLabelText('Line 4 text')
+    await screen.findByRole('button', { name: 'Edit line 4' })
     await user.click(screen.getByRole('button', { name: 'Remove line 5' }))
     await user.click(screen.getByRole('button', { name: 'Preview effect' }))
     await screen.findByRole('heading', { name: 'Impact of this edit' })

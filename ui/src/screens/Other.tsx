@@ -6,63 +6,102 @@ import type {
   FieldDelta,
   ItemSummary,
   LineOp,
+  WarningView,
 } from '../api/types'
-import { Badge, Icon, ScreenHeading, type Tone } from '../components'
-import { fieldLabel, formatNumber, t, tDynamic, type MessageKey } from '../i18n'
+import { Badge, ErrorCode, Icon, ScreenHeading, type Tone } from '../components'
+import {
+  errorText,
+  fieldLabel,
+  formatNumber,
+  t,
+  tDynamic,
+  type MessageKey,
+} from '../i18n'
 import { actions, attempt, run, setPermissions } from '../store'
-import { itemName, useAppDispatch, useAppSelector, withUnit } from '../util'
+import {
+  itemName,
+  splitWarnings,
+  useAppDispatch,
+  useAppSelector,
+  withUnit,
+} from '../util'
 
 export function Warnings() {
-  const dispatch = useAppDispatch()
-  const warnings = useAppSelector(
-    (s) => s.session.snapshot?.build?.warnings ?? [],
-  )
+  const build = useAppSelector((s) => s.session.snapshot?.build)
+  if (build == null) return null
+  const { used, unused } = splitWarnings(build)
   return (
     <>
       <ScreenHeading>{t('warnings.title')}</ScreenHeading>
       <p className="lead">{t('warnings.help')}</p>
-      {warnings.length === 0 ? (
+      {build.warnings.length === 0 ? (
         <p>{t('warnings.none')}</p>
       ) : (
-        <section className="panel table-panel" aria-label={t('warnings.title')}>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{t('warnings.text')}</th>
-                <th scope="col">{t('warnings.item')}</th>
-                <th scope="col">{t('warnings.reason')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {warnings.map((w) => (
-                <tr key={`${w.item}-${w.line}`}>
-                  <td className="mono">{w.text}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="link"
-                      onClick={() => dispatch(actions.editItem(w.item))}
-                    >
-                      {w['item-name'] ?? `#${w.item}`}
-                    </button>
-                  </td>
-                  <td>
-                    <Badge tone="warn">
-                      <span className="mono">{w.code}</span>
-                    </Badge>
-                    <p className="muted small-text">
-                      {tDynamic(`warning.${w.code}`, 'reason.generic', {
-                        kind: w.code,
-                      })}
-                    </p>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        <>
+          <h2>{t('warnings.used')}</h2>
+          {used.length === 0 ? (
+            <p>{t('warnings.usedNone')}</p>
+          ) : (
+            <WarningTable label={t('warnings.used')} warnings={used} />
+          )}
+          {unused.length > 0 && (
+            <>
+              <h2>{t('warnings.unused')}</h2>
+              <p className="muted">{t('warnings.unusedHelp')}</p>
+              <WarningTable label={t('warnings.unused')} warnings={unused} />
+            </>
+          )}
+        </>
       )}
     </>
+  )
+}
+
+function WarningTable({
+  label,
+  warnings,
+}: {
+  label: string
+  warnings: WarningView[]
+}) {
+  const dispatch = useAppDispatch()
+  return (
+    <section className="panel table-panel" aria-label={label}>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">{t('warnings.text')}</th>
+            <th scope="col">{t('warnings.item')}</th>
+            <th scope="col">{t('warnings.reason')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {warnings.map((w) => (
+            <tr key={`${w.item}-${w.line}`}>
+              <td className="mono">{w.text}</td>
+              <td>
+                <button
+                  type="button"
+                  className="link"
+                  onClick={() => dispatch(actions.editItem(w.item))}
+                >
+                  {w['item-name'] ?? `#${w.item}`}
+                </button>
+              </td>
+              <td>
+                <Badge tone="warn">{t('warning.badge')}</Badge>
+                <p className="muted small-text">
+                  {tDynamic(`warning.${w.code}`, 'reason.generic', {
+                    kind: w.code,
+                  })}
+                </p>
+                <ErrorCode code={w.code} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   )
 }
 
@@ -185,7 +224,12 @@ function Request({ r, items }: { r: ChangeRequest; items: ItemSummary[] }) {
             </ul>
           </div>
         )}
-        {r.error != null && <p className="error">{r.error.code}</p>}
+        {r.error != null && (
+          <>
+            <p className="error">{errorText(r.error.code)}</p>
+            <ErrorCode code={r.error.code} />
+          </>
+        )}
       </section>
       {r.status === 'pending' && (
         <section className="stack">
@@ -388,14 +432,56 @@ export function AiConnection() {
   )
 }
 
+/** The fonts' license texts, bundled with the UI (public/licenses). */
+const LICENSES = [
+  { name: 'Inter', file: 'inter-OFL-1.1.txt' },
+  { name: 'Space Grotesk', file: 'space-grotesk-OFL-1.1.txt' },
+  { name: 'JetBrains Mono', file: 'jetbrains-mono-OFL-1.1.txt' },
+]
+
+/** A license text, read from the app's own files when opened. */
+function LicenseText({ name, file }: { name: string; file: string }) {
+  const [text, setText] = useState<string | null>(null)
+  return (
+    <details
+      className="license"
+      onToggle={(e) => {
+        if (!e.currentTarget.open || text !== null) return
+        fetch(`licenses/${file}`)
+          .then((r) => (r.ok ? r.text() : Promise.reject(new Error(file))))
+          .then(setText, () => setText(t('about.licenseMissing', { file })))
+      }}
+    >
+      <summary>{t('about.licenseOf', { name })}</summary>
+      <pre>{text ?? t('about.loading')}</pre>
+    </details>
+  )
+}
+
 export function About() {
+  const version = useAppSelector(
+    (s) => s.session.snapshot?.data['data-version'],
+  )
   return (
     <section className="stack about">
       <ScreenHeading>{t('about.title')}</ScreenHeading>
       <p>{t('app.notice')}</p>
+      <dl className="about-versions">
+        <dt>{t('about.version')}</dt>
+        <dd className="mono">{__APP_VERSION__}</dd>
+        <dt>{t('about.data')}</dt>
+        <dd className="mono">
+          {version == null
+            ? t('about.dataNone')
+            : `${version.game} · ${version['steam-build'] ?? '?'}`}
+        </dd>
+      </dl>
       <p>{t('about.license')}</p>
       <p>{t('about.privacy')}</p>
       <p className="muted">{t('about.fonts')}</p>
+      {LICENSES.map((l) => (
+        <LicenseText key={l.file} name={l.name} file={l.file} />
+      ))}
     </section>
   )
 }

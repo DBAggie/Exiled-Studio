@@ -6,7 +6,11 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use loom_calc::CalcResult;
-use loom_domain::{Build, ItemId};
+use loom_domain::{
+    Attribute, Attributes, Build, ConfigInput, ConfigInputKind, ConfigSet, ConfigSetId,
+    ConfigValue, CustomModifierBlock, CustomModifierLine, ItemId, ItemSetId, ItemsEntry, League,
+    LineResolution, Number, Ordered, SkillSetId, SlotId, SocketGroup, Sourced,
+};
 use loom_persistence::{Overwrite, SaveOptions, Store};
 use loom_pipeline::{RangeEnds, Reresolved};
 use loom_serialization::dto::app::v1 as api;
@@ -15,6 +19,7 @@ use loom_serialization::legacy::{pob_xml, share_code};
 use crate::data::GameData;
 use crate::edit;
 use crate::error::{AppError, Code};
+use crate::loadout;
 use crate::view;
 
 /// The build with the range ends its calculation needs; immutable, shared
@@ -271,21 +276,572 @@ impl Session {
             item: e.item,
             request,
         };
-        self.undo.push(Change {
+        Ok(self.commit(
             state,
-            entry: entry.clone(),
+            State {
+                build: edited.build,
+                ends: edited.ends,
+            },
+            entry,
+        ))
+    }
+
+    /// Makes item set `id` the active one, as one undoable change (the
+    /// UX walkthrough's UX-02: the user picks the set the calculation
+    /// uses). The same set again changes nothing.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_ITEM_SET` when the build has no set `id`.
+    pub fn use_item_set(&mut self, id: u32) -> Result<Option<u64>, AppError> {
+        let state = self.need_state()?;
+        let set = ItemSetId(id);
+        if !state.build.items.sets().any(|s| s.id == set) {
+            return Err(AppError::new(Code::ItemSet, format!("no item set {id}")));
+        }
+        if loom_calc::poe1::collect::active_item_set(&state.build).map(|s| s.id) == Some(set) {
+            return Ok(None);
+        }
+        let mut build = state.build.clone();
+        build.items.active_set = Some(set);
+        let next = State {
+            build,
+            ends: state.ends.clone(),
+        };
+        let entry = api::HistoryEntry {
+            kind: api::ChangeKind::ItemSet,
+            item: id,
+            request: None,
+        };
+        Ok(Some(self.commit(state, next, entry)))
+    }
+
+    /// Changes the build with `change`, as one undoable change; `None` when
+    /// it left the build as it was.
+    fn change_build(
+        &mut self,
+        kind: api::ChangeKind,
+        item: u32,
+        change: impl FnOnce(&mut Build) -> Result<(), AppError>,
+    ) -> Result<Option<u64>, AppError> {
+        let state = self.need_state()?;
+        let mut build = state.build.clone();
+        change(&mut build)?;
+        if build == state.build {
+            return Ok(None);
+        }
+        let next = State {
+            build,
+            ends: state.ends.clone(),
+        };
+        let entry = api::HistoryEntry {
+            kind,
+            item,
+            request: None,
+        };
+        Ok(Some(self.commit(state, next, entry)))
+    }
+
+    /// Makes a stage (PoB's loadout) active: its passive spec and the sets
+    /// linked to it ([`loadout`]).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_LOADOUT` when no spec has ID `spec`.
+    pub fn use_loadout(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::Loadout, spec, |build| {
+            let l = loadout::loadouts(build)
+                .into_iter()
+                .find(|l| l.spec.0 == spec)
+                .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))?;
+            loadout::apply(build, &l);
+            Ok(())
+        })
+    }
+
+    /// Makes skill set `id` the active one.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when the build has no set `id`.
+    pub fn use_skill_set(&mut self, id: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::SkillSet, id, |build| {
+            if !build.skills.sets.typed().any(|s| s.id.0 == id) {
+                return Err(AppError::new(Code::Skill, format!("no skill set {id}")));
+            }
+            build.skills.active = Some(SkillSetId(id));
+            Ok(())
+        })
+    }
+
+    /// Changes a gem of the active skill set: its level, quality, or
+    /// whether it is enabled.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when there is no such group or gem, or a
+    /// level is 0.
+    pub fn edit_gem(
+        &mut self,
+        group: u32,
+        gem: u32,
+        level: Option<u32>,
+        quality: Option<i32>,
+        enabled: Option<bool>,
+    ) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::SkillEdit, group, |build| {
+            let g = socket_group(build, group)?
+                .gems
+                .typed_mut()
+                .nth(gem as usize)
+                .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
+            if let Some(level) = level.filter(|l| *l != *g.level.value()) {
+                if level == 0 {
+                    return Err(AppError::new(Code::Skill, "a gem's level is at least 1"));
+                }
+                g.level.set(level);
+            }
+            if let Some(quality) = quality.filter(|q| *q != *g.quality.value()) {
+                g.quality.set(quality);
+            }
+            if let Some(enabled) = enabled {
+                g.enabled = enabled;
+            }
+            Ok(())
+        })
+    }
+
+    /// Changes a socket group of the active skill set: whether it is
+    /// enabled, its slot and label, or makes it the main skill group.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when there is no such group.
+    pub fn edit_socket_group(
+        &mut self,
+        group: u32,
+        enabled: Option<bool>,
+        main: Option<bool>,
+        main_gem: Option<u32>,
+        place: GroupPlace,
+    ) -> Result<Option<u64>, AppError> {
+        let bundle = self.data.as_ref().map(|d| d.bundle);
+        self.change_build(api::ChangeKind::SkillEdit, group, |build| {
+            let g = socket_group(build, group)?;
+            if let Some(enabled) = enabled {
+                g.enabled = enabled;
+            }
+            if let Some(slot) = place.slot {
+                g.slot = (!slot.is_empty()).then(|| SlotId::new(slot));
+            }
+            if let Some(label) = place.label {
+                g.label = (!label.is_empty()).then_some(label);
+            }
+            if let Some(gem) = main_gem {
+                // Its place among the group's active skills (a gem the data
+                // does not know counts as active, as the view counts).
+                let support = |x: &loom_domain::Gem| {
+                    bundle
+                        .and_then(|b| loom_calc::poe1::skill::gem_effects(x, b))
+                        .and_then(|e| e.first().map(|f| f.support))
+                        == Some(true)
+                };
+                let gems: Vec<_> = g.gems.typed().collect();
+                if gems.get(gem as usize).is_none_or(|x| support(x)) {
+                    return Err(AppError::new(
+                        Code::Skill,
+                        format!("gem {gem} is not an active skill"),
+                    ));
+                }
+                let position = gems
+                    .iter()
+                    .take(gem as usize)
+                    .filter(|x| !support(x))
+                    .count();
+                let value = u32::try_from(position + 1).unwrap_or(1);
+                if g.main_active_skill.as_ref().map(|m| *m.value()) != Some(value) {
+                    match &mut g.main_active_skill {
+                        Some(m) => m.set(value),
+                        None => g.main_active_skill = Some(Sourced::new(value)),
+                    }
+                }
+            }
+            let index = group + 1;
+            if main == Some(true)
+                && build
+                    .character
+                    .main_socket_group
+                    .as_ref()
+                    .map(|m| *m.value())
+                    != Some(index)
+            {
+                match &mut build.character.main_socket_group {
+                    Some(m) => m.set(index),
+                    None => build.character.main_socket_group = Some(Sourced::new(index)),
+                }
+            }
+            Ok(())
+        })
+    }
+
+    /// Adds the gem of gem effect `gem` (a catalog entry's ID) to a socket
+    /// group of the active skill set, at `at` (the end when absent). The
+    /// group's main skill stays the same gem.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_SKILL` when there is no such
+    /// group or the data has no such gem.
+    pub fn add_gem(
+        &mut self,
+        group: u32,
+        gem: &str,
+        at: Option<u32>,
+    ) -> Result<Option<u64>, AppError> {
+        let data = self.need_data()?;
+        let bundle = data.bundle;
+        let new = crate::gems::new_gem(bundle, gem)
+            .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem} in the data")))?;
+        self.change_build(api::ChangeKind::SkillEdit, group, |build| {
+            let g = socket_group(build, group)?;
+            let count = g.gems.typed().count();
+            let at = at.map_or(count, |a| (a as usize).min(count));
+            let main = main_gem_index(g, bundle);
+            g.gems.insert_typed(at, new);
+            set_main_gem(g, bundle, main.map(|m| if at <= m { m + 1 } else { m }));
+            Ok(())
+        })
+    }
+
+    /// Removes a gem from a socket group of the active skill set. The
+    /// group's main skill stays the same gem; when that gem is removed, it
+    /// becomes the group's first active skill.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when there is no such group or gem.
+    pub fn remove_gem(&mut self, group: u32, gem: u32) -> Result<Option<u64>, AppError> {
+        let bundle = self.data.as_ref().map(|d| d.bundle);
+        self.change_build(api::ChangeKind::SkillEdit, group, |build| {
+            let g = socket_group(build, group)?;
+            let at = gem as usize;
+            let main = bundle.and_then(|b| main_gem_index(g, b));
+            g.gems
+                .remove_typed(at)
+                .ok_or_else(|| AppError::new(Code::Skill, format!("no gem {gem}")))?;
+            if let Some(b) = bundle {
+                let main = main.and_then(|m| match m.cmp(&at) {
+                    std::cmp::Ordering::Less => Some(m),
+                    std::cmp::Ordering::Equal => None,
+                    std::cmp::Ordering::Greater => Some(m - 1),
+                });
+                set_main_gem(g, b, main);
+            }
+            Ok(())
+        })
+    }
+
+    /// Adds an empty socket group at the end of the active skill set.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when the build has no skill set.
+    pub fn add_socket_group(
+        &mut self,
+        slot: Option<String>,
+        label: Option<String>,
+    ) -> Result<Option<u64>, AppError> {
+        let state = self.need_state()?;
+        let active = loadout::active_skill_set(&state.build);
+        let index = state
+            .build
+            .skills
+            .sets
+            .typed()
+            .find(|s| Some(s.id) == active)
+            .map_or(0, |s| s.groups.typed().count());
+        self.change_build(
+            api::ChangeKind::SkillEdit,
+            u32::try_from(index).unwrap_or(u32::MAX),
+            |build| {
+                let set = build
+                    .skills
+                    .sets
+                    .typed_mut()
+                    .find(|s| Some(s.id) == active)
+                    .ok_or_else(|| AppError::new(Code::Skill, "the build has no skill set"))?;
+                set.groups.push(SocketGroup {
+                    label: label.filter(|l| !l.is_empty()),
+                    enabled: true,
+                    slot: slot.filter(|s| !s.is_empty()).map(SlotId::new),
+                    main_active_skill: None,
+                    gems: Ordered::new(),
+                    attributes: Vec::new(),
+                });
+                Ok(())
+            },
+        )
+    }
+
+    /// Removes a socket group of the active skill set. The main skill
+    /// group stays the same group; when that group is removed, the group
+    /// now at its place (else the last) is the main one.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_SKILL` when there is no such group.
+    pub fn remove_socket_group(&mut self, group: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::SkillEdit, group, |build| {
+            let active = loadout::active_skill_set(build);
+            let set = build
+                .skills
+                .sets
+                .typed_mut()
+                .find(|s| Some(s.id) == active)
+                .ok_or_else(|| AppError::new(Code::Skill, "the build has no skill set"))?;
+            set.groups
+                .remove_typed(group as usize)
+                .ok_or_else(|| AppError::new(Code::Skill, format!("no socket group {group}")))?;
+            let left = u32::try_from(set.groups.typed().count()).unwrap_or(u32::MAX);
+            if let Some(m) = &mut build.character.main_socket_group {
+                let main = *m.value();
+                let next = if main > group + 1 {
+                    main - 1
+                } else {
+                    main.min(left.max(1))
+                };
+                if next != main {
+                    m.set(next);
+                }
+            }
+            Ok(())
+        })
+    }
+
+    /// Switches the active item set to its first or second weapon set (PoB's
+    /// `useSecondWeaponSet`).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`; `APP_ITEM_SET` when the build has no item set.
+    pub fn use_weapon_set(&mut self, second: bool) -> Result<Option<u64>, AppError> {
+        let state = self.need_state()?;
+        let Some(id) = loom_calc::poe1::collect::active_item_set(&state.build).map(|s| s.id) else {
+            return Err(AppError::new(Code::ItemSet, "the build has no item set"));
+        };
+        self.change_build(api::ChangeKind::WeaponSet, id.0, |build| {
+            let set = build
+                .items
+                .entries
+                .typed_mut()
+                .find_map(|e| match e {
+                    ItemsEntry::Set(s) if s.id == id => Some(s),
+                    _ => None,
+                })
+                .ok_or_else(|| AppError::new(Code::ItemSet, "the item set is gone"))?;
+            let value = if second { "true" } else { "false" };
+            match set
+                .attributes
+                .iter_mut()
+                .find(|a| a.name == crate::view::SECOND_WEAPON_SET)
+            {
+                Some(a) => value.clone_into(&mut a.value),
+                // Absent reads as the first set.
+                None if second => set
+                    .attributes
+                    .push(Attribute::new(crate::view::SECOND_WEAPON_SET, value)),
+                None => {}
+            }
+            Ok(())
+        })
+    }
+
+    /// Sets the league the build is planned for.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`.
+    pub fn set_league(&mut self, league: &api::League) -> Result<Option<u64>, AppError> {
+        let league = match league {
+            api::League::Challenge => League::Challenge,
+            api::League::Standard => League::Standard,
+        };
+        self.change_build(api::ChangeKind::League, 0, |build| {
+            build.league = Some(league);
+            Ok(())
+        })
+    }
+
+    /// Makes config set `id` the active one.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_CONFIG` when the build has no set `id`.
+    pub fn use_config_set(&mut self, id: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::Config, id, |build| {
+            if !build.config.sets.typed().any(|s| s.id.0 == id) {
+                return Err(AppError::new(Code::Config, format!("no config set {id}")));
+            }
+            build.config.active = Some(ConfigSetId(id));
+            Ok(())
+        })
+    }
+
+    /// Sets a config input of the active config set: its value, which a
+    /// placeholder of that name becomes; a new input goes after the
+    /// others. A build with no config set gets one (ID 1).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`; `APP_CONFIG` for an empty name, PoB's legacy
+    /// `customMods` (its text is lines, edited as a custom modifier block),
+    /// or a number that is not finite.
+    pub fn set_config_input(
+        &mut self,
+        name: &str,
+        value: &api::ConfigValueView,
+    ) -> Result<Option<u64>, AppError> {
+        if name.trim().is_empty() || name == LEGACY_CUSTOM_MODS {
+            return Err(AppError::new(
+                Code::Config,
+                format!("the config input {name:?} cannot be set here"),
+            ));
+        }
+        let value = match value {
+            api::ConfigValueView::Boolean(b) => ConfigValue::Boolean(*b),
+            api::ConfigValueView::Number(n) if n.is_finite() => {
+                ConfigValue::Number(Sourced::new(Number(*n)))
+            }
+            api::ConfigValueView::Number(_) => {
+                return Err(AppError::new(
+                    Code::Config,
+                    "a config number must be finite",
+                ));
+            }
+            api::ConfigValueView::Text(t) => ConfigValue::String(t.clone()),
+        };
+        self.change_build(api::ChangeKind::Config, 0, |build| {
+            let set = active_config_or_new(build);
+            if let Some(input) = set.inputs.typed_mut().find(|i| i.name == name) {
+                // The same number keeps its source text (an export writes
+                // it as read).
+                let same = match (&input.value, &value) {
+                    (ConfigValue::Number(a), ConfigValue::Number(b)) => a.value() == b.value(),
+                    (a, b) => a == b,
+                };
+                if !same {
+                    input.value = value;
+                }
+                input.kind = ConfigInputKind::Input;
+            } else {
+                set.inputs.push(ConfigInput {
+                    name: name.to_owned(),
+                    value,
+                    kind: ConfigInputKind::Input,
+                    lines: Vec::new(),
+                    attributes: Attributes::default(),
+                });
+            }
+            Ok(())
+        })
+    }
+
+    /// Removes a config input of the active config set.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_CONFIG` when the set has no input `name`.
+    pub fn remove_config_input(&mut self, name: &str) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::Config, 0, |build| {
+            let set = active_config(build)?;
+            let at = set
+                .inputs
+                .typed()
+                .position(|i| i.name == name)
+                .ok_or_else(|| AppError::new(Code::Config, format!("no config input {name}")))?;
+            set.inputs.remove_typed(at);
+            Ok(())
+        })
+    }
+
+    /// Changes a custom modifier block of the active config set: whether
+    /// it applies, or its text, whose lines are read again (PoB's rule,
+    /// [`pob_xml::custom_modifier_lines`]) and resolved as an import
+    /// resolves them.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_CONFIG` when there is no such block; with a
+    /// text, `APP_NO_DATA` and the resolver's codes.
+    pub fn edit_custom_block(
+        &mut self,
+        block: u32,
+        enabled: Option<bool>,
+        text: Option<&str>,
+    ) -> Result<Option<u64>, AppError> {
+        let data = if text.is_some() {
+            Some(self.need_data()?)
+        } else {
+            None
+        };
+        self.change_build(api::ChangeKind::Config, block, |build| {
+            let b = active_config(build)?
+                .custom_modifiers
+                .get_mut(block as usize)
+                .ok_or_else(|| AppError::new(Code::Config, format!("no custom block {block}")))?;
+            if let Some(enabled) = enabled {
+                b.enabled = enabled;
+            }
+            if let Some(text) = text.filter(|t| *t != b.text) {
+                b.text = text.to_owned();
+                b.lines = custom_lines(text);
+            }
+            if let Some(data) = &data {
+                resolve_pending(build, data)?;
+            }
+            Ok(())
+        })
+    }
+
+    /// Adds a custom modifier block, enabled, with `text`, after the
+    /// others of the active config set (one is made when the build has
+    /// none).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, and the resolver's codes.
+    pub fn add_custom_block(&mut self, text: &str) -> Result<Option<u64>, AppError> {
+        let data = self.need_data()?;
+        self.change_build(api::ChangeKind::Config, 0, |build| {
+            active_config_or_new(build)
+                .custom_modifiers
+                .push(CustomModifierBlock {
+                    title: None,
+                    enabled: true,
+                    text: text.to_owned(),
+                    lines: custom_lines(text),
+                    attributes: Attributes::default(),
+                });
+            resolve_pending(build, &data)
+        })
+    }
+
+    /// Removes a custom modifier block of the active config set.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_CONFIG` when there is no such block.
+    pub fn remove_custom_block(&mut self, block: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::Config, block, |build| {
+            let blocks = &mut active_config(build)?.custom_modifiers;
+            if block as usize >= blocks.len() {
+                return Err(AppError::new(
+                    Code::Config,
+                    format!("no custom block {block}"),
+                ));
+            }
+            blocks.remove(block as usize);
+            Ok(())
+        })
+    }
+
+    /// Makes `next` current, keeping `previous` for undo.
+    fn commit(&mut self, previous: Arc<State>, next: State, entry: api::HistoryEntry) -> u64 {
+        self.undo.push(Change {
+            state: previous,
+            entry,
         });
         if self.undo.len() > HISTORY_LIMIT {
             self.undo.remove(0);
         }
         self.redo.clear();
-        self.current = Some(Arc::new(State {
-            build: edited.build,
-            ends: edited.ends,
-        }));
+        self.current = Some(Arc::new(next));
         self.dirty = true;
         self.version += 1;
-        Ok(self.version)
+        self.version
     }
 
     /// Reverts the latest change; `None` when there is none.
@@ -411,7 +967,11 @@ impl Session {
             .items
             .item(ItemId(id))
             .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {id}")))?;
-        Ok(view::item_view(&state.build, item))
+        Ok(view::item_view(
+            &state.build,
+            item,
+            self.data.as_ref().map(|d| d.bundle),
+        ))
     }
 
     /// The snapshot DTO, with the calculation's status.
@@ -420,10 +980,9 @@ impl Session {
         let entry = |c: Option<&Change>| c.map(|c| c.entry.clone());
         api::Snapshot {
             version: self.version,
-            build: self
-                .current
-                .as_ref()
-                .map(|s| view::build_view(&s.build, self.name())),
+            build: self.current.as_ref().map(|s| {
+                view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle))
+            }),
             calc,
             history: api::HistoryView {
                 can_undo: !self.undo.is_empty(),
@@ -447,6 +1006,78 @@ impl Session {
             notices: self.notices.iter().map(AppError::dto).collect(),
         }
     }
+}
+
+/// Socket group `group` (an index) of the active skill set.
+/// Where a socket group goes: its slot and label (each: `None` keeps it,
+/// empty clears it).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct GroupPlace {
+    /// The equipment slot.
+    pub slot: Option<String>,
+    /// The label.
+    pub label: Option<String>,
+}
+
+/// Whether the data reads gem `x` as a support (a gem it does not know is
+/// not one).
+fn is_support(x: &loom_domain::Gem, bundle: &loom_data::bundle::Bundle) -> bool {
+    loom_calc::poe1::skill::gem_effects(x, bundle).and_then(|e| e.first().map(|f| f.support))
+        == Some(true)
+}
+
+/// The index (among all its gems) of the gem a group's `mainActiveSkill`
+/// names (the n-th gem that is not a support), if it names one.
+fn main_gem_index(g: &SocketGroup, bundle: &loom_data::bundle::Bundle) -> Option<usize> {
+    let n = usize::try_from(*g.main_active_skill.as_ref()?.value()).ok()?;
+    g.gems
+        .typed()
+        .enumerate()
+        .filter(|(_, x)| !is_support(x, bundle))
+        .nth(n.checked_sub(1)?)
+        .map(|(i, _)| i)
+}
+
+/// Points a group's `mainActiveSkill` (when it has one) at gem `main` (by
+/// index among all its gems), or at its first active skill when `None`.
+fn set_main_gem(g: &mut SocketGroup, bundle: &loom_data::bundle::Bundle, main: Option<usize>) {
+    let value = main.map_or(1, |m| {
+        let before = g
+            .gems
+            .typed()
+            .take(m)
+            .filter(|x| !is_support(x, bundle))
+            .count();
+        u32::try_from(before + 1).unwrap_or(1)
+    });
+    if let Some(m) = &mut g.main_active_skill
+        && *m.value() != value
+    {
+        m.set(value);
+    }
+}
+
+/// Socket group `group` of the active skill set.
+pub(crate) fn group_of(build: &Build, group: u32) -> Result<&SocketGroup, AppError> {
+    let active = loadout::active_skill_set(build);
+    build
+        .skills
+        .sets
+        .typed()
+        .find(|s| Some(s.id) == active)
+        .and_then(|s| s.groups.typed().nth(group as usize))
+        .ok_or_else(|| AppError::new(Code::Skill, format!("no socket group {group}")))
+}
+
+fn socket_group(build: &mut Build, group: u32) -> Result<&mut SocketGroup, AppError> {
+    let active = loadout::active_skill_set(build);
+    build
+        .skills
+        .sets
+        .typed_mut()
+        .find(|s| Some(s.id) == active)
+        .and_then(|s| s.groups.typed_mut().nth(group as usize))
+        .ok_or_else(|| AppError::new(Code::Skill, format!("no socket group {group}")))
 }
 
 /// Whether the data can calculate the build.
@@ -545,7 +1176,7 @@ pub fn preview(
         .build
         .items
         .item(ItemId(e.item))
-        .map(|i| view::item_view(&after_state.build, i))
+        .map(|i| view::item_view(&after_state.build, i, Some(data.bundle)))
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", e.item)))?;
     Ok(api::ItemEditPreview { item, fields })
 }
@@ -557,4 +1188,57 @@ fn same_file(a: &Path, b: &Path) -> bool {
         (Ok(a), Ok(b)) => a == b,
         _ => a == b,
     }
+}
+
+/// PoB's legacy custom modifier input: its text is lines, which the page
+/// does not edit as an input.
+const LEGACY_CUSTOM_MODS: &str = "customMods";
+
+/// The active config set (the first when none is named).
+fn active_config(build: &mut Build) -> Result<&mut ConfigSet, AppError> {
+    let active = loadout::active_config_set(build);
+    build
+        .config
+        .sets
+        .typed_mut()
+        .find(|s| Some(s.id) == active)
+        .ok_or_else(|| AppError::new(Code::Config, "the build has no config set"))
+}
+
+/// The active config set, made (ID 1, active) when the build has none.
+fn active_config_or_new(build: &mut Build) -> &mut ConfigSet {
+    if loadout::active_config_set(build).is_none() {
+        build.config.sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs: Ordered::default(),
+            custom_modifiers: Vec::new(),
+            attributes: Attributes::default(),
+        });
+        build.config.active = Some(ConfigSetId(1));
+    }
+    let active = loadout::active_config_set(build);
+    build
+        .config
+        .sets
+        .typed_mut()
+        .find(|s| Some(s.id) == active)
+        .unwrap_or_else(|| unreachable!("a config set was just made"))
+}
+
+/// A custom modifier block's lines read from `text`, pending resolution.
+fn custom_lines(text: &str) -> Vec<CustomModifierLine> {
+    pob_xml::custom_modifier_lines(text)
+        .map(|text| CustomModifierLine {
+            text,
+            resolution: LineResolution::Pending,
+        })
+        .collect()
+}
+
+/// Resolves the build's pending lines (a changed block's), as an import
+/// does. The items' lines are resolved already, so their range ends stand.
+fn resolve_pending(build: &mut Build, data: &GameData) -> Result<(), AppError> {
+    loom_pipeline::resolve(data.resolver, data.data, build)?;
+    Ok(())
 }

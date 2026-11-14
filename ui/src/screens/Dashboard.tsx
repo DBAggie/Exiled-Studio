@@ -10,6 +10,7 @@ import {
   fieldStateText,
   fieldValue,
   reasonText,
+  splitWarnings,
   useAppDispatch,
   useAppSelector,
 } from '../util'
@@ -73,7 +74,8 @@ function FieldPanel({
                   <span className={`stat-value${negative ? ' negative' : ''}`}>
                     {fieldValue(f)}
                   </span>
-                  <FieldBadge field={f} />
+                  {/* Only the exceptions are marked (UX-12). */}
+                  {f.state !== 'complete' && <FieldBadge field={f} />}
                 </span>
               </button>
             </li>
@@ -96,6 +98,7 @@ export function Dashboard() {
   const offence = fields.filter((f) => OFFENCE.has(f.field))
   const defence = fields.filter((f) => !OFFENCE.has(f.field))
   const version = build['data-version']
+  const { used, unused } = splitWarnings(build)
   const character = [
     build.class != null && build.level != null
       ? t('dashboard.character', {
@@ -151,12 +154,17 @@ export function Dashboard() {
             </button>
           </div>
           <p className="muted small-text">
-            {build.warnings.length === 1
-              ? t('dashboard.warnings1')
-              : t('dashboard.warnings', { n: build.warnings.length })}
+            {used.length === 0
+              ? t('dashboard.warningsUnusedOnly', { n: unused.length })
+              : used.length === 1
+                ? t('dashboard.warnings1')
+                : t('dashboard.warnings', { n: used.length })}
+            {used.length > 0 &&
+              unused.length > 0 &&
+              ` ${t('dashboard.warningsUnused', { n: unused.length })}`}
           </p>
           <ul className="warning-strip">
-            {build.warnings.slice(0, 6).map((w) => (
+            {used.slice(0, 6).map((w) => (
               <li key={`${w.item}-${w.line}`}>
                 <span className="mono" title={w.text}>
                   {w.text}

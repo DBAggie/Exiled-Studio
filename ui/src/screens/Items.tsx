@@ -1,54 +1,244 @@
 // Screens 7 and 5 (docs/ui, Equipment and ItemEditor), in this slice: the
 // item list and the item editor (line status, edit, remove, add, the
-// effect of the edit before Apply, applied as one undoable step).
+// effect of the edit before Apply, applied as one undoable step). The
+// editor shows an item card (UX-08) with a variant picker (UX-09), and
+// each line as the game prints it; PoB's markup shows only while a line
+// is edited (UX-07).
 import { useEffect, useId, useState } from 'react'
 
-import type { ItemEdit, ItemEditPreview, ItemView, LineOp } from '../api/types'
-import { Badge, Icon, LineBadge, ScreenHeading } from '../components'
+import type {
+  League,
+  ItemEdit,
+  ItemEditPreview,
+  SetView,
+  ItemSummary,
+  ItemView,
+  LineOp,
+} from '../api/types'
+import {
+  Badge,
+  ErrorCode,
+  Icon,
+  LineBadge,
+  ScreenHeading,
+  Sockets,
+} from '../components'
 import { fieldLabel, t, tDynamic } from '../i18n'
-import { actions, attempt, run } from '../store'
-import { itemName, useAppDispatch, useAppSelector, withUnit } from '../util'
+import { actions, attempt, query, run } from '../store'
+import { Inventory } from './Inventory'
+import {
+  cleanTitle,
+  itemName,
+  useAppDispatch,
+  useAppSelector,
+  withUnit,
+} from '../util'
+
+/** The equipment slots in the order the game's inventory shows them. */
+const SLOT_ORDER = [
+  'Weapon 1',
+  'Weapon 2',
+  'Helmet',
+  'Body Armour',
+  'Gloves',
+  'Boots',
+  'Amulet',
+  'Ring 1',
+  'Ring 2',
+  'Ring 3',
+  'Belt',
+  'Flask 1',
+  'Flask 2',
+  'Flask 3',
+  'Flask 4',
+  'Flask 5',
+]
+
+/** Equipped first, in inventory order (abyssal and other slots after the
+ * slot they belong to); then jewels in the passive tree. */
+function slotRank(item: ItemSummary): number {
+  if (item.slot == null) return 10_000
+  const i = SLOT_ORDER.findIndex(
+    (s) => item.slot === s || item.slot?.startsWith(`${s} `),
+  )
+  return i === -1 ? 1_000 : i
+}
+
+function ItemRow({ item, place }: { item: ItemSummary; place: string }) {
+  const dispatch = useAppDispatch()
+  const groups = useAppSelector(
+    (s) => s.session.snapshot?.build?.['skill-groups'],
+  )
+  const league = useAppSelector((s) => s.session.snapshot?.build?.league)
+  const legacy = item.legacy && league === 'challenge'
+  // The sockets a gem of the active skill set sits in, for an item in use.
+  const filled = new Set(
+    item['in-use']
+      ? (groups ?? [])
+          .filter((g) => g.slot != null && g.slot === item.slot)
+          .flatMap((g) => g.gems.map((x) => x.socket))
+          .filter((s) => s != null)
+      : [],
+  )
+  return (
+    <li>
+      <button
+        type="button"
+        className="item-row"
+        aria-label={t('items.edit', { name: itemName(item) })}
+        onClick={() => dispatch(actions.editItem(item.id))}
+      >
+        <span className="slot">{place}</span>
+        <span>
+          <span className={`name rarity-${item.rarity ?? 'normal'}`}>
+            {itemName(item)}
+          </span>
+          {item.base != null && item.base !== itemName(item) && (
+            <span className="sub">{item.base}</span>
+          )}
+          {item.sockets.length > 0 && (
+            <span className="item-sockets">
+              <Sockets groups={item.sockets} filled={filled} />
+            </span>
+          )}
+        </span>
+        <span className="item-badges">
+          {legacy && <Badge tone="warn">{t('items.legacy')}</Badge>}
+          {item.warnings > 0 && (
+            <Badge tone={item['in-use'] ? 'warn' : 'neutral'}>
+              {t('items.warningCount', { n: item.warnings })}
+            </Badge>
+          )}
+        </span>
+      </button>
+    </li>
+  )
+}
+
+function ItemSetPicker({ sets }: { sets: SetView[] }) {
+  const dispatch = useAppDispatch()
+  const id = useId()
+  const active = sets.find((s) => s.active)
+  return (
+    <div className="set-picker">
+      <label htmlFor={id}>{t('items.set')}</label>
+      <select
+        id={id}
+        value={active?.id ?? ''}
+        onChange={(e) =>
+          void dispatch(run({ 'use-item-set': { id: Number(e.target.value) } }))
+        }
+      >
+        {sets.map((s) => (
+          <option key={s.id} value={s.id}>
+            {setTitle(s)}
+          </option>
+        ))}
+      </select>
+      <span className="muted small-text">{t('items.setHelp')}</span>
+    </div>
+  )
+}
+
+/** The league the build is planned for: in a challenge league, legacy
+ * versions of unique items cannot be had, and items set to one say so. */
+export function LeaguePicker({ league }: { league: League }) {
+  const dispatch = useAppDispatch()
+  const id = useId()
+  return (
+    <div className="set-picker">
+      <label htmlFor={id}>{t('league.label')}</label>
+      <select
+        id={id}
+        value={league}
+        onChange={(e) =>
+          void dispatch(
+            run({ 'set-league': { league: e.target.value as League } }),
+          )
+        }
+      >
+        <option value="challenge">{t('league.challenge')}</option>
+        <option value="standard">{t('league.standard')}</option>
+      </select>
+    </div>
+  )
+}
+
+/** A set's title, without PoB's loadout markers (`Campaign {1,2}`). */
+function setTitle(s: SetView): string {
+  const title = cleanTitle(s.title)
+  return title !== '' ? title : t('items.setN', { n: s.id })
+}
 
 export function Items() {
-  const dispatch = useAppDispatch()
-  const items = useAppSelector((s) => s.session.snapshot?.build?.items ?? [])
+  const build = useAppSelector((s) => s.session.snapshot?.build)
+  if (build == null) return null
+  const items = build.items
+  const sets = build['item-sets']
+  const used = items
+    .filter((i) => i['in-use'])
+    .sort((a, b) => slotRank(a) - slotRank(b))
+  const unused = items.filter((i) => !i['in-use'])
+  const inSets = (item: ItemSummary) => {
+    const names = sets
+      .filter((s) => item.sets.includes(s.id))
+      .map((s) => setTitle(s))
+    return names.length === 0 ? t('items.inNoSet') : names.join(', ')
+  }
   return (
     <>
-      <ScreenHeading>{t('items.title')}</ScreenHeading>
+      <div className="page-head">
+        <ScreenHeading>{t('items.title')}</ScreenHeading>
+        <span className="spacer" />
+        <LeaguePicker league={build.league} />
+        {sets.length > 1 && <ItemSetPicker sets={sets} />}
+      </div>
+      <Inventory />
       {items.length === 0 ? (
         <p>{t('items.none')}</p>
       ) : (
-        <section className="panel table-panel" aria-label={t('items.title')}>
-          <ul className="item-list">
-            {items.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className="item-row"
-                  aria-label={t('items.edit', { name: itemName(item) })}
-                  onClick={() => dispatch(actions.editItem(item.id))}
-                >
-                  <span className="slot">{item.slot ?? '—'}</span>
-                  <span>
-                    <span className={`name rarity-${item.rarity ?? 'normal'}`}>
-                      {itemName(item)}
-                    </span>
-                    {item.base != null && item.base !== itemName(item) && (
-                      <span className="sub">{item.base}</span>
-                    )}
-                  </span>
-                  {item.warnings > 0 ? (
-                    <Badge tone="warn">
-                      {t('items.warningCount', { n: item.warnings })}
-                    </Badge>
-                  ) : (
-                    <span />
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
+        <>
+          <section className="panel table-panel" aria-labelledby="items-used">
+            <div className="panel-head">
+              <h2 id="items-used">{t('items.inUse')}</h2>
+            </div>
+            {used.length === 0 ? (
+              <p className="panel-foot">{t('items.inUseNone')}</p>
+            ) : (
+              <ul className="item-list">
+                {used.map((item) => (
+                  <ItemRow
+                    key={item.id}
+                    item={item}
+                    place={
+                      item['tree-socket'] != null
+                        ? t('items.treeSocket')
+                        : (item.slot ?? '—')
+                    }
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+          {unused.length > 0 && (
+            <details className="panel table-panel unused-items">
+              <summary>
+                {unused.length === 1
+                  ? t('items.notInUseCount1')
+                  : t('items.notInUseCount', { n: unused.length })}
+                <span className="muted small-text">
+                  {' '}
+                  {t('items.notInUseHelp')}
+                </span>
+              </summary>
+              <ul className="item-list">
+                {unused.map((item) => (
+                  <ItemRow key={item.id} item={item} place={inSets(item)} />
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
       )}
     </>
   )
@@ -88,14 +278,133 @@ const EDITABLE = new Set(['modifier', 'unrecognized', 'spec-unknown'])
  * the text out (separators): kept in the item and its export, not listed
  * again unless they carry a warning (ADR-015: never hidden). */
 const IN_HEADING = new Set(['rarity', 'name', 'base', 'separator'])
+/** Lines the item card shows, or file fields: folded under "File fields". */
+const ON_CARD = new Set([
+  'spec',
+  'item-class',
+  'influence',
+  'flag',
+  'variant-base',
+])
+
+/** The item card (UX-08): the base values, requirements, and sockets a
+ * player reads, and the variant picker (UX-09). `locked` while a draft
+ * is open: a variant change reads the item again. */
+function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
+  const dispatch = useAppDispatch()
+  const id = useId()
+  const league = useAppSelector((s) => s.session.snapshot?.build?.league)
+  const c = item.card
+  const eras = c['variant-eras']
+  // Patch versions are an "item version"; a player's choice is a "kind".
+  const versions = eras.some((e) => e !== 'choice')
+  const selected =
+    c['selected-variant'] == null ? null : eras[c['selected-variant'] - 1]
+  const current = c['current-variant']
+  const select = (variant: number) =>
+    void dispatch(
+      run({
+        'edit-item': {
+          item: item.id,
+          ops: [{ 'select-variant': { variant } }],
+          expect: [],
+        },
+      }),
+    )
+  const facts = [
+    c['item-class'],
+    c.quality == null ? null : t('card.quality', { q: c.quality }),
+    c['item-level'] == null
+      ? null
+      : t('card.itemLevel', { n: c['item-level'] }),
+    c['level-req'] == null ? null : t('card.levelReq', { n: c['level-req'] }),
+    ...c.properties.map((p) => `${p.name}: ${p.value}`),
+    ...c.influences.map((i) => t('card.influence', { name: i })),
+    ...c.flags,
+  ].filter((f): f is string => f != null && f !== '')
+  if (facts.length === 0 && c.sockets.length === 0 && c.variants.length < 2) {
+    return null
+  }
+  return (
+    <div className="item-card">
+      {c.sockets.length > 0 && <Sockets groups={c.sockets} />}
+      {facts.length > 0 && (
+        <ul className="item-facts" aria-label={t('card.label')}>
+          {facts.map((f, i) => (
+            <li key={i}>{f}</li>
+          ))}
+        </ul>
+      )}
+      {c.variants.length > 1 && (
+        <div className="set-picker">
+          <label htmlFor={id}>
+            {t(versions ? 'card.version' : 'card.kind')}
+          </label>
+          <select
+            id={id}
+            value={c['selected-variant'] ?? ''}
+            disabled={locked}
+            onChange={(e) => select(Number(e.target.value))}
+          >
+            {c['selected-variant'] == null && (
+              <option value="">{t('card.noVariant')}</option>
+            )}
+            {c.variants.map((v, i) => (
+              <option key={i} value={i + 1}>
+                {eras[i] === 'legacy' ? t('card.legacyOption', { name: v }) : v}
+              </option>
+            ))}
+          </select>
+          {locked && (
+            <span className="muted small-text">{t('card.variantLocked')}</span>
+          )}
+        </div>
+      )}
+      {selected === 'legacy' &&
+        (league === 'challenge' ? (
+          <p className="legacy-note" role="note">
+            <Badge tone="warn">{t('items.legacy')}</Badge>
+            <span>{t('card.legacyChallenge')}</span>
+            {current != null && (
+              <button
+                type="button"
+                className="btn"
+                disabled={locked}
+                onClick={() => select(current)}
+              >
+                {t('card.useCurrent', {
+                  name: c.variants[current - 1] ?? current,
+                })}
+              </button>
+            )}
+          </p>
+        ) : (
+          <p className="legacy-note muted" role="note">
+            {t('card.legacyStandard')}
+          </p>
+        ))}
+    </div>
+  )
+}
 
 /** The changed fields of a preview, as "before → after" rows. */
-function Impact({ preview }: { preview: ItemEditPreview }) {
+function Impact({
+  preview,
+  inUse,
+}: {
+  preview: ItemEditPreview
+  inUse: boolean | undefined
+}) {
   const changed = preview.fields.filter(
     (f) => f.before !== f.after || f['state-before'] !== f['state-after'],
   )
   if (changed.length === 0) {
-    return <p className="muted">{t('editor.noEffect')}</p>
+    // Say why when the item is not in use (UX-06).
+    return (
+      <p className="muted">
+        {inUse === false ? t('editor.noEffectUnused') : t('editor.noEffect')}
+      </p>
+    )
   }
   return (
     <ul className="impact-list">
@@ -130,11 +439,22 @@ export function ItemEditor() {
   const dispatch = useAppDispatch()
   const id = useAppSelector((s) => s.ui.item)
   const version = useAppSelector((s) => s.session.snapshot?.version)
+  const inUse = useAppSelector(
+    (s) =>
+      s.session.snapshot?.build?.items.find((i) => i.id === id)?.['in-use'],
+  )
   const [item, setItem] = useState<ItemView | null>(null)
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [newLine, setNewLine] = useState('')
   const [preview, setPreview] = useState<ItemEditPreview | null>(null)
   const [applied, setApplied] = useState(false)
+  // The last applied change's effect, kept until the next edit (UX-24).
+  const [last, setLast] = useState<ItemEditPreview | null>(null)
+  const dirty = useAppSelector((s) => s.session.snapshot?.dirty === true)
+  // The game stat IDs each line reads: for checking, off by default (UX-10).
+  const [showStats, setShowStats] = useState(false)
+  // Lines whose PoB text is open for editing (UX-07).
+  const [editing, setEditing] = useState<ReadonlySet<number>>(new Set())
   const addId = useId()
 
   // While a draft is open the editor keeps the item it was made against,
@@ -155,14 +475,36 @@ export function ItemEditor() {
     }
   }, [dispatch, id, version, drafting])
 
-  if (item === null) return null
-  const edit = editOf(item, draft)
-  const changed = edit.ops.length > 0
+  const edit = item === null ? null : editOf(item, draft)
+  const changed = edit !== null && edit.ops.length > 0
+  // A live preview a moment after the user stops typing (UX-24).
+  const editKey = changed ? JSON.stringify(edit) : ''
+  useEffect(() => {
+    if (editKey === '') return
+    let live = true
+    const timer = setTimeout(() => {
+      void dispatch(
+        query((api) => api.preview(JSON.parse(editKey) as ItemEdit)),
+      ).then((p) => {
+        if (live && p !== null) setPreview(p)
+      })
+    }, 500)
+    return () => {
+      live = false
+      clearTimeout(timer)
+    }
+  }, [dispatch, editKey])
+
+  if (item === null || edit === null) return null
 
   const reset = () => {
     setDraft(emptyDraft())
     setPreview(null)
+    setEditing(new Set())
   }
+  const fileFields = item.lines.filter(
+    (line) => ON_CARD.has(line.kind) && line.status !== 'warning',
+  )
 
   return (
     <div className="columns">
@@ -179,6 +521,15 @@ export function ItemEditor() {
               {itemName(item)}
             </ScreenHeading>
             {item.base != null && <p className="muted">{item.base}</p>}
+            <ItemCardView item={item} locked={drafting} />
+            {inUse === false && (
+              <p className="top-gap">
+                <Badge tone="neutral">{t('items.notInUse')}</Badge>{' '}
+                <span className="muted small-text">
+                  {t('items.notInUseEditor')}
+                </span>
+              </p>
+            )}
           </div>
           <button type="button" onClick={() => dispatch(actions.go('items'))}>
             {t('editor.back')}
@@ -197,11 +548,21 @@ export function ItemEditor() {
             <LineBadge status="warning" />
             {t('editor.legendWarning')}
           </span>
+          <label className="check stats-toggle">
+            <input
+              type="checkbox"
+              checked={showStats}
+              onChange={(e) => setShowStats(e.target.checked)}
+            />
+            {t('editor.showStats')}
+          </label>
         </p>
         <ol className="lines">
           {item.lines
             .filter(
-              (line) => !IN_HEADING.has(line.kind) || line.status === 'warning',
+              (line) =>
+                !(IN_HEADING.has(line.kind) || ON_CARD.has(line.kind)) ||
+                line.status === 'warning',
             )
             .map((line) => {
               const n = line.index + 1
@@ -220,9 +581,14 @@ export function ItemEditor() {
                     })}
                   </span>
                   <div>
-                    {editable && !removed ? (
+                    {editable &&
+                    !removed &&
+                    (line.kind !== 'modifier' ||
+                      editing.has(line.index) ||
+                      text !== line.text) ? (
                       <input
                         aria-label={t('editor.lineLabel', { n })}
+                        autoFocus={editing.has(line.index)}
                         value={text}
                         onChange={(e) => {
                           setPreview(null)
@@ -237,11 +603,51 @@ export function ItemEditor() {
                       />
                     ) : (
                       <span className={removed ? 'text muted' : 'text'}>
-                        {removed ? <del>{line.text}</del> : line.text}
+                        {removed ? (
+                          <del>{line.shown ?? line.text}</del>
+                        ) : (
+                          (line.shown ?? line.text)
+                        )}
+                        {line.marks.map((m) => (
+                          <Badge key={m} tone="info" className="line-mark">
+                            {tDynamic(`editor.mark.${m}`, 'editor.mark.other', {
+                              mark: m,
+                            })}
+                          </Badge>
+                        ))}
+                        {line.variants.length > 0 &&
+                          item.card.variants.length > 0 && (
+                            <Badge tone="neutral" className="line-mark">
+                              {t('editor.variantOf', {
+                                names: line.variants
+                                  .map((v) => item.card.variants[v - 1] ?? v)
+                                  .join(', '),
+                              })}
+                            </Badge>
+                          )}
+                        {editable && !removed && (
+                          <button
+                            type="button"
+                            className="link small-text line-edit"
+                            aria-label={t('editor.editLine', { n })}
+                            onClick={() =>
+                              setEditing(new Set([...editing, line.index]))
+                            }
+                          >
+                            {t('editor.edit')}
+                          </button>
+                        )}
                       </span>
                     )}
-                    {line.stats.length > 0 && !removed && (
-                      <div className="stats">
+                    {showStats && line.stats.length > 0 && !removed && (
+                      <div
+                        className={`stats${text !== line.text ? ' stale' : ''}`}
+                      >
+                        {text !== line.text && (
+                          <span className="stale-note">
+                            {t('editor.statsStale')}{' '}
+                          </span>
+                        )}
                         {line.stats
                           .map((s) => `${s.id} ${s.value}`)
                           .join(' · ')}
@@ -249,10 +655,10 @@ export function ItemEditor() {
                     )}
                     {line.code != null && !removed && (
                       <div className="stats">
-                        {line.code} ·{' '}
                         {tDynamic(`warning.${line.code}`, 'reason.generic', {
                           kind: line.code,
                         })}
+                        <ErrorCode code={line.code} />
                       </div>
                     )}
                   </div>
@@ -326,6 +732,21 @@ export function ItemEditor() {
           />
           <button type="submit">{t('editor.add')}</button>
         </form>
+        {fileFields.length > 0 && (
+          <details className="file-fields">
+            <summary>
+              {t('editor.fileFields', { n: fileFields.length })}
+            </summary>
+            <p className="muted small-text">{t('editor.fileFieldsHelp')}</p>
+            <ul>
+              {fileFields.map((line) => (
+                <li key={line.index}>
+                  <code>{line.text}</code>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
 
       <div className="aside stack">
@@ -334,7 +755,12 @@ export function ItemEditor() {
             <h2 id="ep-h">{t('editor.effect')}</h2>
           </div>
           {preview !== null ? (
-            <Impact preview={preview} />
+            <Impact preview={preview} inUse={inUse} />
+          ) : !changed && last !== null ? (
+            <>
+              <p className="muted small-text">{t('editor.lastApplied')}</p>
+              <Impact preview={last} inUse={inUse} />
+            </>
           ) : (
             <p className="muted">
               {changed ? t('editor.previewHint') : t('editor.noChanges')}
@@ -361,14 +787,21 @@ export function ItemEditor() {
               type="button"
               className="primary"
               disabled={!changed}
-              onClick={() =>
-                void dispatch(run({ 'edit-item': edit })).then((o) => {
+              onClick={() => {
+                const apply = async () => {
+                  // The effect to keep: the one shown, else asked for now.
+                  const shown =
+                    preview ??
+                    (await dispatch(query((api) => api.preview(edit))))
+                  const o = await dispatch(run({ 'edit-item': edit }))
                   if (o !== null) {
                     reset()
                     setApplied(true)
+                    setLast(shown)
                   }
-                })
-              }
+                }
+                void apply()
+              }}
             >
               {t('editor.apply')}
             </button>
@@ -376,7 +809,8 @@ export function ItemEditor() {
               {t('editor.reset')}
             </button>
           </div>
-          {applied && <p role="status">{t('editor.applied')}</p>}
+          {/* Until the build is saved (UX-24). */}
+          {applied && dirty && <p role="status">{t('editor.applied')}</p>}
         </section>
       </div>
     </div>

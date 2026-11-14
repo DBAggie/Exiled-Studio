@@ -216,6 +216,10 @@ export type BuildPartEntry =
  */
 export type BuildPart = 'character' | 'passives' | 'skills' | 'items' | 'config'
 /**
+ * The league a build is planned for.
+ */
+export type League = 'challenge' | 'standard'
+/**
  * One entry of a list with untyped content in place.
  */
 export type PassiveSpecEntry =
@@ -331,6 +335,11 @@ export interface Build {
    * The sections in order, typed ones as markers.
    */
   layout: BuildPartEntry[]
+  /**
+   * The league the build is planned for, if chosen (additive,
+   * accepted 2026-11-14).
+   */
+  league?: League | null
   passives: Passives
   /**
    * Untyped content before the build's container.

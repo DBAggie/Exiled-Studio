@@ -10,7 +10,7 @@
 use loom_domain as d;
 
 use super::DtoError;
-use super::types::{Adapted, Exclusion};
+use super::types::{Adapted, Exclusion, League};
 use super::types::{
     AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
     ConfigLayout, ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion,
@@ -219,6 +219,10 @@ pub(super) fn build_to(b: &d::Build) -> Build {
             schema_version: v.schema_version,
             steam_build: v.steam_build,
         }),
+        league: b.league.map(|l| match l {
+            d::League::Challenge => League::Challenge,
+            d::League::Standard => League::Standard,
+        }),
         character: Character {
             class: c.class.as_ref().map(|i| i.as_str().to_owned()),
             ascendancy: c.ascendancy.as_ref().map(|i| i.as_str().to_owned()),
@@ -250,6 +254,10 @@ pub(super) fn build_from(b: Build) -> Result<d::Build, DtoError> {
         game: game_from(&v.game),
         schema_version: v.schema_version,
         steam_build: v.steam_build,
+    });
+    out.league = b.league.map(|l| match l {
+        League::Challenge => d::League::Challenge,
+        League::Standard => d::League::Standard,
     });
     let c = b.character;
     out.character = d::Character {

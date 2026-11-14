@@ -46,6 +46,8 @@ dto! {
         pub recovery: Vec<RecoveryEntry>,
         /// Recent builds.
         pub recent: Vec<RecentEntry>,
+        /// The gems the game data offers.
+        pub gems: Vec<GemCatalogEntry>,
     }
 
     /// The application's state at one version. Queries return it whole;
@@ -118,12 +120,184 @@ dto! {
         pub data_version: Option<DataVersionView>,
         /// `complete` or `partial`: whether anything was not read.
         pub completeness: String,
+        /// `complete` or `partial` counting only what the calculation
+        /// reads: lines of items in use ([`ItemSummary::in_use`]) and the
+        /// custom modifier lines. A warning on an item of another item set
+        /// leaves it `complete` (UX walkthrough, UX-03).
+        pub in_use_completeness: String,
         /// The import's counts.
         pub lines: LineCounts,
         /// The items, in build order.
         pub items: Vec<ItemSummary>,
         /// Lines with warnings: kept, shown, not calculated (ADR-015).
         pub warnings: Vec<WarningView>,
+        /// The item sets, in build order.
+        pub item_sets: Vec<SetView>,
+        /// Whether the active item set uses its second weapon set (the
+        /// game's weapon swap, `II`).
+        pub second_weapon_set: bool,
+        /// The skill sets, in build order.
+        pub skill_sets: Vec<SetView>,
+        /// The passive tree specs, in build order.
+        pub specs: Vec<SetView>,
+        /// The config sets, in build order.
+        pub config_sets: Vec<SetView>,
+        /// The build's stages (PoB's loadouts: one per passive spec, with
+        /// the item, skill, and config sets linked to it), in spec order.
+        pub loadouts: Vec<LoadoutView>,
+        /// The active skill set's socket groups, in order: a calc result's
+        /// `gem` source names a group and a gem by their index here.
+        pub skill_groups: Vec<SkillGroupView>,
+        /// The names of the active passive spec's allocated nodes, when the
+        /// loaded game data has them: a calc result's `passive` source
+        /// names its node by number.
+        pub passive_names: Vec<NodeName>,
+        /// The active config set's inputs and custom modifier blocks, if
+        /// the build has a config set.
+        pub config: Option<ConfigView>,
+        /// The league the build is planned for (`challenge` when not
+        /// chosen).
+        pub league: League,
+    }
+
+    /// The active config set: its inputs and custom modifier blocks.
+    pub struct ConfigView {
+        /// The set's ID.
+        pub set: u32,
+        /// Its inputs, in build order (the name is the key).
+        pub inputs: Vec<ConfigInputView>,
+        /// Its custom modifier blocks, in order (the index is the key).
+        pub blocks: Vec<CustomBlockView>,
+    }
+
+    /// One config input.
+    pub struct ConfigInputView {
+        /// The name, as the build's format writes it (PoB's option key).
+        pub name: String,
+        /// The value.
+        pub value: ConfigValueView,
+        /// Whether the value is a placeholder: the value a planner shows
+        /// for an input left unset.
+        pub placeholder: bool,
+        /// What it does to the computed fields.
+        pub effect: InputEffect,
+    }
+
+    /// One custom modifier block.
+    pub struct CustomBlockView {
+        /// The title, if any.
+        pub title: Option<String>,
+        /// Whether it applies.
+        pub enabled: bool,
+        /// The text as written.
+        pub text: String,
+        /// The modifier lines read from the text, in order.
+        pub lines: Vec<CustomLineView>,
+    }
+
+    /// One line of a custom modifier block.
+    pub struct CustomLineView {
+        /// The text.
+        pub text: String,
+        /// Its status: `warning` when it did not resolve (kept, not
+        /// calculated, ADR-015).
+        pub status: LineStatus,
+        /// The typed kind it resolved to, if any (`custom-note`: a label or
+        /// comment with no effect; `custom-pattern`: read as PoB reads it).
+        pub typed: Option<String>,
+    }
+
+    /// One item set, skill set, passive spec, or config set.
+    pub struct SetView {
+        /// The set's ID.
+        pub id: u32,
+        /// The title as written, if any (PoB's colour codes and `{1,2}`
+        /// loadout links included).
+        pub title: Option<String>,
+        /// Whether the calculation uses it.
+        pub active: bool,
+    }
+
+    /// A stage of the build (PoB's loadout): a passive spec and the sets
+    /// linked to it, switched together.
+    pub struct LoadoutView {
+        /// The passive spec's ID (the stage's key).
+        pub spec: u32,
+        /// The title, without colour codes and links.
+        pub title: String,
+        /// The linked item set, if one is.
+        pub item_set: Option<u32>,
+        /// The linked skill set, if one is.
+        pub skill_set: Option<u32>,
+        /// The linked config set, if one is.
+        pub config_set: Option<u32>,
+        /// Whether the build uses this spec and every linked set.
+        pub active: bool,
+    }
+
+    /// One socket group of the active skill set.
+    pub struct SkillGroupView {
+        /// The label, if any.
+        pub label: Option<String>,
+        /// The slot it is socketed in, if any.
+        pub slot: Option<String>,
+        /// Whether the group is enabled.
+        pub enabled: bool,
+        /// Whether it is the build's main skill group.
+        pub main: bool,
+        /// Its gems, in order.
+        pub gems: Vec<GemView>,
+    }
+
+    /// A gem the game data offers, for a gem picker.
+    pub struct GemCatalogEntry {
+        /// The gem effect ID (the `gem` of [`Command::AddGem`]).
+        pub id: String,
+        /// The name.
+        pub name: String,
+        /// Whether it is a support gem.
+        pub support: bool,
+        /// Its colour (red, green, blue, or white), if known.
+        pub colour: Option<String>,
+        /// Its tag names (Spell, Area, Cold, ...).
+        pub tags: Vec<String>,
+        /// For a support, when a group was named: whether it would support
+        /// an active gem of that group.
+        pub fits: Option<bool>,
+    }
+    /// One gem of a socket group.
+    pub struct GemView {
+        /// The name as written, if any.
+        pub name: Option<String>,
+        /// The level.
+        pub level: u32,
+        /// The quality.
+        pub quality: i32,
+        /// Whether the gem is enabled.
+        pub enabled: bool,
+        /// Whether it is a support, when the game data knows the gem.
+        pub support: Option<bool>,
+        /// Its colour, when the game data knows it: `red`, `green`,
+        /// `blue`, or `white`.
+        pub colour: Option<String>,
+        /// Whether it is the build's main skill (in the main group, the
+        /// active skill the group's main skill names).
+        pub main: bool,
+        /// For a support: the gems of the group (by index) it can support,
+        /// as the calculation matches supports to a skill.
+        pub supports: Vec<u32>,
+        /// The socket it sits in, by index in its slot's item (PoB fills a
+        /// slot's sockets with its groups' gems in order); `None` when the
+        /// group has no slot or the item has no socket left for it.
+        pub socket: Option<u32>,
+    }
+
+    /// A passive node's name.
+    pub struct NodeName {
+        /// The node number.
+        pub node: u32,
+        /// Its name in the game data.
+        pub name: String,
     }
 
     /// Counts of item modifier lines by status.
@@ -145,6 +319,9 @@ dto! {
     pub struct ItemSummary {
         /// The item's ID.
         pub id: u32,
+        /// Its base's item class in the game data (`Bow`, `Quiver`, `Two
+        /// Hand Sword`, `LifeFlask`, ...), when the base is known.
+        pub item_class: Option<String>,
         /// The name, if any.
         pub name: Option<String>,
         /// The base, if written.
@@ -155,6 +332,22 @@ dto! {
         pub slot: Option<String>,
         /// Its lines with warnings.
         pub warnings: u32,
+        /// Whether the calculation reads it: in a slot of the active item
+        /// set that is in use, or in an allocated jewel socket of the
+        /// active passive spec.
+        pub in_use: bool,
+        /// Its sockets as linked groups, each a string of colours (`R`,
+        /// `G`, `B`, `W`, `A` abyssal) in socket order: `R-R-G B` is
+        /// `["RRG", "B"]`. Empty without a `Sockets` line.
+        pub sockets: Vec<String>,
+        /// The item sets that hold it, by ID.
+        pub sets: Vec<u32>,
+        /// The allocated jewel socket of the active spec it is in, by node
+        /// number, if any.
+        pub tree_socket: Option<u32>,
+        /// Whether its selected variant is a legacy version of a unique
+        /// (`Pre 3.7.0`): only Standard has such items.
+        pub legacy: bool,
     }
 
     /// One item with its lines.
@@ -171,6 +364,79 @@ dto! {
         pub slot: Option<String>,
         /// Every source line, in order.
         pub lines: Vec<LineView>,
+        /// What an item card shows (UX walkthrough, UX-08).
+        pub card: ItemCard,
+    }
+
+    /// An item card's fields, from the item's header and spec lines.
+    pub struct ItemCard {
+        /// The item class, if written.
+        pub item_class: Option<String>,
+        /// The quality, as written (`20`).
+        pub quality: Option<String>,
+        /// The item level, as written.
+        pub item_level: Option<String>,
+        /// The level the item requires, as written.
+        pub level_req: Option<String>,
+        /// The sockets, one string of colour letters per link group.
+        pub sockets: Vec<String>,
+        /// The defences and other base values written on the item
+        /// (`Energy Shield: 276`), in order.
+        pub properties: Vec<CardProperty>,
+        /// The influences, by name.
+        pub influences: Vec<String>,
+        /// Flag lines (`Corrupted`, `Mirrored`), as written.
+        pub flags: Vec<String>,
+        /// The variants' names, in order (variant 1 first).
+        pub variants: Vec<String>,
+        /// The selected variant (1-based), if the item names one.
+        pub selected_variant: Option<u32>,
+        /// What each variant is, in the order of `variants`.
+        pub variant_eras: Vec<VariantEra>,
+        /// When the selected variant is a legacy version: the variant the
+        /// current game makes instead, if one matches.
+        pub current_variant: Option<u32>,
+        /// The mods PoB names on the item and the lines each made, prefixes
+        /// first (the tooltip's Alt view headers); lines no mod is found
+        /// for are in none.
+        pub affixes: Vec<AffixView>,
+        /// What the item requires, when known.
+        pub requirements: Option<Requirements>,
+    }
+
+    /// One mod of an item, as the tooltip's Alt view heads its lines
+    /// (`Prefix Modifier "Urchin's" — Life, Defences`).
+    pub struct AffixView {
+        /// Prefix or suffix.
+        pub kind: AffixKind,
+        /// The affix name, when the game data has one.
+        pub name: Option<String>,
+        /// Its tier on the item's base (1 is the best), when known.
+        pub tier: Option<u32>,
+        /// Its tags as the game prints them (`Life`, `Defences`).
+        pub tags: Vec<String>,
+        /// The line indices it made, in item order.
+        pub lines: Vec<u32>,
+    }
+
+    /// An item's requirements: the level, and attributes above 0.
+    pub struct Requirements {
+        /// The level: as written on the item, else the base's drop level.
+        pub level: Option<u32>,
+        /// Strength (0: none).
+        pub strength: u32,
+        /// Dexterity (0: none).
+        pub dexterity: u32,
+        /// Intelligence (0: none).
+        pub intelligence: u32,
+    }
+
+    /// One base value on an item card.
+    pub struct CardProperty {
+        /// The name (`Energy Shield`).
+        pub name: String,
+        /// The value, as written.
+        pub value: String,
     }
 
     /// One source line of an item.
@@ -198,6 +464,19 @@ dto! {
         pub adapted: Option<String>,
         /// The numbers in the text, in order, for roll edits.
         pub numbers: Vec<NumberSpan>,
+        /// A modifier line as the game prints it, its roll applied (no
+        /// markup); `None` when it is shown as written.
+        pub shown: Option<String>,
+        /// The line as the game prints it with Alt held: each roll followed
+        /// by its range (`+28(24-28) to maximum Life`); `None` when the
+        /// line has no range.
+        pub ranged: Option<String>,
+        /// The variants (1-based) a modifier line belongs to; empty for
+        /// every variant.
+        pub variants: Vec<u32>,
+        /// The modifier's marks from its prefixes: `crafted`,
+        /// `fractured`, `crucible`, `scourge`, `synthesis`, `mutated`.
+        pub marks: Vec<String>,
     }
 
     /// A number in a line's text: where it is, as character offsets.
@@ -230,6 +509,9 @@ dto! {
         pub text: String,
         /// The stable code.
         pub code: String,
+        /// Whether the line's item is in use ([`ItemSummary::in_use`]): a
+        /// warning on an item not in use does not touch the calculation.
+        pub in_use: bool,
     }
 
     /// Undo and redo.
@@ -249,7 +531,8 @@ dto! {
     pub struct HistoryEntry {
         /// What it was.
         pub kind: ChangeKind,
-        /// The item it changed.
+        /// The item it changed (for `item-set`: the item set it made
+        /// active).
         pub item: u32,
         /// The change request it applied, when an MCP client asked for it.
         pub request: Option<u64>,
@@ -454,6 +737,68 @@ dto_enum! {
         ItemEdit,
         /// An item edit an MCP client requested.
         RequestApplied,
+        /// Another item set made active.
+        ItemSet,
+        /// Another stage (loadout) made active.
+        Loadout,
+        /// Another skill set made active.
+        SkillSet,
+        /// A gem or socket group changed, or the main skill.
+        SkillEdit,
+        /// Another config set made active, or a config input or custom
+        /// modifier block changed.
+        Config,
+        /// The league the build is planned for changed.
+        League,
+        /// The active item set's weapon set switched (weapon swap).
+        WeaponSet,
+    }
+
+    /// The league a build is planned for.
+    pub enum League {
+        /// A challenge league: legacy versions of unique items cannot be
+        /// had.
+        Challenge,
+        /// Standard: items keep their legacy versions.
+        Standard,
+    }
+
+    /// Whether an affix is a prefix or a suffix.
+    pub enum AffixKind {
+        /// A prefix.
+        Prefix,
+        /// A suffix.
+        Suffix,
+    }
+
+    /// What a variant of an item is.
+    pub enum VariantEra {
+        /// A legacy version (`Pre 3.7.0`): only items from earlier leagues.
+        Legacy,
+        /// The version the current game makes (`Current`).
+        Current,
+        /// A choice the player makes (`Fire`, `Life`), not a version.
+        Choice,
+    }
+
+    /// A config input's value.
+    pub enum ConfigValueView {
+        /// A flag.
+        Boolean(bool),
+        /// A number.
+        Number(f64),
+        /// Text.
+        Text(String),
+    }
+
+    /// What a config input does to the computed fields.
+    pub enum InputEffect {
+        /// The calculation applies it.
+        Applied,
+        /// It changes no computed field.
+        NoEffect,
+        /// The calculation does not model it: computed fields are partial.
+        Unmodelled,
     }
 
     /// One line operation of an item edit.
@@ -477,6 +822,13 @@ dto_enum! {
             line: u32,
             /// The roll, from 0 to 1.
             value: f64,
+        },
+        /// Selects the item's variant (1-based): its `Selected Variant`
+        /// line is written (added after the variants when missing), and
+        /// the item is read again.
+        SelectVariant {
+            /// The variant.
+            variant: u32,
         },
         /// Adds a modifier line after the item's last line.
         Add {
@@ -506,6 +858,132 @@ dto_enum! {
         },
         /// Applies an item edit.
         EditItem(ItemEdit),
+        /// Makes an item set the active one, as one undoable change.
+        UseItemSet {
+            /// The set's ID.
+            id: u32,
+        },
+        /// Makes a stage (loadout) the active one: its passive spec and the
+        /// sets linked to it, as one undoable change.
+        UseLoadout {
+            /// The passive spec's ID.
+            spec: u32,
+        },
+        /// Makes a skill set the active one, as one undoable change.
+        UseSkillSet {
+            /// The set's ID.
+            id: u32,
+        },
+        /// Changes a gem of the active skill set, as one undoable change.
+        EditGem {
+            /// The socket group's index in the active skill set.
+            group: u32,
+            /// The gem's index in the group.
+            gem: u32,
+            /// A new level.
+            level: Option<u32>,
+            /// A new quality.
+            quality: Option<i32>,
+            /// Enables or disables the gem.
+            enabled: Option<bool>,
+        },
+        /// Changes a socket group of the active skill set, as one undoable
+        /// change.
+        EditSocketGroup {
+            /// The group's index in the active skill set.
+            group: u32,
+            /// Enables or disables the group.
+            enabled: Option<bool>,
+            /// Makes it the main skill group (`true` only).
+            main: Option<bool>,
+            /// Makes this gem (by index in the group) the group's main active
+            /// skill; with `main`, the build's main skill.
+            #[serde(rename = "main-gem")]
+            main_gem: Option<u32>,
+            /// Moves the group to this equipment slot (empty: no slot).
+            slot: Option<String>,
+            /// Renames the group; empty for no label.
+            label: Option<String>,
+        },
+        /// Adds a gem to a socket group of the active skill set.
+        AddGem {
+            /// The group's index in the active skill set.
+            group: u32,
+            /// The gem, by its gem effect ID (a [`GemCatalogEntry`]'s `id`).
+            gem: String,
+            /// Its place in the group (by index); the end when absent.
+            at: Option<u32>,
+        },
+        /// Removes a gem from a socket group of the active skill set.
+        RemoveGem {
+            /// The group's index in the active skill set.
+            group: u32,
+            /// The gem's index in the group.
+            gem: u32,
+        },
+        /// Adds an empty socket group at the end of the active skill set.
+        AddSocketGroup {
+            /// The equipment slot it is socketed in, if any.
+            slot: Option<String>,
+            /// Its label, if any.
+            label: Option<String>,
+        },
+        /// Removes a socket group of the active skill set.
+        RemoveSocketGroup {
+            /// The group's index in the active skill set.
+            group: u32,
+        },
+        /// Makes a config set the active one, as one undoable change.
+        UseConfigSet {
+            /// The set's ID.
+            id: u32,
+        },
+        /// Sets a config input of the active config set (added when the
+        /// set has none of that name; a placeholder becomes a value), as
+        /// one undoable change.
+        SetConfigInput {
+            /// The name (PoB's option key).
+            name: String,
+            /// The value.
+            value: ConfigValueView,
+        },
+        /// Removes a config input of the active config set.
+        RemoveConfigInput {
+            /// The name.
+            name: String,
+        },
+        /// Changes a custom modifier block of the active config set; a new
+        /// text's lines are read and resolved again.
+        EditCustomBlock {
+            /// The block's index.
+            block: u32,
+            /// Whether it applies, if changed.
+            enabled: Option<bool>,
+            /// The new text, if changed.
+            text: Option<String>,
+        },
+        /// Adds a custom modifier block, with `text`, after the others.
+        AddCustomBlock {
+            /// The text.
+            text: String,
+        },
+        /// Removes a custom modifier block.
+        RemoveCustomBlock {
+            /// The block's index.
+            block: u32,
+        },
+        /// Switches the active item set to its first or second weapon set
+        /// (the game's weapon swap), as one undoable change.
+        UseWeaponSet {
+            /// The second weapon set (`II`) when set.
+            second: bool,
+        },
+        /// Sets the league the build is planned for, as one undoable
+        /// change.
+        SetLeague {
+            /// The league.
+            league: League,
+        },
         /// Reverts the latest change.
         Undo,
         /// Applies the latest reverted change again.
@@ -514,6 +992,11 @@ dto_enum! {
         Save,
         /// Opens a recent build by its ID.
         OpenRecent {
+            /// The ID.
+            id: String,
+        },
+        /// Removes a build from the recent list (the file stays).
+        ForgetRecent {
             /// The ID.
             id: String,
         },

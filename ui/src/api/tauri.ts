@@ -50,6 +50,7 @@ export const tauriApi: LoomApi = {
       : [answer[0], JSON.parse(answer[1]) as CalcResultDocumentV1]
   },
   item: (id) => call('item', { id }),
+  gems: (group) => call('gems', { group: group ?? null }),
   preview: (edit) => call('preview', { edit }),
   execute: (command) => call('execute', { command }),
   recent: () => call('recent'),
