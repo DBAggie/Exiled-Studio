@@ -5,9 +5,9 @@ Rules for anyone contributing, human or AI agent. `CLAUDE.md` adds Claude Code s
 ## Hard rules
 - The game is the truth; PoB v2.67.2 is the pinned regression oracle. Every difference from PoB needs evidence and a divergence-register entry (ADR-001/006).
 - Never modify the legacy PoB repository. Legacy source is fetched at a pinned public tag, never copied in (ADR-006).
-- Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). Local game data and extractor output go in `local/` or `out/` (both ignored).
+- Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). GGG's published passive tree export (data and sprite sheets) is fetched at pinned commits by `tools/tree/` into `local/` and shipped only inside signed data bundles (ADR-005 Amendment 2). Local game data and extractor output go in `local/` or `out/` (both ignored).
 - Modifiers are `(stat_id, values)`. Text parsing lives only in import adapters; unresolved content is quarantined and shown, never dropped (ADR-015).
-- No telemetry. Network access only in `loom-integrations` (ADR-011). One exception outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`; no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged).
+- No telemetry. Network access only in `loom-integrations` (ADR-011). Exceptions outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`, and the maintainer's `tools/tree/` scripts fetch GGG's passive tree export at pinned commits with `git` (ADR-005 Amendment 2); no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged).
 - Do not contradict an ADR. Propose an amendment and wait for the maintainer.
 
 ## Layout

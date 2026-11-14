@@ -9,10 +9,10 @@ ADRs are authoritative. To change a decision, add an amendment (or a new ADR tha
 | [002](002-application-shell-and-core.md) | Application shell and domain core (Tauri 2, React, Rust) | Accepted |
 | [003](003-domain-and-calculation-architecture.md) | Domain and calculation architecture | Accepted |
 | [004](004-api-state-and-concurrency.md) | Application API, state, and concurrency | Accepted |
-| [005](005-build-and-data-compatibility.md) | Build formats and game-data source | Revised; Amendment 1 (Oodle via external tool) |
+| [005](005-build-and-data-compatibility.md) | Build formats and game-data source | Revised; Amendment 1 (Oodle via external tool); Amendment 2 (GGG's passive tree export as a pinned input, sprites in bundles; proposed 2026-11-14, accepted on merge) |
 | [006](006-parity-and-oracle.md) | Parity verification, oracle, divergence register | Revised |
 | [007](007-corpus-and-coverage.md) | Parity corpus and coverage | Revised; Amendment 1 (credited community builds, removal on request) |
-| [008](008-ui-and-accessibility.md) | UI, UX, and accessibility | Accepted |
+| [008](008-ui-and-accessibility.md) | UI, UX, and accessibility | Accepted; Amendment 1 (passive tree editor before skills, proposed 2026-11-14, accepted on merge) |
 | [009](009-persistence-and-recovery.md) | Persistence, undo, and recovery | Accepted |
 | [010](010-updates-security-and-offline.md) | Updates, signing, addons, offline | Revised |
 | [011](011-integrations-and-privacy.md) | Integrations, sharing, and privacy | Accepted |
