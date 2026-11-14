@@ -10,25 +10,35 @@ describe('error states', () => {
   it('says when no game data is loaded, and lets the user choose it', async () => {
     const { user } = await renderApp({ data: false })
     expect(
-      screen.getByText(/No game data is loaded\. Choose the folder/),
+      screen.getByText(
+        /No game data is loaded\. Choose the game data folder: the folder that holds bundle\.json/,
+      ),
     ).toBeTruthy()
-    await user.type(screen.getByLabelText('Share code or XML'), 'abc')
-    await user.click(screen.getByRole('button', { name: 'Import' }))
+    await user.type(
+      screen.getByLabelText('Paste a share code or build XML'),
+      'abc',
+    )
+    await user.click(screen.getByRole('button', { name: 'Import build' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain('APP_NO_DATA')
     await expectAccessible()
     await user.click(
-      screen.getByRole('button', { name: 'Choose game data folder…' }),
+      screen.getByRole('button', { name: 'Choose the game data folder…' }),
     )
     await waitFor(() =>
-      expect(screen.getByText(/Steam build 26530219/)).toBeTruthy(),
+      expect(
+        screen.getByText(/Data for Path of Exile, Steam build 26530219/),
+      ).toBeTruthy(),
     )
   })
 
   it('shows a failed import with its code', async () => {
     const { user } = await renderApp({ importFails: 'IMPORT_XML' })
-    await user.type(screen.getByLabelText('Share code or XML'), '<bad')
-    await user.click(screen.getByRole('button', { name: 'Import' }))
+    await user.type(
+      screen.getByLabelText('Paste a share code or build XML'),
+      '<bad',
+    )
+    await user.click(screen.getByRole('button', { name: 'Import build' }))
     const alert = await screen.findByRole('alert')
     expect(alert.textContent).toContain('not a valid Path of Building build')
     expect(alert.textContent).toContain('IMPORT_XML')

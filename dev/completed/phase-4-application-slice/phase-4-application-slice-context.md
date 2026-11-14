@@ -3,7 +3,7 @@ Last Updated: 2026-11-13
 # Phase 4: application slice and MCP addon (context)
 
 ## Key files
-- Plan: `dev/active/phase-4-application-slice/phase-4-application-slice-plan.md`.
+- Plan: `dev/completed/phase-4-application-slice/phase-4-application-slice-plan.md`.
 - Pipeline being moved into the app: `tools/parity-cli/src/calc_run.rs` (`one`: import, `resolve_build_ranged`, item bases, line values, `CalcOptions`, `calculate`).
 - Persistence: `crates/loom-persistence/src/lib.rs` (`Store`, `FileOps`).
 - Item reader: `crates/loom-serialization/src/legacy/pob_item/` (`read`, `domain::to_domain`, `item_base`, `line_values`).

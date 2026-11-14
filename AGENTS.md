@@ -192,7 +192,7 @@ cargo run --release -p loom-parity-cli -- calc-parity <oracle-run-dir> <calc-run
 pnpm install --frozen-lockfile
 pnpm format:check && pnpm lint && pnpm build
 pnpm test              # vitest: UI workflow, axe on every screen, keyboard, error states, contrast
-pnpm licenses:check    # JS dependency licenses (allow-list and named exceptions in ui/scripts/check-licenses.mjs)
+pnpm licenses:check    # JS dependency licenses (OSI allow-list and named exceptions in ui/scripts/check-licenses.mjs; its test is scripts/check-licenses.test.mjs, run by pnpm test)
 
 # Desktop app in dev mode: run `pnpm dev` in ui/, then in another terminal (LOOM_BUNDLE_DIR names a
 # bundle folder, else the one chosen in the app; LOOM_DATA_DIR overrides the app's data folder):
@@ -243,5 +243,5 @@ Write state as facts with dates and links (PR numbers, CI runs, file paths), not
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).
 
 ## Dependencies
-- Licenses must be permissive and MIT-compatible; the allow-list is in `deny.toml` and the `cargo-deny` CI job enforces it on the whole tree. Never add a license to the global allow-list to get a crate in. A crate that needs another license gets a per-crate exception with a reason, and only with maintainer approval.
+- Licenses must be open source (OSI-approved; maintainer decision 2026-11-13, which widened the permissive-only rule): the allow-lists are `deny.toml` (Rust; the `cargo-deny` CI job checks the whole tree) and `ui/scripts/check-licenses.mjs` (JavaScript; `pnpm licenses:check` in CI). Strong copyleft (GPL, AGPL, LGPL) stays off both lists: ADR-005 keeps GPL-derived code out of the shipped app, so such a dependency needs the maintainer. Anything else outside the lists gets a per-package exception with a reason, only with maintainer approval. A bundled asset (a font) ships with its license text next to it (`ui/public/licenses/`).
 - crates.io only; git or other registries need an explicit `deny.toml` entry.

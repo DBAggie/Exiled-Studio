@@ -1,29 +1,75 @@
-/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2). Every colour the
-   UI uses is a token here; theme/pairs.ts lists each foreground and
-   background pair the CSS combines, and a test checks their contrast
-   (WCAG 2.2 AA) and that no other CSS file writes a colour. */
+/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2, and the mockups in
+   docs/ui/exiled-studio-ui-draft-v1.zip). Every colour the UI uses is a
+   token here; theme/pairs.ts lists each foreground and background pair the
+   CSS combines, and a test checks their contrast (WCAG 2.2 AA) and that no
+   other CSS file writes a colour. */
 :root {
+  /* Surfaces, darkest first. */
   --c-bg: #101215;
+  --c-input: #0f1114;
+  --c-nav: #13161a;
+  --c-header: #14171b;
   --c-panel: #181b20;
   --c-raised: #20242b;
+  --c-hover: #22272f;
+  --c-selected: #2c323b;
+
+  /* Lines. */
+  --c-row: #23272e;
   --c-border: #2a2f37;
+  --c-border-control: #3a414c;
   --c-border-strong: #6b7380;
+
+  /* Text. */
   --c-text: #e9e6df;
+  --c-soft: #c9ced6;
   --c-muted: #a3a9b3;
+  --c-link: #f0b45a;
   --c-accent: #e8a33d;
-  --c-on-accent: #101215;
+  --c-on-accent: #1a1206;
   --c-focus: #8dc1f2;
+
+  /* States (text). */
   --c-ok: #8fd18a;
   --c-info: #8dc1f2;
   --c-warn: #f0a85a;
   --c-neutral: #b8bec8;
   --c-danger: #f08a7a;
+
+  /* Badges: tinted fill and its text. */
+  --c-ok-fill: #1d2b22;
+  --c-ok-text: #a3ddb2;
+  --c-info-fill: #16263a;
+  --c-info-text: #8dc1f2;
+  --c-warn-fill: #3a2a12;
+  --c-warn-text: #f5be6b;
+  --c-neutral-fill: #252a32;
+  --c-neutral-text: #c9ced6;
+  --c-danger-fill: #3a1d1a;
+  --c-danger-text: #f5a497;
+
+  /* Change blocks (AI approval: what is removed and added; a line with a
+     warning in the item editor). */
+  --c-remove-fill: #221b12;
+  --c-remove-border: #4a3518;
+  --c-add-fill: #14231a;
+  --c-add-border: #2c4a36;
+
+  /* Item rarity. */
   --c-rarity-normal: #c9ced6;
   --c-rarity-magic: #8dc1f2;
   --c-rarity-rare: #f2d97a;
   --c-rarity-unique: #e39a6e;
 
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+  /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
+  --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-heading:
+    'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', system-ui,
+    sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Mono',
+    monospace;
+
+  --radius: 8px;
+  --radius-panel: 10px;
 }

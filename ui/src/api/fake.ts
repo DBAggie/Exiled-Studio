@@ -413,13 +413,19 @@ export class FakeApi implements LoomApi {
   }
 
   preview(edit: ItemEdit): Promise<ItemEditPreview> {
+    return Promise.resolve(this.previewOf(edit))
+  }
+
+  /** The effect of an edit, calculated (the app attaches it to a change
+   * request too). */
+  private previewOf(edit: ItemEdit): ItemEditPreview {
     const after = this.applyEdit(edit)
     const before = life(this.current?.items ?? [])
     const item = after.items.find((i) => i.id === edit.item)
     if (item === undefined) {
       this.fail('APP_EDIT_ITEM')
     }
-    return Promise.resolve({
+    return {
       item,
       fields: [
         {
@@ -430,7 +436,7 @@ export class FakeApi implements LoomApi {
           'state-after': 'complete',
         },
       ],
-    })
+    }
   }
 
   execute(command: Command): Promise<Outcome> {
@@ -607,7 +613,7 @@ export class FakeApi implements LoomApi {
       client: 'test-client',
       edit,
       note: 'More life',
-      preview: null,
+      preview: this.previewOf(edit),
       status: 'pending',
       error: null,
     }
