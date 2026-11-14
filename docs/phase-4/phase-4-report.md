@@ -1,6 +1,6 @@
 # Phase 4 report: application slice and MCP addon
 
-Phase 4 of `docs/plan/ACTION-PLAN.md` ("Application slice + MCP addon"), planned in `dev/active/phase-4-application-slice/` (plan, context with both reviews, tasks). Plan, implementation, and this report are one PR at the maintainer's request (2026-11-13: "Complete phase 4 in the fewest number of PRs possible").
+Phase 4 of `docs/plan/ACTION-PLAN.md` ("Application slice + MCP addon"), planned in `dev/active/phase-4-application-slice/` (plan, context with both reviews, tasks). Plan, implementation, and this report are one PR, #105, at the maintainer's request (2026-11-13: "Complete phase 4 in the fewest number of PRs possible").
 
 **Verdict.** Gate items 1, 2, 3, 4, and 5 hold on Windows locally (section 3) and are run by CI on Windows and Linux. Item 1b (the real application under WebDriver) is a new CI job, `e2e`, first run on this PR; its result is recorded in the handoff with the PR's CI run. If it cannot be made to run, the plan's fallback applies: the maintainer's smoke run (section 5) is recorded here as the gate item. The `axe-core` license exception (MPL-2.0, test-only) awaits the maintainer (section 6).
 
