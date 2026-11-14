@@ -27,6 +27,13 @@ fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
 
+/// The app's own origin, as the webview loads it: a remote origin gets no
+/// command (Tauri's ACL). WebView2 serves custom protocols over http.
+#[cfg(windows)]
+const APP_ORIGIN: &str = "http://tauri.localhost";
+#[cfg(not(windows))]
+const APP_ORIGIN: &str = "tauri://localhost";
+
 struct FakePicker(PathBuf);
 
 impl FilePicker for FakePicker {
@@ -109,7 +116,7 @@ impl Shell {
                 cmd: cmd.into(),
                 callback: CallbackFn(0),
                 error: CallbackFn(1),
-                url: "http://tauri.localhost".parse().unwrap(),
+                url: APP_ORIGIN.parse().unwrap(),
                 body: InvokeBody::Json(body),
                 headers: Default::default(),
                 invoke_key: INVOKE_KEY.to_string(),

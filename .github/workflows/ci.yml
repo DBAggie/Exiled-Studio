@@ -400,7 +400,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # Ubuntu 24.04, not latest: 26.04 has no webkit2gtk-driver (WebKitWebDriver).
+        os: [ubuntu-24.04, windows-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Tauri system dependencies and the WebKit driver (Linux)
@@ -441,12 +442,28 @@ jobs:
       - name: Workflow (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a ui/e2e/run.sh target/debug/loom-tauri
-      # The runner image's Edge driver matches its Edge, which WebView2
-      # follows (EDGEWEBDRIVER is set by the image).
+      # msedgedriver must match the WebView2 runtime the app runs in: its
+      # version from the registry, the driver from Microsoft's download host.
+      - name: Install msedgedriver for the WebView2 runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          $version = (Get-ItemProperty $key).pv
+          Write-Output "WebView2 runtime $version"
+          $zip = Join-Path $env:RUNNER_TEMP 'edgedriver.zip'
+          $dir = Join-Path $env:RUNNER_TEMP 'edgedriver'
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip
+          } catch {
+            Invoke-WebRequest "https://msedgedriver.azureedge.net/$version/edgedriver_win64.zip" -OutFile $zip
+          }
+          Expand-Archive $zip -DestinationPath $dir -Force
+          "EDGE_DRIVER=$((Join-Path $dir 'msedgedriver.exe') -replace '\\', '/')" >> $env:GITHUB_ENV
       - name: Workflow (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: ui/e2e/run.sh target/debug/loom-tauri.exe "$EDGEWEBDRIVER/msedgedriver.exe"
+        run: ui/e2e/run.sh target/debug/loom-tauri.exe "$EDGE_DRIVER"
 
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 

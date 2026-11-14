@@ -10,12 +10,26 @@ app="$1"
 native="${2:-}"
 root="$(pwd)"
 work="$(mktemp -d)"
+# On Windows (Git Bash) the app and the drivers are native programs: give
+# them Windows paths, and the app's path absolute.
+if command -v cygpath >/dev/null 2>&1; then
+  root="$(cygpath -m "$root")"
+  work="$(cygpath -m "$work")"
+fi
+case "$app" in
+  /* | [A-Za-z]:*) ;;
+  *) app="$root/$app" ;;
+esac
 cp tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml "$work/import.xml"
 
 export LOOM_E2E_DIR="$work"
 export LOOM_DATA_DIR="$work/data"
 export LOOM_BUNDLE_DIR="$root/crates/loom-data/tests/fixtures/bundle-poe1"
 
+if [ -n "$native" ] && [ ! -f "$native" ]; then
+  echo "no native driver at $native" >&2
+  exit 1
+fi
 if [ -n "$native" ]; then
   tauri-driver --native-driver "$native" &
 else
