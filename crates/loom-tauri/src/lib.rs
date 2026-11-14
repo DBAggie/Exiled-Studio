@@ -87,6 +87,13 @@ fn item(ctx: State<'_, Ctx>, id: u32) -> Answer<api::ItemView> {
     ctx.app.item(id).map_err(dto)
 }
 
+/// The gems the game data offers (for a gem picker); for supports,
+/// whether each fits socket group `group`.
+#[tauri::command]
+fn gems(ctx: State<'_, Ctx>, group: Option<u32>) -> Answer<Vec<api::GemCatalogEntry>> {
+    ctx.app.gems(group).map_err(dto)
+}
+
 /// An item edit's effect (runs off the main thread).
 #[tauri::command(async)]
 fn preview(ctx: State<'_, Ctx>, edit: api::ItemEdit) -> Answer<api::ItemEditPreview> {
@@ -242,10 +249,11 @@ fn save_settings(path: &std::path::Path, settings: &Settings) {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 16] = [
+pub const COMMANDS: [&str; 17] = [
     "snapshot",
     "calc_document",
     "item",
+    "gems",
     "preview",
     "execute",
     "recent",
@@ -282,6 +290,7 @@ pub fn build<R: Runtime>(
             snapshot,
             calc_document,
             item,
+            gems,
             preview,
             execute,
             recent,

@@ -55,10 +55,14 @@ describe('keyboard', () => {
     )
     await user.keyboard('{ArrowDown}')
     expect(document.activeElement?.textContent).toBe(
-      'Path of Building file (.xml)…',
+      'Path of Building share code',
     )
-    const poe2 = screen.getByRole('menuitem', { name: /Path of Exile 2/ })
-    expect(poe2.getAttribute('aria-disabled')).toBe('true')
+    await user.keyboard('{ArrowDown}')
+    expect(document.activeElement?.textContent).toBe('Save a copy as…')
+    // A PoE1 build is not offered the PoE2 export (UX-25).
+    expect(
+      screen.queryByRole('menuitem', { name: /Path of Exile 2/ }),
+    ).toBeNull()
     await user.keyboard('{Escape}')
     await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
     expect(document.activeElement).toBe(trigger)

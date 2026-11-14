@@ -8,8 +8,13 @@ import {
   type CalcResultDocumentV1,
   type ChangeRequest,
   type Command,
+  type ConfigView,
+  type GemCatalogEntry,
+  type HistoryEntry,
   type ItemEdit,
   type ItemEditPreview,
+  type GemView,
+  type ItemCard,
   type ItemView,
   type LineView,
   type LoomApi,
@@ -18,6 +23,7 @@ import {
   type Outcome,
   type RecentEntry,
   type RecoveryEntry,
+  type SkillGroupView,
   type Snapshot,
 } from './types'
 
@@ -37,7 +43,7 @@ function line(
   text: string,
   extra: Partial<LineView> = {},
 ): LineView {
-  return {
+  const view: LineView = {
     index,
     text,
     kind: 'modifier',
@@ -52,6 +58,35 @@ function line(
       end: m.index + m[0].length,
       text: m[0],
     })),
+    variants: [],
+    marks: [],
+    ranged: null,
+    ...extra,
+  }
+  // A modifier shows without PoB's markup (the app also applies the roll).
+  if (!('shown' in extra)) {
+    view.shown =
+      view.kind === 'modifier' ? text.replace(/\{[^}]*\}/g, '') : null
+  }
+  return view
+}
+
+function card(extra: Partial<ItemCard> = {}): ItemCard {
+  return {
+    'item-class': null,
+    quality: null,
+    'item-level': null,
+    'level-req': null,
+    sockets: [],
+    properties: [],
+    influences: [],
+    flags: [],
+    variants: [],
+    'selected-variant': null,
+    'variant-eras': [],
+    'current-variant': null,
+    affixes: [],
+    requirements: null,
     ...extra,
   }
 }
@@ -77,6 +112,28 @@ function sampleItems(): ItemView[] {
       base: 'Plain Test Ring',
       rarity: 'rare',
       slot: 'Ring 1',
+      card: card({
+        'item-class': 'Rings',
+        quality: '20',
+        'item-level': '84',
+        'level-req': '30',
+        flags: ['Corrupted'],
+        affixes: [
+          {
+            kind: 'prefix',
+            name: 'Steady',
+            tier: null,
+            tags: ['Attack'],
+            lines: [4],
+          },
+        ],
+        requirements: {
+          level: 30,
+          strength: 0,
+          dexterity: 10,
+          intelligence: 0,
+        },
+      }),
       lines: [
         line(0, 'Rarity: RARE', {
           kind: 'rarity',
@@ -95,6 +152,7 @@ function sampleItems(): ItemView[] {
         }),
         lifeLine(3, '+15 to maximum Life'),
         line(4, '+12 to Accuracy', {
+          ranged: '+12(10-15) to Accuracy',
           stats: [{ id: 'accuracy_rating', value: '12' }],
         }),
         line(5, 'Nothing like this', {
@@ -109,6 +167,7 @@ function sampleItems(): ItemView[] {
       base: 'Plain Wand',
       rarity: 'magic',
       slot: 'Weapon 1',
+      card: card({ sockets: ['BG', 'R'] }),
       lines: [
         line(0, 'Rarity: MAGIC', {
           kind: 'rarity',
@@ -123,7 +182,69 @@ function sampleItems(): ItemView[] {
         }),
       ],
     },
+    {
+      // Only in the second item set: not in use while set 1 is active.
+      id: 3,
+      name: 'Spare Band',
+      base: 'Plain Test Ring',
+      rarity: 'rare',
+      slot: null,
+      card: card({
+        variants: ['Pre 3.7.0', 'Current'],
+        'variant-eras': ['legacy', 'current'],
+        'selected-variant': 2,
+      }),
+      lines: [
+        line(0, 'Rarity: RARE', {
+          kind: 'rarity',
+          section: null,
+          status: 'other',
+        }),
+        line(1, 'Spare Band', { kind: 'name', section: null, status: 'other' }),
+        line(2, 'Something else unread', {
+          status: 'warning',
+          code: 'LINE_NO_TEMPLATE',
+        }),
+        line(3, 'Variant: Pre 3.7.0', {
+          kind: 'spec',
+          section: null,
+          status: 'other',
+        }),
+        line(4, 'Variant: Current', {
+          kind: 'spec',
+          section: null,
+          status: 'other',
+        }),
+        line(5, 'Selected Variant: 2', {
+          kind: 'spec',
+          section: null,
+          status: 'other',
+        }),
+        line(6, '{variant:1}{range:0.5}+(10-20) to maximum Life', {
+          shown: '+15 to maximum Life',
+          ranged: '+15(10-20) to maximum Life',
+          variants: [1],
+          status: 'excluded',
+        }),
+        line(7, '{variant:2}{crafted}+25 to maximum Life', {
+          variants: [2],
+          marks: ['crafted'],
+        }),
+      ],
+    },
   ]
+}
+
+/** The sample build's item sets: each set's slots, by item ID. */
+const SETS: { id: number; title: string; slots: Record<string, number> }[] = [
+  { id: 1, title: 'Leveling', slots: { 'Ring 1': 1, 'Weapon 1': 2 } },
+  { id: 2, title: 'Endgame', slots: { 'Ring 1': 3, 'Weapon 1': 2 } },
+]
+
+/** The slot `item` is in, in set `set`. */
+function slotIn(set: number, item: number): string | null {
+  const slots = SETS.find((s) => s.id === set)?.slots ?? {}
+  return Object.entries(slots).find(([, id]) => id === item)?.[0] ?? null
 }
 
 function life(items: ItemView[]): number {
@@ -192,9 +313,184 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
 
 type Listener = (event: ApiEvent) => void
 
+type Group = Omit<SkillGroupView, 'main'>
+
+const gem = (
+  name: string,
+  level: number,
+  colour: string,
+  support = false,
+  socket: number | null = null,
+  supports: number[] = [],
+): GemView => ({
+  name,
+  level,
+  quality: 0,
+  enabled: true,
+  support,
+  colour,
+  main: false,
+  socket,
+  supports,
+})
+
+/** The sample build's skill sets, by ID. */
+function sampleSkills(): Record<number, Group[]> {
+  return {
+    1: [
+      {
+        label: null,
+        slot: 'Weapon 1',
+        enabled: true,
+        gems: [
+          gem('Ice Nova', 1, 'blue', false, 0),
+          gem('Added Cold Damage', 1, 'green', true, 1, [0]),
+        ],
+      },
+      {
+        label: 'Movement',
+        slot: 'Boots',
+        enabled: true,
+        gems: [gem('Frostblink', 1, 'blue')],
+      },
+    ],
+    2: [
+      {
+        label: null,
+        slot: 'Body Armour',
+        enabled: true,
+        gems: [
+          gem('Ice Nova', 20, 'blue'),
+          gem('Added Cold Damage', 20, 'green', true, null, [0]),
+        ],
+      },
+    ],
+  }
+}
+
+/** The sample game data's gems (a few). */
+const GEM_CATALOG: GemCatalogEntry[] = [
+  {
+    id: 'AddedColdDamageSupport',
+    name: 'Added Cold Damage',
+    support: true,
+    colour: 'green',
+    tags: ['Support', 'Cold'],
+    fits: null,
+  },
+  {
+    id: 'Frostblink',
+    name: 'Frostblink',
+    support: false,
+    colour: 'blue',
+    tags: ['Spell', 'Movement', 'Cold'],
+    fits: null,
+  },
+  {
+    id: 'IceNova',
+    name: 'Ice Nova',
+    support: false,
+    colour: 'blue',
+    tags: ['Spell', 'Area', 'Cold'],
+    fits: null,
+  },
+  {
+    id: 'MeleePhysicalDamageSupport',
+    name: 'Melee Physical Damage',
+    support: true,
+    colour: 'red',
+    tags: ['Support', 'Melee'],
+    fits: null,
+  },
+  {
+    id: 'Smite',
+    name: 'Smite',
+    support: false,
+    colour: 'red',
+    tags: ['Attack', 'Melee'],
+    fits: null,
+  },
+]
+
+/** The sample build's stages: spec, item set, skill set. */
+const STAGES = [
+  { spec: 1, title: 'Leveling', set: 1, skillSet: 1 },
+  { spec: 2, title: 'Endgame', set: 2, skillSet: 2 },
+]
+
 interface State {
   items: ItemView[]
+  /** The active item set. */
+  set: number
+  /** The active passive spec. */
+  spec: number
+  /** The active skill set. */
+  skillSet: number
+  skills: Record<number, Group[]>
+  /** The main socket group, by index in the active skill set. */
+  main: number
+  /** The main gem, by index in the main group. */
+  mainGem: number
+  /** The active config set's inputs and blocks. */
+  config: ConfigView
+  league: 'challenge' | 'standard'
+  secondWeaponSet: boolean
 }
+
+/** A custom line's status as the resolver gives it: a line with no digit
+ * is a note; "to maximum Life" matches; anything else is a warning. */
+const fakeLine = (
+  text: string,
+): ConfigView['blocks'][number]['lines'][number] =>
+  /\d/.test(text)
+    ? /to maximum Life$/.test(text)
+      ? { text, status: 'matched', typed: null }
+      : { text, status: 'warning', typed: null }
+    : { text, status: 'matched', typed: 'custom-note' }
+
+const fakeBlock = (text: string, enabled = true) => ({
+  title: null,
+  enabled,
+  text,
+  lines: text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '')
+    .map(fakeLine),
+})
+
+/** The effect the engine gives an input, by name (a sample of its rule). */
+const fakeEffect = (name: string): ConfigView['inputs'][number]['effect'] =>
+  name.startsWith('condition')
+    ? 'no-effect'
+    : ['enemyIsBoss', 'usePowerCharges', 'resistancePenalty'].includes(name)
+      ? 'applied'
+      : 'unmodelled'
+
+const sampleConfig = (): ConfigView => ({
+  set: 1,
+  inputs: [
+    { name: 'resistancePenalty', value: { number: -60 }, placeholder: false },
+    { name: 'enemyIsBoss', value: { text: 'Pinnacle' }, placeholder: false },
+    { name: 'usePowerCharges', value: { boolean: true }, placeholder: false },
+    { name: 'conditionFullLife', value: { boolean: true }, placeholder: false },
+    { name: 'enemyLevel', value: { number: 83 }, placeholder: true },
+  ].map((i) => ({ ...i, effect: fakeEffect(i.name) })),
+  blocks: [fakeBlock('+15 to maximum Life\nBoss phase two')],
+})
+
+const fresh = (): State => ({
+  items: sampleItems(),
+  set: 1,
+  spec: 1,
+  skillSet: 1,
+  skills: sampleSkills(),
+  main: 0,
+  mainGem: 0,
+  config: sampleConfig(),
+  league: 'challenge',
+  secondWeaponSet: false,
+})
 
 export class FakeApi implements LoomApi {
   version = 0
@@ -203,6 +499,8 @@ export class FakeApi implements LoomApi {
   private current: State | null = null
   private undoStack: State[] = []
   private redoStack: State[] = []
+  /** The change that made each state, for the history's words. */
+  private made = new WeakMap<State, HistoryEntry>()
   private dirty = false
   private path: string | null = null
   private calc: [number, CalcResultDocumentV1] | null = null
@@ -281,12 +579,27 @@ export class FakeApi implements LoomApi {
     }, 5)
   }
 
+  /** Makes `next` current as one undoable change; nothing when it is
+   * the same. */
+  private commit(next: State, entry?: HistoryEntry): Outcome {
+    if (this.current === null) this.fail('APP_NO_BUILD')
+    if (JSON.stringify(next) === JSON.stringify(this.current)) return 'nothing'
+    if (entry !== undefined) this.made.set(next, entry)
+    this.undoStack.push(this.current)
+    this.redoStack = []
+    this.dirty = true
+    this.changed(next)
+    return this.done()
+  }
+
   private done(): Outcome {
     return { done: { version: this.version } }
   }
 
   snapshot(): Promise<Snapshot> {
     const items = this.current?.items ?? []
+    const set = this.current?.set ?? 1
+    const inUse = (id: number) => slotIn(set, id) !== null
     const warnings = items.flatMap((item) =>
       item.lines
         .filter((l) => l.status === 'warning')
@@ -296,6 +609,7 @@ export class FakeApi implements LoomApi {
           line: l.index,
           text: l.text,
           code: l.code ?? '',
+          'in-use': inUse(item.id),
         })),
     )
     const all = items
@@ -321,6 +635,9 @@ export class FakeApi implements LoomApi {
                 'steam-build': 26530219,
               },
               completeness: warnings.length > 0 ? 'partial' : 'complete',
+              'in-use-completeness': warnings.some((w) => w['in-use'])
+                ? 'partial'
+                : 'complete',
               lines: {
                 modifiers: all.length,
                 matched: count('matched'),
@@ -330,20 +647,76 @@ export class FakeApi implements LoomApi {
               },
               items: items.map((i) => ({
                 id: i.id,
+                'item-class': i.id === 2 ? 'Wand' : 'Ring',
                 name: i.name,
                 base: i.base,
                 rarity: i.rarity,
-                slot: i.slot,
+                slot: slotIn(set, i.id),
                 warnings: i.lines.filter((l) => l.status === 'warning').length,
+                'in-use': inUse(i.id),
+                sets: SETS.filter((s) =>
+                  Object.values(s.slots).includes(i.id),
+                ).map((s) => s.id),
+                'tree-socket': null,
+                legacy:
+                  i.card['variant-eras'][
+                    (i.card['selected-variant'] ?? 0) - 1
+                  ] === 'legacy',
+                // The wand: Ice Nova and its support linked, one socket free.
+                sockets: i.id === 2 ? ['BG', 'R'] : [],
               })),
               warnings,
+              'item-sets': SETS.map((s) => ({
+                id: s.id,
+                title: s.title,
+                active: s.id === set,
+              })),
+              'skill-sets': STAGES.map((s) => ({
+                id: s.skillSet,
+                title: `^4${s.title} {${s.spec}}`,
+                active: s.skillSet === this.current?.skillSet,
+              })),
+              specs: STAGES.map((s) => ({
+                id: s.spec,
+                title: `${s.title} {${s.spec}}`,
+                active: s.spec === this.current?.spec,
+              })),
+              'config-sets': [{ id: 1, title: 'Default', active: true }],
+              loadouts: STAGES.map((s) => ({
+                spec: s.spec,
+                title: s.title,
+                'item-set': s.set,
+                'skill-set': s.skillSet,
+                'config-set': 1,
+                active:
+                  s.spec === this.current?.spec &&
+                  s.set === set &&
+                  s.skillSet === this.current?.skillSet,
+              })),
+              'skill-groups': (
+                this.current?.skills[this.current.skillSet] ?? []
+              ).map((g, i) => ({
+                ...g,
+                main: i === this.current?.main,
+                gems: g.gems.map((x, j) => ({
+                  ...x,
+                  main: i === this.current?.main && j === this.current.mainGem,
+                })),
+              })),
+              'passive-names': [{ node: 420, name: 'Heart of Ice' }],
+              config: this.current?.config ?? null,
+              league: this.current?.league ?? 'challenge',
+              'second-weapon-set': this.current?.secondWeaponSet ?? false,
             },
       calc: this.calcState,
       history: {
         'can-undo': this.undoStack.length > 0,
         'can-redo': this.redoStack.length > 0,
-        undo: null,
-        redo: null,
+        undo:
+          this.undoStack.length > 0 && this.current !== null
+            ? (this.made.get(this.current) ?? null)
+            : null,
+        redo: this.made.get(this.redoStack.at(-1) as State) ?? null,
       },
       dirty: this.dirty,
       path: this.path,
@@ -395,6 +768,19 @@ export class FakeApi implements LoomApi {
         texts[op.remove.line] = null
       } else if ('add' in op) {
         texts.push(op.add.text)
+      } else if ('select-variant' in op) {
+        const v = op['select-variant'].variant
+        if (v < 1 || v > item.card.variants.length) this.fail('APP_EDIT_LINE')
+        item.card['selected-variant'] = v
+        item.card['current-variant'] =
+          item.card['variant-eras'][v - 1] === 'legacy'
+            ? item.card['variant-eras'].indexOf('current') + 1 || null
+            : null
+        item.lines = item.lines.map((l) =>
+          l.variants.length === 0
+            ? l
+            : { ...l, status: l.variants.includes(v) ? 'matched' : 'excluded' },
+        )
       }
     }
     const kept = item.lines.length
@@ -409,7 +795,7 @@ export class FakeApi implements LoomApi {
       return [lifeLine(0, text)]
     })
     item.lines = item.lines.map((l, index) => ({ ...l, index }))
-    return { items }
+    return { ...this.current, items }
   }
 
   preview(edit: ItemEdit): Promise<ItemEditPreview> {
@@ -503,13 +889,229 @@ export class FakeApi implements LoomApi {
       this.changed(next)
       return this.done()
     }
+    if ('use-item-set' in command) {
+      const id = command['use-item-set'].id
+      if (this.current === null) {
+        this.fail('APP_NO_BUILD')
+      }
+      if (!SETS.some((s) => s.id === id)) {
+        this.fail('APP_ITEM_SET')
+      }
+      return this.commit(
+        { ...this.current, set: id },
+        { kind: 'item-set', item: id },
+      )
+    }
+    if ('use-loadout' in command) {
+      const stage = STAGES.find((s) => s.spec === command['use-loadout'].spec)
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (stage === undefined) this.fail('APP_LOADOUT')
+      return this.commit(
+        {
+          ...this.current,
+          spec: stage.spec,
+          set: stage.set,
+          skillSet: stage.skillSet,
+        },
+        { kind: 'loadout', item: stage.spec },
+      )
+    }
+    if ('use-skill-set' in command) {
+      const id = command['use-skill-set'].id
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (this.current.skills[id] === undefined) this.fail('APP_SKILL')
+      return this.commit(
+        { ...this.current, skillSet: id },
+        { kind: 'skill-set', item: id },
+      )
+    }
+    if ('edit-gem' in command) {
+      const e = command['edit-gem']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const g = skills[this.current.skillSet]?.[e.group]?.gems[e.gem]
+      if (g === undefined || e.level === 0) this.fail('APP_SKILL')
+      if (e.level != null) g.level = e.level
+      if (e.quality != null) g.quality = e.quality
+      if (e.enabled != null) g.enabled = e.enabled
+      return this.commit(
+        { ...this.current, skills },
+        { kind: 'skill-edit', item: e.group },
+      )
+    }
+    if ('edit-socket-group' in command) {
+      const e = command['edit-socket-group']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const g = skills[this.current.skillSet]?.[e.group]
+      if (g === undefined) this.fail('APP_SKILL')
+      if (e.enabled != null) g.enabled = e.enabled
+      if (e.slot != null) g.slot = e.slot === '' ? null : e.slot
+      if (e.label != null) g.label = e.label === '' ? null : e.label
+      return this.commit(
+        {
+          ...this.current,
+          skills,
+          main: e.main === true ? e.group : this.current.main,
+          mainGem: e['main-gem'] ?? this.current.mainGem,
+        },
+        { kind: 'skill-edit', item: e.group },
+      )
+    }
+    if ('add-gem' in command) {
+      const e = command['add-gem']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const g = skills[this.current.skillSet]?.[e.group]
+      const entry = GEM_CATALOG.find((x) => x.id === e.gem)
+      if (g === undefined || entry === undefined) this.fail('APP_SKILL')
+      const at = Math.min(e.at ?? g.gems.length, g.gems.length)
+      g.gems.splice(
+        at,
+        0,
+        gem(entry.name, 20, entry.colour ?? 'white', entry.support, null, []),
+      )
+      return this.commit(
+        { ...this.current, skills },
+        { kind: 'skill-edit', item: e.group },
+      )
+    }
+    if ('remove-gem' in command) {
+      const e = command['remove-gem']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const g = skills[this.current.skillSet]?.[e.group]
+      if (g === undefined || g.gems[e.gem] === undefined) this.fail('APP_SKILL')
+      g.gems.splice(e.gem, 1)
+      return this.commit(
+        { ...this.current, skills },
+        { kind: 'skill-edit', item: e.group },
+      )
+    }
+    if ('add-socket-group' in command) {
+      const e = command['add-socket-group']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const set = skills[this.current.skillSet] ?? []
+      set.push({
+        label: e.label ?? null,
+        slot: e.slot ?? null,
+        enabled: true,
+        gems: [],
+      })
+      skills[this.current.skillSet] = set
+      return this.commit(
+        { ...this.current, skills },
+        { kind: 'skill-edit', item: set.length - 1 },
+      )
+    }
+    if ('remove-socket-group' in command) {
+      const e = command['remove-socket-group']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const skills = structuredClone(this.current.skills)
+      const set = skills[this.current.skillSet]
+      if (set?.[e.group] === undefined) this.fail('APP_SKILL')
+      set.splice(e.group, 1)
+      const main = this.current.main
+      return this.commit(
+        {
+          ...this.current,
+          skills,
+          main: main > e.group ? main - 1 : Math.min(main, set.length - 1),
+        },
+        { kind: 'skill-edit', item: e.group },
+      )
+    }
+    if ('use-weapon-set' in command) {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const second = command['use-weapon-set'].second
+      return this.commit(
+        { ...this.current, secondWeaponSet: second },
+        { kind: 'weapon-set', item: 1 },
+      )
+    }
+    if ('set-league' in command) {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      return this.commit(
+        { ...this.current, league: command['set-league'].league },
+        { kind: 'league', item: 0 },
+      )
+    }
+    if ('set-config-input' in command) {
+      const e = command['set-config-input']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (e.name.trim() === '' || e.name === 'customMods')
+        this.fail('APP_CONFIG')
+      const config = structuredClone(this.current.config)
+      const input = config.inputs.find((i) => i.name === e.name)
+      if (input === undefined) {
+        config.inputs.push({
+          name: e.name,
+          value: e.value,
+          placeholder: false,
+          effect: fakeEffect(e.name),
+        })
+      } else {
+        input.value = e.value
+        input.placeholder = false
+      }
+      return this.commit(
+        { ...this.current, config },
+        { kind: 'config', item: 0 },
+      )
+    }
+    if ('remove-config-input' in command) {
+      const e = command['remove-config-input']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const config = structuredClone(this.current.config)
+      const at = config.inputs.findIndex((i) => i.name === e.name)
+      if (at < 0) this.fail('APP_CONFIG')
+      config.inputs.splice(at, 1)
+      return this.commit(
+        { ...this.current, config },
+        { kind: 'config', item: 0 },
+      )
+    }
+    if ('edit-custom-block' in command) {
+      const e = command['edit-custom-block']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const config = structuredClone(this.current.config)
+      const block = config.blocks[e.block]
+      if (block === undefined) this.fail('APP_CONFIG')
+      const next = fakeBlock(e.text ?? block.text, e.enabled ?? block.enabled)
+      config.blocks[e.block] = { ...next, title: block.title }
+      return this.commit(
+        { ...this.current, config },
+        { kind: 'config', item: e.block },
+      )
+    }
+    if ('add-custom-block' in command) {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const config = structuredClone(this.current.config)
+      config.blocks.push(fakeBlock(command['add-custom-block'].text))
+      return this.commit(
+        { ...this.current, config },
+        { kind: 'config', item: config.blocks.length - 1 },
+      )
+    }
+    if ('remove-custom-block' in command) {
+      const e = command['remove-custom-block']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const config = structuredClone(this.current.config)
+      if (config.blocks[e.block] === undefined) this.fail('APP_CONFIG')
+      config.blocks.splice(e.block, 1)
+      return this.commit(
+        { ...this.current, config },
+        { kind: 'config', item: e.block },
+      )
+    }
     if ('open-recent' in command) {
       if (!this.recentList.some((r) => r.id === command['open-recent'].id)) {
         this.fail('APP_NOT_FOUND')
       }
       this.path = 'recent.json'
       this.dirty = false
-      this.changed({ items: sampleItems() })
+      this.changed(fresh())
       return this.done()
     }
     if ('restore' in command) {
@@ -517,8 +1119,14 @@ export class FakeApi implements LoomApi {
         (r) => r.id !== command.restore.id,
       )
       this.dirty = true
-      this.changed({ items: sampleItems() })
+      this.changed(fresh())
       return this.done()
+    }
+    if ('forget-recent' in command) {
+      const id = command['forget-recent'].id
+      if (!this.recentList.some((r) => r.id === id)) this.fail('APP_NOT_FOUND')
+      this.recentList = this.recentList.filter((r) => r.id !== id)
+      return 'nothing'
     }
     if ('discard' in command) {
       this.recoveryList = this.recoveryList.filter(
@@ -570,12 +1178,31 @@ export class FakeApi implements LoomApi {
     this.redoStack = []
     this.path = null
     this.dirty = true
-    this.changed({ items: sampleItems() })
+    this.changed(fresh())
     return this.done()
   }
 
   recent() {
     return Promise.resolve(this.recentList)
+  }
+
+  gems(group?: number) {
+    if (!this.options.data) this.fail('APP_NO_DATA')
+    const groups = this.current?.skills[this.current.skillSet] ?? []
+    if (group !== undefined && groups[group] === undefined) {
+      this.fail('APP_SKILL')
+    }
+    return Promise.resolve(
+      GEM_CATALOG.map((e) => ({
+        ...e,
+        // Cold supports fit a group with a cold spell; Melee ones do not.
+        fits:
+          group === undefined || !e.support
+            ? null
+            : e.tags.includes('Cold') &&
+              (groups[group]?.gems ?? []).some((g) => g.name === 'Ice Nova'),
+      })),
+    )
   }
 
   recovery() {
@@ -631,7 +1258,7 @@ export class FakeApi implements LoomApi {
     this.dirty = false
     this.undoStack = []
     this.redoStack = []
-    this.changed({ items: sampleItems() })
+    this.changed(fresh())
     return Promise.resolve(this.done())
   }
 

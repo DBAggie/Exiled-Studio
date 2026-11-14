@@ -2,13 +2,48 @@
 // data, unsaved work to restore, recent builds.
 import { useId, useState } from 'react'
 
-import { Icon, ScreenHeading } from '../components'
+import { ErrorCode, Icon, ScreenHeading } from '../components'
 import { errorText, t } from '../i18n'
-import { attempt, importBuild, openBuild, run } from '../store'
+import {
+  actions,
+  attempt,
+  importBuild,
+  openBuild,
+  refreshLists,
+  run,
+} from '../store'
 import { useAppDispatch, useAppSelector } from '../util'
 
 function when(seconds: number): string {
-  return new Date(seconds * 1000).toLocaleString()
+  return new Date(seconds * 1000).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
+const relative = new Intl.RelativeTimeFormat(undefined, { numeric: 'auto' })
+
+/** "2 hours ago", "yesterday" (UX-20). */
+function ago(seconds: number): string {
+  const diff = seconds - Date.now() / 1000
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ['year', 31_536_000],
+    ['month', 2_592_000],
+    ['week', 604_800],
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+  ]
+  for (const [unit, size] of units) {
+    if (Math.abs(diff) >= size)
+      return relative.format(Math.round(diff / size), unit)
+  }
+  return t('start.justNow')
+}
+
+/** A path's last part; the full path is shown on hover. */
+function fileName(path: string): string {
+  return path.split(/[\\/]/).pop() ?? path
 }
 
 export function Start() {
@@ -30,6 +65,66 @@ export function Start() {
         <p className="lead">{t('start.lead')}</p>
       </div>
 
+      {/* Unsaved work first: it is what the user most likely came back
+          for (UX-19). */}
+      {recovery.length > 0 && (
+        <section className="panel recovery" aria-labelledby="recovery-h">
+          <div className="panel-head">
+            <h2 id="recovery-h">{t('start.recovery')}</h2>
+          </div>
+          <ul className="recovery-list">
+            {recovery.map((r) => {
+              const name = r.name === '' ? t('app.untitled') : r.name
+              const file = r.path ?? r.origin
+              return (
+                <li key={r.id}>
+                  <div>
+                    <strong>{name}</strong>
+                    <span className="sub">
+                      {t('start.recoveryWhen', { when: ago(r['saved-at']) })}
+                      {file != null && (
+                        <>
+                          {' · '}
+                          <span className="mono" title={file}>
+                            {fileName(file)}
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <div className="row end">
+                    <button
+                      type="button"
+                      className="primary"
+                      aria-label={t('start.restore', { name })}
+                      onClick={() =>
+                        void dispatch(
+                          openBuild((api) =>
+                            api.execute({ restore: { id: r.id } }),
+                          ),
+                        )
+                      }
+                    >
+                      {t('start.restoreShort')}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t('start.discard', { name })}
+                      onClick={() =>
+                        void dispatch(run({ discard: { id: r.id } })).then(() =>
+                          dispatch(refreshLists()),
+                        )
+                      }
+                    >
+                      {t('start.discardShort')}
+                    </button>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
       <div className="start-grid">
         <section className="panel import-card" aria-labelledby={`${textId}-h`}>
           <h2 id={`${textId}-h`}>
@@ -39,6 +134,12 @@ export function Start() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
+              // A pobb.in or pastebin link: say so before trying (UX-18).
+              if (/^\s*https?:\/\//i.test(text)) {
+                dispatch(actions.importStarted())
+                dispatch(actions.importFailed('UI_LINK'))
+                return
+              }
               void dispatch(
                 importBuild((api) => api.execute({ 'import-text': { text } })),
               )
@@ -75,9 +176,10 @@ export function Start() {
           </form>
           {reading && <p role="status">{t('import.reading')}</p>}
           {flow.state === 'failed' && (
-            <p role="alert" className="error">
-              {errorText(flow.code)} <code>{flow.code}</code>
-            </p>
+            <div role="alert">
+              <p className="error">{errorText(flow.code)}</p>
+              {flow.code !== 'UI_LINK' && <ErrorCode code={flow.code} />}
+            </div>
           )}
         </section>
 
@@ -109,7 +211,10 @@ export function Start() {
               </p>
             )}
             {data?.error !== null && data?.error !== undefined && (
-              <p className="error">{errorText(data.error.code)}</p>
+              <>
+                <p className="error">{errorText(data.error.code)}</p>
+                <ErrorCode code={data.error.code} />
+              </>
             )}
             <button
               type="button"
@@ -124,63 +229,6 @@ export function Start() {
         </div>
       </div>
 
-      {recovery.length > 0 && (
-        <section className="panel table-panel" aria-labelledby="recovery-h">
-          <div className="panel-head">
-            <h2 id="recovery-h">{t('start.recovery')}</h2>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">{t('start.colBuild')}</th>
-                <th scope="col">{t('start.colSaved')}</th>
-                <th scope="col">
-                  <span className="visually-hidden">
-                    {t('start.colActions')}
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {recovery.map((r) => {
-                const name = r.name === '' ? t('app.untitled') : r.name
-                return (
-                  <tr key={r.id}>
-                    <th scope="row">{name}</th>
-                    <td className="muted">{when(r['saved-at'])}</td>
-                    <td className="right">
-                      <div className="row end">
-                        <button
-                          type="button"
-                          className="primary"
-                          onClick={() =>
-                            void dispatch(
-                              openBuild((api) =>
-                                api.execute({ restore: { id: r.id } }),
-                              ),
-                            )
-                          }
-                        >
-                          {t('start.restore', { name })}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            void dispatch(run({ discard: { id: r.id } }))
-                          }
-                        >
-                          {t('start.discard', { name })}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </section>
-      )}
-
       <section aria-labelledby="recent-h">
         <div className="recent-head">
           <h2 id="recent-h">{t('start.recent')}</h2>
@@ -193,8 +241,12 @@ export function Start() {
               <thead>
                 <tr>
                   <th scope="col">{t('start.colBuild')}</th>
-                  <th scope="col">{t('start.colFile')}</th>
                   <th scope="col">{t('start.colOpened')}</th>
+                  <th scope="col">
+                    <span className="visually-hidden">
+                      {t('start.colActions')}
+                    </span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -214,9 +266,25 @@ export function Start() {
                       >
                         {r.name}
                       </button>
+                      <span className="sub mono" title={r.path}>
+                        {fileName(r.path)}
+                      </span>
                     </th>
-                    <td className="muted mono small-text">{r.path}</td>
-                    <td>{when(r.at)}</td>
+                    <td title={when(r.at)}>{ago(r.at)}</td>
+                    <td className="right">
+                      <button
+                        type="button"
+                        className="link"
+                        aria-label={t('start.forget', { name: r.name })}
+                        onClick={() =>
+                          void dispatch(
+                            run({ 'forget-recent': { id: r.id } }),
+                          ).then(() => dispatch(refreshLists()))
+                        }
+                      >
+                        {t('start.forgetShort')}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

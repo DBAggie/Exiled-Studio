@@ -12,7 +12,7 @@ use std::sync::mpsc::{self, Receiver};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use loom_app::{App, Config, HostCommand, Session, api};
+use loom_app::{App, Config, GroupPlace, HostCommand, Session, api};
 use loom_persistence::Store;
 use loom_serialization::legacy::pob_xml;
 
@@ -254,6 +254,16 @@ fn workflow_should_import_edit_recalculate_undo_save_reopen_and_export() {
         })
         .unwrap_err();
     assert_eq!(unknown.code, "APP_NOT_FOUND");
+
+    // A recent build can be taken off the list; its file stays (UX-20).
+    let id = r.app.recent()[0].id.clone();
+    let file = PathBuf::from(&r.app.recent()[0].path);
+    r.run(api::Command::ForgetRecent { id: id.clone() })
+        .unwrap();
+    assert!(r.app.recent().is_empty());
+    assert!(file.exists());
+    let gone = r.run(api::Command::ForgetRecent { id }).unwrap_err();
+    assert_eq!(gone.code, "APP_NOT_FOUND");
 
     // Export PoB XML: it reads back with the edited line and the rest as
     // the export wrote it.
@@ -752,4 +762,734 @@ fn a_save_should_not_recalculate() {
     assert_eq!(snap.version, v);
     assert_eq!(snap.calc.state, api::CalcState::Done);
     assert!(!snap.dirty);
+}
+
+/// UX walkthrough, UX-02 and UX-03: the view says which items and
+/// warnings are in use, lists the item sets, and the user can make
+/// another set active as one undoable change.
+#[test]
+fn item_sets_should_be_listed_and_switchable() {
+    let xml = synthetic().replace(
+        "</ItemSet>",
+        "</ItemSet><ItemSet id=\"2\" title=\"Bare\" useSecondWeaponSet=\"false\">\
+         <Slot name=\"Ring 1\" itemId=\"0\"/></ItemSet>",
+    );
+    assert!(
+        xml.contains("title=\"Bare\""),
+        "the second set was not added"
+    );
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+
+    let build = session.snapshot(idle()).build.unwrap();
+    let sets: Vec<(u32, bool)> = build.item_sets.iter().map(|s| (s.id, s.active)).collect();
+    assert_eq!(sets, [(1, true), (2, false)]);
+    let ring = build.items.iter().find(|i| i.id == 1).unwrap();
+    assert!(ring.in_use);
+    assert_eq!(ring.sets, [1]);
+    assert!(build.warnings.iter().all(|w| w.in_use == (w.item == 1)));
+
+    let v = session.use_item_set(2).unwrap().unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+    assert!(build.item_sets.iter().any(|s| s.id == 2 && s.active));
+    assert!(!build.items.iter().find(|i| i.id == 1).unwrap().in_use);
+    // No item in use, so no warning in use: complete for the calculation,
+    // whatever the import's own completeness.
+    assert!(build.warnings.iter().all(|w| !w.in_use));
+    assert_eq!(build.in_use_completeness, "complete");
+    let snap = session.snapshot(idle());
+    assert!(snap.dirty);
+    assert_eq!(snap.version, v);
+    assert_eq!(
+        snap.history.undo.as_ref().map(|e| (e.kind.clone(), e.item)),
+        Some((api::ChangeKind::ItemSet, 2))
+    );
+    // The active set again: no change.
+    assert_eq!(session.use_item_set(2).unwrap(), None);
+    assert_eq!(session.use_item_set(9).unwrap_err().code, "APP_ITEM_SET");
+
+    session.undo().unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+    assert!(build.item_sets.iter().any(|s| s.id == 1 && s.active));
+}
+
+/// The synthetic build with two stages (PoB's loadouts): two specs, two
+/// skill sets, and two item sets linked by `{1}` and `{2}`.
+fn staged() -> String {
+    let skill = |name: &str, level: u32| {
+        format!(
+            "<Skill enabled=\"true\" slot=\"Weapon 1\" mainActiveSkill=\"1\">\
+             <Gem nameSpec=\"{name}\" skillId=\"{name}\" level=\"{level}\" quality=\"0\" \
+             enabled=\"true\"/></Skill>"
+        )
+    };
+    let xml = synthetic()
+        .replace(
+            "<Spec treeVersion=\"3_29\" classId=\"0\" ascendClassId=\"0\" nodes=\"\"/>",
+            "<Spec title=\"^4Leveling {1}\" treeVersion=\"3_29\" classId=\"0\" ascendClassId=\"0\" nodes=\"\"/>\
+             <Spec title=\"Endgame {2}\" treeVersion=\"3_29\" classId=\"0\" ascendClassId=\"0\" nodes=\"\"/>",
+        )
+        .replace(
+            "<Skills/>",
+            &format!(
+                "<Skills activeSkillSet=\"1\"><SkillSet id=\"1\" title=\"Leveling {{1}}\">{}{}</SkillSet>\
+                 <SkillSet id=\"2\" title=\"Endgame {{2}}\">{}</SkillSet></Skills>",
+                skill("Smite", 1),
+                skill("Leap Slam", 1),
+                skill("Smite", 20),
+            ),
+        )
+        .replace("<ItemSet id=\"1\" ", "<ItemSet id=\"1\" title=\"Leveling {1}\" ")
+        .replace(
+            "</ItemSet>",
+            "</ItemSet><ItemSet id=\"2\" title=\"Endgame {2}\" useSecondWeaponSet=\"false\">\
+             <Slot name=\"Ring 1\" itemId=\"0\"/></ItemSet>",
+        );
+    assert!(
+        xml.contains("Endgame {2}\" tree"),
+        "the second spec was not added"
+    );
+    assert!(
+        xml.contains("SkillSet id=\"2\""),
+        "the skill sets were not added"
+    );
+    assert!(
+        xml.contains("ItemSet id=\"1\" title"),
+        "the item set was not titled"
+    );
+    xml
+}
+
+/// The maintainer's global stage choice (2026-11-14): one stage sets the
+/// tree, the item set, and the skill set together, as one undoable change.
+#[test]
+fn a_stage_should_switch_the_tree_items_and_skills_together() {
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&staged(), None).unwrap();
+
+    let build = session.snapshot(idle()).build.unwrap();
+    let stages: Vec<_> = build
+        .loadouts
+        .iter()
+        .map(|l| (l.spec, l.title.as_str(), l.item_set, l.skill_set, l.active))
+        .collect();
+    assert_eq!(
+        stages,
+        [
+            (1, "Leveling", Some(1), Some(1), true),
+            (2, "Endgame", Some(2), Some(2), false),
+        ]
+    );
+    assert_eq!(build.skill_groups.len(), 2);
+
+    session.use_loadout(2).unwrap().unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+    assert!(build.loadouts.iter().any(|l| l.spec == 2 && l.active));
+    assert!(build.specs.iter().any(|s| s.id == 2 && s.active));
+    assert!(build.item_sets.iter().any(|s| s.id == 2 && s.active));
+    assert!(build.skill_sets.iter().any(|s| s.id == 2 && s.active));
+    assert_eq!(build.skill_groups.len(), 1);
+    assert_eq!(build.skill_groups[0].gems[0].level, 20);
+    assert_eq!(
+        session
+            .snapshot(idle())
+            .history
+            .undo
+            .map(|e| (e.kind, e.item)),
+        Some((api::ChangeKind::Loadout, 2))
+    );
+    assert_eq!(session.use_loadout(2).unwrap(), None);
+    assert_eq!(session.use_loadout(7).unwrap_err().code, "APP_LOADOUT");
+
+    session.undo().unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+    assert!(build.loadouts.iter().any(|l| l.spec == 1 && l.active));
+}
+
+/// The Skills page draws each slot's sockets: an item's link groups from
+/// its `Sockets` line, each gem's socket (a slot's groups fill its sockets
+/// in order, as PoB does), and which actives each support supports.
+#[test]
+fn sockets_and_support_links_should_be_shown() {
+    let gem = |id: &str, skill: &str| {
+        format!(
+            "<Gem nameSpec=\"{skill}\" gemId=\"{id}\" skillId=\"{skill}\" level=\"1\" \
+             quality=\"0\" enabled=\"true\"/>"
+        )
+    };
+    let bolt = gem("Test/Gems/Bolt", "TestBolt");
+    let support = gem("Test/Gems/SupportDamage", "SupportTestDamage");
+    let xml = synthetic()
+        .replace("Plain Test Ring\n", "Plain Test Ring\nSockets: B-R G\n")
+        .replace(
+            "<Skills/>",
+            &format!(
+                "<Skills activeSkillSet=\"1\"><SkillSet id=\"1\">\
+                 <Skill enabled=\"true\" slot=\"Ring 1\" mainActiveSkill=\"1\">{bolt}{support}</Skill>\
+                 <Skill enabled=\"true\" slot=\"Ring 1\" mainActiveSkill=\"1\">{support}{bolt}</Skill>\
+                 <Skill enabled=\"true\" mainActiveSkill=\"1\">{bolt}</Skill>\
+                 </SkillSet></Skills>"
+            ),
+        );
+    assert!(xml.contains("Sockets: B-R G"), "the sockets were not added");
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+
+    let ring = build.items.iter().find(|i| i.id == 1).unwrap();
+    assert_eq!(ring.sockets, ["BR", "G"]);
+    let other = build.items.iter().find(|i| i.id == 2).unwrap();
+    assert!(other.sockets.is_empty());
+
+    let groups = &build.skill_groups;
+    let view = |g: usize| {
+        groups[g]
+            .gems
+            .iter()
+            .map(|gem| (gem.support, gem.socket, gem.supports.clone()))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        view(0),
+        [
+            (Some(false), Some(0), vec![]),
+            (Some(true), Some(1), vec![0])
+        ]
+    );
+    // The second group goes on: socket 2 is the last; its support names
+    // the active by its index in its own group.
+    assert_eq!(
+        view(1),
+        [(Some(true), Some(2), vec![1]), (Some(false), None, vec![])]
+    );
+    // No slot, no socket.
+    assert_eq!(view(2), [(Some(false), None, vec![])]);
+}
+
+/// A build planner adds and removes gems and socket groups, picks gems
+/// from the game data's catalog, and moves or renames a group; the main
+/// skill stays on its gem, and every change reaches the export.
+#[test]
+fn gems_and_groups_should_be_added_and_removed() {
+    let bolt = "<Gem nameSpec=\"Test Bolt\" gemId=\"Test/Gems/Bolt\" skillId=\"TestBolt\" \
+                level=\"1\" quality=\"0\" enabled=\"true\"/>";
+    let xml = synthetic().replace(
+        "<Skills/>",
+        &format!(
+            "<Skills activeSkillSet=\"1\"><SkillSet id=\"1\">\
+             <Skill enabled=\"true\" slot=\"Ring 1\" mainActiveSkill=\"1\">{bolt}</Skill>\
+             </SkillSet></Skills>"
+        ),
+    );
+    let dir = Scratch::new("gem-add");
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+    let bundle = session.data().unwrap().bundle;
+
+    // The catalog: both gems, the support marked as fitting the group.
+    let group = session
+        .state()
+        .unwrap()
+        .build
+        .skills
+        .sets
+        .typed()
+        .next()
+        .unwrap();
+    let group = group.groups.typed().next().unwrap().clone();
+    let catalog = loom_app::gems::catalog(bundle, Some(&group));
+    let entry = |id: &str| catalog.iter().find(|e| e.id == id).unwrap();
+    assert_eq!(entry("TestBolt").name, "Test Bolt");
+    assert_eq!(entry("TestBolt").fits, None);
+    assert!(entry("SupportTestDamage").support);
+    assert_eq!(entry("SupportTestDamage").fits, Some(true));
+    assert!(
+        loom_app::gems::catalog(bundle, None)
+            .iter()
+            .all(|e| e.fits.is_none())
+    );
+
+    // Add a support at the end and an active in front: the main skill
+    // stays on the first bolt, now the second gem.
+    session
+        .add_gem(0, "SupportTestDamage", None)
+        .unwrap()
+        .unwrap();
+    session.add_gem(0, "TestBolt", Some(0)).unwrap().unwrap();
+    let groups = session.snapshot(idle()).build.unwrap().skill_groups;
+    let gems: Vec<_> = groups[0]
+        .gems
+        .iter()
+        .map(|g| (g.name.as_deref().unwrap_or(""), g.level, g.main))
+        .collect();
+    assert_eq!(
+        gems,
+        [
+            ("Test Bolt", 2, false),
+            ("Test Bolt", 1, true),
+            ("Test Damage Support", 1, false)
+        ]
+    );
+    assert_eq!(
+        session.add_gem(0, "NoSuchGem", None).unwrap_err().code,
+        "APP_SKILL"
+    );
+
+    // Remove the main gem: the main skill falls to the first active.
+    session.remove_gem(0, 1).unwrap().unwrap();
+    let groups = session.snapshot(idle()).build.unwrap().skill_groups;
+    assert_eq!(groups[0].gems.len(), 2);
+    assert!(groups[0].gems[0].main);
+    assert_eq!(session.remove_gem(0, 9).unwrap_err().code, "APP_SKILL");
+
+    // A new group, moved and renamed; then removed.
+    session
+        .add_socket_group(Some("Ring 2".to_owned()), None)
+        .unwrap()
+        .unwrap();
+    session
+        .edit_socket_group(
+            1,
+            None,
+            None,
+            None,
+            GroupPlace {
+                slot: Some(String::new()),
+                label: Some("Auras".to_owned()),
+            },
+        )
+        .unwrap()
+        .unwrap();
+    let groups = session.snapshot(idle()).build.unwrap().skill_groups;
+    assert_eq!(groups.len(), 2);
+    assert_eq!(
+        (groups[1].label.as_deref(), groups[1].slot.as_deref()),
+        (Some("Auras"), None)
+    );
+    let out = dir.path("added.xml");
+    session.export_xml(&out).unwrap();
+    let xml = std::fs::read_to_string(&out).unwrap();
+    assert!(xml.contains("gemId=\"Test/Gems/SupportDamage\""), "{xml}");
+    assert!(xml.contains("label=\"Auras\""), "{xml}");
+    session.remove_socket_group(1).unwrap().unwrap();
+    assert_eq!(
+        session.snapshot(idle()).build.unwrap().skill_groups.len(),
+        1
+    );
+    assert_eq!(
+        session.remove_socket_group(5).unwrap_err().code,
+        "APP_SKILL"
+    );
+
+    // Each was one undoable step.
+    session.undo().unwrap();
+    assert_eq!(
+        session.snapshot(idle()).build.unwrap().skill_groups.len(),
+        2
+    );
+}
+
+/// A build planner edits gems: level, quality, enabled, the group's
+/// state, and the main skill; each is undoable and reaches the export.
+#[test]
+fn gems_and_groups_should_be_editable() {
+    let dir = Scratch::new("gem-edits");
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&staged(), None).unwrap();
+    let build = session.snapshot(idle()).build.unwrap();
+    assert_eq!(build.main_skill.as_deref(), Some("Smite"));
+    // Imported from text, so no file name: named from the build (UX-15;
+    // the ascendancy "None" is no name).
+    assert_eq!(build.name, "Smite Scion 1");
+    let groups = build.skill_groups;
+    assert!(groups[0].main && !groups[1].main);
+    assert!(groups[0].gems[0].main && !groups[1].gems[0].main);
+    assert_eq!(
+        session
+            .edit_socket_group(0, None, None, Some(4), GroupPlace::default())
+            .unwrap_err()
+            .code,
+        "APP_SKILL"
+    );
+
+    session
+        .edit_gem(0, 0, Some(21), Some(23), Some(false))
+        .unwrap()
+        .unwrap();
+    session
+        .edit_socket_group(1, Some(false), Some(true), None, GroupPlace::default())
+        .unwrap()
+        .unwrap();
+    let groups = session.snapshot(idle()).build.unwrap().skill_groups;
+    let gem = &groups[0].gems[0];
+    assert_eq!((gem.level, gem.quality, gem.enabled), (21, 23, false));
+    assert!(!groups[0].main && groups[1].main && !groups[1].enabled);
+    assert!(groups[1].gems[0].main);
+    assert_eq!(
+        session.snapshot(idle()).history.undo.map(|e| e.kind),
+        Some(api::ChangeKind::SkillEdit)
+    );
+    // The same values again change nothing; bad indexes and level 0 fail.
+    assert_eq!(session.edit_gem(0, 0, Some(21), None, None).unwrap(), None);
+    assert_eq!(
+        session
+            .edit_gem(0, 5, Some(2), None, None)
+            .unwrap_err()
+            .code,
+        "APP_SKILL"
+    );
+    assert_eq!(
+        session
+            .edit_gem(9, 0, Some(2), None, None)
+            .unwrap_err()
+            .code,
+        "APP_SKILL"
+    );
+    assert_eq!(
+        session
+            .edit_gem(0, 0, Some(0), None, None)
+            .unwrap_err()
+            .code,
+        "APP_SKILL"
+    );
+
+    let out = dir.path("out.xml");
+    session.export_xml(&out).unwrap();
+    let xml = std::fs::read_to_string(&out).unwrap();
+    assert!(
+        xml.contains("level=\"21\" quality=\"23\" enabled=\"false\""),
+        "{xml}"
+    );
+    assert!(xml.contains("mainSocketGroup=\"2\""));
+
+    session.undo().unwrap();
+    session.undo().unwrap();
+    let groups = session.snapshot(idle()).build.unwrap().skill_groups;
+    assert_eq!(groups[0].gems[0].level, 1);
+    assert!(groups[0].main && groups[1].enabled);
+}
+
+#[test]
+fn gem_names_should_fall_back_to_the_gem_item_and_skip_placeholders() {
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    let mut bundle = session.data().unwrap().bundle.clone();
+    let skills = bundle.skills.as_mut().unwrap();
+    for effect in &mut skills.gem_effects {
+        match effect.id.as_str() {
+            // Most gem effects of the real data leave their name to the gem item.
+            "TestBolt" => effect.name.clear(),
+            "SupportTestDamage" => effect.name = "[DNT] Test Damage".to_owned(),
+            _ => {}
+        }
+    }
+    // A later effect of the same gem with the same name (a Vaal gem's
+    // leftover `AltX`) is not listed again.
+    let mut alt = skills
+        .gem_effects
+        .iter()
+        .find(|e| e.id == "TestBolt")
+        .unwrap()
+        .clone();
+    alt.id = "TestBoltAltX".to_owned();
+    skills.gem_effects.push(alt);
+    skills
+        .gems
+        .iter_mut()
+        .find(|g| g.effects.iter().any(|e| e == "TestBolt"))
+        .unwrap()
+        .effects
+        .push("TestBoltAltX".to_owned());
+    let catalog = loom_app::gems::catalog(&bundle, None);
+    assert!(catalog.iter().all(|e| e.id != "TestBoltAltX"));
+    let bolt = catalog.iter().find(|e| e.id == "TestBolt").unwrap();
+    assert_eq!(bolt.name, "Test Bolt");
+    assert!(catalog.iter().all(|e| e.id != "SupportTestDamage"));
+    assert_eq!(
+        loom_app::gems::new_gem(&bundle, "TestBolt")
+            .unwrap()
+            .name
+            .as_deref(),
+        Some("Test Bolt")
+    );
+    assert!(loom_app::gems::new_gem(&bundle, "SupportTestDamage").is_none());
+}
+
+#[test]
+fn config_inputs_and_custom_blocks_should_be_edited() {
+    use loom_serialization::dto::app::v1::{ConfigValueView, InputEffect, LineStatus};
+    let dir = Scratch::new("config");
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&synthetic(), None).unwrap();
+    let view = |s: &Session| {
+        loom_app::build_view(&s.state().unwrap().build, String::new(), None)
+            .config
+            .unwrap()
+    };
+
+    // A build with no config set gets one; each input says what it does.
+    session
+        .set_config_input("resistancePenalty", &ConfigValueView::Number(-60.0))
+        .unwrap()
+        .unwrap();
+    session
+        .set_config_input("conditionFullLife", &ConfigValueView::Boolean(true))
+        .unwrap();
+    session
+        .set_config_input("somethingNew", &ConfigValueView::Text("x".to_owned()))
+        .unwrap();
+    let config = view(&session);
+    let effect = |name: &str| {
+        config
+            .inputs
+            .iter()
+            .find(|i| i.name == name)
+            .map(|i| i.effect.clone())
+    };
+    assert_eq!(effect("resistancePenalty"), Some(InputEffect::Applied));
+    assert_eq!(effect("conditionFullLife"), Some(InputEffect::NoEffect));
+    assert_eq!(effect("somethingNew"), Some(InputEffect::Unmodelled));
+    // The same value again changes nothing; the legacy input is refused.
+    assert_eq!(
+        session
+            .set_config_input("conditionFullLife", &ConfigValueView::Boolean(true))
+            .unwrap(),
+        None
+    );
+    assert_eq!(
+        session
+            .set_config_input("customMods", &ConfigValueView::Text(String::new()))
+            .unwrap_err()
+            .code,
+        "APP_CONFIG"
+    );
+    session
+        .remove_config_input("somethingNew")
+        .unwrap()
+        .unwrap();
+    assert_eq!(view(&session).inputs.len(), 2);
+    assert_eq!(
+        session
+            .remove_config_input("somethingNew")
+            .unwrap_err()
+            .code,
+        "APP_CONFIG"
+    );
+
+    // A custom block: its lines read and resolved; a changed text again.
+    // A line with no digit is a note (ADR-015 Amendment 2); one with a
+    // number that matches nothing is a warning.
+    session
+        .add_custom_block("+15 to maximum Life\n\nA comment\n+7 to nothing known")
+        .unwrap()
+        .unwrap();
+    let block = &view(&session).blocks[0];
+    assert!(block.enabled);
+    let lines: Vec<_> = block
+        .lines
+        .iter()
+        .map(|l| (l.text.as_str(), l.status.clone(), l.typed.as_deref()))
+        .collect();
+    assert_eq!(
+        lines,
+        [
+            ("+15 to maximum Life", LineStatus::Matched, None),
+            ("A comment", LineStatus::Matched, Some("custom-note")),
+            ("+7 to nothing known", LineStatus::Warning, None),
+        ]
+    );
+    session
+        .edit_custom_block(0, Some(false), Some("+15 to maximum Life"))
+        .unwrap()
+        .unwrap();
+    let block = &view(&session).blocks[0];
+    assert!(!block.enabled);
+    assert_eq!(block.lines.len(), 1);
+    assert_eq!(block.lines[0].status, LineStatus::Matched);
+    assert_eq!(
+        session
+            .edit_custom_block(3, Some(true), None)
+            .unwrap_err()
+            .code,
+        "APP_CONFIG"
+    );
+
+    // Each change is one undo step, and the export carries them.
+    session.undo().unwrap();
+    assert!(view(&session).blocks[0].enabled);
+    session.redo().unwrap();
+    let xml = dir.0.join("config.xml");
+    session.export_xml(&xml).unwrap();
+    let text = std::fs::read_to_string(&xml).unwrap();
+    assert!(text.contains("resistancePenalty"), "{text}");
+    assert!(text.contains("+15 to maximum Life"), "{text}");
+    session.remove_custom_block(0).unwrap().unwrap();
+    assert!(view(&session).blocks.is_empty());
+}
+
+#[test]
+fn an_item_card_readable_lines_and_a_variant_pick_should_be_shown() {
+    use loom_serialization::dto::app::v1::{ItemEdit, LineOp, LineStatus};
+    let item = "<Item id=\"9\">\nRarity: UNIQUE\nTest Circle\nPlain Test Ring\n\
+                Variant: Old\nVariant: Current\nSelected Variant: 1\nQuality: 20\n\
+                Sockets: R-G B\nLevelReq: 30\nImplicits: 0\n\
+                {variant:1}{range:0.5}+(10-20) to maximum Life\n\
+                {variant:2}{range:1}+(20-30) to maximum Life\n\
+                {crafted}+12 to Accuracy\nCorrupted\n</Item>\n";
+    let xml = synthetic().replacen("<ItemSet ", &format!("{item}<ItemSet "), 1);
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+
+    let view = session.item(9).unwrap();
+    let card = &view.card;
+    assert_eq!(card.variants, ["Old", "Current"]);
+    assert_eq!(card.selected_variant, Some(1));
+    assert_eq!(card.quality.as_deref(), Some("20"));
+    assert_eq!(card.level_req.as_deref(), Some("30"));
+    assert_eq!(card.sockets, ["RG", "B"]);
+    assert_eq!(card.flags, ["Corrupted"]);
+    let modifier = |v: &loom_serialization::dto::app::v1::ItemView, n: usize| {
+        v.lines
+            .iter()
+            .filter(|l| l.kind == "modifier")
+            .nth(n)
+            .cloned()
+            .unwrap()
+    };
+    // The roll applied, no markup; the variants and marks named.
+    let old = modifier(&view, 0);
+    assert_eq!(old.shown.as_deref(), Some("+15 to maximum Life"));
+    assert_eq!(old.variants, [1]);
+    assert_eq!(old.status, LineStatus::Matched);
+    assert_eq!(modifier(&view, 1).status, LineStatus::Excluded);
+    let crafted = modifier(&view, 2);
+    assert_eq!(crafted.shown.as_deref(), Some("+12 to Accuracy"));
+    assert_eq!(crafted.marks, ["crafted"]);
+
+    // Picking the other variant: one undoable edit, the lines read again.
+    let pick = |variant| ItemEdit {
+        item: 9,
+        ops: vec![LineOp::SelectVariant { variant }],
+        expect: Vec::new(),
+    };
+    session.edit(&pick(2), None).unwrap();
+    let view = session.item(9).unwrap();
+    assert_eq!(view.card.selected_variant, Some(2));
+    assert_eq!(modifier(&view, 0).status, LineStatus::Excluded);
+    assert_eq!(
+        modifier(&view, 1).shown.as_deref(),
+        Some("+30 to maximum Life")
+    );
+    assert_eq!(modifier(&view, 1).status, LineStatus::Matched);
+    assert_eq!(
+        session.edit(&pick(3), None).unwrap_err().code,
+        "APP_EDIT_LINE"
+    );
+    session.undo().unwrap();
+    assert_eq!(session.item(9).unwrap().card.selected_variant, Some(1));
+
+    // An item with no `Selected Variant` line gets one after its variants.
+    let xml = xml.replace("Selected Variant: 1\n", "");
+    session.import_text(&xml, None).unwrap();
+    assert_eq!(session.item(9).unwrap().card.selected_variant, None);
+    session.edit(&pick(1), None).unwrap();
+    let view = session.item(9).unwrap();
+    assert_eq!(view.card.selected_variant, Some(1));
+    assert_eq!(modifier(&view, 1).status, LineStatus::Excluded);
+}
+
+#[test]
+fn the_league_should_flag_legacy_versions_and_be_saved() {
+    use loom_serialization::dto::app::v1::{League, VariantEra};
+    let item = "<Item id=\"9\">\nRarity: UNIQUE\nTest Circle\nPlain Test Ring\n\
+                Variant: Pre 3.7.0\nVariant: Current\nSelected Variant: 1\nImplicits: 0\n\
+                {variant:1}+10 to maximum Life\n{variant:2}+20 to maximum Life\n</Item>\n";
+    let xml = synthetic().replacen("<ItemSet ", &format!("{item}<ItemSet "), 1);
+    let dir = Scratch::new("league");
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+    let view = |s: &Session| loom_app::build_view(&s.state().unwrap().build, String::new(), None);
+
+    // Not chosen reads as a challenge league; the legacy version is named,
+    // with the current one to switch to.
+    assert_eq!(view(&session).league, League::Challenge);
+    let summary = |s: &Session| view(s).items.into_iter().find(|i| i.id == 9).unwrap();
+    assert!(summary(&session).legacy);
+    let card = session.item(9).unwrap().card;
+    assert_eq!(card.variant_eras, [VariantEra::Legacy, VariantEra::Current]);
+    assert_eq!(card.current_variant, Some(2));
+
+    // The league is one undoable change, kept in the saved document.
+    session.set_league(&League::Standard).unwrap().unwrap();
+    assert_eq!(session.set_league(&League::Standard).unwrap(), None);
+    let path = dir.0.join("league.json");
+    session.save_as(&path).unwrap();
+    let mut reopened = Session::new(Store::new());
+    reopened.open(&path).unwrap();
+    assert_eq!(view(&reopened).league, League::Standard);
+    session.undo().unwrap();
+    assert_eq!(view(&session).league, League::Challenge);
+
+    // Switching to the current version clears the flag.
+    session
+        .edit(
+            &loom_serialization::dto::app::v1::ItemEdit {
+                item: 9,
+                ops: vec![loom_serialization::dto::app::v1::LineOp::SelectVariant { variant: 2 }],
+                expect: Vec::new(),
+            },
+            None,
+        )
+        .unwrap();
+    assert!(!summary(&session).legacy);
+    assert_eq!(session.item(9).unwrap().card.current_variant, None);
+}
+
+#[test]
+fn the_weapon_set_should_switch_as_one_undoable_change() {
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&synthetic(), None).unwrap();
+    let view = |s: &Session| loom_app::build_view(&s.state().unwrap().build, String::new(), None);
+    assert!(!view(&session).second_weapon_set);
+    // The first set when nothing is written: no change.
+    assert_eq!(session.use_weapon_set(false).unwrap(), None);
+    session.use_weapon_set(true).unwrap().unwrap();
+    assert!(view(&session).second_weapon_set);
+    assert_eq!(session.use_weapon_set(true).unwrap(), None);
+    session.undo().unwrap();
+    assert!(!view(&session).second_weapon_set);
+}
+
+#[test]
+fn the_card_should_name_pob_affixes_and_the_base_requirements() {
+    use loom_serialization::dto::app::v1::AffixKind;
+    let item = "<Item id=\"9\">\nRarity: RARE\nTest Steady Band\nPlain Test Ring\n\
+                Prefix: {range:0.5}TestAccuracy1\nPrefix: None\nSuffix: None\n\
+                Implicits: 0\n+15 to Accuracy\n</Item>\n";
+    let xml = synthetic().replacen("<ItemSet ", &format!("{item}<ItemSet "), 1);
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+    let card = session.item(9).unwrap().card;
+    let a = &card.affixes;
+    assert_eq!(a.len(), 1);
+    assert_eq!(a[0].kind, AffixKind::Prefix);
+    assert_eq!(a[0].name.as_deref(), Some("Steady"));
+    assert_eq!(a[0].tags, ["Attack"]);
+    // The accuracy line is the item's last line.
+    let view = session.item(9).unwrap();
+    let last = view.lines.iter().rfind(|l| l.kind == "modifier").unwrap();
+    assert_eq!(a[0].lines, [last.index]);
+    // No `LevelReq`: the base's drop level; the base's dexterity.
+    let req = card.requirements.unwrap();
+    assert_eq!((req.level, req.strength, req.dexterity), (Some(5), 0, 10));
 }

@@ -19,6 +19,7 @@
 //! - [`bundle`]: [`BundleData`], the pipeline's data from a validated
 //!   data bundle (P2-6a).
 
+pub mod affixes;
 pub mod base;
 pub mod build;
 pub mod bundle;

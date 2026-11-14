@@ -34,10 +34,12 @@ describe('workflow', () => {
         'Calculation finished.',
       ),
     )
-    // Label, value, and badge are one row (one button).
+    // Label, value, and badge are one row (one button). Exact numbers carry
+    // no chip, only in their name (UX-12).
     const life = row('Life')
     expect(within(life).getByText('70')).toBeTruthy()
-    expect(within(life).getByText('Exact')).toBeTruthy()
+    expect(within(life).queryByText('Exact')).toBeNull()
+    expect(life.getAttribute('aria-label')).toContain('Exact')
     const dps = row('Hit DPS')
     expect(within(dps).getByText('Not yet')).toBeTruthy()
     expect(within(dps).getByText('—')).toBeTruthy()
@@ -46,11 +48,12 @@ describe('workflow', () => {
     ).toBeTruthy()
     expect(within(row('Average hit')).getByText('Cannot settle')).toBeTruthy()
 
-    // The breakdown of life: the item by name, its line from 1.
+    // The breakdown of life: the item by slot and name, with its line.
     await user.click(row('Life'))
     await screen.findByRole('heading', { name: 'Why is Life 70?', level: 1 })
     const sources = screen.getByRole('table')
-    expect(within(sources).getByText('Loom Test Band, line 4')).toBeTruthy()
+    expect(within(sources).getByText('Ring 1 · Loom Test Band')).toBeTruthy()
+    expect(await within(sources).findByText('+15 to maximum Life')).toBeTruthy()
     await user.click(
       screen.getByRole('button', { name: 'Back to the dashboard' }),
     )
@@ -60,6 +63,8 @@ describe('workflow', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Edit Loom Test Band' }),
     )
+    // A line shows as the game prints it; Edit opens its PoB text (UX-07).
+    await user.click(await screen.findByRole('button', { name: 'Edit line 4' }))
     const input = await screen.findByLabelText('Line 4 text')
     await user.clear(input)
     await user.type(input, '+40 to maximum Life')
@@ -75,6 +80,9 @@ describe('workflow', () => {
     expect(
       await screen.findByText('Edit applied. Undo is available.'),
     ).toBeTruthy()
+    // The applied change's effect stays in view (UX-24).
+    expect(within(impact).getByText('The change you applied:')).toBeTruthy()
+    expect(within(impact).getByText('+25')).toBeTruthy()
     await waitFor(() => expect(screen.getByText('Up to date')).toBeTruthy())
     expect(
       api.executed.some((c) => typeof c === 'object' && 'edit-item' in c),

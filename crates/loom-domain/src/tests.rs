@@ -595,6 +595,29 @@ fn ordered_should_keep_opaque_content_between_typed_siblings() {
 }
 
 #[test]
+fn ordered_should_insert_and_remove_typed_entries_around_opaque_content() {
+    let mut list: Ordered<&str> = Ordered::new();
+    list.push("a");
+    list.push_opaque(OpaqueNode::element("x"));
+    list.push("c");
+    list.insert_typed(1, "b");
+    list.insert_typed(9, "d");
+    let shape = |l: &Ordered<&str>| -> Vec<String> {
+        l.entries()
+            .iter()
+            .map(|e| match e {
+                Entry::Typed(t) => (*t).to_owned(),
+                Entry::Opaque(_) => "opaque".to_owned(),
+            })
+            .collect()
+    };
+    assert_eq!(shape(&list), ["a", "opaque", "b", "c", "d"]);
+    assert_eq!(list.remove_typed(2), Some("c"));
+    assert_eq!(list.remove_typed(5), None);
+    assert_eq!(shape(&list), ["a", "opaque", "b", "d"]);
+}
+
+#[test]
 fn build_layout_should_keep_untyped_sections_in_place() {
     let build = sample_build(Game::Poe1, clean_item(1));
     let shape: Vec<String> = build

@@ -45,6 +45,16 @@ pub enum BuildPart {
     Config,
 }
 
+/// The league a build is planned for.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum League {
+    /// A challenge league: items drop as the current game makes them;
+    /// legacy versions of unique items cannot be had.
+    Challenge,
+    /// Standard: items from earlier leagues keep their legacy versions.
+    Standard,
+}
+
 /// A build.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Build {
@@ -52,6 +62,10 @@ pub struct Build {
     game_specific: GameSpecific,
     /// The data bundle the build was made with, if recorded.
     pub data: Option<DataVersion>,
+    /// The league the build is planned for, if chosen: whether legacy
+    /// item versions can be had (a planner's setting; PoB's format has no
+    /// place for it).
+    pub league: Option<League>,
     /// The character.
     pub character: Character,
     /// Passive specs.
@@ -93,6 +107,7 @@ impl Build {
             game,
             game_specific: GameSpecific::empty(game),
             data: None,
+            league: None,
             character: Character::default(),
             passives: Passives::default(),
             skills: Skills::default(),

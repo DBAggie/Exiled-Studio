@@ -190,6 +190,83 @@ fn interpolate(from: i64, to: i64, r: f64) -> i64 {
     rounded as i64
 }
 
+/// The line as the game prints it, for display: each range `(a-b)` of a
+/// line with `{range:r}` replaced by its roll (PoB's `itemLib.applyRange`:
+/// `a + r x (b - a)`, rounded away from zero, here at the ends' own
+/// decimals). `None` when the line shows no roll: no range, no `{range:}`
+/// (PoB would take its user setting), or a `value(min-max)` line. The
+/// item's scalings (catalyst, corrupted range, modifier magnitudes) are
+/// not applied: the engine reads those as reasons ([`line_values`]).
+#[must_use]
+pub fn shown_text(m: &ModifierLine) -> Option<String> {
+    rewrite_ranges(m, false)
+}
+
+/// A modifier line as the game prints it with Alt held: each `(a-b)` is
+/// its roll followed by the range (`+28(24-28) to maximum Life`). `None`
+/// when [`shown_text`] is.
+#[must_use]
+pub fn ranged_text(m: &ModifierLine) -> Option<String> {
+    rewrite_ranges(m, true)
+}
+
+/// Each `(a-b)` of the line replaced by its roll, kept after it when
+/// `keep` is set.
+fn rewrite_ranges(m: &ModifierLine, keep: bool) -> Option<String> {
+    let r = roll(m)?;
+    if !has_range(&m.text) || has_value_then_range(&m.text) {
+        return None;
+    }
+    let mut out = String::with_capacity(m.text.len());
+    let mut rest = m.text.as_str();
+    while let Some(open) = rest.find('(') {
+        out.push_str(rest.get(..open).unwrap_or_default());
+        let inner = rest.get(open + 1..).unwrap_or_default();
+        if let Some((a, b, tail)) = range_at(inner) {
+            out.push_str(&rolled_text(a, b, r)?);
+            if keep {
+                out.push_str(rest.get(open..rest.len() - tail.len()).unwrap_or_default());
+            }
+            rest = tail;
+        } else {
+            out.push('(');
+            rest = inner;
+        }
+    }
+    out.push_str(rest);
+    Some(out)
+}
+
+/// A range's ends `a-b)` at the start of `s`, and the text after it.
+fn range_at(s: &str) -> Option<(&str, &str, &str)> {
+    let after_a = number(s)?;
+    let a = s.get(..s.len() - after_a.len())?;
+    let from_b = after_a.strip_prefix('-')?;
+    let after_b = number(from_b)?;
+    let b = from_b.get(..from_b.len() - after_b.len())?;
+    Some((a, b, after_b.strip_prefix(')')?))
+}
+
+/// `a + r x (b - a)` at the ends' most decimals, rounded away from zero.
+#[expect(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    reason = "a range's ends have a handful of decimals"
+)]
+fn rolled_text(a: &str, b: &str, r: f64) -> Option<String> {
+    let decimals = |n: &str| n.split_once('.').map_or(0, |(_, f)| f.len());
+    let places = decimals(a).max(decimals(b));
+    let (from, to): (f64, f64) = (a.parse().ok()?, b.parse().ok()?);
+    let scale = 10f64.powi(places as i32);
+    let v = (from + r * (to - from)) * scale;
+    let rounded = if v >= 0.0 {
+        (v + 0.5).floor()
+    } else {
+        (v - 0.5).ceil()
+    } / scale;
+    Some(format!("{rounded:.places$}"))
+}
+
 /// The line's `{range:r}` when it is a number in `[0, 1]`.
 fn roll(m: &ModifierLine) -> Option<f64> {
     let r: f64 = m
@@ -439,6 +516,55 @@ mod tests {
         assert_eq!(rolled(3), [Some(20)]);
         // The affix spec's {range:} is not a mod line.
         assert_eq!(got.len(), 4);
+    }
+
+    #[test]
+    fn shown_text_should_print_each_range_as_its_roll() {
+        let text = rare(
+            "Implicits: 0
+{range:0.468}+(10-20) to maximum Life
+{range:1}Adds (12-16) to (24-28) Fire Damage
+{range:0.5}(0.4-0.6)% of Life Regenerated
+{range:0.049}-(7-6) to Y
++(10-20) to Z
+{range:0.5}10(5-15) to W
+{range:0.5}+15 to V",
+        );
+        let item = item(&text, &[]);
+        let shown: Vec<_> = item.body.modifiers().map(|(_, m)| shown_text(m)).collect();
+        assert_eq!(
+            shown,
+            [
+                Some("+15 to maximum Life".to_owned()),
+                Some("Adds 16 to 28 Fire Damage".to_owned()),
+                Some("0.5% of Life Regenerated".to_owned()),
+                Some("-7 to Y".to_owned()),
+                // No `{range:}`, a value before the range, or no range.
+                None,
+                None,
+                None,
+            ]
+        );
+    }
+
+    #[test]
+    fn ranged_text_should_keep_each_range_after_its_roll() {
+        let text = rare(
+            "Implicits: 0
+{range:0.5}+(10-20) to maximum Life
+{range:0.5}Adds (10-22) to (20-36) Fire Damage
++(10-20) to Z",
+        );
+        let item = item(&text, &[]);
+        let ranged: Vec<_> = item.body.modifiers().map(|(_, m)| ranged_text(m)).collect();
+        assert_eq!(
+            ranged,
+            [
+                Some("+15(10-20) to maximum Life".to_owned()),
+                Some("Adds 16(10-22) to 28(20-36) Fire Damage".to_owned()),
+                None,
+            ]
+        );
     }
 
     #[test]

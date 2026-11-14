@@ -29,6 +29,8 @@ export type Screen =
   | 'breakdown'
   | 'items'
   | 'item'
+  | 'skills'
+  | 'config'
   | 'warnings'
   | 'ai'
   | 'about'
@@ -68,6 +70,9 @@ interface UiState {
   error: string | null
   /** A share code to show. */
   shareCode: string | null
+  /** A finished action to confirm (saved, exported), until dismissed or
+   * the next screen. */
+  flash: string | null
 }
 
 const ui = createSlice({
@@ -79,10 +84,15 @@ const ui = createSlice({
     announcement: '',
     error: null,
     shareCode: null,
+    flash: null,
   } as UiState,
   reducers: {
     go(state, action: PayloadAction<Screen>) {
       state.screen = action.payload
+      state.flash = null
+    },
+    flash(state, action: PayloadAction<string | null>) {
+      state.flash = action.payload
     },
     breakdown(state, action: PayloadAction<string>) {
       state.field = action.payload
@@ -190,6 +200,18 @@ export const attempt =
     }
   }
 
+/** A read that changes nothing: no refresh, no error shown; null on
+ * failure (for details a screen can do without). */
+export const query =
+  <T>(call: (api: LoomApi) => Promise<T>): Thunk<T | null> =>
+  async (_dispatch, _getState, api) => {
+    try {
+      return await call(api)
+    } catch {
+      return null
+    }
+  }
+
 export const run = (command: Command): Thunk<Outcome | null> =>
   attempt((api) => api.execute(command))
 
@@ -222,6 +244,22 @@ export const openBuild =
     }
   }
 
+/** Saves the build: to its file, or asks where when it has none. */
+export const saveBuild = (): Thunk<Outcome | null> => (dispatch, getState) => {
+  const path = getState().session.snapshot?.path
+  return dispatch(
+    attempt((api) => (path == null ? api.saveAs() : api.execute('save'))),
+  )
+}
+
+/** Closes the build and goes to the start screen. */
+export const closeBuild = (): Thunk => async (dispatch) => {
+  const outcome = await dispatch(run('close'))
+  if (outcome !== null) {
+    dispatch(actions.go('start'))
+  }
+}
+
 export const setPermissions =
   (permissions: McpPermissions): Thunk =>
   async (dispatch, _getState, api) => {
@@ -239,6 +277,9 @@ export async function startSync(store: Store, api: LoomApi) {
       store.dispatch(actions.announce(t('calc.announceRunning')))
     }
     void store.dispatch(refresh())
+    if (typeof kind === 'object' && 'saved' in kind) {
+      store.dispatch(actions.flash(t('flash.saved', { path: kind.saved.path })))
+    }
     if (
       kind === 'mcp-changed' ||
       (typeof kind === 'object' && 'saved' in kind)

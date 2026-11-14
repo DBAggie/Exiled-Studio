@@ -527,7 +527,7 @@ def with_skills(game, files):
     return files
 
 
-def write(name, game, files):
+def write(name, game, files, data_schema=2):
     out = HERE / name
     if out.exists():
         shutil.rmtree(out)
@@ -540,7 +540,7 @@ def write(name, game, files):
         entries.append({"path": path, "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
     manifest = {
         "format": 2,
-        "data_schema": 2,
+        "data_schema": data_schema,
         "game": game,
         "source": {
             "steam_build": None,
@@ -579,6 +579,22 @@ poe1["poe1/pantheons.json"] = [
         "souls": [{"name": "Soul of Minor Test", "stats": [["test_maximum_life", 4]]}],
     },
 ]
-write("bundle-poe1", "poe1", poe1)
+# B-2 (data schema 4): affix names and levels, a base's drop level and
+# attribute requirements, tag display names.
+for m in poe1["data/mods.json"]:
+    m.update(
+        {
+            "TestArmour1": {"name": "of Test Plating", "level": 5, "implicit_tags": ["defences"]},
+            "TestAccuracy1": {"name": "Steady", "level": 12, "implicit_tags": ["attack"]},
+        }.get(m["id"], {})
+    )
+for b in poe1["data/base_items.json"]:
+    if b["id"] == "Test/Items/Ring1":
+        b.update({"drop_level": 5, "requirements": {"strength": 0, "dexterity": 10, "intelligence": 0}})
+poe1["data/tags.json"] = [
+    {"id": "attack", "display": "Attack"},
+    {"id": "defences", "display": "Defences"},
+]
+write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))
 print("ok")

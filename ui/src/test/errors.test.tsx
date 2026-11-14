@@ -40,8 +40,48 @@ describe('error states', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Import build' }))
     const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('not a valid Path of Building build')
+    expect(alert.textContent).toContain('This is not a Path of Building build')
     expect(alert.textContent).toContain('IMPORT_XML')
+  })
+
+  it('says what to do in words, the code once and apart (UX-05)', async () => {
+    const { user } = await renderApp({
+      importFails: 'IMPORT_SHARE_CODE_BASE64',
+    })
+    await user.type(
+      screen.getByLabelText('Paste a share code or build XML'),
+      'not a code',
+    )
+    await user.click(screen.getByRole('button', { name: 'Import build' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('This is not a share code.')
+    expect(alert.textContent).toContain('then Generate')
+    expect(alert.textContent?.split('IMPORT_SHARE_CODE_BASE64')).toHaveLength(2)
+    expect(screen.getByText('Code IMPORT_SHARE_CODE_BASE64')).toBeTruthy()
+  })
+
+  it('says links cannot be opened offline (UX-18)', async () => {
+    const { user, api } = await renderApp()
+    await user.type(
+      screen.getByLabelText('Paste a share code or build XML'),
+      'https://pobb.in/abc',
+    )
+    await user.click(screen.getByRole('button', { name: 'Import build' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('Links can’t be opened')
+    expect(alert.textContent).not.toContain('UI_LINK')
+    expect(api.executed).toEqual([])
+  })
+
+  it('words a code it does not know by its layer, never the bare code', async () => {
+    const { user } = await renderApp({ importFails: 'BUNDLE_HASH_MISMATCH' })
+    await user.type(
+      screen.getByLabelText('Paste a share code or build XML'),
+      'abc',
+    )
+    await user.click(screen.getByRole('button', { name: 'Import build' }))
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('The game data is damaged')
   })
 
   it('shows a failed calculation in the header, never as numbers', async () => {
@@ -52,7 +92,7 @@ describe('error states', () => {
     )
     expect(
       await screen.findByText(
-        /Calculation failed: This build was made with another data version/,
+        /Calculation failed: This build was saved with another version of the game data/,
       ),
     ).toBeTruthy()
     expect(screen.getByText('No calculation yet.')).toBeTruthy()
@@ -69,6 +109,8 @@ describe('error states', () => {
     await user.click(
       await screen.findByRole('button', { name: 'Edit Loom Test Band' }),
     )
+    // A line shows as the game prints it; Edit opens its PoB text (UX-07).
+    await user.click(await screen.findByRole('button', { name: 'Edit line 4' }))
     const input = await screen.findByLabelText('Line 4 text')
     await user.clear(input)
     await user.type(input, '+20 to maximum Life')

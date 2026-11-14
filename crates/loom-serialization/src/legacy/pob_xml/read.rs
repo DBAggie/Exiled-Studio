@@ -548,7 +548,7 @@ fn custom_modifier_block(n: Node<'_, '_>) -> Option<CustomModifierBlock> {
 /// `HeadlessWrapper.lua` 75: `^` and a digit, then `^x` and six hex
 /// digits) and trimmed of Lua's `%s`. An empty line is left out: it is no
 /// modifier.
-pub(super) fn custom_modifier_lines(text: &str) -> impl Iterator<Item = String> + '_ {
+pub fn custom_modifier_lines(text: &str) -> impl Iterator<Item = String> + '_ {
     text.split('\n').filter_map(|line| {
         let line = strip_escapes(line);
         let line = line.trim_matches(is_lua_space);

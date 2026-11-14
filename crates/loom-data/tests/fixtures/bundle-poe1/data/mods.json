@@ -21,6 +21,11 @@
   "domain": 1,
   "generation": 2,
   "id": "TestArmour1",
+  "implicit_tags": [
+   "defences"
+  ],
+  "level": 5,
+  "name": "of Test Plating",
   "spawn": [
    {
     "tag": "armour",
@@ -39,6 +44,11 @@
   "domain": 1,
   "generation": 1,
   "id": "TestAccuracy1",
+  "implicit_tags": [
+   "attack"
+  ],
+  "level": 12,
+  "name": "Steady",
   "spawn": [
    {
     "tag": "default",

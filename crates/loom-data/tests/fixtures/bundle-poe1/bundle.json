@@ -1,5 +1,5 @@
 {
- "data_schema": 2,
+ "data_schema": 4,
  "files": [
   {
    "path": "data/active_skills.json",
@@ -18,8 +18,8 @@
   },
   {
    "path": "data/base_items.json",
-   "sha256": "4be1ac0f811443fb0af8bcad714d5292b03311a82e56ac0ad2b69f1ebc25f38d",
-   "size": 973
+   "sha256": "310d5f3a4b021471c482e3457570e9e96794f542b4eb22921129bc1bebd3980e",
+   "size": 1076
   },
   {
    "path": "data/characters.json",
@@ -88,8 +88,8 @@
   },
   {
    "path": "data/mods.json",
-   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
-   "size": 663
+   "sha256": "0dcc094cb334c7f94ebeca7ff8a7de550a4987fd7807c40e1f37ba36475b10ee",
+   "size": 819
   },
   {
    "path": "data/monster_levels.json",
@@ -135,6 +135,11 @@
    "path": "data/stats.json",
    "sha256": "e5a16b162c312e85bff67524f411fb780b35623c907fa150cb16cc291f5d624a",
    "size": 782
+  },
+  {
+   "path": "data/tags.json",
+   "sha256": "aa10362b6244961bbd1435af0a9a6eab5308c1d0cffe00b0c39f54f9c4706b61",
+   "size": 101
   },
   {
    "path": "data/weapon_types.json",

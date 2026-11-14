@@ -95,6 +95,14 @@ pub const CLIENT_TEXTS: &str = "data/client_texts.json";
 pub const LOOKUPS: &str = "data/lookups.json";
 /// Item rules.
 pub const ITEM_RULES: &str = "data/item_rules.json";
+/// Tag display names (data schema 4; optional, listed when present).
+pub const TAGS: &str = "data/tags.json";
+
+/// The first data schema whose mods carry their affix name and level, whose
+/// base items carry their drop level and attribute requirements, and that
+/// has [`TAGS`] (B-2's tooltip). Readers gate on the manifest's
+/// `data_schema`, not on empty fields: an empty name is a mod without one.
+pub const AFFIX_SCHEMA: u32 = 4;
 /// The folder of stat-description files.
 pub const STAT_DESCRIPTIONS_DIR: &str = "stat_descriptions/";
 
@@ -237,6 +245,38 @@ pub struct ModEntry {
     /// (P3-8n); empty in an older bundle.
     #[serde(default)]
     pub implicit_tags: Vec<String>,
+    /// The affix name the game shows (`Urchin's`, `of the Lost`); empty
+    /// when it has none. Carried since data schema 4 ([`AFFIX_SCHEMA`]).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub name: String,
+    /// The mod's level (the lowest item level it rolls on). Since data
+    /// schema 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<i64>,
+}
+
+/// A base item's attribute requirements (the game's
+/// `ComponentAttributeRequirements`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AttributeRequirements {
+    /// Strength.
+    pub strength: i64,
+    /// Dexterity.
+    pub dexterity: i64,
+    /// Intelligence.
+    pub intelligence: i64,
+}
+
+/// A tag's display name (the game's `Tags.DisplayString`: `Life`,
+/// `Defences`), as the tooltip's modifier headers print it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TagName {
+    /// Tag ID.
+    pub id: String,
+    /// Display name.
+    pub display: String,
 }
 
 /// A base item.
@@ -258,6 +298,13 @@ pub struct BaseItem {
     /// Implicit mods, by ID.
     #[serde(default)]
     pub implicits: Vec<String>,
+    /// The level it drops from. Since data schema 4 ([`AFFIX_SCHEMA`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drop_level: Option<i64>,
+    /// Its attribute requirements, when the game lists any. Since data
+    /// schema 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub requirements: Option<AttributeRequirements>,
 }
 
 /// A client text the item rules name.
@@ -301,6 +348,9 @@ pub struct Bundle {
     pub lookups: Vec<LookupTable>,
     /// Item rules.
     pub item_rules: ItemRules,
+    /// Tag display names, sorted by ID (data schema 4; empty without
+    /// [`TAGS`]).
+    pub tags: Vec<TagName>,
     /// Stat-description files.
     pub stat_descriptions: StatDescriptions,
     /// The Path of Exile only section, when present.
@@ -481,6 +531,11 @@ impl Bundle {
             client_texts: json(source, CLIENT_TEXTS)?,
             lookups: json(source, LOOKUPS)?,
             item_rules: json(source, ITEM_RULES)?,
+            tags: if manifest.files.iter().any(|f| f.path == TAGS) {
+                json(source, TAGS)?
+            } else {
+                Vec::new()
+            },
             stat_descriptions,
             poe1,
             skills,

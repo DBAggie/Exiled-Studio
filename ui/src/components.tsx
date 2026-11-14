@@ -99,13 +99,20 @@ export function ErrorAlert() {
     <div role="alert" className="panel alert">
       <p className="error">
         <strong>{t('error.title')}: </strong>
-        {errorText(error)} <code>{error}</code>
+        {errorText(error)}
       </p>
+      <ErrorCode code={error} />
       <button type="button" onClick={() => dispatch(actions.error(null))}>
         {t('error.dismiss')}
       </button>
     </div>
   )
+}
+
+/** An error or warning code, small and apart from the words: for
+ * support and bug reports, not for reading (UX-05). */
+export function ErrorCode({ code }: { code: string }) {
+  return <p className="error-code">{t('error.code', { code })}</p>
 }
 
 /** Polite announcements (the calculation's progress). */
@@ -130,6 +137,7 @@ type IconName =
   | 'close'
   | 'copy'
   | 'folder'
+  | 'plus'
 
 const PATHS: Record<IconName, ReactNode> = {
   logo: (
@@ -158,6 +166,7 @@ const PATHS: Record<IconName, ReactNode> = {
     </>
   ),
   close: <path d="M6 6l12 12M18 6L6 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   copy: (
     <>
       <rect x="9" y="9" width="11" height="11" rx="2" />
@@ -194,6 +203,47 @@ export function Brand() {
     <span className="brand">
       <Icon name="logo" size={22} />
       {t('app.name')}
+    </span>
+  )
+}
+
+/** An item's sockets as its `Sockets` line gives them: link groups of
+ * colour letters (`['RRG', 'B']`), drawn as circles joined by link bars.
+ * `filled` marks the sockets a gem sits in. Shapes and token colours, no
+ * game art (ADR-000). */
+export function Sockets({
+  groups,
+  filled,
+}: {
+  groups: string[]
+  filled?: ReadonlySet<number>
+}) {
+  if (groups.length === 0) return null
+  const starts = groups.map((_, i) =>
+    groups.slice(0, i).reduce((n, g) => n + g.length, 0),
+  )
+  const total = groups.reduce((n, g) => n + g.length, 0)
+  return (
+    <span
+      className="sockets"
+      role="img"
+      aria-label={t('sockets.label', {
+        n: total,
+        links: groups.map((g) => g.length).join(' + '),
+      })}
+    >
+      {groups.map((g, gi) => (
+        <span className="socket-link" key={gi}>
+          {[...g].map((c, ci) => (
+            <span
+              key={ci}
+              className={`socket socket-${c.toLowerCase()}${
+                filled?.has((starts[gi] ?? 0) + ci) === true ? ' filled' : ''
+              }`}
+            />
+          ))}
+        </span>
+      ))}
     </span>
   )
 }

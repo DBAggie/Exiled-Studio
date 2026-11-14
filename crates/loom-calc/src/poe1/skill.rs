@@ -315,6 +315,76 @@ fn supports(
     support.allowed_types.is_empty() || type_expression(&support.allowed_types, types, minion)
 }
 
+/// For each gem of a socket group, in order: the indexes (in the group) of
+/// the active gems it supports, as [`main_skill`] matches supports to its
+/// active skill (each active with the types the enabled supports before
+/// it add). An active gem, a gem the data does not know, and a support
+/// that fits no active gem have none. For showing which support sits
+/// under which skill; the calculation reads only its main skill.
+#[must_use]
+pub fn group_links(group: &SocketGroup, data: &dyn CalcData) -> Vec<Vec<usize>> {
+    let gems: Vec<_> = group.gems.typed().collect();
+    let first = |g: &Gem| gem_effects(g, data).and_then(|e| e.first().copied());
+    let mut out = vec![Vec::new(); gems.len()];
+    for (a, gem) in gems.iter().enumerate() {
+        let Some(effect) = first(gem).filter(|e| !e.support) else {
+            continue;
+        };
+        let active = effect
+            .active_skill
+            .as_deref()
+            .and_then(|s| data.active_skill(s));
+        let minion: &[String] = active.map_or(&[], |s| s.minion_types.as_slice());
+        let mut types: BTreeSet<String> = active
+            .map(|s| s.types.iter().cloned().collect())
+            .unwrap_or_default();
+        for (s, support) in gems.iter().enumerate() {
+            let Some(se) = first(support).filter(|e| e.support) else {
+                continue;
+            };
+            if supports(se, effect, gem.gem.is_some(), &types, minion) {
+                if support.enabled {
+                    types.extend(se.added_types.iter().cloned());
+                }
+                if let Some(list) = out.get_mut(s) {
+                    list.push(a);
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Whether `support` (a support's granted effect) would support an active
+/// gem of `group`, each active with the types the group's enabled supports
+/// add: for a gem picker that offers the supports that fit the group.
+#[must_use]
+pub fn fits_group(support: &GrantedEffect, group: &SocketGroup, data: &dyn CalcData) -> bool {
+    let gems: Vec<_> = group.gems.typed().collect();
+    let first = |g: &Gem| gem_effects(g, data).and_then(|e| e.first().copied());
+    gems.iter().any(|gem| {
+        let Some(effect) = first(gem).filter(|e| !e.support) else {
+            return false;
+        };
+        let active = effect
+            .active_skill
+            .as_deref()
+            .and_then(|s| data.active_skill(s));
+        let minion: &[String] = active.map_or(&[], |s| s.minion_types.as_slice());
+        let mut types: BTreeSet<String> = active
+            .map(|s| s.types.iter().cloned().collect())
+            .unwrap_or_default();
+        for other in &gems {
+            if let Some(se) = first(other).filter(|e| e.support)
+                && other.enabled
+                && supports(se, effect, gem.gem.is_some(), &types, minion)
+            {
+                types.extend(se.added_types.iter().cloned());
+            }
+        }
+        supports(support, effect, true, &types, minion)
+    })
+}
 /// The most optional effects [`choose`] tries every combination of.
 const MAX_OPTIONAL: usize = 8;
 

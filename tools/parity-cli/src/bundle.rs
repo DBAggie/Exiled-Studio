@@ -35,8 +35,8 @@ use loom_data::bundle::poe1::{self as bundle_poe1, Grafts as BundleGrafts};
 use loom_data::bundle::properties as bundle_properties;
 use loom_data::bundle::skills as bundle_skills;
 use loom_data::bundle::{
-    self, BaseItem, ClientText, FileEntry, LookupTable, Manifest, ModEntry, ModStat, Provenance,
-    SpawnWeight, Stat,
+    self, AttributeRequirements, BaseItem, ClientText, FileEntry, LookupTable, Manifest, ModEntry,
+    ModStat, Provenance, SpawnWeight, Stat, TagName,
 };
 use loom_data::stat_desc::{Lookup, LookupHandler, StatDescManifest};
 use loom_parser::import::ItemRules;
@@ -245,6 +245,7 @@ fn mods(
         col("IsEssenceOnlyModifier")?,
     );
     let implicit = column(&t, &["ImplicitTagsKeys", "ImplicitTags"])?;
+    let (name, level) = (col("Name")?, col("Level")?);
     let mut slots = Vec::new();
     for n in 1..=8 {
         slots.push(StatSlot::find(&t, n)?);
@@ -300,6 +301,8 @@ fn mods(
                 .into_iter()
                 .filter_map(|i| at(&tags, Some(i), counts))
                 .collect(),
+            name: Table::text(r, name).unwrap_or("").trim().to_owned(),
+            level: Table::int(r, level),
         });
     }
     let names: BTreeSet<&str> = mod_types.iter().map(String::as_str).collect();
@@ -328,10 +331,12 @@ fn base_items(
         column(&t, &["TagsKeys", "Tags"])?,
         column(&t, &["Implicit_ModsKeys", "Implicit_Mods"])?,
     );
+    let drop_level = col("DropLevel")?;
+    let requirements = attribute_requirements(read)?;
     let mut item_tags = ItemTags::default();
     let (mut unknown, mut nameless) = (0, 0);
     let mut out = Vec::new();
-    for r in &t.rows {
+    for (row, r) in t.rows.iter().enumerate() {
         let (Some(i), Some(n)) = (Table::text(r, id), Table::text(r, name)) else {
             continue;
         };
@@ -371,9 +376,65 @@ fn base_items(
                     found
                 })
                 .collect(),
+            drop_level: Table::int(r, drop_level),
+            requirements: requirements.get(&row).copied(),
         });
     }
     Ok((out, unknown, nameless))
+}
+
+/// Base item rows (by index) to their attribute requirements, from
+/// `ComponentAttributeRequirements` (a PoE1 extraction root; empty when the
+/// extract has no such table). Rows with no requirement are left out.
+fn attribute_requirements(
+    read: Read<'_>,
+) -> Result<BTreeMap<usize, AttributeRequirements>, String> {
+    let mut out = BTreeMap::new();
+    let Some(t) = Table::read(read, "ComponentAttributeRequirements")? else {
+        return Ok(out);
+    };
+    let base = column(&t, &["BaseItemTypesKey", "BaseItemTypes"])?;
+    let (s, d, i) = (
+        t.column("ReqStr")?,
+        t.column("ReqDex")?,
+        t.column("ReqInt")?,
+    );
+    for r in &t.rows {
+        let Some(row) = Table::int(r, base).and_then(|n| usize::try_from(n).ok()) else {
+            continue;
+        };
+        let req = AttributeRequirements {
+            strength: Table::int(r, s).unwrap_or(0),
+            dexterity: Table::int(r, d).unwrap_or(0),
+            intelligence: Table::int(r, i).unwrap_or(0),
+        };
+        if req != AttributeRequirements::default() {
+            out.insert(row, req);
+        }
+    }
+    Ok(out)
+}
+
+/// Each tag's display name (`Tags.DisplayString`), sorted by ID; tags with
+/// none left out.
+fn tag_names(read: Read<'_>) -> Result<Vec<TagName>, String> {
+    let t = Table::require(read, "Tags")?;
+    let (id, display) = (t.column("Id")?, t.column("DisplayString")?);
+    let mut out: Vec<TagName> = t
+        .rows
+        .iter()
+        .filter_map(|r| {
+            let id = Table::text(r, id)?;
+            let display = Table::text(r, display)?.trim();
+            (!id.is_empty() && !display.is_empty()).then(|| TagName {
+                id: id.to_owned(),
+                display: display.to_owned(),
+            })
+        })
+        .collect();
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    out.dedup_by(|a, b| a.id == b.id);
+    Ok(out)
 }
 
 /// The `ClientStrings` rows the rules name, sorted by ID.
@@ -553,6 +614,14 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         bundle::ITEM_RULES,
         to_json(&rules)?,
         None,
+    );
+    let tags = tag_names(read)?;
+    put(
+        &mut files,
+        &mut rows,
+        bundle::TAGS,
+        to_json(&tags)?,
+        Some(tags.len()),
     );
 
     let sk = &skill_tables;
@@ -757,8 +826,10 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         .collect();
     let manifest = Manifest {
         format: bundle::CALC_FORMAT,
-        // 3 since P3-8n: mods carry their implicit tags.
-        data_schema: 3,
+        // 3 since P3-8n: mods carry their implicit tags. 4 since B-2: mods
+        // their affix name and level, bases their drop level and attribute
+        // requirements, and `data/tags.json` (`bundle::AFFIX_SCHEMA`).
+        data_schema: bundle::AFFIX_SCHEMA,
         game: game.clone(),
         source: provenance(&raw),
         files: entries,
@@ -803,10 +874,11 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
 /// The tables `convert` reads for PoE1 only (the `poe1/` section and the
 /// essence classes), for gate 3d.
 #[cfg(test)]
-const POE1_ONLY_TABLES: [&str; 4] = [
+const POE1_ONLY_TABLES: [&str; 5] = [
     "AlternateQualityTypes",
     "BrequelGrafts",
     "BrequelGraftGrantedSkillLevels",
+    "ComponentAttributeRequirements",
     "Essences",
 ];
 
@@ -888,6 +960,74 @@ mod tests {
         let row = serde_json::json!([4, [5, 8]]);
         let slot = StatSlot::find(&t, 1).unwrap();
         assert_eq!(slot.read(row.as_array().unwrap()), (Some(4), Some((5, 8))));
+    }
+
+    /// A reader of the given `tables/<name>.json` texts.
+    fn reader(tables: &[(&str, &str)]) -> impl Fn(&str) -> Result<Vec<u8>, String> {
+        let tables: Vec<(String, String)> = tables
+            .iter()
+            .map(|(n, j)| (format!("tables/{n}.json"), (*j).to_owned()))
+            .collect();
+        move |path: &str| {
+            tables
+                .iter()
+                .find(|(p, _)| p == path)
+                .map(|(_, j)| j.clone().into_bytes())
+                .ok_or_else(|| format!("{path}: missing"))
+        }
+    }
+
+    #[test]
+    fn attribute_requirements_should_map_base_rows_and_skip_none() {
+        let read = reader(&[(
+            "ComponentAttributeRequirements",
+            r#"{"table": "ComponentAttributeRequirements", "columns": [
+                {"name": "BaseItemTypesKey", "references": "BaseItemTypes"},
+                {"name": "ReqStr", "references": null},
+                {"name": "ReqDex", "references": null},
+                {"name": "ReqInt", "references": null}],
+              "rows": [[4, 85, 62, 0], [5, 0, 0, 0], [null, 1, 1, 1]]}"#,
+        )]);
+        let req = attribute_requirements(&read).unwrap();
+        assert_eq!(
+            req.into_iter().collect::<Vec<_>>(),
+            [(
+                4,
+                AttributeRequirements {
+                    strength: 85,
+                    dexterity: 62,
+                    intelligence: 0
+                }
+            )]
+        );
+        // An extract without the table (PoE2 until checked): none.
+        assert!(attribute_requirements(&reader(&[])).unwrap().is_empty());
+    }
+
+    #[test]
+    fn tag_names_should_keep_tags_with_a_display_string_sorted() {
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null}],
+              "rows": [["life", 1, "Life"], ["default", 2, ""],
+                       ["defences", 3, "Defences "], ["life", 4, "Again"]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [
+                TagName {
+                    id: "defences".to_owned(),
+                    display: "Defences".to_owned()
+                },
+                TagName {
+                    id: "life".to_owned(),
+                    display: "Life".to_owned()
+                },
+            ]
+        );
     }
 
     #[test]

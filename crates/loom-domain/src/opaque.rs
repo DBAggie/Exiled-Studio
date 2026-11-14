@@ -129,6 +129,36 @@ impl<T> Ordered<T> {
         })
     }
 
+    /// The position in `entries` of the `n`-th typed entry.
+    fn typed_position(&self, n: usize) -> Option<usize> {
+        self.entries
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| matches!(e, Entry::Typed(_)))
+            .nth(n)
+            .map(|(i, _)| i)
+    }
+
+    /// Inserts a typed entry before the `n`-th typed entry, or after the
+    /// last entry when there are `n` or fewer; opaque content keeps its
+    /// place.
+    pub fn insert_typed(&mut self, n: usize, value: T) {
+        match self.typed_position(n) {
+            Some(i) => self.entries.insert(i, Entry::Typed(value)),
+            None => self.entries.push(Entry::Typed(value)),
+        }
+    }
+
+    /// Removes and returns the `n`-th typed entry; `None` when there is
+    /// none. Opaque content keeps its place.
+    pub fn remove_typed(&mut self, n: usize) -> Option<T> {
+        let i = self.typed_position(n)?;
+        match self.entries.remove(i) {
+            Entry::Typed(t) => Some(t),
+            Entry::Opaque(_) => None,
+        }
+    }
+
     /// The opaque entries, in order.
     pub fn opaque(&self) -> impl Iterator<Item = &OpaqueNode> {
         self.entries.iter().filter_map(|e| match e {

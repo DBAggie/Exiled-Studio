@@ -46,6 +46,15 @@ dto! {
         pub build: Build,
     }
 
+    /// The league a build is planned for.
+    #[serde(rename_all = "kebab-case")]
+    pub enum League {
+        /// A challenge league: legacy item versions cannot be had.
+        Challenge,
+        /// Standard: legacy item versions can be had.
+        Standard,
+    }
+
     /// A game.
     #[serde(rename_all = "kebab-case")]
     pub enum Game {
@@ -87,6 +96,10 @@ dto! {
         /// The data bundle the build was made with, if recorded.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub data: Option<DataVersion>,
+        /// The league the build is planned for, if chosen (additive,
+        /// accepted 2026-11-14).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub league: Option<League>,
         /// The character.
         pub character: Character,
         /// Passive specs.

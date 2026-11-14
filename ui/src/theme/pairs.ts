@@ -81,4 +81,31 @@ export const PAIRS: Pair[] = [
     min: NON_TEXT,
     use: 'selected tab and import card border',
   },
+  // The game-style tooltip's text on its panel.
+  ...[
+    '--c-tt-label',
+    '--c-tt-value',
+    '--c-tt-augmented',
+    '--c-tt-mod',
+    '--c-tt-crafted',
+    '--c-tt-enchant',
+    '--c-tt-fractured',
+    '--c-tt-corrupted',
+    '--c-rarity-normal',
+    '--c-rarity-magic',
+    '--c-rarity-rare',
+    '--c-rarity-unique',
+  ].map((fg) => ({
+    fg,
+    bg: '--c-tt-bg',
+    min: TEXT,
+    use: 'item tooltip text',
+  })),
+  // A gem's colour mark sits on a socket group card (a panel).
+  ...['red', 'green', 'blue', 'white'].map((c) => ({
+    fg: `--c-gem-${c}`,
+    bg: '--c-panel',
+    min: NON_TEXT,
+    use: 'gem colour mark',
+  })),
 ]

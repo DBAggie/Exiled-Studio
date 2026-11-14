@@ -34,7 +34,7 @@ mod value;
 )]
 mod tests;
 
-pub use build::{Build, BuildPart, Character};
+pub use build::{Build, BuildPart, Character, League};
 pub use config::{
     Config, ConfigInput, ConfigInputKind, ConfigLayout, ConfigSet, ConfigValue,
     CustomModifierBlock, CustomModifierLine,
