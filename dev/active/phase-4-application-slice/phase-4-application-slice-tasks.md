@@ -19,4 +19,4 @@ One PR (maintainer request 2026-11-13). Tick a task in the commit that does it.
 - [x] Report `docs/phase-4/phase-4-report.md`; handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README
 - [ ] CI `e2e` passes on Windows and Linux (or the maintainer's checklist recorded; gate 1b)
 - [ ] Maintainer: `axe-core` license exception
-- [ ] Open PR
+- [x] Open PR: #105 (base `dev`)
