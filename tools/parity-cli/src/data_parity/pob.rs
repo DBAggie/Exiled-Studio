@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 5;
+pub const FORMAT: u32 = 6;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -34,6 +34,10 @@ pub struct Export {
     pub gems: BTreeMap<String, Gem>,
     /// `data.itemBases` with weapon or armour properties, by name.
     pub bases: BTreeMap<String, Base>,
+    /// Every `data.itemBases` entry's requirements, by name (format 6).
+    pub base_requirements: BTreeMap<String, BaseRequirements>,
+    /// The mods of the keyed `data.itemMods` files, by mod ID (format 6).
+    pub mods: BTreeMap<String, ItemMod>,
     /// `data.monster*Table`, by table name; entry `i` is level `i + 1`.
     pub monster_tables: BTreeMap<String, Vec<f64>>,
     /// `data.gameConstants`.
@@ -356,6 +360,57 @@ pub struct Base {
     /// `armour` (PoB's field names).
     #[serde(default)]
     pub armour: Option<BTreeMap<String, f64>>,
+}
+
+/// An item base's `req` (format 6): the level PoB's exporter derived
+/// (`v2.67.2:src/Export/Scripts/bases.lua:276-293`) and the attributes it
+/// copied when not 0 (`:294-305`). Absent fields were not written.
+#[derive(Debug, Deserialize)]
+#[expect(dead_code, reason = "PoB's item type names are not game data")]
+#[serde(deny_unknown_fields)]
+pub struct BaseRequirements {
+    /// PoB's item type.
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// Whether the base is a flask (the exporter's other level rule).
+    pub flask: bool,
+    /// The required level.
+    #[serde(default)]
+    pub level: Option<f64>,
+    /// Strength.
+    #[serde(default)]
+    pub str: Option<f64>,
+    /// Dexterity.
+    #[serde(default)]
+    pub dex: Option<f64>,
+    /// Intelligence.
+    #[serde(default)]
+    pub int: Option<f64>,
+}
+
+/// One mod of the keyed `data.itemMods` files (format 6), as PoB's
+/// exporter wrote it (`v2.67.2:src/Export/Scripts/mods.lua:83-114`).
+#[derive(Debug, Deserialize)]
+#[expect(
+    dead_code,
+    reason = "the kind is not compared (data_parity::NOT_COMPARED)"
+)]
+#[serde(deny_unknown_fields)]
+pub struct ItemMod {
+    /// `affix` (the game's `Mods.Name`; `""` when it has none).
+    pub affix: String,
+    /// `level` (the game's `Mods.Level`).
+    #[serde(default)]
+    pub level: Option<f64>,
+    /// `type` (`Prefix`, `Suffix`, `Corrupted`, ...), when written.
+    #[serde(default, rename = "type")]
+    pub kind: Option<String>,
+    /// The `data.itemMods` files holding the ID, in the export's order.
+    #[serde(deserialize_with = "list")]
+    pub tables: Vec<String>,
+    /// Two of those files disagree on the affix or level.
+    #[serde(default)]
+    pub conflict: bool,
 }
 
 /// The tree file.

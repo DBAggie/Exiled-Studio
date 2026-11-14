@@ -88,7 +88,7 @@ pub struct Transform {
 }
 
 /// Every conversion the comparison makes.
-pub const TRANSFORMS: [Transform; 17] = [
+pub const TRANSFORMS: [Transform; 20] = [
     Transform {
         table: "*",
         fields: "*",
@@ -172,6 +172,24 @@ pub const TRANSFORMS: [Transform; 17] = [
         fields: "movement_penalty",
         transform: "negated movement speed; absent when 0",
         source: "v2.67.2:src/Export/Scripts/bases.lua:237-238",
+    },
+    Transform {
+        table: "base_requirements",
+        fields: "*",
+        transform: "matched by name as bases (every base, not only weapons and armour); flask: the bundle's item class ends in Flask",
+        source: "v2.67.2:src/Export/Scripts/bases.lua:116-117, 283, 342",
+    },
+    Transform {
+        table: "base_requirements",
+        fields: "level, str, dex, int",
+        transform: "level: the drop level when above 4 (weapon or armour) or above 2 (flask), else 1, raised to floor(implicit level * 0.8), absent when 1; attributes absent when 0",
+        source: "v2.67.2:src/Export/Scripts/bases.lua:276-305",
+    },
+    Transform {
+        table: "mod_affixes",
+        fields: "affix, level",
+        transform: "matched by mod ID; affix is the game's Mods.Name, \"\" when none; level is Mods.Level",
+        source: "v2.67.2:src/Export/Scripts/mods.lua:83, 101, 114; v2.67.2:src/Modules/Data.lua:646-681",
     },
     Transform {
         table: "game_constants",
@@ -273,7 +291,7 @@ impl Comparison {
     }
 
     /// A PoB row the bundle does not have.
-    fn pob_only(&mut self, table: &'static str, key: &str) {
+    pub(super) fn pob_only(&mut self, table: &'static str, key: &str) {
         let counts = self.table(table);
         counts.compared += 1;
         counts.differences += 1;
@@ -371,10 +389,13 @@ pub fn compare(
     else {
         return Err("the bundle has no calc tables (format 2 is needed)".to_owned());
     };
+    super::affixes::check_schema(bundle)?;
     let mut out = Comparison::default();
     compare_skills(&mut out, skills, export);
     compare_gems(&mut out, skills, export);
     compare_bases(&mut out, bundle, properties, export);
+    super::affixes::compare_base_requirements(&mut out, bundle, properties, export);
+    super::affixes::compare_mod_affixes(&mut out, bundle, export);
     compare_characters(&mut out, passives, export);
     compare_constants(&mut out, passives, properties, export);
     compare_monster_levels(&mut out, properties, export);
@@ -761,7 +782,7 @@ fn compare_gems(out: &mut Comparison, skills: &SkillTables, export: &Export) {
 
 /// PoB's display name of a base: `ö` as `o`, trimmed
 /// (`v2.67.2:src/Export/Scripts/bases.lua:116-117`).
-fn pob_name(name: &str) -> String {
+pub(super) fn pob_name(name: &str) -> String {
     name.replace('\u{f6}', "o").trim().to_owned()
 }
 

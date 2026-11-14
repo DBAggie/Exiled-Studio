@@ -70,6 +70,15 @@ Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against
 ## P3-12i: the skills' `color`
 The bundle carries each granted effect's colour (`attribute`, the game's `GrantedEffects.Attribute` as stored); PoB's export (format 5) writes each skill's `color`, which its exporter copies from the same column (`src/Export/Scripts/skills.lua` 157). Table `skills`, field `color`: 1,508 values compared (every skill both sides hold), 0 differences; the other counts are unchanged (534 differences, `uncategorized` 0). Two PoB skills without a colour (`HarvestNessaCrabScreechDebuff`, `HarvestRhexScreechDebuff`) are among the 13 PoB-only rows.
 
+## B-2: tables `mod_affixes` and `base_requirements` (UX sprint, data schema 4)
+The item tooltip's Alt view shows each mod's affix name and level, and the requirement line (`dev/active/ux-improvements/b2-item-data-plan.md`). The export (format 6) adds:
+- `mods`: each mod of the keyed `data.itemMods` files (Explicit, ItemExclusive, Corrupted, Delve, Synthesis, Scourge, Eldritch, Flask, Tincture, Graft, Jewel, JewelAbyss, JewelCluster, JewelCharm, Foulborn), by the game's mod ID, which `Prefix:`/`Suffix:` spec lines name (`src/Classes/Item.lua` 1008 to 1010). Each has its `affix` and `level` as PoB's exporter wrote them (`src/Export/Scripts/mods.lua` 101, 114) and the files that hold it. `conflict` is set when two files disagree. `Item` (a merge of seven of them) and `WatchersEye` (derived) are not read. `data.masterMods` (crafted mods) has no IDs.
+- `base_requirements`: every `data.itemBases` entry's `req` and whether it is a flask.
+
+`mod_affixes` compares `affix` and `level` by mod ID. `base_requirements` matches by name as `bases` does, but over every base. Several game bases under one name (an old and a new quiver) compare as one when their values in PoB's form agree; otherwise the row differs. The required level is put into PoB's form as its exporter derived it (`src/Export/Scripts/bases.lua` 276 to 293): the drop level when above 4 for a weapon or armour and above 2 for a flask, raised to `floor(level * 0.8)` of each implicit, and absent when 1. Attributes are absent when 0 (294 to 305). A bundle before data schema 4 is refused.
+
+PoB v2.67.2's export: 23,230 mods, none in conflict, every ID in the build 26530219 bundle; 1,106 bases, 15 renamed by PoB (no bundle name) and 22 names shared by several game bases (matched against the schema 3 bundle). The schema 4 run's counts and rules follow.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 
