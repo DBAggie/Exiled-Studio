@@ -441,7 +441,7 @@ jobs:
         run: echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
       - name: Workflow (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a ui/e2e/run.sh target/debug/loom-tauri
+        run: xvfb-run -a bash ui/e2e/run.sh target/debug/loom-tauri
       # msedgedriver must match the WebView2 runtime the app runs in: its
       # version from the registry, the driver from Microsoft's download host.
       - name: Install msedgedriver for the WebView2 runtime (Windows)
@@ -463,7 +463,7 @@ jobs:
       - name: Workflow (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: ui/e2e/run.sh target/debug/loom-tauri.exe "$EDGE_DRIVER"
+        run: bash ui/e2e/run.sh target/debug/loom-tauri.exe "$EDGE_DRIVER"
 
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 
