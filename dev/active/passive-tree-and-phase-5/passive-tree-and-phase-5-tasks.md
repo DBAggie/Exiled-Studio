@@ -10,6 +10,7 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [x] Maintainer answers on MQ1 to MQ8 (2026-11-14, context file)
 - [x] T0 ADR-008 Amendment 1, ADR-005 Amendment 2, ACTION-PLAN change, ADR README, hard rules
 - [x] Open the draft PR (#107); follow-up commit with the PR number
+- [x] Mark #107 ready for review (maintainer 2026-11-14: merge the plan now; every step below in follow-up PRs from `dev`)
 - [ ] (Before P5: the maintainer's UI and UX side project, its own PR from `dev`; handoff, Next action)
 - [ ] P5 Logs (tracing, JSON lines, rotation, redaction, correlation IDs), diagnostics export with preview, crash records
 - [ ] P1 Packaging: bundler config, version policy (0.1.0), `package` CI job (portable, AppImage smoke), WebView2 offline
@@ -31,4 +32,3 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [ ] P7 Performance: `tools/bench`, baselines, instruction-count CI check, `docs/phase-5/performance.md`
 - [ ] P8 Reports, handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README (notice, install, privacy), task docs
 - [ ] `code-architecture-reviewer` before marking the PR ready
-- [ ] Mark the PR ready for review
