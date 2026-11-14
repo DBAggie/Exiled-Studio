@@ -24,3 +24,5 @@ Four minimalist directions on the canvas https://claude.ai/artifact/5993AyXC3qZC
 ## Bearing on later plans
 - Note 1 overlaps Phase 5 P-d in #107's plan (a signed bundle shipped with the installer, installed into the app data folder, chosen automatically). This side project can do the development-side part now (find and remember installed bundles without a folder picker) without the signing.
 - Note 5 is the "dashboard tabs and Customize" item the UI fidelity PR left for later (`docs/ui/fidelity/README.md`).
+
+PR: #108 (open, branch `feat/ux-improvements`, base `dev`).
