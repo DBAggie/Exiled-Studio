@@ -5,15 +5,18 @@ Last Updated: 2026-11-13
 One PR (maintainer request 2026-11-13). Tick a task in the commit that does it.
 
 - [x] Plan, context, tasks
-- [ ] plan-reviewer run; findings applied (context file)
-- [ ] App API DTOs v1 (`loom_serialization::dto::app::v1`), schema, TS types
-- [ ] `loom-app` session: commands, history, item edits, preview, reopen
-- [ ] `loom-app` jobs and events: worker, cancel, stale discard
-- [ ] `loom-persistence`: recovery snapshots, recent index
-- [ ] `loom-integrations`: MCP server, tools contract v1, permissions, approvals, contract tests
-- [ ] `loom-tauri`: commands, events, dialogs, capabilities, IPC workflow test
-- [ ] UI: store, import state machine, screens, fake API, tests, axe, keyboard, contrast
-- [ ] CI: `pnpm test` in `frontend`
-- [ ] code-architecture-reviewer run; findings applied
-- [ ] Report `docs/phase-4/phase-4-report.md`; handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README
+- [x] plan-reviewer run; findings applied (context file)
+- [x] `loom-pipeline` (decision 0); `calc-run` byte-identical
+- [x] App API DTOs v1 (`loom_serialization::dto::app::v1`), schema, TS types
+- [x] `loom-app` session: commands, history, item edits, preview, reopen
+- [x] `loom-app` jobs and events: worker, cancel, stale discard
+- [x] `loom-persistence`: recovery snapshots, recent index
+- [x] `loom-integrations`: MCP server, tools contract v1, permissions, approvals, contract tests
+- [x] `loom-tauri`: commands, events, dialogs, capabilities, IPC workflow test
+- [x] UI: store, import state machine, screens, fake API, tests, axe, keyboard, contrast
+- [x] CI: `pnpm test` and `pnpm licenses:check` in `frontend`; `e2e` job
+- [x] code-architecture-reviewer run; findings applied (report section 2)
+- [x] Report `docs/phase-4/phase-4-report.md`; handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README
+- [ ] CI `e2e` passes on Windows and Linux (or the maintainer's checklist recorded; gate 1b)
+- [ ] Maintainer: `axe-core` license exception
 - [ ] Open PR

@@ -24,6 +24,8 @@ Last Updated: 2026-11-13
 - The SQLite index is not needed for the slice's recent list; ADR-009 keeps JSON files authoritative, and the index comes with search.
 
 ## Open questions (maintainer)
+- `axe-core` (MPL-2.0, test-only): approve the exception or not (report section 6).
+- Gate item 1b: CI `e2e` result, else the real-app checklist (report section 5).
 - UI brief open questions (Skills layout, dashboards, stages) stay open; nothing in this slice depends on them.
 
 ## plan-reviewer findings (2026-11-13; verdict "proceed with changes", no blockers)

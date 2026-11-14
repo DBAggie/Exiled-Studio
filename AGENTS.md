@@ -19,16 +19,16 @@ crates/
   loom-calc           core   calculations over immutable snapshots
   loom-serialization  core   versioned DTOs (build, calc result, app API), migrations, legacy XML adapters
   loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
-  loom-persistence    host   files, autosave, SQLite indexes
-  loom-app            host   command/query/event API, single-writer build task
-  loom-integrations   host   network adapters, MCP addon transport
+  loom-persistence    host   files, recovery snapshots, recent list (SQLite indexes later)
+  loom-app            host   command/query/event API, single-writer build task, background calculation
+  loom-integrations   host   network adapters, the local MCP server (loopback)
   loom-tauri          shell  Tauri 2 desktop app
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
-schemas/              generated JSON Schemas of the successor documents, build and calc result (do not edit; CI checks freshness)
+schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract (rewritten by its test, below)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -191,9 +191,20 @@ cargo run --release -p loom-parity-cli -- calc-parity <oracle-run-dir> <calc-run
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
 pnpm format:check && pnpm lint && pnpm build
+pnpm test              # vitest: UI workflow, axe on every screen, keyboard, error states, contrast
+pnpm licenses:check    # JS dependency licenses (allow-list and named exceptions in ui/scripts/check-licenses.mjs)
 
-# Desktop app in dev mode: run `pnpm dev` in ui/, then in another terminal
+# Desktop app in dev mode: run `pnpm dev` in ui/, then in another terminal (LOOM_BUNDLE_DIR names a
+# bundle folder, else the one chosen in the app; LOOM_DATA_DIR overrides the app's data folder):
 cargo run -p loom-tauri
+# Outside the shell (`pnpm dev` in a browser) the UI runs on an in-memory fake API with sample data.
+
+# MCP tool contract (Phase 4): a change to the tool list is a reviewed diff of schemas/mcp-tools.v1.json:
+LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
+# The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
+# msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
+cargo build -p loom-tauri --features e2e,tauri/custom-protocol
+ui/e2e/run.sh target/debug/loom-tauri [<path to msedgedriver.exe>]
 ```
 
 ## Code expectations
