@@ -24,7 +24,6 @@ Last Updated: 2026-11-13
 - The SQLite index is not needed for the slice's recent list; ADR-009 keeps JSON files authoritative, and the index comes with search.
 
 ## Open questions (maintainer)
-- `axe-core` (MPL-2.0, test-only): approve the exception or not (report section 6).
 - Gate item 1b: CI `e2e` result, else the real-app checklist (report section 5).
 - UI brief open questions (Skills layout, dashboards, stages) stay open; nothing in this slice depends on them.
 
@@ -46,5 +45,5 @@ All 18 applied in the plan; where each landed:
 14. History entries with origin and request ID (decision 4).
 15. Preview off the writer thread (decision 6).
 16. Fields from the calc document; tree table keyed by game (decisions 1, 6).
-17. `axe-core` MPL-2.0: test-only, listed as an exception awaiting the maintainer; pnpm license check (gate 5).
+17. `axe-core` MPL-2.0: test-only, listed as an exception, approved by the maintainer 2026-11-13; pnpm license check (gate 5).
 18. MCP results are app API v1 DTOs (decision 11).

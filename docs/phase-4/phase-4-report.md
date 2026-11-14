@@ -2,7 +2,7 @@
 
 Phase 4 of `docs/plan/ACTION-PLAN.md` ("Application slice + MCP addon"), planned in `dev/active/phase-4-application-slice/` (plan, context with both reviews, tasks). Plan, implementation, and this report are one PR, #105, at the maintainer's request (2026-11-13: "Complete phase 4 in the fewest number of PRs possible").
 
-**Verdict.** Gate items 1, 2, 3, 4, and 5 hold on Windows locally (section 3) and are run by CI on Windows and Linux. Item 1b (the real application under WebDriver) is a new CI job, `e2e`, first run on this PR; its result is recorded in the handoff with the PR's CI run. If it cannot be made to run, the plan's fallback applies: the maintainer's smoke run (section 5) is recorded here as the gate item. The `axe-core` license exception (MPL-2.0, test-only) awaits the maintainer (section 6).
+**Verdict.** Gate items 1, 2, 3, 4, and 5 hold on Windows locally (section 3) and are run by CI on Windows and Linux. Item 1b (the real application under WebDriver) is a new CI job, `e2e`, first run on this PR; its result is recorded in the handoff with the PR's CI run. If it cannot be made to run, the plan's fallback applies: the maintainer's smoke run (section 5) is recorded here as the gate item. The `axe-core` license exception (MPL-2.0, test-only) was approved by the maintainer 2026-11-13 (section 6).
 
 ## 1. What was built
 | Part | Where | What |
@@ -51,7 +51,7 @@ Run `pnpm build` in `ui/`, then `cargo run -p loom-tauri` with `LOOM_BUNDLE_DIR`
 9. Accessibility: zoom to 200 % (no lost content or function), target sizes, a screen-reader pass (NVDA on Windows, Orca on Linux) over the start screen, dashboard, and item editor.
 
 ## 6. Open for the maintainer
-- **`axe-core` (MPL-2.0)**: a test-only dependency of `ui/` (accessibility checks), never shipped. AGENTS.md asks for approval of a license outside the allow-list; it is listed as an exception in `ui/scripts/check-licenses.mjs` with that note. `lightningcss` (Vite's CSS tool, MPL-2.0) was already in the tree. If not approved: remove `axe-core` and `expectAccessible`, and gate 2 keeps the keyboard, error-state, and contrast checks.
+- **`axe-core` (MPL-2.0)**: a test-only dependency of `ui/` (accessibility checks), never shipped; the exception was approved by the maintainer 2026-11-13 and is listed in `ui/scripts/check-licenses.mjs`. `lightningcss` (Vite's CSS tool, MPL-2.0) was already in the tree.
 - **UI brief questions** (`docs/ui/UI-DESIGN-BRIEF.md`, section 7) stay open; this slice depends on none of them.
 
 ## 7. Known limitations (later phases)

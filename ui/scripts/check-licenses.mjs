@@ -32,7 +32,7 @@ const EXCEPTIONS = [
     prefix: 'axe-core',
     license: 'MPL-2.0',
     reason:
-      'accessibility checks in the UI tests (Phase 4); test-only. Awaiting the maintainer’s approval (Phase 4 report).',
+      'accessibility checks in the UI tests (Phase 4); test-only; approved by the maintainer 2026-11-13',
   },
   {
     prefix: 'argparse',
