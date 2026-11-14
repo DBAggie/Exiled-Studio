@@ -464,7 +464,8 @@ jobs:
       - name: Workflow (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER
+        # tauri-driver by its Windows path (the PATH entry above is Git Bash's form).
+        run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER (Join-Path $HOME '.cargo-toolsin	auri-driver.exe')
 
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 
