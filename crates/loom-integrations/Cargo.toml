@@ -13,6 +13,10 @@ loom-domain.workspace = true
 loom-app.workspace = true
 # The MCP token (ADR-017): the OS random source; MIT or Apache-2.0.
 getrandom = "0.4"
+# The MCP token kept between starts in the OS's protected store (ADR-017
+# Amendment 1, ADR-011): Windows Credential Manager, the macOS Keychain, the
+# Linux kernel keyring (no D-Bus or C library); MIT or Apache-2.0.
+keyring = { version = "3.6.3", default-features = false, features = ["windows-native", "apple-native", "linux-native"] }
 serde.workspace = true
 serde_json.workspace = true
 

@@ -27,9 +27,10 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use loom_calc::CalcResult;
 use loom_persistence::Store;
 use loom_persistence::recent::{Entry as RecentFileEntry, Recent};
-use loom_persistence::recovery::{Header, Recovery};
+use loom_persistence::recovery::{Header, Recovery, StepRef};
 use loom_serialization::dto::app::v1 as api;
 
+use crate::bundles::Library;
 use crate::data::GameData;
 use crate::error::{AppError, Code};
 use crate::session::{self, Session, State};
@@ -45,7 +46,9 @@ pub const MAX_PENDING_REQUESTS: usize = 16;
 pub struct Config {
     /// The application's data folder (`recovery/`, `recent.json`).
     pub data_dir: PathBuf,
-    /// The bundle folder to load at start, if any.
+    /// The bundle folder to load at start (`LOOM_BUNDLE_DIR`), if any;
+    /// else the remembered choice or the newest installed bundle
+    /// ([`crate::bundles`]).
     pub bundle: Option<PathBuf>,
     /// This instance's recovery ID (ASCII letters, digits, `-`).
     pub instance: String,
@@ -177,8 +180,12 @@ impl App {
             .map_err(|e| AppError::layer("PERSIST_RECOVERY", e))?;
         let recent = Recent::at(&config.data_dir.join("recent.json"));
         let mut session = Session::new(store);
-        if let Some(dir) = &config.bundle {
-            session.set_data(GameData::load(dir));
+        let mut library = Library::new(&config.data_dir);
+        let (data, notice) = library.start(config.bundle.as_deref());
+        session.set_installed(library.installed().to_vec());
+        if let Some(data) = data {
+            session.set_loaded(data);
+            session.set_data_notice(notice);
         }
         let idle = api::CalcStatus {
             state: api::CalcState::Idle,
@@ -219,6 +226,7 @@ impl App {
         };
         let writer = Writer {
             session,
+            library,
             shared: Arc::clone(&shared),
             sink,
             jobs: jobs_tx,
@@ -382,6 +390,8 @@ impl App {
             running: p.endpoint.is_some(),
             url: p.endpoint.as_ref().map(|(u, _)| u.clone()),
             token: p.endpoint.as_ref().map(|(_, t)| t.clone()),
+            // The shell knows where the token is kept and says so.
+            token_kept: false,
             permissions: p.permissions.clone(),
             requests: p.requests.clone(),
         })
@@ -529,6 +539,8 @@ struct CalcTrack {
 
 struct Writer {
     session: Session,
+    /// The installed and loaded bundles (B-1).
+    library: Library,
     shared: Arc<Shared>,
     sink: Sink,
     jobs: Sender<Job>,
@@ -806,7 +818,23 @@ impl Writer {
                 path: self.session.path().map(|p| p.display().to_string()),
                 origin: self.session.origin().map(|p| p.display().to_string()),
             };
-            // A failed autosave is retried with the next change.
+            // A failed autosave is retried with the next change. The
+            // history first: a snapshot is never newer than its history.
+            let steps = self.session.undo_steps();
+            let entries: Vec<serde_json::Value> = steps
+                .iter()
+                .map(|s| serde_json::to_value(&s.entry).unwrap_or(serde_json::Value::Null))
+                .collect();
+            let refs: Vec<StepRef<'_>> = steps
+                .iter()
+                .zip(&entries)
+                .map(|(s, entry)| StepRef {
+                    id: s.id,
+                    entry,
+                    build: &s.state.build,
+                })
+                .collect();
+            let _ = self.recovery.write_history(self.session.store(), &refs);
             let _ = self
                 .recovery
                 .write(self.session.store(), &header, &state.build);
@@ -848,7 +876,8 @@ impl Writer {
                 Ok(done(self.session.version()))
             }
             HostCommand::SetBundle(dir) => {
-                self.session.set_data(GameData::load(&dir));
+                let data = self.library.use_dir(&dir);
+                self.session.set_loaded(data);
                 Ok(done(self.session.version()))
             }
             HostCommand::Api(c) => self.api(c),
@@ -876,6 +905,15 @@ impl Writer {
         match command {
             api::Command::ImportText { text } => self.session.import_text(&text, None).map(done),
             api::Command::NewBuild => self.session.new_build().map(done),
+            api::Command::UseBundle { id } => {
+                // An unknown ID or a bundle that does not load leaves the
+                // loaded data as it was.
+                let data = self.library.use_id(&id)?;
+                self.session
+                    .set_installed(self.library.installed().to_vec());
+                self.session.set_loaded(Ok(data));
+                Ok(done(self.session.version()))
+            }
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
             api::Command::UseItemSet { id } => Ok(self
                 .session
@@ -1007,12 +1045,26 @@ impl Writer {
                     .recovery
                     .read(self.session.store(), &id)
                     .map_err(|e| AppError::layer(e.code(), &e))?;
+                let history = self.recovery.read_history(self.session.store(), &id);
                 let v = self.session.open_build(
                     build,
                     header.path.map(PathBuf::from),
                     header.origin.map(PathBuf::from),
                     true,
                 );
+                // The undo history comes back too (UX-19): the newest steps
+                // whose change still reads.
+                let mut steps: Vec<_> = history
+                    .into_iter()
+                    .rev()
+                    .map_while(|s| {
+                        serde_json::from_value::<api::HistoryEntry>(s.entry)
+                            .ok()
+                            .map(|e| (e, s.build))
+                    })
+                    .collect();
+                steps.reverse();
+                self.session.restore_history(steps);
                 let _ = self.recovery.discard(&id);
                 self.refresh_lists();
                 Ok(done(v))

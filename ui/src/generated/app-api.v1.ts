@@ -68,6 +68,14 @@ export interface ApplicationAPIV1 {
   command:
     | 'new-build'
     | {
+        'use-bundle': {
+          /**
+           * The bundle's ID ([`InstalledBundle`]).
+           */
+          id: string
+        }
+      }
+    | {
         'import-text': {
           /**
            * The text.
@@ -815,9 +823,15 @@ export interface McpStatus {
    */
   running: boolean
   /**
-   * The session's bearer token, while it runs.
+   * The bearer token, while it runs.
    */
   token?: string | null
+  /**
+   * Whether the token is kept between starts in the OS's protected
+   * store (ADR-017 Amendment 1); `false` when it is made at each
+   * start.
+   */
+  'token-kept'?: boolean
   /**
    * Its address, while it runs (`http://127.0.0.1:<port>/mcp`).
    */
@@ -1341,6 +1355,11 @@ export interface ItemSummary {
    */
   rarity?: string | null
   /**
+   * Its requirements (level, attributes), as on its card (B-2:
+   * the equipment panel checks them against the character).
+   */
+  requirements?: Requirements | null
+  /**
    * The item sets that hold it, by ID.
    */
   sets: number[]
@@ -1562,6 +1581,12 @@ export interface CalcStatus {
  */
 export interface DataStatus {
   /**
+   * The loaded bundle's ID, when it is an installed one (a folder
+   * picked for development, or `LOOM_BUNDLE_DIR`, has none: it is
+   * unsigned and not installed).
+   */
+  active?: string | null
+  /**
    * The bundle folder, if one is set.
    */
   bundle?: string | null
@@ -1574,10 +1599,61 @@ export interface DataStatus {
    */
   error?: ApiError3 | null
   /**
+   * The bundles installed in the application's `bundles/` folder,
+   * newest first (B-1). The UI switches between them by ID with
+   * [`Command::UseBundle`]; paths never reach the webview.
+   */
+  installed?: InstalledBundle[]
+  /**
+   * Something to tell the user about the choice of data that is not
+   * an error: `APP_BUNDLE_FALLBACK` when the remembered bundle did
+   * not load and the newest installed one was taken instead.
+   */
+  notice?: ApiError3 | null
+  /**
+   * The installed bundle the open build was made with, when it is not
+   * the loaded one (ADR-010: never switched silently; the UI offers
+   * it).
+   */
+  pinned?: string | null
+  /**
    * The passive tree version the application gives the engine for
-   * this bundle, if known.
+   * this bundle, if known; it names the game's patch (`3_29` is
+   * patch 3.29), which the UI shows (UX-14).
    */
   'tree-version'?: string | null
+}
+/**
+ * A bundle installed in the application's `bundles/` folder.
+ */
+export interface InstalledBundle {
+  'data-version': DataVersionView1
+  /**
+   * Its ID: `<game>/<steam build>-s<data schema>`.
+   */
+  id: string
+  /**
+   * The passive tree version the application knows for it, if any:
+   * the game's patch (`3_29` is patch 3.29; UX-14).
+   */
+  'tree-version'?: string | null
+}
+/**
+ * A data version.
+ */
+export interface DataVersionView1 {
+  /**
+   * `poe1` or `poe2`.
+   */
+  game: string
+  /**
+   * The bundle's data schema version.
+   */
+  'schema-version': number
+  /**
+   * The Steam build it was extracted from, if known.
+   */
+  'steam-build'?: number | null
 }
 /**
  * Undo and redo.

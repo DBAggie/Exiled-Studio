@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { ItemSummary, ItemView, LineView } from '../api/types'
-import { t } from '../i18n'
+import { formatNumber, t } from '../i18n'
 import { actions, attempt, run } from '../store'
 import { Sprite } from '../sprites'
 import { type SpriteKind, spriteFor } from '../spriteKind'
@@ -47,6 +47,42 @@ function slotName(slot: string, second: boolean): string {
   return second && slot.startsWith('Weapon') ? `${slot} Swap` : slot
 }
 
+/** What the character has, to check requirements against: its level and
+ * the attributes the calculation computed (`null` when it did not). */
+export interface Have {
+  level: number | null
+  str: number | null
+  dex: number | null
+  int: number | null
+}
+
+/** The open build's level and computed attributes. */
+function useHave(): Have {
+  const level = useAppSelector((s) => s.session.snapshot?.build?.level ?? null)
+  const fields = useAppSelector((s) => s.session.calc?.[1].result.fields)
+  const of = (name: string): number | null => {
+    const f = fields?.find((x) => x.field === name) as
+      { value?: number | null } | undefined
+    return typeof f?.value === 'number' ? f.value : null
+  }
+  return {
+    level,
+    str: of('strength'),
+    dex: of('dexterity'),
+    int: of('intelligence'),
+  }
+}
+
+type ReqLabel = 'level' | 'str' | 'dex' | 'int'
+
+/** Whether a requirement part is above what the character has (the game
+ * prints it in red). */
+function unmet(have: Have | undefined, label: ReqLabel, value: string) {
+  const own = have?.[label]
+  const need = Number(value)
+  return own != null && Number.isFinite(need) && need > own
+}
+
 /** Which tooltip is open, and where its item is on screen. */
 interface Hover {
   id: number
@@ -55,6 +91,7 @@ interface Hover {
 
 /** The game's hover tooltip for item `id`, next to `rect`. */
 function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
+  const have = useHave()
   const dispatch = useAppDispatch()
   const version = useAppSelector((s) => s.session.snapshot?.version)
   const [item, setItem] = useState<ItemView | null>(null)
@@ -93,7 +130,7 @@ function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
       id="item-tooltip"
       style={{ left: place.left, top: place.top }}
     >
-      <TooltipBody item={item} details={details} />
+      <TooltipBody item={item} details={details} have={have} />
     </div>
   )
 }
@@ -101,8 +138,10 @@ function Tooltip({ hover, details }: { hover: Hover; details: boolean }) {
 /** The requirement line's parts, as the game prints them: the level,
  * then attributes above 0. */
 function requirementParts(
-  c: ItemView['card'],
-): { label: 'level' | 'str' | 'dex' | 'int'; value: string }[] {
+  c: Pick<ItemView['card'], 'requirements'> & {
+    'level-req'?: string | null
+  },
+): { label: ReqLabel; value: string }[] {
   const r = c.requirements
   const level =
     r?.level != null
@@ -110,7 +149,7 @@ function requirementParts(
       : c['level-req'] != null && c['level-req'] !== '0'
         ? c['level-req']
         : null
-  const parts: { label: 'level' | 'str' | 'dex' | 'int'; value: string }[] = []
+  const parts: { label: ReqLabel; value: string }[] = []
   if (level != null && level !== '0')
     parts.push({ label: 'level', value: level })
   if (r != null) {
@@ -150,9 +189,12 @@ function lineTone(line: LineView): string {
 export function TooltipBody({
   item,
   details,
+  have,
 }: {
   item: ItemView
   details: boolean
+  /** What the character has: unmet requirements show in red. */
+  have?: Have
 }) {
   const c = item.card
   const rarity = item.rarity?.toLowerCase() ?? 'normal'
@@ -207,11 +249,27 @@ export function TooltipBody({
             {part.label === 'level' ? (
               <>
                 {t('tooltip.level')}{' '}
-                <span className="tt-value">{part.value}</span>
+                <span
+                  className={
+                    unmet(have, part.label, part.value)
+                      ? 'tt-unmet'
+                      : 'tt-value'
+                  }
+                >
+                  {part.value}
+                </span>
               </>
             ) : (
               <>
-                <span className="tt-value">{part.value}</span>{' '}
+                <span
+                  className={
+                    unmet(have, part.label, part.value)
+                      ? 'tt-unmet'
+                      : 'tt-value'
+                  }
+                >
+                  {part.value}
+                </span>{' '}
                 {t(`tooltip.${part.label}`)}
               </>
             )}
@@ -580,7 +638,94 @@ export function Inventory() {
           aria-hidden="true"
         />
       </div>
+      <TreeJewels items={build.items} onHover={setHover} />
+      <RequirementCheck items={build.items} />
       {hover != null && <Tooltip hover={hover} details={details || altHeld} />}
     </section>
+  )
+}
+
+/** The jewels socketed in the active passive tree, in a row under the
+ * inventory (the brief's equipment mockup), each with the tooltip. */
+function TreeJewels({
+  items,
+  onHover,
+}: {
+  items: ItemSummary[]
+  onHover: (h: Hover | null) => void
+}) {
+  const dispatch = useAppDispatch()
+  const jewels = items.filter((i) => i['in-use'] && i['tree-socket'] != null)
+  if (jewels.length === 0) return null
+  const leave = () => onHover(null)
+  return (
+    <div className="inv-tree-jewels">
+      <h3 className="small-text muted">{t('inventory.treeJewels')}</h3>
+      <ul>
+        {jewels.map((j) => {
+          const hover = (e: { currentTarget: Element }) =>
+            onHover({ id: j.id, rect: e.currentTarget.getBoundingClientRect() })
+          return (
+            <li key={j.id}>
+              <button
+                type="button"
+                className={`inv-jewel rarity-frame-${j.rarity?.toLowerCase() ?? 'normal'}`}
+                aria-label={t('inventory.treeJewel', { name: itemName(j) })}
+                aria-describedby="item-tooltip"
+                onMouseEnter={hover}
+                onFocus={hover}
+                onMouseLeave={leave}
+                onBlur={leave}
+                onClick={() => dispatch(actions.editItem(j.id))}
+              >
+                <Sprite kind="jewel" />
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/** The items in use whose requirements the character does not meet, by
+ * the level and the attributes the calculation computed (the game ignores
+ * such an item's modifiers). */
+function RequirementCheck({ items }: { items: ItemSummary[] }) {
+  const have = useHave()
+  if (have.str == null && have.dex == null && have.int == null) return null
+  const short = items
+    .filter((i) => i['in-use'] && i.requirements != null)
+    .flatMap((i) =>
+      requirementParts({ requirements: i.requirements ?? null })
+        .filter((p) => unmet(have, p.label, p.value))
+        .map((p) => ({ item: i, part: p })),
+    )
+  return (
+    <div className="inv-requirements">
+      <p className="small-text">
+        {t('inventory.attributes', {
+          str: formatNumber(have.str ?? 0),
+          dex: formatNumber(have.dex ?? 0),
+          int: formatNumber(have.int ?? 0),
+        })}
+      </p>
+      {short.length === 0 ? (
+        <p className="small-text muted">{t('inventory.requirementsMet')}</p>
+      ) : (
+        <ul className="small-text inv-short">
+          {short.map(({ item, part }) => (
+            <li key={`${item.id}-${part.label}`}>
+              {t('inventory.requirementShort', {
+                name: itemName(item),
+                need: part.value,
+                what: t(`inventory.req.${part.label}`),
+                have: formatNumber(have[part.label] ?? 0),
+              })}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }

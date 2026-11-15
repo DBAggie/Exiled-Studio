@@ -1,6 +1,6 @@
 # Pick-list group 2: start page B, game data found for the user, new build
 
-Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes, no blockers; taken as below). PR A done 2026-11-14 (PR #111, branch `feat/start-page`; `docs/ui/ux-walkthrough.md`, "Start page B, PR A"); PR B open. Maintainer 2026-11-14: "Finish what ui tasks you can until I can get you the bundle" (B-2's data PR 2 waits on the schema 4 bundle), taken as the pick of group 2 (`docs/ui/ux-walkthrough.md`, "Pick list"): B-1, B-3, B-4, UX-17, the open halves of UX-19 and UX-20. One PR from `dev`, branch `feat/start-page`.
+Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes, no blockers; taken as below). PR A done 2026-11-14 (PR #111, branch `feat/start-page`; `docs/ui/ux-walkthrough.md`, "Start page B, PR A"); PR B done 2026-11-14 in UX sprint 2 (branch `feat/ux-sprint-2`; `docs/ui/ux-walkthrough.md`, "UX sprint 2"). Maintainer 2026-11-14: "Finish what ui tasks you can until I can get you the bundle" (B-2's data PR 2 waits on the schema 4 bundle), taken as the pick of group 2 (`docs/ui/ux-walkthrough.md`, "Pick list"): B-1, B-3, B-4, UX-17, the open halves of UX-19 and UX-20. One PR from `dev`, branch `feat/start-page`.
 
 ## Review outcome (2026-11-14)
 

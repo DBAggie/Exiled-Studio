@@ -74,6 +74,8 @@
   --c-tt-enchant: #b4b4ff;
   --c-tt-fractured: #a29162;
   --c-tt-corrupted: #ff4a4a;
+  /* A requirement the character does not meet (the game's red). */
+  --c-tt-unmet: #ff4a4a;
   --c-tt-separator: #5a4a2c;
   --c-tt-shadow: rgb(0 0 0 / 0.6);
   --c-tt-sheen: rgb(255 255 255 / 0.06);

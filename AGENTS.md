@@ -123,6 +123,9 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
+# PoB's configuration options for the configuration page (verifies the oracle first; writes
+# ui/src/data/pob-config-options.json, PoB's MIT notice beside it):
+powershell -ExecutionPolicy Bypass -File tools/oracle/config-options.ps1
 # Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 4: it sets PoB's CALCS view, the
 # breakdowns' source, to the main view before loading (probe.calcs_view; docs/phase-3/calc-parity.md), with the shims in
 # shims.lua: Inflate through zlib, variant_order (sorted pairs for PoB's ambiguous old-format Vaal gem

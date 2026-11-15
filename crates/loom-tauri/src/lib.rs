@@ -21,8 +21,10 @@
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+use loom_app::bundles::{SETTINGS_FILE, Settings};
 use loom_app::{App, AppError, Config, HostCommand, api};
 use loom_integrations::mcp::Server;
+use loom_integrations::mcp::token::{self as mcp_token, NoStore, OsStore, TokenStore};
 use tauri::{Emitter, Manager, Runtime, State};
 
 /// The event channel the webview listens on.
@@ -121,12 +123,22 @@ pub struct Ctx {
     app: Arc<App>,
     picker: Box<dyn FilePicker>,
     server: Mutex<Option<Server>>,
+    /// The application's `settings.json` (the MCP server's last port).
     settings: PathBuf,
     /// The last dropped file, until `open_dropped` takes it.
     drop: Mutex<Option<PathBuf>>,
+    /// Where the MCP token is kept (ADR-017 Amendment 1).
+    tokens: Box<dyn TokenStore>,
+    /// Whether the running server's token is kept between starts.
+    token_kept: std::sync::atomic::AtomicBool,
 }
 
 impl Ctx {
+    /// The UI's preferences file, beside `settings.json`.
+    fn ui_prefs(&self) -> PathBuf {
+        self.settings.with_file_name(UI_PREFS_FILE)
+    }
+
     /// The application.
     #[must_use]
     pub fn app(&self) -> &Arc<App> {
@@ -198,14 +210,14 @@ fn recovery(ctx: State<'_, Ctx>) -> Vec<api::RecoveryEntry> {
 /// The MCP server's state.
 #[tauri::command]
 fn mcp_status(ctx: State<'_, Ctx>) -> api::McpStatus {
-    ctx.app.mcp_status()
+    status(&ctx)
 }
 
 /// Sets what MCP clients may do.
 #[tauri::command]
 fn set_permissions(ctx: State<'_, Ctx>, permissions: api::McpPermissions) -> api::McpStatus {
     ctx.app.set_permissions(permissions);
-    ctx.app.mcp_status()
+    status(&ctx)
 }
 
 fn lock(ctx: &Ctx) -> std::sync::MutexGuard<'_, Option<Server>> {
@@ -245,26 +257,67 @@ fn open_dropped(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     ctx.app.execute(command).map_err(dto)
 }
 
-/// Starts the MCP server (no-op when it runs).
+/// Starts the MCP server (no-op when it runs), on its last port when that
+/// is free (UX-26: a client's configured URL keeps working), and
+/// remembers the port.
 #[tauri::command]
 fn mcp_start(ctx: State<'_, Ctx>) -> Answer<api::McpStatus> {
     let mut server = lock(&ctx);
     if server.is_none() {
-        *server = Some(
-            Server::start(Arc::clone(&ctx.app))
-                .map_err(|e| api::ApiError::new("MCP_START", e.to_string()))?,
-        );
+        let last = Settings::load(&ctx.settings).mcp_port;
+        let (token, kept) = mcp_token::kept_token(&*ctx.tokens)
+            .map_err(|e| api::ApiError::new("MCP_START", e.to_string()))?;
+        let started = Server::start_with(Arc::clone(&ctx.app), last, Some(token))
+            .map_err(|e| api::ApiError::new("MCP_START", e.to_string()))?;
+        ctx.token_kept
+            .store(kept, std::sync::atomic::Ordering::SeqCst);
+        let port = started.addr().port();
+        if last != Some(port) {
+            Settings::update(&ctx.settings, |s| s.mcp_port = Some(port));
+        }
+        *server = Some(started);
     }
     drop(server);
-    Ok(ctx.app.mcp_status())
+    Ok(status(&ctx))
 }
 
-/// Stops the MCP server.
+/// Stops the MCP server (a kept token stays for the next start).
 #[tauri::command]
 fn mcp_stop(ctx: State<'_, Ctx>) -> api::McpStatus {
     let server = lock(&ctx).take();
     drop(server);
-    ctx.app.mcp_status()
+    status(&ctx)
+}
+
+/// Makes a new MCP token and keeps it (ADR-017 Amendment 1, Rotate). A
+/// running server restarts on its port with it at once, so clients with
+/// the old token are refused.
+///
+/// # Errors
+/// `MCP_START` when the random source or the restart fails.
+#[tauri::command]
+fn mcp_rotate(ctx: State<'_, Ctx>) -> Answer<api::McpStatus> {
+    let start = |e: std::io::Error| api::ApiError::new("MCP_START", e.to_string());
+    let (token, kept) = mcp_token::rotate(&*ctx.tokens).map_err(start)?;
+    let mut server = lock(&ctx);
+    if let Some(mut running) = server.take() {
+        let port = running.addr().port();
+        running.stop();
+        let restarted =
+            Server::start_with(Arc::clone(&ctx.app), Some(port), Some(token)).map_err(start)?;
+        ctx.token_kept
+            .store(kept, std::sync::atomic::Ordering::SeqCst);
+        *server = Some(restarted);
+    }
+    drop(server);
+    Ok(status(&ctx))
+}
+
+/// The application's MCP status with where the token is kept.
+fn status(ctx: &Ctx) -> api::McpStatus {
+    let mut status = ctx.app.mcp_status();
+    status.token_kept = status.running && ctx.token_kept.load(std::sync::atomic::Ordering::SeqCst);
+    status
 }
 
 fn with_pick(
@@ -316,47 +369,61 @@ fn export_xml(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     with_pick(&ctx, Pick::ExportPob, &name, HostCommand::ExportXml)
 }
 
-/// Loads a bundle folder the user picks, and remembers it.
+/// Loads a bundle folder the user picks (development: an unsigned folder,
+/// not installed); the application remembers it when it loads.
 #[tauri::command(async)]
 fn choose_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
-    let Some(dir) = ctx.picker.pick(Pick::BundleFolder, "") else {
-        return Ok(nothing());
-    };
-    let outcome = ctx
-        .app
-        .execute(HostCommand::SetBundle(dir.clone()))
-        .map_err(dto)?;
-    if ctx.app.snapshot().data.error.is_none() {
-        save_settings(&ctx.settings, &Settings { bundle: Some(dir) });
+    with_pick(&ctx, Pick::BundleFolder, "", HostCommand::SetBundle)
+}
+
+/// The UI's own preferences (B-5: the user's dashboards), an opaque JSON
+/// document the shell keeps in `<data>/ui-prefs.json`; the application
+/// never reads it.
+const UI_PREFS_FILE: &str = "ui-prefs.json";
+
+/// The largest preferences document kept.
+pub const MAX_UI_PREFS: usize = 64 * 1024;
+
+/// The UI's preferences, if any were saved (`null` otherwise, or when the
+/// file does not read: a preference, not data).
+#[tauri::command]
+fn ui_prefs(ctx: State<'_, Ctx>) -> Option<String> {
+    let path = ctx.ui_prefs();
+    // A file grown past the limit by hand is not read.
+    let len = std::fs::metadata(&path).ok()?.len();
+    if usize::try_from(len).map_or(true, |n| n > MAX_UI_PREFS) {
+        return None;
     }
-    Ok(outcome)
-}
-
-/// The shell's own settings (the bundle folder).
-#[derive(Debug, Default, serde::Serialize, serde::Deserialize)]
-struct Settings {
-    bundle: Option<PathBuf>,
-}
-
-fn load_settings(path: &std::path::Path) -> Settings {
-    std::fs::read_to_string(path)
+    let text = std::fs::read_to_string(&path).ok()?;
+    serde_json::from_str::<serde_json::Value>(&text)
         .ok()
-        .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_default()
+        .map(|_| text)
 }
 
-fn save_settings(path: &std::path::Path, settings: &Settings) {
-    if let Ok(text) = serde_json::to_string_pretty(settings) {
-        if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
-        }
-        let store = loom_persistence::Store::new();
-        let _ = store.write_replacing(path, text.as_bytes());
+/// Saves the UI's preferences.
+///
+/// # Errors
+/// `UI_PREFS` when the text is not JSON or is larger than
+/// [`MAX_UI_PREFS`]; `PERSIST_*` when it cannot be written.
+#[tauri::command]
+fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
+    if text.len() > MAX_UI_PREFS || serde_json::from_str::<serde_json::Value>(&text).is_err() {
+        return Err(api::ApiError::new(
+            "UI_PREFS",
+            "not a JSON document of at most 64 KiB",
+        ));
     }
+    let path = ctx.ui_prefs();
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    loom_persistence::Store::new()
+        .write_replacing(&path, text.as_bytes())
+        .map_err(|e| api::ApiError::new(e.code(), e.to_string()))
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 18] = [
+pub const COMMANDS: [&str; 21] = [
     "snapshot",
     "calc_document",
     "item",
@@ -369,12 +436,15 @@ pub const COMMANDS: [&str; 18] = [
     "set_permissions",
     "mcp_start",
     "mcp_stop",
+    "mcp_rotate",
     "import_file",
     "open_file",
     "save_as",
     "export_xml",
     "choose_bundle",
     "open_dropped",
+    "ui_prefs",
+    "set_ui_prefs",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -383,8 +453,13 @@ pub struct Paths {
     /// The data folder.
     pub data: PathBuf,
     /// The bundle folder named by `LOOM_BUNDLE_DIR`, if set (else the
-    /// remembered one).
+    /// application takes the remembered one or the newest installed one,
+    /// `loom_app::bundles`).
     pub bundle: Option<PathBuf>,
+    /// Whether the MCP token is kept between starts in the OS's protected
+    /// store (ADR-017 Amendment 1); tests pass `false`, so they never
+    /// touch the user's credentials.
+    pub keep_token: bool,
 }
 
 /// Adds the commands and starts the application in `setup`.
@@ -407,12 +482,15 @@ pub fn build<R: Runtime>(
             set_permissions,
             mcp_start,
             mcp_stop,
+            mcp_rotate,
             import_file,
             open_file,
             save_as,
             export_xml,
             choose_bundle,
             open_dropped,
+            ui_prefs,
+            set_ui_prefs,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -432,13 +510,12 @@ pub fn build<R: Runtime>(
         .setup(move |app| {
             let handle = app.handle().clone();
             let paths = paths(&handle);
-            let settings = paths.data.join("settings.json");
-            let bundle = paths.bundle.or_else(|| load_settings(&settings).bundle);
+            let settings = paths.data.join(SETTINGS_FILE);
             let emitter = handle.clone();
             let sink: loom_app::Sink = Arc::new(move |event: api::Event| {
                 let _ = emitter.emit(EVENT, event);
             });
-            let application = App::start(Config::new(paths.data, bundle), sink)
+            let application = App::start(Config::new(paths.data, paths.bundle), sink)
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
             app.manage(Ctx {
                 app: Arc::new(application),
@@ -446,6 +523,12 @@ pub fn build<R: Runtime>(
                 server: Mutex::new(None),
                 settings,
                 drop: Mutex::new(None),
+                tokens: if paths.keep_token {
+                    Box::new(OsStore::new())
+                } else {
+                    Box::new(NoStore)
+                },
+                token_kept: std::sync::atomic::AtomicBool::new(false),
             });
             Ok(())
         })
@@ -474,7 +557,9 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
                 .set_file_name(name)
                 .blocking_save_file(),
             Pick::BundleFolder => dialog
-                .set_title("Choose the game data folder (the folder that holds bundle.json)")
+                .set_title(
+                    "Choose an unsigned game data folder for development (it holds bundle.json)",
+                )
                 .blocking_pick_folder(),
         };
         path.and_then(|p| p.into_path().ok())
@@ -513,6 +598,8 @@ pub fn run() -> tauri::Result<()> {
                 .or_else(|| handle.path().app_data_dir().ok())
                 .unwrap_or_else(|| PathBuf::from(".loom")),
             bundle: std::env::var_os("LOOM_BUNDLE_DIR").map(PathBuf::from),
+            // End-to-end runs keep nothing in the user's credentials.
+            keep_token: !cfg!(feature = "e2e"),
         },
         |handle| {
             #[cfg(feature = "e2e")]

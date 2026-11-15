@@ -141,6 +141,14 @@ describe('workflow', () => {
     // The command to copy names the user scope, so the server shows in
     // every folder.
     expect(screen.getByText(/claude mcp add --scope user/)).toBeTruthy()
+    // The token is kept between starts (ADR-017 Amendment 1) and can be
+    // rotated: the command shows the new one.
+    expect(screen.getByText(/kept between starts/)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Show token' }))
+    expect(screen.getByText(/Bearer fake-token"/)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Rotate token' }))
+    expect(await screen.findByText(/New token made/)).toBeTruthy()
+    expect(screen.getByText(/Bearer fake-token-1"/)).toBeTruthy()
     await user.click(screen.getByLabelText('Allow change requests'))
     api.addRequest({
       item: 1,

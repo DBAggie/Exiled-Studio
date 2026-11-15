@@ -167,3 +167,54 @@ fn recent_should_read_a_list_written_before_the_summary() {
     recent.touch(&store, e.clone()).unwrap();
     assert_eq!(recent.entries(&store), vec![e]);
 }
+
+fn at_level(level: u32) -> Build {
+    let mut build = Build::new(Game::Poe1);
+    build.character.level = Some(loom_domain::Sourced::read(level, "test"));
+    build
+}
+
+#[test]
+fn recovery_history_should_keep_the_latest_steps_and_stop_at_a_broken_one() {
+    use loom_persistence::recovery::{HISTORY_KEEP, StepRef};
+    let dir = Scratch::new("history");
+    let store = Store::new();
+    let builds: Vec<Build> = (1..=30).map(at_level).collect();
+    let entries: Vec<serde_json::Value> = (1..=30).map(|i| serde_json::json!({ "n": i })).collect();
+    let steps = |range: std::ops::Range<usize>| -> Vec<StepRef<'_>> {
+        range
+            .map(|i| StepRef {
+                id: i as u64,
+                entry: &entries[i],
+                build: &builds[i],
+            })
+            .collect()
+    };
+    let history = dir.0.join("first.history");
+    {
+        let first = Recovery::open(&dir.0, "first").unwrap();
+        first.write(&store, &header(1), &builds[29]).unwrap();
+        // Written in two autosaves: the second writes only its new steps
+        // and drops the ones past the limit.
+        first.write_history(&store, &steps(0..10)).unwrap();
+        first.write_history(&store, &steps(0..29)).unwrap();
+        let files = std::fs::read_dir(&history).unwrap().count();
+        assert_eq!(files, HISTORY_KEEP + 1, "the kept steps and the index");
+    }
+    let second = Recovery::open(&dir.0, "second").unwrap();
+    let read = second.read_history(&store, "first");
+    assert_eq!(read.len(), HISTORY_KEEP);
+    assert_eq!(read[0].build, builds[4], "oldest kept first");
+    assert_eq!(read[HISTORY_KEEP - 1].build, builds[28]);
+    assert_eq!(read[HISTORY_KEEP - 1].entry, entries[28]);
+    // A step that does not read cuts the history there: the newer steps
+    // stay, the older ones go (undo never skips a state).
+    std::fs::write(history.join("20.json"), "not a document").unwrap();
+    let read = second.read_history(&store, "first");
+    assert_eq!(read.len(), 8);
+    assert_eq!(read[0].build, builds[21]);
+    // Discard removes it with the snapshot.
+    second.discard("first").unwrap();
+    assert!(!history.exists());
+    assert!(second.read_history(&store, "first").is_empty());
+}

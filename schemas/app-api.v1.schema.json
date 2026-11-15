@@ -540,6 +540,29 @@
           "const": "new-build"
         },
         {
+          "description": "Loads an installed bundle by its ID (B-1) and remembers the\nchoice.",
+          "type": "object",
+          "properties": {
+            "use-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID ([`InstalledBundle`]).",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-bundle"
+          ]
+        },
+        {
           "description": "Imports a PoB share code or XML text.",
           "type": "object",
           "properties": {
@@ -1442,6 +1465,13 @@
       "description": "The game data.",
       "type": "object",
       "properties": {
+        "active": {
+          "description": "The loaded bundle's ID, when it is an installed one (a folder\npicked for development, or `LOOM_BUNDLE_DIR`, has none: it is\nunsigned and not installed).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "bundle": {
           "description": "The bundle folder, if one is set.",
           "type": [
@@ -1471,8 +1501,34 @@
             }
           ]
         },
+        "installed": {
+          "description": "The bundles installed in the application's `bundles/` folder,\nnewest first (B-1). The UI switches between them by ID with\n[`Command::UseBundle`]; paths never reach the webview.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/InstalledBundle"
+          }
+        },
+        "notice": {
+          "description": "Something to tell the user about the choice of data that is not\nan error: `APP_BUNDLE_FALLBACK` when the remembered bundle did\nnot load and the newest installed one was taken instead.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pinned": {
+          "description": "The installed bundle the open build was made with, when it is not\nthe loaded one (ADR-010: never switched silently; the UI offers\nit).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "tree-version": {
-          "description": "The passive tree version the application gives the engine for\nthis bundle, if known.",
+          "description": "The passive tree version the application gives the engine for\nthis bundle, if known; it names the game's patch (`3_29` is\npatch 3.29), which the UI shows (UX-14).",
           "type": [
             "string",
             "null"
@@ -1923,6 +1979,32 @@
         }
       ]
     },
+    "InstalledBundle": {
+      "description": "A bundle installed in the application's `bundles/` folder.",
+      "type": "object",
+      "properties": {
+        "data-version": {
+          "description": "Its data version.",
+          "$ref": "#/$defs/DataVersionView"
+        },
+        "id": {
+          "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "tree-version": {
+          "description": "The passive tree version the application knows for it, if any:\nthe game's patch (`3_29` is patch 3.29; UX-14).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data-version"
+      ]
+    },
     "ItemCard": {
       "description": "An item card's fields, from the item's header and spec lines.",
       "type": "object",
@@ -2143,6 +2225,17 @@
           "type": [
             "string",
             "null"
+          ]
+        },
+        "requirements": {
+          "description": "Its requirements (level, attributes), as on its card (B-2:\nthe equipment panel checks them against the character).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Requirements"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "sets": {
@@ -2683,11 +2776,16 @@
           "type": "boolean"
         },
         "token": {
-          "description": "The session's bearer token, while it runs.",
+          "description": "The bearer token, while it runs.",
           "type": [
             "string",
             "null"
           ]
+        },
+        "token-kept": {
+          "description": "Whether the token is kept between starts in the OS's protected\nstore (ADR-017 Amendment 1); `false` when it is made at each\nstart.",
+          "type": "boolean",
+          "default": false
         },
         "url": {
           "description": "Its address, while it runs (`http://127.0.0.1:<port>/mcp`).",

@@ -37,6 +37,10 @@ export interface FakeOptions {
   calcFails?: string
   recent?: RecentEntry[]
   recovery?: RecoveryEntry[]
+  /** Installed bundles by Steam build (B-1); the first is loaded. */
+  installed?: number[]
+  /** The Steam build the build was made with (its pinned data). */
+  pinned?: number
 }
 
 function line(
@@ -304,6 +308,9 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
       ],
       fields: [
         { field: 'life', state: 'complete', node: 3, value },
+        { field: 'strength', state: 'complete', node: null, value: 20 },
+        { field: 'dexterity', state: 'complete', node: null, value: 5 },
+        { field: 'intelligence', state: 'complete', node: null, value: 20 },
         {
           field: 'resistance.fire',
           state: 'partial',
@@ -542,6 +549,14 @@ export class FakeApi implements LoomApi {
     this.options = { data: true, ...options }
     this.recentList = options.recent ?? []
     this.recoveryList = options.recovery ?? []
+    this.activeBuild = options.installed?.[0] ?? 26530219
+  }
+
+  /** The loaded bundle's Steam build. */
+  private activeBuild: number
+
+  private bundleId(build: number) {
+    return `poe1/${build}-s4`
   }
 
   private emit(kind: ApiEvent['kind']) {
@@ -680,6 +695,7 @@ export class FakeApi implements LoomApi {
                   ] === 'legacy',
                 // The wand: Ice Nova and its support linked, one socket free.
                 sockets: i.id === 2 ? ['BG', 'R'] : [],
+                requirements: i.card.requirements ?? null,
               })),
               warnings,
               'item-sets': SETS.map((s) => ({
@@ -741,10 +757,40 @@ export class FakeApi implements LoomApi {
         bundle: this.options.data === true ? '/data/bundle' : null,
         'data-version':
           this.options.data === true
-            ? { game: 'poe1', 'schema-version': 3, 'steam-build': 26530219 }
+            ? {
+                game: 'poe1',
+                'schema-version': 3,
+                'steam-build': this.activeBuild,
+              }
             : null,
-        'tree-version': this.options.data === true ? '3_29' : null,
+        // The tree version is known for the real bundle's build only.
+        'tree-version':
+          this.options.data === true && this.activeBuild === 26530219
+            ? '3_29'
+            : null,
         error: null,
+        installed: (this.options.installed ?? []).map((b) => ({
+          id: this.bundleId(b),
+          'data-version': {
+            game: 'poe1',
+            'schema-version': 4,
+            'steam-build': b,
+          },
+          'tree-version': b === 26530219 ? '3_29' : null,
+        })),
+        active:
+          this.options.data === true &&
+          (this.options.installed ?? []).includes(this.activeBuild)
+            ? this.bundleId(this.activeBuild)
+            : null,
+        notice: null,
+        pinned:
+          this.current !== null &&
+          this.options.pinned !== undefined &&
+          this.options.pinned !== this.activeBuild &&
+          (this.options.installed ?? []).includes(this.options.pinned)
+            ? this.bundleId(this.options.pinned)
+            : null,
       },
       notices: [],
     })
@@ -891,6 +937,17 @@ export class FakeApi implements LoomApi {
           this.changed(null)
           return this.done()
       }
+    }
+    if (typeof command === 'object' && 'use-bundle' in command) {
+      const build = (this.options.installed ?? []).find(
+        (b) => this.bundleId(b) === command['use-bundle'].id,
+      )
+      if (build === undefined) this.fail('APP_NO_BUNDLE')
+      this.activeBuild = build
+      this.options.data = true
+      this.version += 1
+      this.emit('build-changed')
+      return this.done()
     }
     if (command === 'new-build') {
       if (this.options.data !== true) this.fail('APP_NO_DATA')
@@ -1246,7 +1303,8 @@ export class FakeApi implements LoomApi {
   mcpStart() {
     this.mcp.running = true
     this.mcp.url = 'http://127.0.0.1:50000/mcp'
-    this.mcp.token = 'fake-token'
+    this.mcp.token ??= 'fake-token'
+    this.mcp['token-kept'] = true
     return this.mcpStatus()
   }
 
@@ -1254,7 +1312,15 @@ export class FakeApi implements LoomApi {
     this.mcp.running = false
     this.mcp.url = null
     this.mcp.token = null
+    this.mcp['token-kept'] = false
     this.mcp.permissions['standing-grant'] = false
+    return this.mcpStatus()
+  }
+
+  private rotations = 0
+  mcpRotate() {
+    this.rotations += 1
+    if (this.mcp.running) this.mcp.token = `fake-token-${this.rotations}`
     return this.mcpStatus()
   }
 
@@ -1300,6 +1366,18 @@ export class FakeApi implements LoomApi {
 
   exportXml() {
     return Promise.resolve(this.done())
+  }
+
+  /** The saved preferences document (for tests). */
+  prefs: string | null = null
+
+  uiPrefs() {
+    return Promise.resolve(this.prefs)
+  }
+
+  setUiPrefs(text: string) {
+    this.prefs = text
+    return Promise.resolve()
   }
 
   chooseBundle() {

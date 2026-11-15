@@ -359,6 +359,18 @@ fn requirements(
     (out.level.is_some() || out.strength + out.dexterity + out.intelligence > 0).then_some(out)
 }
 
+/// An item's requirements from its own `LevelReq` (or `Requires Level`)
+/// line and its base ([`requirements`]).
+fn item_requirements(item: &Item, bundle: Option<&Bundle>) -> Option<api::Requirements> {
+    let written = item.body.lines.iter().find_map(|l| match &l.kind {
+        LineKind::Spec { key, value, .. } if key == "LevelReq" || key == "Requires Level" => {
+            Some(value.trim().to_owned())
+        }
+        _ => None,
+    });
+    requirements(item, written.as_deref(), bundle)
+}
+
 /// The base values an item card shows, by spec key, in this order.
 const CARD_PROPERTIES: [&str; 8] = [
     "Armour",
@@ -425,7 +437,7 @@ fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
             .selected
             .and_then(|v| pob_item::current_variant(&variant_names(item), v)),
         affixes: data.map(|d| affixes(item, d)).unwrap_or_default(),
-        requirements: requirements(item, spec("LevelReq").as_deref(), bundle),
+        requirements: item_requirements(item, bundle),
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
     }
@@ -707,6 +719,7 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
                 _ => None,
             }),
             legacy: is_legacy(item),
+            requirements: item_requirements(item, bundle),
         });
     }
     let active = loom_calc::poe1::collect::active_item_set(build).map(|s| s.id);

@@ -369,13 +369,14 @@ fn unsaved_changes_should_be_recoverable_after_the_app_ends() {
     let dir = Scratch::new("recovery");
     let data = dir.path("data");
     let edited;
+    let original;
     {
         let r = start(&data, Some(bundle_dir()), "first");
         let v = version(
             &r.run(api::Command::ImportText { text: synthetic() })
                 .unwrap(),
         );
-        r.calculated(v);
+        original = r.calculated(v);
         let edit = replace(&r.app, "+15 to maximum Life", "+40 to maximum Life");
         let v = version(&r.run(api::Command::EditItem(edit)).unwrap());
         edited = r.calculated(v);
@@ -398,6 +399,12 @@ fn unsaved_changes_should_be_recoverable_after_the_app_ends() {
     );
     assert!(r.app.snapshot().dirty);
     assert!(r.app.recovery().is_empty());
+    // The undo history came back with it (UX-19): undo reaches the import.
+    let history = r.app.snapshot().history;
+    assert!(history.can_undo, "the edit can be undone after a restore");
+    let v = version(&r.run(api::Command::Undo).unwrap());
+    assert_eq!(r.calculated(v), original, "undo reaches the imported build");
+    assert!(!r.app.snapshot().history.can_undo);
     assert_eq!(
         r.run(api::Command::Restore {
             id: "first".to_owned()
@@ -1535,5 +1542,126 @@ fn a_new_build_should_start_empty_calculate_save_and_export() {
     let text = std::fs::read_to_string(&xml).unwrap();
     assert!(pob_xml::import(&text).is_ok(), "the export reads back");
     assert!(text.contains(r#"className="Scion""#));
+    r.app.stop();
+}
+
+/// Copies the synthetic bundle into `<data>/bundles/poe1/<name>/` with its
+/// manifest's Steam build set to `steam` (the manifest is not hashed, so the
+/// copy is valid; its data version differs).
+fn install(data: &Path, name: &str, steam: u64) -> PathBuf {
+    fn copy(from: &Path, to: &Path) {
+        std::fs::create_dir_all(to).unwrap();
+        for entry in std::fs::read_dir(from).unwrap() {
+            let entry = entry.unwrap();
+            let target = to.join(entry.file_name());
+            if entry.file_type().unwrap().is_dir() {
+                copy(&entry.path(), &target);
+            } else {
+                std::fs::copy(entry.path(), target).unwrap();
+            }
+        }
+    }
+    let dir = data.join("bundles/poe1").join(name);
+    copy(&bundle_dir(), &dir);
+    let path = dir.join("bundle.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+    manifest["source"]["steam_build"] = serde_json::json!(steam);
+    std::fs::write(&path, manifest.to_string()).unwrap();
+    dir
+}
+
+#[test]
+fn installed_bundles_should_be_found_switched_remembered_and_offered_for_a_pinned_build() {
+    let dir = Scratch::new("installed");
+    let data = dir.path("data");
+    let old = install(&data, "100-s4", 100);
+    install(&data, "200-s4", 200);
+
+    // No folder named, nothing remembered: the newest installed bundle.
+    let r = start(&data, None, "installed-1");
+    let snap = r.app.snapshot();
+    assert!(snap.data.error.is_none());
+    assert_eq!(snap.data.active.as_deref(), Some("poe1/200-s4"));
+    let ids: Vec<&str> = snap.data.installed.iter().map(|i| i.id.as_str()).collect();
+    assert_eq!(ids, ["poe1/200-s4", "poe1/100-s4"]);
+    assert_eq!(snap.data.pinned, None);
+
+    // A build imported now is pinned to it (ADR-010).
+    let v = version(
+        &r.run(api::Command::ImportText { text: synthetic() })
+            .unwrap(),
+    );
+    r.calculated(v);
+
+    // An unknown ID changes nothing.
+    let e = r
+        .run(api::Command::UseBundle {
+            id: "poe1/1-s4".to_owned(),
+        })
+        .unwrap_err();
+    assert_eq!(e.code, "APP_NO_BUNDLE");
+    assert_eq!(r.app.snapshot().data.active.as_deref(), Some("poe1/200-s4"));
+
+    // Switching: the build's data is now another installed bundle, which
+    // is offered, never taken silently.
+    r.run(api::Command::UseBundle {
+        id: "poe1/100-s4".to_owned(),
+    })
+    .unwrap();
+    let e = r.wait("calc-failed", |e| {
+        matches!(e.kind, api::EventKind::CalcFailed { .. })
+    });
+    match e.kind {
+        api::EventKind::CalcFailed { error } => assert_eq!(error.code, "APP_DATA_VERSION"),
+        _ => unreachable!(),
+    }
+    let snap = r.app.snapshot();
+    assert_eq!(snap.data.active.as_deref(), Some("poe1/100-s4"));
+    assert_eq!(snap.data.pinned.as_deref(), Some("poe1/200-s4"));
+    // Taking the offer calculates again.
+    let v = version(
+        &r.run(api::Command::UseBundle {
+            id: "poe1/200-s4".to_owned(),
+        })
+        .unwrap(),
+    );
+    r.calculated(v);
+    assert_eq!(r.app.snapshot().data.pinned, None);
+    // Back to the old one; the choice is remembered.
+    r.run(api::Command::UseBundle {
+        id: "poe1/100-s4".to_owned(),
+    })
+    .unwrap();
+    r.app.stop();
+    let settings = std::fs::read_to_string(data.join("settings.json")).unwrap();
+    assert!(
+        settings.contains(r#""bundle-id": "poe1/100-s4""#),
+        "{settings}"
+    );
+
+    let r = start(&data, None, "installed-2");
+    assert_eq!(r.app.snapshot().data.active.as_deref(), Some("poe1/100-s4"));
+    r.app.stop();
+
+    // The remembered bundle breaks: the newest installed one is taken,
+    // and the snapshot says so.
+    std::fs::remove_file(old.join("data/stats.json")).unwrap();
+    let r = start(&data, None, "installed-3");
+    let snap = r.app.snapshot();
+    assert!(snap.data.error.is_none());
+    assert_eq!(snap.data.active.as_deref(), Some("poe1/200-s4"));
+    assert_eq!(
+        snap.data.notice.map(|n| n.code).as_deref(),
+        Some("APP_BUNDLE_FALLBACK")
+    );
+    r.app.stop();
+
+    // `LOOM_BUNDLE_DIR` wins and is not an installed one.
+    let r = start(&data, Some(bundle_dir()), "installed-4");
+    let snap = r.app.snapshot();
+    assert!(snap.data.error.is_none());
+    assert_eq!(snap.data.active, None);
+    assert_eq!(snap.data.installed.len(), 2);
     r.app.stop();
 }

@@ -151,11 +151,26 @@ export const en = {
   'start.forgetShort': 'Remove',
   'start.justNow': 'just now',
   'start.discard': 'Discard {name}',
-  'start.dataReady': 'Game data ready · {game}, game build {build}.',
+  'start.dataReady': 'Game data ready · {name}.',
+  'data.patch': '{game} {patch}',
+  'data.gameBuild': '{game}, game build {build}',
+  'data.steamBuild': 'game build {build}',
   'start.dataNoneYet': 'No game data yet.',
   'start.dataFailed': 'The game data did not load.',
   'start.dataAdd': 'Add game data…',
   'start.dataChange': 'Change',
+  'start.dataChoose': 'Choose game data',
+  'data.heading': 'Game data',
+  'data.noneInstalled':
+    'No game data is installed. Installed game data appears here and is chosen for you.',
+  'data.entry':
+    '{name} · game build {build}, data schema {schema} (unsigned: signing comes with the installer)',
+  'data.inUse': 'In use',
+  'data.use': 'Use',
+  'data.unsignedInUse': 'In use: a folder chosen for development (unsigned).',
+  'data.chooseFolder': 'Choose a game data folder (unsigned, for development)…',
+  'data.pinned':
+    'This build was made with other game data ({id}), which is installed.',
 
   'import.reading': 'Reading the build…',
   'import.imported': 'Imported · {state}',
@@ -212,6 +227,44 @@ export const en = {
   'dashboard.viewWarnings': 'Review all',
   'dashboard.mainSkill': 'main skill {skill}',
   'dashboard.character': '{class} · level {level}',
+  'dashboard.dashboards': 'Dashboards',
+  'dashboard.addDashboard': 'Add a dashboard',
+  'dashboard.newName': 'Dashboard {n}',
+  'dashboard.customize': 'Customize',
+  'dashboard.done': 'Done',
+  'dashboard.name': 'Name',
+  'dashboard.deleteDashboard': 'Delete this dashboard',
+  'dashboard.empty':
+    'This dashboard is empty. Select Customize to add components.',
+  'dashboard.tools': '{name}: arrange',
+  'dashboard.moveUp': 'Move up',
+  'dashboard.moveDown': 'Move down',
+  'dashboard.makeFull': 'Full width',
+  'dashboard.makeHalf': 'Half width',
+  'dashboard.remove': 'Remove',
+  'dashboard.library': 'Add a component',
+  'dashboard.add': 'Add {name}',
+  'dashboard.addStat': 'Add stat',
+  'dashboard.statField': 'Stat',
+  'dashboard.statChoose': 'Choose a stat',
+  'dashboard.statMissing': 'This stat is not in the calculation.',
+  'dashboard.kind.offence': 'Offence',
+  'dashboard.kind.defence': 'Defence',
+  'dashboard.kind.warnings': 'Warnings',
+  'dashboard.kind.equipment': 'Equipment',
+  'dashboard.kind.main-skill': 'Main skill',
+  'dashboard.kind.stat': 'Stat: {field}',
+  'dashboard.kindHelp.offence': 'damage, speed, and critical strikes',
+  'dashboard.kindHelp.defence': 'life, mana, defences, and resistances',
+  'dashboard.kindHelp.warnings': 'lines kept but not calculated',
+  'dashboard.kindHelp.equipment': 'the inventory, with tooltips',
+  'dashboard.kindHelp.main-skill': 'the main skill and its supports',
+  'dashboard.mainSkillTitle': 'Main skill',
+  'dashboard.openSkills': 'Edit skills',
+  'dashboard.noMainSkill': 'No main skill.',
+  'dashboard.support': 'Support',
+  'dashboard.active': 'Active',
+  'dashboard.gemLevel': 'level {level}',
 
   'breakdown.crumbs': 'Breadcrumb',
   'breakdown.title': 'Why is {field} {value}?',
@@ -364,6 +417,17 @@ export const en = {
   'items.none': 'This build has no items.',
   'items.warningCount': '{n} with warnings',
   'items.legacy': 'Legacy',
+  'inventory.treeJewels': 'Jewels in the passive tree',
+  'inventory.treeJewel': 'Passive tree jewel: {name}',
+  'inventory.attributes':
+    'Strength {str} · Dexterity {dex} · Intelligence {int}',
+  'inventory.requirementsMet':
+    'Every item in use meets its level and attribute requirements.',
+  'inventory.requirementShort': '{name} needs {need} {what} (you have {have}).',
+  'inventory.req.level': 'level',
+  'inventory.req.str': 'Strength',
+  'inventory.req.dex': 'Dexterity',
+  'inventory.req.int': 'Intelligence',
   'inventory.title': 'Equipped',
   'inventory.details': 'Details (hold Alt)',
   'inventory.weaponSet': 'Weapon set',
@@ -490,6 +554,14 @@ export const en = {
   'config.noEffect': 'Changes no number',
   'config.legacy': 'Lines (shown as custom modifiers)',
   'config.remove': 'Remove {input}',
+  'config.addOption': 'Add an option',
+  'config.addOptionHelp':
+    'Path of Building’s configuration options ({version}). Shown first: the options for every build and for this build’s skills.',
+  'config.search': 'Search options',
+  'config.allOptions': 'All options',
+  'config.optionsFound': '{n} options',
+  'config.optionsMore': '{n} more: search to narrow the list.',
+  'config.addNamed': 'Add {option}',
   'config.addInput': 'Add an input by its Path of Building name',
   'config.addHelp':
     'For an option this list does not show yet. Use the name Path of Building saves it under.',
@@ -616,7 +688,8 @@ export const en = {
   'ai.off': 'Stopped',
   'ai.start': 'Start the server',
   'ai.stop': 'Stop the server',
-  'ai.running': 'Running at {url}, on this computer only.',
+  'ai.running':
+    'Running at {url}, on this computer only. The address stays the same the next time you start it, unless another program took the port.',
   'ai.stopped': 'Start it to let an AI client on this computer connect.',
   'ai.permissions': 'Permissions',
   'ai.read': 'Read the build',
@@ -630,8 +703,14 @@ export const en = {
   'ai.withoutAsking': 'Without asking',
   'ai.askEach': 'Ask each time',
   'ai.connect': 'Connect Claude Code',
-  'ai.connectHelp':
-    'Run this command in a terminal. The token changes each time the server starts, so copy the command again after a restart.',
+  'ai.connectHelp': 'Run this command in a terminal.',
+  'ai.tokenKept':
+    'The token is kept between starts in your system’s protected credential store, so you run the command once. Rotate it if it may have leaked.',
+  'ai.tokenSession':
+    'The token is new each time the server starts (no protected credential store is available), so copy the command again after a restart.',
+  'ai.rotate': 'Rotate token',
+  'ai.rotated':
+    'New token made. Copy the command again; clients with the old token are refused.',
   'ai.copyCommand': 'Copy command',
   'ai.copied': 'Copied',
   'ai.showToken': 'Show token',
@@ -677,6 +756,8 @@ export const en = {
   'error.code': 'Code {code}',
   'error.APP_NO_DATA':
     'Game data is not loaded yet. Under “Game data” on the start page, choose the game data folder, then try again.',
+  'error.APP_NO_BUNDLE':
+    'That game data is no longer installed. Choose game data in About.',
   'error.APP_BUNDLE':
     'That folder is not game data. Choose the folder that holds the file bundle.json.',
   'error.APP_DATA_VERSION':
@@ -765,6 +846,8 @@ export const en = {
   'warning.LINE_UNRECOGNIZED': 'Not a line Exiled Studio recognizes.',
   'warning.LINE_UNKNOWN_SPEC': 'An item property Exiled Studio does not know.',
 
+  'notice.APP_BUNDLE_FALLBACK':
+    'The game data you chose did not load, so the newest installed game data is in use.',
   'notice.APP_RESOLUTION_CHANGED':
     'This build’s lines were read with an earlier reading of the data; that reading is kept and rolled values are not settled.',
 } as const

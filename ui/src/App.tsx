@@ -27,6 +27,7 @@ import { Skills } from './screens/Skills'
 import { Start } from './screens/Start'
 import {
   buildStatus,
+  dataName,
   historyText,
   useAppDispatch,
   useAppSelector,
@@ -582,25 +583,62 @@ function DataLine({
   version: DataVersionView | null | undefined
 }) {
   const dispatch = useAppDispatch()
-  const error = useAppSelector((s) => s.session.snapshot?.data?.error)
+  const data = useAppSelector((s) => s.session.snapshot?.data)
+  const error = data?.error
+  const installed = data?.installed ?? []
   return (
     <span className="data-line">
       {version != null
         ? t('start.dataReady', {
-            game: version.game === 'poe1' ? 'Path of Exile' : 'Path of Exile 2',
-            build: version['steam-build'] ?? '?',
+            name: dataName(version, data?.['tree-version']),
           })
         : error != null
           ? t('start.dataFailed')
           : t('start.dataNoneYet')}{' '}
-      <button
-        type="button"
-        className="link"
-        onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
-      >
-        {version != null ? t('start.dataChange') : t('start.dataAdd')}
-      </button>
+      {data?.notice != null && (
+        <>{tDynamic(`notice.${data.notice.code}`, 'error.generic')} </>
+      )}
+      {/* With installed data, the choice is About's list (B-1); without,
+          only a development folder can be picked. */}
+      {installed.length > 0 || version != null ? (
+        <button
+          type="button"
+          className="link"
+          onClick={() => dispatch(actions.go('about'))}
+        >
+          {version != null ? t('start.dataChange') : t('start.dataChoose')}
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="link"
+          onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
+        >
+          {t('start.dataAdd')}
+        </button>
+      )}
     </span>
+  )
+}
+
+/** The open build was made with another installed bundle than the loaded
+ * one (ADR-010): offered, never switched silently. */
+function PinnedData() {
+  const dispatch = useAppDispatch()
+  const pinned = useAppSelector((s) => s.session.snapshot?.data?.pinned)
+  if (pinned == null) return null
+  return (
+    <div className="panel" role="note">
+      <p>
+        {t('data.pinned', { id: pinned })}{' '}
+        <button
+          type="button"
+          onClick={() => void dispatch(run({ 'use-bundle': { id: pinned } }))}
+        >
+          {t('data.use')}
+        </button>
+      </p>
+    </div>
   )
 }
 
@@ -688,6 +726,7 @@ function Workspace({ screen }: { screen: Screen }) {
         <ErrorAlert />
         <Flash />
         <Notices />
+        <PinnedData />
         <Content key={screen} screen={screen} />
       </main>
       <ShareCodeDialog />

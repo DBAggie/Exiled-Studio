@@ -20,6 +20,7 @@ import {
   type RecoveryEntry,
   type Snapshot,
 } from '../api/types'
+import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
 import { importFlow, importActions } from './importFlow'
 
@@ -79,6 +80,8 @@ interface UiState {
   /** An action that would replace a build with unsaved changes, waiting
    * for the user's answer (UX-01). */
   confirm: Replace | null
+  /** The user's dashboards (B-5). */
+  prefs: Prefs
 }
 
 /** What replaces the open build: a new one, a file the user picks, a
@@ -101,6 +104,7 @@ const ui = createSlice({
     flash: null,
     dragging: false,
     confirm: null,
+    prefs: defaultPrefs(),
   } as UiState,
   reducers: {
     go(state, action: PayloadAction<Screen>) {
@@ -132,6 +136,9 @@ const ui = createSlice({
     },
     confirm(state, action: PayloadAction<Replace | null>) {
       state.confirm = action.payload
+    },
+    prefs(state, action: PayloadAction<Prefs>) {
+      state.prefs = action.payload
     },
   },
 })
@@ -206,6 +213,28 @@ export const refreshLists = (): Thunk => async (dispatch, _getState, api) => {
   dispatch(actions.recovery(await api.recovery()))
   dispatch(actions.mcp(await api.mcpStatus()))
 }
+
+/** Reads the user's dashboards (the defaults when none were saved). */
+export const loadPrefs = (): Thunk => async (dispatch, _getState, api) => {
+  try {
+    dispatch(actions.prefs(readPrefs(await api.uiPrefs())))
+  } catch {
+    dispatch(actions.prefs(defaultPrefs()))
+  }
+}
+
+/** Changes the user's dashboards and saves them; a failed save keeps the
+ * change for this session and says so. */
+export const setPrefs =
+  (prefs: Prefs): Thunk =>
+  async (dispatch, _getState, api) => {
+    dispatch(actions.prefs(prefs))
+    try {
+      await api.setUiPrefs(JSON.stringify(prefs))
+    } catch (e) {
+      dispatch(actions.error(codeOf(e)))
+    }
+  }
 
 /** Runs a call; on failure shows its code and returns null. */
 export const attempt =
@@ -357,6 +386,7 @@ export async function startSync(store: Store, api: LoomApi) {
   })
   await store.dispatch(refresh())
   await store.dispatch(refreshLists())
+  await store.dispatch(loadPrefs())
   return () => {
     stop()
     stopDrop()

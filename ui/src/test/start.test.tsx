@@ -132,3 +132,44 @@ describe('start page', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 })
+
+// B-1 (start page plan, PR B): installed game data is listed in About and
+// switched there; a build made with another installed bundle is offered it.
+describe('game data', () => {
+  it('lists installed game data and switches it', async () => {
+    const { user, api } = await renderApp({ installed: [200, 100] })
+    expect(screen.getByText(/game build 200\./)).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: 'Change' }))
+    const section = await screen.findByRole('region', { name: 'Game data' })
+    await expectAccessible(section)
+    expect(within(section).getByText('In use')).toBeTruthy()
+    expect(
+      within(section).getByRole('button', {
+        name: 'Choose a game data folder (unsigned, for development)…',
+      }),
+    ).toBeTruthy()
+    await user.click(within(section).getByRole('button', { name: 'Use' }))
+    expect(api.executed).toEqual([{ 'use-bundle': { id: 'poe1/100-s4' } }])
+    await waitFor(() =>
+      expect(screen.getByText(/game build 100\./)).toBeTruthy(),
+    )
+  })
+
+  it('offers the build its own installed data', async () => {
+    const { user, api } = await renderApp({
+      installed: [200, 100],
+      pinned: 100,
+    })
+    await user.click(screen.getByRole('button', { name: 'New build' }))
+    const note = await screen.findByText(
+      /This build was made with other game data \(poe1\/100-s4\)/,
+    )
+    await user.click(within(note).getByRole('button', { name: 'Use' }))
+    expect(api.executed).toContainEqual({
+      'use-bundle': { id: 'poe1/100-s4' },
+    })
+    await waitFor(() =>
+      expect(screen.queryByText(/This build was made with other/)).toBeNull(),
+    )
+  })
+})

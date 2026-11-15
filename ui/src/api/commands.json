@@ -11,10 +11,13 @@
   "set_permissions",
   "mcp_start",
   "mcp_stop",
+  "mcp_rotate",
   "import_file",
   "open_file",
   "save_as",
   "export_xml",
   "choose_bundle",
-  "open_dropped"
+  "open_dropped",
+  "ui_prefs",
+  "set_ui_prefs"
 ]

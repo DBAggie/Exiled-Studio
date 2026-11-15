@@ -109,6 +109,8 @@ export interface LoomApi {
   setPermissions(permissions: McpPermissions): Promise<McpStatus>
   mcpStart(): Promise<McpStatus>
   mcpStop(): Promise<McpStatus>
+  /** A new MCP token, kept; a running server takes it at once. */
+  mcpRotate(): Promise<McpStatus>
   importFile(): Promise<Outcome>
   openFile(): Promise<Outcome>
   saveAs(): Promise<Outcome>
@@ -117,6 +119,11 @@ export interface LoomApi {
   /** Opens the last dropped file: imports a PoB build, opens a build
    * document; `UI_DROP` for anything else. */
   openDropped(): Promise<Outcome>
+  /** The UI's own preferences document (the user's dashboards), `null`
+   * before one is saved. */
+  uiPrefs(): Promise<string | null>
+  /** Saves the UI's preferences (`UI_PREFS` when not JSON or too big). */
+  setUiPrefs(text: string): Promise<void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

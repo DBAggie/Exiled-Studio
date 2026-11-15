@@ -12,6 +12,15 @@ import type {
   SetView,
 } from '../api/types'
 import { Badge, Icon, ScreenHeading } from '../components'
+import {
+  initialValue,
+  matches,
+  OPTIONS,
+  optionOf,
+  relevant,
+  SOURCE_TAG,
+  type ConfigOption,
+} from '../configOptions'
 import { LeaguePicker } from './Items'
 import { t, tDynamic } from '../i18n'
 import { run } from '../store'
@@ -99,6 +108,47 @@ function TextInput({
   )
 }
 
+/** A PoB list option's choices; the current value stays a choice even
+ * when PoB's list does not have it. */
+function ChoiceEditor({
+  option,
+  value,
+  label,
+  onSet,
+}: {
+  option: ConfigOption
+  value: ConfigValueView
+  label: string
+  onSet: (v: ConfigValueView) => void
+}) {
+  const choices = option.list ?? []
+  const current =
+    'number' in value
+      ? String(value.number)
+      : 'text' in value
+        ? value.text
+        : String(value.boolean)
+  const known = choices.some((c) => String(c.val) === current)
+  return (
+    <select
+      aria-label={label}
+      value={current}
+      onChange={(e) => {
+        const c = choices.find((x) => String(x.val) === e.target.value)
+        if (c == null) return
+        onSet(typeof c.val === 'number' ? { number: c.val } : { text: c.val })
+      }}
+    >
+      {!known && <option value={current}>{current}</option>}
+      {choices.map((c) => (
+        <option key={String(c.val)} value={String(c.val)}>
+          {c.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 function ValueEditor({
   input,
   label,
@@ -109,6 +159,12 @@ function ValueEditor({
   onSet: (v: ConfigValueView) => void
 }) {
   const v = input.value
+  const option = optionOf(input.name)
+  if (option?.type === 'list') {
+    return (
+      <ChoiceEditor option={option} value={v} label={label} onSet={onSet} />
+    )
+  }
   if ('boolean' in v) {
     return (
       <input
@@ -150,13 +206,34 @@ function EffectBadge({ input }: { input: ConfigInputView }) {
   return null
 }
 
+/** An input's name: PoB's label for it, else the key in words. */
+function optionLabel(name: string): string {
+  return optionOf(name)?.label ?? inputLabel(name)
+}
+
+/** The first line of PoB's tooltip, as a short help line. */
+function helpLine(option: ConfigOption | undefined): string | null {
+  const first = option?.tooltip?.split('\n')[0]?.trim()
+  return first != null && first !== '' ? first : null
+}
+
 function InputRow({ input }: { input: ConfigInputView }) {
   const dispatch = useAppDispatch()
-  const label = inputLabel(input.name)
+  const option = optionOf(input.name)
+  const label = optionLabel(input.name)
+  const help = helpLine(option)
   return (
     <li className="config-row">
       <div className="config-name">
         <span>{label}</span>
+        {help !== null && (
+          <span
+            className="muted small-text config-help"
+            title={option?.tooltip}
+          >
+            {help}
+          </span>
+        )}
         <span className="muted small-text">
           {input.name}
           {input.placeholder && ` · ${t('config.placeholder')}`}
@@ -188,6 +265,94 @@ function InputRow({ input }: { input: ConfigInputView }) {
         <Icon name="close" size={14} />
       </button>
     </li>
+  )
+}
+
+/** How many matches the option picker lists at once. */
+const SHOWN = 40
+
+/** Adds any of PoB's options (the catalogue): searched by label or key;
+ * by default the options PoB shows for every build and those for this
+ * build's skills, all of them on request. */
+function AddOption({ have }: { have: ReadonlySet<string> }) {
+  const dispatch = useAppDispatch()
+  const id = useId()
+  const groups = useAppSelector(
+    (s) => s.session.snapshot?.build?.['skill-groups'] ?? [],
+  )
+  const [query, setQuery] = useState('')
+  const [all, setAll] = useState(false)
+  const skills = new Set(
+    groups.flatMap((g) => g.gems.map((x) => x.name ?? '')).filter(Boolean),
+  )
+  const found = OPTIONS.filter(
+    (o) =>
+      !have.has(o.var) && (all || relevant(o, skills)) && matches(o, query),
+  )
+  return (
+    <details className="config-add">
+      <summary>{t('config.addOption')}</summary>
+      <p className="muted small-text">
+        {t('config.addOptionHelp', { version: SOURCE_TAG })}
+      </p>
+      <div className="row">
+        <label className="field">
+          <span>{t('config.search')}</span>
+          <input
+            id={id}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={all}
+            onChange={(e) => setAll(e.target.checked)}
+          />
+          {t('config.allOptions')}
+        </label>
+      </div>
+      <p className="muted small-text" role="status">
+        {t('config.optionsFound', { n: found.length })}
+      </p>
+      <ul className="config-options">
+        {found.slice(0, SHOWN).map((o) => (
+          <li key={o.var}>
+            <span className="config-name">
+              <span>{o.label}</span>
+              <span className="muted small-text">
+                {[o.section, o.heading].filter(Boolean).join(' · ')}
+              </span>
+            </span>
+            <button
+              type="button"
+              className="small"
+              aria-label={t('config.addNamed', { option: o.label })}
+              onClick={() =>
+                void dispatch(
+                  run({
+                    'set-config-input': {
+                      name: o.var,
+                      value: initialValue(o),
+                    },
+                  }),
+                )
+              }
+            >
+              <Icon name="plus" size={14} />
+              {t('config.add')}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {found.length > SHOWN && (
+        <p className="muted small-text">
+          {t('config.optionsMore', { n: found.length - SHOWN })}
+        </p>
+      )}
+    </details>
   )
 }
 
@@ -454,6 +619,7 @@ export function Config() {
               </div>
             )
           })}
+          <AddOption have={new Set(inputs.map((i) => i.name))} />
           <AddInput />
         </section>
         <section className="panel" aria-labelledby="config-blocks">

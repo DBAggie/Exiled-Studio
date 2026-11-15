@@ -11,11 +11,13 @@
 //! `loom_serialization::dto::app::v1`.
 
 mod app;
+pub mod bundles;
 mod data;
 mod edit;
 mod error;
 pub mod gems;
 pub mod loadout;
+pub mod main_skill;
 mod session;
 mod view;
 

@@ -53,6 +53,11 @@ pub enum Code {
     /// A command names a config set, input, or custom modifier block the
     /// build does not have, or an input the page cannot set.
     Config,
+    /// The remembered bundle did not load and the newest installed one was
+    /// taken (a notice, not an error).
+    BundleFallback,
+    /// No installed bundle has the ID a command names.
+    NoBundle,
 }
 
 impl Code {
@@ -82,6 +87,8 @@ impl Code {
             Self::Loadout => "APP_LOADOUT",
             Self::Skill => "APP_SKILL",
             Self::Config => "APP_CONFIG",
+            Self::BundleFallback => "APP_BUNDLE_FALLBACK",
+            Self::NoBundle => "APP_NO_BUNDLE",
         }
     }
 }

@@ -436,3 +436,20 @@ Content-Length: 1000
     assert_eq!(send(addr, &head, b"").0, 401);
     assert!(started.elapsed() < Duration::from_secs(5));
 }
+
+#[test]
+fn server_should_take_its_preferred_port_when_free_and_another_when_taken() {
+    let mut f = fixture("port");
+    let port = f.server.addr().port();
+    f.server.stop();
+    // Free again: the same port (UX-26: a client's URL keeps working), and
+    // a new token (ADR-017: per session).
+    let old_token = f.server.token().to_owned();
+    f.server = Server::start_on(Arc::clone(&f.app), Some(port)).unwrap();
+    assert_eq!(f.server.addr().port(), port);
+    assert_ne!(f.server.token(), old_token);
+    // Taken (here by the running server): an ephemeral port instead.
+    let mut second = Server::start_on(Arc::clone(&f.app), Some(port)).unwrap();
+    assert_ne!(second.addr().port(), port);
+    second.stop();
+}
