@@ -16,6 +16,7 @@ The maintainer's run after PR #109 (B-2's data part, PR 1), on the main workstat
 | `b2-public-calc-run-summary.json`, `b2-corpus-poe1-26530219-calc-run-summary.json` | `calc-run` on the public fixtures (136 builds) and the anonymous corpus (21) |
 | `b2-public-calc-parity-summary.json`, `b2-corpus-poe1-26530219-calc-parity-summary.json` | `calc-parity` against the oracle |
 | `b2-public-vs-close.json`, `b2-public-overlay-vs-close.json`, `b2-corpus-poe1-26530219-vs-close.json` | Each calc document compared with the Phase 3 close-out's (`docs/phase-3/phase-3-report/`) |
+| `rules-rebuild.md`, `rules-public-calc-run-summary.json` | The bundle rebuilt for B-2 PR 2's item rules (`affix_generations`, `mod_tag_names`), 2026-11-15; manifest `4cdd0bdb…` |
 
 ## Result
 **No calculation changed.**
