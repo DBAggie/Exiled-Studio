@@ -59,6 +59,25 @@ pub struct Session {
     generation: u64,
 }
 
+/// A new build's PoB XML ([`Session::new_build`]); `{tree}` is the spec's
+/// tree version attribute, or nothing. Our own template, in the shape PoB's files take.
+const NEW_BUILD: &str = r#"<PathOfBuilding>
+	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec{tree} classId="0" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1"/>
+	</Skills>
+	<Items activeItemSet="1" useSecondWeaponSet="false">
+		<ItemSet id="1" useSecondWeaponSet="false"/>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default"/>
+	</Config>
+</PathOfBuilding>
+"#;
+
 fn stem(path: &Path) -> String {
     path.file_stem()
         .map(|s| s.to_string_lossy().into_owned())
@@ -204,6 +223,37 @@ impl Session {
         let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
         self.notices.clear();
         self.replace(State { build, ends }, None, origin, true);
+        Ok(self.version)
+    }
+
+    /// Starts a new PoE1 build as PoB starts one (UX brief note 3, B-3):
+    /// Scion, level 1, one empty passive spec on the data's tree version,
+    /// one skill set, one item set, one config set. It is read from a fixed
+    /// PoB template through the import path, so it saves and exports like
+    /// any build. Not dirty until edited; no path (UX-15 names it).
+    ///
+    /// # Errors
+    /// `APP_NO_DATA`; `APP_DATA_VERSION` when the data is not PoE1.
+    pub fn new_build(&mut self) -> Result<u64, AppError> {
+        let data = self.need_data()?;
+        if data.version.game != loom_domain::Game::Poe1 {
+            return Err(AppError::new(
+                Code::DataVersion,
+                "a new build needs PoE1 data",
+            ));
+        }
+        // An unknown tree version is left out (PoB reads its latest); the
+        // calculation reports it (`unchecked-tree-version`).
+        let tree = data
+            .tree_version
+            .as_ref()
+            .map(|t| format!(r#" treeVersion="{}""#, t.as_str()))
+            .unwrap_or_default();
+        let text = NEW_BUILD.replace("{tree}", &tree);
+        let mut build = loom_pipeline::read_pob(&text)?;
+        let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+        self.notices.clear();
+        self.replace(State { build, ends }, None, None, false);
         Ok(self.version)
     }
 

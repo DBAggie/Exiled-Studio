@@ -520,6 +520,11 @@
       "description": "A command (ADR-004): an intent the application runs in order.",
       "oneOf": [
         {
+          "description": "Starts a new PoE1 build: Scion, level 1, empty sets (UX brief\nnote 3).",
+          "type": "string",
+          "const": "new-build"
+        },
+        {
           "description": "Imports a PoB share code or XML text.",
           "type": "object",
           "properties": {
@@ -2802,15 +2807,45 @@
       "description": "A recent build.",
       "type": "object",
       "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "at": {
           "description": "When it was last opened or saved, in seconds since the Unix\nepoch.",
           "type": "integer",
           "format": "uint64",
           "minimum": 0
         },
+        "class": {
+          "description": "The class, if known (UX-20; lists written before it have none).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "id": {
           "description": "The ID the application issued for it (the UI opens a recent\nbuild by it and never sends a path).",
           "type": "string"
+        },
+        "level": {
+          "description": "The character level, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "main-skill": {
+          "description": "The main skill, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "description": "The display name.",

@@ -1,15 +1,20 @@
-// Screen 1 (docs/ui, Main): import a PoB build, open a saved one, the game
-// data, unsaved work to restore, recent builds.
-import { useId, useState } from 'react'
+// Screen 1 (docs/ui, Main), start page B (the maintainer's choice, UX
+// brief note 4): one command bar that imports a pasted share code or PoB
+// XML or finds a recent build; the actions New build, Import from
+// clipboard, Open a file; unsaved work to restore; recent builds. The game
+// data's status is the frame's footer line (App.tsx), and a file can be
+// dropped anywhere in the window.
+import { useEffect, useId, useRef, useState } from 'react'
 
 import { ErrorCode, Icon, ScreenHeading } from '../components'
+import type { RecentEntry } from '../api/types'
 import { errorText, t } from '../i18n'
 import {
   actions,
-  attempt,
   importBuild,
   openBuild,
   refreshLists,
+  replaceBuild,
   run,
 } from '../store'
 import { useAppDispatch, useAppSelector } from '../util'
@@ -46,6 +51,34 @@ function fileName(path: string): string {
   return path.split(/[\\/]/).pop() ?? path
 }
 
+/** Whether text is a build to import rather than words to find a recent
+ * build by: PoB XML, a share code (one long run of base64url), or a link
+ * (which the import then explains, UX-18). */
+function looksLikeBuild(text: string): boolean {
+  const s = text.trim()
+  return (
+    s.startsWith('<') ||
+    /^https?:\/\//i.test(s) ||
+    (s.length >= 40 && /^[A-Za-z0-9_\-+/=]+$/.test(s))
+  )
+}
+
+/** "Inquisitor 92 · Smite" (UX-20); empty when the list has nothing. */
+function summary(r: RecentEntry): string {
+  const who = [r.ascendancy ?? r.class, r.level].filter((x) => x != null)
+  return [who.join(' '), r['main-skill']].filter((x) => x).join(' · ')
+}
+
+/** Whether a key or paste event belongs to a text field. */
+function inField(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      target instanceof HTMLTextAreaElement ||
+      target instanceof HTMLInputElement)
+  )
+}
+
 export function Start() {
   const dispatch = useAppDispatch()
   const snapshot = useAppSelector((s) => s.session.snapshot)
@@ -53,10 +86,70 @@ export function Start() {
   const recent = useAppSelector((s) => s.lists.recent)
   const recovery = useAppSelector((s) => s.lists.recovery)
   const [text, setText] = useState('')
-  const textId = useId()
-  const data = snapshot?.data
-  const version = data?.['data-version']
+  const [hint, setHint] = useState<string | null>(null)
+  const barRef = useRef<HTMLTextAreaElement>(null)
+  const barId = useId()
+  const hasData = snapshot?.data?.['data-version'] != null
   const reading = flow.state === 'reading'
+
+  const importText = (value: string) => {
+    // A pobb.in or pastebin link: say so before trying (UX-18).
+    if (/^\s*https?:\/\//i.test(value)) {
+      dispatch(actions.importStarted())
+      dispatch(actions.importFailed('UI_LINK'))
+      return
+    }
+    void dispatch(
+      importBuild((api) => api.execute({ 'import-text': { text: value } })),
+    )
+  }
+
+  // Ctrl+V on the page, outside a field, imports the clipboard's text
+  // (the paste event needs no clipboard permission). Registered once; it
+  // reads the latest state through the ref.
+  const onPage = useRef<(e: ClipboardEvent) => void>(() => {})
+  useEffect(() => {
+    onPage.current = (e) => {
+      if (inField(e.target) || !hasData) return
+      const pasted = e.clipboardData?.getData('text') ?? ''
+      if (pasted.trim() === '') return
+      e.preventDefault()
+      setText(pasted)
+      importText(pasted)
+    }
+  })
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => onPage.current(e)
+    window.addEventListener('paste', onPaste)
+    return () => window.removeEventListener('paste', onPaste)
+  }, [])
+
+  const fromClipboard = async () => {
+    setHint(null)
+    try {
+      const pasted = (await navigator.clipboard?.readText()) ?? ''
+      if (pasted.trim() === '') {
+        setHint(t('start.clipboardEmpty'))
+        return
+      }
+      setText(pasted)
+      importText(pasted)
+    } catch {
+      // Refused: the paste shortcut works without permission.
+      barRef.current?.focus()
+      setHint(t('start.clipboardRefused'))
+    }
+  }
+
+  const query = looksLikeBuild(text) ? '' : text.trim().toLowerCase()
+  const shown =
+    query === ''
+      ? recent
+      : recent.filter((r) =>
+          [r.name, fileName(r.path), summary(r)].some((s) =>
+            s.toLowerCase().includes(query),
+          ),
+        )
 
   return (
     <>
@@ -125,116 +218,117 @@ export function Start() {
           </ul>
         </section>
       )}
-      <div className="start-grid">
-        <section className="panel import-card" aria-labelledby={`${textId}-h`}>
-          <h2 id={`${textId}-h`}>
-            <Icon name="download" size={22} />
-            {t('start.import')}
-          </h2>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              // A pobb.in or pastebin link: say so before trying (UX-18).
-              if (/^\s*https?:\/\//i.test(text)) {
-                dispatch(actions.importStarted())
-                dispatch(actions.importFailed('UI_LINK'))
-                return
+
+      <section className="panel command-panel" aria-label={t('start.import')}>
+        <form
+          className="command-bar"
+          onSubmit={(e) => {
+            e.preventDefault()
+            importText(text)
+          }}
+        >
+          <label htmlFor={barId} className="visually-hidden">
+            {t('start.importLabel')}
+          </label>
+          <Icon name="download" size={20} />
+          <textarea
+            id={barId}
+            ref={barRef}
+            rows={1}
+            value={text}
+            placeholder={t('start.barPlaceholder')}
+            aria-describedby={`${barId}-help`}
+            onChange={(e) => setText(e.target.value)}
+            onPaste={(e) => {
+              // A build pasted into the empty bar imports at once.
+              const pasted = e.clipboardData.getData('text')
+              if (text === '' && hasData && looksLikeBuild(pasted)) {
+                e.preventDefault()
+                setText(pasted)
+                importText(pasted)
               }
-              void dispatch(
-                importBuild((api) => api.execute({ 'import-text': { text } })),
-              )
             }}
-          >
-            <label htmlFor={textId} className="muted">
-              {t('start.importLabel')}
-            </label>
-            <textarea
-              id={textId}
-              rows={4}
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-            <div className="row">
-              <button
-                type="submit"
-                className="primary"
-                disabled={reading || text.trim() === ''}
-              >
-                {t('start.importButton')}
-              </button>
-              <button
-                type="button"
-                disabled={reading}
-                onClick={() =>
-                  void dispatch(importBuild((api) => api.importFile()))
-                }
-              >
-                {t('start.importFile')}
-              </button>
-              <span className="muted">{t('start.importSafe')}</span>
-            </div>
-          </form>
-          {reading && <p role="status">{t('import.reading')}</p>}
-          {flow.state === 'failed' && (
-            <div role="alert">
-              <p className="error">{errorText(flow.code)}</p>
-              {flow.code !== 'UI_LINK' && <ErrorCode code={flow.code} />}
-            </div>
-          )}
-        </section>
-
-        <div className="start-side">
-          <section className="panel side-card" aria-labelledby="open-h">
-            <h2 id="open-h">{t('start.openTitle')}</h2>
-            <p className="muted">{t('start.openHelp')}</p>
-            <button
-              type="button"
-              onClick={() => void dispatch(openBuild((api) => api.openFile()))}
-            >
-              {t('start.open')}
-            </button>
-          </section>
-
-          <section className="panel side-card" aria-labelledby="data-h">
-            <h2 id="data-h">{t('start.data')}</h2>
-            {version === null || version === undefined ? (
-              <p className="muted">{t('start.dataNone')}</p>
-            ) : (
-              <p>
-                {t('start.dataLoaded', {
-                  game:
-                    version.game === 'poe1'
-                      ? 'Path of Exile'
-                      : 'Path of Exile 2',
-                  build: version['steam-build'] ?? '?',
-                })}
-              </p>
-            )}
-            {data?.error !== null && data?.error !== undefined && (
-              <>
-                <p className="error">{errorText(data.error.code)}</p>
-                <ErrorCode code={data.error.code} />
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() =>
-                void dispatch(attempt((api) => api.chooseBundle()))
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                // Words find a recent build; only a build imports.
+                if (hasData && looksLikeBuild(text)) importText(text)
               }
-            >
-              <Icon name="folder" />
-              {t('start.chooseData')}
-            </button>
-          </section>
+            }}
+          />
+          <button
+            type="submit"
+            className="primary"
+            disabled={!hasData || reading || text.trim() === ''}
+          >
+            {t('start.importButton')}
+          </button>
+        </form>
+        <p id={`${barId}-help`} className="muted small">
+          {hasData ? t('start.importSafe') : t('start.needData')}
+        </p>
+        {reading && <p role="status">{t('import.reading')}</p>}
+        {hint !== null && <p role="status">{hint}</p>}
+        {flow.state === 'failed' && (
+          <div role="alert">
+            <p className="error">{errorText(flow.code)}</p>
+            {flow.code !== 'UI_LINK' && <ErrorCode code={flow.code} />}
+          </div>
+        )}
+        <div className="start-actions">
+          <button
+            type="button"
+            disabled={!hasData}
+            onClick={() => void dispatch(replaceBuild('new-build'))}
+          >
+            <Icon name="plus" />
+            {t('start.newBuild')}
+            <kbd aria-hidden="true">Ctrl N</kbd>
+          </button>
+          <button
+            type="button"
+            disabled={!hasData || reading}
+            onClick={() => void fromClipboard()}
+          >
+            <Icon name="copy" />
+            {t('start.fromClipboard')}
+            <kbd aria-hidden="true">Ctrl V</kbd>
+          </button>
+          <button
+            type="button"
+            onClick={() => void dispatch(replaceBuild('open-file'))}
+          >
+            <Icon name="folder" />
+            {t('start.open')}
+            <kbd aria-hidden="true">Ctrl O</kbd>
+          </button>
+          <button
+            type="button"
+            className="link"
+            disabled={!hasData || reading}
+            onClick={() => void dispatch(replaceBuild('import-file'))}
+          >
+            {t('start.importFile')}
+          </button>
         </div>
-      </div>
+      </section>
 
       <section aria-labelledby="recent-h">
         <div className="recent-head">
           <h2 id="recent-h">{t('start.recent')}</h2>
+          {query !== '' && (
+            <span className="muted" role="status">
+              {t('start.recentFiltered', {
+                n: shown.length,
+                all: recent.length,
+              })}
+            </span>
+          )}
         </div>
         {recent.length === 0 ? (
           <p className="muted">{t('start.recentNone')}</p>
+        ) : shown.length === 0 ? (
+          <p className="muted">{t('start.recentNoMatch')}</p>
         ) : (
           <div className="panel table-panel">
             <table>
@@ -250,43 +344,47 @@ export function Start() {
                 </tr>
               </thead>
               <tbody>
-                {recent.map((r) => (
-                  <tr key={r.id}>
-                    <th scope="row">
-                      <button
-                        type="button"
-                        className="recent-name"
-                        onClick={() =>
-                          void dispatch(
-                            openBuild((api) =>
-                              api.execute({ 'open-recent': { id: r.id } }),
-                            ),
-                          )
-                        }
-                      >
-                        {r.name}
-                      </button>
-                      <span className="sub mono" title={r.path}>
-                        {fileName(r.path)}
-                      </span>
-                    </th>
-                    <td title={when(r.at)}>{ago(r.at)}</td>
-                    <td className="right">
-                      <button
-                        type="button"
-                        className="link"
-                        aria-label={t('start.forget', { name: r.name })}
-                        onClick={() =>
-                          void dispatch(
-                            run({ 'forget-recent': { id: r.id } }),
-                          ).then(() => dispatch(refreshLists()))
-                        }
-                      >
-                        {t('start.forgetShort')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {shown.map((r) => {
+                  const what = summary(r)
+                  return (
+                    <tr key={r.id}>
+                      <th scope="row">
+                        <button
+                          type="button"
+                          className="recent-name"
+                          onClick={() =>
+                            void dispatch(
+                              openBuild((api) =>
+                                api.execute({ 'open-recent': { id: r.id } }),
+                              ),
+                            )
+                          }
+                        >
+                          {r.name}
+                        </button>
+                        {what !== '' && <span className="sub">{what}</span>}
+                        <span className="sub mono" title={r.path}>
+                          {fileName(r.path)}
+                        </span>
+                      </th>
+                      <td title={when(r.at)}>{ago(r.at)}</td>
+                      <td className="right">
+                        <button
+                          type="button"
+                          className="link"
+                          aria-label={t('start.forget', { name: r.name })}
+                          onClick={() =>
+                            void dispatch(
+                              run({ 'forget-recent': { id: r.id } }),
+                            ).then(() => dispatch(refreshLists()))
+                          }
+                        >
+                          {t('start.forgetShort')}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

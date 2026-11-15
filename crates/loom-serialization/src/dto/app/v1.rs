@@ -664,6 +664,14 @@ dto! {
         /// When it was last opened or saved, in seconds since the Unix
         /// epoch.
         pub at: u64,
+        /// The class, if known (UX-20; lists written before it have none).
+        pub class: Option<String>,
+        /// The ascendancy, if known.
+        pub ascendancy: Option<String>,
+        /// The character level, if known.
+        pub level: Option<u32>,
+        /// The main skill, if known.
+        pub main_skill: Option<String>,
     }
 
     /// An error: a stable code (ADR-014) and a message for logs. The UI
@@ -851,6 +859,9 @@ dto_enum! {
 
     /// A command (ADR-004): an intent the application runs in order.
     pub enum Command {
+        /// Starts a new PoE1 build: Scion, level 1, empty sets (UX brief
+        /// note 3).
+        NewBuild,
         /// Imports a PoB share code or XML text.
         ImportText {
             /// The text.

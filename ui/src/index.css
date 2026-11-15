@@ -143,6 +143,12 @@ button.link:hover:not(:disabled) {
   background: transparent;
 }
 
+/* Off: reads as plain muted text, not a link. */
+button.link:disabled {
+  color: var(--c-muted);
+  text-decoration: none;
+}
+
 input,
 textarea,
 select {
@@ -592,59 +598,76 @@ th.right {
   font-size: 1.15rem;
 }
 
-.start-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: flex-start;
-}
-
-.start-grid > .import-card {
-  flex: 2 1 520px;
-}
-
-.start-grid > .start-side {
-  flex: 1 1 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.import-card {
+.command-panel {
   border-color: var(--c-accent);
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.import-card h2 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.5rem;
-}
-
-.import-card h2 svg {
-  color: var(--c-accent);
-}
-
-.import-card form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.side-card {
-  padding: 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-items: flex-start;
 }
 
-.side-card h2 {
+/* Start page B: one input with its icon and the import button. */
+.command-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.command-bar > svg {
+  flex: none;
+  color: var(--c-accent);
+}
+
+.command-bar textarea {
+  flex: 1;
+  /* Words as much as code here: the body font, not the mono one. */
+  font-family: inherit;
+  min-height: 44px;
+  resize: vertical;
+  font-size: 1.05rem;
+}
+
+.command-panel .small {
+  font-size: 0.928rem;
+}
+
+.start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.start-actions kbd {
+  margin-left: 4px;
+  padding: 0 6px;
+  border: 1px solid var(--c-border-control);
+  border-radius: 4px;
+  color: var(--c-muted);
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+
+/* A file dragged over the window. */
+.drop-hint {
+  position: fixed;
+  inset: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--c-accent);
+  border-radius: 12px;
+  background: var(--c-panel);
+  pointer-events: none;
+}
+
+.drop-hint p {
   font-size: 1.25rem;
+}
+
+.data-line .link {
+  padding: 0;
 }
 
 .recent-head {

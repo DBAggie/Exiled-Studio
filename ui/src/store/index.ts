@@ -11,6 +11,7 @@ import {
   ApiFailure,
   type CalcResultDocumentV1,
   type Command,
+  type DropNotice,
   type LoomApi,
   type McpPermissions,
   type McpStatus,
@@ -73,7 +74,20 @@ interface UiState {
   /** A finished action to confirm (saved, exported), until dismissed or
    * the next screen. */
   flash: string | null
+  /** A file is being dragged over the window. */
+  dragging: boolean
+  /** An action that would replace a build with unsaved changes, waiting
+   * for the user's answer (UX-01). */
+  confirm: Replace | null
 }
+
+/** What replaces the open build: a new one, a file the user picks, a
+ * dropped file. */
+export type Replace =
+  | 'new-build'
+  | 'open-file'
+  | 'import-file'
+  | { dropped: Extract<DropNotice, { state: 'dropped' }>['kind'] }
 
 const ui = createSlice({
   name: 'ui',
@@ -85,6 +99,8 @@ const ui = createSlice({
     error: null,
     shareCode: null,
     flash: null,
+    dragging: false,
+    confirm: null,
   } as UiState,
   reducers: {
     go(state, action: PayloadAction<Screen>) {
@@ -110,6 +126,12 @@ const ui = createSlice({
     },
     shareCode(state, action: PayloadAction<string | null>) {
       state.shareCode = action.payload
+    },
+    dragging(state, action: PayloadAction<boolean>) {
+      state.dragging = action.payload
+    },
+    confirm(state, action: PayloadAction<Replace | null>) {
+      state.confirm = action.payload
     },
   },
 })
@@ -244,6 +266,43 @@ export const openBuild =
     }
   }
 
+/** Starts a new build (UX brief note 3). */
+export const newBuild = (): Thunk => async (dispatch) => {
+  const outcome = await dispatch(run('new-build'))
+  if (outcome !== null && outcome !== 'nothing') {
+    dispatch(actions.go('dashboard'))
+  }
+}
+
+/** Does `what` now. */
+export const perform =
+  (what: Replace): Thunk =>
+  async (dispatch) => {
+    if (what === 'new-build') return dispatch(newBuild())
+    if (what === 'open-file')
+      return dispatch(openBuild((api) => api.openFile()))
+    if (what === 'import-file')
+      return dispatch(importBuild((api) => api.importFile()))
+    if (what.dropped === 'pob')
+      return dispatch(importBuild((api) => api.openDropped()))
+    // A build document opens; anything else fails with UI_DROP.
+    return dispatch(openBuild((api) => api.openDropped()))
+  }
+
+/** Does `what`, first asking when it would replace unsaved changes
+ * (UX-01). A dropped file that is not a build never asks. */
+export const replaceBuild =
+  (what: Replace): Thunk =>
+  async (dispatch, getState) => {
+    const dirty = getState().session.snapshot?.dirty === true
+    const harmless = typeof what === 'object' && what.dropped === 'other'
+    if (dirty && !harmless) {
+      dispatch(actions.confirm(what))
+      return
+    }
+    await dispatch(perform(what))
+  }
+
 /** Saves the build: to its file, or asks where when it has none. */
 export const saveBuild = (): Thunk<Outcome | null> => (dispatch, getState) => {
   const path = getState().session.snapshot?.path
@@ -287,7 +346,19 @@ export async function startSync(store: Store, api: LoomApi) {
       void store.dispatch(refreshLists())
     }
   })
+  const stopDrop = await api.onDrop((notice) => {
+    store.dispatch(actions.dragging(notice.state === 'over'))
+    if (notice.state === 'dropped') {
+      // The shell keeps only the latest drop: a question still open for an
+      // earlier one is replaced, so the answer opens what was dropped last.
+      store.dispatch(actions.confirm(null))
+      void store.dispatch(replaceBuild({ dropped: notice.kind }))
+    }
+  })
   await store.dispatch(refresh())
   await store.dispatch(refreshLists())
-  return stop
+  return () => {
+    stop()
+    stopDrop()
+  }
 }

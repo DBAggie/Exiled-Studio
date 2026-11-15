@@ -72,7 +72,11 @@ describe('keyboard', () => {
     const { user } = await renderApp()
     const live = screen.getByRole('status')
     expect(live.getAttribute('aria-live')).toBe('polite')
-    await user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Import a Path of Building file (.xml)…',
+      }),
+    )
     await waitFor(() => expect(live.textContent).toBe('Calculation finished.'))
   })
 })

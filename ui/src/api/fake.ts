@@ -9,6 +9,7 @@ import {
   type ChangeRequest,
   type Command,
   type ConfigView,
+  type DropNotice,
   type GemCatalogEntry,
   type HistoryEntry,
   type ItemEdit,
@@ -312,6 +313,7 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
 }
 
 type Listener = (event: ApiEvent) => void
+type DropListener = (notice: DropNotice) => void
 
 type Group = Omit<SkillGroupView, 'main'>
 
@@ -496,6 +498,9 @@ export class FakeApi implements LoomApi {
   version = 0
   private options: FakeOptions
   private listeners: Listener[] = []
+  private dropListeners: DropListener[] = []
+  /** The last dropped file's kind, until opened. */
+  private dropped: 'pob' | 'build' | 'other' | null = null
   private current: State | null = null
   private undoStack: State[] = []
   private redoStack: State[] = []
@@ -875,6 +880,15 @@ export class FakeApi implements LoomApi {
           this.changed(null)
           return this.done()
       }
+    }
+    if (command === 'new-build') {
+      if (this.options.data !== true) this.fail('APP_NO_DATA')
+      this.undoStack = []
+      this.redoStack = []
+      this.path = null
+      this.dirty = false
+      this.changed({ ...fresh(), items: [], skills: {} })
+      return this.done()
     }
     if ('import-text' in command) {
       return this.importText(command['import-text'].text)
@@ -1282,6 +1296,31 @@ export class FakeApi implements LoomApi {
     this.version += 1
     this.emit('build-changed')
     return Promise.resolve(this.done())
+  }
+
+  openDropped() {
+    const kind = this.dropped
+    this.dropped = null
+    if (kind === null) return Promise.resolve<Outcome>('nothing')
+    try {
+      if (kind === 'other') this.fail('UI_DROP')
+      return kind === 'pob' ? this.importFile() : this.openFile()
+    } catch (e) {
+      return Promise.reject(e as Error)
+    }
+  }
+
+  /** A test's drag and drop, as the shell reports it. */
+  drop(notice: DropNotice) {
+    if (notice.state === 'dropped') this.dropped = notice.kind
+    for (const l of this.dropListeners) l(notice)
+  }
+
+  onDrop(listener: DropListener) {
+    this.dropListeners.push(listener)
+    return Promise.resolve(() => {
+      this.dropListeners = this.dropListeners.filter((l) => l !== listener)
+    })
   }
 
   onEvent(listener: Listener) {

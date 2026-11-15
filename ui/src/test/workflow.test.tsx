@@ -123,7 +123,11 @@ describe('workflow', () => {
 
   it('approves an AI change request as one undoable step', async () => {
     const { user, api } = await renderApp()
-    await user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Import a Path of Building file (.xml)…',
+      }),
+    )
     await user.click(
       await screen.findByRole('button', { name: 'Open the dashboard' }),
     )

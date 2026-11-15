@@ -16,12 +16,12 @@ use std::time::Duration;
 
 use loom_tauri::{FilePicker, Paths, Pick};
 use serde_json::{Value, json};
-use tauri::Listener;
 use tauri::ipc::{CallbackFn, InvokeBody};
 use tauri::test::{
     INVOKE_KEY, MockRuntime, get_ipc_response, mock_builder, mock_context, noop_assets,
 };
 use tauri::webview::InvokeRequest;
+use tauri::{Listener, Manager};
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -261,4 +261,50 @@ fn capabilities_should_grant_no_dialog_or_file_system_permission() {
         files += 1;
     }
     assert!(files >= 1);
+}
+
+#[test]
+fn a_dropped_file_should_be_kept_on_the_rust_side_and_opened_by_kind() {
+    let s = shell("drop");
+    let handle = s.webview.app_handle().clone();
+    let (tx, drops) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    handle.listen_any(loom_tauri::DROP_EVENT, move |e| {
+        let _ = tx
+            .lock()
+            .unwrap()
+            .send(serde_json::from_str::<Value>(e.payload()).unwrap());
+    });
+    let next = || drops.recv_timeout(Duration::from_secs(10)).unwrap();
+
+    // Nothing dropped: nothing to open.
+    assert_eq!(s.ok("open_dropped", json!({})), json!("nothing"));
+
+    // Another kind of file: the webview hears its kind, never its path.
+    loom_tauri::dropped(&handle, &[s.dir.join("notes.txt")]);
+    let notice = next();
+    assert_eq!(
+        notice,
+        json!({"state": "dropped", "kind": "other", "name": "notes.txt"})
+    );
+    let err = s.invoke("open_dropped", json!({})).unwrap_err();
+    assert_eq!(err["code"], "UI_DROP");
+
+    // A PoB build: imported.
+    loom_tauri::dropped(&handle, &[s.dir.join("import.xml")]);
+    assert_eq!(next()["kind"], "pob");
+    s.calculated(&s.ok("open_dropped", json!({})));
+    let snap = s.ok("snapshot", json!({}));
+    assert_eq!(snap["build"]["name"], "import");
+    // Taken once.
+    assert_eq!(s.ok("open_dropped", json!({})), json!("nothing"));
+}
+
+#[test]
+fn drop_kind_should_follow_the_extension() {
+    use loom_tauri::{DropKind, drop_kind};
+    assert_eq!(drop_kind(Path::new("a/Build.XML")), DropKind::Pob);
+    assert_eq!(drop_kind(Path::new("b.json")), DropKind::Build);
+    assert_eq!(drop_kind(Path::new("c.txt")), DropKind::Other);
+    assert_eq!(drop_kind(Path::new("noext")), DropKind::Other);
 }

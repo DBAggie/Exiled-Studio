@@ -66,6 +66,7 @@ export interface ApplicationAPIV1 {
    * A command.
    */
   command:
+    | 'new-build'
     | {
         'import-text': {
           /**
@@ -974,15 +975,31 @@ export interface ItemEditPreview1 {
  */
 export interface RecentEntry {
   /**
+   * The ascendancy, if known.
+   */
+  ascendancy?: string | null
+  /**
    * When it was last opened or saved, in seconds since the Unix
    * epoch.
    */
   at: number
   /**
+   * The class, if known (UX-20; lists written before it have none).
+   */
+  class?: string | null
+  /**
    * The ID the application issued for it (the UI opens a recent
    * build by it and never sends a path).
    */
   id: string
+  /**
+   * The character level, if known.
+   */
+  level?: number | null
+  /**
+   * The main skill, if known.
+   */
+  'main-skill'?: string | null
   /**
    * The display name.
    */

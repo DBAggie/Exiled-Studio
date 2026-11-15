@@ -685,11 +685,18 @@ impl Writer {
             .recent
             .entries(self.session.store())
             .into_iter()
-            .map(|e| api::RecentEntry {
-                id: e.id(),
-                path: e.path,
-                name: e.name,
-                at: e.at,
+            .map(|e| {
+                let s = e.summary.clone().unwrap_or_default();
+                api::RecentEntry {
+                    id: e.id(),
+                    path: e.path,
+                    name: e.name,
+                    at: e.at,
+                    class: s.class,
+                    ascendancy: s.ascendancy,
+                    level: s.level,
+                    main_skill: s.skill,
+                }
             })
             .collect();
         self.recovery_list = self.read_recovery();
@@ -813,6 +820,9 @@ impl Writer {
                 path: path.display().to_string(),
                 name: self.session.name(),
                 at: now(),
+                summary: self.session.state().map(|s| {
+                    crate::view::recent_summary(&s.build, self.session.data().map(|d| d.bundle))
+                }),
             },
         );
     }
@@ -865,6 +875,7 @@ impl Writer {
         let done = |v: u64| api::Outcome::Done { version: v };
         match command {
             api::Command::ImportText { text } => self.session.import_text(&text, None).map(done),
+            api::Command::NewBuild => self.session.new_build().map(done),
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
             api::Command::UseItemSet { id } => Ok(self
                 .session

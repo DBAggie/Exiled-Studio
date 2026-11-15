@@ -114,6 +114,7 @@ fn recent_should_keep_newest_first_without_duplicates_and_find_by_id() {
         path: path.to_owned(),
         name: path.to_owned(),
         at,
+        summary: None,
     };
     for i in 0..12 {
         recent
@@ -139,4 +140,30 @@ fn recent_should_read_as_empty_when_the_cache_is_broken() {
     let file = dir.0.join("recent.json");
     std::fs::write(&file, "not json").unwrap();
     assert!(Recent::at(&file).entries(&store).is_empty());
+}
+
+#[test]
+fn recent_should_read_a_list_written_before_the_summary() {
+    let dir = Scratch::new("recent-old");
+    let store = Store::new();
+    let file = dir.0.join("recent.json");
+    std::fs::write(
+        &file,
+        r#"{"format":"loom-recent","version":1,"entries":[{"path":"a.json","name":"a","at":5}]}"#,
+    )
+    .unwrap();
+    let recent = Recent::at(&file);
+    let entries = recent.entries(&store);
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].summary, None);
+    // A summary is written and read back.
+    let mut e = entries[0].clone();
+    e.summary = Some(loom_persistence::recent::Summary {
+        class: Some("Templar".to_owned()),
+        ascendancy: Some("Inquisitor".to_owned()),
+        level: Some(92),
+        skill: Some("Smite".to_owned()),
+    });
+    recent.touch(&store, e.clone()).unwrap();
+    assert_eq!(recent.entries(&store), vec![e]);
 }

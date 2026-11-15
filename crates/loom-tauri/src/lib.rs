@@ -7,6 +7,14 @@
 //! recovery snapshot is opened by the ID the application issued. The
 //! capability file grants the webview no `dialog:*` or `fs:*` permission.
 //!
+//! **Dropped files** (UX brief note 4, start page B): the window's
+//! drag-drop event reaches the Rust side ([`dropped`]), which keeps the
+//! path and tells the webview only what kind of file it is ([`DROP_EVENT`]);
+//! the webview asks about unsaved work and then calls `open_dropped`. Tauri
+//! handling drops turns off HTML5 drag and drop of files in the webview on
+//! Windows; nothing uses it (a later tree editor or gem reordering that
+//! drags elements would need `dragDropEnabled` reconsidered).
+//!
 //! The command names are the committed list `ui/src/api/commands.json`,
 //! which the UI's client reads and a test compares with these handlers.
 
@@ -19,6 +27,73 @@ use tauri::{Emitter, Manager, Runtime, State};
 
 /// The event channel the webview listens on.
 pub const EVENT: &str = "loom://event";
+
+/// The channel for a file dragged over the window or dropped on it.
+pub const DROP_EVENT: &str = "loom://drop";
+
+/// What a file is, by its extension.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DropKind {
+    /// A PoB build (`.xml`): imported.
+    Pob,
+    /// A build document (`.json`): opened.
+    Build,
+    /// Anything else: refused.
+    Other,
+}
+
+/// The kind of a dropped file.
+#[must_use]
+pub fn drop_kind(path: &std::path::Path) -> DropKind {
+    match path
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .as_deref()
+    {
+        Some("xml") => DropKind::Pob,
+        Some("json") => DropKind::Build,
+        _ => DropKind::Other,
+    }
+}
+
+/// What the webview hears on [`DROP_EVENT`]: a file is over the window,
+/// left it, or was dropped (its kind and file name, never its path).
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(tag = "state", rename_all = "kebab-case")]
+pub enum DropNotice {
+    /// A file is over the window.
+    Over,
+    /// It left without a drop.
+    Left,
+    /// It was dropped; `open_dropped` opens it.
+    Dropped {
+        /// What it is.
+        kind: DropKind,
+        /// Its file name.
+        name: String,
+    },
+}
+
+/// A drop on the window: keeps the first file's path for `open_dropped`
+/// and tells the webview. Called by the window's drag-drop event.
+pub fn dropped<R: Runtime>(handle: &tauri::AppHandle<R>, paths: &[PathBuf]) {
+    let Some(path) = paths.first() else {
+        let _ = handle.emit(DROP_EVENT, DropNotice::Left);
+        return;
+    };
+    let notice = DropNotice::Dropped {
+        kind: drop_kind(path),
+        name: path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+    };
+    if let Some(ctx) = handle.try_state::<Ctx>() {
+        *lock_drop(&ctx) = Some(path.clone());
+    }
+    let _ = handle.emit(DROP_EVENT, notice);
+}
 
 /// The kinds of file the dialogs pick.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +122,8 @@ pub struct Ctx {
     picker: Box<dyn FilePicker>,
     server: Mutex<Option<Server>>,
     settings: PathBuf,
+    /// The last dropped file, until `open_dropped` takes it.
+    drop: Mutex<Option<PathBuf>>,
 }
 
 impl Ctx {
@@ -136,6 +213,36 @@ fn lock(ctx: &Ctx) -> std::sync::MutexGuard<'_, Option<Server>> {
         Ok(g) => g,
         Err(poisoned) => poisoned.into_inner(),
     }
+}
+
+fn lock_drop(ctx: &Ctx) -> std::sync::MutexGuard<'_, Option<PathBuf>> {
+    match ctx.drop.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    }
+}
+
+/// Opens the last dropped file: a PoB build is imported, a build document
+/// opened; `nothing` when none is waiting.
+///
+/// # Errors
+/// `UI_DROP` for another kind of file; else the command's.
+#[tauri::command(async)]
+fn open_dropped(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
+    let Some(path) = lock_drop(&ctx).take() else {
+        return Ok(nothing());
+    };
+    let command = match drop_kind(&path) {
+        DropKind::Pob => HostCommand::ImportFile(path),
+        DropKind::Build => HostCommand::Open(path),
+        DropKind::Other => {
+            return Err(api::ApiError::new(
+                "UI_DROP",
+                "not a build file (.xml or .json)",
+            ));
+        }
+    };
+    ctx.app.execute(command).map_err(dto)
 }
 
 /// Starts the MCP server (no-op when it runs).
@@ -249,7 +356,7 @@ fn save_settings(path: &std::path::Path, settings: &Settings) {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 17] = [
+pub const COMMANDS: [&str; 18] = [
     "snapshot",
     "calc_document",
     "item",
@@ -267,6 +374,7 @@ pub const COMMANDS: [&str; 17] = [
     "save_as",
     "export_xml",
     "choose_bundle",
+    "open_dropped",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -304,7 +412,23 @@ pub fn build<R: Runtime>(
             save_as,
             export_xml,
             choose_bundle,
+            open_dropped,
         ])
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::DragDrop(drag) = event {
+                let handle = window.app_handle();
+                match drag {
+                    tauri::DragDropEvent::Enter { .. } => {
+                        let _ = handle.emit(DROP_EVENT, DropNotice::Over);
+                    }
+                    tauri::DragDropEvent::Leave => {
+                        let _ = handle.emit(DROP_EVENT, DropNotice::Left);
+                    }
+                    tauri::DragDropEvent::Drop { paths, .. } => dropped(handle, paths),
+                    _ => {}
+                }
+            }
+        })
         .setup(move |app| {
             let handle = app.handle().clone();
             let paths = paths(&handle);
@@ -321,6 +445,7 @@ pub fn build<R: Runtime>(
                 picker: picker(&handle),
                 server: Mutex::new(None),
                 settings,
+                drop: Mutex::new(None),
             });
             Ok(())
         })

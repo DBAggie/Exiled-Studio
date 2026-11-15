@@ -10,6 +10,7 @@ import type {
   ConfigView,
   CustomBlockView,
   CustomLineView,
+  DataVersionView,
   FieldDelta,
   GemCatalogEntry,
   GemView,
@@ -47,6 +48,7 @@ export type {
   ConfigView,
   CustomBlockView,
   CustomLineView,
+  DataVersionView,
   FieldDelta,
   FieldResult,
   GemCatalogEntry,
@@ -84,6 +86,13 @@ export class ApiFailure extends Error {
   }
 }
 
+/** A file over the window or dropped on it (the shell keeps its path;
+ * `openDropped` opens it). */
+export type DropNotice =
+  | { state: 'over' }
+  | { state: 'left' }
+  | { state: 'dropped'; kind: 'pob' | 'build' | 'other'; name: string }
+
 /** The calls the UI makes (ADR-004: commands and queries; events). */
 export interface LoomApi {
   snapshot(): Promise<Snapshot>
@@ -105,7 +114,11 @@ export interface LoomApi {
   saveAs(): Promise<Outcome>
   exportXml(): Promise<Outcome>
   chooseBundle(): Promise<Outcome>
+  /** Opens the last dropped file: imports a PoB build, opens a build
+   * document; `UI_DROP` for anything else. */
+  openDropped(): Promise<Outcome>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
+  onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }
 
 /** A config input's value: on or off, a number, or text. */

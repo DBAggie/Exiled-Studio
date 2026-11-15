@@ -134,19 +134,29 @@ The maintainer asked for a skills page like other planners' (socket groups as ca
 - **UX-16**: the import review merges copies of the same line ("3 copies") and folds lines on items not in use under "On items not in use". A "Calculated" card shows the share of lines that apply, and the excluded lines are explained.
 - **UX-18**: a pobb.in or other link pasted as a share code says links can't be opened offline and how to get the code in PoB (error `UI_LINK`).
 - **UX-19**: recovery is first on the start page, with "Restore" and "Discard" and when it last changed. Restoring still loses the undo history (open).
-- **UX-20**: recent builds show the file name, with the path on hover, a relative time ("2 hours ago"), and a Remove button (command `forget-recent`). Class, skill, and level need the recent list to store them (open).
+- **UX-20**: recent builds show the file name, with the path on hover, a relative time ("2 hours ago"), and a Remove button (command `forget-recent`). Class, ascendancy, level, and skill since start page B, PR A.
 - **UX-21**: the heading the app focuses on a page change draws no ring. Keyboard focus still shows.
 - **UX-22**: About shows the notice once, the app and data versions, and the font license texts in the app.
 - **UX-23**: Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Ctrl+S, and Ctrl+O. Text fields keep their own undo. The undo and redo buttons' tooltips say what they undo and the shortcut.
 - **UX-24**: the item editor previews live after half a second. The applied change's impact stays until the next edit, and "Edit applied" shows only while there are unsaved changes.
 - **UX-25**: the export menu offers PoE2 only for PoE2 builds, "Save a copy as…" sits last behind a separator, and an XML export confirms where it wrote.
+- **Start page B, PR A** (maintainer 2026-11-14: "Finish what ui tasks you can until I can get you the bundle", taken as pick-list group 2; plan `dev/active/ux-improvements/start-page-plan.md`, reviewed by plan-reviewer and split: this PR, then PR B for finding installed game data).
+  - **Command bar** (B-4, the maintainer's choice B): one field. A share code or PoB XML pasted into it imports at once; words filter the recent builds by name, file, or what the build is ("1 of 2"); Enter imports only text that looks like a build. Below it New build (Ctrl N), Import from clipboard (Ctrl V), Open a file (Ctrl O), and "Import a Path of Building file (.xml)…". Ctrl V on the page outside a field imports the clipboard (the paste event, no clipboard permission); the button reads the clipboard and, when that is refused, says to press Ctrl+V. Recovery stays first (UX-19). Ctrl N and Ctrl O are always taken (WebView2 binds them; checked in the real app: Ctrl N made a build and opened no window).
+  - **New build** (B-3): `new-build` makes a PoE1 build as PoB starts one: Scion, level 1, one empty spec on the data's tree version (none when the bundle's is unknown), one skill, item, and config set. It is read from a fixed PoB template through the import path (`Session::new_build`), so it saves and exports as any build. Not dirty until edited; named "Scion 1" (UX-15). In the real app it calculates 20 in each attribute, 60 life, 50 mana.
+  - **Asking before replacing** (UX-01 extended): New build, Open a file, Import a file, and a dropped build file ask "Replace this build?" (save first, go on without saving, cancel) when the open build has unsaved changes. Ctrl O used to replace without asking.
+  - **Files dropped anywhere**: the shell receives the window's drag-drop event, keeps the path on the Rust side, and tells the webview only the file's kind and name (`loom://drop`); the webview asks about unsaved work, then calls `open_dropped` (`.xml` imports, `.json` opens, anything else `UI_DROP`). A hint covers the window while a file is over it; a second drop while the question is open replaces it (the shell keeps only the latest). The window event wiring is not covered by a test (`dropped` is). Tauri handling drops turns off HTML5 file drag and drop in the webview on Windows; nothing uses it (noted in `loom-tauri` for the tree editor and gem reordering).
+  - **No error up front** (UX-17, brief note 1): the start page's footer says "Game data ready · Path of Exile, game build 26530219. Change", or "No game data yet. Add game data…". Without data, import and New build are off with the reason under the bar; Open a file stays on (a saved build opens without data). The header's data badge and the Game data card are gone.
+  - **Recent builds say what they are** (UX-20, open half): each entry stores class, ascendancy, level, and main skill when opened or saved (`loom_persistence::recent::Summary`, optional; the file stays version 1: an older app that refuses the field drops the list, which loses no build, ADR-009), shown as "Elementalist 92 · Ice Nova".
+  - PoB's `ascendClassName="None"` is no longer shown as an ascendancy ("None · level 1").
+  - App API v1, all additive: command `new-build`; `RecentEntry` gains `class`, `ascendancy`, `level`, `main-skill`; shell command `open_dropped` and event `loom://drop`. MCP is unchanged (its tool list is fixed, ADR-017). Screenshots: [`37-start-page-no-data.png`](ux-walkthrough/37-start-page-no-data.png), [`38-start-page-recent.png`](ux-walkthrough/38-start-page-recent.png).
+  - Open: UX-19's other half (the undo history across a restore: the recovery format stores the build, not its history), UX-14 (the patch needs to be in the bundle manifest), and PR B (B-1: installed bundles found and switchable, the folder picker labelled unsigned, the pinned-data rule).
 ## Pick list (for the maintainer)
 Suggested groups, each about one PR; pick, reorder, or drop.
 
 | Group | Items | Size |
 |---|---|---|
 | 1 Safety and truth | ~~UX-01, UX-03, UX-05, UX-06~~ (fixed) | done |
-| 2 Start page B, data found for the user, new build | B-1, B-3, B-4, UX-17, ~~UX-18, UX-21, UX-23~~ (fixed), UX-19 and UX-20 (partly fixed) | L |
+| 2 Start page B, data found for the user, new build | ~~B-3, B-4, UX-17, UX-18, UX-21, UX-23, UX-20~~ (fixed; start page B, PR A), B-1 (PR B), UX-19 (partly fixed) | M |
 | 3 Equipment and item sets | B-2, ~~UX-02, UX-08, UX-09~~ (fixed) | M |
 | 4 Readable item lines and numbers | UX-14, ~~UX-07, UX-10, UX-13, UX-15, UX-16~~ (fixed) | M |
 | 5 Breakdown rework | ~~UX-04~~ (fixed) | done |
