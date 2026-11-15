@@ -623,6 +623,7 @@ export const en = {
   'tree.ascendancy': 'Ascendancy',
   'tree.noAscendancy': 'None',
   'tree.points': 'Passive points: {n} · Ascendancy points: {a}',
+  'tree.attributes': 'Strength {str} · Dexterity {dex} · Intelligence {int}',
   'tree.search': 'Search nodes',
   'tree.found': '{n} found',
   'tree.view': 'View',

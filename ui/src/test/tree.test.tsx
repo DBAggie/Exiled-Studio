@@ -130,6 +130,13 @@ describe('passive tree', () => {
     expect(await screen.findByText('A made-up quote.')).toBeTruthy()
   })
 
+  it('shows the calculated attribute totals by the points', async () => {
+    await openTree()
+    expect(
+      screen.getByText('Strength 20 · Dexterity 5 · Intelligence 20'),
+    ).toBeTruthy()
+  })
+
   it('finds nodes by name and stat text', async () => {
     const { user } = await openTree()
     await user.type(screen.getByLabelText('Search nodes'), 'cold damage')

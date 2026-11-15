@@ -173,3 +173,26 @@ export function useDataName(version: VersionLike | null | undefined): string {
     : data?.installed?.find((b) => same(b['data-version']))?.['tree-version']
   return dataName(version, tree)
 }
+
+/** The open build's attributes as the calculation computed them (`null`
+ * each when it did not). */
+export interface Attributes {
+  str: number | null
+  dex: number | null
+  int: number | null
+}
+
+/** [`Attributes`] of the open build's last calculation. */
+export function useAttributes(): Attributes {
+  const fields = useAppSelector((s) => s.session.calc?.[1].result.fields)
+  const of = (name: string): number | null => {
+    const f = fields?.find((x) => x.field === name) as
+      { value?: number | null } | undefined
+    return typeof f?.value === 'number' ? f.value : null
+  }
+  return {
+    str: of('strength'),
+    dex: of('dexterity'),
+    int: of('intelligence'),
+  }
+}

@@ -30,9 +30,14 @@ import type {
   TreeView,
 } from '../api/types'
 import { ScreenHeading } from '../components'
-import { fieldLabel, t, tDynamic } from '../i18n'
+import { fieldLabel, formatNumber, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
-import { useAppDispatch, useAppSelector, withUnit } from '../util'
+import {
+  useAppDispatch,
+  useAppSelector,
+  useAttributes,
+  withUnit,
+} from '../util'
 import {
   type LoadedSprites,
   type SpriteRect,
@@ -947,6 +952,9 @@ export function Tree() {
   const tree = useAppSelector((s) => s.session.snapshot?.build?.tree ?? null)
   const layout = useTreeLayout()
   const sprites = useTreeSprites()
+  // The attribute totals the tree's allocations give (B-2 item evidence,
+  // E11: the tree screenshots show them by the points).
+  const attributes = useAttributes()
   const [search, setSearch] = useState('')
   const [mode, setMode] = useState<'canvas' | 'list' | null>(null)
   const [hover, setHover] = useState<{
@@ -1137,6 +1145,17 @@ export function Tree() {
             a: tree['ascendancy-points'],
           })}
         </p>
+        {attributes.str != null &&
+          attributes.dex != null &&
+          attributes.int != null && (
+            <p className="tree-points" aria-live="polite">
+              {t('tree.attributes', {
+                str: formatNumber(attributes.str),
+                dex: formatNumber(attributes.dex),
+                int: formatNumber(attributes.int),
+              })}
+            </p>
+          )}
         <span className="spacer" />
         <label htmlFor={searchId} className="visually-hidden">
           {t('tree.search')}

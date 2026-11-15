@@ -10,7 +10,12 @@ import { formatNumber, t } from '../i18n'
 import { actions, attempt, run } from '../store'
 import { Sprite } from '../sprites'
 import { type SpriteKind, spriteFor } from '../spriteKind'
-import { itemName, useAppDispatch, useAppSelector } from '../util'
+import {
+  itemName,
+  useAppDispatch,
+  useAppSelector,
+  useAttributes,
+} from '../util'
 
 /** Item classes that take both hands: the off hand shows them faded. */
 const TWO_HANDED = new Set([
@@ -60,18 +65,7 @@ export interface Have {
 /** The open build's level and computed attributes. */
 function useHave(): Have {
   const level = useAppSelector((s) => s.session.snapshot?.build?.level ?? null)
-  const fields = useAppSelector((s) => s.session.calc?.[1].result.fields)
-  const of = (name: string): number | null => {
-    const f = fields?.find((x) => x.field === name) as
-      { value?: number | null } | undefined
-    return typeof f?.value === 'number' ? f.value : null
-  }
-  return {
-    level,
-    str: of('strength'),
-    dex: of('dexterity'),
-    int: of('intelligence'),
-  }
+  return { level, ...useAttributes() }
 }
 
 type ReqLabel = 'level' | 'str' | 'dex' | 'int'
