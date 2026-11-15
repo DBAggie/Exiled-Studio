@@ -2246,6 +2246,29 @@ fn item_values_should_be_the_calculations_own_nodes() {
     );
     assert_eq!(v.block, Some(24.0));
     assert_eq!(v.weapon, None);
+    // A hybrid local flat is subtracted too, so the shown value comes back
+    // (item-evidence.md, E4): Test Robe's evasion 10 to 20, +10 to
+    // evasion and energy shield, shown 25: (25 - 10 - 10) / 10 = 0.5, so
+    // 10 + 10 + 10 x 0.5 = 25. PoB subtracts only the base's 10, clamps
+    // (25 - 10) / 10 to 1, and gives 30.
+    let b = with_items(
+        witch(1),
+        vec![item(
+            2,
+            vec![
+                spec_line("Evasion Rating", "25"),
+                modifier(vec![stat("local_evasion_rating_and_energy_shield", 10)]),
+            ],
+        )],
+        &[("Body Armour", 2, false)],
+    );
+    let v = values(&b, &with_bases(&[(2, "Test Robe")]));
+    assert!(
+        v.defences
+            .contains(&(ArmourSlot::BodyArmour, Defence::Evasion, 25.0)),
+        "{:?}",
+        v.defences
+    );
     // A sword at 20% quality: 4-9 physical scaled and rounded, 645 ms, 5%.
     let b = with_items(
         witch(1),

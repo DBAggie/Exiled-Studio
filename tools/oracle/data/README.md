@@ -30,3 +30,16 @@ R="$(cygpath -m "$PWD")"; O="$R/local/oracle"
 ```
 
 `tree=<version>` picks another tree than PoB's `latestTreeVersion` (`3_29` at v2.67.2). Two runs give the same bytes (the JSON writer sorts keys), about 9 MB in 4 seconds.
+
+## Item copies (`pob_items.lua`)
+
+B-2 item evidence: PoB's own reading of the game's item copies (Ctrl+Alt+C). For each copy given, PoB reads it as its item paste does (`ItemClass:ParseRaw`), then writes the text it keeps (`ItemClass:BuildRaw`) to `<out-dir>/<name>.txt`. The paste's later `NormaliseQuality` is left out, so the copy's quality stays the game's. Maintainer-run, not in CI, and outside the oracle adapter. Run it like `pob_data.lua` above, with the output folder and the copies as arguments:
+
+```sh
+(cd local/oracle/pob/src && env -i SystemRoot="$SYSTEMROOT" \
+  LUA_PATH='./?.lua;../runtime/lua/?.lua;../runtime/lua/?/init.lua' LUA_CPATH="$O/bin/?.dll" \
+  "$O/bin/luajit.exe" "$R/tools/oracle/data/pob_items.lua" \
+  "$R/docs/ui/b2-data/game-copies/pob-oracle" "$R"/docs/ui/b2-data/game-copies/*.txt </dev/null)
+```
+
+The committed output is `docs/ui/b2-data/game-copies/pob-oracle/`, and `crates/loom-serialization/tests/game_copy_fixtures.rs` compares it with ours (`docs/ui/b2-data/item-evidence.md`, "PoB's reading against ours").

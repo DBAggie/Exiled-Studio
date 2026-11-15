@@ -772,6 +772,9 @@ pub(super) fn piece(
             Term::Step("piece-shown"),
             reasons,
         )?;
+        // A shown value of 0 or less gives no percentile, as in PoB
+        // (`Item.lua:2323`, `armourData.Armour > 0`), so the roll is the
+        // top. A copy of a base with a defence range never shows 0.
         if shown.value > 0.0 {
             derived_percentile(calc, shown, [inc, quality], flat, variance)?
         } else {
