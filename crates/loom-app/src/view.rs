@@ -400,9 +400,11 @@ fn flavour(item: &Item, bundle: &loom_data::bundle::Bundle) -> Vec<api::FlavourL
         Some(plain) if poe1.flavour_of(name).next().is_none() => plain,
         _ => name,
     };
-    let mut texts = poe1.flavour_of(name).map(|r| r.text.as_str());
-    match (texts.next(), texts.next()) {
-        (Some(text), None) => flavour_lines(text),
+    // Distinct texts: variants that print the same text still show it.
+    let texts: std::collections::BTreeSet<&str> =
+        poe1.flavour_of(name).map(|r| r.text.as_str()).collect();
+    match (texts.first(), texts.len()) {
+        (Some(text), 1) => flavour_lines(text),
         _ => Vec::new(),
     }
 }
@@ -1031,5 +1033,13 @@ mod tests {
         );
         assert!(lines("<<HBGAa>><<HBG01>>\n<<HBGAb>>").is_empty());
         assert_eq!(lines("<size:31>{Big} words"), [line("Big words", false)]);
+        // An unclosed tag drops the rest of its line; text outside ASCII
+        // is kept whole.
+        assert_eq!(lines("Kept <unclosed"), [line("Kept", false)]);
+        assert_eq!(lines("Kept <<glyphs"), [line("Kept", false)]);
+        assert_eq!(
+            lines("Çà et là — «déjà»\n<default>{Ünïcode}"),
+            [line("Çà et là — «déjà»", false), line("Ünïcode", true)]
+        );
     }
 }

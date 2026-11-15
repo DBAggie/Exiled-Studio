@@ -1427,6 +1427,7 @@ fn a_uniques_card_should_carry_its_flavour_text_when_the_data_has_one() {
         unique(11, "Test Flavoured", "RARE"),
         unique(12, "Not In The Data", "UNIQUE"),
         unique(13, "Foulborn Test Flavoured", "UNIQUE"),
+        unique(14, "Test Same", "UNIQUE"),
     ]
     .concat();
     let xml = synthetic().replacen("<ItemSet ", &format!("{items}<ItemSet "), 1);
@@ -1452,6 +1453,11 @@ fn a_uniques_card_should_carry_its_flavour_text_when_the_data_has_one() {
     // Only a unique has flavour text; a name the data lacks has none.
     assert!(session.item(11).unwrap().card.flavour.is_empty());
     assert!(session.item(12).unwrap().card.flavour.is_empty());
+    // Two variants with the same text: that text.
+    assert_eq!(
+        session.item(14).unwrap().card.flavour,
+        [line("One text.", false)]
+    );
     // A Foulborn unique reads its plain version's text.
     assert_eq!(
         session.item(13).unwrap().card.flavour,

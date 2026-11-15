@@ -828,11 +828,14 @@ poe1["poe1/jewel_radii.json"] = [
     {"id": "TestMedium", "name": "Medium", "radius": 1200, "ring_inner": 1100, "ring_outer": 1400},
 ]
 # B-2 (Q-B2-1): made-up unique flavour text, one unique with one text (a
-# default-colour note after a gap) and one whose two variants have their own.
+# default-colour note after a gap), one whose two variants have their own,
+# and one whose two variants print the same text.
 poe1["poe1/unique_flavour.json"] = [
     {"name": "Test Flavoured", "id": "TestUnique1", "text": "A made-up line.\nAnother one.\n\n<default>{A made-up note}"},
     {"name": "Test Variants", "id": "TestUnique2", "text": "First variant."},
     {"name": "Test Variants", "id": "TestUnique3", "text": "Second variant."},
+    {"name": "Test Same", "id": "TestUnique4", "text": "One text."},
+    {"name": "Test Same", "id": "TestUnique5", "text": "One text."},
 ]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)

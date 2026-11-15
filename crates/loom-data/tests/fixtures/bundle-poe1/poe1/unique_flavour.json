@@ -13,5 +13,15 @@
   "id": "TestUnique3",
   "name": "Test Variants",
   "text": "Second variant."
+ },
+ {
+  "id": "TestUnique4",
+  "name": "Test Same",
+  "text": "One text."
+ },
+ {
+  "id": "TestUnique5",
+  "name": "Test Same",
+  "text": "One text."
  }
 ]

@@ -136,7 +136,9 @@ fn equal_export() -> Value {
         "flavour_text": [
             {"id": "TestUnique1", "name": "Test Flavoured", "text": ["A made-up line.", "Another one.", "", "^8A made-up note"]},
             {"id": "TestUnique2", "name": "Test Variants", "text": ["First variant."]},
-            {"id": "TestUnique3", "name": "Test Variants", "text": ["Second variant."]}
+            {"id": "TestUnique3", "name": "Test Variants", "text": ["Second variant."]},
+            {"id": "TestUnique4", "name": "Test Same", "text": ["One text."]},
+            {"id": "TestUnique5", "name": "Test Same", "text": ["One text."]}
         ],
         "tree": {
             "classes": [
