@@ -22,5 +22,9 @@
   "set_ui_prefs",
   "tree_layout",
   "tree_sprites",
-  "preview_tree"
+  "preview_tree",
+  "crashes",
+  "dismiss_crash",
+  "diagnostics",
+  "export_diagnostics"
 ]

@@ -1640,7 +1640,7 @@ label.check {
 .error-code {
   margin: 2px 0 0;
   color: var(--c-muted);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
 }
 
@@ -1906,7 +1906,7 @@ button.danger {
 
 .config-text {
   width: 100%;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   resize: vertical;
 }
 
@@ -1984,7 +1984,7 @@ button.line-edit {
 }
 
 .file-fields code {
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 0.85rem;
 }
 
@@ -2472,4 +2472,42 @@ button.inv-slot:focus-visible {
 
 .tree-node-list p {
   margin: 2px 0 0;
+}
+
+/* The diagnostic package's preview (Phase 5, P-f). */
+.diag-files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.diag-files li {
+  padding: 8px 0;
+  border-top: 1px solid var(--c-row);
+}
+
+.diag-text {
+  max-height: 320px;
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--c-input);
+  border: 1px solid var(--c-row);
+  border-radius: 6px;
+}
+
+/* A crash record from an earlier run (Phase 5, P-f). */
+.crash-notice ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.crash-notice li {
+  gap: 12px;
+  padding: 8px 0;
 }

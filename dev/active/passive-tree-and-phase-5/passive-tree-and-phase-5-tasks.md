@@ -11,8 +11,8 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [x] T0 ADR-008 Amendment 1, ADR-005 Amendment 2, ACTION-PLAN change, ADR README, hard rules
 - [x] Open the draft PR (#107); follow-up commit with the PR number
 - [x] Mark #107 ready for review (maintainer 2026-11-14: merge the plan now; every step below in follow-up PRs from `dev`)
-- [ ] (Before P5: the maintainer's UI and UX side project, its own PR from `dev`; handoff, Next action)
-- [ ] P5 Logs (tracing, JSON lines, rotation, redaction, correlation IDs), diagnostics export with preview, crash records
+- [x] (Before P5: the maintainer's UI and UX side project, its own PR from `dev`; done with PRs #108 to #113, the last merged 2026-11-15 as `565f5b0`)
+- [x] P5 Logs (tracing, JSON lines, rotation, redaction, correlation IDs), diagnostics export with preview, crash records (branch `feat/p5-logs`; `docs/phase-5/logs.md`)
 - [ ] P1 Packaging: bundler config, version policy (0.1.0), `package` CI job (portable, AppImage smoke), WebView2 offline
 - [x] T1a Synthetic tree fixture bundle and its generator (`bundle-poe1-tree`, `make_bundles.py`; `loom-tree` `synthetic_tree` tests; the e2e runs on it; branch `feat/ux-sprint-2`, 2026-11-15)
 - [ ] T1 Layout file, provenance block, data schema 4, `loom-tree` crate, `tree-parity layout` (MR record). Partly done on `feat/ux-sprint-2` (2026-11-15, `docs/tree/layout.md`): the layout file with its provenance (optional, no schema bump), `tools/tree` acquire and manifest, `tree-layout`, and `loom-tree`. The per-node record against PoB's tree is done too (`docs/tree/records/layout.json`, `docs/tree/parity.md`; 0.01 on the main tree, 0.1 for the export's rounding elsewhere, one offset per ascendancy). Left: data schema 4's layout as a required file (kept optional).

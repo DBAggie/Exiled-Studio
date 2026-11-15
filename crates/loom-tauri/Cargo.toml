@@ -19,6 +19,7 @@ loom-integrations.workspace = true
 loom-persistence.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tracing.workspace = true
 tauri = "2.12.5"
 # The file dialogs, called from Rust only (decision 10); MIT or Apache-2.0.
 tauri-plugin-dialog = "2"

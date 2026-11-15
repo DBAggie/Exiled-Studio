@@ -21,7 +21,7 @@ crates/
   loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
   loom-tree           core   the passive tree: graph, kinds, positions, allocation rules, tree URL (the editor)
   loom-persistence    host   files, recovery snapshots, recent list (SQLite indexes later)
-  loom-app            host   command/query/event API, single-writer build task, background calculation
+  loom-app            host   command/query/event API, single-writer build task, background calculation, local logs, crash records, diagnostic package (docs/phase-5/logs.md)
   loom-integrations   host   network adapters, the local MCP server (loopback)
   loom-tauri          shell  Tauri 2 desktop app
 tools/

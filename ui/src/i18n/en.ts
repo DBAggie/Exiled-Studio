@@ -830,7 +830,7 @@ export const en = {
   'about.title': 'About Exiled Studio',
   'about.license': 'Free and open source under the MIT license.',
   'about.privacy':
-    'Works offline. No account and no telemetry. Game data comes from data bundles the project extracts itself; no game art is included.',
+    'Works offline. No account and no telemetry. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
   'about.fonts':
     'Fonts: Inter, Space Grotesk and JetBrains Mono, under the SIL Open Font License 1.1; their license texts are below.',
   'about.version': 'Exiled Studio version',
@@ -840,6 +840,18 @@ export const en = {
   'about.licenseMissing':
     'The license text is in the app’s licenses folder ({file}).',
   'about.loading': 'Loading…',
+  'diag.title': 'Diagnostics',
+  'diag.intro':
+    'Exiled Studio keeps local logs and records of internal errors. Nothing is sent anywhere. To report a problem, preview the diagnostic package, then save it and attach it yourself. Your home folder and user name are replaced, and build and item text are never logged.',
+  'diag.preview': 'Preview the diagnostic package',
+  'diag.save': 'Save the diagnostic package…',
+  'diag.saved': 'Diagnostic package saved.',
+  'diag.files': 'Files in the package',
+  'diag.size': '{n} bytes',
+  'crash.title': 'An internal error was recorded',
+  'crash.body':
+    'Exiled Studio recorded an internal error (version {version}, {when}): {message}. Any unsaved build is offered below for recovery. The record is in the diagnostic package (About).',
+  'crash.dismiss': 'Dismiss the record',
 
   'error.title': 'Something went wrong',
   'error.dismiss': 'Dismiss',

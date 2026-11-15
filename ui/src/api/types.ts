@@ -8,9 +8,11 @@ import type {
   ChangeRequest,
   ConfigInputView,
   ConfigView,
+  CrashRecord,
   CustomBlockView,
   CustomLineView,
   DataVersionView,
+  DiagnosticFile,
   FieldDelta,
   GemCatalogEntry,
   GemView,
@@ -53,9 +55,11 @@ export type {
   ChangeRequest,
   ConfigInputView,
   ConfigView,
+  CrashRecord,
   CustomBlockView,
   CustomLineView,
   DataVersionView,
+  DiagnosticFile,
   FieldDelta,
   FieldResult,
   GemCatalogEntry,
@@ -119,6 +123,15 @@ export interface LoomApi {
   execute(command: Command): Promise<Outcome>
   recent(): Promise<RecentEntry[]>
   recovery(): Promise<RecoveryEntry[]>
+  /** Crash records, newest first (Phase 5, P-f). */
+  crashes(): Promise<CrashRecord[]>
+  /** Deletes a crash record the user has seen. */
+  dismissCrash(id: string): Promise<void>
+  /** The diagnostic package for the user to preview. */
+  diagnostics(): Promise<DiagnosticFile[]>
+  /** Writes the previewed package where the user picks; `nothing` when
+   * the user cancels. */
+  exportDiagnostics(): Promise<Outcome>
   mcpStatus(): Promise<McpStatus>
   setPermissions(permissions: McpPermissions): Promise<McpStatus>
   mcpStart(): Promise<McpStatus>

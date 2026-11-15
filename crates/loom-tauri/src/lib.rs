@@ -110,6 +110,8 @@ pub enum Pick {
     ExportPob,
     /// A bundle folder.
     BundleFolder,
+    /// Where to write the diagnostic package (`.zip`).
+    Diagnostics,
 }
 
 /// Opens the file dialogs. `None` when the user cancelled.
@@ -401,6 +403,35 @@ fn choose_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     with_pick(&ctx, Pick::BundleFolder, "", HostCommand::SetBundle)
 }
 
+/// The crash records, newest first (Phase 5, P-f).
+#[tauri::command]
+fn crashes(ctx: State<'_, Ctx>) -> Vec<api::CrashRecord> {
+    ctx.app.crashes()
+}
+
+/// Deletes a crash record the user has seen.
+#[tauri::command]
+fn dismiss_crash(ctx: State<'_, Ctx>, id: String) -> Answer<()> {
+    ctx.app.dismiss_crash(&id).map_err(dto)
+}
+
+/// The diagnostic package for the user to preview (Phase 5, P-f).
+#[tauri::command(async)]
+fn diagnostics(ctx: State<'_, Ctx>) -> Vec<api::DiagnosticFile> {
+    ctx.app.diagnostics()
+}
+
+/// Writes the previewed diagnostic package where the user picks.
+#[tauri::command(async)]
+fn export_diagnostics(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
+    with_pick(
+        &ctx,
+        Pick::Diagnostics,
+        "exiled-studio-diagnostics.zip",
+        HostCommand::ExportDiagnostics,
+    )
+}
+
 /// The UI's own preferences (B-5: the user's dashboards), an opaque JSON
 /// document the shell keeps in `<data>/ui-prefs.json`; the application
 /// never reads it.
@@ -448,7 +479,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 24] = [
+pub const COMMANDS: [&str; 28] = [
     "snapshot",
     "calc_document",
     "item",
@@ -473,6 +504,10 @@ pub const COMMANDS: [&str; 24] = [
     "tree_layout",
     "tree_sprites",
     "preview_tree",
+    "crashes",
+    "dismiss_crash",
+    "diagnostics",
+    "export_diagnostics",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -522,6 +557,10 @@ pub fn build<R: Runtime>(
             tree_layout,
             tree_sprites,
             preview_tree,
+            crashes,
+            dismiss_crash,
+            diagnostics,
+            export_diagnostics,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -541,6 +580,15 @@ pub fn build<R: Runtime>(
         .setup(move |app| {
             let handle = app.handle().clone();
             let paths = paths(&handle);
+            // Logs and crash records first, so the start is recorded
+            // (Phase 5, P-f). A log folder that cannot be made leaves the
+            // application without logs, never without a start.
+            if let Ok(logs) =
+                loom_app::logs::Logs::open(&paths.data, loom_app::logs::Redactor::from_env())
+            {
+                let _ = tracing::subscriber::set_global_default(logs.subscriber());
+            }
+            loom_app::crash::install(paths.data.clone(), loom_app::logs::Redactor::from_env());
             let settings = paths.data.join(SETTINGS_FILE);
             let emitter = handle.clone();
             let sink: loom_app::Sink = Arc::new(move |event: api::Event| {
@@ -592,6 +640,10 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
                     "Choose an unsigned game data folder for development (it holds bundle.json)",
                 )
                 .blocking_pick_folder(),
+            Pick::Diagnostics => dialog
+                .add_filter("Diagnostic package", &["zip"])
+                .set_file_name(name)
+                .blocking_save_file(),
         };
         path.and_then(|p| p.into_path().ok())
     }
@@ -609,6 +661,7 @@ impl FilePicker for E2ePicker {
             Pick::OpenPob => "import.xml",
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
+            Pick::Diagnostics => "diagnostics.zip",
             Pick::BundleFolder => return None,
         };
         Some(self.0.join(file))

@@ -514,6 +514,14 @@ export interface ApplicationAPIV1 {
       }
     | 'export-share-code'
     | 'close'
+  /**
+   * Crash records (Phase 5, P-f).
+   */
+  crashes: CrashRecord[]
+  /**
+   * The diagnostic package's preview (Phase 5, P-f).
+   */
+  diagnostics: DiagnosticFile[]
   error: ApiError
   event: Event
   /**
@@ -592,6 +600,53 @@ export interface ExpectedLine {
   line: number
   /**
    * Its text.
+   */
+  text: string
+}
+/**
+ * A panic the application recorded (ADR-014; Phase 5, P-f), redacted.
+ */
+export interface CrashRecord {
+  /**
+   * When, in seconds since 1970 (UTC).
+   */
+  at: number
+  /**
+   * Its ID.
+   */
+  id: string
+  /**
+   * Where it panicked (`file:line:column`).
+   */
+  location?: string | null
+  /**
+   * The panic's message.
+   */
+  message: string
+  /**
+   * The thread's name.
+   */
+  thread: string
+  /**
+   * The application's version.
+   */
+  version: string
+}
+/**
+ * One file of the diagnostic package, as the user previews it and the
+ * zip holds it.
+ */
+export interface DiagnosticFile {
+  /**
+   * Its size in bytes.
+   */
+  bytes: number
+  /**
+   * Its name in the package (`about.json`, `logs/loom.log`, ...).
+   */
+  name: string
+  /**
+   * Its text, redacted.
    */
   text: string
 }
