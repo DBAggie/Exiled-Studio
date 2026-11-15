@@ -14,6 +14,7 @@ loom-data.workspace = true
 loom-domain.workspace = true
 loom-parser.workspace = true
 loom-serialization.workspace = true
+loom-tree.workspace = true
 thiserror.workspace = true
 
 [lints]

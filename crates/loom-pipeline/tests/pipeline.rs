@@ -89,7 +89,7 @@ fn pipeline_should_calculate_the_synthetic_build_deterministically() {
     let run = || {
         let mut build = loom_pipeline::read_pob(&synthetic()).unwrap();
         let ends = loom_pipeline::resolve(&resolver, &data, &mut build).unwrap();
-        let options = loom_pipeline::options(&build, &data, &ends, None);
+        let options = loom_pipeline::options(&build, &data, &ends, None, None);
         let result = loom_pipeline::calculate(&build, &bundle, &options, &|| false).unwrap();
         loom_pipeline::document(&result).unwrap()
     };
@@ -112,7 +112,7 @@ fn calculate_should_stop_when_cancelled() {
     let resolver = Resolver::new(&data).unwrap();
     let mut build = loom_pipeline::read_pob(&synthetic()).unwrap();
     let ends = loom_pipeline::resolve(&resolver, &data, &mut build).unwrap();
-    let options = loom_pipeline::options(&build, &data, &ends, None);
+    let options = loom_pipeline::options(&build, &data, &ends, None, None);
     let e = loom_pipeline::calculate(&build, &bundle, &options, &|| true).unwrap_err();
     assert_eq!(e.step, Step::Calculate);
     assert_eq!(e.code, "CALC_CANCELLED");

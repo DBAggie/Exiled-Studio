@@ -65,6 +65,9 @@ pub struct Node {
     /// spec: proxies, proxy groups, sockets with a parent). Never drawn,
     /// never modelled.
     pub cluster_area: bool,
+    /// Whether the game marks it as a cluster jewel's (the passives
+    /// table's `expansion`): a socket or node of the cluster areas.
+    pub expansion: bool,
 }
 
 /// A group of nodes around one centre.
@@ -213,6 +216,7 @@ impl Tree {
                         choice_option: row.multiple_choice_option,
                         modelled: false,
                         cluster_area: false,
+                        expansion: row.expansion,
                     },
                 );
             }

@@ -1472,6 +1472,7 @@ pub fn calculate(
         data.data,
         &state.ends,
         data.tree_version.clone(),
+        data.tree.as_deref(),
     );
     Ok(loom_pipeline::calculate(
         &state.build,

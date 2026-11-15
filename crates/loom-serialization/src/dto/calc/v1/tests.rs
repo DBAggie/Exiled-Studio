@@ -380,9 +380,6 @@ impl CalcData for Data {
     fn mastery_effect_stats(&self, _: u32) -> Option<&[StatAmount]> {
         None
     }
-    fn passive_links(&self, _: u32) -> Option<loom_calc::PassiveLinks> {
-        None
-    }
     fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
         None
     }

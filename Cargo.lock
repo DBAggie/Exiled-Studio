@@ -1900,6 +1900,7 @@ dependencies = [
  "loom-domain",
  "loom-parser",
  "loom-serialization",
+ "loom-tree",
  "thiserror 2.0.21",
 ]
 

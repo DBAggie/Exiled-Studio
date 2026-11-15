@@ -8,7 +8,9 @@
 //!    returns the exact ends of the ranges it read ([`RangeEnds`]).
 //! 3. [`options`] gives the engine what the import adapter settles: each
 //!    item's base name and PoB's line values (rolls, scalings) from those
-//!    ends, plus the tree version the host knows for the data.
+//!    ends, the tree version the host knows for the data, and the active
+//!    spec's passives resolved against the tree ([`resolve_passives`]:
+//!    which nodes are connected; the engine does not walk the tree).
 //! 4. [`calculate`] runs the engine with the host's cancellation hook;
 //!    [`document`] writes the calc result document v1.
 //!
@@ -20,11 +22,14 @@
 
 use std::collections::BTreeMap;
 
-use loom_calc::{BaseName, CalcData, CalcInput, CalcOptions, CalcResult};
+use loom_calc::{
+    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, PassiveState, ResolvedPassives,
+};
 use loom_domain::{Build, ItemBody, ItemId, LineKind, LineResolution, TreeVersion};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
 use loom_serialization::dto::calc::v1 as calc_dto;
 use loom_serialization::legacy::{pob_item, pob_xml, share_code};
+use loom_tree::Tree;
 
 pub use loom_parser::import::{BuildRangeEnds as RangeEnds, LineRangeEnds};
 
@@ -220,15 +225,49 @@ pub fn reresolve(
     })
 }
 
+/// The active spec's allocated nodes resolved against `tree` (passive
+/// tree plan, T-e): connected to an allocated start
+/// ([`loom_tree::poe1::connected_to_start`]), a cluster jewel's socket or
+/// node, or not connected. Without a tree, empty: the engine then counts
+/// every node as not connected (a bundle without passive tables has no
+/// node's stats either).
+#[must_use]
+pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives {
+    let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {
+        return ResolvedPassives::default();
+    };
+    let nodes = spec.nodes.value();
+    let connected = loom_tree::poe1::connected_to_start(tree, nodes.iter().map(|n| &n.0));
+    ResolvedPassives {
+        nodes: nodes
+            .iter()
+            .map(|n| {
+                let state = if n.0 & loom_tree::poe1::CLUSTER_NODE_BIT != 0 {
+                    PassiveState::ClusterNode
+                } else if connected.contains(&n.0) {
+                    PassiveState::Connected
+                } else if tree.node(n.0).is_some_and(|x| x.expansion) {
+                    PassiveState::ClusterSocket
+                } else {
+                    PassiveState::Unconnected
+                };
+                (*n, state)
+            })
+            .collect(),
+    }
+}
+
 /// The engine's options for `build`: each item's base name and PoB's line
-/// values from the range ends, and the data's tree version, if the host
-/// knows it.
+/// values from the range ends, the data's tree version, if the host knows
+/// it, and the active spec's passives resolved against `tree`
+/// ([`resolve_passives`]).
 #[must_use]
 pub fn options(
     build: &Build,
     data: &BundleData<'_>,
     ends: &RangeEnds,
     tree_version: Option<TreeVersion>,
+    tree: Option<&Tree>,
 ) -> CalcOptions {
     // The same base names the resolver used, for the engine's armour
     // pieces (the legacy format's naming rules stay in the adapter).
@@ -269,6 +308,7 @@ pub fn options(
         tree_version,
         item_bases,
         item_lines,
+        passives: resolve_passives(build, tree),
         ..CalcOptions::default()
     }
 }

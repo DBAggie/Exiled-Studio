@@ -244,6 +244,49 @@ pub fn connected(tree: &Tree, spec: &Spec) -> BTreeSet<u32> {
     seen
 }
 
+/// The allocated nodes that count in a calculation: those connected to an
+/// allocated root (any class or ascendancy start) through allocated nodes,
+/// over every link of the tree (PoB's load-time rule,
+/// `Classes/PassiveSpec.lua` `BuildAllDependsAndPaths`, `connectedToStart`;
+/// PoB drops the others when it loads a build). Unlike [`connected`] (the
+/// editor's), kept nodes do not count unless connected, and a node the
+/// tree lacks or PoB numbers as a cluster jewel's links nothing. The
+/// calculation's resolved passive set (`loom-pipeline`) reads this.
+#[must_use]
+pub fn connected_to_start<'a>(
+    tree: &Tree,
+    nodes: impl IntoIterator<Item = &'a u32>,
+) -> BTreeSet<u32> {
+    let allocated: BTreeSet<u32> = nodes
+        .into_iter()
+        .copied()
+        .filter(|n| n & CLUSTER_NODE_BIT == 0)
+        .collect();
+    let mut seen: BTreeSet<u32> = allocated
+        .iter()
+        .copied()
+        .filter(|n| {
+            tree.node(*n)
+                .is_some_and(|x| matches!(x.kind, Kind::ClassStart | Kind::AscendancyStart))
+        })
+        .collect();
+    let mut queue: Vec<u32> = seen.iter().copied().collect();
+    while let Some(a) = queue.pop() {
+        let Some(node) = tree.node(a) else { continue };
+        for &b in &node.neighbours {
+            if allocated.contains(&b) && seen.insert(b) {
+                queue.push(b);
+            }
+        }
+    }
+    seen
+}
+
+/// The bit PoB sets on the nodes it generates from a socketed cluster
+/// jewel (`Classes/PassiveSpec.lua` BuildSubgraph: "16: 1 (signal bit, to
+/// prevent conflict with node hashes)").
+pub const CLUSTER_NODE_BIT: u32 = 0x1_0000;
+
 /// Removes every allocated node the edit from `before` left unconnected,
 /// and the effects of removed masteries; returns what was removed. A node
 /// that was not connected before (one allocated through a radius jewel, as

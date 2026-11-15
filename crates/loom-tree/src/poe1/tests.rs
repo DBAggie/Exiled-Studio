@@ -398,3 +398,18 @@ fn a_cluster_area_should_be_neither_modelled_nor_reached() {
     assert_eq!(allocate(&t, &s, 81), Err(EditError::NotModelled(81)));
     assert_eq!(allocate(&t, &s, 82), Err(EditError::NotModelled(82)));
 }
+
+#[test]
+fn connected_to_start_should_follow_every_link_from_any_allocated_start() {
+    let t = tree();
+    // 1 - 10 - 11 connect; 50 is a start too and 51 hangs from it; 2 is
+    // another class's start, and 30 and 13 hang from it; 70 (kept), 71
+    // (absent), and a cluster jewel's node do not count.
+    let nodes = set(&[1, 10, 11, 13, 70, 71, 50, 51, 30, 2, 0x1_0005]);
+    assert_eq!(
+        connected_to_start(&t, &nodes),
+        set(&[1, 10, 11, 50, 51, 30, 13, 2])
+    );
+    // No allocated start: nothing counts.
+    assert!(connected_to_start(&t, &set(&[10, 11])).is_empty());
+}

@@ -56,9 +56,14 @@ fn run_with(
     let overlay = overlay
         .map(|bytes| OverlayData::read(bytes, &bundle, &manifest_sha256))
         .transpose()?;
+    let tree = bundle
+        .passives
+        .as_ref()
+        .map(|p| loom_tree::Tree::from_tables(p, None));
     let request = Request {
         bundle: &bundle,
         resolver: &resolver,
+        tree: tree.as_ref(),
         data: &data,
         bundle_record: BundleRecord {
             game: game.to_owned(),

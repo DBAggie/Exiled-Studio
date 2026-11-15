@@ -10,9 +10,8 @@
 
 use loom_calc::{
     ActiveSkill, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase,
-    EffectLevel, Field, FieldState, GemEffect, GrantedEffect, ItemBase, PassiveLinks, Range,
-    SkillGem, StatAmount, StatSet, StatSetLevel, StateKind, UnsupportedReason, WeaponBase,
-    calculate, math,
+    EffectLevel, Field, FieldState, GemEffect, GrantedEffect, ItemBase, Range, SkillGem,
+    StatAmount, StatSet, StatSetLevel, StateKind, UnsupportedReason, WeaponBase, calculate, math,
 };
 use loom_data::bundle::skills::{ConstantStat, LevelStat};
 use loom_domain::{
@@ -320,9 +319,6 @@ impl CalcData for Data {
         None
     }
     fn mastery_effect_stats(&self, _: u32) -> Option<&[StatAmount]> {
-        None
-    }
-    fn passive_links(&self, _: u32) -> Option<PassiveLinks> {
         None
     }
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {

@@ -40,8 +40,8 @@ Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-data` <- `loom-parser`, `loom-calc`
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
 - `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
-- `loom-parser`, `loom-calc`, `loom-serialization` <- `loom-pipeline` (Phase 4 plan, decision 0)
-- `loom-data` <- `loom-tree` (passive tree plan, T-e; the calculation does not depend on it)
+- `loom-parser`, `loom-calc`, `loom-serialization`, `loom-tree` <- `loom-pipeline` (Phase 4 plan, decision 0; the resolved passive set, passive tree plan T-e)
+- `loom-data` <- `loom-tree` (passive tree plan, T-e; `loom-calc` does not depend on it: `loom-pipeline` resolves the spec with it and hands the engine the result)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).

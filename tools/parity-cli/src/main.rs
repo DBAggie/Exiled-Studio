@@ -1384,10 +1384,15 @@ fn calc_run_run(
         }
         None => None,
     };
+    let tree = bundle
+        .passives
+        .as_ref()
+        .map(|p| loom_tree::Tree::from_tables(p, None));
     let request = calc_run::Request {
         scope,
         bundle: &bundle,
         resolver: &resolver,
+        tree: tree.as_ref(),
         data: &data,
         bundle_record: calc_run::BundleRecord {
             game: bundle.game.name().to_owned(),
