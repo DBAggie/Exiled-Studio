@@ -1,0 +1,15 @@
+Item Class: Jewels
+Rarity: Rare
+Oblivion Glimmer
+Viridian Jewel
+--------
+Item Level: 81
+--------
+{ Prefix Modifier "Bandit's" (Tier: 1) — Attack, Speed }
+6(4-6)% increased Attack Speed with One Handed Melee Weapons
+{ Prefix Modifier "Chilling" (Tier: 1) — Damage, Elemental, Cold }
+16(14-16)% increased Cold Damage
+{ Suffix Modifier "of Dexterity" (Tier: 1) — Attribute }
++13(12-16) to Dexterity
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

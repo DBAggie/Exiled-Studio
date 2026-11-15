@@ -1,0 +1,18 @@
+Rarity: UNIQUE
+Foulborn Emperor's Vigilance
+Steel Kite Shield
+Armour: 2818
+ArmourBasePercentile: 0.9042
+Energy Shield: 598
+EnergyShieldBasePercentile: 1
+Item Level: 83
+Quality: 40
+Sockets: B-R W
+LevelReq: 46
+Implicits: 0
+{tags:defences,armour,energyshield}1120% increased Armour and Energy Shield
+Damage taken from Blocked Hits cannot bypass Energy Shield
+{unscalable}Damage taken from Unblocked hits always bypasses Energy Shield
+{unscalable}{mutated}+20% to Maximum Quality
+{unscalable}Glancing Blows
+Corrupted

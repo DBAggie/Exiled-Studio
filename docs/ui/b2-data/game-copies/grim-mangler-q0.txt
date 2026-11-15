@@ -1,0 +1,33 @@
+Item Class: Two Hand Maces
+Rarity: Rare
+Grim Mangler
+Totemic Maul
+--------
+Two Handed Mace
+Physical Damage: 159-246 (augmented)
+Elemental Damage: 12-212 (augmented)
+Critical Strike Chance: 5.00%
+Attacks per Second: 1.10
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 57
+Str: 127
+Dex: 88
+--------
+Sockets: R-R-R 
+--------
+Item Level: 55
+--------
+{ Implicit Modifier }
+30% increased Stun Duration on Enemies
+--------
+{ Prefix Modifier "Vicious" (Tier: 5) — Damage, Physical, Attack }
+89(85-109)% increased Physical Damage
+{ Prefix Modifier "Annealed" (Tier: 4) — Damage, Physical, Attack }
+Adds 27(20-28) to 45(43-51) Physical Damage
+{ Prefix Modifier "Arcing" (Tier: 5) — Damage, Elemental, Lightning, Attack }
+Adds 12(11-14) to 212(208-242) Lightning Damage
+{ Suffix Modifier "of the Boxer" (Tier: 3) }
+11(10-11)% reduced Enemy Stun Threshold
+(The Stun Threshold determines how much Damage can Stun something)

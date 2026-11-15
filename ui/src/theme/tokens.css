@@ -78,6 +78,12 @@
   --c-tt-flavour: #af6025;
   /* A requirement the character does not meet (the game's red). */
   --c-tt-unmet: #ff4a4a;
+  /* Damage types on a weapon's values (E5): the game's hues, lightened to
+     read on the panel. */
+  --c-tt-fire: #e0864f;
+  --c-tt-cold: #7ea6e6;
+  --c-tt-lightning: #e3df72;
+  --c-tt-chaos: #e070bd;
   --c-tt-separator: #5a4a2c;
   --c-tt-shadow: rgb(0 0 0 / 0.6);
   --c-tt-sheen: rgb(255 255 255 / 0.06);

@@ -5,11 +5,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { ItemSummary, ItemView, LineView } from '../api/types'
+import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
 import { formatNumber, t } from '../i18n'
 import { actions, attempt, run } from '../store'
 import { Sprite } from '../sprites'
 import { type SpriteKind, spriteFor } from '../spriteKind'
-import { itemName, useAppDispatch, useAppSelector } from '../util'
+import {
+  itemName,
+  useAppDispatch,
+  useAppSelector,
+  useAttributes,
+} from '../util'
 
 /** Item classes that take both hands: the off hand shows them faded. */
 const TWO_HANDED = new Set([
@@ -59,18 +65,7 @@ export interface Have {
 /** The open build's level and computed attributes. */
 function useHave(): Have {
   const level = useAppSelector((s) => s.session.snapshot?.build?.level ?? null)
-  const fields = useAppSelector((s) => s.session.calc?.[1].result.fields)
-  const of = (name: string): number | null => {
-    const f = fields?.find((x) => x.field === name) as
-      { value?: number | null } | undefined
-    return typeof f?.value === 'number' ? f.value : null
-  }
-  return {
-    level,
-    str: of('strength'),
-    dex: of('dexterity'),
-    int: of('intelligence'),
-  }
+  return { level, ...useAttributes() }
 }
 
 type ReqLabel = 'level' | 'str' | 'dex' | 'int'
@@ -221,7 +216,32 @@ export function TooltipBody({
         <span className="tt-augmented">+{c.quality}%</span>
       </p>
     ),
-    ...c.properties
+    ...valueLines(c).map((v) => (
+      <p key={`v-${v.name}`}>
+        {v.name}:{' '}
+        {v.parts == null ? (
+          <span className="tt-value">{v.value}</span>
+        ) : (
+          v.parts.map((part, i) => (
+            <span key={part.kind}>
+              {i > 0 && ', '}
+              <span className={`tt-${part.kind}`}>{part.text}</span>
+            </span>
+          ))
+        )}
+      </p>
+    )),
+    c.values?.partial === true && (
+      <p key="v-partial" className="tt-note">
+        {t('values.partial')}
+      </p>
+    ),
+    socketsOverCap(c) != null && (
+      <p key="over-cap" className="tt-note">
+        {t('card.overCap', { n: socketsOverCap(c) ?? 0 })}
+      </p>
+    ),
+    ...writtenProperties(c)
       .filter((p) => p.name !== 'Requires Class')
       .map((p, i) => (
         <p key={`p${i}`}>

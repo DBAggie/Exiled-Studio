@@ -23,6 +23,7 @@ import {
   ScreenHeading,
   Sockets,
 } from '../components'
+import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
 import { fieldLabel, t, tDynamic } from '../i18n'
 import { actions, attempt, query, run } from '../store'
 import { Inventory } from './Inventory'
@@ -194,6 +195,7 @@ export function Items() {
         {sets.length > 1 && <ItemSetPicker sets={sets} />}
       </div>
       <Inventory />
+      <PasteItem />
       {items.length === 0 ? (
         <p>{t('items.none')}</p>
       ) : (
@@ -241,6 +243,102 @@ export function Items() {
         </>
       )}
     </>
+  )
+}
+
+/** Whether a paste lands in a field of its own (then the page leaves it). */
+function inField(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.isContentEditable ||
+      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+  )
+}
+
+/** "Paste an item" (B-2 item evidence, E3): the game's item copy or PoB's
+ * item text becomes a new item, in a slot if one is picked, as one
+ * undoable step. Pasting an item anywhere on the page outside a field
+ * opens this with the text in it; nothing is added until Add. */
+function PasteItem() {
+  const dispatch = useAppDispatch()
+  const textId = useId()
+  const slotId = useId()
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  const [slot, setSlot] = useState('')
+  const [added, setAdded] = useState<string | null>(null)
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      if (inField(e.target)) return
+      const pasted = e.clipboardData?.getData('text') ?? ''
+      if (!/^\s*(Item Class: .*\n\s*)?Rarity: /.test(pasted)) return
+      e.preventDefault()
+      setText(pasted)
+      setAdded(null)
+      setOpen(true)
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [])
+  const add = async () => {
+    const outcome = await dispatch(
+      run({ 'add-item': { text, slot: slot === '' ? null : slot } }),
+    )
+    if (outcome !== null) {
+      const name = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l !== '' && !/^(Item Class|Rarity):/.test(l))[0]
+      setAdded(name ?? '')
+      setText('')
+    }
+  }
+  return (
+    <details
+      className="panel paste-item"
+      open={open}
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>{t('items.paste.title')}</summary>
+      <p className="muted small-text">{t('items.paste.help')}</p>
+      <label htmlFor={textId}>{t('items.paste.text')}</label>
+      <textarea
+        id={textId}
+        rows={8}
+        value={text}
+        spellCheck={false}
+        onChange={(e) => {
+          setText(e.target.value)
+          setAdded(null)
+        }}
+      />
+      <div className="paste-actions">
+        <label htmlFor={slotId}>{t('items.paste.slot')}</label>
+        <select
+          id={slotId}
+          value={slot}
+          onChange={(e) => setSlot(e.target.value)}
+        >
+          <option value="">{t('items.paste.noSlot')}</option>
+          {SLOT_ORDER.filter((s) => s !== 'Ring 3').map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className="primary"
+          disabled={text.trim() === ''}
+          onClick={() => void add()}
+        >
+          {t('items.paste.add')}
+        </button>
+      </div>
+      {added !== null && (
+        <p role="status">{t('items.paste.added', { name: added })}</p>
+      )}
+    </details>
   )
 }
 
@@ -311,6 +409,7 @@ function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
         },
       }),
     )
+  const over = socketsOverCap(c)
   const facts = [
     c['item-class'],
     c.quality == null ? null : t('card.quality', { q: c.quality }),
@@ -318,7 +417,13 @@ function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
       ? null
       : t('card.itemLevel', { n: c['item-level'] }),
     c['level-req'] == null ? null : t('card.levelReq', { n: c['level-req'] }),
-    ...c.properties.map((p) => `${p.name}: ${p.value}`),
+    c['max-sockets'] == null || c['max-sockets'] === 0
+      ? null
+      : t('card.maxSockets', { n: c['max-sockets'] }),
+    over == null ? null : t('card.overCap', { n: over }),
+    ...valueLines(c).map((v) => `${v.name}: ${v.value}`),
+    c.values?.partial === true ? t('values.partial') : null,
+    ...writtenProperties(c).map((p) => `${p.name}: ${p.value}`),
     ...c.influences.map((i) => t('card.influence', { name: i })),
     ...c.flags,
   ].filter((f): f is string => f != null && f !== '')

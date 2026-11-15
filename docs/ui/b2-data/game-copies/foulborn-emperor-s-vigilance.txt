@@ -1,0 +1,37 @@
+Item Class: Shields
+Rarity: Unique
+Foulborn Emperor's Vigilance
+Steel Kite Shield
+--------
+Quality: +40% (augmented)
+Chance to Block: 26%
+Armour: 2818 (augmented)
+Energy Shield: 598 (augmented)
+--------
+Requirements:
+Level: 70
+Str: 111
+Dex: 119 (unmet)
+Int: 60
+--------
+Sockets: B-R W 
+--------
+Item Level: 83
+--------
+{ Unique Modifier — Defences, Armour, Energy Shield }
+1120(1000)% increased Armour and Energy Shield
+{ Unique Modifier }
+Damage taken from Blocked Hits cannot bypass Energy Shield
+Damage taken from Unblocked hits always bypasses Energy Shield — Unscalable Value
+{ Unique Modifier }
+Glancing Blows — Unscalable Value
+(Chance to Block Attack Damage is doubled
+Chance to Block Spell Damage is doubled
+You take 65% of Damage from Blocked Hits)
+{ Foulborn Unique Modifier }
++20% to Maximum Quality — Unscalable Value
+--------
+Chitus' success stemmed from his cunning, taking calculated
+risks so that greater dangers could be averted.
+--------
+Corrupted

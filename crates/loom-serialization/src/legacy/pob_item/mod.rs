@@ -52,6 +52,9 @@
 //! `^%(%a+` to `%)$`), `Requirements:`, a `--------` after the header
 //! (`ParseRaw` resets prefixes there), flask and tincture buff lines, mod
 //! lines that equal a base name, and the Energy Blade base special case.
+//! A game copy (the advanced copy, reminder text, `Requirements:`,
+//! separators) is turned into this format first by
+//! [`crate::legacy::game_copy`], as PoB's paste does.
 //!
 //! Scope: PoB's **PoE1** item format (`v2.67.2` of `PathOfBuilding`). The
 //! influence, spec, and line-flag lists are that version's; PoB for PoE2

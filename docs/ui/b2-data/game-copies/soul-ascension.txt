@@ -1,0 +1,37 @@
+Item Class: Gloves
+Rarity: Unique
+Soul Ascension
+Carnal Mitts
+--------
+Quality: +17% (augmented)
+Evasion Rating: 260 (augmented)
+Energy Shield: 55 (augmented)
+--------
+Requirements:
+Level: 54
+Str: 117
+Dex: 39
+Int: 92 (unmet)
+--------
+Sockets: B-B-B-G 
+--------
+Item Level: 87
+--------
+{ Corruption Implicit Modifier — Attack, Critical }
+Attacks have +0.71(0.5-0.8)% to Critical Strike Chance
+--------
+{ Unique Modifier — Defences, Evasion, Energy Shield }
+147(120-150)% increased Evasion and Energy Shield
+{ Unique Modifier — Chaos, Resistance }
++17(17-29)% to Chaos Resistance
+{ Unique Modifier }
+Eat a Soul when you Hit a Rare or Unique Enemy, no more than once every 0.5 seconds — Unscalable Value
+(Each soul grants 5% increased Attack and Cast speed. You lose 1 soul every 0.5 seconds if you have not eaten any souls Recently. Maximum of 45 souls consumed)
+{ Unique Modifier }
+-4(-10-10) to maximum number of Eaten Souls
+--------
+Fear can be instilled by the smallest entity.
+--------
+Corrupted
+--------
+Elder Item

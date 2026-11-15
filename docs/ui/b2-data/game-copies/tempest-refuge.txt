@@ -1,0 +1,36 @@
+Item Class: Shields
+Rarity: Rare
+Tempest Refuge
+Ezomyte Tower Shield
+--------
+Quality: +20% (augmented)
+Chance to Block: 35% (augmented)
+Armour: 1198 (augmented)
+--------
+Requirements:
+Level: 70
+Str: 159
+Dex: 68
+Int: 98
+--------
+Sockets: B R-R 
+--------
+Item Level: 85
+--------
+{ Implicit Modifier — Life }
++40(30-40) to maximum Life
+--------
+{ Prefix Modifier "Layered" (Tier: 7) — Defences, Armour }
+40(27-42)% increased Armour
+{ Prefix Modifier "Unrelenting" (Tier: 6) }
+46(46-51)% increased Chance to Block
+{ Master Crafted Prefix Modifier "Upgraded" (Rank: 3) — Defences, Armour }
++257(250-320) to Armour
+{ Suffix Modifier "of the Starfish" (Tier: 7) — Life }
+Regenerate 22.2(16.1-24) Life per second
+{ Suffix Modifier "of Shaping" (Tier: 1) — Life }
+Recover 5(3-5)% of Life when you Block
+{ Suffix Modifier "of Obstruction" (Tier: 1) — Damage, Critical }
+You take 57(51-60)% reduced Extra Damage from Critical Strikes
+--------
+Shaper Item

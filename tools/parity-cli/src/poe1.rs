@@ -55,7 +55,11 @@ pub fn item_rules() -> ItemRules {
 /// (`src/Export/Scripts/flavourText.lua`, `forcedNameList`), minus the 31
 /// the join already gives; checked against the game by the maintainer's
 /// copies as they come. Upgraded versions with no pair here get no text.
-pub const FLAVOUR_PAIRS: [(&str, &str); 74] = [
+/// The last pair is the game's own, not PoB's: The Light of Meaning shares
+/// its art with That Which Was Taken, so the join gives it
+/// `UniqueJewel181`; the game prints `UniqueJewel183_` on it
+/// (`docs/ui/b2-data/item-evidence.md`, "Flavour text").
+pub const FLAVOUR_PAIRS: [(&str, &str); 75] = [
     ("UniqueOneHandAxe5", "Jack, the Axe"),
     ("UniqueBootsDIY", "Doryani's Delusion"),
     ("UniqueGlovesStrDex9", "Tombfist"),
@@ -130,6 +134,7 @@ pub const FLAVOUR_PAIRS: [(&str, &str); 74] = [
     ("FatedUnique48", "Winterweave"),
     ("FatedUnique27", "Atziri's Reflection"),
     ("Ring11x", "Replica Gifts from Above"),
+    ("UniqueJewel183_", "The Light of Meaning"),
 ];
 
 /// `ClientStrings` ids of item-display property texts (the categorizer's

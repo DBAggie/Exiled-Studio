@@ -445,6 +445,52 @@
         "version"
       ]
     },
+    "CardDamage": {
+      "description": "One damage type's range on an item card.",
+      "type": "object",
+      "properties": {
+        "damage-type": {
+          "description": "`physical`, `fire`, `cold`, `lightning`, or `chaos`.",
+          "type": "string"
+        },
+        "max": {
+          "description": "The maximum.",
+          "type": "number",
+          "format": "double"
+        },
+        "min": {
+          "description": "The minimum.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "damage-type",
+        "min",
+        "max"
+      ]
+    },
+    "CardDefence": {
+      "description": "One defence on an item card.",
+      "type": "object",
+      "properties": {
+        "defence": {
+          "description": "`armour`, `evasion`, or `energy-shield`.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defence",
+        "value"
+      ]
+    },
     "CardProperty": {
       "description": "One base value on an item card.",
       "type": "object",
@@ -462,6 +508,60 @@
       "required": [
         "name",
         "value"
+      ]
+    },
+    "CardValues": {
+      "description": "An item's own values ([`ItemCard::values`]), each as the game's\ntooltip shows it before rounding for display.",
+      "type": "object",
+      "properties": {
+        "attack-rate": {
+          "description": "A weapon's attacks per second.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "block": {
+          "description": "A shield's chance to block, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "crit-chance": {
+          "description": "A weapon's critical strike chance, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "damage": {
+          "description": "A weapon's damage per type, physical first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDamage"
+          }
+        },
+        "defences": {
+          "description": "The defences above 0, in the game's order (armour, evasion,\nenergy shield).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDefence"
+          }
+        },
+        "partial": {
+          "description": "The values leave out something the engine does not model on\nthis item (an unmodelled line or base, missing data).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defences",
+        "damage",
+        "partial"
       ]
     },
     "ChangeKind": {
@@ -526,6 +626,11 @@
           "description": "A passive tree change an MCP client requested.",
           "type": "string",
           "const": "tree-request-applied"
+        },
+        {
+          "description": "An item added (and perhaps put in a slot).",
+          "type": "string",
+          "const": "item-added"
         }
       ]
     },
@@ -684,6 +789,36 @@
           "additionalProperties": false,
           "required": [
             "edit-item"
+          ]
+        },
+        {
+          "description": "Adds an item to the build from the game's item copy (Ctrl+C or\nCtrl+Alt+C) or PoB's item text, as one undoable change; with\n`slot`, also puts it in that slot of the active item set (B-2\nitem evidence, E3).",
+          "type": "object",
+          "properties": {
+            "add-item": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "description": "A slot of the active item set (`Helmet`, `Weapon 1`,\n`Ring 2`, `Flask 3`, ...), if the item goes in one.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "description": "The copied text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-item"
           ]
         },
         {
@@ -2566,6 +2701,16 @@
             "null"
           ]
         },
+        "max-sockets": {
+          "description": "The most sockets the item's base rolls at its item level (the\ngame data's item types; B-2 item evidence). None when the data\nhas no caps for the base. More sockets than this is shown on the\ncard, never a calculation state.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
+          "minimum": 0
+        },
         "properties": {
           "description": "The defences and other base values written on the item\n(`Energy Shield: 276`), in order.",
           "type": "array",
@@ -2606,6 +2751,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "values": {
+          "description": "The item's own values as the calculation computes them (B-2\nitem evidence): an armour piece's defences, a shield's block, a\nweapon's damage, rate, and critical strike chance. None for an\nitem without such values, or when the data or the base is\nmissing.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardValues"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "variant-eras": {
           "description": "What each variant is, in the order of `variants`.",
@@ -3634,7 +3791,7 @@
           "minimum": 0
         },
         "level": {
-          "description": "The level: as written on the item, else the base's drop level.",
+          "description": "The level: as written on the item, else the base's (its drop\nlevel for a weapon, armour, or flask, its implicits' levels; PoB's\nrule, `loom_data::bundle::required_level`).",
           "type": [
             "integer",
             "null"
@@ -3817,6 +3974,22 @@
       "description": "An ascendancy on the tree.",
       "type": "object",
       "properties": {
+        "flavour": {
+          "description": "Its quote, as the game shows it in the ascendancy's circle (the\ngame data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "flavour-colour": {
+          "description": "The quote's colour (`r,g,b`), when the data gives one.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "id": {
           "description": "Its ID (what nodes name).",
           "type": "string"
@@ -4174,6 +4347,14 @@
           "description": "Whether it exists only once a cluster jewel is socketed (a\nnested socket or position proxy): not drawn, as PoB does not.",
           "type": "boolean",
           "default": false
+        },
+        "flavour": {
+          "description": "Its flavour text, as the game shows it under a keystone's lines\n(the game data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "group": {
           "description": "Its group's index.",

@@ -704,6 +704,24 @@
         "game:UniqueStashLayout.BaseVersion"
       ],
       "count": 56
+    },
+    {
+      "id": "flavour-game-copy-over-shared-art",
+      "category": "pob-derivation",
+      "table": "flavour_text",
+      "fields": [
+        "row"
+      ],
+      "keys": [
+        "The Light of Meaning|UniqueJewel181"
+      ],
+      "evidence": "The Light of Meaning shares its art (ItemVisualIdentity) with That Which Was Taken, whose FlavourText row is UniqueJewel181. PoB's exporter gives every stash row its art's FlavourText row, so it gives The Light of Meaning that text (\"Faith given under false pretenses ...\"). The game prints FlavourText row UniqueJewel183_ on it (\"To name a thing is to give it power.\"): the maintainer's in-game copy, docs/ui/b2-data/game-copies/the-light-of-meaning.txt, checked by the ignored test each_unique_copys_flavour_should_equal_the_bundles. The bundle pairs the name with UniqueJewel183_ (poe1::FLAVOUR_PAIRS), so it has no UniqueJewel181 row for it; its UniqueJewel183 row is bundle-only (docs/ui/b2-data/item-evidence.md, \"Flavour text\").",
+      "sources": [
+        "v2.67.2:src/Export/Scripts/flavourText.lua",
+        "game:FlavourText.Text",
+        "game:UniqueStashLayout.ItemVisualIdentityKey"
+      ],
+      "count": 1
     }
   ]
 }

@@ -65,6 +65,7 @@ export const en = {
   'history.tree': 'passive tree change',
   'history.tree-specs': 'passive tree list change',
   'history.tree-request-applied': 'the AI assistant’s passive tree change',
+  'history.item-added': 'adding {item}',
   'header.save': 'Save',
   'header.export': 'Export',
   'header.unsaved': 'Unsaved changes',
@@ -440,6 +441,17 @@ export const en = {
   'inventory.twoHanded': '{slot}: held by the two-handed {name}',
   'inventory.abyssal': 'Abyssal jewel in {slot}: {name}',
   'tooltip.quality': 'Quality:',
+  'values.physical': 'Physical Damage',
+  'values.elemental': 'Elemental Damage',
+  'values.chaos': 'Chaos Damage',
+  'values.crit': 'Critical Strike Chance',
+  'values.rate': 'Attacks per Second',
+  'values.block': 'Chance to Block',
+  'values.armour': 'Armour',
+  'values.evasion': 'Evasion Rating',
+  'values.energyShield': 'Energy Shield',
+  'values.partial':
+    'Some of the item’s lines are not read, so these values may leave them out.',
   'tooltip.itemLevel': 'Item Level:',
   'tooltip.requires': 'Requires',
   'tooltip.level': 'Level',
@@ -458,6 +470,14 @@ export const en = {
   'items.setN': 'Set {n}',
   'items.setHelp':
     'The calculation uses this set. Switching is one undoable step.',
+  'items.paste.title': 'Paste an item',
+  'items.paste.help':
+    'Copy an item in the game (Ctrl+C, or Ctrl+Alt+C for its modifier tiers and ranges) and paste it here. PoB item text works too.',
+  'items.paste.text': 'Item text',
+  'items.paste.slot': 'Put it in',
+  'items.paste.noSlot': 'No slot (keep it with the build)',
+  'items.paste.add': 'Add the item',
+  'items.paste.added': 'Added {name}.',
   'items.inUse': 'In use',
   'items.inUseNone': 'No item is in use in this item set.',
   'items.treeSocket': 'Passive tree',
@@ -526,6 +546,9 @@ export const en = {
   'card.quality': 'Quality +{q}%',
   'card.itemLevel': 'Item level {n}',
   'card.levelReq': 'Requires level {n}',
+  'card.maxSockets': 'Up to {n} sockets at this item level',
+  'card.overCap':
+    'More sockets than the base rolls at this item level (at most {n})',
   'card.influence': '{name} item',
   'card.version': 'Item version',
   'card.kind': 'Kind',
@@ -600,6 +623,7 @@ export const en = {
   'tree.ascendancy': 'Ascendancy',
   'tree.noAscendancy': 'None',
   'tree.points': 'Passive points: {n} · Ascendancy points: {a}',
+  'tree.attributes': 'Strength {str} · Dexterity {dex} · Intelligence {int}',
   'tree.search': 'Search nodes',
   'tree.found': '{n} found',
   'tree.view': 'View',
@@ -888,6 +912,8 @@ export const en = {
   'error.APP_ITEM_SET': 'This build has no such item set.',
   'error.APP_LOADOUT': 'This build has no such stage.',
   'error.APP_TREE': 'That tree change is not possible.',
+  'error.APP_ADD_ITEM':
+    'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':
     'That skill set, socket group, or gem is not in the build, or the value is not allowed.',
   'error.PERSIST_IMPORT_SOURCE':

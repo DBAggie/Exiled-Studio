@@ -1,0 +1,21 @@
+Item Class: Body Armours
+Rarity: RARE
+Ghoul Pelt
+Royal Plate
+Quality: 20
+Armour: 4818
+Intangibility: 42%
+Sockets: R-W-R-W-R-W
+Item Level: 86
+Searing Exarch Item
+Eater of Worlds Item
+Implicits: 2
+{exarch}{implicit}+2% to maximum Fire Resistance
+{eater}{implicit}6% Chance to Block Spell Damage
+{prefix}{tags:defences,armour}41% increased Armour
+{prefix}{tags:defences,armour}16% increased Stun and Block Recovery
+{prefix}{tags:defences,armour}100% increased Armour
+{crafted}{prefix}{tags:defences,armour}+306 to Armour
+{suffix}{tags:chaos,resistance}+34% to Chaos Resistance
+{suffix}{tags:elemental,lightning,resistance}+46% to Lightning Resistance
+{suffix}{tags:elemental,fire,resistance}+47% to Fire Resistance

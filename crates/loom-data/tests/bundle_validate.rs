@@ -898,3 +898,69 @@ fn flavour_mutations_should_each_give_their_code() {
         assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
     }
 }
+
+/// Socket caps (B-2 item evidence, E9): each mutation gives its code alone.
+#[test]
+fn socket_cap_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/socket_caps.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "base twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown base",
+            |v| v[0]["base"] = json!("Test/Items/Nothing"),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "no counts",
+            |v| v[0]["levels"] = json!([]),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "counts out of order",
+            |v| v[0]["levels"] = json!([[2, 1], [1, 1]]),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
+/// Tree flavour (B-2 item evidence, E10): each mutation gives its code
+/// alone.
+#[test]
+fn tree_flavour_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/tree_flavour.json";
+    let cases: [(&str, Edit, &str); 3] = [
+        (
+            "passive twice",
+            |v| {
+                let first = v["passives"][0].clone();
+                v["passives"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "passive without text",
+            |v| v["passives"][0]["text"] = json!(" "),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "ascendancy without text",
+            |v| v["ascendancies"][0]["text"] = json!(""),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}

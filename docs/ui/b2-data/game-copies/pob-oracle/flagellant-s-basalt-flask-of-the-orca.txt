@@ -1,0 +1,14 @@
+Rarity: MAGIC
+Flagellant's Basalt Flask of the Orca
+Crafted: true
+Prefix: {range:0.5}FlaskFullRechargeOnHit5___
+Suffix: {range:1}FlaskBuffAvoidChillFreeze1_
+Item Level: 84
+Quality: 0
+LevelReq: 64
+Implicits: 2
+{enchant}{crafted}Used when Charges reach full
+Taunts Enemies within 3 metres on use
+{prefix}Gain 3 Charges when you are Hit by an Enemy
+{suffix}35% chance to Avoid being Chilled during Effect
+{suffix}{range:0.25}(31-35)% chance to Avoid being Frozen during Effect

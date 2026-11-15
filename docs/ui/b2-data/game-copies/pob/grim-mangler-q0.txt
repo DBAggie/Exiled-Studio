@@ -1,0 +1,12 @@
+Item Class: Two Hand Maces
+Rarity: RARE
+Grim Mangler
+Totemic Maul
+Sockets: R-R-R
+Item Level: 55
+Implicits: 1
+{implicit}30% increased Stun Duration on Enemies
+{prefix}{tags:damage,physical,attack}89% increased Physical Damage
+{prefix}{tags:damage,physical,attack}Adds 27 to 45 Physical Damage
+{prefix}{tags:damage,elemental,lightning,attack}Adds 12 to 212 Lightning Damage
+{suffix}11% reduced Enemy Stun Threshold

@@ -1,0 +1,9 @@
+Item Class: Jewels
+Rarity: RARE
+Oblivion Glimmer
+Viridian Jewel
+Item Level: 81
+Implicits: 0
+{prefix}{tags:attack,speed}6% increased Attack Speed with One Handed Melee Weapons
+{prefix}{tags:damage,elemental,cold}16% increased Cold Damage
+{suffix}{tags:attribute}+13 to Dexterity

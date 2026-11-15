@@ -393,3 +393,26 @@ fn a_mod_type_a_named_mod_holds_should_not_be_inferred_again() {
         ]
     );
 }
+
+#[test]
+fn a_line_a_set_aside_stat_could_join_should_get_no_header() {
+    let mut b = bundle();
+    // A hybrid of accuracy and life, as the game's "Mammoth's" joins
+    // increased armour with stun recovery (B-2 item evidence, Ghoul Pelt).
+    b.mods.push(entry(
+        "TestAccuracyLife1",
+        1,
+        "TestAccuracyLife",
+        10,
+        &[(ACCURACY, 10, 20), (LIFE, 20, 29)],
+        &[("default", 1000)],
+    ));
+    // Accuracy on two lines is set aside; the life line may be the
+    // hybrid's second line, so TestLife2 alone is not the only reading.
+    let body = ring(vec![
+        explicit("+12 to Accuracy", &[(ACCURACY, 12)]),
+        explicit("+25 to maximum Life", &[(LIFE, 25)]),
+        explicit("+15 to Accuracy", &[(ACCURACY, 15)]),
+    ]);
+    assert_eq!(summary(&on_ring(&b, &body)), []);
+}

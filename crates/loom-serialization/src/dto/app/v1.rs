@@ -411,6 +411,10 @@ dto! {
         pub links: Vec<u32>,
         /// Its stat lines as the game prints them.
         pub lines: Vec<String>,
+        /// Its flavour text, as the game shows it under a keystone's lines
+        /// (the game data's; B-2 item evidence), lines split by `\n`.
+        #[serde(default)]
+        pub flavour: Option<String>,
     }
 
     /// A class on the tree.
@@ -435,6 +439,13 @@ dto! {
         pub name: String,
         /// Its start node, if any.
         pub start: Option<u32>,
+        /// Its quote, as the game shows it in the ascendancy's circle (the
+        /// game data's; B-2 item evidence), lines split by `\n`.
+        #[serde(default)]
+        pub flavour: Option<String>,
+        /// The quote's colour (`r,g,b`), when the data gives one.
+        #[serde(default)]
+        pub flavour_colour: Option<String>,
     }
 
     /// A mastery group's effects.
@@ -720,6 +731,56 @@ dto! {
         /// their own text).
         #[serde(default)]
         pub flavour: Vec<FlavourLine>,
+        /// The item's own values as the calculation computes them (B-2
+        /// item evidence): an armour piece's defences, a shield's block, a
+        /// weapon's damage, rate, and critical strike chance. None for an
+        /// item without such values, or when the data or the base is
+        /// missing.
+        #[serde(default)]
+        pub values: Option<CardValues>,
+        /// The most sockets the item's base rolls at its item level (the
+        /// game data's item types; B-2 item evidence). None when the data
+        /// has no caps for the base. More sockets than this is shown on the
+        /// card, never a calculation state.
+        #[serde(default)]
+        pub max_sockets: Option<u32>,
+    }
+
+    /// An item's own values ([`ItemCard::values`]), each as the game's
+    /// tooltip shows it before rounding for display.
+    pub struct CardValues {
+        /// The defences above 0, in the game's order (armour, evasion,
+        /// energy shield).
+        pub defences: Vec<CardDefence>,
+        /// A shield's chance to block, percent.
+        pub block: Option<f64>,
+        /// A weapon's damage per type, physical first.
+        pub damage: Vec<CardDamage>,
+        /// A weapon's attacks per second.
+        pub attack_rate: Option<f64>,
+        /// A weapon's critical strike chance, percent.
+        pub crit_chance: Option<f64>,
+        /// The values leave out something the engine does not model on
+        /// this item (an unmodelled line or base, missing data).
+        pub partial: bool,
+    }
+
+    /// One defence on an item card.
+    pub struct CardDefence {
+        /// `armour`, `evasion`, or `energy-shield`.
+        pub defence: String,
+        /// The value.
+        pub value: f64,
+    }
+
+    /// One damage type's range on an item card.
+    pub struct CardDamage {
+        /// `physical`, `fire`, `cold`, `lightning`, or `chaos`.
+        pub damage_type: String,
+        /// The minimum.
+        pub min: f64,
+        /// The maximum.
+        pub max: f64,
     }
 
     /// One line of a unique's flavour text. An empty line is the gap the
@@ -755,7 +816,9 @@ dto! {
 
     /// An item's requirements: the level, and attributes above 0.
     pub struct Requirements {
-        /// The level: as written on the item, else the base's drop level.
+        /// The level: as written on the item, else the base's (its drop
+        /// level for a weapon, armour, or flask, its implicits' levels; PoB's
+        /// rule, `loom_data::bundle::required_level`).
         pub level: Option<u32>,
         /// Strength (0: none).
         pub strength: u32,
@@ -1140,6 +1203,8 @@ dto_enum! {
         TreeSpecs,
         /// A passive tree change an MCP client requested.
         TreeRequestApplied,
+        /// An item added (and perhaps put in a slot).
+        ItemAdded,
     }
 
     /// The league a build is planned for.
@@ -1257,6 +1322,17 @@ dto_enum! {
         },
         /// Applies an item edit.
         EditItem(ItemEdit),
+        /// Adds an item to the build from the game's item copy (Ctrl+C or
+        /// Ctrl+Alt+C) or PoB's item text, as one undoable change; with
+        /// `slot`, also puts it in that slot of the active item set (B-2
+        /// item evidence, E3).
+        AddItem {
+            /// The copied text.
+            text: String,
+            /// A slot of the active item set (`Helmet`, `Weapon 1`,
+            /// `Ring 2`, `Flask 3`, ...), if the item goes in one.
+            slot: Option<String>,
+        },
         /// Makes an item set the active one, as one undoable change.
         UseItemSet {
             /// The set's ID.

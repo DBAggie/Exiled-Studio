@@ -1,0 +1,13 @@
+Rarity: RARE
+Oblivion Glimmer
+Viridian Jewel
+Crafted: true
+Prefix: {range:1}OneHandedMeleeAttackSpeedJewel
+Prefix: {range:1}ColdDamageJewel
+Suffix: {range:0.25}DexterityJewel
+Suffix: None
+Item Level: 81
+Implicits: 0
+{tags:attribute}{suffix}+13 to Dexterity
+{tags:damage,elemental,cold}{prefix}16% increased Cold Damage
+{tags:attack,speed}{prefix}6% increased Attack Speed with One Handed Melee Weapons

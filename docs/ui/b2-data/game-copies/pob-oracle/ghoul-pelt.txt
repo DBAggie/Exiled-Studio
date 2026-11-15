@@ -1,0 +1,29 @@
+Rarity: RARE
+Ghoul Pelt
+Royal Plate
+Armour: 4818
+ArmourBasePercentile: 0.9999
+Intangibility: 42%
+Searing Exarch Item
+Eater of Worlds Item
+Crafted: true
+Prefix: {range:0.667}LocalIncreasedPhysicalDamageReductionRatingPercentAndStunRecovery6
+Prefix: {range:1}LocalIncreasedPhysicalDamageReductionRatingPercent7
+Prefix: None
+Suffix: {range:0.75}ChaosResist6
+Suffix: {range:0}LightningResist8
+Suffix: {range:0.5}FireResist8
+Item Level: 86
+Quality: 20
+Sockets: R-W-R-W-R-W
+LevelReq: 84
+Implicits: 2
+{exarch}+2% to maximum Fire Resistance
+{eater}6% Chance to Block Spell Damage
+{tags:defences,armour}{prefix}41% increased Armour
+{tags:defences,armour}{prefix}100% increased Armour
+{tags:elemental,fire,resistance}{suffix}+47% to Fire Resistance
+{tags:elemental,lightning,resistance}{suffix}+46% to Lightning Resistance
+{tags:chaos,resistance}{suffix}+34% to Chaos Resistance
+{tags:defences,armour}{prefix}{range:0}(16-17)% increased Stun and Block Recovery
+{tags:defences,armour}{prefix}{custom}{crafted}{range:0.8}+(250-320) to Armour

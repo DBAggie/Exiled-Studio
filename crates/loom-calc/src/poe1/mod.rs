@@ -24,6 +24,7 @@ pub mod exposure;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
+pub mod item_values;
 pub mod keystones;
 pub mod mapping;
 pub mod minions;
@@ -518,8 +519,12 @@ pub enum PieceValue {
     /// The base's range of a defence (maximum less minimum).
     Variance(Defence),
     /// Where in the range the piece rolled, 0 to 1 (the item's
-    /// `<Defence>BasePercentile`; 1 when it has none).
+    /// `<Defence>BasePercentile`; else derived from [`PieceValue::Shown`];
+    /// else 1).
     Percentile(Defence),
+    /// The defence the item shows (`Armour: 1198`, a game copy's or PoB's
+    /// written total), read when it has no `<Defence>BasePercentile`.
+    Shown(Defence),
     /// The piece's quality, percent.
     Quality,
     /// A shield's chance to block: `Base` is the base's and the local
@@ -534,6 +539,7 @@ impl core::fmt::Display for PieceValue {
             Self::Defence(d) => f.write_str(d.name()),
             Self::Variance(d) => write!(f, "variance.{}", d.name()),
             Self::Percentile(d) => write!(f, "percentile.{}", d.name()),
+            Self::Shown(d) => write!(f, "shown.{}", d.name()),
             Self::Quality => f.write_str("quality"),
             Self::Block => f.write_str("block"),
         }

@@ -82,7 +82,7 @@ pub struct Session {
 
 /// A new build's PoB XML ([`Session::new_build`]); `{tree}` is the spec's
 /// tree version attribute, or nothing. Our own template, in the shape PoB's files take.
-const NEW_BUILD: &str = r#"<PathOfBuilding>
+pub(crate) const NEW_BUILD: &str = r#"<PathOfBuilding>
 	<Build level="1" targetVersion="3_0" className="Scion" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
 	<Tree activeSpec="1">
 		<Spec{tree} classId="0" ascendClassId="0" nodes=""/>
@@ -376,6 +376,30 @@ impl Session {
             State {
                 build: edited.build,
                 ends: edited.ends,
+            },
+            entry,
+        ))
+    }
+
+    /// Adds an item from a game copy or PoB's item text, as one undoable
+    /// change; with `slot`, puts it there in the active item set.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, and [`crate::items::add`]'s codes.
+    pub fn add_item(&mut self, text: &str, slot: Option<&str>) -> Result<u64, AppError> {
+        let state = self.need_state()?;
+        let data = self.need_data()?;
+        let added = crate::items::add(&state.build, &state.ends, text, slot, &data)?;
+        let entry = api::HistoryEntry {
+            kind: api::ChangeKind::ItemAdded,
+            item: added.item.0,
+            request: None,
+        };
+        Ok(self.commit(
+            state,
+            State {
+                build: added.build,
+                ends: added.ends,
             },
             entry,
         ))
@@ -1278,11 +1302,7 @@ impl Session {
             .items
             .item(ItemId(id))
             .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {id}")))?;
-        Ok(view::item_view(
-            &state.build,
-            item,
-            self.data.as_ref().map(|d| d.data),
-        ))
+        Ok(view::item_view_of(&state, item, self.data.as_deref()))
     }
 
     /// The snapshot DTO, with the calculation's status.
@@ -1526,7 +1546,7 @@ pub fn preview(
         .build
         .items
         .item(ItemId(e.item))
-        .map(|i| view::item_view(&after_state.build, i, Some(data.data)))
+        .map(|i| view::item_view_of(&after_state, i, Some(data)))
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", e.item)))?;
     Ok(api::ItemEditPreview { item, fields })
 }

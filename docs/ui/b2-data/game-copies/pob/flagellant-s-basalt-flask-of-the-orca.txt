@@ -1,0 +1,11 @@
+Item Class: Utility Flasks
+Rarity: MAGIC
+Flagellant's Basalt Flask of the Orca
+LevelReq: 64
+Item Level: 84
+Implicits: 2
+Used when Charges reach full (enchant)
+{implicit}Taunts Enemies within 3 metres on use
+{prefix}Gain 3 Charges when you are Hit by an Enemy
+{suffix}35% chance to Avoid being Chilled during Effect
+{suffix}32% chance to Avoid being Frozen during Effect

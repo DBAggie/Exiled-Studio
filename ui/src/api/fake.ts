@@ -500,6 +500,8 @@ interface State {
   tree: fakeTree.FakeSpec
   /** The stages (a spec each), in order. */
   stages: Stage[]
+  /** Slots filled by `add-item`, over the fixed sets' (slot to item). */
+  placed?: Record<string, number>
 }
 
 /** A custom line's status as the resolver gives it: a line with no digit
@@ -680,8 +682,14 @@ export class FakeApi implements LoomApi {
     const set = this.current?.set ?? 1
     const socketOf = (id: number) =>
       this.current?.tree.jewels.find((j) => j.item === id)?.node ?? null
-    const inUse = (id: number) =>
-      slotIn(set, id) !== null || socketOf(id) !== null
+    const placed = this.current?.placed ?? {}
+    const slotOf = (id: number) => {
+      const own = Object.entries(placed).find(([, v]) => v === id)?.[0]
+      if (own !== undefined) return own
+      const fixed = slotIn(set, id)
+      return fixed !== null && placed[fixed] === undefined ? fixed : null
+    }
+    const inUse = (id: number) => slotOf(id) !== null || socketOf(id) !== null
     const warnings = items.flatMap((item) =>
       item.lines
         .filter((l) => l.status === 'warning')
@@ -738,7 +746,7 @@ export class FakeApi implements LoomApi {
                 name: i.name,
                 base: i.base,
                 rarity: i.rarity,
-                slot: slotIn(set, i.id),
+                slot: slotOf(i.id),
                 warnings: i.lines.filter((l) => l.status === 'warning').length,
                 'in-use': inUse(i.id),
                 sets: SETS.filter((s) =>
@@ -1033,6 +1041,48 @@ export class FakeApi implements LoomApi {
       this.dirty = true
       this.changed(next)
       return this.done()
+    }
+    if ('add-item' in command) {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const { text, slot } = command['add-item']
+      const lines = text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(
+          (l) => l !== '' && l !== '--------' && !l.startsWith('Item Class:'),
+        )
+      const rarity = lines[0]?.match(/^Rarity: (\w+)$/)?.[1]?.toLowerCase()
+      if (
+        rarity === undefined ||
+        !['normal', 'magic', 'rare', 'unique'].includes(rarity)
+      ) {
+        this.fail('APP_ADD_ITEM')
+      }
+      const named = rarity === 'rare' || rarity === 'unique'
+      const id = Math.max(0, ...this.current.items.map((i) => i.id)) + 1
+      const item: ItemView = {
+        id,
+        name: lines[1] ?? null,
+        base: named ? (lines[2] ?? null) : null,
+        rarity,
+        slot: slot ?? null,
+        card: card(),
+        lines: lines.map((l, i) =>
+          i === 0
+            ? line(i, l, { kind: 'rarity', section: null, status: 'other' })
+            : i === 1
+              ? line(i, l, { kind: 'name', section: null, status: 'other' })
+              : lifeLine(i, l),
+        ),
+      }
+      const placed =
+        slot != null
+          ? { ...this.current.placed, [slot]: id }
+          : this.current.placed
+      return this.commit(
+        { ...this.current, items: [...this.current.items, item], placed },
+        { kind: 'item-added', item: id },
+      )
     }
     if ('use-item-set' in command) {
       const id = command['use-item-set'].id

@@ -132,6 +132,19 @@ export interface ApplicationAPIV1 {
         'edit-item': ItemEdit
       }
     | {
+        'add-item': {
+          /**
+           * A slot of the active item set (`Helmet`, `Weapon 1`,
+           * `Ring 2`, `Flask 3`, ...), if the item goes in one.
+           */
+          slot?: string | null
+          /**
+           * The copied text.
+           */
+          text: string
+        }
+      }
+    | {
         'use-item-set': {
           /**
            * The set's ID.
@@ -842,6 +855,13 @@ export interface ItemCard {
    */
   'level-req'?: string | null
   /**
+   * The most sockets the item's base rolls at its item level (the
+   * game data's item types; B-2 item evidence). None when the data
+   * has no caps for the base. More sockets than this is shown on the
+   * card, never a calculation state.
+   */
+  'max-sockets'?: number | null
+  /**
    * The defences and other base values written on the item
    * (`Energy Shield: 276`), in order.
    */
@@ -862,6 +882,14 @@ export interface ItemCard {
    * The sockets, one string of colour letters per link group.
    */
   sockets: string[]
+  /**
+   * The item's own values as the calculation computes them (B-2
+   * item evidence): an armour piece's defences, a shield's block, a
+   * weapon's damage, rate, and critical strike chance. None for an
+   * item without such values, or when the data or the base is
+   * missing.
+   */
+  values?: CardValues | null
   /**
    * What each variant is, in the order of `variants`.
    */
@@ -948,13 +976,77 @@ export interface Requirements {
    */
   intelligence: number
   /**
-   * The level: as written on the item, else the base's drop level.
+   * The level: as written on the item, else the base's (its drop
+   * level for a weapon, armour, or flask, its implicits' levels; PoB's
+   * rule, `loom_data::bundle::required_level`).
    */
   level?: number | null
   /**
    * Strength (0: none).
    */
   strength: number
+}
+/**
+ * An item's own values ([`ItemCard::values`]), each as the game's
+ * tooltip shows it before rounding for display.
+ */
+export interface CardValues {
+  /**
+   * A weapon's attacks per second.
+   */
+  'attack-rate'?: number | null
+  /**
+   * A shield's chance to block, percent.
+   */
+  block?: number | null
+  /**
+   * A weapon's critical strike chance, percent.
+   */
+  'crit-chance'?: number | null
+  /**
+   * A weapon's damage per type, physical first.
+   */
+  damage: CardDamage[]
+  /**
+   * The defences above 0, in the game's order (armour, evasion,
+   * energy shield).
+   */
+  defences: CardDefence[]
+  /**
+   * The values leave out something the engine does not model on
+   * this item (an unmodelled line or base, missing data).
+   */
+  partial: boolean
+}
+/**
+ * One damage type's range on an item card.
+ */
+export interface CardDamage {
+  /**
+   * `physical`, `fire`, `cold`, `lightning`, or `chaos`.
+   */
+  'damage-type': string
+  /**
+   * The maximum.
+   */
+  max: number
+  /**
+   * The minimum.
+   */
+  min: number
+}
+/**
+ * One defence on an item card.
+ */
+export interface CardDefence {
+  /**
+   * `armour`, `evasion`, or `energy-shield`.
+   */
+  defence: string
+  /**
+   * The value.
+   */
+  value: number
 }
 /**
  * One source line of an item.
@@ -2042,6 +2134,7 @@ export interface HistoryEntry {
     | 'tree'
     | 'tree-specs'
     | 'tree-request-applied'
+    | 'item-added'
   /**
    * The change request it applied, when an MCP client asked for it.
    */
@@ -2106,6 +2199,15 @@ export interface TreeClassView {
  * An ascendancy on the tree.
  */
 export interface TreeAscendancyView {
+  /**
+   * Its quote, as the game shows it in the ascendancy's circle (the
+   * game data's; B-2 item evidence), lines split by `\n`.
+   */
+  flavour?: string | null
+  /**
+   * The quote's colour (`r,g,b`), when the data gives one.
+   */
+  'flavour-colour'?: string | null
   /**
    * Its ID (what nodes name).
    */
@@ -2175,6 +2277,11 @@ export interface TreeNodeView {
    * nested socket or position proxy): not drawn, as PoB does not.
    */
   'cluster-area'?: boolean
+  /**
+   * Its flavour text, as the game shows it under a keystone's lines
+   * (the game data's; B-2 item evidence), lines split by `\n`.
+   */
+  flavour?: string | null
   /**
    * Its group's index.
    */

@@ -1,0 +1,27 @@
+Item Class: Two Hand Swords
+Rarity: Magic
+Polished Footman Sword of Light
+--------
+Two Handed Sword
+Physical Damage: 49-86 (augmented)
+Critical Strike Chance: 5.00%
+Attacks per Second: 1.45
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 40
+Str: 57
+Dex: 83
+--------
+Sockets: W-W W W-R 
+--------
+Item Level: 46
+--------
+{ Implicit Modifier — Attack }
+60% increased Global Accuracy Rating
+--------
+{ Prefix Modifier "Polished" (Tier: 7) — Damage, Physical, Attack }
+Adds 10(10-13) to 21(21-25) Physical Damage
+{ Suffix Modifier "of Light" (Tier: 1) — Attack }
+15(12-15)% increased Global Accuracy Rating
+23(21-30)% increased Light Radius

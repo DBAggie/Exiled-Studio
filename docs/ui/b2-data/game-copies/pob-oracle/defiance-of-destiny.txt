@@ -1,0 +1,16 @@
+Rarity: UNIQUE
+Defiance of Destiny
+Paua Amulet
+Intangibility: 5%
+Catalyst: Fertile
+CatalystQuality: 20
+Item Level: 85
+LevelReq: 49
+Implicits: 2
+{enchant}{crafted}Allocates Sanctuary
+{tags:mana}{range:1}(20-30)% increased Mana Regeneration Rate
+{tags:life}{range:0.95}+(60-80) to maximum Life
+{tags:elemental,fire,resistance}{range:0.133333}+(10-40)% to Fire Resistance
+{tags:elemental,cold,resistance}{range:0.933333}+(10-40)% to Cold Resistance
+{tags:elemental,lightning,resistance}{range:0.933333}+(10-40)% to Lightning Resistance
+{tags:life}{range:0.8}Gain (10-20)% of Missing Unreserved Life before being Hit by an Enemy

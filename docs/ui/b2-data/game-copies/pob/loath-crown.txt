@@ -1,0 +1,22 @@
+Item Class: Helmets
+Rarity: RARE
+Loath Crown
+Archdemon Crown
+Quality: 20
+Armour: 313
+Energy Shield: 64
+Sockets: G-G-G-R
+Item Level: 82
+Elder Item
+Implicits: 2
+{implicit}-2 to Level of Socketed Support Gems
+{implicit}+2 to Level of Socketed Skill Gems
+{prefix}{tags:damage,gem}Socketed Gems are Supported by Level 18 Concentrated Effect Support - Unscalable Value
+{prefix}{tags:damage,gem}20% increased Area Damage
+{prefix}{tags:defences,armour,energyshield}26% increased Armour and Energy Shield
+{prefix}{tags:defences,armour,energyshield}11% increased Stun and Block Recovery
+{prefix}{tags:mana}+54 to maximum Mana
+{suffix}{tags:damage,elemental,fire,gem}Socketed Gems are Supported by Level 16 Burning Damage Support - Unscalable Value
+{suffix}{tags:damage,elemental,fire,gem}21% increased Burning Damage
+{suffix}{tags:drop}+11% to Item Rarity
+{crafted}{suffix}{tags:elemental,fire,resistance}+34% to Fire Resistance

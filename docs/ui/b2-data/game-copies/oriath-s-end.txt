@@ -1,0 +1,27 @@
+Item Class: Utility Flasks
+Rarity: Unique
+Oriath's End
+Bismuth Flask
+--------
+Lasts 8.50 Seconds
+Consumes 15 of 40 Charges on use
+Currently has 40 Charges
++35% to all Elemental Resistances
+--------
+Requirements:
+Level: 56
+--------
+Item Level: 87
+--------
+Used when Charges reach full (enchant)
+--------
+{ Unique Modifier }
+31(20-40)% increased Charge Recovery
+{ Unique Modifier }
+Enemies you Kill during Effect have a 23(20-30)% chance to Explode, dealing a tenth of their maximum Life as Damage of a Random Element
+--------
+Ennui prevailed, until inspiration sparked
+a mote of flame, kindled by fury
+and all in his path were obliterated.
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.

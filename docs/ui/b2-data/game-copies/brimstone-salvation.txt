@@ -1,0 +1,26 @@
+Item Class: Helmets
+Rarity: Rare
+Brimstone Salvation
+Gladiator Helmet
+--------
+Quality: +16% (augmented)
+Armour: 295 (augmented)
+--------
+Requirements:
+Level: 56
+Str: 79
+Dex: 55
+Int: 54
+--------
+Sockets: W-W W 
+--------
+Item Level: 39
+--------
+{ Prefix Modifier "Lobstered" (Tier: 5) — Defences, Armour }
+43(43-55)% increased Armour
+{ Prefix Modifier "Stout" (Tier: 6) — Life }
++56(55-69) to maximum Life
+{ Suffix Modifier "of the Storm" (Tier: 6) — Elemental, Lightning, Resistance }
++22(18-23)% to Lightning Resistance
+{ Suffix Modifier "of the Penguin" (Tier: 6) — Elemental, Cold, Resistance }
++21(18-23)% to Cold Resistance

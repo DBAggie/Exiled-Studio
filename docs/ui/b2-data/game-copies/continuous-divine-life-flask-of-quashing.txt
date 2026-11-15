@@ -1,0 +1,20 @@
+Item Class: Life Flasks
+Rarity: Magic
+Continuous Divine Life Flask of Quashing
+--------
+Recovers 2400 Life over 3.50 Seconds
+Consumes 15 of 45 Charges on use
+Currently has 0 Charges
+--------
+Requirements:
+Level: 60
+--------
+Item Level: 64
+--------
+{ Prefix Modifier "Continuous" (Tier: 4) }
+24(21-25)% increased Charge Recovery
+{ Suffix Modifier "of Quashing" (Tier: 3) }
+Grants Immunity to Ignite for 9(9-11) seconds if used while Ignited
+Removes all Burning when used
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.

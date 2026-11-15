@@ -559,3 +559,33 @@ fn a_bundle_with_sprites_should_give_them_as_data_urls() {
             .unwrap();
     assert!(plain.tree_sprites().is_none());
 }
+
+#[test]
+fn the_layout_should_carry_the_trees_flavour_texts() {
+    // B-2 item evidence (E10): the synthetic tree bundle's made-up texts
+    // (make_bundles.py): keystone 11040's lines and Test Champion's quote.
+    let data =
+        loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1-tree"))
+            .unwrap();
+    let layout = data.tree_layout.clone().unwrap();
+    let keystone = layout.nodes.iter().find(|n| n.id == 11040).unwrap();
+    assert_eq!(
+        keystone.flavour.as_deref(),
+        Some("A made-up keystone line.\nA second one.")
+    );
+    assert!(
+        layout
+            .nodes
+            .iter()
+            .filter(|n| n.id != 11040)
+            .all(|n| n.flavour.is_none())
+    );
+    let champion = layout
+        .classes
+        .iter()
+        .flat_map(|c| &c.ascendancies)
+        .find(|a| a.id == "TestChampion")
+        .unwrap();
+    assert_eq!(champion.flavour.as_deref(), Some("A made-up quote."));
+    assert_eq!(champion.flavour_colour.as_deref(), Some("200,180,120"));
+}

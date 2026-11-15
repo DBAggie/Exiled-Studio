@@ -1,0 +1,27 @@
+Item Class: Rings
+Rarity: Rare
+Corpse Finger
+Iron Ring
+--------
+Requirements:
+Level: 68
+--------
+Item Level: 85
+--------
+{ Corruption Implicit Modifier }
++1 to Maximum Endurance Charges
+--------
+{ Prefix Modifier "Honed" (Tier: 3) — Damage, Physical, Attack }
+Adds 6(4-6) to 10(9-10) Physical Damage to Attacks
+{ Prefix Modifier "Ultramarine" (Tier: 1) — Mana }
++75(74-78) to maximum Mana
+{ Fractured Suffix Modifier "of Bliss" (Tier: 3) — Mana }
+46(40-49)% increased Mana Regeneration Rate
+{ Suffix Modifier "of Expulsion" (Tier: 3) — Chaos, Resistance }
++23(21-25)% to Chaos Resistance
+{ Suffix Modifier "of Archaeology" (Tier: 2) — Drop }
++15(15-20)% to Item Rarity
+--------
+Corrupted
+--------
+Fractured Item

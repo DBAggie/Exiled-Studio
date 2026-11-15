@@ -62,6 +62,9 @@ pub enum Code {
     /// effect, or the rules do not allow it (no path, a start, a node the
     /// editor keeps but does not edit, an effect taken).
     Tree,
+    /// An item to add was refused: not an item's text, a base the data
+    /// does not know, too long, or a slot it does not fit.
+    AddItem,
 }
 
 impl Code {
@@ -94,6 +97,7 @@ impl Code {
             Self::BundleFallback => "APP_BUNDLE_FALLBACK",
             Self::NoBundle => "APP_NO_BUNDLE",
             Self::Tree => "APP_TREE",
+            Self::AddItem => "APP_ADD_ITEM",
         }
     }
 }

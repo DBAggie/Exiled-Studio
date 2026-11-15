@@ -68,6 +68,7 @@ const NODES: TreeNodeView[] = [
     0,
     [12],
     ['Your maximum Energy Shield is doubled'],
+    { flavour: 'A made-up keystone line.\nA second one.' },
   ),
   node(
     20,
@@ -130,7 +131,14 @@ export const FAKE_LAYOUT: TreeLayout = {
       name: 'Witch',
       start: 1,
       ascendancies: [
-        { number: 1, id: 'Elementalist', name: 'Elementalist', start: 50 },
+        {
+          number: 1,
+          id: 'Elementalist',
+          name: 'Elementalist',
+          start: 50,
+          flavour: 'A made-up quote.',
+          'flavour-colour': '200,180,120',
+        },
         { number: 2, id: 'Occultist', name: 'Occultist', start: 60 },
       ],
     },

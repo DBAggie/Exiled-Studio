@@ -1,0 +1,39 @@
+Item Class: Body Armours
+Rarity: Rare
+Ghoul Pelt
+Royal Plate
+--------
+Quality: +20% (augmented)
+Armour: 4818 (augmented)
+Intangibility: 42%
+--------
+Requirements:
+Level: 84
+Str: 293 (unmet)
+Dex: 111 (unmet)
+--------
+Sockets: R-W-R-W-R-W 
+--------
+Item Level: 86
+--------
+{ Searing Exarch Implicit Modifier (Grand) }
++2% to maximum Fire Resistance
+(Maximum Resistances cannot be raised above 90%)
+{ Eater of Worlds Implicit Modifier (Greater) }
+6% Chance to Block Spell Damage
+--------
+{ Prefix Modifier "Mammoth's" (Tier: 1) — Defences, Armour }
+41(39-42)% increased Armour
+16(16-17)% increased Stun and Block Recovery
+{ Prefix Modifier "Impregnable" (Tier: 2) — Defences, Armour }
+100(92-100)% increased Armour
+{ Master Crafted Prefix Modifier "Upgraded" (Rank: 3) — Defences, Armour }
++306(250-320) to Armour
+{ Suffix Modifier "of Bameth" (Tier: 1) — Chaos, Resistance }
++34(31-35)% to Chaos Resistance
+{ Suffix Modifier "of Ephij" (Tier: 1) — Elemental, Lightning, Resistance }
++46(46-48)% to Lightning Resistance
+{ Suffix Modifier "of Tzteosh" (Tier: 1) — Elemental, Fire, Resistance }
++47(46-48)% to Fire Resistance
+Searing Exarch Item
+Eater of Worlds Item

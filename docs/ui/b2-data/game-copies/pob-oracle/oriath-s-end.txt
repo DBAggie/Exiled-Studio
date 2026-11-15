@@ -1,0 +1,10 @@
+Rarity: UNIQUE
+Oriath's End
+Bismuth Flask
+Item Level: 87
+Quality: 0
+LevelReq: 56
+Implicits: 1
+{enchant}{crafted}Used when Charges reach full
+{range:0.55}(20-40)% increased Charge Recovery
+{range:0.3}Enemies you Kill during Effect have a (20-30)% chance to Explode, dealing a tenth of their maximum Life as Damage of a Random Element

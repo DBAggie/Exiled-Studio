@@ -120,6 +120,13 @@ impl<'a> Calc<'a> {
         (&self.store, &mut self.graph)
     }
 
+    /// The reasons collecting the build gave (unmapped stats, unmodelled
+    /// items, missing data), which every computed field carries.
+    #[must_use]
+    pub const fn global(&self) -> &Reasons {
+        &self.global
+    }
+
     /// A field written by an earlier phase.
     #[must_use]
     pub fn field(&self, field: Field) -> Option<&FieldResult> {
@@ -221,6 +228,31 @@ fn poll(cancel: &dyn Fn() -> bool) -> Result<(), CalcError> {
     }
 }
 
+/// `input` collected with `rules`, with the states it settles: a
+/// calculation before its phases (the data version is the caller's to
+/// check).
+///
+/// # Errors
+/// The rules' collect errors.
+pub(crate) fn collected<'a>(
+    input: &'a CalcInput<'a>,
+    rules: &dyn Ruleset,
+) -> Result<Calc<'a>, CalcError> {
+    let mut ingest = Ingest::new(rules.mapping()).with_item_lines(&input.options.item_lines);
+    rules.collect(input, &mut ingest)?;
+    let (store, global) = ingest.finish();
+    let states = rules.states(input);
+    Ok(Calc {
+        input,
+        store,
+        graph: Graph::new(),
+        global,
+        fields: BTreeMap::new(),
+        states,
+        skill_sources: std::collections::BTreeSet::new(),
+    })
+}
+
 /// Calculates `input` with `rules`, polling `cancel` before collecting,
 /// after collecting, and after each phase.
 ///
@@ -239,20 +271,8 @@ pub fn calculate_with(
         return Ok(CalcResult::game_unsupported(game));
     }
     poll(cancel)?;
-    let mut ingest = Ingest::new(rules.mapping()).with_item_lines(&input.options.item_lines);
-    rules.collect(input, &mut ingest)?;
-    let (store, global) = ingest.finish();
+    let mut calc = collected(input, rules)?;
     poll(cancel)?;
-    let states = rules.states(input);
-    let mut calc = Calc {
-        input,
-        store,
-        graph: Graph::new(),
-        global,
-        fields: BTreeMap::new(),
-        states,
-        skill_sources: std::collections::BTreeSet::new(),
-    };
     for phase in rules.phases() {
         (phase.run)(&mut calc)?;
         poll(cancel)?;

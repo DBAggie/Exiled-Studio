@@ -1,0 +1,26 @@
+Item Class: Warstaves
+Rarity: Magic
+Combatant's Iron Staff of Absorption
+--------
+Warstaff
+Physical Damage: 14-42
+Critical Strike Chance: 7.60%
+Attacks per Second: 1.30
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 13
+Str: 27
+Int: 27
+--------
+Sockets: W-W-W 
+--------
+Item Level: 14
+--------
+{ Implicit Modifier }
++20% Chance to Block Attack Damage
+--------
+{ Prefix Modifier "Combatant's" (Tier: 2) — Attack, Gem }
++1 to Level of Socketed Melee Gems
+{ Suffix Modifier "of Absorption" (Tier: 6) — Mana }
+Gain 4(4-6) Mana per Enemy Killed

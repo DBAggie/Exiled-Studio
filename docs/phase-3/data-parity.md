@@ -95,6 +95,8 @@ The card shows a unique's flavour text (`docs/ui/b2-data/card-data.md`, Q-B2-1).
 - 32 bundle-only rows: base versions that share their art with an upgraded one (Blackheart, Bramblejack, ...). PoB's export keys its stash lookup by art, so one name per art survives there.
 - Totals: 613 differences (not-carried 163, patch-delta 130, pob-derivation 240, representation 80), `uncategorized` 0, 0 failed rules, 370 overlay rows (the 56 new rows are never read: no calculation reads `flavour_text`).
 
+**B-2 item evidence data run** (same build and export, 2026-11-15, twice byte-identical; `docs/ui/b2-data/item-evidence.md`, "Main workstation data run"): one more difference, `The Light of Meaning|UniqueJewel181` (`row`), rule `flavour-game-copy-over-shared-art` (`pob-derivation`, count 1). The Light of Meaning shares its art with That Which Was Taken, so PoB's export gives it that art's text; the maintainer's in-game copy shows `FlavourText` row `UniqueJewel183_`, which the bundle now pairs with it (`poe1::FLAVOUR_PAIRS`). Its `UniqueJewel183` row is bundle-only. Totals: 614 differences (pob-derivation 241), `uncategorized` 0, 0 failed rules, 371 overlay rows. Summary: `docs/ui/b2-data/data-parity-poe1-26530219-evidence.json`.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

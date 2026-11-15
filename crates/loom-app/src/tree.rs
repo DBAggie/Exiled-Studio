@@ -636,6 +636,9 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
         .and_then(|root| bundle.stat_descriptions.scope(root).ok());
     let scope = scope.as_ref();
     let point = |(x, y): (f64, f64)| api::TreePoint { x, y };
+    // The tree's flavour texts (B-2 item evidence, E10), when the bundle
+    // has them.
+    let poe1 = bundle.poe1.as_ref();
     let effects: BTreeMap<u32, &[loom_data::bundle::passives::StatAmount]> = bundle
         .passives
         .as_ref()
@@ -667,6 +670,9 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
                 cluster_area: n.cluster_area,
                 links: n.neighbours.iter().copied().filter(|m| *m > n.id).collect(),
                 lines: lines(bundle, scope, &n.stats),
+                flavour: poe1
+                    .and_then(|p| p.passive_flavour(i64::from(n.id)))
+                    .map(str::to_owned),
             })
             .collect(),
         classes: tree
@@ -679,11 +685,16 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
                 ascendancies: c
                     .ascendancies
                     .iter()
-                    .map(|a| api::TreeAscendancyView {
-                        number: a.number,
-                        id: a.id.clone(),
-                        name: a.name.clone(),
-                        start: a.start,
+                    .map(|a| {
+                        let quote = poe1.and_then(|p| p.ascendancy_flavour(&a.id));
+                        api::TreeAscendancyView {
+                            number: a.number,
+                            id: a.id.clone(),
+                            name: a.name.clone(),
+                            start: a.start,
+                            flavour: quote.map(|q| q.text.clone()),
+                            flavour_colour: quote.and_then(|q| q.colour.clone()),
+                        }
                     })
                     .collect(),
             })

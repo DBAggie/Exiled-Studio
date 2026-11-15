@@ -1,0 +1,20 @@
+Rarity: RARE
+Soul Joy
+Large Cluster Jewel
+Crafted: true
+Prefix: {range:0.5}AfflictionNotableViciousSkewering
+Prefix: {range:0.5}AfflictionNotableVeteranDefender
+Suffix: {range:0.5}AfflictionNotableMartialProwess
+Suffix: {range:0.5}AfflictionJewelSmallPassivesGrantAttackSpeed3__
+Cluster Jewel Skill: affliction_attack_damage_while_holding_a_shield
+Cluster Jewel Node Count: 8
+Item Level: 84
+LevelReq: 67
+Implicits: 3
+{enchant}{crafted}Adds 8 Passive Skills
+{enchant}{crafted}2 Added Passive Skills are Jewel Sockets
+{enchant}{crafted}Added Small Passive Skills grant: 12% increased Attack Damage while holding a Shield
+{tags:attack,speed}{suffix}Added Small Passive Skills also grant: 3% increased Attack Speed
+{tags:damage,attack,speed}{unscalable}{suffix}1 Added Passive Skill is Martial Prowess
+{tags:defences,elemental,resistance,attribute}{unscalable}{prefix}1 Added Passive Skill is Veteran Defender
+{tags:physical,attack,ailment}{unscalable}{prefix}1 Added Passive Skill is Vicious Skewering

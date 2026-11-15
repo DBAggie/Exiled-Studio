@@ -1,0 +1,9 @@
+Item Class: Warstaves
+Rarity: MAGIC
+Combatant's Iron Staff of Absorption
+Sockets: W-W-W
+Item Level: 14
+Implicits: 1
+{implicit}+20% Chance to Block Attack Damage
+{prefix}{tags:attack,gem}+1 to Level of Socketed Melee Gems
+{suffix}{tags:mana}Gain 4 Mana per Enemy Killed

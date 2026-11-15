@@ -1,0 +1,22 @@
+Rarity: RARE
+Storm Keep
+Golden Plate
+Armour: 703
+ArmourBasePercentile: 0.678
+Crafted: true
+Prefix: {range:0.75}LocalBaseArmourAndLife1
+Prefix: None
+Prefix: None
+Suffix: {range:1}ColdResist4
+Suffix: {range:0.2}FireResist1
+Suffix: {range:0.75}Strength6
+Item Level: 57
+Quality: 9
+Sockets: W-W
+LevelReq: 56
+Implicits: 0
+{tags:attribute}{suffix}+36 to Strength
+{tags:life,defences,armour}{prefix}+29 to Armour
+{tags:elemental,fire,resistance}{suffix}+7% to Fire Resistance
+{tags:elemental,cold,resistance}{suffix}+29% to Cold Resistance
+{tags:life,defences,armour}{prefix}{range:0}+(18-23) to maximum Life

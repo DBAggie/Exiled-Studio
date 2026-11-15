@@ -1,0 +1,25 @@
+Item Class: Body Armours
+Rarity: Rare
+Storm Keep
+Golden Plate
+--------
+Armour: 645 (augmented)
+--------
+Requirements:
+Level: 56
+Str: 152
+Int: 55
+--------
+Sockets: W-W 
+--------
+Item Level: 57
+--------
+{ Prefix Modifier "Oyster's" (Tier: 4) — Life, Defences, Armour }
++29(20-32) to Armour
++18(18-23) to maximum Life
+{ Suffix Modifier "of the Yeti" (Tier: 5) — Elemental, Cold, Resistance }
++29(24-29)% to Cold Resistance
+{ Suffix Modifier "of the Whelpling" (Tier: 8) — Elemental, Fire, Resistance }
++7(6-11)% to Fire Resistance
+{ Suffix Modifier "of the Goliath" (Tier: 4) — Attribute }
++36(33-37) to Strength

@@ -1,0 +1,14 @@
+Rarity: MAGIC
+Conjuror's Long Staff of Talent
+Crafted: true
+Prefix: {range:0.778}SpellDamageAndManaOnTwoHandWeapon2
+Suffix: {range:0.2}IncreasedCastSpeedTwoHand1_
+Item Level: 24
+Quality: 0
+Sockets: W W
+LevelReq: 18
+Implicits: 1
++20% Chance to Block Spell Damage
+{tags:mana,damage,caster}{prefix}30% increased Spell Damage
+{tags:caster,speed}{suffix}9% increased Cast Speed
+{tags:mana,damage,caster}{prefix}{range:0}+(31-35) to maximum Mana

@@ -113,6 +113,7 @@ impl HostCommand {
             Self::ExportDiagnostics(_) => "export-diagnostics".to_owned(),
             // Named without serializing its text.
             Self::Api(api::Command::ImportText { .. }) => "import-text".to_owned(),
+            Self::Api(api::Command::AddItem { .. }) => "add-item".to_owned(),
             Self::Api(c) => match serde_json::to_value(c) {
                 Ok(serde_json::Value::String(s)) => s,
                 Ok(serde_json::Value::Object(m)) => m.keys().next().cloned().unwrap_or_default(),
@@ -476,11 +477,7 @@ impl App {
             .items
             .item(loom_domain::ItemId(id))
             .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {id}")))?;
-        Ok(crate::view::item_view(
-            &state.build,
-            item,
-            data.as_ref().map(|d| d.data),
-        ))
+        Ok(crate::view::item_view_of(&state, item, data.as_deref()))
     }
 
     /// An item edit's effect, calculated on the caller's thread with the
@@ -895,9 +892,9 @@ impl Writer {
                         _ => None,
                     };
                     let text = match &command {
-                        HostCommand::Api(api::Command::ImportText { text }) => {
-                            Some(crate::logs::digest(text.as_bytes()))
-                        }
+                        HostCommand::Api(
+                            api::Command::ImportText { text } | api::Command::AddItem { text, .. },
+                        ) => Some(crate::logs::digest(text.as_bytes())),
                         _ => None,
                     };
                     let before = self.session.version();
@@ -1267,6 +1264,9 @@ impl Writer {
                 Ok(done(self.session.version()))
             }
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
+            api::Command::AddItem { text, slot } => {
+                self.session.add_item(&text, slot.as_deref()).map(done)
+            }
             api::Command::UseItemSet { id } => Ok(self
                 .session
                 .use_item_set(id)?

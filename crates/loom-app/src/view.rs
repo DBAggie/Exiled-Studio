@@ -288,6 +288,18 @@ pub fn item_view(build: &Build, item: &Item, data: Option<&BundleData<'_>>) -> a
     }
 }
 
+/// [`item_view`] with the card's values ([`crate::card_values`]), which
+/// need the item's range ends and the game data.
+pub(crate) fn item_view_of(
+    state: &crate::State,
+    item: &Item,
+    data: Option<&crate::GameData>,
+) -> api::ItemView {
+    let mut view = item_view(&state.build, item, data.map(|d| d.data));
+    view.card.values = data.and_then(|d| crate::card_values::values(item, &state.ends, d));
+    view
+}
+
 /// The item's affixes, named and inferred, with tiers
 /// ([`loom_parser::import::affixes`]).
 fn affixes(item: &Item, data: &BundleData<'_>) -> Vec<api::AffixView> {
@@ -328,24 +340,54 @@ fn affixes(item: &Item, data: &BundleData<'_>) -> Vec<api::AffixView> {
 
 /// The item's requirements: the level as written (`LevelReq`), else the
 /// base's drop level; the base's attribute requirements (data schema 4).
+/// The item's base row (a data schema 4 bundle's), by PoB's naming rules.
+fn base_row<'b>(
+    item: &Item,
+    bundle: Option<&'b Bundle>,
+) -> Option<&'b loom_data::bundle::BaseItem> {
+    let b = bundle?;
+    if b.manifest.data_schema < loom_data::bundle::AFFIX_SCHEMA {
+        return None;
+    }
+    let (name, fallback) =
+        pob_item::item_base(&item.body, b.base_items.iter().map(|x| x.name.as_str())).ok()?;
+    let find = |n: &str| b.base_items.iter().find(|x| x.name == n);
+    find(&name).or_else(|| fallback.as_deref().and_then(find))
+}
+
+/// The most sockets the item's base rolls at its item level (B-2 item
+/// evidence, E9: the bundle's `poe1/socket_caps.json`); at the highest
+/// level when the item has none written. None without the file or the
+/// base's row.
+fn max_sockets(item: &Item, bundle: Option<&Bundle>) -> Option<u32> {
+    let base = base_row(item, bundle)?;
+    let caps = bundle?.poe1.as_ref()?.socket_caps_of(&base.id)?;
+    let level = item
+        .body
+        .lines
+        .iter()
+        .find_map(|l| match &l.kind {
+            LineKind::Spec { key, value, .. } if key == "Item Level" => value.trim().parse().ok(),
+            _ => None,
+        })
+        .unwrap_or(u32::MAX);
+    Some(caps.at(level))
+}
+
 fn requirements(
     item: &Item,
     written: Option<&str>,
     bundle: Option<&Bundle>,
 ) -> Option<api::Requirements> {
-    let base = bundle.and_then(|b| {
-        if b.manifest.data_schema < loom_data::bundle::AFFIX_SCHEMA {
-            return None;
-        }
-        let (name, fallback) =
-            pob_item::item_base(&item.body, b.base_items.iter().map(|x| x.name.as_str())).ok()?;
-        let find = |n: &str| b.base_items.iter().find(|x| x.name == n);
-        find(&name).or_else(|| fallback.as_deref().and_then(find))
-    });
+    let base = base_row(item, bundle);
+    // The base's level by PoB's rule (`Bundle::required_level`): a jewel
+    // or a ring without implicits requires none, as the game shows.
     let level = written
         .and_then(|w| w.trim().parse::<u32>().ok())
         .or_else(|| {
-            base.and_then(|b| b.drop_level)
+            bundle
+                .zip(base)
+                .and_then(|(b, base)| b.required_level(base))
                 .and_then(|l| u32::try_from(l).ok())
         });
     let attrs = base.and_then(|b| b.requirements).unwrap_or_default();
@@ -509,6 +551,8 @@ fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
         affixes: data.map(|d| affixes(item, d)).unwrap_or_default(),
         requirements: item_requirements(item, bundle),
         flavour: bundle.map(|b| flavour(item, b)).unwrap_or_default(),
+        values: None,
+        max_sockets: max_sockets(item, bundle),
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
     }
