@@ -7,12 +7,13 @@
 import { useEffect, useId, useRef, useState } from 'react'
 
 import { ErrorCode, Icon, ScreenHeading } from '../components'
-import type { RecentEntry } from '../api/types'
+import type { CrashRecord, RecentEntry } from '../api/types'
 import { errorText, t } from '../i18n'
 import {
   actions,
   importBuild,
   openBuild,
+  query,
   refreshLists,
   replaceBuild,
   run,
@@ -76,6 +77,52 @@ function inField(target: EventTarget | null): boolean {
     (target.isContentEditable ||
       target instanceof HTMLTextAreaElement ||
       target instanceof HTMLInputElement)
+  )
+}
+
+/** Crash records from earlier runs (Phase 5, P-f): each shown until the
+ * user dismisses it; the recovery offer below is the way back to unsaved
+ * work. */
+function CrashNotice() {
+  const dispatch = useAppDispatch()
+  const [crashes, setCrashes] = useState<CrashRecord[]>([])
+  useEffect(() => {
+    let live = true
+    void dispatch(query((api) => api.crashes())).then((c) => {
+      if (live) setCrashes(c ?? [])
+    })
+    return () => {
+      live = false
+    }
+  }, [dispatch])
+  if (crashes.length === 0) return null
+  const dismiss = (id: string) => {
+    void dispatch(query((api) => api.dismissCrash(id).then(() => true))).then(
+      (ok) => {
+        if (ok) setCrashes((all) => all.filter((c) => c.id !== id))
+      },
+    )
+  }
+  return (
+    <section className="panel crash-notice" aria-labelledby="crash-h">
+      <h2 id="crash-h">{t('crash.title')}</h2>
+      <ul>
+        {crashes.map((c) => (
+          <li key={c.id} className="row">
+            <span className="spacer">
+              {t('crash.body', {
+                version: c.version,
+                when: ago(c.at),
+                message: c.message,
+              })}
+            </span>
+            <button type="button" onClick={() => dismiss(c.id)}>
+              {t('crash.dismiss')}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -157,6 +204,8 @@ export function Start() {
         <ScreenHeading>{t('start.title')}</ScreenHeading>
         <p className="lead">{t('start.lead')}</p>
       </div>
+
+      <CrashNotice />
 
       {/* Unsaved work first: it is what the user most likely came back
           for (UX-19). */}

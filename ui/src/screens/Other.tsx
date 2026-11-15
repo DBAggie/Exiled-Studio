@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type {
   ChangeRequest,
+  DiagnosticFile,
   FieldDelta,
   ItemSummary,
   LineOp,
@@ -18,7 +19,7 @@ import {
   tDynamic,
   type MessageKey,
 } from '../i18n'
-import { actions, attempt, run, setPermissions } from '../store'
+import { actions, attempt, query, run, setPermissions } from '../store'
 import {
   dataName,
   itemName,
@@ -541,6 +542,76 @@ function LicenseText({ name, file }: { name: string; file: string }) {
 
 /** The installed game data, with the one in use marked and the others
  * offered (B-1); a folder for development, labelled unsigned. */
+/** The diagnostic package (Phase 5, P-f): previewed file by file, then
+ * saved where the user picks; nothing is sent anywhere. */
+function Diagnostics() {
+  const dispatch = useAppDispatch()
+  const [files, setFiles] = useState<DiagnosticFile[] | null>(null)
+  const [saved, setSaved] = useState(false)
+  const preview = () => {
+    setSaved(false)
+    void dispatch(query((api) => api.diagnostics())).then((f) => {
+      setFiles(f ?? [])
+    })
+  }
+  const save = () => {
+    void dispatch(attempt((api) => api.exportDiagnostics())).then((o) => {
+      if (o !== null && o !== 'nothing') setSaved(true)
+    })
+  }
+  return (
+    <section className="panel stack" aria-labelledby="diag-h">
+      <h2 id="diag-h">{t('diag.title')}</h2>
+      <p>{t('diag.intro')}</p>
+      <div className="row">
+        <button type="button" onClick={preview}>
+          {t('diag.preview')}
+        </button>
+        {files !== null && (
+          <button type="button" className="primary" onClick={save}>
+            {t('diag.save')}
+          </button>
+        )}
+      </div>
+      {saved && (
+        <p role="status" className="muted">
+          {t('diag.saved')}
+        </p>
+      )}
+      {files !== null && (
+        <ul className="diag-files" aria-label={t('diag.files')}>
+          {files.map((f) => (
+            <li key={f.name}>
+              <DiagnosticFileView file={f} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+/** One file of the package; its text is rendered only while open, so a
+ * package of several megabytes stays light. */
+function DiagnosticFileView({ file }: { file: DiagnosticFile }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <details
+      onToggle={(e) => {
+        setOpen(e.currentTarget.open)
+      }}
+    >
+      <summary>
+        <span className="mono">{file.name}</span>{' '}
+        <span className="muted small-text">
+          {t('diag.size', { n: file.bytes })}
+        </span>
+      </summary>
+      {open && <pre className="diag-text">{file.text}</pre>}
+    </details>
+  )
+}
+
 function GameData() {
   const dispatch = useAppDispatch()
   const data = useAppSelector((s) => s.session.snapshot?.data)
@@ -613,6 +684,7 @@ export function About() {
         </dd>
       </dl>
       <GameData />
+      <Diagnostics />
       <p>{t('about.license')}</p>
       <p>{t('about.privacy')}</p>
       <p className="muted">{t('about.fonts')}</p>

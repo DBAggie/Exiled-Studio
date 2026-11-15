@@ -55,6 +55,37 @@ dto! {
         /// The loaded data's passive tree sprites, when its bundle has
         /// them.
         pub tree_sprites: TreeSprites,
+        /// Crash records (Phase 5, P-f).
+        pub crashes: Vec<CrashRecord>,
+        /// The diagnostic package's preview (Phase 5, P-f).
+        pub diagnostics: Vec<DiagnosticFile>,
+    }
+
+    /// A panic the application recorded (ADR-014; Phase 5, P-f), redacted.
+    pub struct CrashRecord {
+        /// Its ID.
+        pub id: String,
+        /// When, in seconds since 1970 (UTC).
+        pub at: u64,
+        /// The application's version.
+        pub version: String,
+        /// The thread's name.
+        pub thread: String,
+        /// The panic's message.
+        pub message: String,
+        /// Where it panicked (`file:line:column`).
+        pub location: Option<String>,
+    }
+
+    /// One file of the diagnostic package, as the user previews it and the
+    /// zip holds it.
+    pub struct DiagnosticFile {
+        /// Its name in the package (`about.json`, `logs/loom.log`, ...).
+        pub name: String,
+        /// Its size in bytes.
+        pub bytes: u64,
+        /// Its text, redacted.
+        pub text: String,
     }
 
     /// The application's state at one version. Queries return it whole;

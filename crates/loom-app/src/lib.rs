@@ -12,11 +12,14 @@
 
 mod app;
 pub mod bundles;
+pub mod crash;
 mod data;
+pub mod diagnostics;
 mod edit;
 mod error;
 pub mod gems;
 pub mod loadout;
+pub mod logs;
 pub mod main_skill;
 mod session;
 pub mod tree;

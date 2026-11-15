@@ -16,6 +16,12 @@
 //!   standing grant, otherwise pending until the user approves or declines
 //!   it. Applied requests go through the same edit command, so they are
 //!   undoable and in the history.
+//! - **Logs (ADR-014; Phase 5, P-f).** Each command runs in a `command`
+//!   span with its correlation ID and ends with one event (its name, never
+//!   its content; the outcome or error code; the time taken). A
+//!   calculation runs in a `calc` span with the correlation of the command
+//!   that asked for it. Imported and opened files are named by extension,
+//!   size, and SHA-256 only ([`crate::logs`]).
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -89,6 +95,42 @@ pub enum HostCommand {
     ExportXml(PathBuf),
     /// Loads another bundle folder.
     SetBundle(PathBuf),
+    /// Writes the diagnostic package last previewed (or, if none was, a
+    /// fresh one) as a zip ([`crate::diagnostics`]).
+    ExportDiagnostics(PathBuf),
+}
+
+impl HostCommand {
+    /// The command's name for the logs (never its content).
+    #[must_use]
+    pub fn name(&self) -> String {
+        match self {
+            Self::ImportFile(_) => "import-file".to_owned(),
+            Self::Open(_) => "open".to_owned(),
+            Self::SaveAs(_) => "save-as".to_owned(),
+            Self::ExportXml(_) => "export-xml".to_owned(),
+            Self::SetBundle(_) => "set-bundle".to_owned(),
+            Self::ExportDiagnostics(_) => "export-diagnostics".to_owned(),
+            // Named without serializing its text.
+            Self::Api(api::Command::ImportText { .. }) => "import-text".to_owned(),
+            Self::Api(c) => match serde_json::to_value(c) {
+                Ok(serde_json::Value::String(s)) => s,
+                Ok(serde_json::Value::Object(m)) => m.keys().next().cloned().unwrap_or_default(),
+                _ => "api".to_owned(),
+            },
+        }
+    }
+}
+
+/// A file's extension, size, and SHA-256 for the logs, never its name.
+fn file_digest(path: &Path) -> Option<(String, usize, String)> {
+    let bytes = std::fs::read(path).ok()?;
+    let (size, sha) = crate::logs::digest(&bytes);
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy().to_ascii_lowercase())
+        .unwrap_or_default();
+    Some((ext, size, sha))
 }
 
 /// What queries read: the latest published state.
@@ -132,6 +174,8 @@ enum Msg {
 
 struct Job {
     version: u64,
+    /// The command that asked for it, if any (the logs' correlation).
+    correlation: Option<u64>,
     state: Arc<State>,
     data: Arc<GameData>,
 }
@@ -149,6 +193,10 @@ pub struct App {
     tx: Sender<Msg>,
     shared: Arc<Shared>,
     threads: std::sync::Mutex<Vec<JoinHandle<()>>>,
+    /// The data folder (crash records, logs, the diagnostic package).
+    data_dir: PathBuf,
+    /// The diagnostic package last previewed, which an export writes.
+    previewed: std::sync::Mutex<Option<crate::diagnostics::Package>>,
 }
 
 impl std::fmt::Debug for App {
@@ -179,6 +227,12 @@ impl App {
         let recovery = Recovery::open(&config.data_dir.join("recovery"), &config.instance)
             .map_err(|e| AppError::layer("PERSIST_RECOVERY", e))?;
         let recent = Recent::at(&config.data_dir.join("recent.json"));
+        tracing::info!(
+            target: "loom::app",
+            version = env!("CARGO_PKG_VERSION"),
+            os = std::env::consts::OS,
+            "start"
+        );
         let mut session = Session::new(store);
         let mut library = Library::new(&config.data_dir);
         let (data, notice) = library.start(config.bundle.as_deref());
@@ -257,6 +311,94 @@ impl App {
             tx,
             shared,
             threads: std::sync::Mutex::new(vec![writer, worker]),
+            data_dir: config.data_dir,
+            previewed: std::sync::Mutex::new(None),
+        })
+    }
+
+    /// The crash records, newest first ([`crate::crash`]).
+    #[must_use]
+    pub fn crashes(&self) -> Vec<api::CrashRecord> {
+        crate::crash::list(&self.data_dir)
+            .into_iter()
+            .map(|r| api::CrashRecord {
+                id: r.id,
+                at: r.at,
+                version: r.version,
+                thread: r.thread,
+                message: r.message,
+                location: r.location,
+            })
+            .collect()
+    }
+
+    /// Deletes crash record `id`.
+    ///
+    /// # Errors
+    /// `APP_NOT_FOUND` when there is no such record.
+    pub fn dismiss_crash(&self, id: &str) -> Result<(), AppError> {
+        if crate::crash::dismiss(&self.data_dir, id) {
+            Ok(())
+        } else {
+            Err(AppError::new(Code::NotFound, "no such crash record"))
+        }
+    }
+
+    /// The diagnostic package, for the user to preview; an export then
+    /// writes exactly these files ([`crate::diagnostics`]).
+    #[must_use]
+    pub fn diagnostics(&self) -> Vec<api::DiagnosticFile> {
+        let package = self.collect_diagnostics();
+        let out = package
+            .iter()
+            .map(|f| api::DiagnosticFile {
+                name: f.name.clone(),
+                bytes: f.text.len() as u64,
+                text: f.text.clone(),
+            })
+            .collect();
+        *self
+            .previewed
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(package);
+        out
+    }
+
+    fn collect_diagnostics(&self) -> crate::diagnostics::Package {
+        let about = self.read(|p| crate::diagnostics::About {
+            data_version: p
+                .snapshot
+                .data
+                .data_version
+                .as_ref()
+                .and_then(|v| serde_json::to_value(v).ok()),
+            bundle: p.snapshot.data.active.clone(),
+            build_open: p.snapshot.build.is_some(),
+        });
+        crate::diagnostics::collect(&self.data_dir, &about, &crate::logs::Redactor::from_env())
+    }
+
+    /// Writes the diagnostic package to `path`: the one last previewed
+    /// (kept, so a second save or a retry after a failed write writes the
+    /// same files), or a fresh one when nothing was previewed.
+    fn export_diagnostics(&self, path: &Path) -> Result<api::Outcome, AppError> {
+        if self.shared.latest.load(Ordering::SeqCst) == u64::MAX {
+            return Err(stopped());
+        }
+        let previewed = self
+            .previewed
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone();
+        let package = previewed.unwrap_or_else(|| self.collect_diagnostics());
+        let bytes =
+            crate::diagnostics::zip(&package).map_err(|e| AppError::layer("APP_DIAGNOSTICS", e))?;
+        std::fs::write(path, bytes).map_err(|e| AppError::layer("APP_DIAGNOSTICS", e))?;
+        tracing::info!(target: "loom::diagnostics", files = package.len(), "exported");
+        // `Done` (the build unchanged): the shell's `nothing` means the user
+        // cancelled the dialog.
+        Ok(api::Outcome::Done {
+            version: self.read(|p| p.snapshot.version),
         })
     }
 
@@ -265,6 +407,11 @@ impl App {
     /// # Errors
     /// The command's error; `APP_STOPPED` after [`App::stop`].
     pub fn execute(&self, command: HostCommand) -> Result<api::Outcome, AppError> {
+        // Written by the shell, never through the writer: it reads only the
+        // data folder.
+        if let HostCommand::ExportDiagnostics(path) = &command {
+            return self.export_diagnostics(path);
+        }
         let correlation = self.shared.correlation.fetch_add(1, Ordering::Relaxed) + 1;
         let (reply, answer) = mpsc::channel();
         self.tx
@@ -648,6 +795,9 @@ fn worker(jobs: &Receiver<Job>, tx: &Sender<Msg>, shared: &Shared) {
         if cancel() {
             continue;
         }
+        let span = tracing::info_span!("calc", correlation = job.correlation, version);
+        let _in = span.enter();
+        let started = Instant::now();
         let run = || {
             session::calculate(&job.state, &job.data, &cancel).and_then(|r| {
                 let doc = loom_pipeline::document(&r)?;
@@ -662,6 +812,16 @@ fn worker(jobs: &Receiver<Job>, tx: &Sender<Msg>, shared: &Shared) {
                     "the calculation stopped unexpectedly",
                 ))
             });
+        let ms = started.elapsed().as_millis();
+        match &result {
+            Ok((r, _)) => {
+                tracing::info!(target: "loom::calc", state = r.state.name(), ms, "calculated");
+            }
+            Err(e) if e.code == "CALC_CANCELLED" => {
+                tracing::info!(target: "loom::calc", ms, "cancelled");
+            }
+            Err(e) => tracing::warn!(target: "loom::calc", error = %e.code, ms, "failed"),
+        }
         if tx.send(Msg::CalcDone { version, result }).is_err() {
             return;
         }
@@ -726,8 +886,48 @@ impl Writer {
                     correlation,
                     reply,
                 } => {
+                    let span = tracing::info_span!("command", correlation);
+                    let _in = span.enter();
+                    let started = Instant::now();
+                    let name = command.name();
+                    let file = match &command {
+                        HostCommand::ImportFile(p) | HostCommand::Open(p) => file_digest(p),
+                        _ => None,
+                    };
+                    let text = match &command {
+                        HostCommand::Api(api::Command::ImportText { text }) => {
+                            Some(crate::logs::digest(text.as_bytes()))
+                        }
+                        _ => None,
+                    };
                     let before = self.session.version();
                     let result = self.command(command);
+                    let ms = started.elapsed().as_millis();
+                    let (ext, size, sha) = file
+                        .map(|(e, n, s)| (Some(e), Some(n), Some(s)))
+                        .or_else(|| text.map(|(n, s)| (None, Some(n), Some(s))))
+                        .unwrap_or_default();
+                    match &result {
+                        Ok(_) => tracing::info!(
+                            target: "loom::command",
+                            command = %name,
+                            outcome = "ok",
+                            version = self.session.version(),
+                            ext,
+                            size,
+                            sha256 = sha,
+                            ms,
+                        ),
+                        Err(e) => tracing::warn!(
+                            target: "loom::command",
+                            command = %name,
+                            error = %e.code,
+                            ext,
+                            size,
+                            sha256 = sha,
+                            ms,
+                        ),
+                    }
                     match &result {
                         Ok(_) => {
                             if self.session.version() != before {
@@ -884,6 +1084,7 @@ impl Writer {
                         .jobs
                         .send(Job {
                             version,
+                            correlation,
                             state,
                             data,
                         })
@@ -975,10 +1176,18 @@ impl Writer {
                     build: &s.state.build,
                 })
                 .collect();
-            let _ = self.recovery.write_history(self.session.store(), &refs);
-            let _ = self
+            let history = self.recovery.write_history(self.session.store(), &refs);
+            let snapshot = self
                 .recovery
                 .write(self.session.store(), &header, &state.build);
+            match (history, snapshot) {
+                (Ok(_), Ok(_)) => {
+                    tracing::info!(target: "loom::recovery", steps = refs.len(), "written");
+                }
+                _ => {
+                    tracing::warn!(target: "loom::recovery", "not written; retried with the next change")
+                }
+            }
         }
     }
 
@@ -1021,6 +1230,8 @@ impl Writer {
                 self.session.set_loaded(data);
                 Ok(done(self.session.version()))
             }
+            // App::execute writes it without the writer.
+            HostCommand::ExportDiagnostics(_) => Ok(done(self.session.version())),
             HostCommand::Api(c) => self.api(c),
         }
     }

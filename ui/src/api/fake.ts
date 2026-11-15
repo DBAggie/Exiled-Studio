@@ -28,6 +28,8 @@ import {
   type Snapshot,
   type TreeLayout,
   type TreeSprites,
+  type CrashRecord,
+  type DiagnosticFile,
   type TreeChange,
   type TreePreview,
 } from './types'
@@ -48,6 +50,8 @@ export interface FakeOptions {
   pinned?: number
   /** Why the passive tree cannot be edited (its version or class). */
   treeLocked?: string
+  /** Crash records from an earlier run (Phase 5, P-f). */
+  crashes?: CrashRecord[]
 }
 
 function line(
@@ -592,6 +596,7 @@ export class FakeApi implements LoomApi {
     this.options = { data: true, ...options }
     this.recentList = options.recent ?? []
     this.recoveryList = options.recovery ?? []
+    this.crashList = options.crashes ?? []
     this.activeBuild = options.installed?.[0] ?? 26530219
   }
 
@@ -1519,6 +1524,44 @@ export class FakeApi implements LoomApi {
 
   recovery() {
     return Promise.resolve(this.recoveryList)
+  }
+
+  /** Crash records (tests set them). */
+  crashList: CrashRecord[] = []
+
+  /** How many diagnostic packages were written. */
+  diagnosticsExported = 0
+
+  crashes() {
+    return Promise.resolve(structuredClone(this.crashList))
+  }
+
+  dismissCrash(id: string): Promise<void> {
+    const before = this.crashList.length
+    this.crashList = this.crashList.filter((c) => c.id !== id)
+    return this.crashList.length < before
+      ? Promise.resolve()
+      : Promise.reject(
+          new ApiFailure({ code: 'APP_NOT_FOUND', message: 'APP_NOT_FOUND' }),
+        )
+  }
+
+  diagnostics(): Promise<DiagnosticFile[]> {
+    const about = JSON.stringify({ application: 'Exiled Studio' }, null, 2)
+    const log = '{"level":"INFO","message":"start"}\n'
+    return Promise.resolve([
+      { name: 'about.json', bytes: about.length, text: about },
+      { name: 'logs/loom.log', bytes: log.length, text: log },
+      ...this.crashList.map((c) => {
+        const text = JSON.stringify(c, null, 2)
+        return { name: `crashes/${c.id}.json`, bytes: text.length, text }
+      }),
+    ])
+  }
+
+  exportDiagnostics(): Promise<Outcome> {
+    this.diagnosticsExported += 1
+    return Promise.resolve({ done: { version: this.version } } as Outcome)
   }
 
   mcpStatus() {

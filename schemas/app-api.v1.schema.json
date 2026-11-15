@@ -8,6 +8,20 @@
       "description": "A command.",
       "$ref": "#/$defs/Command"
     },
+    "crashes": {
+      "description": "Crash records (Phase 5, P-f).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CrashRecord"
+      }
+    },
+    "diagnostics": {
+      "description": "The diagnostic package's preview (Phase 5, P-f).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DiagnosticFile"
+      }
+    },
     "error": {
       "description": "An error.",
       "$ref": "#/$defs/ApiError"
@@ -85,7 +99,9 @@
     "gems",
     "tree-layout",
     "tree-preview",
-    "tree-sprites"
+    "tree-sprites",
+    "crashes",
+    "diagnostics"
   ],
   "$defs": {
     "AffixKind": {
@@ -1795,6 +1811,49 @@
         "blocks"
       ]
     },
+    "CrashRecord": {
+      "description": "A panic the application recorded (ADR-014; Phase 5, P-f), redacted.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When, in seconds since 1970 (UTC).",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its ID.",
+          "type": "string"
+        },
+        "location": {
+          "description": "Where it panicked (`file:line:column`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "description": "The panic's message.",
+          "type": "string"
+        },
+        "thread": {
+          "description": "The thread's name.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The application's version.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "at",
+        "version",
+        "thread",
+        "message"
+      ]
+    },
     "CustomBlockView": {
       "description": "One custom modifier block.",
       "type": "object",
@@ -1959,6 +2018,32 @@
       "required": [
         "game",
         "schema-version"
+      ]
+    },
+    "DiagnosticFile": {
+      "description": "One file of the diagnostic package, as the user previews it and the\nzip holds it.",
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Its size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Its name in the package (`about.json`, `logs/loom.log`, ...).",
+          "type": "string"
+        },
+        "text": {
+          "description": "Its text, redacted.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "text"
       ]
     },
     "Event": {

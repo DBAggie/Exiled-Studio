@@ -42,6 +42,7 @@ impl FilePicker for FakePicker {
             Pick::OpenPob => "import.xml",
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
+            Pick::Diagnostics => "diagnostics.zip",
             Pick::BundleFolder => return None,
         };
         Some(self.0.join(file))
