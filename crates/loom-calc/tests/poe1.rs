@@ -1420,15 +1420,23 @@ fn armour_slots_without_a_known_base_should_be_reasons() {
         reason(&r("Boots", Some("Two-Toned Boots"), vec![])),
         "ambiguous-base"
     );
-    assert_eq!(
-        reason(&r(
-            "Body Armour",
-            Some("Test Plate"),
-            vec![spec_line("Armour", "130")]
-        )),
-        "base-percentile",
-        "a shown value without its percentile"
+    // A shown value without its percentile gives the percentile (PoB's
+    // `Item.lua:2323-2337`): 113 of 100 to 120 is 0.65, giving 113 back;
+    // 130 is past the range, so the percentile is 1 and the armour 120.
+    let shown = r(
+        "Body Armour",
+        Some("Test Plate"),
+        vec![spec_line("Armour", "113")],
     );
+    assert_eq!(reason(&shown), "none");
+    assert_eq!(value(&shown, Field::Armour), 113.0);
+    assert_eq!(state(&shown, Field::Armour), StateKind::Complete);
+    let past = r(
+        "Body Armour",
+        Some("Test Plate"),
+        vec![spec_line("Armour", "130")],
+    );
+    assert_eq!(value(&past, Field::Armour), 120.0);
     // A quiver's lines are global; nothing is missing.
     let quiver = r("Weapon 2", Some("Test Quiver"), vec![]);
     assert_eq!(state(&quiver, Field::Armour), StateKind::Complete);

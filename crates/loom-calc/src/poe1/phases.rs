@@ -699,9 +699,14 @@ fn defence_modifier(
 
 /// The value of `defence` on the armour piece in `slot` (`Classes/
 /// Item.lua`): `round((min + local flat + range x percentile) x (1 + local
-/// inc / 100) x (1 + quality / 100))`; the percentile is 1 when the item
-/// gives none. Its nodes are `step.piece-*`, and the value's term is
-/// [`Term::Base`]: the row's base.
+/// inc / 100) x (1 + quality / 100))`. The percentile is the item's
+/// `<Defence>BasePercentile`; else, when the item shows the defence and
+/// the range is not 0, the one that gives the shown value back (PoB's
+/// `Item.lua:2323-2337`: `round(clamp((shown / (inc x quality) - flat) /
+/// range, 0, 1), 4)`; PoB's flat leaves out hybrid local flats there and
+/// adds them after, ours keeps them, so a hybrid piece shows its own
+/// value; `docs/ui/b2-data/item-evidence.md`); else 1. Its nodes are
+/// `step.piece-*`, and the value's term is [`Term::Base`]: the row's base.
 fn piece(
     calc: &mut Calc<'_>,
     slot: ArmourSlot,
@@ -723,19 +728,6 @@ fn piece(
         Term::Step("piece-range"),
         reasons,
     )?;
-    let percentile = if has(calc, q(PieceValue::Percentile(defence))) {
-        sum(
-            calc,
-            q(PieceValue::Percentile(defence)),
-            Op::Base,
-            Term::Step("piece-percentile"),
-            reasons,
-        )?
-    } else {
-        constant(calc, "default-percentile", 1.0)?
-    };
-    let rolled = product(calc, &[variance, percentile], Term::Step("piece-rolled"))?;
-    let base = total(calc, &[flat, rolled], Term::Step("piece-base"))?;
     let inc = sum(
         calc,
         q(PieceValue::Defence(defence)),
@@ -752,8 +744,106 @@ fn piece(
         reasons,
     )?;
     let quality = factor(calc, quality, Term::Step("piece-quality"))?;
+    let percentile = if has(calc, q(PieceValue::Percentile(defence))) {
+        sum(
+            calc,
+            q(PieceValue::Percentile(defence)),
+            Op::Base,
+            Term::Step("piece-percentile"),
+            reasons,
+        )?
+    } else if variance.value != 0.0 && has(calc, q(PieceValue::Shown(defence))) {
+        let shown = sum(
+            calc,
+            q(PieceValue::Shown(defence)),
+            Op::Base,
+            Term::Step("piece-shown"),
+            reasons,
+        )?;
+        if shown.value > 0.0 {
+            derived_percentile(calc, shown, [inc, quality], flat, variance)?
+        } else {
+            constant(calc, "default-percentile", 1.0)?
+        }
+    } else {
+        constant(calc, "default-percentile", 1.0)?
+    };
+    let rolled = product(calc, &[variance, percentile], Term::Step("piece-rolled"))?;
+    let base = total(calc, &[flat, rolled], Term::Step("piece-base"))?;
     let raw = product(calc, &[base, inc, quality], Term::Step("piece-unrounded"))?;
     round(calc, raw, Term::Base)
+}
+
+/// `round(clamp((shown / (inc x quality) - flat) / range, 0, 1), 4)`
+/// ([`piece`]).
+fn derived_percentile(
+    calc: &mut Calc<'_>,
+    shown: Valued,
+    [inc, quality]: [Valued; 2],
+    flat: Valued,
+    variance: Valued,
+) -> Result<Valued, CalcError> {
+    let scale = product(calc, &[inc, quality], Term::Step("piece-shown-scale"))?;
+    let unscaled = binary(calc, Binary::Quotient, shown, scale, "piece-shown-base")?;
+    let over = binary(
+        calc,
+        Binary::Difference,
+        unscaled,
+        flat,
+        "piece-shown-rolled",
+    )?;
+    let raw = binary(
+        calc,
+        Binary::Quotient,
+        over,
+        variance,
+        "piece-shown-fraction",
+    )?;
+    let one = constant(calc, "percentile-max", 1.0)?;
+    let zero = constant(calc, "percentile-min", 0.0)?;
+    let capped = pair(calc, raw, one, Term::Step("piece-shown-capped"), true)?;
+    let clamped = pair(calc, capped, zero, Term::Step("piece-shown-clamped"), false)?;
+    let places = constant(calc, "percentile-places", 10_000.0)?;
+    let scaled = product(calc, &[clamped, places], Term::Step("piece-shown-scaled"))?;
+    let rounded = round(calc, scaled, Term::Step("piece-shown-rounded"))?;
+    binary(calc, Binary::Quotient, rounded, places, "piece-percentile")
+}
+
+/// A quotient or difference node.
+#[derive(Clone, Copy)]
+enum Binary {
+    Quotient,
+    Difference,
+}
+
+fn binary(
+    calc: &mut Calc<'_>,
+    kind: Binary,
+    a: Valued,
+    b: Valued,
+    step: &'static str,
+) -> Result<Valued, CalcError> {
+    let term = Term::Step(step);
+    let (node, value) = match kind {
+        Binary::Quotient => (
+            Node::Quotient {
+                term,
+                a: a.node,
+                b: b.node,
+            },
+            a.value / b.value,
+        ),
+        Binary::Difference => (
+            Node::Difference {
+                term,
+                a: a.node,
+                b: b.node,
+            },
+            a.value - b.value,
+        ),
+    };
+    let node = calc.graph_mut().push(node, value)?;
+    Ok(Valued { node, value })
 }
 
 /// Energy shield, armour, and evasion (`Modules/CalcDefence.lua`, primary

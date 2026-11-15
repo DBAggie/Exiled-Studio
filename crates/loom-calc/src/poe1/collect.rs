@@ -1068,7 +1068,7 @@ fn armour_slot(
                     key: name.name.clone(),
                 });
             }
-            armour_piece(item, slot, slot_name, &base, ingest);
+            armour_piece(item, slot, &base, ingest);
         }
         // A quiver in the off hand: its lines only.
         Some(ItemBase::Other) if slot == ArmourSlot::Weapon2 => item_lines(item, ingest),
@@ -1135,15 +1135,9 @@ fn percentile_defence(key: &str) -> Option<Defence> {
 /// `round((min + local flat + range x percentile) x (1 + local inc / 100)
 /// x (1 + quality / 100))`; a percentile comes from the item's
 /// `<Defence>BasePercentile` line, else from its shown value (`Armour:
-/// 120`) when it has one, else 1. Deriving it from a shown value is not
-/// modelled (`base-percentile`); PoB writes both lines.
-fn armour_piece(
-    item: &Item,
-    slot: ArmourSlot,
-    slot_name: &str,
-    base: &ArmourBase,
-    ingest: &mut Ingest<'_>,
-) {
+/// 120`) when it has one (derived in `phases::piece`, as PoB's
+/// `Item.lua:2323-2337`), else 1.
+fn armour_piece(item: &Item, slot: ArmourSlot, base: &ArmourBase, ingest: &mut Ingest<'_>) {
     let piece = |value| Quantity::Poe1(Poe1Quantity::Piece(slot, value));
     let from_base = Source::ItemBase { item: item.id };
     let effect = |quantity, op, value, source: &Source| Effect {
@@ -1201,7 +1195,6 @@ fn armour_piece(
             &from_base,
         ));
     }
-    let mut shown = Vec::new();
     let mut percentiles = Vec::new();
     // The last line of each key counts, as PoB's `self.quality` and
     // `armourData[key]` are overwritten line by line.
@@ -1216,9 +1209,14 @@ fn armour_piece(
             percentiles.push(d);
             specs.insert(PieceValue::Percentile(d), (index, value));
         } else if let Some(d) = shown_defence(key) {
-            shown.push(d);
+            specs.insert(PieceValue::Shown(d), (index, value));
         }
     }
+    // A written percentile wins over a shown value.
+    specs.retain(|target, _| match target {
+        PieceValue::Shown(d) => !percentiles.contains(d),
+        _ => true,
+    });
     for (target, (index, value)) in specs {
         let at = Source::Item {
             item: item.id,
@@ -1228,20 +1226,6 @@ fn armour_piece(
         match spec_number(value) {
             Some(n) => ingest.effect(effect(piece(target), Op::Base, n, &at)),
             None => ingest.reason(UnsupportedReason::UnreadLine { source: at }),
-        }
-    }
-    // A shown value with a range of 0 needs no percentile: PoB's
-    // derivation (`Classes/Item.lua:2323-2325`) divides by the range,
-    // giving +-inf (clamped to 1 or 0) or NaN when the shown value equals
-    // the rest exactly; times a range of 0 the term is 0 either way but in
-    // the NaN case, which a shown value PoB itself wrote never hits.
-    for (defence, variance) in ranges {
-        if variance != 0.0 && shown.contains(&defence) && !percentiles.contains(&defence) {
-            ingest.reason(UnsupportedReason::UnmodelledItem {
-                item: item.id,
-                slot: slot_name.to_owned(),
-                what: "base-percentile",
-            });
         }
     }
     item_lines_with(&PieceMapping { slot }, item, ingest);

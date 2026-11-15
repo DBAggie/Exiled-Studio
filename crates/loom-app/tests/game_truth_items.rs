@@ -205,3 +205,53 @@ fn each_unique_copys_flavour_should_equal_the_bundles() {
     // text"); this entry then goes.
     assert_eq!(differences, ["the-light-of-meaning"]);
 }
+
+/// The rounded value of each armour piece's defence in a calculation
+/// (`loom_calc::poe1::phases::piece`: a `RoundHalfUp` of the
+/// `piece-unrounded` product) the piece has, in graph order; a defence
+/// the base lacks is 0 and left out.
+fn piece_values(session: &Session) -> Vec<f64> {
+    use loom_calc::{Node, Term};
+    let (state, data) = session.calc_input().unwrap();
+    let result = loom_app::calculate(&state, &data, &|| false).unwrap();
+    let graph = &result.graph;
+    graph
+        .iter()
+        .filter_map(|(_, node, value)| match node {
+            Node::RoundHalfUp { of, .. } => match graph.node(*of) {
+                Some(Node::Product {
+                    term: Term::Step("piece-unrounded"),
+                    ..
+                }) if value != 0.0 => Some(value),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect()
+}
+
+/// A pasted armour piece without a percentile line calculates the defences
+/// its copy shows: the engine derives the base roll from the shown total
+/// (E4, PoB's `Item.lua:2323-2337`), so each piece's own value is the
+/// game's. Values from the copies (`item-evidence.md`, "Values").
+#[test]
+#[ignore = "needs the real bundle (LOOM_B2_BUNDLE)"]
+fn a_pasted_armour_piece_should_calculate_the_defences_its_copy_shows() {
+    let cases: [(&str, &str, &[f64]); 6] = [
+        ("ghoul-pelt", "Body Armour", &[4818.0]),
+        ("tempest-refuge", "Weapon 2", &[1198.0]),
+        ("loath-crown", "Helmet", &[313.0, 64.0]),
+        ("soul-ascension", "Gloves", &[260.0, 55.0]),
+        ("foulborn-emperor-s-vigilance", "Weapon 2", &[2818.0, 598.0]),
+        ("storm-keep-q9", "Body Armour", &[703.0]),
+    ];
+    for (name, slot, shown) in cases {
+        let mut session = session();
+        session.add_item(&copy(name), Some(slot)).unwrap();
+        let mut got = piece_values(&session);
+        let mut want = shown.to_vec();
+        got.sort_by(f64::total_cmp);
+        want.sort_by(f64::total_cmp);
+        assert_eq!(got, want, "{name}");
+    }
+}

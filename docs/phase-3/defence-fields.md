@@ -9,7 +9,7 @@ The formulas follow PoB's (`crates/loom-calc/src/poe1/phases.rs`, each with its 
 | Field | Formula (PoB) | Source |
 |---|---|---|
 | Armour, evasion, energy shield | the sum of the rows, `max(round(sum), 0)`. A row is an armour piece's value or the global flat value, each when above 0, times `(1 + inc / 100) x more`; rows in PoB's order (Helmet, Gloves, Boots, Body Armour, Weapon 2, Global) | `Modules/CalcDefence.lua`, primary defences |
-| An armour piece's value | `round((min + local flat + range x percentile) x (1 + local inc / 100) x (1 + quality / 100))`; the percentile is the item's `<Defence>BasePercentile`, else 1 | `Classes/Item.lua`, armour branch |
+| An armour piece's value | `round((min + local flat + range x percentile) x (1 + local inc / 100) x (1 + quality / 100))`; the percentile is the item's `<Defence>BasePercentile`; else, for a shown defence (`Armour: 120`) with a range, `round(clamp((shown / (inc x quality) - flat) / range, 0, 1), 4)`; else 1. Until B-2's item evidence a shown defence without its percentile was the reason `base-percentile` (`docs/ui/b2-data/item-evidence.md`) | `Classes/Item.lua`, armour branch |
 | Attribute bonuses | `floor(Int / 10)`% increased energy shield, `floor(Dex / 5)`% increased evasion, on every row | `Modules/CalcPerform.lua` |
 | Resistances | `max = trunc(min(base max, 90))`, `total = trunc(base x max((1 + inc / 100) x more, 0))`, value `max(min(total, max), -200)`; the base includes the penalty | `Modules/CalcDefence.lua`, `calcs.resistances` |
 | Resistance penalty | the config's `resistancePenalty` (a modelled input), else -60, on fire, cold, lightning and chaos | `Modules/CalcSetup.lua` |
@@ -32,7 +32,6 @@ New reasons, each on every computed field:
 | `missing-data` (indeterminate), `shield_types` | a shield without a block row |
 | `unmodelled-item`, `ambiguous-base` | bases of the name with different properties (Two-Toned Boots, three bases in game data) |
 | `unmodelled-item`, `base-properties` | a weapon in the off hand (dual wielding: P3-10), or any weapon slot |
-| `unmodelled-item`, `base-percentile` | a shown defence (`Armour: 120`) without its percentile line; PoB derives one, we do not yet (PoB writes both lines) |
 | `missing-data` (indeterminate), `base_items` | a base name the data lacks |
 
 A config input other than a numeric `resistancePenalty` is still `unmodelled-config`.
