@@ -7,29 +7,51 @@ import { describe, expect, it } from 'vitest'
 import { expectAccessible, renderApp } from './render'
 
 describe('error states', () => {
-  it('says when no game data is loaded, and lets the user choose it', async () => {
-    const { user } = await renderApp({ data: false })
+  it('says quietly when no game data is loaded, and lets the user add it (UX-17)', async () => {
+    const { user, api } = await renderApp({ data: false })
+    // No error up front: one footer line, and the actions that need data
+    // say why they are off instead of failing after a file is picked.
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.getByText(/No game data yet\./)).toBeTruthy()
     expect(
-      screen.getByText(
-        /No game data is loaded\. Choose the game data folder: the folder that holds bundle\.json/,
-      ),
+      screen.getByText(/Add game data .* to import or start builds/),
     ).toBeTruthy()
     await user.type(
       screen.getByLabelText('Paste a share code or build XML'),
       'abc',
     )
-    await user.click(screen.getByRole('button', { name: 'Import build' }))
-    const alert = await screen.findByRole('alert')
-    expect(alert.textContent).toContain('APP_NO_DATA')
+    for (const name of [
+      'Import build',
+      'New build',
+      'Import from clipboard',
+      'Import a Path of Building file (.xml)…',
+    ]) {
+      expect(
+        (screen.getByRole('button', { name }) as HTMLButtonElement).disabled,
+      ).toBe(true)
+    }
+    // A saved build opens without data (decision 7).
+    expect(
+      (
+        screen.getByRole('button', {
+          name: 'Open a file…',
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(false)
+    expect(api.executed).toEqual([])
     await expectAccessible()
-    await user.click(
-      screen.getByRole('button', { name: 'Choose the game data folder…' }),
-    )
+    await user.click(screen.getByRole('button', { name: 'Add game data…' }))
     await waitFor(() =>
       expect(
-        screen.getByText(/Data for Path of Exile, Steam build 26530219/),
+        screen.getByText(
+          /Game data ready · Path of Exile, game build 26530219/,
+        ),
       ).toBeTruthy(),
     )
+    expect(
+      (screen.getByRole('button', { name: 'New build' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(false)
   })
 
   it('shows a failed import with its code', async () => {
@@ -86,7 +108,11 @@ describe('error states', () => {
 
   it('shows a failed calculation in the header, never as numbers', async () => {
     const { user } = await renderApp({ calcFails: 'APP_DATA_VERSION' })
-    await user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Import a Path of Building file (.xml)…',
+      }),
+    )
     await user.click(
       await screen.findByRole('button', { name: 'Open the dashboard' }),
     )
@@ -101,7 +127,11 @@ describe('error states', () => {
 
   it('refuses a stale edit and says why', async () => {
     const { user, api } = await renderApp()
-    await user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Import a Path of Building file (.xml)…',
+      }),
+    )
     await user.click(
       await screen.findByRole('button', { name: 'Open the dashboard' }),
     )

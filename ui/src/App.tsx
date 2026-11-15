@@ -4,14 +4,15 @@
 import { Dialog, DropdownMenu } from 'radix-ui'
 import { useEffect, useId, useState, type ReactNode } from 'react'
 
-import type { LoadoutView } from './api/types'
+import type { DataVersionView, LoadoutView } from './api/types'
 import { Badge, Brand, ErrorAlert, Icon, LiveRegion } from './components'
 import { errorText, t, tDynamic } from './i18n'
 import {
   actions,
   attempt,
   closeBuild,
-  openBuild,
+  perform,
+  replaceBuild,
   run,
   saveBuild,
   type Screen,
@@ -421,6 +422,67 @@ function CloseDialog({
   )
 }
 
+/** Asks before an action replaces a build with unsaved changes (UX-01):
+ * save first, go on without saving, or cancel. */
+function ReplaceDialog() {
+  const dispatch = useAppDispatch()
+  const what = useAppSelector((s) => s.ui.confirm)
+  const close = () => dispatch(actions.confirm(null))
+  const go = async (save: boolean) => {
+    if (what === null) return
+    close()
+    if (save) {
+      const saved = await dispatch(saveBuild())
+      // Cancelled or failed: keep the build (the error shows).
+      if (saved === null || saved === 'nothing') return
+    }
+    await dispatch(perform(what))
+  }
+  return (
+    <Dialog.Root
+      open={what !== null}
+      onOpenChange={(open) => {
+        if (!open) close()
+      }}
+    >
+      <Dialog.Portal>
+        <Dialog.Content className="dialog-content">
+          <Dialog.Title>{t('replace.title')}</Dialog.Title>
+          <Dialog.Description className="muted">
+            {t('replace.help')}
+          </Dialog.Description>
+          <div className="row">
+            <button
+              type="button"
+              className="primary"
+              onClick={() => void go(true)}
+            >
+              {t('replace.save')}
+            </button>
+            <button type="button" onClick={() => void go(false)}>
+              {t('replace.discard')}
+            </button>
+            <Dialog.Close asChild>
+              <button type="button">{t('close.cancel')}</button>
+            </Dialog.Close>
+          </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
+}
+
+/** Shown while a file is dragged over the window (start page B). */
+function DropHint() {
+  const dragging = useAppSelector((s) => s.ui.dragging)
+  if (!dragging) return null
+  return (
+    <div className="drop-hint" role="status">
+      <p>{t('drop.hint')}</p>
+    </div>
+  )
+}
+
 function Content({ screen }: { screen: Screen }) {
   switch (screen) {
     case 'import-review':
@@ -488,16 +550,6 @@ function StartFrame({ screen }: { screen: Screen }) {
         <Brand />
         <span className="spacer" />
         <Badge tone="neutral">{t('start.offline')}</Badge>
-        {version != null ? (
-          <Badge tone="ok">
-            {t('start.dataBadge', {
-              game: version.game === 'poe1' ? 'PoE1' : 'PoE2',
-              build: version['steam-build'] ?? '?',
-            })}
-          </Badge>
-        ) : (
-          <Badge tone="warn">{t('start.noDataBadge')}</Badge>
-        )}
         {screen === 'about' ? (
           <button type="button" onClick={() => dispatch(actions.go('start'))}>
             {t('nav.start')}
@@ -513,11 +565,42 @@ function StartFrame({ screen }: { screen: Screen }) {
         {screen === 'about' ? <About /> : <Start />}
       </main>
       <footer className="app-footer">
+        {/* The game data in one quiet line (start page B; UX-17: no error
+            up front). */}
+        <DataLine version={version} />
         {/* About says it itself: once on the page (UX-22). */}
         {screen !== 'about' && <span>{t('app.notice')}</span>}
         <span>{t('app.licensed')}</span>
       </footer>
     </div>
+  )
+}
+
+function DataLine({
+  version,
+}: {
+  version: DataVersionView | null | undefined
+}) {
+  const dispatch = useAppDispatch()
+  const error = useAppSelector((s) => s.session.snapshot?.data?.error)
+  return (
+    <span className="data-line">
+      {version != null
+        ? t('start.dataReady', {
+            game: version.game === 'poe1' ? 'Path of Exile' : 'Path of Exile 2',
+            build: version['steam-build'] ?? '?',
+          })
+        : error != null
+          ? t('start.dataFailed')
+          : t('start.dataNoneYet')}{' '}
+      <button
+        type="button"
+        className="link"
+        onClick={() => void dispatch(attempt((api) => api.chooseBundle()))}
+      >
+        {version != null ? t('start.dataChange') : t('start.dataAdd')}
+      </button>
+    </span>
   )
 }
 
@@ -533,13 +616,20 @@ function inTextField(target: EventTarget | null): boolean {
 }
 
 /** The keyboard shortcuts (UX-23): Ctrl+Z undo, Ctrl+Y or Ctrl+Shift+Z
- * redo, Ctrl+S save, Ctrl+O open. In a text field, undo and redo stay the
- * field's own. */
+ * redo, Ctrl+S save, Ctrl+O open, Ctrl+N new build (asking first when
+ * either would replace unsaved changes). In a text field, undo and redo
+ * stay the field's own. Ctrl+N and Ctrl+O are the browser's otherwise (a
+ * new window, a file), so they are always taken. */
 function useShortcuts(hasBuild: boolean) {
   const dispatch = useAppDispatch()
+  const hasData = useAppSelector(
+    (s) => s.session.snapshot?.data?.['data-version'] != null,
+  )
+  // A question is open (replace this build?): its own keys only.
+  const asking = useAppSelector((s) => s.ui.confirm !== null)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey) return
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || asking) return
       const key = e.key.toLowerCase()
       const text = inTextField(e.target)
       if (key === 's' && hasBuild) {
@@ -547,7 +637,10 @@ function useShortcuts(hasBuild: boolean) {
         void dispatch(saveBuild())
       } else if (key === 'o') {
         e.preventDefault()
-        void dispatch(openBuild((api) => api.openFile()))
+        void dispatch(replaceBuild('open-file'))
+      } else if (key === 'n') {
+        e.preventDefault()
+        if (hasData) void dispatch(replaceBuild('new-build'))
       } else if (key === 'z' && !e.shiftKey && hasBuild && !text) {
         e.preventDefault()
         void dispatch(run('undo'))
@@ -562,7 +655,7 @@ function useShortcuts(hasBuild: boolean) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [dispatch, hasBuild])
+  }, [dispatch, hasBuild, hasData, asking])
 }
 
 export function App() {
@@ -580,6 +673,8 @@ export function App() {
       ) : (
         <StartFrame screen={screen} />
       )}
+      <ReplaceDialog />
+      <DropHint />
     </>
   )
 }

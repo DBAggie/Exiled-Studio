@@ -115,20 +115,28 @@ export const en = {
 
   'start.title': 'What do you want to do?',
   'start.lead':
-    'Import a build from Path of Building, or open one you saved. Every number explains itself.',
+    'Import a build from Path of Building, start a new one, or open one you saved. Every number explains itself.',
   'start.offline': 'Offline · no account',
-  'start.dataBadge': 'Game data: {game} · Steam build {build}',
-  'start.noDataBadge': 'No game data loaded',
-  'start.import': 'Import from Path of Building',
+  'start.import': 'Import or find a build',
   'start.importLabel': 'Paste a share code or build XML',
+  'start.barPlaceholder':
+    'Paste a share code or PoB XML, or type to find a recent build',
   'start.importButton': 'Import build',
-  'start.importFile': 'Open a .xml file…',
-  'start.importSafe': 'Your original file is never changed.',
-  'start.openTitle': 'Open a saved build',
-  'start.openHelp': 'Exiled Studio build files (.json).',
-  'start.open': 'Open file…',
+  'start.importFile': 'Import a Path of Building file (.xml)…',
+  'start.importSafe':
+    'Your original file is never changed. You can also drop a file anywhere in the window.',
+  'start.needData':
+    'Add game data (at the bottom of the page) to import or start builds. Saved builds open without it.',
+  'start.newBuild': 'New build',
+  'start.fromClipboard': 'Import from clipboard',
+  'start.clipboardEmpty': 'The clipboard has no text to import.',
+  'start.clipboardRefused':
+    'The clipboard could not be read. Press Ctrl+V to paste into the field.',
+  'start.open': 'Open a file…',
   'start.recent': 'Recent builds',
   'start.recentNone': 'No recent builds.',
+  'start.recentNoMatch': 'No recent build matches.',
+  'start.recentFiltered': '{n} of {all}',
   'start.colBuild': 'Build',
   'start.colFile': 'File',
   'start.colOpened': 'Last opened',
@@ -143,11 +151,11 @@ export const en = {
   'start.forgetShort': 'Remove',
   'start.justNow': 'just now',
   'start.discard': 'Discard {name}',
-  'start.data': 'Game data',
-  'start.dataNone':
-    'No game data is loaded. Choose the game data folder: the folder that holds bundle.json.',
-  'start.dataLoaded': 'Data for {game}, Steam build {build}',
-  'start.chooseData': 'Choose the game data folder…',
+  'start.dataReady': 'Game data ready · {game}, game build {build}.',
+  'start.dataNoneYet': 'No game data yet.',
+  'start.dataFailed': 'The game data did not load.',
+  'start.dataAdd': 'Add game data…',
+  'start.dataChange': 'Change',
 
   'import.reading': 'Reading the build…',
   'import.imported': 'Imported · {state}',
@@ -584,6 +592,13 @@ export const en = {
   'warnings.unusedHelp':
     'These items are in other item sets, or are jewels outside the active passive tree. Their warnings do not touch the numbers.',
 
+  'replace.title': 'Replace this build?',
+  'replace.help':
+    'It has changes you have not saved. Save it first, or go on without saving (the changes are lost).',
+  'replace.save': 'Save first',
+  'replace.discard': 'Go on without saving',
+  'drop.hint':
+    'Drop a build file to open it: Path of Building (.xml) or Exiled Studio (.json).',
   'close.title': 'Close this build?',
   'close.help':
     'It has unsaved changes. Closing without saving loses them, and the recovery copy is removed too.',
@@ -722,6 +737,8 @@ export const en = {
     'That configuration input or custom modifier block is not in this build, or cannot be set here.',
   'error.UI_LINK':
     'Links can’t be opened: Exiled Studio works offline. In Path of Building, use Import/Export Build, then Generate, and paste the code here.',
+  'error.UI_DROP':
+    'That is not a build file. Drop a Path of Building file (.xml) or an Exiled Studio build (.json).',
   'error.MCP_START':
     'The AI connection could not start. Try again, or restart Exiled Studio.',
   'error.family.APP': 'Exiled Studio could not do that.',

@@ -6,13 +6,28 @@ import { expectAccessible, renderApp } from './render'
 
 async function imported() {
   const r = await renderApp({
-    recent: [{ id: 'a1', path: '/builds/witch.json', name: 'witch', at: 1 }],
+    recent: [
+      {
+        id: 'a1',
+        path: '/builds/witch.json',
+        name: 'witch',
+        at: 1,
+        class: null,
+        ascendancy: null,
+        level: null,
+        'main-skill': null,
+      },
+    ],
     recovery: [
       { id: 'r1', 'saved-at': 1, name: 'lost', path: null, origin: null },
     ],
   })
   await expectAccessible()
-  await r.user.click(screen.getByRole('button', { name: 'Open a .xml file…' }))
+  await r.user.click(
+    screen.getByRole('button', {
+      name: 'Import a Path of Building file (.xml)…',
+    }),
+  )
   await screen.findByRole('heading', { name: 'Imported build', level: 1 })
   return r
 }

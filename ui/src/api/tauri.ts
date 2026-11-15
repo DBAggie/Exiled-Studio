@@ -10,11 +10,13 @@ import {
   type ApiError,
   type ApiEvent,
   type CalcResultDocumentV1,
+  type DropNotice,
   type LoomApi,
 } from './types'
 
 export const COMMANDS: readonly string[] = commands
 export const EVENT = 'loom://event'
+export const DROP_EVENT = 'loom://drop'
 
 type Name = (typeof commands)[number]
 
@@ -64,8 +66,13 @@ export const tauriApi: LoomApi = {
   saveAs: () => call('save_as'),
   exportXml: () => call('export_xml'),
   chooseBundle: () => call('choose_bundle'),
+  openDropped: () => call('open_dropped'),
   onEvent: (listener) =>
     listen<ApiEvent>(EVENT, (e) => {
+      listener(e.payload)
+    }),
+  onDrop: (listener) =>
+    listen<DropNotice>(DROP_EVENT, (e) => {
       listener(e.payload)
     }),
 }

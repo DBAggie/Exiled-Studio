@@ -47,7 +47,7 @@ describe('UX High fixes', () => {
 
   it('closes without asking when nothing is unsaved, or when told to', async () => {
     const { user, api } = await renderApp()
-    await user.click(screen.getByRole('button', { name: 'Open file…' }))
+    await user.click(screen.getByRole('button', { name: 'Open a file…' }))
     await screen.findByRole('heading', { name: 'Dashboard', level: 1 })
     await user.click(screen.getByRole('button', { name: 'Close build' }))
     await screen.findByRole('heading', { name: 'What do you want to do?' })
@@ -182,6 +182,10 @@ describe('UX High fixes', () => {
           path: 'C:\\builds\\witch.json',
           name: 'witch',
           at: now - 7200,
+          class: 'Witch',
+          ascendancy: 'Elementalist',
+          level: 92,
+          'main-skill': 'Ice Nova',
         },
       ],
       recovery: [
@@ -194,14 +198,13 @@ describe('UX High fixes', () => {
         },
       ],
     })
-    // Recovery comes before the import panel.
+    // Recovery comes before the command bar.
     const recovery = screen.getByRole('heading', {
       name: 'Unsaved work from a session that ended',
     })
-    const importHeading = screen.getByRole('heading', { name: /Import/ })
+    const bar = screen.getByLabelText('Paste a share code or build XML')
     expect(
-      recovery.compareDocumentPosition(importHeading) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
+      recovery.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
     expect(screen.getByText(/Last changed 2 minutes ago/)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Restore lost' })).toBeTruthy()
@@ -210,6 +213,8 @@ describe('UX High fixes', () => {
       'C:\\builds\\witch.json',
     )
     expect(screen.getByText('2 hours ago')).toBeTruthy()
+    // What the build is (UX-20).
+    expect(screen.getByText('Elementalist 92 · Ice Nova')).toBeTruthy()
     await user.click(
       screen.getByRole('button', { name: 'Remove witch from recent builds' }),
     )

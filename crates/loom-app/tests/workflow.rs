@@ -1493,3 +1493,47 @@ fn the_card_should_name_pob_affixes_and_the_base_requirements() {
     let req = card.requirements.unwrap();
     assert_eq!((req.level, req.strength, req.dexterity), (Some(5), 0, 10));
 }
+
+#[test]
+fn a_new_build_should_start_empty_calculate_save_and_export() {
+    let dir = Scratch::new("new-build");
+    // Without data there is nothing to make it with.
+    let none = start(&dir.path("data0"), None, "new-build-0");
+    let err = none.run(api::Command::NewBuild).unwrap_err();
+    assert_eq!(err.code, "APP_NO_DATA");
+    none.app.stop();
+
+    let r = start(&dir.path("data"), Some(bundle_dir()), "new-build");
+    let v = version(&r.run(api::Command::NewBuild).unwrap());
+    r.calculated(v);
+    let snap = r.app.snapshot();
+    assert!(!snap.dirty, "a new build is not dirty until edited");
+    let build = snap.build.unwrap();
+    assert_eq!(build.game, "poe1");
+    assert_eq!(build.class.as_deref(), Some("Scion"));
+    assert_eq!(build.level, Some(1));
+    assert_eq!(build.ascendancy, None, "PoB's None is no ascendancy");
+    assert_eq!(build.name, "Scion 1", "named from itself (UX-15)");
+    assert!(build.items.is_empty());
+    assert!(build.warnings.is_empty());
+    assert_eq!(build.item_sets.len(), 1);
+    assert_eq!(build.skill_sets.len(), 1);
+    assert_eq!(build.specs.len(), 1);
+    assert_eq!(build.config_sets.len(), 1);
+
+    // It saves and exports as any build.
+    let saved = dir.path("new.json");
+    r.app.execute(HostCommand::SaveAs(saved.clone())).unwrap();
+    assert!(saved.exists());
+    // The recent list says what it is (UX-20).
+    let recent = r.app.recent();
+    assert_eq!(recent[0].class.as_deref(), Some("Scion"));
+    assert_eq!(recent[0].level, Some(1));
+    assert_eq!(recent[0].ascendancy, None, "PoB's None is no ascendancy");
+    let xml = dir.path("new.xml");
+    r.app.execute(HostCommand::ExportXml(xml.clone())).unwrap();
+    let text = std::fs::read_to_string(&xml).unwrap();
+    assert!(pob_xml::import(&text).is_ok(), "the export reads back");
+    assert!(text.contains(r#"className="Scion""#));
+    r.app.stop();
+}

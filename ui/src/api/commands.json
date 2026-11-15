@@ -15,5 +15,6 @@
   "open_file",
   "save_as",
   "export_xml",
-  "choose_bundle"
+  "choose_bundle",
+  "open_dropped"
 ]

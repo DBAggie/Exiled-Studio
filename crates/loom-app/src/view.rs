@@ -598,6 +598,34 @@ fn custom_open(build: &Build) -> bool {
     })
 }
 
+/// The build's ascendancy; PoB writes "no ascendancy" as `None`, which is
+/// no name.
+fn ascendancy(build: &Build) -> Option<String> {
+    build
+        .character
+        .ascendancy
+        .as_ref()
+        .map(|a| a.as_str().to_owned())
+        .filter(|a| a != "None")
+}
+
+/// What the recent list shows of a build (UX-20): class, ascendancy,
+/// level, main skill, as [`build_view`] names them.
+#[must_use]
+pub fn recent_summary(build: &Build, bundle: Option<&Bundle>) -> loom_persistence::recent::Summary {
+    let groups = skill_groups(build, bundle);
+    loom_persistence::recent::Summary {
+        class: build
+            .character
+            .class
+            .as_ref()
+            .map(|c| c.as_str().to_owned()),
+        ascendancy: ascendancy(build),
+        level: build.character.level.as_ref().map(|l| *l.value()),
+        skill: main_skill(build, &groups),
+    }
+}
+
 /// The build's view. `bundle` names the passive nodes, when loaded.
 #[must_use]
 pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::BuildView {
@@ -688,11 +716,7 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
             .class
             .as_ref()
             .map(|c| c.as_str().to_owned()),
-        ascendancy: build
-            .character
-            .ascendancy
-            .as_ref()
-            .map(|a| a.as_str().to_owned()),
+        ascendancy: ascendancy(build),
         level: build.character.level.as_ref().map(|l| *l.value()),
         main_skill: skill,
         data_version: build.data.as_ref().map(data_version),

@@ -27,6 +27,30 @@ pub struct Entry {
     pub name: String,
     /// When it was last opened or saved, in seconds since the Unix epoch.
     pub at: u64,
+    /// What the build is, for the list (UX-20); absent in entries an
+    /// earlier version wrote. The version stays 1: the field is optional,
+    /// and an older app that refuses it drops the list, which loses no
+    /// build (the file is a cache, ADR-009).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summary: Option<Summary>,
+}
+
+/// What a recent build is: class, ascendancy, level, main skill.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Summary {
+    /// The class.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub class: Option<String>,
+    /// The ascendancy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ascendancy: Option<String>,
+    /// The character level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<u32>,
+    /// The main skill.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skill: Option<String>,
 }
 
 impl Entry {
