@@ -214,7 +214,8 @@ fn the_headers_should_name_the_tags_the_game_shows() {
     };
     // Urchin's and Thorny as real Ctrl+Alt+C copies of current-game items
     // print them (`resource` and `physical_damage` hidden); the others as
-    // poedb shows them (Q-B2-2: to confirm with copies from the game).
+    // poedb shows them. The names are the game's `Tags.Name`, empty for the
+    // hidden tags (Q-B2-2, `docs/ui/b2-data/card-data.md`).
     assert_eq!(
         tags,
         [

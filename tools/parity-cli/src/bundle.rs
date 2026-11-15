@@ -426,11 +426,18 @@ fn attribute_requirements(
     Ok(out)
 }
 
-/// Each tag's display name (`Tags.DisplayString`), sorted by ID; tags with
-/// none left out.
+/// Each tag's display name, sorted by ID; tags with none left out.
+///
+/// The name is `Tags.Name` where the schema has that column (PoE1): the
+/// names the Alt view prints after a mod's header (`Life`, `Defences`,
+/// `Armour`), empty for the tags it hides (`resource`, `physical_damage`;
+/// Q-B2-2, `docs/ui/b2-data/card-data.md`). Without it (PoE2's schema
+/// leaves the fourth column unnamed), `Tags.DisplayString`, which holds
+/// monster labels, not mod tag names.
 fn tag_names(read: Read<'_>) -> Result<Vec<TagName>, String> {
     let t = Table::require(read, "Tags")?;
-    let (id, display) = (t.column("Id")?, t.column("DisplayString")?);
+    let id = t.column("Id")?;
+    let display = t.column("Name").or_else(|_| t.column("DisplayString"))?;
     let mut out: Vec<TagName> = t
         .rows
         .iter()
@@ -1070,6 +1077,29 @@ mod tests {
                     display: "Life".to_owned()
                 },
             ]
+        );
+    }
+
+    #[test]
+    fn tag_names_should_read_the_name_column_when_the_schema_has_it() {
+        // PoE1: `Name` holds the mod tag names; `DisplayString` the monster
+        // labels, ignored; an empty `Name` (a hidden tag) is left out.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": "Name", "references": null}],
+              "rows": [["life", 1, "", "Life"], ["resource", 2, "", ""],
+                       ["pinnacle_boss", 3, "Pinnacle Atlas Boss", ""]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "life".to_owned(),
+                display: "Life".to_owned()
+            }]
         );
     }
 

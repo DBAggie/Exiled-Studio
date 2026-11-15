@@ -39,10 +39,9 @@ pub fn item_rules() -> ItemRules {
             property_ids: PROPERTY_IDS.iter().map(|i| (*i).to_owned()).collect(),
             label_ids: LABEL_IDS.iter().map(|i| (*i).to_owned()).collect(),
             granted_skill_wrapper: Some(GRAFT_WRAPPER_ID.to_owned()),
-            mod_tag_names: MOD_TAG_NAMES
-                .iter()
-                .map(|(id, name)| ((*id).to_owned(), (*name).to_owned()))
-                .collect(),
+            // Tag names come from `Tags.Name` in the bundle's tag table
+            // (Q-B2-2): no rule list.
+            mod_tag_names: Vec::new(),
         },
     }
 }
@@ -62,46 +61,6 @@ pub const PROPERTY_IDS: [&str; 8] = [
 
 /// `ClientStrings` ids of property labels PoB writes as `<label>: <number>`.
 pub const LABEL_IDS: [&str; 1] = ["ZanaInfluencedItem"];
-
-/// The mod tags the game's Alt view names after a mod's header (B-2,
-/// Q-B2-2). `Tags.DisplayString` is empty for mod tags, so the names are
-/// ours. **Unconfirmed in part** (`dev/active/ux-improvements/
-/// b2-item-data-plan.md`, Q-B2-2): real Ctrl+Alt+C copies of current-game
-/// items show `Life, Defences, Armour` / `Evasion` / `Energy Shield` and
-/// `Damage, Physical`, with `resource` and `physical_damage` hidden; poedb
-/// also shows `Attribute`, `Chaos, Resistance`. The other plain gameplay
-/// words are named the same way until copies from the game confirm them;
-/// compound and internal tags (`elemental_damage`, `flat_life_regen`,
-/// `influence_mod`, ...) are left out, so not shown.
-pub const MOD_TAG_NAMES: [(&str, &str); 27] = [
-    ("life", "Life"),
-    ("mana", "Mana"),
-    ("defences", "Defences"),
-    ("armour", "Armour"),
-    ("evasion", "Evasion"),
-    ("energy_shield", "Energy Shield"),
-    ("damage", "Damage"),
-    ("physical", "Physical"),
-    ("elemental", "Elemental"),
-    ("fire", "Fire"),
-    ("cold", "Cold"),
-    ("lightning", "Lightning"),
-    ("chaos", "Chaos"),
-    ("resistance", "Resistance"),
-    ("attribute", "Attribute"),
-    ("attack", "Attack"),
-    ("caster", "Caster"),
-    ("speed", "Speed"),
-    ("critical", "Critical"),
-    ("minion", "Minion"),
-    ("ailment", "Ailment"),
-    ("bleed", "Bleed"),
-    ("poison", "Poison"),
-    ("aura", "Aura"),
-    ("curse", "Curse"),
-    ("gem", "Gem"),
-    ("block", "Block"),
-];
 
 /// The `ClientStrings` id of the graft skill wrapper (`Uses level {1} {0}`;
 /// Spike B PR B5g).
