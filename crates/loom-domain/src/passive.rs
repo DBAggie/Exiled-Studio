@@ -2,7 +2,7 @@
 //! sockets the calculations need (Phase 2 plan, decision 1).
 
 use crate::id::{ItemId, NodeId, SpecId, TreeVersion};
-use crate::opaque::{Attributes, Ordered};
+use crate::opaque::{Attribute, Attributes, Ordered};
 use crate::value::Sourced;
 
 /// The build's passive specs.
@@ -80,5 +80,97 @@ impl PassiveSpec {
             layout: Ordered::new(),
             attributes: Attributes::new(),
         }
+    }
+
+    /// PoB's attribute for the spec's class number.
+    pub const CLASS: &'static str = "classId";
+    /// PoB's attribute for the spec's ascendancy number within its class
+    /// (0: none).
+    pub const ASCENDANCY: &'static str = "ascendClassId";
+    /// PoB's attribute for the spec's secondary (bloodline) ascendancy.
+    pub const SECONDARY_ASCENDANCY: &'static str = "secondaryAscendClassId";
+
+    /// The spec's class number (PoB's `classId`), when it has one that
+    /// reads as a number (passive tree plan, T-h). Typed through the
+    /// attribute it is kept in, so PoB's attribute order round-trips byte
+    /// for byte.
+    #[must_use]
+    pub fn class(&self) -> Option<u32> {
+        self.number(Self::CLASS)
+    }
+
+    /// The spec's ascendancy number (PoB's `ascendClassId`; 0 for none).
+    #[must_use]
+    pub fn ascendancy(&self) -> Option<u32> {
+        self.number(Self::ASCENDANCY)
+    }
+
+    /// The spec's secondary ascendancy (PoB's `secondaryAscendClassId`):
+    /// preserved, never edited (passive tree plan, T-g).
+    #[must_use]
+    pub fn secondary_ascendancy(&self) -> Option<u32> {
+        self.number(Self::SECONDARY_ASCENDANCY)
+    }
+
+    /// Sets the class number, in place when the spec has the attribute.
+    pub fn set_class(&mut self, class: u32) {
+        self.set(Self::CLASS, class);
+    }
+
+    /// Sets the ascendancy number, in place when the spec has the
+    /// attribute.
+    pub fn set_ascendancy(&mut self, ascendancy: u32) {
+        self.set(Self::ASCENDANCY, ascendancy);
+    }
+
+    /// Sets the secondary ascendancy, in place when the spec has the
+    /// attribute.
+    pub fn set_secondary_ascendancy(&mut self, ascendancy: u32) {
+        self.set(Self::SECONDARY_ASCENDANCY, ascendancy);
+    }
+
+    fn number(&self, name: &str) -> Option<u32> {
+        self.attributes
+            .iter()
+            .find(|a| a.name == name)
+            .and_then(|a| a.value.trim().parse().ok())
+    }
+
+    fn set(&mut self, name: &str, value: u32) {
+        let value = value.to_string();
+        match self.attributes.iter_mut().find(|a| a.name == name) {
+            Some(a) => a.value = value,
+            None => self.attributes.push(Attribute::new(name, value)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn class_and_ascendancy_should_be_typed_and_set_in_place() {
+        let mut s = PassiveSpec::new(SpecId(1));
+        s.attributes.push(Attribute::new("ascendClassId", " 2"));
+        s.attributes.push(Attribute::new("classId", "x"));
+        assert_eq!(s.ascendancy(), Some(2));
+        assert_eq!(s.class(), None);
+        assert_eq!(s.secondary_ascendancy(), None);
+        s.set_class(5);
+        s.set_secondary_ascendancy(1);
+        let names: Vec<(&str, &str)> = s
+            .attributes
+            .iter()
+            .map(|a| (a.name.as_str(), a.value.as_str()))
+            .collect();
+        assert_eq!(
+            names,
+            [
+                ("ascendClassId", " 2"),
+                ("classId", "5"),
+                ("secondaryAscendClassId", "1")
+            ]
+        );
     }
 }

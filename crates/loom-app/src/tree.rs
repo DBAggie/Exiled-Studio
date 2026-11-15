@@ -2,10 +2,10 @@
 //! the loaded data's tree and its layout DTO, a build's spec as the rules
 //! see it, and an edited spec written back.
 //!
-//! A spec's class and ascendancy are PoB's `classId` and `ascendClassId`
-//! attributes, kept untyped in the domain and edited in place (the plan's
-//! T-h types them; untyped they round-trip already, so an unedited spec is
-//! written byte for byte). An edited spec gets:
+//! A spec's class and ascendancy are PoB's `classId` and `ascendClassId`,
+//! typed by the domain's accessors ([`PassiveSpec::class`]) over the
+//! attributes they are kept in and edited in place, so an unedited spec is
+//! written byte for byte (the plan's T-h). An edited spec gets:
 //! - its nodes and mastery effects written in ascending order, starts
 //!   included, as PoB lists them;
 //! - its `classId` and `ascendClassId` set;
@@ -20,8 +20,8 @@ use loom_data::bundle::Bundle;
 use loom_data::stat_desc::render::{NotRenderedReason, StatValue, VariantFilter};
 use loom_data::stat_desc::scope::Scope;
 use loom_domain::{
-    AscendancyId, Attribute, Attributes, Build, ClassId, Entry, ItemId, JewelSocket, MasteryEffect,
-    NodeId, OpaqueNode, PassiveSpec, SpecId, SpecPart, TreeVersion,
+    AscendancyId, Attributes, Build, ClassId, Entry, ItemId, JewelSocket, MasteryEffect, NodeId,
+    OpaqueNode, PassiveSpec, SpecId, SpecPart, TreeVersion,
 };
 use loom_serialization::dto::app::v1 as api;
 use loom_tree::poe1::{self, EditError, Spec};
@@ -37,20 +37,6 @@ const NO_ASCENDANCY: &str = "None";
 
 fn tree_error(e: &EditError) -> AppError {
     AppError::new(Code::Tree, e.to_string())
-}
-
-fn attribute<'s>(spec: &'s PassiveSpec, name: &str) -> Option<&'s str> {
-    spec.attributes
-        .iter()
-        .find(|a| a.name == name)
-        .map(|a| a.value.as_str())
-}
-
-fn set_attribute(spec: &mut PassiveSpec, name: &str, value: String) {
-    match spec.attributes.iter_mut().find(|a| a.name == name) {
-        Some(a) => a.value = value,
-        None => spec.attributes.push(Attribute::new(name, value)),
-    }
 }
 
 /// The spec `id` of the build.
@@ -71,14 +57,10 @@ fn is_active(build: &Build, spec: SpecId) -> bool {
     loom_calc::poe1::collect::active_spec(build).is_some_and(|s| s.id == spec)
 }
 
-fn number(spec: &PassiveSpec, name: &str) -> Option<u32> {
-    attribute(spec, name).and_then(|v| v.trim().parse::<u32>().ok())
-}
-
 /// The spec's class: `classId`, else, for the active spec, the build's
 /// class by name; `None` when neither names one of the tree's classes.
 fn class_of(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Option<u32> {
-    number(spec, "classId")
+    spec.class()
         .or_else(|| {
             let name = build.character.class.as_ref()?;
             is_active(build, spec.id)
@@ -92,7 +74,7 @@ fn class_of(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Option<u32> {
 /// The spec's ascendancy within `class`: `ascendClassId`, else, for the
 /// active spec, the build's ascendancy by name, else 0 (none).
 fn ascendancy_of(build: &Build, spec: &PassiveSpec, tree: &Tree, class: u32) -> u32 {
-    number(spec, "ascendClassId")
+    spec.ascendancy()
         .or_else(|| {
             let name = build.character.ascendancy.as_ref()?;
             is_active(build, spec.id)
@@ -174,11 +156,9 @@ pub fn write_spec(build: &mut Build, id: u32, tree: &Tree, next: &Spec) -> Resul
             })
             .collect(),
     );
-    set_attribute(spec, "classId", next.class.to_string());
-    set_attribute(spec, "ascendClassId", next.ascendancy.to_string());
-    let secondary = attribute(spec, "secondaryAscendClassId")
-        .and_then(|v| v.trim().parse::<u32>().ok())
-        .unwrap_or(0);
+    spec.set_class(next.class);
+    spec.set_ascendancy(next.ascendancy);
+    let secondary = spec.secondary_ascendancy().unwrap_or(0);
     match poe1::url::encode(tree, next, secondary) {
         Some(url) => {
             for node in spec.layout.opaque_mut() {
@@ -284,8 +264,8 @@ pub fn new_spec(
         s.tree_version = data
             .cloned()
             .or_else(|| active.and_then(|a| a.tree_version.clone()));
-        if let Some(bloodline) = active.and_then(|a| attribute(a, "secondaryAscendClassId")) {
-            set_attribute(&mut s, "secondaryAscendClassId", bloodline.to_owned());
+        if let Some(bloodline) = active.and_then(PassiveSpec::secondary_ascendancy) {
+            s.set_secondary_ascendancy(bloodline);
         }
         let mut next = Spec {
             class: rules.as_ref().map_or(0, |r| r.class),
@@ -295,8 +275,8 @@ pub fn new_spec(
         };
         next.nodes.extend(poe1::starts(tree, &next));
         s.nodes.set(next.nodes.iter().map(|n| NodeId(*n)).collect());
-        set_attribute(&mut s, "classId", next.class.to_string());
-        set_attribute(&mut s, "ascendClassId", next.ascendancy.to_string());
+        s.set_class(next.class);
+        s.set_ascendancy(next.ascendancy);
         s
     };
     build.passives.specs.push(spec);
