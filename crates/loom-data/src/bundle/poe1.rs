@@ -15,6 +15,9 @@
 //! - `poe1/jewel_radii.json`: the jewel radii (`PassiveJewelRadii`), each
 //!   with its name, radius, and ring (passive tree plan, T-f: which nodes
 //!   a radius jewel reaches).
+//! - `poe1/unique_flavour.json`: unique items' flavour text (`FlavourText`,
+//!   found through `UniqueStashLayout`; B-2's item card, Q-B2-1), each with
+//!   the unique's name and the text's ID, as the game writes it.
 
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +33,27 @@ pub const GRAFTS: &str = "poe1/grafts.json";
 pub const PANTHEONS: &str = "poe1/pantheons.json";
 /// Jewel radii.
 pub const JEWEL_RADII: &str = "poe1/jewel_radii.json";
+/// Unique flavour text.
+pub const UNIQUE_FLAVOUR: &str = "poe1/unique_flavour.json";
+
+/// A unique item's flavour text. The game links them by a name convention,
+/// not a key (`docs/ui/b2-data/card-data.md`): the unique's art
+/// (`ItemVisualIdentity.Id`) names the `FlavourText` row, and a per-game
+/// list names the rest (upgraded versions that share their base's art).
+/// A name may have several rows: a unique whose variants have their own
+/// text (Grand Spectrum).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UniqueFlavour {
+    /// The unique's name (`Words.Text2`).
+    pub name: String,
+    /// The `FlavourText` row's ID.
+    pub id: String,
+    /// The text as the game stores it, with line breaks as `\n` (the
+    /// table's `\r\n` made `\n`) and the game's markup (`<default>{...}`,
+    /// `<<...>>` glyphs) kept.
+    pub text: String,
+}
 
 /// A jewel radius (`PassiveJewelRadii`), in the game table's units: the
 /// tree before 3.16's, which `loom_tree::poe1::radius::scaled` turns into
@@ -125,6 +149,8 @@ pub struct Poe1Section {
     pub pantheons: Option<Vec<Pantheon>>,
     /// Jewel radii (`None` when the file is absent).
     pub jewel_radii: Option<Vec<JewelRadius>>,
+    /// Unique flavour text (`None` when the file is absent).
+    pub unique_flavour: Option<Vec<UniqueFlavour>>,
 }
 
 impl Poe1Section {
@@ -183,6 +209,36 @@ impl Poe1Section {
         (ids, bad)
     }
 
+    /// Unique flavour text's domain checks for the validator: each row's
+    /// key (`name:id`, each must be unique), the number of rows without a
+    /// name or an ID, and the rows with no text.
+    pub(super) fn flavour_domain(&self) -> (Vec<String>, usize, Vec<(String, &'static str)>) {
+        let rows = self.unique_flavour.as_deref().unwrap_or_default();
+        let keys = rows
+            .iter()
+            .map(|r| format!("{}:{}", r.name, r.id))
+            .collect();
+        let empty = rows
+            .iter()
+            .filter(|r| r.name.is_empty() || r.id.is_empty())
+            .count();
+        let bad = rows
+            .iter()
+            .filter(|r| r.text.trim().is_empty())
+            .map(|r| (format!("{UNIQUE_FLAVOUR}:{}:{}", r.name, r.id), "no text"))
+            .collect();
+        (keys, empty, bad)
+    }
+
+    /// The flavour text rows of the unique named `name`, in the file's
+    /// order (none without the file).
+    pub fn flavour_of<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a UniqueFlavour> {
+        self.unique_flavour
+            .iter()
+            .flatten()
+            .filter(move |r| r.name == name)
+    }
+
     /// Reads the section's files the manifest lists.
     ///
     /// # Errors
@@ -210,6 +266,11 @@ impl Poe1Section {
             },
             jewel_radii: if listed(JEWEL_RADII) {
                 Some(json(source, JEWEL_RADII)?)
+            } else {
+                None
+            },
+            unique_flavour: if listed(UNIQUE_FLAVOUR) {
+                Some(json(source, UNIQUE_FLAVOUR)?)
             } else {
                 None
             },

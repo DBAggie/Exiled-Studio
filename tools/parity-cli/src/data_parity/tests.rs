@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 7,
+        "format": 8,
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -132,6 +132,11 @@ fn equal_export() -> Value {
             {"inner": 0, "outer": 1440, "label": "Medium"},
             {"inner": 960, "outer": 1320, "label": "Variable"},
             {"inner": 1320, "outer": 1680, "label": "Variable"}
+        ],
+        "flavour_text": [
+            {"id": "TestUnique1", "name": "Test Flavoured", "text": ["A made-up line.", "Another one.", "", "^8A made-up note"]},
+            {"id": "TestUnique2", "name": "Test Variants", "text": ["First variant."]},
+            {"id": "TestUnique3", "name": "Test Variants", "text": ["Second variant."]}
         ],
         "tree": {
             "classes": [
@@ -346,6 +351,33 @@ fn rows_on_one_side_should_be_listed() {
     );
     let skills = &comparison.tables["skills"];
     assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 2));
+}
+
+#[test]
+fn flavour_text_should_compare_pobs_cleaned_lines_by_name_and_id() {
+    let mut export = equal_export();
+    let rows = export["flavour_text"].as_array_mut().unwrap();
+    // A changed line, a PoB row the bundle lacks, and a bundle row PoB
+    // lacks; an ID with trailing underscores is the same row.
+    rows[0]["id"] = json!("TestUnique1__");
+    rows[1]["text"] = json!(["First variant, as PoB has it."]);
+    rows[2] = json!({"id": "TestUnique9", "name": "Test PoB Only", "text": ["Only in PoB."]});
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(
+        fields(&comparison.differences),
+        [
+            ("flavour_text", "Test PoB Only|TestUnique9", "row"),
+            ("flavour_text", "Test Variants|TestUnique2", "text"),
+        ]
+    );
+    let only: Vec<&str> = comparison
+        .bundle_only
+        .iter()
+        .filter(|b| b.table == "flavour_text")
+        .map(|b| b.key.as_str())
+        .collect();
+    assert_eq!(only, ["Test Variants|TestUnique3"]);
 }
 
 #[test]

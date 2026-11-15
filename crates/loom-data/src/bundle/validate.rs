@@ -975,6 +975,22 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (keys, empty, findings) = p.flavour_domain();
+        if empty > 0 {
+            report.add(
+                "BUNDLE_EMPTY_ID",
+                super::poe1::UNIQUE_FLAVOUR,
+                format!("{empty} rows have no name or no ID"),
+            );
+        }
+        duplicates(
+            report,
+            super::poe1::UNIQUE_FLAVOUR,
+            keys.iter().map(String::as_str),
+        );
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
     }
 }
 

@@ -855,3 +855,46 @@ fn pantheon_mutations_should_each_give_their_code() {
         assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
     }
 }
+
+/// Unique flavour text (B-2): each mutation gives its code alone; a name
+/// with two IDs (variants) is valid.
+#[test]
+fn flavour_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/unique_flavour.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "row twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "row without a name",
+            |v| {
+                v[0]["name"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "row without an ID",
+            |v| {
+                v[1]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "row without text",
+            |v| {
+                v[2]["text"] = " ".into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}

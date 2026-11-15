@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 7
+local FORMAT = 8
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -428,6 +428,17 @@ for i, r in ipairs(data.jewelRadius or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- Unique flavour text (format 8, B-2): data.flavourText (src/Data/
+-- FlavourText.lua, written by src/Export/Scripts/flavourText.lua), in PoB's
+-- order: each entry's FlavourText ID, the unique's name, and its lines as
+-- PoB's exporter cleaned them.
+---------------------------------------------------------------------------
+local flavourText = {}
+for i, entry in ipairs(data.flavourText or {}) do
+	flavourText[i] = { id = entry.id, name = entry.name, text = list(entry.text) }
+end
+
+---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
 local document = {
@@ -447,6 +458,7 @@ local document = {
 	bosses = bosses,
 	pantheons = pantheons,
 	jewel_radii = list(jewelRadii),
+	flavour_text = list(flavourText),
 	tree = { classes = classes, nodes = nodes },
 }
 

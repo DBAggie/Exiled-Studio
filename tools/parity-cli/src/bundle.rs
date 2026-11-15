@@ -19,7 +19,9 @@
 //! - PoE1: `poe1/quality_types.json` (`properties::quality_types`),
 //!   `poe1/grafts.json` (`grafts::rows`), and `poe1/pantheons.json`
 //!   (`pantheons::rows`, P3-12g), and `poe1/jewel_radii.json`
-//!   (`jewel_radii::rows`, passive tree plan T-f);
+//!   (`jewel_radii::rows`, passive tree plan T-f), and
+//!   `poe1/unique_flavour.json` (`flavour::rows` with
+//!   `poe1::FLAVOUR_PAIRS`, B-2's item card);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
 //!   and passive tables ([`passives`]; the extract's manifest format 5), and
@@ -48,7 +50,7 @@ use sha2::{Digest, Sha256};
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
+use crate::{flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
 
 mod base_properties;
 mod passives;
@@ -820,6 +822,15 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 bundle_poe1::GRAFTS,
                 to_json(&g)?,
                 Some(n),
+            );
+        }
+        if let Some(texts) = flavour::rows(read, &poe1::FLAVOUR_PAIRS)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::UNIQUE_FLAVOUR,
+                to_json(&texts)?,
+                Some(texts.len()),
             );
         }
         if let Some(radii) = jewel_radii::rows(read)? {

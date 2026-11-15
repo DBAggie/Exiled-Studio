@@ -819,6 +819,13 @@ export interface ItemCard {
    */
   flags: string[]
   /**
+   * A unique's flavour text, line by line, as the game prints it
+   * under the mods (B-2): empty when the game data has none for the
+   * unique's name, or several (a unique whose variants each have
+   * their own text).
+   */
+  flavour?: FlavourLine[]
+  /**
    * The influences, by name.
    */
   influences: string[]
@@ -898,6 +905,22 @@ export interface AffixView {
    * Its tier on the item's base (1 is the best), when known.
    */
   tier?: number | null
+}
+/**
+ * One line of a unique's flavour text. An empty line is the gap the
+ * game leaves between parts.
+ */
+export interface FlavourLine {
+  /**
+   * The game prints it in the default text colour (`<default>{...}`:
+   * a note such as "This item can be transformed on the Altar of
+   * Sacrifice"), not the flavour colour.
+   */
+  'default-colour': boolean
+  /**
+   * The text, the game's markup removed.
+   */
+  text: string
 }
 /**
  * One base value on an item card.

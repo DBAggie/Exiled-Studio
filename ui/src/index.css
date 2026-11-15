@@ -2233,6 +2233,16 @@ button.inv-slot:focus-visible {
   color: var(--c-tt-label);
 }
 
+/* A unique's flavour text (B-2); a default-colour note uses .tt-flag. */
+.tt-flavour {
+  color: var(--c-tt-flavour);
+  font-style: italic;
+}
+
+.tt-gap {
+  height: 0.75em;
+}
+
 /* The Alt view's mod header: small, grey, italic, above its lines. */
 .tt-affix {
   color: var(--c-tt-label);

@@ -21,6 +21,7 @@ mod data_parity;
 mod divergence;
 mod dto_hashes;
 mod extract;
+mod flavour;
 mod grafts;
 mod item_tags;
 mod jewel_radii;

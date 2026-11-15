@@ -1,0 +1,17 @@
+[
+ {
+  "id": "TestUnique1",
+  "name": "Test Flavoured",
+  "text": "A made-up line.\nAnother one.\n\n<default>{A made-up note}"
+ },
+ {
+  "id": "TestUnique2",
+  "name": "Test Variants",
+  "text": "First variant."
+ },
+ {
+  "id": "TestUnique3",
+  "name": "Test Variants",
+  "text": "Second variant."
+ }
+]
