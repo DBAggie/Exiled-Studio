@@ -1718,3 +1718,76 @@ fn installed_bundles_should_be_found_switched_remembered_and_offered_for_a_pinne
     assert_eq!(snap.data.installed.len(), 2);
     r.app.stop();
 }
+
+#[test]
+fn a_pasted_game_copy_should_become_an_item_and_undo_should_remove_it() {
+    let copy = "Item Class: Rings\nRarity: Rare\nTest Band\nPlain Test Ring\n--------\n\
+                Requirements:\nLevel: 12\n--------\nItem Level: 50\n--------\n\
+                { Implicit Modifier \u{2014} Life }\n+10(5-15) to maximum Life\n--------\n\
+                { Prefix Modifier \"Healthy\" (Tier: 1) \u{2014} Life }\n+20(10-29) to maximum Life\n\
+                --------\nA made-up flavour line.\n--------\nCorrupted\n";
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&synthetic(), None).unwrap();
+    let before = session.snapshot(idle()).build.unwrap().items.len();
+
+    let v = session.add_item(copy, None).unwrap();
+    let snap = session.snapshot(idle());
+    assert_eq!(snap.version, v);
+    assert!(snap.dirty);
+    let entry = snap.history.undo.clone().unwrap();
+    assert_eq!(entry.kind, api::ChangeKind::ItemAdded);
+    let build = snap.build.unwrap();
+    assert_eq!(build.items.len(), before + 1);
+    let item = session.item(entry.item).unwrap();
+    assert_eq!(item.name.as_deref(), Some("Test Band"));
+    assert_eq!(item.base.as_deref(), Some("Plain Test Ring"));
+    // Not in a slot, so not in use; the copy's level stands (no sockets).
+    assert!(
+        !build
+            .items
+            .iter()
+            .find(|i| i.id == entry.item)
+            .unwrap()
+            .in_use
+    );
+    assert_eq!(item.card.level_req.as_deref(), Some("12"));
+    assert!(item.card.flags.iter().any(|f| f == "Corrupted"));
+    let texts: Vec<&str> = item.lines.iter().map(|l| l.text.as_str()).collect();
+    assert!(
+        texts.contains(&"{implicit}{tags:life}{range:0.5}+(5-15) to maximum Life"),
+        "{texts:?}"
+    );
+    assert!(
+        texts.contains(&"{prefix}{tags:life}+20 to maximum Life"),
+        "{texts:?}"
+    );
+
+    // Refused: a slot the base's class does not fit, a gem, an unknown
+    // base, a text too long. Nothing changes.
+    let code = |r: Result<u64, loom_app::AppError>| r.unwrap_err().code;
+    assert_eq!(code(session.add_item(copy, Some("Ring 1"))), "APP_ADD_ITEM");
+    let gem = "Item Class: Skill Gems\nRarity: Gem\nShield Crush\n--------\nLevel: 1\n";
+    assert_eq!(code(session.add_item(gem, None)), "APP_ADD_ITEM");
+    let unknown = copy.replace("Plain Test Ring", "Unknown Test Base");
+    assert_eq!(code(session.add_item(&unknown, None)), "APP_ADD_ITEM");
+    let long = format!("{copy}{}", "x".repeat(loom_app::items::MAX_TEXT));
+    assert_eq!(code(session.add_item(&long, None)), "APP_ADD_ITEM");
+    assert_eq!(session.snapshot(idle()).version, v);
+
+    // PoB's item text is taken too.
+    session
+        .add_item(
+            "Rarity: RARE\nOther Band\nPlain Test Ring\nImplicits: 0\n+5 to maximum Life\n",
+            None,
+        )
+        .unwrap();
+    assert_eq!(
+        session.snapshot(idle()).build.unwrap().items.len(),
+        before + 2
+    );
+
+    session.undo().unwrap();
+    session.undo().unwrap();
+    assert_eq!(session.snapshot(idle()).build.unwrap().items.len(), before);
+}

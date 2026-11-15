@@ -381,6 +381,30 @@ impl Session {
         ))
     }
 
+    /// Adds an item from a game copy or PoB's item text, as one undoable
+    /// change; with `slot`, puts it there in the active item set.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, and [`crate::items::add`]'s codes.
+    pub fn add_item(&mut self, text: &str, slot: Option<&str>) -> Result<u64, AppError> {
+        let state = self.need_state()?;
+        let data = self.need_data()?;
+        let added = crate::items::add(&state.build, &state.ends, text, slot, &data)?;
+        let entry = api::HistoryEntry {
+            kind: api::ChangeKind::ItemAdded,
+            item: added.item.0,
+            request: None,
+        };
+        Ok(self.commit(
+            state,
+            State {
+                build: added.build,
+                ends: added.ends,
+            },
+            entry,
+        ))
+    }
+
     /// Makes item set `id` the active one, as one undoable change (the
     /// UX walkthrough's UX-02: the user picks the set the calculation
     /// uses). The same set again changes nothing.

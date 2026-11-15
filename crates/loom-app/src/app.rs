@@ -113,6 +113,7 @@ impl HostCommand {
             Self::ExportDiagnostics(_) => "export-diagnostics".to_owned(),
             // Named without serializing its text.
             Self::Api(api::Command::ImportText { .. }) => "import-text".to_owned(),
+            Self::Api(api::Command::AddItem { .. }) => "add-item".to_owned(),
             Self::Api(c) => match serde_json::to_value(c) {
                 Ok(serde_json::Value::String(s)) => s,
                 Ok(serde_json::Value::Object(m)) => m.keys().next().cloned().unwrap_or_default(),
@@ -895,9 +896,9 @@ impl Writer {
                         _ => None,
                     };
                     let text = match &command {
-                        HostCommand::Api(api::Command::ImportText { text }) => {
-                            Some(crate::logs::digest(text.as_bytes()))
-                        }
+                        HostCommand::Api(
+                            api::Command::ImportText { text } | api::Command::AddItem { text, .. },
+                        ) => Some(crate::logs::digest(text.as_bytes())),
                         _ => None,
                     };
                     let before = self.session.version();
@@ -1267,6 +1268,9 @@ impl Writer {
                 Ok(done(self.session.version()))
             }
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
+            api::Command::AddItem { text, slot } => {
+                self.session.add_item(&text, slot.as_deref()).map(done)
+            }
             api::Command::UseItemSet { id } => Ok(self
                 .session
                 .use_item_set(id)?

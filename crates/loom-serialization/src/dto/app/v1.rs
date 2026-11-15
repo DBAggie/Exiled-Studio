@@ -1140,6 +1140,8 @@ dto_enum! {
         TreeSpecs,
         /// A passive tree change an MCP client requested.
         TreeRequestApplied,
+        /// An item added (and perhaps put in a slot).
+        ItemAdded,
     }
 
     /// The league a build is planned for.
@@ -1257,6 +1259,17 @@ dto_enum! {
         },
         /// Applies an item edit.
         EditItem(ItemEdit),
+        /// Adds an item to the build from the game's item copy (Ctrl+C or
+        /// Ctrl+Alt+C) or PoB's item text, as one undoable change; with
+        /// `slot`, also puts it in that slot of the active item set (B-2
+        /// item evidence, E3).
+        AddItem {
+            /// The copied text.
+            text: String,
+            /// A slot of the active item set (`Helmet`, `Weapon 1`,
+            /// `Ring 2`, `Flask 3`, ...), if the item goes in one.
+            slot: Option<String>,
+        },
         /// Makes an item set the active one, as one undoable change.
         UseItemSet {
             /// The set's ID.

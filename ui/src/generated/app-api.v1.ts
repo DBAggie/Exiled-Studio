@@ -132,6 +132,19 @@ export interface ApplicationAPIV1 {
         'edit-item': ItemEdit
       }
     | {
+        'add-item': {
+          /**
+           * A slot of the active item set (`Helmet`, `Weapon 1`,
+           * `Ring 2`, `Flask 3`, ...), if the item goes in one.
+           */
+          slot?: string | null
+          /**
+           * The copied text.
+           */
+          text: string
+        }
+      }
+    | {
         'use-item-set': {
           /**
            * The set's ID.
@@ -2042,6 +2055,7 @@ export interface HistoryEntry {
     | 'tree'
     | 'tree-specs'
     | 'tree-request-applied'
+    | 'item-added'
   /**
    * The change request it applied, when an MCP client asked for it.
    */

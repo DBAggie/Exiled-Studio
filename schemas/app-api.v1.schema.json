@@ -526,6 +526,11 @@
           "description": "A passive tree change an MCP client requested.",
           "type": "string",
           "const": "tree-request-applied"
+        },
+        {
+          "description": "An item added (and perhaps put in a slot).",
+          "type": "string",
+          "const": "item-added"
         }
       ]
     },
@@ -684,6 +689,36 @@
           "additionalProperties": false,
           "required": [
             "edit-item"
+          ]
+        },
+        {
+          "description": "Adds an item to the build from the game's item copy (Ctrl+C or\nCtrl+Alt+C) or PoB's item text, as one undoable change; with\n`slot`, also puts it in that slot of the active item set (B-2\nitem evidence, E3).",
+          "type": "object",
+          "properties": {
+            "add-item": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "description": "A slot of the active item set (`Helmet`, `Weapon 1`,\n`Ring 2`, `Flask 3`, ...), if the item goes in one.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "description": "The copied text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-item"
           ]
         },
         {

@@ -65,6 +65,7 @@ export const en = {
   'history.tree': 'passive tree change',
   'history.tree-specs': 'passive tree list change',
   'history.tree-request-applied': 'the AI assistant’s passive tree change',
+  'history.item-added': 'adding {item}',
   'header.save': 'Save',
   'header.export': 'Export',
   'header.unsaved': 'Unsaved changes',
@@ -458,6 +459,14 @@ export const en = {
   'items.setN': 'Set {n}',
   'items.setHelp':
     'The calculation uses this set. Switching is one undoable step.',
+  'items.paste.title': 'Paste an item',
+  'items.paste.help':
+    'Copy an item in the game (Ctrl+C, or Ctrl+Alt+C for its modifier tiers and ranges) and paste it here. PoB item text works too.',
+  'items.paste.text': 'Item text',
+  'items.paste.slot': 'Put it in',
+  'items.paste.noSlot': 'No slot (keep it with the build)',
+  'items.paste.add': 'Add the item',
+  'items.paste.added': 'Added {name}.',
   'items.inUse': 'In use',
   'items.inUseNone': 'No item is in use in this item set.',
   'items.treeSocket': 'Passive tree',
@@ -888,6 +897,8 @@ export const en = {
   'error.APP_ITEM_SET': 'This build has no such item set.',
   'error.APP_LOADOUT': 'This build has no such stage.',
   'error.APP_TREE': 'That tree change is not possible.',
+  'error.APP_ADD_ITEM':
+    'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':
     'That skill set, socket group, or gem is not in the build, or the value is not allowed.',
   'error.PERSIST_IMPORT_SOURCE':
