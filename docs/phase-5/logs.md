@@ -1,4 +1,4 @@
-# Logs, diagnostics, and crash records (Phase 5, P5)
+# Logs, diagnostics, and crash records (Phase 5, P5; PR #115)
 
 Step P5 of `dev/active/passive-tree-and-phase-5/passive-tree-and-phase-5-plan.md` (design P-f; ADR-014). Everything here lives in the host crates `loom-app` and `loom-tauri`. No core crate logs, so the core crates stay wasm32-safe (ADR-016). Nothing is sent anywhere (ADR-011): the logs, the crash records, and the diagnostic package stay on the user's disk until the user attaches the package to a report themselves.
 
