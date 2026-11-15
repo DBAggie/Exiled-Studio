@@ -36,7 +36,7 @@ use std::time::Instant;
 
 use loom_calc::{
     ActiveSkill, ArmourBase, CalcData, CharacterBase, GemEffect, GrantedEffect, ItemBase,
-    MonsterDefences, MonsterStats, PassiveLinks, Range, SkillGem, StatAmount, StatSet,
+    MonsterDefences, MonsterStats, Range, SkillGem, StatAmount, StatSet,
 };
 use loom_data::bundle::Bundle;
 use loom_domain::{Build, DataVersion, TreeVersion};
@@ -428,10 +428,6 @@ impl CalcData for OverlayData<'_> {
         self.bundle.mastery_effect_stats(effect)
     }
 
-    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
-        self.bundle.passive_links(node)
-    }
-
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {
         self.bundle.skill_gem(base_item)
     }
@@ -514,6 +510,8 @@ pub struct Request<'a> {
     pub bundle: &'a Bundle,
     /// The pipeline over it.
     pub resolver: &'a Resolver<'a, 'a>,
+    /// Its passive tree, if it has one (the resolved passive set).
+    pub tree: Option<&'a loom_tree::Tree>,
     /// Its data (for the item base names).
     pub data: &'a BundleData<'a>,
     /// The bundle's record.
@@ -572,6 +570,7 @@ fn one(
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
+        request.tree,
     );
     let data: &dyn CalcData = match &request.overlay {
         Some((overlay, _)) => *overlay,

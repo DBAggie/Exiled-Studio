@@ -17,7 +17,11 @@
 //!   object template, mastery group, and mastery effect, every passive of a
 //!   tree node, and every tree node of a connection or root; no object
 //!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
-//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`); the
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`), and the tree
+//!   layout, when present, has a radius and an angle per slot
+//!   (`BUNDLE_TREE_LAYOUT`), and the tree sprites, when present, have
+//!   every sheet listed, every sprite on its sheet, and every node icon
+//!   on a sheet (`BUNDLE_TREE_SPRITES`); the
 //!   weapon, armour, and shield types' base items exist;
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
 //!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
@@ -116,8 +120,46 @@ pub fn validate(source: &dyn BundleSource) -> Report {
     };
     referential(&bundle, &mut report);
     domain(&bundle, &mut report);
+    layout(&bundle, &mut report);
+    sprites(&bundle, &mut report);
     smoke(&bundle, &mut report);
     report
+}
+
+/// The tree layout, when present, fits the tree's orbits
+/// (`BUNDLE_TREE_LAYOUT`).
+fn layout(b: &Bundle, report: &mut Report) {
+    let (Some(layout), Some(p)) = (&b.tree_layout, &b.passives) else {
+        return;
+    };
+    if !layout.fits(&p.tree.orbit_slots) {
+        report.add(
+            "BUNDLE_TREE_LAYOUT",
+            super::tree_layout::TREE_LAYOUT,
+            "the layout does not give one radius and one angle in [0, 360) per slot of every orbit",
+        );
+    }
+}
+
+/// The tree sprites, when present: a sound index whose sheets are listed
+/// (`BUNDLE_TREE_SPRITES`).
+fn sprites(b: &Bundle, report: &mut Report) {
+    use super::tree_sprites::TREE_SPRITES;
+    let Some(sprites) = &b.tree_sprites else {
+        return;
+    };
+    for p in sprites.problems() {
+        report.add("BUNDLE_TREE_SPRITES", TREE_SPRITES, p);
+    }
+    for path in sprites.sheet_paths() {
+        if b.manifest.files.iter().all(|f| f.path != path) {
+            report.add(
+                "BUNDLE_TREE_SPRITES",
+                &path,
+                "a sheet the index names is not listed",
+            );
+        }
+    }
 }
 
 fn at_of(e: &BundleError) -> String {
@@ -917,6 +959,19 @@ fn domain(b: &Bundle, report: &mut Report) {
             report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
         }
         duplicates(report, file, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let (ids, findings) = p.radius_domain();
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add(
+                "BUNDLE_EMPTY_ID",
+                super::poe1::JEWEL_RADII,
+                format!("{empty} rows have no ID"),
+            );
+        }
+        duplicates(report, super::poe1::JEWEL_RADII, ids.into_iter());
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }

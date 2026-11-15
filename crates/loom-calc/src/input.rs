@@ -10,7 +10,9 @@ pub use loom_data::bundle::skills::{
     ActiveSkill, EffectLevel, FloatStat, GemEffect, GrantedEffect, Reservation, Resource, SkillGem,
     StatSet, StatSetLevel,
 };
-use loom_domain::{Build, ConfigSetId, DataVersion, ItemId, ItemSetId, SpecId, TreeVersion};
+use loom_domain::{
+    Build, ConfigSetId, DataVersion, ItemId, ItemSetId, NodeId, SpecId, TreeVersion,
+};
 
 use crate::error::CalcError;
 
@@ -60,10 +62,6 @@ pub trait CalcData {
 
     /// The stats of the mastery effect with this hash.
     fn mastery_effect_stats(&self, effect: u32) -> Option<&[StatAmount]>;
-
-    /// A passive node's place in the tree: whether it is a root (a class
-    /// or ascendancy start) and the nodes it is linked to, either way.
-    fn passive_links(&self, node: u32) -> Option<PassiveLinks>;
 
     /// The properties of the item base with this name; `None` when no
     /// base has the name.
@@ -237,18 +235,6 @@ impl BaseName {
     }
 }
 
-/// A passive node's links in the tree ([`CalcData::passive_links`]).
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct PassiveLinks {
-    /// A class or ascendancy start: allocated nodes connect to one.
-    pub root: bool,
-    /// A cluster jewel socket: one inside a cluster jewel's subgraph
-    /// connects through the jewel, not the tree.
-    pub expansion: bool,
-    /// The linked nodes, sorted and unique.
-    pub links: Vec<u32>,
-}
-
 impl CalcData for Bundle {
     fn data_version(&self) -> DataVersion {
         DataVersion {
@@ -298,34 +284,6 @@ impl CalcData for Bundle {
             .iter()
             .find(|e| e.hash == i64::from(effect))
             .map(|e| e.stats.as_slice())
-    }
-
-    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
-        let tables = self.passives.as_ref()?;
-        let me = i64::from(node);
-        let passive = tables.passives.iter().find(|p| p.node == me)?;
-        let mut links = Vec::new();
-        // The tree stores each link once, on one of its two nodes.
-        for n in tables.tree.groups.iter().flat_map(|g| &g.nodes) {
-            if n.node == me {
-                links.extend(
-                    n.connections
-                        .iter()
-                        .filter_map(|c| u32::try_from(c.node).ok()),
-                );
-            } else if n.connections.iter().any(|c| c.node == me)
-                && let Ok(other) = u32::try_from(n.node)
-            {
-                links.push(other);
-            }
-        }
-        links.sort_unstable();
-        links.dedup();
-        Some(PassiveLinks {
-            root: !passive.characters.is_empty() || passive.ascendancy_start,
-            expansion: passive.expansion,
-            links,
-        })
     }
 
     fn item_base(&self, name: &str) -> Option<ItemBase> {
@@ -545,6 +503,65 @@ pub struct CalcOptions {
     /// line not listed takes its resolution's values; a ranged one stays
     /// unsettled (`unsettled-value`).
     pub item_lines: BTreeMap<ItemId, BTreeMap<usize, LineValues>>,
+    /// The active spec's nodes as the host resolved them against the tree
+    /// (passive tree plan, T-e): which count. The host builds it from the
+    /// tree (`loom-pipeline` with `loom-tree`); the engine does not walk
+    /// the tree's links.
+    pub passives: ResolvedPassives,
+}
+
+/// The active spec's allocated nodes, each with what the tree makes of it
+/// ([`CalcOptions::passives`]). A node it does not list counts as not
+/// connected (a node PoB numbers as a cluster jewel's, as one).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ResolvedPassives {
+    /// Each allocated node's state.
+    pub nodes: BTreeMap<NodeId, PassiveState>,
+}
+
+impl ResolvedPassives {
+    /// The state of `node`: listed, else as the module says.
+    #[must_use]
+    pub fn state(&self, node: NodeId) -> PassiveState {
+        self.nodes
+            .get(&node)
+            .copied()
+            .unwrap_or(if node.0 & PassiveState::CLUSTER_NODE_BIT == 0 {
+                PassiveState::Unconnected
+            } else {
+                PassiveState::ClusterNode
+            })
+    }
+
+    /// Whether `node` is allocated and connected.
+    #[must_use]
+    pub fn connected(&self, node: NodeId) -> bool {
+        self.nodes.get(&node) == Some(&PassiveState::Connected)
+    }
+}
+
+/// What an allocated node is in the calculation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PassiveState {
+    /// Connected to an allocated class or ascendancy start through
+    /// allocated nodes (PoB's `connectedToStart`): its stats count.
+    Connected,
+    /// Not connected: PoB drops it when it loads a build; its stats do not
+    /// count (`unconnected-node`).
+    Unconnected,
+    /// A cluster jewel socket inside a cluster jewel's subgraph, not
+    /// connected: it connects through the jewel (`cluster-jewel-node`).
+    ClusterSocket,
+    /// A node PoB generates from a socketed cluster jewel
+    /// (`cluster-jewel-node`).
+    ClusterNode,
+}
+
+impl PassiveState {
+    /// The bit PoB sets on the nodes of a cluster jewel's subgraph
+    /// (`Classes/PassiveSpec.lua` BuildSubgraph: "16: 1 (signal bit, to
+    /// prevent conflict with node hashes)").
+    pub const CLUSTER_NODE_BIT: u32 = 0x1_0000;
 }
 
 /// What an import adapter settled about one item line's values.

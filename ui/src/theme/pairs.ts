@@ -91,6 +91,7 @@ export const PAIRS: Pair[] = [
     '--c-tt-enchant',
     '--c-tt-fractured',
     '--c-tt-corrupted',
+    '--c-tt-unmet',
     '--c-rarity-normal',
     '--c-rarity-magic',
     '--c-rarity-rare',

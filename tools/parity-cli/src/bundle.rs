@@ -18,7 +18,8 @@
 //!   files, copied as the extractor wrote them;
 //! - PoE1: `poe1/quality_types.json` (`properties::quality_types`),
 //!   `poe1/grafts.json` (`grafts::rows`), and `poe1/pantheons.json`
-//!   (`pantheons::rows`, P3-12g);
+//!   (`pantheons::rows`, P3-12g), and `poe1/jewel_radii.json`
+//!   (`jewel_radii::rows`, passive tree plan T-f);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
 //!   and passive tables ([`passives`]; the extract's manifest format 5), and
@@ -47,7 +48,7 @@ use sha2::{Digest, Sha256};
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{grafts, mod_filter, pantheons, poe1, poe2, properties};
+use crate::{grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
 
 mod base_properties;
 mod passives;
@@ -814,6 +815,15 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(n),
             );
         }
+        if let Some(radii) = jewel_radii::rows(read)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::JEWEL_RADII,
+                to_json(&radii)?,
+                Some(radii.len()),
+            );
+        }
         if let Some((gods, summary)) = pantheons::rows(read)? {
             put(
                 &mut files,
@@ -884,12 +894,13 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
 /// The tables `convert` reads for PoE1 only (the `poe1/` section and the
 /// essence classes), for gate 3d.
 #[cfg(test)]
-const POE1_ONLY_TABLES: [&str; 5] = [
+const POE1_ONLY_TABLES: [&str; 6] = [
     "AlternateQualityTypes",
     "BrequelGrafts",
     "BrequelGraftGrantedSkillLevels",
     "ComponentAttributeRequirements",
     "Essences",
+    "PassiveJewelRadii",
 ];
 
 #[cfg(test)]

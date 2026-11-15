@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 6
+local FORMAT = 7
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -418,6 +418,16 @@ for key, node in pairs(rawTree.nodes or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- Jewel radii (format 7, passive tree plan T-f): data.jewelRadius, the
+-- latest tree version's list (Modules/Data.lua 597-624), in PoB's order:
+-- the full radii, then the rings ("Variable").
+---------------------------------------------------------------------------
+local jewelRadii = {}
+for i, r in ipairs(data.jewelRadius or {}) do
+	jewelRadii[i] = { inner = r.inner, outer = r.outer, label = r.label }
+end
+
+---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
 local document = {
@@ -436,6 +446,7 @@ local document = {
 	monster_constants = copyMap(data.monsterConstants),
 	bosses = bosses,
 	pantheons = pantheons,
+	jewel_radii = list(jewelRadii),
 	tree = { classes = classes, nodes = nodes },
 }
 

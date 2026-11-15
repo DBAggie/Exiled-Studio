@@ -433,6 +433,320 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
+      "description": "The active passive spec (app-api.v1 TreeView: spec ID, class, ascendancy, allocated nodes, mastery effects, socketed jewels, kept nodes, points, and why it cannot be edited, if it cannot), each allocated node's name and kind, and the build's specs. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      },
+      "name": "get_tree",
+      "title": "Get the passive tree"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Nodes of the loaded data's tree whose name or stat lines contain the text (any case): ID, name, kind, ascendancy, lines, and whether the active spec allocates it; at most `limit` (default 25, at most 100), ascending by ID. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "description": "Only nodes of this kind.",
+            "enum": [
+              "normal",
+              "notable",
+              "keystone",
+              "mastery",
+              "jewel-socket"
+            ],
+            "type": "string"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "text": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object"
+      },
+      "name": "find_tree_nodes",
+      "title": "Find passive tree nodes"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "One node of the loaded data's tree (app-api.v1 TreeNodeView), whether the active spec allocates it, its neighbours' IDs and names, and, for a mastery, its effects and the chosen one. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "node": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node"
+        ],
+        "type": "object"
+      },
+      "name": "get_tree_node",
+      "title": "Get a passive tree node"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "The effect of a passive tree change, calculated by the application without applying it: the nodes it allocates (the path) or removes, and every field before and after (app-api.v1 TreePreview). A change the editor refuses fails with APP_TREE. Read-only.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "description": "app-api.v1 TreeChange: one passive tree edit, as the tree editor makes it. allocate-node allocates the node and the shortest path to it; deallocate-node removes the node and the nodes it leaves unconnected; set-mastery-effect chooses a mastery's effect (get_tree_node lists them). Nodes the editor keeps but does not edit are never removed.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "allocate-node": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "allocate-node"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "deallocate-node": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "deallocate-node"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "set-mastery-effect": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "effect": {
+                        "description": "The effect's ID.",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node",
+                      "effect"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "set-mastery-effect"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "required": [
+          "change"
+        ],
+        "type": "object"
+      },
+      "name": "preview_tree_change",
+      "title": "Preview a passive tree change"
+    },
+    {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false,
+        "readOnlyHint": false
+      },
+      "description": "Asks the user to apply a passive tree change (app-api.v1 ChangeRequest with `tree`). Refused unless the user allows change requests (APP_REQUESTS_OFF). The request waits for the user's approval in the application unless they gave a standing grant; poll get_request. An applied change is one undoable step in the build's history.",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "change": {
+            "description": "app-api.v1 TreeChange: one passive tree edit, as the tree editor makes it. allocate-node allocates the node and the shortest path to it; deallocate-node removes the node and the nodes it leaves unconnected; set-mastery-effect chooses a mastery's effect (get_tree_node lists them). Nodes the editor keeps but does not edit are never removed.",
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "allocate-node": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "allocate-node"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "deallocate-node": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "deallocate-node"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "set-mastery-effect": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "effect": {
+                        "description": "The effect's ID.",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "node": {
+                        "description": "The node's ID (find_tree_nodes).",
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "The spec's ID (get_tree).",
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "spec",
+                      "node",
+                      "effect"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "set-mastery-effect"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "note": {
+            "description": "Why, shown to the user.",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [
+          "change"
+        ],
+        "type": "object"
+      },
+      "name": "request_tree_change",
+      "title": "Request a passive tree change"
+    },
+    {
+      "annotations": {
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
       "description": "A change request's status: pending, applied, declined, or failed with its code (app-api.v1 ChangeRequest). Read-only.",
       "inputSchema": {
         "additionalProperties": false,

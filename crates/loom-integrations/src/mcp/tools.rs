@@ -40,6 +40,31 @@ fn item_edit_schema() -> Value {
     })
 }
 
+fn tree_change_schema() -> Value {
+    let node = |extra: Value| {
+        let mut required = vec![json!("spec"), json!("node")];
+        let mut properties = json!({
+            "spec": {"type": "integer", "minimum": 1, "description": "The spec's ID (get_tree)."},
+            "node": {"type": "integer", "minimum": 0, "description": "The node's ID (find_tree_nodes)."}
+        });
+        if let (Some(p), Some(e)) = (properties.as_object_mut(), extra.as_object()) {
+            for (k, v) in e {
+                p.insert(k.clone(), v.clone());
+                required.push(json!(k));
+            }
+        }
+        json!({"type": "object", "required": required, "additionalProperties": false, "properties": properties})
+    };
+    json!({
+        "description": "app-api.v1 TreeChange: one passive tree edit, as the tree editor makes it. allocate-node allocates the node and the shortest path to it; deallocate-node removes the node and the nodes it leaves unconnected; set-mastery-effect chooses a mastery's effect (get_tree_node lists them). Nodes the editor keeps but does not edit are never removed.",
+        "oneOf": [
+            {"type": "object", "required": ["allocate-node"], "additionalProperties": false, "properties": {"allocate-node": node(json!({}))}},
+            {"type": "object", "required": ["deallocate-node"], "additionalProperties": false, "properties": {"deallocate-node": node(json!({}))}},
+            {"type": "object", "required": ["set-mastery-effect"], "additionalProperties": false, "properties": {"set-mastery-effect": node(json!({"effect": {"type": "integer", "minimum": 0, "description": "The effect's ID."}}))}}
+        ]
+    })
+}
+
 fn empty() -> Value {
     json!({"type": "object", "properties": {}, "additionalProperties": false})
 }
@@ -105,6 +130,41 @@ pub fn list() -> Value {
             "annotations": {"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false}
         },
         {
+            "name": "get_tree",
+            "title": "Get the passive tree",
+            "description": "The active passive spec (app-api.v1 TreeView: spec ID, class, ascendancy, allocated nodes, mastery effects, socketed jewels, kept nodes, points, and why it cannot be edited, if it cannot), each allocated node's name and kind, and the build's specs. Read-only.",
+            "inputSchema": empty(),
+            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+        },
+        {
+            "name": "find_tree_nodes",
+            "title": "Find passive tree nodes",
+            "description": "Nodes of the loaded data's tree whose name or stat lines contain the text (any case): ID, name, kind, ascendancy, lines, and whether the active spec allocates it; at most `limit` (default 25, at most 100), ascending by ID. Read-only.",
+            "inputSchema": {"type": "object", "required": ["text"], "additionalProperties": false, "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 200}, "kind": {"type": "string", "enum": ["normal", "notable", "keystone", "mastery", "jewel-socket"], "description": "Only nodes of this kind."}, "limit": {"type": "integer", "minimum": 1, "maximum": 100}}},
+            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+        },
+        {
+            "name": "get_tree_node",
+            "title": "Get a passive tree node",
+            "description": "One node of the loaded data's tree (app-api.v1 TreeNodeView), whether the active spec allocates it, its neighbours' IDs and names, and, for a mastery, its effects and the chosen one. Read-only.",
+            "inputSchema": {"type": "object", "required": ["node"], "additionalProperties": false, "properties": {"node": {"type": "integer", "minimum": 0}}},
+            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+        },
+        {
+            "name": "preview_tree_change",
+            "title": "Preview a passive tree change",
+            "description": "The effect of a passive tree change, calculated by the application without applying it: the nodes it allocates (the path) or removes, and every field before and after (app-api.v1 TreePreview). A change the editor refuses fails with APP_TREE. Read-only.",
+            "inputSchema": {"type": "object", "required": ["change"], "additionalProperties": false, "properties": {"change": tree_change_schema()}},
+            "annotations": {"readOnlyHint": true, "openWorldHint": false}
+        },
+        {
+            "name": "request_tree_change",
+            "title": "Request a passive tree change",
+            "description": "Asks the user to apply a passive tree change (app-api.v1 ChangeRequest with `tree`). Refused unless the user allows change requests (APP_REQUESTS_OFF). The request waits for the user's approval in the application unless they gave a standing grant; poll get_request. An applied change is one undoable step in the build's history.",
+            "inputSchema": {"type": "object", "required": ["change"], "additionalProperties": false, "properties": {"change": tree_change_schema(), "note": {"type": "string", "maxLength": 500, "description": "Why, shown to the user."}}},
+            "annotations": {"readOnlyHint": false, "destructiveHint": false, "idempotentHint": false, "openWorldHint": false}
+        },
+        {
             "name": "get_request",
             "title": "Get a change request",
             "description": "A change request's status: pending, applied, declined, or failed with its code (app-api.v1 ChangeRequest). Read-only.",
@@ -133,6 +193,24 @@ fn to_value(v: &impl serde::Serialize) -> Value {
 
 fn no_build() -> CallError {
     CallError::Tool(AppError::new(loom_app::Code::NoBuild, "no build is open"))
+}
+
+fn no_tree() -> CallError {
+    CallError::Tool(AppError::new(
+        loom_app::Code::NoData,
+        "the game data has no passive tree",
+    ))
+}
+
+/// The active spec and the loaded data's tree.
+fn tree_state(app: &App) -> Result<(api::BuildView, std::sync::Arc<api::TreeLayout>), CallError> {
+    let build = app.snapshot().build.ok_or_else(no_build)?;
+    let layout = app.tree_layout().map_err(CallError::Tool)?;
+    Ok((build, layout))
+}
+
+fn kind_name(kind: &api::TreeNodeKind) -> Value {
+    to_value(kind)
 }
 
 fn calc_document(app: &App) -> Result<(u64, Value), CallError> {
@@ -224,6 +302,102 @@ pub fn call(app: &App, client: &str, name: &str, args: &Value) -> Result<Value, 
             let edit: api::ItemEdit = params(args, "edit")?;
             let note: Option<String> = params(args, "note")?;
             app.request_change(client, edit, note)
+                .map(|r| to_value(&r))
+                .map_err(CallError::Tool)
+        }
+        "get_tree" => {
+            let (build, layout) = tree_state(app)?;
+            let tree = build.tree.as_ref().ok_or_else(no_tree)?;
+            let allocated: Vec<Value> = tree
+                .nodes
+                .iter()
+                .filter_map(|id| layout.nodes.iter().find(|n| n.id == *id))
+                .map(|n| json!({"id": n.id, "name": n.name, "kind": kind_name(&n.kind)}))
+                .collect();
+            Ok(json!({
+                "tree-version": layout.tree_version,
+                "tree": to_value(tree),
+                "allocated": allocated,
+                "specs": to_value(&build.specs),
+            }))
+        }
+        "find_tree_nodes" => {
+            let text: String = params(args, "text")?;
+            let kind: Option<String> = params(args, "kind")?;
+            let limit: Option<usize> = params(args, "limit")?;
+            let (build, layout) = tree_state(app)?;
+            let allocated = build
+                .tree
+                .as_ref()
+                .map(|t| t.nodes.as_slice())
+                .unwrap_or_default();
+            let needle = text.to_lowercase();
+            let nodes: Vec<Value> = layout
+                .nodes
+                .iter()
+                .filter(|n| n.modelled && !n.cluster_area)
+                .filter(|n| kind.as_deref().is_none_or(|k| kind_name(&n.kind) == k))
+                .filter(|n| {
+                    n.name.to_lowercase().contains(&needle)
+                        || n.lines.iter().any(|l| l.to_lowercase().contains(&needle))
+                })
+                .take(limit.unwrap_or(25).clamp(1, 100))
+                .map(|n| {
+                    json!({
+                        "id": n.id,
+                        "name": n.name,
+                        "kind": kind_name(&n.kind),
+                        "ascendancy": n.ascendancy,
+                        "lines": n.lines,
+                        "allocated": allocated.contains(&n.id),
+                    })
+                })
+                .collect();
+            Ok(json!({"nodes": nodes}))
+        }
+        "get_tree_node" => {
+            let id: u32 = params(args, "node")?;
+            let (build, layout) = tree_state(app)?;
+            let node = layout
+                .nodes
+                .iter()
+                .find(|n| n.id == id)
+                .ok_or_else(|| CallError::Params(format!("no node {id}")))?;
+            let tree = build.tree.as_ref();
+            let neighbours: Vec<Value> = layout
+                .nodes
+                .iter()
+                .filter(|n| n.id != id && (node.links.contains(&n.id) || n.links.contains(&id)))
+                .map(|n| json!({"id": n.id, "name": n.name}))
+                .collect();
+            let effects = node.mastery_group.as_ref().and_then(|g| {
+                layout
+                    .masteries
+                    .iter()
+                    .find(|m| &m.id == g)
+                    .map(|m| to_value(&m.effects))
+            });
+            let chosen = tree
+                .and_then(|t| t.masteries.iter().find(|m| m.node == id))
+                .map(|m| m.effect);
+            Ok(json!({
+                "node": to_value(node),
+                "allocated": tree.is_some_and(|t| t.nodes.contains(&id)),
+                "neighbours": neighbours,
+                "mastery-effects": effects,
+                "chosen-effect": chosen,
+            }))
+        }
+        "preview_tree_change" => {
+            let change: api::TreeChange = params(args, "change")?;
+            app.preview_tree_change(&change)
+                .map(|p| to_value(&p))
+                .map_err(CallError::Tool)
+        }
+        "request_tree_change" => {
+            let change: api::TreeChange = params(args, "change")?;
+            let note: Option<String> = params(args, "note")?;
+            app.request_tree_change(client, change, note)
                 .map(|r| to_value(&r))
                 .map_err(CallError::Tool)
         }

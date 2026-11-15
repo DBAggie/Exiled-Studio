@@ -1861,6 +1861,35 @@ button.danger {
   margin-top: 8px;
 }
 
+.config-add > .row {
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.config-help {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.config-options {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.config-options li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--c-row);
+}
+
 .config-block {
   margin: 12px 0;
   padding: 10px 12px 12px;
@@ -2175,6 +2204,10 @@ button.inv-slot:focus-visible {
   color: var(--c-tt-value);
 }
 
+.tt-unmet {
+  color: var(--c-tt-unmet);
+}
+
 .tt-augmented,
 .tt-mod {
   color: var(--c-tt-mod);
@@ -2209,4 +2242,234 @@ button.inv-slot:focus-visible {
 
 .tt-affix:not(:first-child) {
   margin-top: 4px;
+}
+
+/* B-2: the jewels in the passive tree and the requirement check, under
+   the inventory. */
+.inv-tree-jewels {
+  margin-top: 0.75rem;
+}
+
+.inv-tree-jewels ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inv-tree-jewels .inv-jewel {
+  width: 2rem;
+  height: 2rem;
+}
+
+.inv-requirements {
+  margin-top: 0.75rem;
+}
+
+.inv-requirements p,
+.inv-requirements ul {
+  margin: 0.25rem 0 0;
+}
+
+.inv-short {
+  color: var(--c-danger);
+}
+
+/* B-5: the user's dashboards. */
+.dash-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dash-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dash-tabs button[aria-pressed='true'] {
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.dash-edit-head {
+  margin-bottom: 12px;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.dash-cell {
+  min-width: 0;
+}
+
+.dash-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dash-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  border: 1px dashed var(--c-border);
+  border-radius: 6px;
+}
+
+.dash-library {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dash-library li + li {
+  margin-top: 6px;
+}
+
+.dash-stat-add {
+  margin-top: 12px;
+}
+
+.stat-tile-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  text-align: left;
+}
+
+.stat-tile-button h2 {
+  margin: 0;
+}
+
+.stat-tile-value {
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.main-skill-gems {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.main-skill-gems li + li {
+  margin-top: 4px;
+}
+
+/* The passive tree (screens/Tree.tsx). */
+.tree-bar {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tree-points {
+  margin: 0 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-stage {
+  position: relative;
+}
+
+.tree-canvas-wrap {
+  position: relative;
+}
+
+.tree-canvas {
+  display: block;
+  width: 100%;
+  height: 70vh;
+  min-height: 360px;
+  background: var(--c-tree-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-panel);
+  cursor: grab;
+  touch-action: none;
+}
+
+.tree-canvas:active {
+  cursor: grabbing;
+}
+
+.tree-zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.tree-card {
+  position: absolute;
+  z-index: 5;
+  max-width: 22rem;
+  padding: 10px 12px;
+  background: var(--c-raised);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+
+.tree-card p {
+  margin: 0 0 4px;
+}
+
+.tree-card-name {
+  font-weight: 600;
+}
+
+.tree-lines {
+  margin: 4px 0;
+  padding-left: 1rem;
+}
+
+.tree-list .segmented {
+  margin-bottom: 8px;
+}
+
+.tree-node-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree-node-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--c-row);
+}
+
+.tree-node-list li.on {
+  background: var(--c-selected);
+}
+
+.tree-node-list p {
+  margin: 2px 0 0;
 }

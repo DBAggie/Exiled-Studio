@@ -19,6 +19,7 @@ crates/
   loom-calc           core   calculations over immutable snapshots
   loom-serialization  core   versioned DTOs (build, calc result, app API), migrations, legacy XML adapters
   loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
+  loom-tree           core   the passive tree: graph, kinds, positions, allocation rules, tree URL (the editor)
   loom-persistence    host   files, recovery snapshots, recent list (SQLite indexes later)
   loom-app            host   command/query/event API, single-writer build task, background calculation
   loom-integrations   host   network adapters, the local MCP server (loopback)
@@ -28,6 +29,7 @@ tools/
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
+  tree                not a crate: GGG's passive tree export, pinned (manifest.json) and fetched into local/tree-export/ by acquire.{ps1,sh} (ADR-005 Amendment 2)
 schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract (rewritten by its test, below)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
@@ -38,12 +40,13 @@ Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-data` <- `loom-parser`, `loom-calc`
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
 - `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
-- `loom-parser`, `loom-calc`, `loom-serialization` <- `loom-pipeline` (Phase 4 plan, decision 0)
+- `loom-parser`, `loom-calc`, `loom-serialization`, `loom-tree` <- `loom-pipeline` (Phase 4 plan, decision 0; the resolved passive set, passive tree plan T-e)
+- `loom-data` <- `loom-tree` (passive tree plan, T-e; `loom-calc` does not depend on it: `loom-pipeline` resolves the spec with it and hands the engine the result)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
 - `tools/*` depend on core crates only.
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
-**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline) must:
+**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline, loom-tree) must:
 - build for `wasm32-unknown-unknown` (CI checks every PR; ADR-016);
 - not use the filesystem, threads, clocks, environment, or network. Each has a `clippy.toml` that bans these; hosts inject them;
 - depend only on other core crates and pure, wasm-compatible libraries;
@@ -59,7 +62,7 @@ Toolchain: Rust pinned by `rust-toolchain.toml`; Node per `.node-version`; pnpm 
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
-cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline
+cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline -p loom-tree
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
 # Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto (build v1, calc::v1), regenerate both;
@@ -100,6 +103,17 @@ cargo run --release -p loom-parity-cli -- bundle local/extract/<game>/<build> --
 cargo run --release -p loom-parity-cli -- bundle-check <bundle-dir>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
 cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<build>
+# The passive tree's layout constants and sprites (docs/tree/layout.md): fetch GGG's export at the pinned commit, then write a
+# copy of <bundle> with data/passive_tree_layout.json, data/passive_tree_sprites.json, and the export's sprite sheets in
+# trees/assets/ added (<dir> must not exist; the sheets are never committed); the rules and layout against that bundle:
+powershell -ExecutionPolicy Bypass -File tools/tree/acquire.ps1      # or tools/tree/acquire.sh
+cargo run --release -p loom-parity-cli -- tree-layout tools/tree/manifest.json local/tree-export <bundle> --out <dir>
+cargo test -p loom-tree --test real_bundle -- --ignored --nocapture          # LOOM_TREE_BUNDLE, else local/tree/bundle-poe1-tree-a
+cargo test -p loom-app --test tree_workflow -- --ignored --nocapture
+# The tree against PoB (docs/tree/parity.md; needs the oracle, tools/oracle/acquire): layout, 2,000 seeded allocations, and PoB
+# reading edited exports back, through tools/oracle/data/pob_tree.lua (outside the adapter protocol) and
+# `loom-parity-cli tree-parity layout|alloc-requests|alloc|readback`; writes docs/tree/records/, exit 0 when all match:
+tools/tree/parity.sh [bundle-dir]                                            # default local/tree/bundle-poe1-tree-a
 # Render every stat-description variant and resolve it back; writes summary.json and report.json (<dir> must not exist):
 cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
 # Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
@@ -123,6 +137,9 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
+# PoB's configuration options for the configuration page (verifies the oracle first; writes
+# ui/src/data/pob-config-options.json, PoB's MIT notice beside it):
+powershell -ExecutionPolicy Bypass -File tools/oracle/config-options.ps1
 # Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 4: it sets PoB's CALCS view, the
 # breakdowns' source, to the main view before loading (probe.calcs_view; docs/phase-3/calc-parity.md), with the shims in
 # shims.lua: Inflate through zlib, variant_order (sorted pairs for PoB's ambiguous old-format Vaal gem
@@ -161,6 +178,7 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# (PoB export format 7: table jewel_radii checks the bundle's poe1/jewel_radii.json, PassiveJewelRadii, against data.jewelRadius.)
 # Custom modifier lines against PoB's own parse (Phase 3 close-out, ADR-015 Amendment 2; maintainer-run): every custom line
 # of the fixtures read as a build does (notes, patterns, stats, unresolved) and compared with pob-parse.json
 # (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a
@@ -204,6 +222,7 @@ LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
 # The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
 # msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
 cargo build -p loom-tauri --features e2e,tauri/custom-protocol
+# (runs on the synthetic tree bundle crates/loom-data/tests/fixtures/bundle-poe1-tree, which make_bundles.py writes)
 ui/e2e/run.sh target/debug/loom-tauri                                   # Linux
 pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Windows (PowerShell, not Git Bash)
 ```

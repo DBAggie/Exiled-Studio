@@ -26,7 +26,12 @@ import {
   type RecoveryEntry,
   type SkillGroupView,
   type Snapshot,
+  type TreeLayout,
+  type TreeSprites,
+  type TreeChange,
+  type TreePreview,
 } from './types'
+import * as fakeTree from './fakeTree'
 
 export interface FakeOptions {
   /** Whether game data is loaded. */
@@ -37,6 +42,12 @@ export interface FakeOptions {
   calcFails?: string
   recent?: RecentEntry[]
   recovery?: RecoveryEntry[]
+  /** Installed bundles by Steam build (B-1); the first is loaded. */
+  installed?: number[]
+  /** The Steam build the build was made with (its pinned data). */
+  pinned?: number
+  /** Why the passive tree cannot be edited (its version or class). */
+  treeLocked?: string
 }
 
 function line(
@@ -244,6 +255,28 @@ function sampleItems(): ItemView[] {
         }),
       ],
     },
+    {
+      // A jewel in no item set: the tree's sockets take it.
+      id: 4,
+      name: 'Frost Eye',
+      base: 'Cobalt Jewel',
+      rarity: 'rare',
+      slot: null,
+      card: card({ 'item-class': 'Jewel' }),
+      lines: [
+        line(0, 'Rarity: RARE', {
+          kind: 'rarity',
+          section: null,
+          status: 'other',
+        }),
+        line(1, 'Frost Eye', { kind: 'name', section: null, status: 'other' }),
+        line(2, 'Cobalt Jewel', {
+          kind: 'base',
+          section: null,
+          status: 'other',
+        }),
+      ],
+    },
   ]
 }
 
@@ -304,6 +337,9 @@ export function sampleDocument(items: ItemView[]): CalcResultDocumentV1 {
       ],
       fields: [
         { field: 'life', state: 'complete', node: 3, value },
+        { field: 'strength', state: 'complete', node: null, value: 20 },
+        { field: 'dexterity', state: 'complete', node: null, value: 5 },
+        { field: 'intelligence', state: 'complete', node: null, value: 20 },
         {
           field: 'resistance.fire',
           state: 'partial',
@@ -425,8 +461,16 @@ const GEM_CATALOG: GemCatalogEntry[] = [
   },
 ]
 
+/** A stage: its spec, title, item set, skill set. */
+interface Stage {
+  spec: number
+  title: string
+  set: number
+  skillSet: number
+}
+
 /** The sample build's stages: spec, item set, skill set. */
-const STAGES = [
+const STAGES: Stage[] = [
   { spec: 1, title: 'Leveling', set: 1, skillSet: 1 },
   { spec: 2, title: 'Endgame', set: 2, skillSet: 2 },
 ]
@@ -448,6 +492,10 @@ interface State {
   config: ConfigView
   league: 'challenge' | 'standard'
   secondWeaponSet: boolean
+  /** The active passive spec's tree. */
+  tree: fakeTree.FakeSpec
+  /** The stages (a spec each), in order. */
+  stages: Stage[]
 }
 
 /** A custom line's status as the resolver gives it: a line with no digit
@@ -503,6 +551,8 @@ const fresh = (): State => ({
   config: sampleConfig(),
   league: 'challenge',
   secondWeaponSet: false,
+  tree: fakeTree.freshSpec(),
+  stages: STAGES,
 })
 
 export class FakeApi implements LoomApi {
@@ -542,6 +592,14 @@ export class FakeApi implements LoomApi {
     this.options = { data: true, ...options }
     this.recentList = options.recent ?? []
     this.recoveryList = options.recovery ?? []
+    this.activeBuild = options.installed?.[0] ?? 26530219
+  }
+
+  /** The loaded bundle's Steam build. */
+  private activeBuild: number
+
+  private bundleId(build: number) {
+    return `poe1/${build}-s4`
   }
 
   private emit(kind: ApiEvent['kind']) {
@@ -615,7 +673,10 @@ export class FakeApi implements LoomApi {
   snapshot(): Promise<Snapshot> {
     const items = this.current?.items ?? []
     const set = this.current?.set ?? 1
-    const inUse = (id: number) => slotIn(set, id) !== null
+    const socketOf = (id: number) =>
+      this.current?.tree.jewels.find((j) => j.item === id)?.node ?? null
+    const inUse = (id: number) =>
+      slotIn(set, id) !== null || socketOf(id) !== null
     const warnings = items.flatMap((item) =>
       item.lines
         .filter((l) => l.status === 'warning')
@@ -663,7 +724,12 @@ export class FakeApi implements LoomApi {
               },
               items: items.map((i) => ({
                 id: i.id,
-                'item-class': i.id === 2 ? 'Wand' : 'Ring',
+                'item-class':
+                  i.card['item-class'] === 'Jewel'
+                    ? 'Jewel'
+                    : i.id === 2
+                      ? 'Wand'
+                      : 'Ring',
                 name: i.name,
                 base: i.base,
                 rarity: i.rarity,
@@ -673,13 +739,14 @@ export class FakeApi implements LoomApi {
                 sets: SETS.filter((s) =>
                   Object.values(s.slots).includes(i.id),
                 ).map((s) => s.id),
-                'tree-socket': null,
+                'tree-socket': socketOf(i.id),
                 legacy:
                   i.card['variant-eras'][
                     (i.card['selected-variant'] ?? 0) - 1
                   ] === 'legacy',
                 // The wand: Ice Nova and its support linked, one socket free.
                 sockets: i.id === 2 ? ['BG', 'R'] : [],
+                requirements: i.card.requirements ?? null,
               })),
               warnings,
               'item-sets': SETS.map((s) => ({
@@ -692,13 +759,13 @@ export class FakeApi implements LoomApi {
                 title: `^4${s.title} {${s.spec}}`,
                 active: s.skillSet === this.current?.skillSet,
               })),
-              specs: STAGES.map((s) => ({
+              specs: (this.current?.stages ?? STAGES).map((s) => ({
                 id: s.spec,
                 title: `${s.title} {${s.spec}}`,
                 active: s.spec === this.current?.spec,
               })),
               'config-sets': [{ id: 1, title: 'Default', active: true }],
-              loadouts: STAGES.map((s) => ({
+              loadouts: (this.current?.stages ?? STAGES).map((s) => ({
                 spec: s.spec,
                 title: s.title,
                 'item-set': s.set,
@@ -720,6 +787,13 @@ export class FakeApi implements LoomApi {
                 })),
               })),
               'passive-names': [{ node: 420, name: 'Heart of Ice' }],
+              tree:
+                this.options.data === true && this.current !== null
+                  ? {
+                      ...fakeTree.view(this.current.tree, this.current.spec),
+                      locked: this.options.treeLocked ?? null,
+                    }
+                  : null,
               config: this.current?.config ?? null,
               league: this.current?.league ?? 'challenge',
               'second-weapon-set': this.current?.secondWeaponSet ?? false,
@@ -741,10 +815,40 @@ export class FakeApi implements LoomApi {
         bundle: this.options.data === true ? '/data/bundle' : null,
         'data-version':
           this.options.data === true
-            ? { game: 'poe1', 'schema-version': 3, 'steam-build': 26530219 }
+            ? {
+                game: 'poe1',
+                'schema-version': 3,
+                'steam-build': this.activeBuild,
+              }
             : null,
-        'tree-version': this.options.data === true ? '3_29' : null,
+        // The tree version is known for the real bundle's build only.
+        'tree-version':
+          this.options.data === true && this.activeBuild === 26530219
+            ? '3_29'
+            : null,
         error: null,
+        installed: (this.options.installed ?? []).map((b) => ({
+          id: this.bundleId(b),
+          'data-version': {
+            game: 'poe1',
+            'schema-version': 4,
+            'steam-build': b,
+          },
+          'tree-version': b === 26530219 ? '3_29' : null,
+        })),
+        active:
+          this.options.data === true &&
+          (this.options.installed ?? []).includes(this.activeBuild)
+            ? this.bundleId(this.activeBuild)
+            : null,
+        notice: null,
+        pinned:
+          this.current !== null &&
+          this.options.pinned !== undefined &&
+          this.options.pinned !== this.activeBuild &&
+          (this.options.installed ?? []).includes(this.options.pinned)
+            ? this.bundleId(this.options.pinned)
+            : null,
       },
       notices: [],
     })
@@ -892,6 +996,17 @@ export class FakeApi implements LoomApi {
           return this.done()
       }
     }
+    if (typeof command === 'object' && 'use-bundle' in command) {
+      const build = (this.options.installed ?? []).find(
+        (b) => this.bundleId(b) === command['use-bundle'].id,
+      )
+      if (build === undefined) this.fail('APP_NO_BUNDLE')
+      this.activeBuild = build
+      this.options.data = true
+      this.version += 1
+      this.emit('build-changed')
+      return this.done()
+    }
     if (command === 'new-build') {
       if (this.options.data !== true) this.fail('APP_NO_DATA')
       this.undoStack = []
@@ -928,8 +1043,10 @@ export class FakeApi implements LoomApi {
       )
     }
     if ('use-loadout' in command) {
-      const stage = STAGES.find((s) => s.spec === command['use-loadout'].spec)
       if (this.current === null) this.fail('APP_NO_BUILD')
+      const stage = this.current.stages.find(
+        (s) => s.spec === command['use-loadout'].spec,
+      )
       if (stage === undefined) this.fail('APP_LOADOUT')
       return this.commit(
         {
@@ -1130,6 +1247,8 @@ export class FakeApi implements LoomApi {
         { kind: 'config', item: e.block },
       )
     }
+    const tree = this.treeCommand(command)
+    if (tree !== null) return tree
     if ('open-recent' in command) {
       if (!this.recentList.some((r) => r.id === command['open-recent'].id)) {
         this.fail('APP_NOT_FOUND')
@@ -1161,6 +1280,13 @@ export class FakeApi implements LoomApi {
     }
     if ('approve' in command) {
       const r = this.request(command.approve.id)
+      if (r.tree != null) {
+        const outcome = this.treeCommand(r.tree as Command)
+        r.status = 'applied'
+        this.emit('mcp-changed')
+        return outcome ?? 'nothing'
+      }
+      if (r.edit == null) this.fail('APP_REQUEST')
       const next = this.applyEdit(r.edit)
       if (this.current !== null) {
         this.undoStack.push(this.current)
@@ -1177,6 +1303,167 @@ export class FakeApi implements LoomApi {
       return 'nothing'
     }
     return 'nothing'
+  }
+
+  /** A passive tree command, or `null` for another command. */
+  private treeCommand(command: Command): Outcome | null {
+    if (typeof command !== 'object') return null
+    const edit = (
+      spec: number,
+      f: (s: fakeTree.FakeSpec) => fakeTree.FakeSpec,
+    ): Outcome => {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (spec !== this.current.spec) this.fail('APP_TREE')
+      if (this.options.treeLocked !== undefined) this.fail('APP_TREE')
+      let next: fakeTree.FakeSpec
+      try {
+        next = f(this.current.tree)
+      } catch (e) {
+        if (e instanceof fakeTree.TreeRefused) this.fail('APP_TREE')
+        throw e
+      }
+      return this.commit(
+        { ...this.current, tree: next },
+        { kind: 'tree', item: spec },
+      )
+    }
+    if ('allocate-node' in command) {
+      const c = command['allocate-node']
+      return edit(c.spec, (s) => fakeTree.allocate(s, c.node))
+    }
+    if ('deallocate-node' in command) {
+      const c = command['deallocate-node']
+      return edit(c.spec, (s) => fakeTree.deallocate(s, c.node))
+    }
+    if ('set-mastery-effect' in command) {
+      const c = command['set-mastery-effect']
+      return edit(c.spec, (s) => fakeTree.setMastery(s, c.node, c.effect))
+    }
+    if ('select-class' in command) {
+      const c = command['select-class']
+      return edit(c.spec, (s) => fakeTree.selectClass(s, c.class))
+    }
+    if ('select-ascendancy' in command) {
+      const c = command['select-ascendancy']
+      return edit(c.spec, (s) => fakeTree.selectAscendancy(s, c.ascendancy))
+    }
+    const specs = (
+      next: Stage[],
+      item: number,
+      active = this.current?.spec ?? 1,
+    ): Outcome => {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      return this.commit(
+        { ...this.current, stages: next, spec: active },
+        { kind: 'tree-specs', item },
+      )
+    }
+    const named = (title: string) => {
+      if (title.trim() === '') this.fail('APP_TREE')
+      return title.trim()
+    }
+    if ('new-spec' in command) {
+      const c = command['new-spec']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const stages = this.current.stages
+      const from =
+        c.copy == null ? undefined : stages.find((s) => s.spec === c.copy)
+      if (c.copy != null && from === undefined) this.fail('APP_TREE')
+      const spec = stages.length + 1
+      return specs(
+        [
+          ...stages,
+          {
+            spec,
+            title: named(c.title),
+            set: from?.set ?? this.current.set,
+            skillSet: from?.skillSet ?? this.current.skillSet,
+          },
+        ],
+        spec,
+      )
+    }
+    if ('rename-spec' in command) {
+      const c = command['rename-spec']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (!this.current.stages.some((s) => s.spec === c.spec))
+        this.fail('APP_TREE')
+      const title = named(c.title)
+      return specs(
+        this.current.stages.map((s) =>
+          s.spec === c.spec ? { ...s, title } : s,
+        ),
+        c.spec,
+      )
+    }
+    if ('delete-spec' in command) {
+      const c = command['delete-spec']
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      const stages = this.current.stages
+      if (stages.length <= 1 || !stages.some((s) => s.spec === c.spec))
+        this.fail('APP_TREE')
+      const active = this.current.spec
+      return specs(
+        stages
+          .filter((s) => s.spec !== c.spec)
+          .map((s, i) => ({ ...s, spec: i + 1 })),
+        c.spec,
+        active === c.spec
+          ? Math.max(1, c.spec - 1)
+          : active > c.spec
+            ? active - 1
+            : active,
+      )
+    }
+    if ('socket-jewel' in command) {
+      const c = command['socket-jewel']
+      const item = c.item ?? null
+      if (
+        item !== null &&
+        this.current?.items.find((i) => i.id === item)?.card['item-class'] !==
+          'Jewel'
+      )
+        this.fail('APP_TREE')
+      return edit(c.spec, (s) => fakeTree.socketJewel(s, c.node, item))
+    }
+    if ('reset-tree' in command) {
+      const c = command['reset-tree']
+      return edit(c.spec, (s) => fakeTree.reset(s))
+    }
+    return null
+  }
+
+  treeLayout(): Promise<TreeLayout> {
+    if (this.options.data !== true) {
+      return Promise.reject(
+        new ApiFailure({ code: 'APP_NO_DATA', message: 'APP_NO_DATA' }),
+      )
+    }
+    return Promise.resolve(fakeTree.FAKE_LAYOUT)
+  }
+
+  // The fake data has no sprites: the tree is drawn in our own shapes.
+  treeSprites(): Promise<TreeSprites> {
+    return Promise.reject(
+      new ApiFailure({ code: 'APP_NO_DATA', message: 'APP_NO_DATA' }),
+    )
+  }
+
+  previewTree(spec: number, node: number): Promise<TreePreview> {
+    try {
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (spec !== this.current.spec) this.fail('APP_TREE')
+      return Promise.resolve(
+        fakeTree.preview(this.current.tree, node, life(this.current.items)),
+      )
+    } catch (e) {
+      if (e instanceof fakeTree.TreeRefused) {
+        return Promise.reject(
+          new ApiFailure({ code: 'APP_TREE', message: e.message }),
+        )
+      }
+      return Promise.reject(e as Error)
+    }
   }
 
   private request(id: number): ChangeRequest {
@@ -1246,7 +1533,8 @@ export class FakeApi implements LoomApi {
   mcpStart() {
     this.mcp.running = true
     this.mcp.url = 'http://127.0.0.1:50000/mcp'
-    this.mcp.token = 'fake-token'
+    this.mcp.token ??= 'fake-token'
+    this.mcp['token-kept'] = true
     return this.mcpStatus()
   }
 
@@ -1254,7 +1542,15 @@ export class FakeApi implements LoomApi {
     this.mcp.running = false
     this.mcp.url = null
     this.mcp.token = null
+    this.mcp['token-kept'] = false
     this.mcp.permissions['standing-grant'] = false
+    return this.mcpStatus()
+  }
+
+  private rotations = 0
+  mcpRotate() {
+    this.rotations += 1
+    if (this.mcp.running) this.mcp.token = `fake-token-${this.rotations}`
     return this.mcpStatus()
   }
 
@@ -1268,6 +1564,37 @@ export class FakeApi implements LoomApi {
       preview: this.previewOf(edit),
       status: 'pending',
       error: null,
+    }
+    this.mcp.requests.push(r)
+    this.emit('mcp-changed')
+    return r
+  }
+
+  /** A client's passive tree change request (for tests). */
+  addTreeRequest(change: TreeChange): ChangeRequest {
+    const [key] = Object.keys(change)
+    const { spec, node } = Object.values(change)[0] as {
+      spec: number
+      node: number
+    }
+    if (this.current === null || spec !== this.current.spec)
+      this.fail('APP_TREE')
+    const preview = fakeTree.preview(
+      this.current.tree,
+      node,
+      life(this.current.items),
+    )
+    const r: ChangeRequest = {
+      id: this.mcp.requests.length + 1,
+      client: 'test-client',
+      edit: null,
+      note: 'More damage',
+      preview: null,
+      status: 'pending',
+      error: null,
+      tree: change,
+      'tree-preview':
+        key === 'set-mastery-effect' ? { ...preview, path: [] } : preview,
     }
     this.mcp.requests.push(r)
     this.emit('mcp-changed')
@@ -1300,6 +1627,18 @@ export class FakeApi implements LoomApi {
 
   exportXml() {
     return Promise.resolve(this.done())
+  }
+
+  /** The saved preferences document (for tests). */
+  prefs: string | null = null
+
+  uiPrefs() {
+    return Promise.resolve(this.prefs)
+  }
+
+  setUiPrefs(text: string) {
+    this.prefs = text
+    return Promise.resolve()
   }
 
   chooseBundle() {

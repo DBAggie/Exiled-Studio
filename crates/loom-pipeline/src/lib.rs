@@ -8,7 +8,9 @@
 //!    returns the exact ends of the ranges it read ([`RangeEnds`]).
 //! 3. [`options`] gives the engine what the import adapter settles: each
 //!    item's base name and PoB's line values (rolls, scalings) from those
-//!    ends, plus the tree version the host knows for the data.
+//!    ends, the tree version the host knows for the data, and the active
+//!    spec's passives resolved against the tree ([`resolve_passives`]:
+//!    which nodes are connected; the engine does not walk the tree).
 //! 4. [`calculate`] runs the engine with the host's cancellation hook;
 //!    [`document`] writes the calc result document v1.
 //!
@@ -20,11 +22,18 @@
 
 use std::collections::BTreeMap;
 
-use loom_calc::{BaseName, CalcData, CalcInput, CalcOptions, CalcResult};
-use loom_domain::{Build, ItemBody, ItemId, LineKind, LineResolution, TreeVersion};
+use loom_calc::{
+    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, PassiveState, ResolvedPassives,
+};
+use loom_domain::{
+    Build, ItemBody, ItemId, LineKind, LineResolution, PassiveSpec, Resolved, StatValue,
+    TreeVersion,
+};
 use loom_parser::import::{BundleData, ItemBaseName, ItemData as _, Resolver};
 use loom_serialization::dto::calc::v1 as calc_dto;
 use loom_serialization::legacy::{pob_item, pob_xml, share_code};
+use loom_tree::Tree;
+use loom_tree::poe1::radius::{Centre, Leap};
 
 pub use loom_parser::import::{BuildRangeEnds as RangeEnds, LineRangeEnds};
 
@@ -220,15 +229,167 @@ pub fn reresolve(
     })
 }
 
+/// "Passive Skills in Radius can be Allocated without being connected to
+/// your tree" (Intuitive Leap, Thread of Hope).
+const LEAP_STAT: &str = "local_unique_jewel_nearby_disconnected_passives_can_be_allocated";
+/// The same for keystones only.
+const LEAP_KEYSTONES_STAT: &str =
+    "local_unique_jewel_nearby_disconnected_keystone_passives_can_be_allocated";
+/// "Passive Skills in Radius of <keystone> can be Allocated without being
+/// connected to your tree" (Impossible Escape): the keystone's hash.
+const ESCAPE_STAT: &str =
+    "local_unique_jewel_disconnected_passives_can_be_allocated_around_keystone_hash";
+/// "Only affects Passives in <size> Ring" (Thread of Hope): the ring.
+const RING_STAT: &str = "local_jewel_variable_ring_radius_value";
+
+/// The one value a stat line settles, if it does.
+fn settled(value: &StatValue) -> Vec<i64> {
+    match value {
+        StatValue::Exact { min, max } if min == max => vec![*min],
+        StatValue::Hidden {
+            assumed: Some(v), ..
+        } => vec![*v],
+        StatValue::Lookup(keys) => keys.clone(),
+        _ => Vec::new(),
+    }
+}
+
+/// The jewels socketed in `spec` that let nodes in their radius be
+/// allocated without a path (passive tree plan, T-f), read from their
+/// selected lines' stats (ADR-015): Intuitive Leap-like jewels around
+/// their socket, Impossible Escape around its keystone (one leap per
+/// keystone the line names). The radius is the ring the ring stat names,
+/// else the radius the item's `Radius:` line names; a jewel whose radius
+/// the tree's data does not have gives none (its nodes stay unconnected,
+/// a reason, never a guess). A line that did not resolve gives nothing:
+/// PoB's older wording ("Passives in Radius can be Allocated ...") is not
+/// the game's text, and stays an `unresolved-line` reason.
+#[must_use]
+pub fn leaps(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Vec<Leap> {
+    let mut out = Vec::new();
+    for socket in spec.jewel_sockets.typed() {
+        let Some(item) = socket
+            .item
+            .and_then(|id| build.items.items().find(|i| i.id == id))
+        else {
+            continue;
+        };
+        let mut label = None;
+        let (mut leap, mut keystones_only, mut ring) = (false, false, None);
+        let mut keystones: Vec<u32> = Vec::new();
+        for line in &item.body.lines {
+            match &line.kind {
+                LineKind::Spec { key, value, .. } if key == "Radius" => {
+                    label = Some(value.as_str())
+                }
+                LineKind::Modifier(m) if m.selected => {
+                    let LineResolution::Resolved {
+                        result: Resolved::Stats(stats),
+                        ..
+                    } = &m.resolution
+                    else {
+                        continue;
+                    };
+                    for s in stats {
+                        match s.stat.as_str() {
+                            LEAP_STAT => leap = true,
+                            LEAP_KEYSTONES_STAT => keystones_only = true,
+                            ESCAPE_STAT => keystones.extend(
+                                settled(&s.value)
+                                    .into_iter()
+                                    .filter_map(|k| u32::try_from(k).ok()),
+                            ),
+                            RING_STAT => ring = settled(&s.value).first().copied(),
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        let Some(radius) = ring
+            .and_then(|k| tree.ring(k))
+            .or_else(|| label.and_then(|l| tree.radius_named(l)))
+        else {
+            continue;
+        };
+        if leap || keystones_only {
+            out.push(Leap {
+                socket: socket.node.0,
+                ring: radius,
+                centre: Centre::Socket,
+                keystones_only: keystones_only && !leap,
+            });
+        }
+        for k in keystones {
+            out.push(Leap {
+                socket: socket.node.0,
+                ring: radius,
+                centre: Centre::Keystone(k),
+                keystones_only: false,
+            });
+        }
+    }
+    out
+}
+
+// The tree and the engine name cluster jewel nodes by the same bit.
+const _: () = assert!(loom_tree::poe1::CLUSTER_NODE_BIT == PassiveState::CLUSTER_NODE_BIT);
+
+/// The active spec's allocated nodes resolved against `tree` (passive
+/// tree plan, T-e): connected to an allocated start
+/// ([`loom_tree::poe1::connected_to_start`]) or held by a radius jewel
+/// ([`leaps`], [`loom_tree::poe1::radius::held`]), a cluster jewel's
+/// socket or node, or not connected. Without a tree, empty: the engine
+/// then counts every node as not connected, each with the visible
+/// `unconnected-node` reason (a bundle without passive tables has no
+/// node's stats either; the app and `calc-run` pass the bundle's tree
+/// whenever it has one).
+#[must_use]
+pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives {
+    let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {
+        return ResolvedPassives::default();
+    };
+    let nodes = spec.nodes.value();
+    let mut connected = loom_tree::poe1::connected_to_start(tree, nodes.iter().map(|n| &n.0));
+    let allocated: std::collections::BTreeSet<u32> = nodes
+        .iter()
+        .map(|n| n.0)
+        .filter(|n| n & loom_tree::poe1::CLUSTER_NODE_BIT == 0)
+        .collect();
+    let held =
+        loom_tree::poe1::radius::held(tree, &leaps(build, spec, tree), &allocated, &connected);
+    connected.extend(held);
+    ResolvedPassives {
+        nodes: nodes
+            .iter()
+            .map(|n| {
+                let state = if n.0 & loom_tree::poe1::CLUSTER_NODE_BIT != 0 {
+                    PassiveState::ClusterNode
+                } else if connected.contains(&n.0) {
+                    PassiveState::Connected
+                } else if tree.node(n.0).is_some_and(|x| x.expansion) {
+                    PassiveState::ClusterSocket
+                } else {
+                    PassiveState::Unconnected
+                };
+                (*n, state)
+            })
+            .collect(),
+    }
+}
+
 /// The engine's options for `build`: each item's base name and PoB's line
-/// values from the range ends, and the data's tree version, if the host
-/// knows it.
+/// values from the range ends, the data's tree version, if the host knows
+/// it, and the active spec's passives resolved against `tree`
+/// ([`resolve_passives`]).
 #[must_use]
 pub fn options(
     build: &Build,
     data: &BundleData<'_>,
     ends: &RangeEnds,
     tree_version: Option<TreeVersion>,
+    tree: Option<&Tree>,
 ) -> CalcOptions {
     // The same base names the resolver used, for the engine's armour
     // pieces (the legacy format's naming rules stay in the adapter).
@@ -269,6 +430,7 @@ pub fn options(
         tree_version,
         item_bases,
         item_lines,
+        passives: resolve_passives(build, tree),
         ..CalcOptions::default()
     }
 }

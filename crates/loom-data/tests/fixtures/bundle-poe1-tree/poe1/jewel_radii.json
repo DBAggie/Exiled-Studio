@@ -1,0 +1,16 @@
+[
+ {
+  "id": "TestSmall",
+  "name": "Small",
+  "radius": 960,
+  "ring_inner": 960,
+  "ring_outer": 1320
+ },
+ {
+  "id": "TestMedium",
+  "name": "Medium",
+  "radius": 1440,
+  "ring_inner": 1320,
+  "ring_outer": 1680
+ }
+]

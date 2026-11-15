@@ -74,6 +74,8 @@
   --c-tt-enchant: #b4b4ff;
   --c-tt-fractured: #a29162;
   --c-tt-corrupted: #ff4a4a;
+  /* A requirement the character does not meet (the game's red). */
+  --c-tt-unmet: #ff4a4a;
   --c-tt-separator: #5a4a2c;
   --c-tt-shadow: rgb(0 0 0 / 0.6);
   --c-tt-sheen: rgb(255 255 255 / 0.06);
@@ -90,6 +92,18 @@
   --c-gem-green: #7cc46f;
   --c-gem-blue: #6fa4e8;
   --c-gem-white: #d9dde3;
+
+  /* The passive tree canvas (our own shapes; never game art, ADR-000). */
+  --c-tree-bg: #0c0e11;
+  --c-tree-link: #3a414c;
+  --c-tree-link-on: #c98a2e;
+  --c-tree-node: #59616e;
+  --c-tree-node-on: #e8a33d;
+  --c-tree-path: #8dc1f2;
+  --c-tree-removed: #f08a7a;
+  --c-tree-match: #f2d97a;
+  --c-tree-kept: #3a3f47;
+  --c-tree-ring: #c9ced6;
 
   /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
   --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;

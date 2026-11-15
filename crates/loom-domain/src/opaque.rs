@@ -113,6 +113,11 @@ impl<T> Ordered<T> {
         &self.entries
     }
 
+    /// Every entry, in order, mutably (the list's order stays).
+    pub fn entries_mut(&mut self) -> &mut [Entry<T>] {
+        &mut self.entries
+    }
+
     /// The typed entries, in order.
     pub fn typed(&self) -> impl Iterator<Item = &T> {
         self.entries.iter().filter_map(|e| match e {
@@ -165,6 +170,20 @@ impl<T> Ordered<T> {
             Entry::Typed(_) => None,
             Entry::Opaque(n) => Some(n),
         })
+    }
+
+    /// The opaque entries, in order, mutably.
+    pub fn opaque_mut(&mut self) -> impl Iterator<Item = &mut OpaqueNode> {
+        self.entries.iter_mut().filter_map(|e| match e {
+            Entry::Typed(_) => None,
+            Entry::Opaque(n) => Some(n),
+        })
+    }
+
+    /// Removes the opaque entries `drop` picks; typed entries stay.
+    pub fn remove_opaque(&mut self, drop: impl Fn(&OpaqueNode) -> bool) {
+        self.entries
+            .retain(|e| !matches!(e, Entry::Opaque(n) if drop(n)));
     }
 }
 

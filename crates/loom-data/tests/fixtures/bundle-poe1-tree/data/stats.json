@@ -1,0 +1,69 @@
+[
+ {
+  "id": "test_maximum_life"
+ },
+ {
+  "id": "test_local_armour",
+  "local": true
+ },
+ {
+  "id": "test_accuracy_a"
+ },
+ {
+  "id": "test_accuracy_b"
+ },
+ {
+  "id": "test_evasion_a"
+ },
+ {
+  "id": "test_evasion_b"
+ },
+ {
+  "id": "test_strength"
+ },
+ {
+  "id": "test_shadow"
+ },
+ {
+  "id": "test_first_half"
+ },
+ {
+  "id": "test_second_half"
+ },
+ {
+  "id": "test_presence"
+ },
+ {
+  "id": "test_spell_flag"
+ },
+ {
+  "id": "test_attack_flag"
+ },
+ {
+  "id": "test_base_damage_min"
+ },
+ {
+  "id": "test_base_damage_max"
+ },
+ {
+  "id": "test_damage_per_level"
+ },
+ {
+  "id": "test_quality_cast_speed"
+ },
+ {
+  "id": "test_support_more_damage"
+ },
+ {
+  "id": "test_flag_stat"
+ },
+ {
+  "id": "test_passive_life"
+ },
+ {
+  "id": "test_life_per_level"
+ },
+ {
+  "id": "test_mastery_stat"
+ }
+]

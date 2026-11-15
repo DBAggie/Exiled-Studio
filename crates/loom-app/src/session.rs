@@ -34,8 +34,23 @@ pub struct State {
 
 #[derive(Debug, Clone)]
 struct Change {
+    /// Unique within the session; a state moved between undo and redo
+    /// gets a new one (the recovery history writes each ID once).
+    id: u64,
     state: Arc<State>,
     entry: api::HistoryEntry,
+}
+
+/// An undo step for the recovery history (UX-19): its ID, what the change
+/// was, and the build before it.
+#[derive(Debug, Clone)]
+pub struct UndoStep {
+    /// Unique within the session, never reused for another state.
+    pub id: u64,
+    /// What the change was.
+    pub entry: api::HistoryEntry,
+    /// The state before the change.
+    pub state: Arc<State>,
 }
 
 /// How many changes undo keeps.
@@ -47,6 +62,10 @@ pub struct Session {
     store: Store,
     data: Option<Arc<GameData>>,
     data_error: Option<AppError>,
+    /// The installed bundles (B-1), for the snapshot.
+    installed: Vec<crate::bundles::Installed>,
+    /// A notice about the choice of data (`APP_BUNDLE_FALLBACK`).
+    data_notice: Option<AppError>,
     current: Option<Arc<State>>,
     version: u64,
     undo: Vec<Change>,
@@ -57,6 +76,8 @@ pub struct Session {
     notices: Vec<AppError>,
     /// Bumped when another build is opened or the build is closed.
     generation: u64,
+    /// The last [`Change`] ID issued.
+    change_id: u64,
 }
 
 /// A new build's PoB XML ([`Session::new_build`]); `{tree}` is the spec's
@@ -92,6 +113,8 @@ impl Session {
             store,
             data: None,
             data_error: None,
+            installed: Vec::new(),
+            data_notice: None,
             current: None,
             version: 0,
             undo: Vec::new(),
@@ -101,6 +124,7 @@ impl Session {
             origin: None,
             notices: Vec::new(),
             generation: 0,
+            change_id: 0,
         }
     }
 
@@ -121,9 +145,17 @@ impl Session {
     /// Sets the game data (or why it did not load). The open build is
     /// kept; its next calculation uses the new data.
     pub fn set_data(&mut self, data: Result<GameData, AppError>) {
+        self.set_loaded(data.map(Arc::new));
+    }
+
+    /// Sets game data that may be shared (a loaded bundle the application
+    /// keeps, [`crate::bundles::Library`]), or why it did not load. Clears
+    /// the data notice.
+    pub fn set_loaded(&mut self, data: Result<Arc<GameData>, AppError>) {
+        self.data_notice = None;
         match data {
             Ok(d) => {
-                self.data = Some(Arc::new(d));
+                self.data = Some(d);
                 self.data_error = None;
             }
             Err(e) => {
@@ -132,6 +164,16 @@ impl Session {
             }
         }
         self.version += 1;
+    }
+
+    /// Sets the installed bundles the snapshot lists.
+    pub fn set_installed(&mut self, installed: Vec<crate::bundles::Installed>) {
+        self.installed = installed;
+    }
+
+    /// Sets a notice about the choice of data (after [`Self::set_loaded`]).
+    pub fn set_data_notice(&mut self, notice: Option<AppError>) {
+        self.data_notice = notice;
     }
 
     /// The game data, if loaded.
@@ -221,8 +263,11 @@ impl Session {
         let data = self.need_data()?;
         let mut build = loom_pipeline::read_pob(text)?;
         let ends = loom_pipeline::resolve(data.resolver, data.data, &mut build)?;
+        let mut state = State { build, ends };
+        // Exiled Studio's own main skill, not PoB's number (Q-UX-1).
+        crate::main_skill::set_default(&mut state, &data);
         self.notices.clear();
-        self.replace(State { build, ends }, None, origin, true);
+        self.replace(state, None, origin, true);
         Ok(self.version)
     }
 
@@ -373,6 +418,17 @@ impl Session {
         item: u32,
         change: impl FnOnce(&mut Build) -> Result<(), AppError>,
     ) -> Result<Option<u64>, AppError> {
+        self.change_build_for(kind, item, None, change)
+    }
+
+    /// [`Session::change_build`], recording the change request it applies.
+    fn change_build_for(
+        &mut self,
+        kind: api::ChangeKind,
+        item: u32,
+        request: Option<u64>,
+        change: impl FnOnce(&mut Build) -> Result<(), AppError>,
+    ) -> Result<Option<u64>, AppError> {
         let state = self.need_state()?;
         let mut build = state.build.clone();
         change(&mut build)?;
@@ -386,7 +442,7 @@ impl Session {
         let entry = api::HistoryEntry {
             kind,
             item,
-            request: None,
+            request,
         };
         Ok(Some(self.commit(state, next, entry)))
     }
@@ -397,13 +453,45 @@ impl Session {
     /// # Errors
     /// `APP_NO_BUILD`, `APP_LOADOUT` when no spec has ID `spec`.
     pub fn use_loadout(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
+        let main = self.main_skill_default()?;
         self.change_build(api::ChangeKind::Loadout, spec, |build| {
             let l = loadout::loadouts(build)
                 .into_iter()
                 .find(|l| l.spec.0 == spec)
                 .ok_or_else(|| AppError::new(Code::Loadout, format!("no stage {spec}")))?;
+            let before = build.skills.active;
             loadout::apply(build, &l);
+            if build.skills.active != before {
+                main(build);
+            }
             Ok(())
+        })
+    }
+
+    /// After a skill set switch, sets the build's main skill
+    /// ([`crate::main_skill::choose_after_switch`]: the open build's main
+    /// skill again when the new set has it) with the loaded data and the
+    /// open build's range ends; does nothing without data.
+    fn main_skill_default(&self) -> Result<impl Fn(&mut Build) + use<>, AppError> {
+        let state = self.need_state()?;
+        let ends = state.ends.clone();
+        let data = self.data.clone();
+        let previous = data
+            .as_ref()
+            .map(|d| crate::main_skill::current_skills(&state.build, d))
+            .unwrap_or_default();
+        Ok(move |build: &mut Build| {
+            if let Some(data) = &data {
+                let state = State {
+                    build: build.clone(),
+                    ends: ends.clone(),
+                };
+                if let Some(choice) =
+                    crate::main_skill::choose_after_switch(&state, data, &previous)
+                {
+                    crate::main_skill::apply(build, choice);
+                }
+            }
         })
     }
 
@@ -412,11 +500,15 @@ impl Session {
     /// # Errors
     /// `APP_NO_BUILD`, `APP_SKILL` when the build has no set `id`.
     pub fn use_skill_set(&mut self, id: u32) -> Result<Option<u64>, AppError> {
+        let main = self.main_skill_default()?;
         self.change_build(api::ChangeKind::SkillSet, id, |build| {
             if !build.skills.sets.typed().any(|s| s.id.0 == id) {
                 return Err(AppError::new(Code::Skill, format!("no skill set {id}")));
             }
-            build.skills.active = Some(SkillSetId(id));
+            if build.skills.active != Some(SkillSetId(id)) {
+                build.skills.active = Some(SkillSetId(id));
+                main(build);
+            }
             Ok(())
         })
     }
@@ -696,6 +788,113 @@ impl Session {
         })
     }
 
+    /// A passive tree edit of spec `spec` (passive tree plan, T5a), as one
+    /// undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn edit_tree(
+        &mut self,
+        spec: u32,
+        edit: crate::tree::Edit,
+    ) -> Result<Option<u64>, AppError> {
+        self.edit_tree_for(spec, edit, None)
+    }
+
+    /// [`Session::edit_tree`] for change request `request`, when it is one
+    /// (history kind `tree-request-applied`).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn edit_tree_for(
+        &mut self,
+        spec: u32,
+        edit: crate::tree::Edit,
+        request: Option<u64>,
+    ) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let version = self.data.as_ref().and_then(|d| d.tree_version.clone());
+        let kind = if request.is_some() {
+            api::ChangeKind::TreeRequestApplied
+        } else {
+            api::ChangeKind::Tree
+        };
+        self.change_build_for(kind, spec, request, |build| {
+            let outcome = crate::tree::run(build, spec, &tree, version.as_ref(), edit)?;
+            crate::tree::write_spec(build, spec, &tree, &outcome.spec)
+        })
+    }
+
+    /// Sockets a jewel in a tree socket of spec `spec`
+    /// (`crate::tree::socket_jewel`), as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn socket_jewel(
+        &mut self,
+        spec: u32,
+        node: u32,
+        item: Option<u32>,
+    ) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let data = self.data.clone();
+        self.change_build(api::ChangeKind::Tree, spec, |build| {
+            crate::tree::socket_jewel(
+                build,
+                spec,
+                &tree,
+                data.as_ref().map(|d| d.bundle),
+                node,
+                item,
+            )
+        })
+    }
+
+    /// Adds a passive spec (`crate::tree::new_spec`), as one undoable
+    /// change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn new_spec(&mut self, title: &str, copy: Option<u32>) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let version = self.data.as_ref().and_then(|d| d.tree_version.clone());
+        let item = crate::tree::spec_count(&self.need_state()?.build) + 1;
+        self.change_build(api::ChangeKind::TreeSpecs, item, |build| {
+            crate::tree::new_spec(build, &tree, version.as_ref(), title, copy).map(|_| ())
+        })
+    }
+
+    /// Renames passive spec `spec`, as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_TREE`.
+    pub fn rename_spec(&mut self, spec: u32, title: &str) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::TreeSpecs, spec, |build| {
+            crate::tree::rename_spec(build, spec, title)
+        })
+    }
+
+    /// Deletes passive spec `spec`, as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_TREE`.
+    pub fn delete_spec(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::TreeSpecs, spec, |build| {
+            crate::tree::delete_spec(build, spec)
+        })
+    }
+
+    /// The loaded data's passive tree.
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or it has no passive tree.
+    pub fn tree(&self) -> Result<Arc<loom_tree::Tree>, AppError> {
+        self.data
+            .as_ref()
+            .and_then(|d| d.tree.clone())
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))
+    }
+
     /// Sets the league the build is planned for.
     ///
     /// # Errors
@@ -878,9 +1077,67 @@ impl Session {
         })
     }
 
+    fn next_change_id(&mut self) -> u64 {
+        self.change_id += 1;
+        self.change_id
+    }
+
+    /// The undo steps, oldest first (for the recovery history).
+    #[must_use]
+    pub fn undo_steps(&self) -> Vec<UndoStep> {
+        self.undo
+            .iter()
+            .map(|c| UndoStep {
+                id: c.id,
+                entry: c.entry.clone(),
+                state: Arc::clone(&c.state),
+            })
+            .collect()
+    }
+
+    /// Gives a build just opened from a recovery snapshot its undo history
+    /// back (UX-19): `steps` oldest first, each the build before a change.
+    /// A step is resolved again for its range ends as [`Self::open_build`]
+    /// does; its notices are not shown (they are the open build's to say).
+    /// Nothing happens without an open build.
+    pub fn restore_history(&mut self, steps: Vec<(api::HistoryEntry, Build)>) {
+        if self.current.is_none() {
+            return;
+        }
+        let keep = steps.len().saturating_sub(HISTORY_LIMIT);
+        let mut undo = Vec::new();
+        for (entry, build) in steps.into_iter().skip(keep) {
+            let ends = self.ends_of(&build).unwrap_or_default();
+            let id = self.next_change_id();
+            undo.push(Change {
+                id,
+                state: Arc::new(State { build, ends }),
+                entry,
+            });
+        }
+        // Same build, same version: only what undo can reach changed.
+        self.undo = undo;
+        self.redo.clear();
+    }
+
+    /// The range ends of a build resolved again with the loaded data, when
+    /// the data is the build's and it resolves the same.
+    fn ends_of(&self, build: &Build) -> Option<RangeEnds> {
+        let data = self.data.as_ref()?;
+        if build.game() != data.version.game || build.data.as_ref() != Some(&data.version) {
+            return None;
+        }
+        match loom_pipeline::reresolve(data.resolver, data.data, build) {
+            Ok(Reresolved::Same(e)) => Some(e),
+            _ => None,
+        }
+    }
+
     /// Makes `next` current, keeping `previous` for undo.
     fn commit(&mut self, previous: Arc<State>, next: State, entry: api::HistoryEntry) -> u64 {
+        let id = self.next_change_id();
         self.undo.push(Change {
+            id,
             state: previous,
             entry,
         });
@@ -898,7 +1155,9 @@ impl Session {
     pub fn undo(&mut self) -> Option<u64> {
         let change = self.undo.pop()?;
         let current = self.current.replace(change.state)?;
+        let id = self.next_change_id();
         self.redo.push(Change {
+            id,
             state: current,
             entry: change.entry,
         });
@@ -911,7 +1170,9 @@ impl Session {
     pub fn redo(&mut self) -> Option<u64> {
         let change = self.redo.pop()?;
         let current = self.current.replace(change.state)?;
+        let id = self.next_change_id();
         self.undo.push(Change {
+            id,
             state: current,
             entry: change.entry,
         });
@@ -1031,7 +1292,12 @@ impl Session {
         api::Snapshot {
             version: self.version,
             build: self.current.as_ref().map(|s| {
-                view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle))
+                let mut v =
+                    view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle));
+                v.tree = self.data.as_ref().and_then(|d| {
+                    crate::tree::view(&s.build, d.tree.as_ref()?, d.tree_version.as_ref())
+                });
+                v
             }),
             calc,
             history: api::HistoryView {
@@ -1052,9 +1318,42 @@ impl Session {
                     .and_then(|d| d.tree_version.as_ref())
                     .map(|t| t.as_str().to_owned()),
                 error: self.data_error.as_ref().map(AppError::dto),
+                installed: self
+                    .installed
+                    .iter()
+                    .map(|i| api::InstalledBundle {
+                        id: i.id.clone(),
+                        data_version: view::data_version(&i.version),
+                        tree_version: crate::data::tree_version(&i.version)
+                            .map(|t| t.as_str().to_owned()),
+                    })
+                    .collect(),
+                active: self.data.as_ref().and_then(|d| {
+                    self.installed
+                        .iter()
+                        .find(|i| i.dir == d.dir)
+                        .map(|i| i.id.clone())
+                }),
+                notice: self.data_notice.as_ref().map(AppError::dto),
+                pinned: self.pinned_bundle(),
             },
             notices: self.notices.iter().map(AppError::dto).collect(),
         }
+    }
+}
+
+impl Session {
+    /// The installed bundle the open build was made with, when the loaded
+    /// data is another one (ADR-010: offered, never switched silently).
+    fn pinned_bundle(&self) -> Option<String> {
+        let pinned = self.current.as_ref()?.build.data.as_ref()?;
+        if self.data.as_ref().is_some_and(|d| d.version == *pinned) {
+            return None;
+        }
+        self.installed
+            .iter()
+            .find(|i| i.version == *pinned)
+            .map(|i| i.id.clone())
     }
 }
 
@@ -1173,6 +1472,7 @@ pub fn calculate(
         data.data,
         &state.ends,
         data.tree_version.clone(),
+        data.tree.as_deref(),
     );
     Ok(loom_pipeline::calculate(
         &state.build,
@@ -1229,6 +1529,68 @@ pub fn preview(
         .map(|i| view::item_view(&after_state.build, i, Some(data.data)))
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", e.item)))?;
     Ok(api::ItemEditPreview { item, fields })
+}
+
+/// A tree edit's effect, calculated off the writer thread as an item
+/// edit's: the path allocated, the nodes removed, each field before and
+/// after (empty when the build does not calculate with the data).
+///
+/// # Errors
+/// `APP_NO_DATA` (no tree), `APP_TREE`; the calculation's.
+pub fn preview_tree(
+    state: &State,
+    data: &GameData,
+    spec: u32,
+    edit: crate::tree::Edit,
+    before: Option<&CalcResult>,
+    cancel: &dyn Fn() -> bool,
+) -> Result<api::TreePreview, AppError> {
+    let tree = data
+        .tree
+        .as_ref()
+        .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))?;
+    let outcome = crate::tree::run(&state.build, spec, tree, data.tree_version.as_ref(), edit)?;
+    let node = match edit {
+        crate::tree::Edit::Allocate(n)
+        | crate::tree::Edit::Deallocate(n)
+        | crate::tree::Edit::Mastery { node: n, .. } => n,
+        _ => 0,
+    };
+    let mut fields = Vec::new();
+    if check_data(&state.build, data).is_ok() {
+        let mut build = state.build.clone();
+        crate::tree::write_spec(&mut build, spec, tree, &outcome.spec)?;
+        let computed;
+        let before = match before {
+            Some(b) => b,
+            None => {
+                computed = calculate(state, data, cancel)?;
+                &computed
+            }
+        };
+        let after_state = State {
+            build,
+            ends: state.ends.clone(),
+        };
+        let after = calculate(&after_state, data, cancel)?;
+        fields = view::fields(before)
+            .into_iter()
+            .zip(view::fields(&after))
+            .map(|((field, b, sb), (_, a, sa))| api::FieldDelta {
+                field,
+                before: b,
+                after: a,
+                state_before: sb,
+                state_after: sa,
+            })
+            .collect();
+    }
+    Ok(api::TreePreview {
+        node,
+        path: outcome.path,
+        removed: outcome.removed,
+        fields,
+    })
 }
 
 /// Whether two paths name the same file (by canonical path when both

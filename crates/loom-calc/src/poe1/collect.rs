@@ -51,7 +51,7 @@ use super::mapping::{PieceMapping, Poe1Mapping, SkillMapping, WeaponMapping};
 use super::skill::{self, InstanceProblem};
 use super::{ArmourSlot, Defence, PieceValue, Poe1Quantity, WeaponValue, hit};
 use crate::ingest::{Ingest, StatMapping};
-use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveLinks, StatAmount, WeaponBase};
+use crate::input::{ArmourBase, CalcInput, ItemBase, PassiveState, StatAmount, WeaponBase};
 use crate::quantity::{Bound, DamageType, Op, Quantity};
 use crate::source::Source;
 use crate::state::{IndeterminateReason, UnsupportedReason};
@@ -360,39 +360,6 @@ fn lines(stats: &[StatAmount]) -> Vec<StatLine> {
         .collect()
 }
 
-/// The bit PoB sets on the nodes of a cluster jewel's subgraph.
-const CLUSTER_NODE_BIT: u32 = 0x1_0000;
-
-/// The allocated tree nodes connected to an allocated root (a class or
-/// ascendancy start) through allocated nodes (`Classes/PassiveSpec.lua`
-/// `BuildAllDependsAndPaths`, `connectedToStart`). A node the data lacks
-/// links nothing.
-fn connected(input: &CalcInput<'_>, nodes: &[NodeId]) -> BTreeSet<u32> {
-    let allocated: BTreeSet<u32> = nodes
-        .iter()
-        .map(|n| n.0)
-        .filter(|n| n & CLUSTER_NODE_BIT == 0)
-        .collect();
-    let links: BTreeMap<u32, PassiveLinks> = allocated
-        .iter()
-        .filter_map(|&n| input.data.passive_links(n).map(|l| (n, l)))
-        .collect();
-    let mut seen: BTreeSet<u32> = links
-        .iter()
-        .filter(|(_, l)| l.root)
-        .map(|(n, _)| *n)
-        .collect();
-    let mut queue: Vec<u32> = seen.iter().copied().collect();
-    while let Some(n) = queue.pop() {
-        for &m in links.get(&n).map_or(&[][..], |l| l.links.as_slice()) {
-            if allocated.contains(&m) && seen.insert(m) {
-                queue.push(m);
-            }
-        }
-    }
-    seen
-}
-
 /// The allocated nodes and chosen mastery effects of `spec`, after the
 /// tree version check.
 fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) {
@@ -413,14 +380,13 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             }
         }
     }
-    let connected = connected(input, nodes);
+    let resolved = &input.options.passives;
     for node in nodes {
+        let state = resolved.state(*node);
         // PoB numbers the nodes it generates from a socketed cluster jewel
-        // with bit 16 set, above every tree node hash
-        // (`Classes/PassiveSpec.lua` BuildSubgraph: "16: 1 (signal bit,
-        // to prevent conflict with node hashes)"); their stats come from
-        // the jewel, not the passives table.
-        if node.0 & CLUSTER_NODE_BIT != 0 {
+        // with bit 16 set, above every tree node hash; their stats come
+        // from the jewel, not the passives table.
+        if state == PassiveState::ClusterNode {
             ingest.reason(UnsupportedReason::UnmodelledPassive {
                 source: Source::Passive { node: *node },
                 what: "cluster-jewel-node",
@@ -436,25 +402,29 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         };
         // PoB drops allocated nodes not connected to a start when it
         // loads a build, and the game allows none; their stats do not
-        // count, and the fields say so. Jewels that allocate without a
-        // path (Thread of Hope, Intuitive Leap) are not modelled yet, so
-        // their nodes land here too: partial, never a silent value.
-        if !connected.contains(&node.0) {
-            // A cluster jewel socket inside a subgraph (PoB's legacy ids
-            // are tree ids) connects through the cluster jewel.
-            let expansion = input
-                .data
-                .passive_links(node.0)
-                .is_some_and(|l| l.expansion);
-            ingest.reason(UnsupportedReason::UnmodelledPassive {
-                source: Source::Passive { node: *node },
-                what: if expansion {
-                    "cluster-jewel-node"
-                } else {
-                    "unconnected-node"
-                },
-            });
-            continue;
+        // count, and the fields say so. Nodes a jewel lets be allocated
+        // without a path (Thread of Hope, Intuitive Leap, Impossible
+        // Escape) are connected in the resolved set when the bundle has
+        // the jewel radii (`loom_pipeline::resolve_passives`); without
+        // them they land here: partial, never a silent value. A
+        // cluster jewel socket inside a subgraph (PoB's legacy IDs are
+        // tree IDs) connects through the cluster jewel.
+        match state {
+            PassiveState::Connected => {}
+            PassiveState::ClusterSocket | PassiveState::ClusterNode => {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *node },
+                    what: "cluster-jewel-node",
+                });
+                continue;
+            }
+            PassiveState::Unconnected => {
+                ingest.reason(UnsupportedReason::UnmodelledPassive {
+                    source: Source::Passive { node: *node },
+                    what: "unconnected-node",
+                });
+                continue;
+            }
         }
         ingest.stats(&Source::Passive { node: *node }, &lines(stats));
     }
@@ -464,7 +434,7 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         // them) that is connected: a mastery connects through an
         // allocated notable of its group (the unconnected node itself is
         // reported above).
-        if !nodes.contains(&m.node) || !connected.contains(&m.node.0) {
+        if !nodes.contains(&m.node) || !resolved.connected(m.node) {
             continue;
         }
         match input.data.mastery_effect_stats(m.effect) {
@@ -519,9 +489,11 @@ const GRANTED_PASSIVE_STAT: &str = "mod_granted_passive_hash";
 /// source.
 fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &mut Ingest<'_>) {
     let allocated: BTreeSet<u32> = spec.map_or_else(BTreeSet::new, |spec| {
-        connected(input, spec.nodes.value())
-            .into_iter()
-            .filter(|n| spec.nodes.value().iter().any(|a| a.0 == *n))
+        spec.nodes
+            .value()
+            .iter()
+            .filter(|n| input.options.passives.connected(**n))
+            .map(|n| n.0)
             .collect()
     });
     let mut granted = BTreeSet::new();

@@ -137,3 +137,39 @@ export function inputLabel(name: string): string {
     .toLowerCase()
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
+
+/** Game data as players name it (UX-14): the game and its patch, from the
+ * passive tree version the application knows for the data (`3_29` is
+ * patch 3.29); the Steam build when the patch is not known. */
+export function dataName(
+  version: { game: string; 'steam-build'?: number | null },
+  tree?: string | null,
+): string {
+  const game = version.game === 'poe1' ? 'Path of Exile' : 'Path of Exile 2'
+  if (tree != null && /^\d+_\d+$/.test(tree)) {
+    return t('data.patch', { game, patch: tree.replace('_', '.') })
+  }
+  return t('data.gameBuild', { game, build: version['steam-build'] ?? '?' })
+}
+
+type VersionLike = {
+  game: string
+  'schema-version'?: number
+  'steam-build'?: number | null
+}
+
+/** [`dataName`] of a data version (a build's pinned one), with the patch
+ * when the loaded or an installed bundle has that version. */
+export function useDataName(version: VersionLike | null | undefined): string {
+  const data = useAppSelector((s) => s.session.snapshot?.data)
+  if (version == null) return '—'
+  const same = (v: VersionLike | null | undefined) =>
+    v != null &&
+    v.game === version.game &&
+    v['steam-build'] === version['steam-build'] &&
+    v['schema-version'] === version['schema-version']
+  const tree = same(data?.['data-version'])
+    ? data?.['tree-version']
+    : data?.installed?.find((b) => same(b['data-version']))?.['tree-version']
+  return dataName(version, tree)
+}

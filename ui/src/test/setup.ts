@@ -15,6 +15,11 @@ const proto = Element.prototype as unknown as Record<string, unknown>
 proto.scrollIntoView ??= () => {}
 proto.hasPointerCapture ??= () => false
 proto.releasePointerCapture ??= () => {}
+proto.setPointerCapture ??= () => {}
+
+// jsdom has no 2D canvas: drawing is skipped (the tree's list view is
+// what tests use, as screen reader users do).
+HTMLCanvasElement.prototype.getContext = () => null
 
 afterEach(() => {
   cleanup()

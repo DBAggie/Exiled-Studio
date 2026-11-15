@@ -90,7 +90,7 @@ describe('UX High fixes', () => {
     ).closest('section') as HTMLElement
     expect(within(inUse).getByText('Loom Test Band')).toBeTruthy()
     expect(within(inUse).queryByText('Spare Band')).toBeNull()
-    expect(screen.getByText('1 item not in use')).toBeTruthy()
+    expect(screen.getByText('2 items not in use')).toBeTruthy()
     await expectAccessible()
 
     // Switching the set is a command, undoable like an edit.
@@ -396,39 +396,78 @@ describe('UX High fixes', () => {
     const { user, api } = await importBuild()
     await user.click(screen.getByRole('button', { name: 'Configuration' }))
     await screen.findByRole('heading', { name: 'Configuration', level: 1 })
-    // Inputs by group, named in words, marked by what the calculation does.
+    // Inputs by group, named as Path of Building names them, marked by
+    // what the calculation does.
     const enemy = screen
       .getByRole('heading', { name: 'Enemy', level: 3 })
       .closest('div') as HTMLElement
-    expect(within(enemy).getByText('Enemy is boss')).toBeTruthy()
+    expect(within(enemy).getByText('Is the enemy a Boss?')).toBeTruthy()
     expect(within(enemy).getByText(/enemyLevel · default value/)).toBeTruthy()
     const conditions = screen
       .getByRole('heading', { name: 'Conditions', level: 3 })
       .closest('div') as HTMLElement
     expect(within(conditions).getByText('Changes no number')).toBeTruthy()
 
-    // A number, a flag, and removing an input.
-    const penalty = screen.getByLabelText('Resistance penalty')
-    await user.clear(penalty)
-    await user.type(penalty, '-30{Enter}')
+    // A choice from PoB's list, a flag, and removing an input.
+    await user.selectOptions(
+      screen.getByLabelText('Resistance penalty'),
+      'Act 5 (-30%)',
+    )
     expect(api.executed).toContainEqual({
       'set-config-input': {
         name: 'resistancePenalty',
         value: { number: -30 },
       },
     })
-    await user.click(screen.getByLabelText('Full life'))
+    await user.click(screen.getByLabelText('Are you always on Full Life?'))
     expect(api.executed).toContainEqual({
       'set-config-input': {
         name: 'conditionFullLife',
         value: { boolean: false },
       },
     })
-    await user.click(screen.getByRole('button', { name: 'Remove Full life' }))
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Remove Are you always on Full Life?',
+      }),
+    )
     expect(api.executed).toContainEqual({
       'remove-config-input': { name: 'conditionFullLife' },
     })
-    await waitFor(() => expect(screen.queryByLabelText('Full life')).toBeNull())
+    await waitFor(() =>
+      expect(
+        screen.queryByLabelText('Are you always on Full Life?'),
+      ).toBeNull(),
+    )
+
+    // Any of PoB's options from the catalogue, found by search: a general
+    // one at once, one for a skill the build lacks among all options.
+    await user.click(screen.getByText('Add an option'))
+    const search = screen.getByLabelText('Search options')
+    await user.type(search, "avian's might")
+    expect(
+      screen.queryByRole('button', { name: "Add Is Avian's Might active?" }),
+    ).toBeNull()
+    await user.click(screen.getByLabelText('All options'))
+    expect(
+      screen.getByRole('button', { name: "Add Is Avian's Might active?" }),
+    ).toBeTruthy()
+    await user.clear(search)
+    await user.type(search, 'consecrated')
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Add Are you on Consecrated Ground?',
+      }),
+    )
+    expect(api.executed).toContainEqual({
+      'set-config-input': {
+        name: 'conditionOnConsecratedGround',
+        value: { boolean: true },
+      },
+    })
+    expect(
+      await screen.findByLabelText('Are you on Consecrated Ground?'),
+    ).toBeTruthy()
 
     // An input by its PoB name; it is not calculated yet.
     await user.click(
@@ -442,7 +481,9 @@ describe('UX High fixes', () => {
         value: { boolean: true },
       },
     })
-    expect(await screen.findByLabelText('On fungal ground')).toBeTruthy()
+    expect(
+      await screen.findByLabelText('Are you on Fungal Ground?'),
+    ).toBeTruthy()
 
     // A custom modifier block: its lines read, a warning marked.
     const block = screen
@@ -622,5 +663,94 @@ describe('the equipment panel (B-2)', () => {
       await within(panel).findByRole('img', { name: 'Weapon 1: empty' }),
     ).toBeTruthy()
     await expectAccessible()
+  })
+
+  it('marks requirements the character does not meet, as the game does', async () => {
+    const { user } = await importBuild()
+    await user.click(screen.getByRole('button', { name: 'Equipment' }))
+    const panel = await screen.findByRole('region', { name: 'Equipped' })
+    // The sample character: 5 Dexterity; the ring needs 10.
+    expect(
+      await within(panel).findByText(
+        'Loom Test Band needs 10 Dexterity (you have 5).',
+      ),
+    ).toBeTruthy()
+    expect(
+      within(panel).getByText('Strength 20 · Dexterity 5 · Intelligence 20'),
+    ).toBeTruthy()
+    await user.hover(
+      within(panel).getByRole('button', { name: 'Ring 1: Loom Test Band' }),
+    )
+    const tip = await screen.findByRole('tooltip')
+    const need = within(tip).getByText('10')
+    expect(need.className).toBe('tt-unmet')
+    await expectAccessible()
+  })
+})
+
+// B-5 (UX brief note 5; docs/ui screen 9): dashboards the user adds,
+// arranges, and resizes, saved as the UI's preferences.
+describe('dashboards (B-5)', () => {
+  it('switches, customizes, and saves dashboards', async () => {
+    const { user, api } = await importBuild()
+    const tabs = screen.getByRole('group', { name: 'Dashboards' })
+    // The defaults: Overview (shown) and Defence.
+    expect(
+      within(tabs)
+        .getByRole('button', { name: 'Overview' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(screen.getByRole('region', { name: 'Main skill' })).toBeTruthy()
+    await user.click(within(tabs).getByRole('button', { name: 'Defence' }))
+    // A stat tile, and the Defence panel below it.
+    expect(screen.getByRole('region', { name: 'Life' })).toBeTruthy()
+    expect(screen.getByRole('region', { name: 'Defence' })).toBeTruthy()
+    expect(JSON.parse(api.prefs ?? '{}').active).toBe('defence')
+
+    // A new dashboard opens in Customize, empty; add a panel and a stat.
+    await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    const name = screen.getByLabelText('Name')
+    await user.clear(name)
+    await user.type(name, 'Bossing')
+    await user.click(screen.getByRole('button', { name: 'Add Offence' }))
+    expect(
+      screen
+        .getByRole('button', { name: 'Add Offence' })
+        .hasAttribute('disabled'),
+    ).toBe(true)
+    await user.selectOptions(screen.getByLabelText('Stat'), 'life')
+    await user.click(screen.getByRole('button', { name: 'Add stat' }))
+    const life = screen.getByRole('group', { name: 'Stat: Life: arrange' })
+    await user.click(within(life).getByRole('button', { name: 'Move up' }))
+    await user.click(within(life).getByRole('button', { name: 'Full width' }))
+    await expectAccessible()
+
+    let saved = JSON.parse(api.prefs ?? '{}') as {
+      dashboards: {
+        name: string
+        components: { kind: string; width: string }[]
+      }[]
+    }
+    const bossing = saved.dashboards.find((d) => d.name === 'Bossing')!
+    expect(bossing.components.map((c) => [c.kind, c.width])).toEqual([
+      ['stat', 'full'],
+      ['offence', 'half'],
+    ])
+    await user.click(within(life).getByRole('button', { name: 'Remove' }))
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    expect(within(tabs).getByRole('button', { name: 'Bossing' })).toBeTruthy()
+
+    // Up to four dashboards; then deleting one.
+    await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    expect(screen.queryByRole('button', { name: 'Add a dashboard' })).toBeNull()
+    await user.click(
+      screen.getByRole('button', { name: 'Delete this dashboard' }),
+    )
+    saved = JSON.parse(api.prefs ?? '{}')
+    expect(saved.dashboards.map((d) => d.name)).toEqual([
+      'Overview',
+      'Defence',
+      'Bossing',
+    ])
   })
 })

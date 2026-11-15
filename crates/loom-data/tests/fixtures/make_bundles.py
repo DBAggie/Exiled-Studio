@@ -14,12 +14,16 @@ in sorted-key form and `bundle.json` listing every file's SHA-256 and size.
 import hashlib
 import json
 import shutil
+import struct
+import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
 
 def dump(value):
+    if isinstance(value, bytes):
+        return value
     return (json.dumps(value, sort_keys=True, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
 
 
@@ -555,6 +559,227 @@ def write(name, game, files, data_schema=2):
     (out / "bundle.json").write_bytes(dump(manifest))
 
 
+def png(width, height, pixel):
+    """A plain RGBA PNG, `pixel(x, y)` giving each pixel's four bytes: the
+    synthetic tree's made-up sprite sheet (our own, never GGG's art)."""
+    def chunk(kind, data):
+        body = kind + data
+        return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
+    rows = b"".join(b"\x00" + b"".join(bytes(pixel(x, y)) for x in range(width)) for y in range(height))
+    header = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b"")
+
+
+def tree_sprites(passives):
+    """Passive tree plan T-a: a made-up sprite sheet (four 16-pixel squares:
+    an icon, a frame, a mastery icon, a jewel frame) and its index, so CI
+    covers the bundle's sprites, the app's sprites query, and the canvas."""
+    colours = [(200, 160, 60, 255), (90, 90, 90, 255), (60, 120, 200, 255), (160, 60, 160, 255)]
+
+    def pixel(x, y):
+        inside = 2 <= x % 16 < 14 and 2 <= y < 14
+        return colours[x // 16] if inside else (0, 0, 0, 0)
+
+    sheet = png(64, 16, pixel)
+
+    def at(k, name):
+        return {"name": name, "x": 16 * k, "y": 0, "w": 16, "h": 16}
+
+    icons = [at(0, "Test/Icon")]
+    frames = sorted(
+        [at(1, n) for n in ("KeystoneFrameAllocated", "KeystoneFrameUnallocated", "NotableFrameAllocated",
+                            "NotableFrameUnallocated", "PSSkillFrame", "PSSkillFrameActive")]
+        + [at(3, "JewelFrameAllocated"), at(3, "JewelFrameUnallocated")],
+        key=lambda r: r["name"],
+    )
+    masteries = [at(2, "Test/Mastery")]
+    categories = [{"name": "frame", "sprites": frames}]
+    for kind in ("keystone", "normal", "notable"):
+        for state in ("Active", "Inactive"):
+            categories.append({"name": kind + state, "sprites": icons})
+    for name in ("masteryActiveSelected", "masteryConnected", "masteryInactive"):
+        categories.append({"name": name, "sprites": masteries})
+    for c in categories:
+        c.update({"file": "test-sheet.png", "width": 64, "height": 16})
+    categories.sort(key=lambda c: c["name"])
+    nodes = []
+    for row in sorted(passives, key=lambda r: r["node"]):
+        if row.get("characters") or row.get("ascendancy_start"):
+            continue
+        if row.get("mastery_group"):
+            nodes.append({"node": row["node"], "inactive_icon": "Test/Mastery", "active_icon": "Test/Mastery"})
+        else:
+            nodes.append({"node": row["node"], "icon": "Test/Icon"})
+    index = {
+        "zoom": 0.5,
+        "categories": categories,
+        "nodes": nodes,
+        "source": {
+            "repository": "synthetic",
+            "tag": "synthetic",
+            "commit": "0" * 40,
+            "files": [],
+            "angle_rule": "synthetic: equal steps",
+        },
+    }
+    return index, sheet
+
+
+def tree_bundle(files):
+    """Passive tree plan T1a: the PoE1 bundle with a larger made-up tree for
+    the tree editor's tests and the e2e workflow. Two classes (Test Brute
+    with two ascendancies, Test Sage with one), three rows of nine groups
+    between the class starts (a ring of six nodes each, notables, two
+    masteries, a keystone, jewel sockets), a large cluster socket with a
+    nested medium and small socket and their proxies, a multiple choice in
+    each ascendancy, the layout constants, the jewel radii, and a made-up
+    sprite sheet with its index (`tree_sprites`). Every value
+    is made up; only the shapes follow the game's."""
+    out = dict(files)
+    passives = []
+    groups = []
+
+    def stat(v):
+        return [{"stat": "test_passive_life", "value": v}]
+
+    def add(node, name, **extra):
+        row = {"id": f"t{node}", "node": node, "name": name}
+        row.update(extra)
+        passives.append(row)
+
+    def tnode(n, orbit, index, links=()):
+        return {
+            "node": n,
+            "orbit": orbit,
+            "orbit_index": index,
+            "connections": [{"node": t, "orbit": None} for t in links],
+        }
+
+    # Class starts.
+    add(1000, "Brute Start", characters=["Test/Chars/Str"])
+    add(2000, "Sage Start", characters=["Test/Chars/Int"])
+    groups.append({"x": -1800.0, "y": 0.0, "flags": 0, "nodes": [tnode(1000, 0, 0)]})
+    groups.append({"x": 1800.0, "y": 0.0, "flags": 0, "nodes": [tnode(2000, 0, 0)]})
+    # Three rows of nine groups; group (r, c) has the ring
+    # 10000 + 1000 r + 10 c + k.
+    ring = {}
+    for r, y in enumerate((-400.0, 0.0, 400.0)):
+        for c in range(9):
+            x = -1200.0 + 300.0 * c
+            ids = [10000 + 1000 * r + 10 * c + k for k in range(6)]
+            ring[(r, c)] = ids
+            nodes = []
+            for k, n in enumerate(ids):
+                if r == 1 and c == 4 and k == 0:
+                    add(n, "Test Keystone", keystone=True)
+                elif k == 3 and c % 2 == 0:
+                    add(n, f"Test Notable {r}-{c}", notable=True, stats=stat(25))
+                else:
+                    add(n, f"Test Life {r}-{c}-{k}", stats=stat(5))
+                nodes.append(tnode(n, 1, k, [ids[(k + 1) % 6]]))
+            # Two masteries, each linked from its group's notable.
+            if (r, c) in ((0, 2), (2, 6)):
+                m = 10000 + 1000 * r + 10 * c + 9
+                add(m, "Test Life Mastery", mastery_group="TestLifeMastery")
+                nodes.append(tnode(m, 0, 0, [ids[3]]))
+            # Two jewel sockets in the middle of their groups.
+            if (r, c) in ((1, 2), (1, 6)):
+                j = 10000 + 1000 * r + 10 * c + 8
+                add(j, "Test Jewel Socket", jewel_socket=True)
+                nodes.append(tnode(j, 0, 0, [ids[0]]))
+            groups.append({"x": x, "y": y, "flags": 0, "nodes": nodes})
+    links = []
+    for r in range(3):
+        for c in range(8):
+            links.append((ring[(r, c)][1], ring[(r, c + 1)][4]))
+        if r < 2:
+            for c in (0, 4, 8):
+                links.append((ring[(r, c)][2], ring[(r + 1, c)][5]))
+    links.append((1000, ring[(1, 0)][4]))
+    links.append((2000, ring[(1, 8)][1]))
+    # Ascendancies far away: a start, a chain, a multiple choice.
+    asc = [
+        ("TestChampion", "Test Champion", "Test/Chars/Str", 1, -3000.0, -2000.0, 3000),
+        ("TestBerserker", "Test Berserker", "Test/Chars/Str", 2, -3000.0, 2000.0, 3100),
+        ("TestOracle", "Test Oracle", "Test/Chars/Int", 1, 3000.0, -2000.0, 3200),
+    ]
+    for aid, name, _, _, x, y, base in asc:
+        add(base, name, ascendancy=aid, ascendancy_start=True)
+        add(base + 1, f"{name} Small", ascendancy=aid, stats=stat(8))
+        add(base + 2, f"{name} Notable", ascendancy=aid, notable=True, stats=stat(40))
+        add(base + 3, f"{name} Choice", ascendancy=aid, notable=True, multiple_choice=True)
+        add(base + 4, f"{name} Option A", ascendancy=aid, multiple_choice_option=True, stats=stat(12))
+        add(base + 5, f"{name} Option B", ascendancy=aid, multiple_choice_option=True, stats=stat(14))
+        groups.append(
+            {
+                "x": x,
+                "y": y,
+                "flags": 0,
+                "nodes": [
+                    tnode(base, 0, 0, [base + 1]),
+                    tnode(base + 1, 1, 0, [base + 2]),
+                    tnode(base + 2, 1, 1, [base + 3]),
+                    tnode(base + 3, 1, 2, [base + 4, base + 5]),
+                    tnode(base + 4, 1, 3),
+                    tnode(base + 5, 1, 4),
+                ],
+            }
+        )
+    # A large cluster socket on the main tree (linked to row 2; a plain
+    # jewel socket in the passives table, as the game's) and its area: a
+    # nested medium socket with a proxy, a nested small socket with one.
+    add(5000, "Test Large Jewel Socket", jewel_socket=True)
+    add(5001, "Test Medium Cluster Socket", jewel_socket=True, expansion=True)
+    add(5002, "Test Medium Proxy")
+    add(5003, "Test Small Cluster Socket", jewel_socket=True, expansion=True)
+    add(5004, "Test Small Proxy")
+    groups.append({"x": 0.0, "y": 900.0, "flags": 0, "nodes": [tnode(5000, 0, 0, [ring[(2, 4)][2]])]})
+    groups.append(
+        {"x": 0.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5001, 0, 0, [5000]), tnode(5002, 1, 0, [5001])]}
+    )
+    groups.append(
+        {"x": 300.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5003, 0, 0, [5000]), tnode(5004, 1, 0, [5003])]}
+    )
+    # Links stored once, on the first node.
+    by_node = {n["node"]: n for g in groups for n in g["nodes"]}
+    for a, b in links:
+        by_node[a]["connections"].append({"node": b, "orbit": None})
+    out["data/ascendancies.json"] = [
+        {"id": aid, "name": name, "character": ch, "class_number": number}
+        for aid, name, ch, number, *_rest in asc
+    ]
+    out["data/passives.json"] = sorted(passives, key=lambda row: row["node"])
+    out["data/mastery_groups.json"] = [
+        {"id": "TestLifeMastery", "effects": ["TestLifeMastery1", "TestLifeMastery2"]}
+    ]
+    out["data/mastery_effects.json"] = [
+        {"id": "TestLifeMastery1", "hash": 4242, "stats": [{"stat": "test_mastery_stat", "value": 5}]},
+        {"id": "TestLifeMastery2", "hash": 4243, "stats": [{"stat": "test_passive_life", "value": 20}]},
+    ]
+    out["data/passive_tree.json"] = {
+        "tree": "Default",
+        "graph": "Metadata/PassiveSkillGraph",
+        "orbit_slots": [1, 6],
+        "roots": [1000, 2000],
+        "groups": groups,
+    }
+    out["data/passive_tree_layout.json"] = {
+        "orbit_radii": [0.0, 82.0],
+        "orbit_angles": [[0.0], [0.0, 60.0, 120.0, 180.0, 240.0, 300.0]],
+        "source": {
+            "repository": "synthetic",
+            "tag": "synthetic",
+            "commit": "0" * 40,
+            "files": [],
+            "angle_rule": "synthetic: equal steps",
+        },
+    }
+    index, sheet = tree_sprites(passives)
+    out["data/passive_tree_sprites.json"] = index
+    out["trees/assets/test-sheet.png"] = sheet
+    return out
+
+
 poe1 = with_skills("poe1", common("poe1", 34, "charm_stat_descriptions"))
 poe1["poe1/quality_types.json"] = [
     {"id": "TestQuality", "description": "Quality (Test Modifiers)", "stats": [["test_maximum_life", 1]]}
@@ -595,6 +820,12 @@ poe1["data/tags.json"] = [
     {"id": "attack", "display": "Attack"},
     {"id": "defences", "display": "Defences"},
 ]
+# Passive tree plan T-f: two made-up jewel radii with their rings.
+poe1["poe1/jewel_radii.json"] = [
+    {"id": "TestSmall", "name": "Small", "radius": 960, "ring_inner": 960, "ring_outer": 1320},
+    {"id": "TestMedium", "name": "Medium", "radius": 1440, "ring_inner": 1320, "ring_outer": 1680},
+]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
+write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))
 print("ok")

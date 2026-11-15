@@ -12,6 +12,9 @@
 //! - `poe1/pantheons.json`: the pantheon's gods (`PantheonPanelLayout`,
 //!   rows not disabled), each with its souls and their stats (P3-12g; the
 //!   calc applies a chosen god's souls).
+//! - `poe1/jewel_radii.json`: the jewel radii (`PassiveJewelRadii`), each
+//!   with its name, radius, and ring (passive tree plan, T-f: which nodes
+//!   a radius jewel reaches).
 
 use serde::{Deserialize, Serialize};
 
@@ -25,6 +28,28 @@ pub const QUALITY_TYPES: &str = "poe1/quality_types.json";
 pub const GRAFTS: &str = "poe1/grafts.json";
 /// Pantheons.
 pub const PANTHEONS: &str = "poe1/pantheons.json";
+/// Jewel radii.
+pub const JEWEL_RADII: &str = "poe1/jewel_radii.json";
+
+/// A jewel radius (`PassiveJewelRadii`), in tree units. A jewel with this
+/// radius reaches the nodes whose distance from its socket is at most
+/// `radius`; a ring jewel (Thread of Hope) the nodes from `ring_inner` to
+/// `ring_outer`, both included.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JewelRadius {
+    /// ID.
+    pub id: String,
+    /// The name an item's `Radius:` line shows (`ClientStrings`); empty
+    /// when the extract has none.
+    pub name: String,
+    /// The radius.
+    pub radius: i64,
+    /// The ring's inner radius.
+    pub ring_inner: i64,
+    /// The ring's outer radius.
+    pub ring_outer: i64,
+}
 
 /// A god of the pantheon (`PantheonPanelLayout`).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -96,6 +121,8 @@ pub struct Poe1Section {
     pub grafts: Option<Grafts>,
     /// Pantheons (`None` when the file is absent).
     pub pantheons: Option<Vec<Pantheon>>,
+    /// Jewel radii (`None` when the file is absent).
+    pub jewel_radii: Option<Vec<JewelRadius>>,
 }
 
 impl Poe1Section {
@@ -135,6 +162,25 @@ impl Poe1Section {
         (PANTHEONS, ids, bad)
     }
 
+    /// The jewel radii's domain checks for the validator: unique IDs, and
+    /// the rows whose values are out of range (a negative radius, or a
+    /// ring whose inner radius is above its outer one).
+    pub(super) fn radius_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let radii = self.jewel_radii.as_deref().unwrap_or_default();
+        let ids = radii.iter().map(|r| r.id.as_str()).collect();
+        let bad = radii
+            .iter()
+            .filter(|r| r.radius < 0 || r.ring_inner < 0 || r.ring_inner > r.ring_outer)
+            .map(|r| {
+                (
+                    format!("{JEWEL_RADII}:{}", r.id),
+                    "a negative radius, or a ring whose inner radius is above its outer one",
+                )
+            })
+            .collect();
+        (ids, bad)
+    }
+
     /// Reads the section's files the manifest lists.
     ///
     /// # Errors
@@ -157,6 +203,11 @@ impl Poe1Section {
             },
             pantheons: if listed(PANTHEONS) {
                 Some(json(source, PANTHEONS)?)
+            } else {
+                None
+            },
+            jewel_radii: if listed(JEWEL_RADII) {
+                Some(json(source, JEWEL_RADII)?)
             } else {
                 None
             },

@@ -13,8 +13,8 @@ use loom_calc::poe1::hit::spell_skill;
 use loom_calc::poe1::sockets::{ALWAYS_MATCHES, SocketMatch, socket_matches};
 use loom_calc::{
     ActiveSkill, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, EffectLevel, Field,
-    FieldState, GemEffect, GrantedEffect, PassiveLinks, SkillGem, Source, StatAmount, StatSet,
-    StatSetLevel, StateKind, UnsupportedReason, calculate,
+    FieldState, GemEffect, GrantedEffect, SkillGem, Source, StatAmount, StatSet, StatSetLevel,
+    StateKind, UnsupportedReason, calculate,
 };
 use loom_data::bundle::skills::{FloatStat, LevelStat};
 use loom_domain::{
@@ -449,9 +449,6 @@ impl CalcData for Data {
         None
     }
     fn mastery_effect_stats(&self, _: u32) -> Option<&[StatAmount]> {
-        None
-    }
-    fn passive_links(&self, _: u32) -> Option<PassiveLinks> {
         None
     }
     fn skill_gem(&self, base_item: &str) -> Option<&SkillGem> {

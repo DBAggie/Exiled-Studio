@@ -2,10 +2,12 @@
 //! decision 1): one validated bundle folder.
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, OnceLock};
 
 use loom_data::bundle::{Bundle, BundleSource, SourceError, validate};
 use loom_domain::{DataVersion, Game, TreeVersion};
 use loom_parser::import::{BundleData, Resolver};
+use sha2::{Digest, Sha256};
 
 use crate::error::{AppError, Code};
 
@@ -85,6 +87,12 @@ pub struct GameData {
     pub version: DataVersion,
     /// The tree version for it, if known.
     pub tree_version: Option<TreeVersion>,
+    /// Its passive tree, when it has one (the tree editor).
+    pub tree: Option<Arc<loom_tree::Tree>>,
+    /// The tree's layout DTO, made once.
+    pub tree_layout: Option<Arc<loom_serialization::dto::app::v1::TreeLayout>>,
+    /// The tree's sprites DTO, made on first use ([`GameData::tree_sprites`]).
+    sprites: OnceLock<Option<Arc<loom_serialization::dto::app::v1::TreeSprites>>>,
 }
 
 impl std::fmt::Debug for GameData {
@@ -120,14 +128,54 @@ impl GameData {
             Resolver::new(data).map_err(|e| AppError::new(Code::Bundle, e.code().to_owned()))?;
         let resolver: &'static Resolver<'static, 'static> = Box::leak(Box::new(resolver));
         let version = loom_parser::import::data_version(data);
+        let tree_version = tree_version(&version);
+        let tree = loom_tree::Tree::from_bundle(bundle);
+        let tree_layout = tree.as_ref().map(|t| {
+            Arc::new(crate::tree::layout(
+                t,
+                bundle,
+                tree_version.as_ref().map(|v| v.as_str().to_owned()),
+            ))
+        });
         Ok(Self {
             dir: dir.to_owned(),
             bundle,
             data,
             resolver,
-            tree_version: tree_version(&version),
+            tree_version,
             version,
+            tree: tree.map(Arc::new),
+            tree_layout,
+            sprites: OnceLock::new(),
         })
+    }
+
+    /// The tree's sprites DTO, when the bundle has sprites and the tree is
+    /// placed: made on the first call (the sheets are read only when the
+    /// tree screen asks), then kept. Each sheet is read from the folder
+    /// again and must still have the manifest's SHA-256 and size, else
+    /// there are no sprites (the screen draws its own shapes).
+    pub fn tree_sprites(&self) -> Option<Arc<loom_serialization::dto::app::v1::TreeSprites>> {
+        self.sprites
+            .get_or_init(|| {
+                let index = self.bundle.tree_sprites.as_ref()?;
+                if !self.tree.as_ref().is_some_and(|t| t.placed()) {
+                    return None;
+                }
+                let source = DirSource(&self.dir);
+                let manifest = &self.bundle.manifest;
+                crate::tree::sprites(index, |path| {
+                    let entry = manifest.files.iter().find(|f| f.path == path)?;
+                    let bytes = source.read(path).ok()?;
+                    let sha: String = Sha256::digest(&bytes)
+                        .iter()
+                        .map(|b| format!("{b:02x}"))
+                        .collect();
+                    (bytes.len() as u64 == entry.size && sha == entry.sha256).then_some(bytes)
+                })
+                .map(Arc::new)
+            })
+            .clone()
     }
 }
 

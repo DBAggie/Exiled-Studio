@@ -1,0 +1,2462 @@
+{
+ "graph": "Metadata/PassiveSkillGraph",
+ "groups": [
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11004,
+       "orbit": null
+      }
+     ],
+     "node": 1000,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": -1800.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11081,
+       "orbit": null
+      }
+     ],
+     "node": 2000,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 1800.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10001,
+       "orbit": null
+      }
+     ],
+     "node": 10000,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10002,
+       "orbit": null
+      },
+      {
+       "node": 10014,
+       "orbit": null
+      }
+     ],
+     "node": 10001,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10003,
+       "orbit": null
+      },
+      {
+       "node": 11005,
+       "orbit": null
+      }
+     ],
+     "node": 10002,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10004,
+       "orbit": null
+      }
+     ],
+     "node": 10003,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10005,
+       "orbit": null
+      }
+     ],
+     "node": 10004,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10000,
+       "orbit": null
+      }
+     ],
+     "node": 10005,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -1200.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10011,
+       "orbit": null
+      }
+     ],
+     "node": 10010,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10012,
+       "orbit": null
+      },
+      {
+       "node": 10024,
+       "orbit": null
+      }
+     ],
+     "node": 10011,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10013,
+       "orbit": null
+      }
+     ],
+     "node": 10012,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10014,
+       "orbit": null
+      }
+     ],
+     "node": 10013,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10015,
+       "orbit": null
+      }
+     ],
+     "node": 10014,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10010,
+       "orbit": null
+      }
+     ],
+     "node": 10015,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -900.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10021,
+       "orbit": null
+      }
+     ],
+     "node": 10020,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10022,
+       "orbit": null
+      },
+      {
+       "node": 10034,
+       "orbit": null
+      }
+     ],
+     "node": 10021,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10023,
+       "orbit": null
+      }
+     ],
+     "node": 10022,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10024,
+       "orbit": null
+      }
+     ],
+     "node": 10023,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10025,
+       "orbit": null
+      }
+     ],
+     "node": 10024,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10020,
+       "orbit": null
+      }
+     ],
+     "node": 10025,
+     "orbit": 1,
+     "orbit_index": 5
+    },
+    {
+     "connections": [
+      {
+       "node": 10023,
+       "orbit": null
+      }
+     ],
+     "node": 10029,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": -600.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10031,
+       "orbit": null
+      }
+     ],
+     "node": 10030,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10032,
+       "orbit": null
+      },
+      {
+       "node": 10044,
+       "orbit": null
+      }
+     ],
+     "node": 10031,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10033,
+       "orbit": null
+      }
+     ],
+     "node": 10032,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10034,
+       "orbit": null
+      }
+     ],
+     "node": 10033,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10035,
+       "orbit": null
+      }
+     ],
+     "node": 10034,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10030,
+       "orbit": null
+      }
+     ],
+     "node": 10035,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -300.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10041,
+       "orbit": null
+      }
+     ],
+     "node": 10040,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10042,
+       "orbit": null
+      },
+      {
+       "node": 10054,
+       "orbit": null
+      }
+     ],
+     "node": 10041,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10043,
+       "orbit": null
+      },
+      {
+       "node": 11045,
+       "orbit": null
+      }
+     ],
+     "node": 10042,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10044,
+       "orbit": null
+      }
+     ],
+     "node": 10043,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10045,
+       "orbit": null
+      }
+     ],
+     "node": 10044,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10040,
+       "orbit": null
+      }
+     ],
+     "node": 10045,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 0.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10051,
+       "orbit": null
+      }
+     ],
+     "node": 10050,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10052,
+       "orbit": null
+      },
+      {
+       "node": 10064,
+       "orbit": null
+      }
+     ],
+     "node": 10051,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10053,
+       "orbit": null
+      }
+     ],
+     "node": 10052,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10054,
+       "orbit": null
+      }
+     ],
+     "node": 10053,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10055,
+       "orbit": null
+      }
+     ],
+     "node": 10054,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10050,
+       "orbit": null
+      }
+     ],
+     "node": 10055,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 300.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10061,
+       "orbit": null
+      }
+     ],
+     "node": 10060,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10062,
+       "orbit": null
+      },
+      {
+       "node": 10074,
+       "orbit": null
+      }
+     ],
+     "node": 10061,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10063,
+       "orbit": null
+      }
+     ],
+     "node": 10062,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10064,
+       "orbit": null
+      }
+     ],
+     "node": 10063,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10065,
+       "orbit": null
+      }
+     ],
+     "node": 10064,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10060,
+       "orbit": null
+      }
+     ],
+     "node": 10065,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 600.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10071,
+       "orbit": null
+      }
+     ],
+     "node": 10070,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10072,
+       "orbit": null
+      },
+      {
+       "node": 10084,
+       "orbit": null
+      }
+     ],
+     "node": 10071,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10073,
+       "orbit": null
+      }
+     ],
+     "node": 10072,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10074,
+       "orbit": null
+      }
+     ],
+     "node": 10073,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10075,
+       "orbit": null
+      }
+     ],
+     "node": 10074,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10070,
+       "orbit": null
+      }
+     ],
+     "node": 10075,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 900.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 10081,
+       "orbit": null
+      }
+     ],
+     "node": 10080,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 10082,
+       "orbit": null
+      }
+     ],
+     "node": 10081,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 10083,
+       "orbit": null
+      },
+      {
+       "node": 11085,
+       "orbit": null
+      }
+     ],
+     "node": 10082,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 10084,
+       "orbit": null
+      }
+     ],
+     "node": 10083,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 10085,
+       "orbit": null
+      }
+     ],
+     "node": 10084,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 10080,
+       "orbit": null
+      }
+     ],
+     "node": 10085,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 1200.0,
+   "y": -400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11001,
+       "orbit": null
+      }
+     ],
+     "node": 11000,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11002,
+       "orbit": null
+      },
+      {
+       "node": 11014,
+       "orbit": null
+      }
+     ],
+     "node": 11001,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11003,
+       "orbit": null
+      },
+      {
+       "node": 12005,
+       "orbit": null
+      }
+     ],
+     "node": 11002,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11004,
+       "orbit": null
+      }
+     ],
+     "node": 11003,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11005,
+       "orbit": null
+      }
+     ],
+     "node": 11004,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11000,
+       "orbit": null
+      }
+     ],
+     "node": 11005,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -1200.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11011,
+       "orbit": null
+      }
+     ],
+     "node": 11010,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11012,
+       "orbit": null
+      },
+      {
+       "node": 11024,
+       "orbit": null
+      }
+     ],
+     "node": 11011,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11013,
+       "orbit": null
+      }
+     ],
+     "node": 11012,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11014,
+       "orbit": null
+      }
+     ],
+     "node": 11013,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11015,
+       "orbit": null
+      }
+     ],
+     "node": 11014,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11010,
+       "orbit": null
+      }
+     ],
+     "node": 11015,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -900.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11021,
+       "orbit": null
+      }
+     ],
+     "node": 11020,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11022,
+       "orbit": null
+      },
+      {
+       "node": 11034,
+       "orbit": null
+      }
+     ],
+     "node": 11021,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11023,
+       "orbit": null
+      }
+     ],
+     "node": 11022,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11024,
+       "orbit": null
+      }
+     ],
+     "node": 11023,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11025,
+       "orbit": null
+      }
+     ],
+     "node": 11024,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11020,
+       "orbit": null
+      }
+     ],
+     "node": 11025,
+     "orbit": 1,
+     "orbit_index": 5
+    },
+    {
+     "connections": [
+      {
+       "node": 11020,
+       "orbit": null
+      }
+     ],
+     "node": 11028,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": -600.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11031,
+       "orbit": null
+      }
+     ],
+     "node": 11030,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11032,
+       "orbit": null
+      },
+      {
+       "node": 11044,
+       "orbit": null
+      }
+     ],
+     "node": 11031,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11033,
+       "orbit": null
+      }
+     ],
+     "node": 11032,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11034,
+       "orbit": null
+      }
+     ],
+     "node": 11033,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11035,
+       "orbit": null
+      }
+     ],
+     "node": 11034,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11030,
+       "orbit": null
+      }
+     ],
+     "node": 11035,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -300.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11041,
+       "orbit": null
+      }
+     ],
+     "node": 11040,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11042,
+       "orbit": null
+      },
+      {
+       "node": 11054,
+       "orbit": null
+      }
+     ],
+     "node": 11041,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11043,
+       "orbit": null
+      },
+      {
+       "node": 12045,
+       "orbit": null
+      }
+     ],
+     "node": 11042,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11044,
+       "orbit": null
+      }
+     ],
+     "node": 11043,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11045,
+       "orbit": null
+      }
+     ],
+     "node": 11044,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11040,
+       "orbit": null
+      }
+     ],
+     "node": 11045,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 0.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11051,
+       "orbit": null
+      }
+     ],
+     "node": 11050,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11052,
+       "orbit": null
+      },
+      {
+       "node": 11064,
+       "orbit": null
+      }
+     ],
+     "node": 11051,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11053,
+       "orbit": null
+      }
+     ],
+     "node": 11052,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11054,
+       "orbit": null
+      }
+     ],
+     "node": 11053,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11055,
+       "orbit": null
+      }
+     ],
+     "node": 11054,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11050,
+       "orbit": null
+      }
+     ],
+     "node": 11055,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 300.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11061,
+       "orbit": null
+      }
+     ],
+     "node": 11060,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11062,
+       "orbit": null
+      },
+      {
+       "node": 11074,
+       "orbit": null
+      }
+     ],
+     "node": 11061,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11063,
+       "orbit": null
+      }
+     ],
+     "node": 11062,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11064,
+       "orbit": null
+      }
+     ],
+     "node": 11063,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11065,
+       "orbit": null
+      }
+     ],
+     "node": 11064,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11060,
+       "orbit": null
+      }
+     ],
+     "node": 11065,
+     "orbit": 1,
+     "orbit_index": 5
+    },
+    {
+     "connections": [
+      {
+       "node": 11060,
+       "orbit": null
+      }
+     ],
+     "node": 11068,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 600.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11071,
+       "orbit": null
+      }
+     ],
+     "node": 11070,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11072,
+       "orbit": null
+      },
+      {
+       "node": 11084,
+       "orbit": null
+      }
+     ],
+     "node": 11071,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11073,
+       "orbit": null
+      }
+     ],
+     "node": 11072,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11074,
+       "orbit": null
+      }
+     ],
+     "node": 11073,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11075,
+       "orbit": null
+      }
+     ],
+     "node": 11074,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11070,
+       "orbit": null
+      }
+     ],
+     "node": 11075,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 900.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 11081,
+       "orbit": null
+      }
+     ],
+     "node": 11080,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 11082,
+       "orbit": null
+      }
+     ],
+     "node": 11081,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 11083,
+       "orbit": null
+      },
+      {
+       "node": 12085,
+       "orbit": null
+      }
+     ],
+     "node": 11082,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 11084,
+       "orbit": null
+      }
+     ],
+     "node": 11083,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 11085,
+       "orbit": null
+      }
+     ],
+     "node": 11084,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 11080,
+       "orbit": null
+      }
+     ],
+     "node": 11085,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 1200.0,
+   "y": 0.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12001,
+       "orbit": null
+      }
+     ],
+     "node": 12000,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12002,
+       "orbit": null
+      },
+      {
+       "node": 12014,
+       "orbit": null
+      }
+     ],
+     "node": 12001,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12003,
+       "orbit": null
+      }
+     ],
+     "node": 12002,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12004,
+       "orbit": null
+      }
+     ],
+     "node": 12003,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12005,
+       "orbit": null
+      }
+     ],
+     "node": 12004,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12000,
+       "orbit": null
+      }
+     ],
+     "node": 12005,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -1200.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12011,
+       "orbit": null
+      }
+     ],
+     "node": 12010,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12012,
+       "orbit": null
+      },
+      {
+       "node": 12024,
+       "orbit": null
+      }
+     ],
+     "node": 12011,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12013,
+       "orbit": null
+      }
+     ],
+     "node": 12012,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12014,
+       "orbit": null
+      }
+     ],
+     "node": 12013,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12015,
+       "orbit": null
+      }
+     ],
+     "node": 12014,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12010,
+       "orbit": null
+      }
+     ],
+     "node": 12015,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -900.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12021,
+       "orbit": null
+      }
+     ],
+     "node": 12020,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12022,
+       "orbit": null
+      },
+      {
+       "node": 12034,
+       "orbit": null
+      }
+     ],
+     "node": 12021,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12023,
+       "orbit": null
+      }
+     ],
+     "node": 12022,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12024,
+       "orbit": null
+      }
+     ],
+     "node": 12023,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12025,
+       "orbit": null
+      }
+     ],
+     "node": 12024,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12020,
+       "orbit": null
+      }
+     ],
+     "node": 12025,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -600.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12031,
+       "orbit": null
+      }
+     ],
+     "node": 12030,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12032,
+       "orbit": null
+      },
+      {
+       "node": 12044,
+       "orbit": null
+      }
+     ],
+     "node": 12031,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12033,
+       "orbit": null
+      }
+     ],
+     "node": 12032,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12034,
+       "orbit": null
+      }
+     ],
+     "node": 12033,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12035,
+       "orbit": null
+      }
+     ],
+     "node": 12034,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12030,
+       "orbit": null
+      }
+     ],
+     "node": 12035,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": -300.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12041,
+       "orbit": null
+      }
+     ],
+     "node": 12040,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12042,
+       "orbit": null
+      },
+      {
+       "node": 12054,
+       "orbit": null
+      }
+     ],
+     "node": 12041,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12043,
+       "orbit": null
+      }
+     ],
+     "node": 12042,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12044,
+       "orbit": null
+      }
+     ],
+     "node": 12043,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12045,
+       "orbit": null
+      }
+     ],
+     "node": 12044,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12040,
+       "orbit": null
+      }
+     ],
+     "node": 12045,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 0.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12051,
+       "orbit": null
+      }
+     ],
+     "node": 12050,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12052,
+       "orbit": null
+      },
+      {
+       "node": 12064,
+       "orbit": null
+      }
+     ],
+     "node": 12051,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12053,
+       "orbit": null
+      }
+     ],
+     "node": 12052,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12054,
+       "orbit": null
+      }
+     ],
+     "node": 12053,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12055,
+       "orbit": null
+      }
+     ],
+     "node": 12054,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12050,
+       "orbit": null
+      }
+     ],
+     "node": 12055,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 300.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12061,
+       "orbit": null
+      }
+     ],
+     "node": 12060,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12062,
+       "orbit": null
+      },
+      {
+       "node": 12074,
+       "orbit": null
+      }
+     ],
+     "node": 12061,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12063,
+       "orbit": null
+      }
+     ],
+     "node": 12062,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12064,
+       "orbit": null
+      }
+     ],
+     "node": 12063,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12065,
+       "orbit": null
+      }
+     ],
+     "node": 12064,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12060,
+       "orbit": null
+      }
+     ],
+     "node": 12065,
+     "orbit": 1,
+     "orbit_index": 5
+    },
+    {
+     "connections": [
+      {
+       "node": 12063,
+       "orbit": null
+      }
+     ],
+     "node": 12069,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 600.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12071,
+       "orbit": null
+      }
+     ],
+     "node": 12070,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12072,
+       "orbit": null
+      },
+      {
+       "node": 12084,
+       "orbit": null
+      }
+     ],
+     "node": 12071,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12073,
+       "orbit": null
+      }
+     ],
+     "node": 12072,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12074,
+       "orbit": null
+      }
+     ],
+     "node": 12073,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12075,
+       "orbit": null
+      }
+     ],
+     "node": 12074,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12070,
+       "orbit": null
+      }
+     ],
+     "node": 12075,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 900.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12081,
+       "orbit": null
+      }
+     ],
+     "node": 12080,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 12082,
+       "orbit": null
+      }
+     ],
+     "node": 12081,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 12083,
+       "orbit": null
+      }
+     ],
+     "node": 12082,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 12084,
+       "orbit": null
+      }
+     ],
+     "node": 12083,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 12085,
+       "orbit": null
+      }
+     ],
+     "node": 12084,
+     "orbit": 1,
+     "orbit_index": 4
+    },
+    {
+     "connections": [
+      {
+       "node": 12080,
+       "orbit": null
+      }
+     ],
+     "node": 12085,
+     "orbit": 1,
+     "orbit_index": 5
+    }
+   ],
+   "x": 1200.0,
+   "y": 400.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 3001,
+       "orbit": null
+      }
+     ],
+     "node": 3000,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3002,
+       "orbit": null
+      }
+     ],
+     "node": 3001,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3003,
+       "orbit": null
+      }
+     ],
+     "node": 3002,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 3004,
+       "orbit": null
+      },
+      {
+       "node": 3005,
+       "orbit": null
+      }
+     ],
+     "node": 3003,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [],
+     "node": 3004,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [],
+     "node": 3005,
+     "orbit": 1,
+     "orbit_index": 4
+    }
+   ],
+   "x": -3000.0,
+   "y": -2000.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 3101,
+       "orbit": null
+      }
+     ],
+     "node": 3100,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3102,
+       "orbit": null
+      }
+     ],
+     "node": 3101,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3103,
+       "orbit": null
+      }
+     ],
+     "node": 3102,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 3104,
+       "orbit": null
+      },
+      {
+       "node": 3105,
+       "orbit": null
+      }
+     ],
+     "node": 3103,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [],
+     "node": 3104,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [],
+     "node": 3105,
+     "orbit": 1,
+     "orbit_index": 4
+    }
+   ],
+   "x": -3000.0,
+   "y": 2000.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 3201,
+       "orbit": null
+      }
+     ],
+     "node": 3200,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3202,
+       "orbit": null
+      }
+     ],
+     "node": 3201,
+     "orbit": 1,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 3203,
+       "orbit": null
+      }
+     ],
+     "node": 3202,
+     "orbit": 1,
+     "orbit_index": 1
+    },
+    {
+     "connections": [
+      {
+       "node": 3204,
+       "orbit": null
+      },
+      {
+       "node": 3205,
+       "orbit": null
+      }
+     ],
+     "node": 3203,
+     "orbit": 1,
+     "orbit_index": 2
+    },
+    {
+     "connections": [],
+     "node": 3204,
+     "orbit": 1,
+     "orbit_index": 3
+    },
+    {
+     "connections": [],
+     "node": 3205,
+     "orbit": 1,
+     "orbit_index": 4
+    }
+   ],
+   "x": 3000.0,
+   "y": -2000.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 12042,
+       "orbit": null
+      }
+     ],
+     "node": 5000,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 0.0,
+   "y": 900.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 5000,
+       "orbit": null
+      }
+     ],
+     "node": 5001,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 5001,
+       "orbit": null
+      }
+     ],
+     "node": 5002,
+     "orbit": 1,
+     "orbit_index": 0
+    }
+   ],
+   "x": 0.0,
+   "y": 1300.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [
+      {
+       "node": 5000,
+       "orbit": null
+      }
+     ],
+     "node": 5003,
+     "orbit": 0,
+     "orbit_index": 0
+    },
+    {
+     "connections": [
+      {
+       "node": 5003,
+       "orbit": null
+      }
+     ],
+     "node": 5004,
+     "orbit": 1,
+     "orbit_index": 0
+    }
+   ],
+   "x": 300.0,
+   "y": 1300.0
+  }
+ ],
+ "orbit_slots": [
+  1,
+  6
+ ],
+ "roots": [
+  1000,
+  2000
+ ],
+ "tree": "Default"
+}

@@ -44,8 +44,8 @@ pub use ingest::{EffectTemplate, Ingest, ItemLines, StatMap, StatMapping, TypedM
 pub use input::{
     ActiveSkill, ArmourBase, BaseName, CHARACTER_TEMPLATE, CalcData, CalcInput, CalcOptions,
     CharacterBase, EffectLevel, GemEffect, GrantedEffect, ItemBase, LineValues, MONSTER_TEMPLATE,
-    MonsterDefences, MonsterStats, PassiveLinks, Range, Scaling, SkillChoice, SkillGem, StatAmount,
-    StatSet, StatSetLevel, WeaponBase,
+    MonsterDefences, MonsterStats, PassiveState, Range, ResolvedPassives, Scaling, SkillChoice,
+    SkillGem, StatAmount, StatSet, StatSetLevel, WeaponBase,
 };
 pub use quantity::{Bound, DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};

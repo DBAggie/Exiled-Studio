@@ -401,6 +401,7 @@ pub fn compare(
     compare_monster_levels(&mut out, properties, export);
     compare_bosses(&mut out, properties, export, bosses);
     compare_pantheons(&mut out, bundle, export)?;
+    compare_jewel_radii(&mut out, bundle, export);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()
@@ -1120,6 +1121,50 @@ pub const PANTHEON_SCOPE: &str = "stat_descriptions";
 ///
 /// # Errors
 /// A message when the scope does not load.
+/// `jewel_radii`: the bundle's row `k` (`PassiveJewelRadii`, in the
+/// table's order) against PoB's `k`-th full radius (its name and outer
+/// radius) and its `k`-th ring (the entries labelled `Variable`, in order):
+/// the bundle reads a ring jewel's ring value `k` as row `k`'s ring
+/// (`loom_tree::poe1::radius`), which this checks.
+fn compare_jewel_radii(out: &mut Comparison, bundle: &Bundle, export: &Export) {
+    const T: &str = "jewel_radii";
+    let rows = bundle
+        .poe1
+        .as_ref()
+        .and_then(|p| p.jewel_radii.as_deref())
+        .unwrap_or_default();
+    let full: Vec<_> = export
+        .jewel_radii
+        .iter()
+        .filter(|r| r.label != "Variable")
+        .collect();
+    let rings: Vec<_> = export
+        .jewel_radii
+        .iter()
+        .filter(|r| r.label == "Variable")
+        .collect();
+    for (k, row) in rows.iter().enumerate() {
+        let (Some(radius), Some(ring)) = (full.get(k), rings.get(k)) else {
+            out.bundle_only(T, [row.id.clone()]);
+            continue;
+        };
+        #[expect(clippy::cast_precision_loss, reason = "radii are small integers")]
+        let num = |v: i64| json!(v as f64);
+        out.check(T, &row.id, "name", json!(row.name), json!(radius.label));
+        out.check(T, &row.id, "radius", num(row.radius), json!(radius.outer));
+        out.check(
+            T,
+            &row.id,
+            "ring",
+            json!([num(row.ring_inner), num(row.ring_outer)]),
+            json!([ring.inner, ring.outer]),
+        );
+    }
+    for k in rows.len()..full.len().max(rings.len()) {
+        out.pob_only(T, &format!("row {}", k + 1));
+    }
+}
+
 fn compare_pantheons(out: &mut Comparison, bundle: &Bundle, export: &Export) -> Result<(), String> {
     const T: &str = "pantheons";
     let gods: BTreeMap<&str, &loom_data::bundle::poe1::Pantheon> = bundle

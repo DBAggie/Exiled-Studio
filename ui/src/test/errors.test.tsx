@@ -43,9 +43,7 @@ describe('error states', () => {
     await user.click(screen.getByRole('button', { name: 'Add game data…' }))
     await waitFor(() =>
       expect(
-        screen.getByText(
-          /Game data ready · Path of Exile, game build 26530219/,
-        ),
+        screen.getByText(/Game data ready · Path of Exile 3\.29\./),
       ).toBeTruthy(),
     )
     expect(

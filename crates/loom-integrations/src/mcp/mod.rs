@@ -4,14 +4,17 @@
 //! - **Transport.** MCP's Streamable HTTP, request-response subset: a
 //!   POST of one JSON-RPC message gets one JSON answer (202 for a
 //!   notification); no server-sent events, so GET and DELETE get 405.
-//! - **Exposure.** `127.0.0.1` only, an ephemeral port, off until the user
-//!   starts it. Each connection is served on its own thread, at most
+//! - **Exposure.** `127.0.0.1` only, off until the user starts it. The
+//!   port is the one the caller prefers (the shell remembers the last one,
+//!   so a client's configured URL keeps working across restarts; UX-26)
+//!   when it is free, else an ephemeral one. Each connection is served on its own thread, at most
 //!   [`MAX_CONNECTIONS`] at once, and must send its whole request within
 //!   [`http::DEADLINE`], so a slow client cannot hold the server; the head
 //!   is checked before the body is read. Tool calls run one at a time (a
 //!   preview is a full calculation).
-//! - **Authentication.** A random bearer token made at each start (dead at
-//!   stop), compared in constant time. The `Host` header must name the
+//! - **Authentication.** A random bearer token, compared in constant time:
+//!   kept between starts in the OS's protected store when the caller
+//!   passes it ([`token`]; ADR-017 Amendment 1), else made at this start. The `Host` header must name the
 //!   server's own loopback address and an `Origin` header, if sent, must
 //!   be a loopback origin (DNS rebinding).
 //! - **Permissions.** Reading is allowed while the server runs; change
@@ -21,6 +24,7 @@
 //! The application makes no outbound connection and holds no key.
 
 mod http;
+pub mod token;
 pub mod tools;
 
 use std::io;
@@ -58,13 +62,6 @@ impl std::fmt::Debug for Server {
     }
 }
 
-/// 32 random bytes as hex.
-fn token() -> io::Result<String> {
-    let mut bytes = [0_u8; 32];
-    getrandom::fill(&mut bytes).map_err(|e| io::Error::other(e.to_string()))?;
-    Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
-}
-
 /// Equal without an early exit on the first different byte.
 fn constant_time_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
@@ -80,9 +77,45 @@ impl Server {
     /// # Errors
     /// The I/O error of binding, or of the random source.
     pub fn start(app: Arc<App>) -> io::Result<Self> {
-        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0))?;
+        Self::start_on(app, None)
+    }
+
+    /// Starts the server on `preferred` when that loopback port is free,
+    /// else on an ephemeral one (a port taken by another program, or by a
+    /// second instance of the app, is never fought over).
+    ///
+    /// # Errors
+    /// The I/O error of binding an ephemeral port, or of the random source.
+    pub fn start_on(app: Arc<App>, preferred: Option<u16>) -> io::Result<Self> {
+        Self::start_with(app, preferred, None)
+    }
+
+    /// [`Self::start_on`] with `token` (a [`token::valid`] one, kept between
+    /// starts) instead of a new one.
+    ///
+    /// # Errors
+    /// [`io::ErrorKind::InvalidInput`] for a token that is not valid; the
+    /// I/O error of binding an ephemeral port, or of the random source.
+    pub fn start_with(
+        app: Arc<App>,
+        preferred: Option<u16>,
+        token: Option<String>,
+    ) -> io::Result<Self> {
+        let token = match token {
+            Some(t) if token::valid(&t) => t,
+            Some(_) => {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    "not a token this server makes",
+                ));
+            }
+            None => token::new_token()?,
+        };
+        let listener = preferred
+            .filter(|p| *p != 0)
+            .and_then(|p| TcpListener::bind((Ipv4Addr::LOCALHOST, p)).ok())
+            .map_or_else(|| TcpListener::bind((Ipv4Addr::LOCALHOST, 0)), Ok)?;
         let addr = listener.local_addr()?;
-        let token = token()?;
         let stop = Arc::new(AtomicBool::new(false));
         let state = Arc::new(Conn {
             app: Arc::clone(&app),
@@ -148,8 +181,8 @@ impl Server {
         &self.token
     }
 
-    /// Stops the server; its token dies with it and the standing grant
-    /// ends.
+    /// Stops the server; the standing grant ends (a token made at this
+    /// start dies with it; a kept one stays for the next start).
     pub fn stop(&mut self) {
         if let Some(thread) = self.thread.take() {
             self.stop.store(true, Ordering::SeqCst);

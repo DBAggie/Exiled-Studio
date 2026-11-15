@@ -27,9 +27,10 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use loom_calc::CalcResult;
 use loom_persistence::Store;
 use loom_persistence::recent::{Entry as RecentFileEntry, Recent};
-use loom_persistence::recovery::{Header, Recovery};
+use loom_persistence::recovery::{Header, Recovery, StepRef};
 use loom_serialization::dto::app::v1 as api;
 
+use crate::bundles::Library;
 use crate::data::GameData;
 use crate::error::{AppError, Code};
 use crate::session::{self, Session, State};
@@ -45,7 +46,9 @@ pub const MAX_PENDING_REQUESTS: usize = 16;
 pub struct Config {
     /// The application's data folder (`recovery/`, `recent.json`).
     pub data_dir: PathBuf,
-    /// The bundle folder to load at start, if any.
+    /// The bundle folder to load at start (`LOOM_BUNDLE_DIR`), if any;
+    /// else the remembered choice or the newest installed bundle
+    /// ([`crate::bundles`]).
     pub bundle: Option<PathBuf>,
     /// This instance's recovery ID (ASCII letters, digits, `-`).
     pub instance: String,
@@ -177,8 +180,12 @@ impl App {
             .map_err(|e| AppError::layer("PERSIST_RECOVERY", e))?;
         let recent = Recent::at(&config.data_dir.join("recent.json"));
         let mut session = Session::new(store);
-        if let Some(dir) = &config.bundle {
-            session.set_data(GameData::load(dir));
+        let mut library = Library::new(&config.data_dir);
+        let (data, notice) = library.start(config.bundle.as_deref());
+        session.set_installed(library.installed().to_vec());
+        if let Some(data) = data {
+            session.set_loaded(data);
+            session.set_data_notice(notice);
         }
         let idle = api::CalcStatus {
             state: api::CalcState::Idle,
@@ -219,6 +226,7 @@ impl App {
         };
         let writer = Writer {
             session,
+            library,
             shared: Arc::clone(&shared),
             sink,
             jobs: jobs_tx,
@@ -363,6 +371,101 @@ impl App {
         session::preview(&state, &data, edit, before, &cancel).map(|p| (p, generation))
     }
 
+    /// The loaded data's passive tree layout (static while the data is
+    /// loaded; the UI caches it by the data version).
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or it has no passive tree.
+    pub fn tree_layout(&self) -> Result<Arc<api::TreeLayout>, AppError> {
+        self.read(|p| p.data.as_ref().and_then(|d| d.tree_layout.clone()))
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))
+    }
+
+    /// The loaded data's passive tree sprites (static while the data is
+    /// loaded).
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or its bundle has no sprites
+    /// (the tree screen then draws its own shapes).
+    pub fn tree_sprites(&self) -> Result<Arc<api::TreeSprites>, AppError> {
+        // The data is taken out of the lock first: the first call reads the
+        // sheets.
+        self.read(|p| p.data.clone())
+            .and_then(|d| d.tree_sprites())
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no tree sprites"))
+    }
+
+    /// What clicking a node of spec `spec` would do: allocate it (when it
+    /// is not allocated) or deallocate it, with each field before and
+    /// after; calculated on the caller's thread, never committed.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_TREE`, the calculation's codes.
+    pub fn preview_tree(&self, spec: u32, node: u32) -> Result<api::TreePreview, AppError> {
+        self.preview_tree_edit(spec, node, None).map(|(p, _)| p)
+    }
+
+    /// A requested tree change's effect, as [`App::preview_tree`]
+    /// calculates it.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_TREE`, the calculation's codes.
+    pub fn preview_tree_change(
+        &self,
+        change: &api::TreeChange,
+    ) -> Result<api::TreePreview, AppError> {
+        let (spec, edit) = crate::tree::change_edit(change);
+        self.preview_tree_edit(spec, 0, Some(edit)).map(|(p, _)| p)
+    }
+
+    /// The preview of `edit` on spec `spec`, or, without one, of clicking
+    /// `node`; with the build generation it was made against.
+    fn preview_tree_edit(
+        &self,
+        spec: u32,
+        node: u32,
+        edit: Option<crate::tree::Edit>,
+    ) -> Result<(api::TreePreview, u64), AppError> {
+        let (state, data, calc, version, generation) = self.read(|p| {
+            (
+                p.state.clone(),
+                p.data.clone(),
+                p.calc.clone(),
+                p.snapshot.version,
+                p.generation,
+            )
+        });
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let tree = data
+            .tree
+            .clone()
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))?;
+        let edit = if let Some(e) = edit {
+            e
+        } else {
+            let allocated = crate::tree::rules_spec(
+                &state.build,
+                crate::tree::spec_of(&state.build, spec)?,
+                &tree,
+            )
+            .nodes
+            .contains(&node);
+            if allocated {
+                crate::tree::Edit::Deallocate(node)
+            } else {
+                crate::tree::Edit::Allocate(node)
+            }
+        };
+        let before = calc
+            .as_ref()
+            .filter(|(v, _, _)| *v == version)
+            .map(|(_, r, _)| r.as_ref());
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
+        session::preview_tree(&state, &data, spec, edit, before, &cancel).map(|p| (p, generation))
+    }
+
     /// The recent builds.
     #[must_use]
     pub fn recent(&self) -> Vec<api::RecentEntry> {
@@ -382,6 +485,8 @@ impl App {
             running: p.endpoint.is_some(),
             url: p.endpoint.as_ref().map(|(u, _)| u.clone()),
             token: p.endpoint.as_ref().map(|(_, t)| t.clone()),
+            // The shell knows where the token is kept and says so.
+            token_kept: false,
             permissions: p.permissions.clone(),
             requests: p.requests.clone(),
         })
@@ -421,6 +526,70 @@ impl App {
         edit: api::ItemEdit,
         note: Option<String>,
     ) -> Result<api::ChangeRequest, AppError> {
+        self.admit()?;
+        let (preview, generation) = self.preview_with_generation(&edit)?;
+        let mut request = self.new_request(client, note);
+        request.edit = Some(edit);
+        request.preview = Some(preview);
+        self.submit(request, generation)
+    }
+
+    /// An MCP client asks for a passive tree change (passive tree plan,
+    /// A-b), as [`App::request_change`] asks for an item edit.
+    ///
+    /// # Errors
+    /// `APP_REQUESTS_OFF`, `APP_REQUESTS_FULL`, the preview's codes
+    /// (`APP_TREE` for a change the editor refuses).
+    pub fn request_tree_change(
+        &self,
+        client: &str,
+        change: api::TreeChange,
+        note: Option<String>,
+    ) -> Result<api::ChangeRequest, AppError> {
+        self.admit()?;
+        let (spec, edit) = crate::tree::change_edit(&change);
+        let (preview, generation) = self.preview_tree_edit(spec, 0, Some(edit))?;
+        let mut request = self.new_request(client, note);
+        request.tree = Some(change);
+        request.tree_preview = Some(preview);
+        self.submit(request, generation)
+    }
+
+    /// A pending request with no change yet.
+    fn new_request(&self, client: &str, note: Option<String>) -> api::ChangeRequest {
+        api::ChangeRequest {
+            id: self.shared.requests.fetch_add(1, Ordering::Relaxed) + 1,
+            client: client.chars().take(64).collect(),
+            edit: None,
+            note: note.map(|n| n.chars().take(500).collect()),
+            preview: None,
+            status: api::RequestStatus::Pending,
+            error: None,
+            tree: None,
+            tree_preview: None,
+        }
+    }
+
+    /// Hands a request to the writer, which checks it again.
+    fn submit(
+        &self,
+        request: api::ChangeRequest,
+        generation: u64,
+    ) -> Result<api::ChangeRequest, AppError> {
+        let (reply, answer) = mpsc::channel();
+        self.tx
+            .send(Msg::Request {
+                request: Box::new(request),
+                generation,
+                reply,
+            })
+            .map_err(|_| stopped())?;
+        answer.recv().map_err(|_| stopped())?
+    }
+
+    /// Whether clients may request changes now (checked again on the
+    /// writer).
+    fn admit(&self) -> Result<(), AppError> {
         let (allowed, pending) = self.read(|p| {
             (
                 p.permissions.requests,
@@ -442,25 +611,7 @@ impl App {
                 "too many change requests are waiting",
             ));
         }
-        let (preview, generation) = self.preview_with_generation(&edit)?;
-        let request = api::ChangeRequest {
-            id: self.shared.requests.fetch_add(1, Ordering::Relaxed) + 1,
-            client: client.chars().take(64).collect(),
-            edit,
-            note: note.map(|n| n.chars().take(500).collect()),
-            preview: Some(preview),
-            status: api::RequestStatus::Pending,
-            error: None,
-        };
-        let (reply, answer) = mpsc::channel();
-        self.tx
-            .send(Msg::Request {
-                request: Box::new(request),
-                generation,
-                reply,
-            })
-            .map_err(|_| stopped())?;
-        answer.recv().map_err(|_| stopped())?
+        Ok(())
     }
 
     /// Stops the threads, cancelling a running calculation, and keeps a
@@ -529,6 +680,8 @@ struct CalcTrack {
 
 struct Writer {
     session: Session,
+    /// The installed and loaded bundles (B-1).
+    library: Library,
     shared: Arc<Shared>,
     sink: Sink,
     jobs: Sender<Job>,
@@ -806,7 +959,23 @@ impl Writer {
                 path: self.session.path().map(|p| p.display().to_string()),
                 origin: self.session.origin().map(|p| p.display().to_string()),
             };
-            // A failed autosave is retried with the next change.
+            // A failed autosave is retried with the next change. The
+            // history first: a snapshot is never newer than its history.
+            let steps = self.session.undo_steps();
+            let entries: Vec<serde_json::Value> = steps
+                .iter()
+                .map(|s| serde_json::to_value(&s.entry).unwrap_or(serde_json::Value::Null))
+                .collect();
+            let refs: Vec<StepRef<'_>> = steps
+                .iter()
+                .zip(&entries)
+                .map(|(s, entry)| StepRef {
+                    id: s.id,
+                    entry,
+                    build: &s.state.build,
+                })
+                .collect();
+            let _ = self.recovery.write_history(self.session.store(), &refs);
             let _ = self
                 .recovery
                 .write(self.session.store(), &header, &state.build);
@@ -848,7 +1017,8 @@ impl Writer {
                 Ok(done(self.session.version()))
             }
             HostCommand::SetBundle(dir) => {
-                self.session.set_data(GameData::load(&dir));
+                let data = self.library.use_dir(&dir);
+                self.session.set_loaded(data);
                 Ok(done(self.session.version()))
             }
             HostCommand::Api(c) => self.api(c),
@@ -876,6 +1046,15 @@ impl Writer {
         match command {
             api::Command::ImportText { text } => self.session.import_text(&text, None).map(done),
             api::Command::NewBuild => self.session.new_build().map(done),
+            api::Command::UseBundle { id } => {
+                // An unknown ID or a bundle that does not load leaves the
+                // loaded data as it was.
+                let data = self.library.use_id(&id)?;
+                self.session
+                    .set_installed(self.library.installed().to_vec());
+                self.session.set_loaded(Ok(data));
+                Ok(done(self.session.version()))
+            }
             api::Command::EditItem(e) => self.session.edit(&e, None).map(done),
             api::Command::UseItemSet { id } => Ok(self
                 .session
@@ -968,6 +1147,46 @@ impl Writer {
                 .session
                 .remove_custom_block(block)?
                 .map_or(api::Outcome::Nothing, done)),
+            api::Command::AllocateNode { spec, node } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Allocate(node))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::DeallocateNode { spec, node } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Deallocate(node))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SetMasteryEffect { spec, node, effect } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Mastery { node, effect })?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SelectClass { spec, class } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Class(class))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SelectAscendancy { spec, ascendancy } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Ascendancy(ascendancy))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::ResetTree { spec } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Reset)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SocketJewel { spec, node, item } => Ok(self
+                .session
+                .socket_jewel(spec, node, item)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::NewSpec { title, copy } => Ok(self
+                .session
+                .new_spec(&title, copy)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RenameSpec { spec, title } => Ok(self
+                .session
+                .rename_spec(spec, &title)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::DeleteSpec { spec } => Ok(self
+                .session
+                .delete_spec(spec)?
+                .map_or(api::Outcome::Nothing, done)),
             api::Command::Undo => Ok(self.session.undo().map_or(api::Outcome::Nothing, done)),
             api::Command::Redo => Ok(self.session.redo().map_or(api::Outcome::Nothing, done)),
             api::Command::Save => {
@@ -1007,12 +1226,26 @@ impl Writer {
                     .recovery
                     .read(self.session.store(), &id)
                     .map_err(|e| AppError::layer(e.code(), &e))?;
+                let history = self.recovery.read_history(self.session.store(), &id);
                 let v = self.session.open_build(
                     build,
                     header.path.map(PathBuf::from),
                     header.origin.map(PathBuf::from),
                     true,
                 );
+                // The undo history comes back too (UX-19): the newest steps
+                // whose change still reads.
+                let mut steps: Vec<_> = history
+                    .into_iter()
+                    .rev()
+                    .map_while(|s| {
+                        serde_json::from_value::<api::HistoryEntry>(s.entry)
+                            .ok()
+                            .map(|e| (e, s.build))
+                    })
+                    .collect();
+                steps.reverse();
+                self.session.restore_history(steps);
                 let _ = self.recovery.discard(&id);
                 self.refresh_lists();
                 Ok(done(v))
@@ -1035,18 +1268,14 @@ impl Writer {
             }
             api::Command::Approve { id } => {
                 let index = self.pending(id)?;
-                let edit = self.requests.get(index).map(|r| r.edit.clone());
-                let result = match edit {
-                    Some(_)
-                        if self.request_generation.get(&id) != Some(&self.session.generation()) =>
-                    {
-                        Err(AppError::new(
-                            Code::StaleEdit,
-                            "the request is for another build",
-                        ))
-                    }
-                    Some(e) => self.session.edit(&e, Some(id)),
-                    None => Err(AppError::new(Code::Request, "no such request")),
+                let result = if self.request_generation.get(&id) == Some(&self.session.generation())
+                {
+                    self.apply_request(index)
+                } else {
+                    Err(AppError::new(
+                        Code::StaleEdit,
+                        "the request is for another build",
+                    ))
                 };
                 self.settle(index, &result);
                 self.publish();
@@ -1080,6 +1309,25 @@ impl Writer {
             .iter()
             .position(|r| r.id == id && r.status == api::RequestStatus::Pending)
             .ok_or_else(|| AppError::new(Code::Request, format!("no pending request {id}")))
+    }
+
+    /// Applies request `index`: its item edit or its tree change. A tree
+    /// change that changes nothing is applied at the current version.
+    fn apply_request(&mut self, index: usize) -> Result<u64, AppError> {
+        let request = self
+            .requests
+            .get(index)
+            .cloned()
+            .ok_or_else(|| AppError::new(Code::Request, "no such request"))?;
+        match (request.edit, request.tree) {
+            (Some(e), _) => self.session.edit(&e, Some(request.id)),
+            (None, Some(change)) => {
+                let (spec, edit) = crate::tree::change_edit(&change);
+                let applied = self.session.edit_tree_for(spec, edit, Some(request.id))?;
+                Ok(applied.unwrap_or_else(|| self.session.version()))
+            }
+            (None, None) => Err(AppError::new(Code::Request, "the request has no change")),
+        }
     }
 
     fn settle(&mut self, index: usize, result: &Result<u64, AppError>) {
@@ -1127,12 +1375,8 @@ impl Writer {
         self.requests.push(request);
         let index = self.requests.len() - 1;
         if self.permissions.standing_grant {
-            let edit = self.requests.get(index).map(|r| r.edit.clone());
             let before = self.session.version();
-            let result = match edit {
-                Some(e) => self.session.edit(&e, Some(id)),
-                None => Err(AppError::new(Code::Request, "no such request")),
-            };
+            let result = self.apply_request(index);
             self.settle(index, &result);
             if self.session.version() != before {
                 self.changed(None);

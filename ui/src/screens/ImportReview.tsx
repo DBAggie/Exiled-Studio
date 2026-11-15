@@ -12,6 +12,7 @@ import {
   splitWarnings,
   useAppDispatch,
   useAppSelector,
+  useDataName,
 } from '../util'
 
 /** Warnings with the same item name, text, and reason as one row, with
@@ -74,11 +75,11 @@ function ReviewList({ warnings }: { warnings: WarningView[] }) {
 export function ImportReview() {
   const dispatch = useAppDispatch()
   const build = useAppSelector((s) => s.session.snapshot?.build)
+  const dataLabel = useDataName(build?.['data-version'])
   if (build === null || build === undefined) {
     return null
   }
   const c = build.lines
-  const version = build['data-version']
   const status = buildStatus(build)
   const { used, unused } = splitWarnings(build)
   const name = build.name === '' ? t('app.untitled') : build.name
@@ -219,11 +220,7 @@ export function ImportReview() {
             </div>
             <div>
               <dt className="muted">{t('import.data')}</dt>
-              <dd className="mono">
-                {version === null || version === undefined
-                  ? '—'
-                  : `${version.game} · ${version['steam-build'] ?? '?'}`}
-              </dd>
+              <dd>{dataLabel}</dd>
             </div>
           </dl>
           <p className="muted small-text">{t('import.partialHelp')}</p>

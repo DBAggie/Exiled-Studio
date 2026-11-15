@@ -1,0 +1,18 @@
+[
+ {
+  "granted_effect": "TestBolt",
+  "id": "TestBolt",
+  "name": "Test Bolt",
+  "tags": [
+   "test_spell"
+  ]
+ },
+ {
+  "granted_effect": "SupportTestDamage",
+  "id": "SupportTestDamage",
+  "name": "Test Damage Support",
+  "tags": [
+   "test_support"
+  ]
+ }
+]

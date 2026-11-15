@@ -1,0 +1,14 @@
+{
+ "bases": [
+  {
+   "base": "Plain Test Charm",
+   "gem": "Test/Gems/Bolt",
+   "graft": "TestGraft1",
+   "skill": "Test Bolt"
+  }
+ ],
+ "levels": [
+  1,
+  20
+ ]
+}

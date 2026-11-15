@@ -1,0 +1,959 @@
+{
+ "categories": [
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "frame",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "JewelFrameAllocated",
+     "w": 16,
+     "x": 48,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "JewelFrameUnallocated",
+     "w": 16,
+     "x": 48,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "KeystoneFrameAllocated",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "KeystoneFrameUnallocated",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "NotableFrameAllocated",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "NotableFrameUnallocated",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "PSSkillFrame",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    },
+    {
+     "h": 16,
+     "name": "PSSkillFrameActive",
+     "w": 16,
+     "x": 16,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "keystoneActive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "keystoneInactive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "masteryActiveSelected",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Mastery",
+     "w": 16,
+     "x": 32,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "masteryConnected",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Mastery",
+     "w": 16,
+     "x": 32,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "masteryInactive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Mastery",
+     "w": 16,
+     "x": 32,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "normalActive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "normalInactive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "notableActive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  },
+  {
+   "file": "test-sheet.png",
+   "height": 16,
+   "name": "notableInactive",
+   "sprites": [
+    {
+     "h": 16,
+     "name": "Test/Icon",
+     "w": 16,
+     "x": 0,
+     "y": 0
+    }
+   ],
+   "width": 64
+  }
+ ],
+ "nodes": [
+  {
+   "icon": "Test/Icon",
+   "node": 3001
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3002
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3003
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3004
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3005
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3101
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3102
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3103
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3104
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3105
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3201
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3202
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3203
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3204
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 3205
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 5000
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 5001
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 5002
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 5003
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 5004
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10000
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10001
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10002
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10003
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10004
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10005
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10010
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10011
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10012
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10013
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10014
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10015
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10020
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10021
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10022
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10023
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10024
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10025
+  },
+  {
+   "active_icon": "Test/Mastery",
+   "inactive_icon": "Test/Mastery",
+   "node": 10029
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10030
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10031
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10032
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10033
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10034
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10035
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10040
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10041
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10042
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10043
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10044
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10045
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10050
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10051
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10052
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10053
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10054
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10055
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10060
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10061
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10062
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10063
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10064
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10065
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10070
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10071
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10072
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10073
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10074
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10075
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10080
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10081
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10082
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10083
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10084
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 10085
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11000
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11001
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11002
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11003
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11004
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11005
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11010
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11011
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11012
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11013
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11014
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11015
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11020
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11021
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11022
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11023
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11024
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11025
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11028
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11030
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11031
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11032
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11033
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11034
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11035
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11040
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11041
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11042
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11043
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11044
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11045
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11050
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11051
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11052
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11053
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11054
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11055
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11060
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11061
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11062
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11063
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11064
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11065
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11068
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11070
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11071
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11072
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11073
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11074
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11075
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11080
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11081
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11082
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11083
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11084
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 11085
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12000
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12001
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12002
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12003
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12004
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12005
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12010
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12011
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12012
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12013
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12014
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12015
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12020
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12021
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12022
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12023
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12024
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12025
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12030
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12031
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12032
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12033
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12034
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12035
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12040
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12041
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12042
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12043
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12044
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12045
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12050
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12051
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12052
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12053
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12054
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12055
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12060
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12061
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12062
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12063
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12064
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12065
+  },
+  {
+   "active_icon": "Test/Mastery",
+   "inactive_icon": "Test/Mastery",
+   "node": 12069
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12070
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12071
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12072
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12073
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12074
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12075
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12080
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12081
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12082
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12083
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12084
+  },
+  {
+   "icon": "Test/Icon",
+   "node": 12085
+  }
+ ],
+ "source": {
+  "angle_rule": "synthetic: equal steps",
+  "commit": "0000000000000000000000000000000000000000",
+  "files": [],
+  "repository": "synthetic",
+  "tag": "synthetic"
+ },
+ "zoom": 0.5
+}

@@ -1,0 +1,20 @@
+[package]
+name = "loom-tree"
+description = "The passive tree: graph, kinds, positions, and the editor's allocation rules (core, wasm32)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-data.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

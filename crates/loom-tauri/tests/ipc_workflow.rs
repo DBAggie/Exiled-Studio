@@ -77,6 +77,7 @@ fn shell(test: &str) -> Shell {
         move |_| Paths {
             data,
             bundle: Some(root().join("crates/loom-data/tests/fixtures/bundle-poe1")),
+            keep_token: false,
         },
         move |_| Box::new(FakePicker(picks)),
     )
@@ -221,6 +222,14 @@ fn workflow_should_run_through_the_tauri_commands() {
         json!({"permissions": {"requests": true, "standing-grant": false}}),
     );
     assert_eq!(status["permissions"]["requests"], true);
+    // Rotate (ADR-017 Amendment 1): a new token on the same address; with
+    // no protected store here, the token is per session.
+    let before = s.ok("mcp_status", json!({}));
+    assert_eq!(before["token-kept"], false);
+    let rotated = s.ok("mcp_rotate", json!({}));
+    assert_eq!(rotated["running"], true);
+    assert_eq!(rotated["url"], before["url"]);
+    assert_ne!(rotated["token"], before["token"]);
     let status = s.ok("mcp_stop", json!({}));
     assert_eq!(status["running"], false);
 
@@ -307,4 +316,22 @@ fn drop_kind_should_follow_the_extension() {
     assert_eq!(drop_kind(Path::new("b.json")), DropKind::Build);
     assert_eq!(drop_kind(Path::new("c.txt")), DropKind::Other);
     assert_eq!(drop_kind(Path::new("noext")), DropKind::Other);
+}
+
+#[test]
+fn ui_prefs_should_round_trip_and_refuse_what_is_not_json() {
+    let s = shell("prefs");
+    assert_eq!(s.ok("ui_prefs", json!({})), Value::Null);
+    let text = r#"{"dashboards":[{"id":"a","name":"Overview","components":[]}]}"#;
+    s.ok("set_ui_prefs", json!({"text": text}));
+    assert_eq!(s.ok("ui_prefs", json!({})), json!(text));
+    let e = s
+        .invoke("set_ui_prefs", json!({"text": "{not json"}))
+        .unwrap_err();
+    assert_eq!(e["code"], "UI_PREFS");
+    let big = format!(r#"{{"x":"{}"}}"#, "a".repeat(loom_tauri::MAX_UI_PREFS));
+    let e = s.invoke("set_ui_prefs", json!({"text": big})).unwrap_err();
+    assert_eq!(e["code"], "UI_PREFS");
+    // The saved document is unchanged by the refusals.
+    assert_eq!(s.ok("ui_prefs", json!({})), json!(text));
 }

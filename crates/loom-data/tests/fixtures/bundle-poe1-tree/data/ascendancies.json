@@ -1,0 +1,20 @@
+[
+ {
+  "character": "Test/Chars/Str",
+  "class_number": 1,
+  "id": "TestChampion",
+  "name": "Test Champion"
+ },
+ {
+  "character": "Test/Chars/Str",
+  "class_number": 2,
+  "id": "TestBerserker",
+  "name": "Test Berserker"
+ },
+ {
+  "character": "Test/Chars/Int",
+  "class_number": 1,
+  "id": "TestOracle",
+  "name": "Test Oracle"
+ }
+]

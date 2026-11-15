@@ -11,7 +11,7 @@
 use loom_calc::poe1::{Poe1Data, Poe1Field};
 use loom_calc::{
     ArmourBase, BaseName, CalcData, CalcInput, CalcOptions, CalcResult, CharacterBase, DamageType,
-    Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveLinks, Range,
+    Field, FieldState, IndeterminateReason, ItemBase, LineValues, Node, PassiveState, Range,
     Scaling, Source, StatAmount, StateKind, Term, UnsupportedReason, WeaponBase, calculate,
 };
 use loom_data::bundle::poe1::{Pantheon, PantheonSoul};
@@ -185,19 +185,6 @@ impl CalcData for Data {
             .find(|(n, _)| *n == effect)
             .map(|(_, s)| s.as_slice())
     }
-    fn passive_links(&self, node: u32) -> Option<PassiveLinks> {
-        let links = match node {
-            START => vec![1, 2, 3, 4],
-            1..=4 => vec![START],
-            5 | 6 => vec![],
-            _ => return None,
-        };
-        Some(PassiveLinks {
-            root: node == START,
-            expansion: node == 6,
-            links,
-        })
-    }
     fn skill_gem(&self, _: &str) -> Option<&loom_calc::SkillGem> {
         None
     }
@@ -257,6 +244,7 @@ fn run_with(b: &Build, options: &CalcOptions) -> CalcResult {
     reason = "a test helper: a failure fails the test"
 )]
 fn run_on(data: &Data, b: &Build, options: &CalcOptions) -> CalcResult {
+    let options = &with_passives(b, options);
     let input = CalcInput {
         build: b,
         data,
@@ -265,6 +253,32 @@ fn run_on(data: &Data, b: &Build, options: &CalcOptions) -> CalcResult {
     let r = calculate(&input).unwrap();
     r.graph.check().unwrap();
     r
+}
+
+/// The test tree as the host resolves it (`loom-pipeline`): the start
+/// links nodes 1 to 4; 5 and 6 link nothing, 6 is a cluster jewel socket.
+fn with_passives(b: &Build, options: &CalcOptions) -> CalcOptions {
+    let mut o = options.clone();
+    if let Some(spec) = loom_calc::poe1::collect::active_spec(b) {
+        let nodes = spec.nodes.value();
+        let start = nodes.iter().any(|n| n.0 == START);
+        o.passives.nodes = nodes
+            .iter()
+            .map(|n| {
+                let state = if n.0 & PassiveState::CLUSTER_NODE_BIT != 0 {
+                    PassiveState::ClusterNode
+                } else if start && matches!(n.0, START | 1..=4) {
+                    PassiveState::Connected
+                } else if n.0 == 6 {
+                    PassiveState::ClusterSocket
+                } else {
+                    PassiveState::Unconnected
+                };
+                (*n, state)
+            })
+            .collect();
+    }
+    o
 }
 
 fn run(b: &Build) -> CalcResult {
