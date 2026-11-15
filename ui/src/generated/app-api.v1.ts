@@ -855,6 +855,13 @@ export interface ItemCard {
    */
   'level-req'?: string | null
   /**
+   * The most sockets the item's base rolls at its item level (the
+   * game data's item types; B-2 item evidence). None when the data
+   * has no caps for the base. More sockets than this is shown on the
+   * card, never a calculation state.
+   */
+  'max-sockets'?: number | null
+  /**
    * The defences and other base values written on the item
    * (`Energy Shield: 276`), in order.
    */

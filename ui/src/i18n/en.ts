@@ -546,6 +546,9 @@ export const en = {
   'card.quality': 'Quality +{q}%',
   'card.itemLevel': 'Item level {n}',
   'card.levelReq': 'Requires level {n}',
+  'card.maxSockets': 'Up to {n} sockets at this item level',
+  'card.overCap':
+    'More sockets than the base rolls at this item level (at most {n})',
   'card.influence': '{name} item',
   'card.version': 'Item version',
   'card.kind': 'Kind',

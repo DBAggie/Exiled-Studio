@@ -465,3 +465,16 @@ fn format_2_bundles_should_load_their_property_tables_in_each_game_shape() {
         )
     );
 }
+
+/// The most sockets a base rolls at an item level (E9; the game's body
+/// armour chain: `docs/ui/b2-data/card-data.md`).
+#[test]
+fn socket_caps_should_follow_the_item_level() {
+    let b = load(&source("bundle-poe1").unwrap()).unwrap();
+    let poe1 = b.poe1.as_ref().unwrap();
+    let shield = poe1.socket_caps_of("Test/Items/Shield1").unwrap();
+    let at: Vec<u32> = [1, 14, 25, 46, 72].iter().map(|l| shield.at(*l)).collect();
+    assert_eq!(at, [2, 3, 4, 5, 6]);
+    assert_eq!(poe1.socket_caps_of("Test/Items/Ring1").unwrap().at(84), 0);
+    assert!(poe1.socket_caps_of("Test/Items/Wand1").is_none());
+}

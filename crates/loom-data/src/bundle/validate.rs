@@ -975,6 +975,19 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (bases, findings) = p.socket_domain();
+        duplicates(report, super::poe1::SOCKET_CAPS, bases.iter().copied());
+        let known: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();
+        for base in bases.iter().filter(|x| !known.contains(*x)) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{}:{base}", super::poe1::SOCKET_CAPS),
+                format!("base item {base} does not exist"),
+            );
+        }
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
         let (keys, empty, findings) = p.flavour_domain();
         if empty > 0 {
             report.add(

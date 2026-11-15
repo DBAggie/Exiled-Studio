@@ -88,3 +88,26 @@ describe('card values (B-2 item evidence)', () => {
     expect(screen.getByText(/may leave them out/).className).toBe('tt-note')
   })
 })
+
+describe('socket caps (B-2 item evidence)', () => {
+  it('notes sockets past the base’s cap on the tooltip', () => {
+    const six = item({ sockets: ['RGB', 'RGB'], 'max-sockets': 4 })
+    render(<TooltipBody item={six} details={false} />)
+    expect(
+      screen.getByText(/More sockets than the base rolls/).textContent,
+    ).toContain('at most 4')
+  })
+
+  it('says nothing within the cap or without one', () => {
+    for (const card of [
+      { sockets: ['RGB'], 'max-sockets': 6 },
+      { sockets: ['RGBRGB'], 'max-sockets': null },
+    ]) {
+      const { unmount } = render(
+        <TooltipBody item={item(card)} details={false} />,
+      )
+      expect(screen.queryByText(/More sockets than/)).toBeNull()
+      unmount()
+    }
+  })
+})

@@ -46,6 +46,30 @@ struct Entry {
 #[derive(Default)]
 pub struct ItemTags {
     cache: BTreeMap<String, Option<Vec<String>>>,
+    sockets: BTreeMap<String, Option<String>>,
+}
+
+/// The game's item level for a socket count that never rolls.
+const NEVER: u32 = 9999;
+
+/// The socket counts a `socket_info` value lets roll, with the item level
+/// each needs (`count:item level:weight` entries; weight above 0 and item
+/// level below [`NEVER`]), by count; `None` when an entry does not read.
+pub fn socket_levels(info: &str) -> Option<Vec<(u32, u32)>> {
+    let mut out: BTreeMap<u32, u32> = BTreeMap::new();
+    for entry in info.split_whitespace() {
+        let mut parts = entry.split(':').map(str::parse::<u32>);
+        let (Some(Ok(count)), Some(Ok(level)), Some(Ok(weight)), None) =
+            (parts.next(), parts.next(), parts.next(), parts.next())
+        else {
+            return None;
+        };
+        if weight > 0 && level < NEVER {
+            let at = out.entry(count).or_insert(level);
+            *at = (*at).min(level);
+        }
+    }
+    Some(out.into_iter().collect())
 }
 
 impl ItemTags {
@@ -53,6 +77,46 @@ impl ItemTags {
     /// (see the module docs).
     pub fn tags(&mut self, read: Read<'_>, path: &str) -> Option<Vec<String>> {
         self.walk(read, &path.to_lowercase(), 0)
+    }
+
+    /// The `socket_info` of `path`'s `Sockets` block, from the nearest file
+    /// of its chain that sets it (B-2 item evidence, E9); `None` when no
+    /// file does, or the chain does not read.
+    pub fn socket_info(&mut self, read: Read<'_>, path: &str) -> Option<String> {
+        self.socket_walk(read, &path.to_lowercase(), 0)
+    }
+
+    fn socket_walk(&mut self, read: Read<'_>, path: &str, depth: usize) -> Option<String> {
+        if let Some(known) = self.sockets.get(path) {
+            return known.clone();
+        }
+        self.sockets.insert(path.to_owned(), None);
+        let info = if depth > MAX_DEPTH {
+            None
+        } else {
+            read(&format!("item_types/{path}.it.json"))
+                .ok()
+                .and_then(|bytes| serde_json::from_slice::<ItemTypeFile>(&bytes).ok())
+                .and_then(|file| {
+                    let own = file
+                        .blocks
+                        .iter()
+                        .filter(|b| b.name == "Sockets")
+                        .flat_map(|b| &b.entries)
+                        .filter(|e| e.key == "socket_info")
+                        .filter_map(|e| e.value.as_ref()?.as_str().map(str::to_owned))
+                        .next_back();
+                    own.or_else(|| {
+                        (file.extends != "nothing")
+                            .then(|| {
+                                self.socket_walk(read, &file.extends.to_lowercase(), depth + 1)
+                            })
+                            .flatten()
+                    })
+                })
+        };
+        self.sockets.insert(path.to_owned(), info.clone());
+        info
     }
 
     fn walk(&mut self, read: Read<'_>, path: &str, depth: usize) -> Option<Vec<String>> {
@@ -104,6 +168,51 @@ impl ItemTags {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn socket_levels_should_keep_the_counts_that_roll() {
+        // The game's body armour and shield values (card-data.md).
+        assert_eq!(
+            socket_levels("1:1:50 2:1:120 3:2:100 4:25:30 5:35:5 6:50:1"),
+            Some(vec![(1, 1), (2, 1), (3, 2), (4, 25), (5, 35), (6, 50)])
+        );
+        assert_eq!(
+            socket_levels("1:1:50 2:1:120 3:2:100 4:9999:30 5:9999:20 6:9999:5"),
+            Some(vec![(1, 1), (2, 1), (3, 2)])
+        );
+        assert_eq!(socket_levels("0:1:1 1:9999:100"), Some(vec![(0, 1)]));
+        assert_eq!(socket_levels("1:1"), None);
+    }
+
+    #[test]
+    fn socket_info_should_come_from_the_nearest_file_that_sets_it() {
+        let files: BTreeMap<String, String> = [
+            (
+                "item_types/a.it.json",
+                r#"{"extends": "nothing", "blocks": [{"name": "Sockets", "entries": [{"key": "socket_info", "value": "1:1:1 2:1:1"}]}]}"#,
+            ),
+            ("item_types/b.it.json", r#"{"extends": "A", "blocks": []}"#),
+            (
+                "item_types/c.it.json",
+                r#"{"extends": "B", "blocks": [{"name": "Sockets", "entries": [{"key": "socket_info", "value": "1:1:1"}]}]}"#,
+            ),
+            ("item_types/d.it.json", r#"{"extends": "nothing", "blocks": []}"#),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_owned(), v.to_owned()))
+        .collect();
+        let read = |p: &str| -> Result<Vec<u8>, String> {
+            files
+                .get(p)
+                .map(|s| s.as_bytes().to_vec())
+                .ok_or_else(|| p.to_owned())
+        };
+        let mut t = ItemTags::default();
+        assert_eq!(t.socket_info(&read, "B").as_deref(), Some("1:1:1 2:1:1"));
+        assert_eq!(t.socket_info(&read, "C").as_deref(), Some("1:1:1"));
+        assert_eq!(t.socket_info(&read, "D"), None);
+        assert_eq!(t.socket_info(&read, "E"), None);
+    }
 
     fn file(extends: &str, entries: &[(&str, &str)]) -> String {
         let entries: Vec<String> = entries

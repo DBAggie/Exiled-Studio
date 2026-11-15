@@ -74,6 +74,15 @@ export function valueLines(c: ItemCard): ValueLine[] {
   return out
 }
 
+/** The item's sockets beyond what its base rolls at its item level (B-2
+ * item evidence, E9), or null when within the cap or the cap is unknown. */
+export function socketsOverCap(c: ItemCard): number | null {
+  const cap = c['max-sockets']
+  if (cap == null) return null
+  const count = c.sockets.reduce((n, group) => n + group.length, 0)
+  return count > cap ? cap : null
+}
+
 /** The written properties the card still shows next to its values. */
 export function writtenProperties(c: ItemCard): ItemCard['properties'] {
   return c.values == null

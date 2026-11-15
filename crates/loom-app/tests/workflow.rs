@@ -1792,3 +1792,35 @@ fn a_pasted_game_copy_should_become_an_item_and_undo_should_remove_it() {
     session.undo().unwrap();
     assert_eq!(session.snapshot(idle()).build.unwrap().items.len(), before);
 }
+
+#[test]
+fn the_card_should_give_the_bases_socket_cap_at_the_item_level() {
+    // The fixture's made-up caps (`make_bundles.py`): the shield as the
+    // game's body armour (3 below item level 25, 6 from 50), the ring none.
+    let item = |id: u32, base: &str, level: Option<u32>| {
+        let level = level
+            .map(|l| format!("Item Level: {l}\n"))
+            .unwrap_or_default();
+        format!("<Item id=\"{id}\">\nRarity: NORMAL\n{base}\n{level}Implicits: 0\n</Item>\n")
+    };
+    let items = [
+        item(9, "Plain Test Shield", Some(14)),
+        item(10, "Plain Test Shield", Some(72)),
+        item(11, "Plain Test Ring", Some(84)),
+        item(12, "Plain Test Shield", None),
+        item(13, "Plain Test Wand", Some(84)),
+    ]
+    .concat();
+    let xml = synthetic().replacen("<ItemSet ", &format!("{items}<ItemSet "), 1);
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+    let cap = |id| session.item(id).unwrap().card.max_sockets;
+    assert_eq!(cap(9), Some(3));
+    assert_eq!(cap(10), Some(6));
+    assert_eq!(cap(11), Some(0));
+    // No item level: the most at any level.
+    assert_eq!(cap(12), Some(6));
+    // No caps for the base.
+    assert_eq!(cap(13), None);
+}

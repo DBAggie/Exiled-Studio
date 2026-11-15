@@ -23,7 +23,7 @@ import {
   ScreenHeading,
   Sockets,
 } from '../components'
-import { valueLines, writtenProperties } from '../cardValues'
+import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
 import { fieldLabel, t, tDynamic } from '../i18n'
 import { actions, attempt, query, run } from '../store'
 import { Inventory } from './Inventory'
@@ -409,6 +409,7 @@ function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
         },
       }),
     )
+  const over = socketsOverCap(c)
   const facts = [
     c['item-class'],
     c.quality == null ? null : t('card.quality', { q: c.quality }),
@@ -416,6 +417,10 @@ function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
       ? null
       : t('card.itemLevel', { n: c['item-level'] }),
     c['level-req'] == null ? null : t('card.levelReq', { n: c['level-req'] }),
+    c['max-sockets'] == null || c['max-sockets'] === 0
+      ? null
+      : t('card.maxSockets', { n: c['max-sockets'] }),
+    over == null ? null : t('card.overCap', { n: over }),
     ...valueLines(c).map((v) => `${v.name}: ${v.value}`),
     c.values?.partial === true ? t('values.partial') : null,
     ...writtenProperties(c).map((p) => `${p.name}: ${p.value}`),

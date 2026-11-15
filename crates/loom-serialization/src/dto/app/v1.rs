@@ -727,6 +727,12 @@ dto! {
         /// missing.
         #[serde(default)]
         pub values: Option<CardValues>,
+        /// The most sockets the item's base rolls at its item level (the
+        /// game data's item types; B-2 item evidence). None when the data
+        /// has no caps for the base. More sockets than this is shown on the
+        /// card, never a calculation state.
+        #[serde(default)]
+        pub max_sockets: Option<u32>,
     }
 
     /// An item's own values ([`ItemCard::values`]), each as the game's

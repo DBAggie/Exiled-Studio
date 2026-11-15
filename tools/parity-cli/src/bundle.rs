@@ -48,7 +48,7 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use crate::extract::{Extract, Read, Table};
-use crate::item_tags::ItemTags;
+use crate::item_tags::{self, ItemTags};
 use crate::lookup::{LookupReport, TableLookup};
 use crate::{flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
 
@@ -313,13 +313,15 @@ fn mods(
     Ok((out, bad_spawn, duplicate_types))
 }
 
-/// Named base items, and the count whose tags are unknown.
+/// Named base items, the count whose tags are unknown, the count without
+/// a name, and each base's socket caps (B-2 item evidence, E9: the item
+/// type chain's `socket_info`; bases whose chain sets none are left out).
 fn base_items(
     read: Read<'_>,
     classes: &[String],
     mods: &[ModEntry],
     counts: &Counts,
-) -> Result<(Vec<BaseItem>, usize, usize), String> {
+) -> Result<BaseItemRows, String> {
     let tag_ids = mod_filter::tag_ids(read)?;
     let t = Table::require(read, "BaseItemTypes")?;
     let col = |n: &str| t.column(n);
@@ -340,6 +342,7 @@ fn base_items(
     let mut item_tags = ItemTags::default();
     let (mut unknown, mut nameless) = (0, 0);
     let mut out = Vec::new();
+    let mut caps = Vec::new();
     for r in &t.rows {
         let (Some(i), Some(n)) = (Table::text(r, id), Table::text(r, name)) else {
             continue;
@@ -360,6 +363,16 @@ fn base_items(
             });
         if row_tags.is_none() {
             unknown += 1;
+        }
+        if let Some(levels) = Table::text(r, inherits)
+            .and_then(|path| item_tags.socket_info(read, path))
+            .and_then(|info| item_tags::socket_levels(&info))
+            .filter(|l| !l.is_empty())
+        {
+            caps.push(bundle_poe1::SocketCaps {
+                base: i.to_owned(),
+                levels,
+            });
         }
         out.push(BaseItem {
             id: i.to_owned(),
@@ -384,8 +397,11 @@ fn base_items(
             requirements: requirements.get(i).copied(),
         });
     }
-    Ok((out, unknown, nameless))
+    Ok((out, unknown, nameless, caps))
 }
+
+/// [`base_items`]' result.
+type BaseItemRows = (Vec<BaseItem>, usize, usize, Vec<bundle_poe1::SocketCaps>);
 
 /// Base item IDs to their attribute requirements, from
 /// `ComponentAttributeRequirements` (a PoE1 extraction root; empty when the
@@ -575,7 +591,8 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     unique_ids("ItemClasses", classes.iter().map(String::as_str))?;
     let (mod_rows, bad_spawn, duplicate_types) = mods(read, &classes, &counts)?;
     unique_ids("Mods", mod_rows.iter().map(|m| m.id.as_str()))?;
-    let (bases, tags_unknown, nameless) = base_items(read, &classes, &mod_rows, &counts)?;
+    let (bases, tags_unknown, nameless, socket_caps) =
+        base_items(read, &classes, &mod_rows, &counts)?;
     let (skill_tables, skill_summary) = skills::convert(read, &classes, &counts)?;
     let (passive_tables, passive_summary) = passives::convert(read, &raw, &counts)?;
     let (property_tables, property_summary) = base_properties::convert(read, &counts)?;
@@ -831,6 +848,15 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 bundle_poe1::UNIQUE_FLAVOUR,
                 to_json(&texts)?,
                 Some(texts.len()),
+            );
+        }
+        if !socket_caps.is_empty() {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::SOCKET_CAPS,
+                to_json(&socket_caps)?,
+                Some(socket_caps.len()),
             );
         }
         if let Some(radii) = jewel_radii::rows(read)? {

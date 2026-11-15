@@ -18,6 +18,9 @@
 //! - `poe1/unique_flavour.json`: unique items' flavour text (`FlavourText`,
 //!   found through `UniqueStashLayout`; B-2's item card, Q-B2-1), each with
 //!   the unique's name and the text's ID, as the game writes it.
+//! - `poe1/socket_caps.json`: how many sockets each base can roll by item
+//!   level (the item type files' `Sockets` component, `socket_info`, the
+//!   nearest file of the base's chain that sets it; B-2 item evidence).
 
 use serde::{Deserialize, Serialize};
 
@@ -35,6 +38,34 @@ pub const PANTHEONS: &str = "poe1/pantheons.json";
 pub const JEWEL_RADII: &str = "poe1/jewel_radii.json";
 /// Unique flavour text.
 pub const UNIQUE_FLAVOUR: &str = "poe1/unique_flavour.json";
+/// Socket caps by base.
+pub const SOCKET_CAPS: &str = "poe1/socket_caps.json";
+
+/// The sockets a base can roll (`docs/ui/b2-data/card-data.md`, "Maximum
+/// sockets"): the item type's `socket_info` (`count:item level:weight`),
+/// the counts that can roll (weight above 0, item level below the game's
+/// 9999 "never") with the item level each needs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SocketCaps {
+    /// The base item's ID.
+    pub base: String,
+    /// `(sockets, item level)`, by socket count.
+    pub levels: Vec<(u32, u32)>,
+}
+
+impl SocketCaps {
+    /// The most sockets the base rolls at `item_level`; 0 when none rolls.
+    #[must_use]
+    pub fn at(&self, item_level: u32) -> u32 {
+        self.levels
+            .iter()
+            .filter(|(_, level)| *level <= item_level)
+            .map(|(count, _)| *count)
+            .max()
+            .unwrap_or(0)
+    }
+}
 
 /// A unique item's flavour text. The game links them by a name convention,
 /// not a key (`docs/ui/b2-data/card-data.md`): the unique's art
@@ -151,6 +182,8 @@ pub struct Poe1Section {
     pub jewel_radii: Option<Vec<JewelRadius>>,
     /// Unique flavour text (`None` when the file is absent).
     pub unique_flavour: Option<Vec<UniqueFlavour>>,
+    /// Socket caps (`None` when the file is absent).
+    pub socket_caps: Option<Vec<SocketCaps>>,
 }
 
 impl Poe1Section {
@@ -230,6 +263,31 @@ impl Poe1Section {
         (keys, empty, bad)
     }
 
+    /// Socket caps' domain checks for the validator: each row's base, and
+    /// the rows with no level or counts out of order.
+    pub(super) fn socket_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let rows = self.socket_caps.as_deref().unwrap_or_default();
+        let bases = rows.iter().map(|r| r.base.as_str()).collect();
+        let bad = rows
+            .iter()
+            .filter(|r| {
+                r.levels.is_empty()
+                    || r.levels
+                        .iter()
+                        .zip(r.levels.iter().skip(1))
+                        .any(|(a, b)| a.0 >= b.0)
+            })
+            .map(|r| (format!("{SOCKET_CAPS}:{}", r.base), "no counts in order"))
+            .collect();
+        (bases, bad)
+    }
+
+    /// The socket caps of base `id`, if the file has them.
+    #[must_use]
+    pub fn socket_caps_of(&self, id: &str) -> Option<&SocketCaps> {
+        self.socket_caps.iter().flatten().find(|r| r.base == id)
+    }
+
     /// The flavour text rows of the unique named `name`, in the file's
     /// order (none without the file).
     pub fn flavour_of<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a UniqueFlavour> {
@@ -271,6 +329,11 @@ impl Poe1Section {
             },
             unique_flavour: if listed(UNIQUE_FLAVOUR) {
                 Some(json(source, UNIQUE_FLAVOUR)?)
+            } else {
+                None
+            },
+            socket_caps: if listed(SOCKET_CAPS) {
+                Some(json(source, SOCKET_CAPS)?)
             } else {
                 None
             },

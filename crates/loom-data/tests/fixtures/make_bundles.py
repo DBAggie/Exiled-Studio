@@ -837,6 +837,13 @@ poe1["poe1/unique_flavour.json"] = [
     {"name": "Test Same", "id": "TestUnique4", "text": "One text."},
     {"name": "Test Same", "id": "TestUnique5", "text": "One text."},
 ]
+# B-2 item evidence (E9): made-up socket caps in the game's form, a
+# body-armour-like chain (3 below item level 25, 6 from 50) for the shield
+# and none for the ring.
+poe1["poe1/socket_caps.json"] = [
+    {"base": "Test/Items/Shield1", "levels": [[1, 1], [2, 1], [3, 2], [4, 25], [5, 35], [6, 50]]},
+    {"base": "Test/Items/Ring1", "levels": [[0, 1]]},
+]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))

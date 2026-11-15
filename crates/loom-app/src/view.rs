@@ -340,20 +340,46 @@ fn affixes(item: &Item, data: &BundleData<'_>) -> Vec<api::AffixView> {
 
 /// The item's requirements: the level as written (`LevelReq`), else the
 /// base's drop level; the base's attribute requirements (data schema 4).
+/// The item's base row (a data schema 4 bundle's), by PoB's naming rules.
+fn base_row<'b>(
+    item: &Item,
+    bundle: Option<&'b Bundle>,
+) -> Option<&'b loom_data::bundle::BaseItem> {
+    let b = bundle?;
+    if b.manifest.data_schema < loom_data::bundle::AFFIX_SCHEMA {
+        return None;
+    }
+    let (name, fallback) =
+        pob_item::item_base(&item.body, b.base_items.iter().map(|x| x.name.as_str())).ok()?;
+    let find = |n: &str| b.base_items.iter().find(|x| x.name == n);
+    find(&name).or_else(|| fallback.as_deref().and_then(find))
+}
+
+/// The most sockets the item's base rolls at its item level (B-2 item
+/// evidence, E9: the bundle's `poe1/socket_caps.json`); at the highest
+/// level when the item has none written. None without the file or the
+/// base's row.
+fn max_sockets(item: &Item, bundle: Option<&Bundle>) -> Option<u32> {
+    let base = base_row(item, bundle)?;
+    let caps = bundle?.poe1.as_ref()?.socket_caps_of(&base.id)?;
+    let level = item
+        .body
+        .lines
+        .iter()
+        .find_map(|l| match &l.kind {
+            LineKind::Spec { key, value, .. } if key == "Item Level" => value.trim().parse().ok(),
+            _ => None,
+        })
+        .unwrap_or(u32::MAX);
+    Some(caps.at(level))
+}
+
 fn requirements(
     item: &Item,
     written: Option<&str>,
     bundle: Option<&Bundle>,
 ) -> Option<api::Requirements> {
-    let base = bundle.and_then(|b| {
-        if b.manifest.data_schema < loom_data::bundle::AFFIX_SCHEMA {
-            return None;
-        }
-        let (name, fallback) =
-            pob_item::item_base(&item.body, b.base_items.iter().map(|x| x.name.as_str())).ok()?;
-        let find = |n: &str| b.base_items.iter().find(|x| x.name == n);
-        find(&name).or_else(|| fallback.as_deref().and_then(find))
-    });
+    let base = base_row(item, bundle);
     // The base's level by PoB's rule (`Bundle::required_level`): a jewel
     // or a ring without implicits requires none, as the game shows.
     let level = written
@@ -526,6 +552,7 @@ fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
         requirements: item_requirements(item, bundle),
         flavour: bundle.map(|b| flavour(item, b)).unwrap_or_default(),
         values: None,
+        max_sockets: max_sockets(item, bundle),
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
     }

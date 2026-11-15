@@ -2701,6 +2701,16 @@
             "null"
           ]
         },
+        "max-sockets": {
+          "description": "The most sockets the item's base rolls at its item level (the\ngame data's item types; B-2 item evidence). None when the data\nhas no caps for the base. More sockets than this is shown on the\ncard, never a calculation state.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
+          "minimum": 0
+        },
         "properties": {
           "description": "The defences and other base values written on the item\n(`Energy Shield: 276`), in order.",
           "type": "array",

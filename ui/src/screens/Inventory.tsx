@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { ItemSummary, ItemView, LineView } from '../api/types'
-import { valueLines, writtenProperties } from '../cardValues'
+import { socketsOverCap, valueLines, writtenProperties } from '../cardValues'
 import { formatNumber, t } from '../i18n'
 import { actions, attempt, run } from '../store'
 import { Sprite } from '../sprites'
@@ -240,6 +240,11 @@ export function TooltipBody({
     c.values?.partial === true && (
       <p key="v-partial" className="tt-note">
         {t('values.partial')}
+      </p>
+    ),
+    socketsOverCap(c) != null && (
+      <p key="over-cap" className="tt-note">
+        {t('card.overCap', { n: socketsOverCap(c) ?? 0 })}
       </p>
     ),
     ...writtenProperties(c)
