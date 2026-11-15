@@ -12,4 +12,5 @@
 
 pub mod bundle;
 pub mod rules;
+pub mod signature;
 pub mod stat_desc;

@@ -38,7 +38,7 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this order. Tick each when its commit is pushed; the handoff's Current state names the last one.
 - [x] Housekeeping: #117's merge recorded
 - [x] P1 packaging (`docs/phase-5/packaging.md`)
-- [ ] P2 signing
+- [x] P2 signing (`docs/release/signing.md`)
 - [ ] P3 app updates
 - [ ] P4 data bundles
 - [ ] P6 security

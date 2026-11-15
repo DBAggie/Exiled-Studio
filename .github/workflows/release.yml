@@ -45,6 +45,11 @@ jobs:
         working-directory: ui
       - run: pnpm build
         working-directory: ui
+      - name: Data key (throwaway when the secret is absent)
+        shell: bash
+        env:
+          LOOM_DATA_KEY: ${{ secrets.LOOM_DATA_KEY }}
+        run: bash tools/package/data-key.sh
       - name: Version
         id: version
         shell: bash
@@ -103,6 +108,11 @@ jobs:
         working-directory: ui
       - run: pnpm build
         working-directory: ui
+      - name: Data key (throwaway when the secret is absent)
+        shell: bash
+        env:
+          LOOM_DATA_KEY: ${{ secrets.LOOM_DATA_KEY }}
+        run: bash tools/package/data-key.sh
       - name: Version
         id: version
         run: echo "version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "loom-tauri") | .version')" >> "$GITHUB_OUTPUT"

@@ -37,6 +37,9 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "std", "registry"] }
 # The diagnostic package's zip (stored entries; Phase 5, P-f).
 crc32fast = "1.4"
+# Ed25519 signatures over data bundles and feeds (Phase 5, P-c; BSD-3-Clause).
+# No default features: no precomputed tables, no RNG (core crates verify only).
+ed25519-dalek = { version = "2.2", default-features = false, features = ["std", "zeroize"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"
