@@ -2,7 +2,7 @@
 
 Maintainer 2026-11-15: 27 in-game items (Ctrl+Alt+C copies plus plain and Alt screenshots, 29 copies with two items at 0% and 9% quality) and four passive tree screenshots, then "include it" (the tree points in the same PR). "We can copy the flavour text" (maintainer 2026-11-15, ADR-000 decision recorded in `item-evidence.md`). Branch `feat/b2-item-evidence` from `dev` after #116 (B-2 card data: tag names from `Tags.Name`, unique flavour from `poe1/unique_flavour.json`). One PR, one commit per step, each with its evidence.
 
-**Status (2026-11-15): E1 to E11 done on `feat/b2-item-evidence`, one commit each (E1 and E2 together; E7's flavour check in E3's commit); E12 is the PR (PR #117, open).** E2b's comparison is `crates/loom-serialization/tests/game_copy_fixtures.rs` against `pob-oracle/`. E9 and E10 wait for the main workstation's data run (`item-evidence.md`, "For the main workstation's next data run").
+**Status (2026-11-15): E1 to E11 done on `feat/b2-item-evidence`, one commit each (E1 and E2 together; E7's flavour check in E3's commit); E12 is the PR (PR #117, open).** E2b's comparison is `crates/loom-serialization/tests/game_copy_fixtures.rs` against `pob-oracle/`. E9 and E10's data run is done on the same branch by the main workstation (2026-11-15, `ce00a46` and its docs; `item-evidence.md`, "Main workstation data run").
 
 Revised after the plan-reviewer (verdict "proceed with changes"; findings C1 to C4 and the ADR notes are taken below) and after #116.
 

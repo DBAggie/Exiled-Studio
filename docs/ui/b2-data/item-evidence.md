@@ -101,7 +101,8 @@ One deliberate difference: PoB subtracts only the defence's own flat there, and 
 - **Calc evidence** (2026-11-15, this workstation):
   - **Run.** `calc-run` of the public set (136 builds, the `attack-hits.md` command, scope `calc-scope-poe1.json`) on the flavour bundle `bundle-poe1-tree-a`, made with the CLI at `dev` (`c0623d3`) and at this branch (`0bde2a0` plus the review's test and comment). Two runs at the branch give byte-identical documents.
   - **Result.** In every one of the 135 documents, each field's value, state, and reasons are equal; the summary counts are equal too (2,270 complete, 176 partial, 482 unsupported, 312 indeterminate). 38 documents differ only in the graph's node numbering.
-  - **Not rerun.** No `calc-parity` rerun was needed: every compared value is the same. The corpus run is the maintainer's, on the main workstation, with the next data run.
+  - **Not rerun.** No `calc-parity` rerun was needed: every compared value is the same.
+  - **Corpus** (main workstation, with the data run below): `calc-run --anonymous` of the 21 corpus builds on the new app bundle, with the CLI at `dev` (`c0623d3`) and at this branch (`ce00a46`). In all 21 documents the result's state, reasons, and fields (values, states, reasons, node references) are equal; only the `graph` section differs. Summary counts equal (141 unsupported, 363 indeterminate).
 - **Register.** No fixture reaches the difference, so there is no `oracle-compare` difference for a register entry to cover; the register is kept by fixture and field (`docs/parity/README.md`). If a fixture ever reaches it, add a `game-truth` entry with this evidence: the game's tooltip is the shown value.
 - **Pinned.** `item_values_should_be_the_calculations_own_nodes` (`crates/loom-calc/tests/poe1.rs`) covers the hybrid case: an evasion base of 10 to 20, `local_evasion_rating_and_energy_shield` +10, and a shown 25 give 25 back. PoB's way gives 30.
 - **A shown value of 0 or less** gives no percentile, as in PoB (`armourData.Armour > 0`), so the roll is the top. A copy of a base with a defence range never shows 0.
@@ -158,26 +159,25 @@ The copies agree with the item type files' caps (`card-data.md`, "Maximum socket
 - **Tested.**
   - The fixture bundle carries made-up caps in the game's form.
   - Tests cover the validator (duplicate, unknown base, empty, out of order), the item levels 1, 14, 25, 46, 72, and the card.
-- **Data run.** The real file needs the main workstation's next bundle build, because this workstation has no extract. That run should list the corpus items over their cap.
+- **Data run** (main workstation, 2026-11-15; "Main workstation data run" below): the real file has caps for 863 bases, following the game's thresholds (body armour and two-handers: 4 sockets from item level 25, 5 from 35, 6 from 50; helmets stop at 4, one-handers and shields at 3).
+- **Corpus:** of 1,055 items in the 21 builds, 375 get a cap and **none has more sockets than its cap**. 20 socketed items get no cap: Stygian Vise and Unset Ring bases (with Darkness Enthroned), whose sockets come with the base, so their item type files roll no count. Most items in the corpus have no item level written, so they are checked at the highest level.
 - **Difference from PoB.** PoB's per-base `socketLimit` has no item-level thresholds, and it gives Gnarled Branch and Corroded Blade 6 where the game data gives 3. The card follows the game; this is display only.
 
 ## Flavour text
 
 The card reads unique flavour text from the bundle (#116). Each unique copy's flavour section was checked against it on the real bundle (`crates/loom-app/tests/game_truth_items.rs`):
-- 8 of the 9 uniques with flavour text agree.
-- **The Light of Meaning** does not. The game shows "To name a thing is to give it power.", but PoB v2.67.2 pairs the unique with `UniqueJewel181` ("Faith given under false pretenses still carries the same power."), and #116's bundle took PoB's pair.
-  - The fix is for the main workstation's next data run:
-    1. Find the `FlavourText` row holding the game's line.
-    2. Add its pair to `poe1::FLAVOUR_PAIRS`.
-    3. Register the new `flavour_text` difference from PoB as `game-truth`.
-  - The test lists this entry until then.
+- All 9 uniques with flavour text agree, after the data run's fix below.
+- **The Light of Meaning** did not, on #116's bundle. The game shows "To name a thing is to give it power.", but PoB v2.67.2 pairs the unique with `UniqueJewel181` ("Faith given under false pretenses still carries the same power."), and #116's bundle took PoB's pair.
+  - **Why.** The Light of Meaning shares its art with That Which Was Taken, whose text is `UniqueJewel181`; both PoB's exporter and #116's art join give each stash row its art's text. The game's line is `FlavourText` row `UniqueJewel183_`, which no art reaches.
+  - **Fix.** `("UniqueJewel183_", "The Light of Meaning")` in `poe1::FLAVOUR_PAIRS` (75 pairs); the flavour test now expects no difference. That Which Was Taken keeps `UniqueJewel181` (no copy of it yet).
+  - **PoB.** The bundle no longer has PoB's `The Light of Meaning|UniqueJewel181` row: `data-parity` rule `flavour-game-copy-over-shared-art` (`pob-derivation`, count 1), with the copy as its evidence (`docs/phase-3/data-parity.md`, "B-2: table `flavour_text`"). Not a divergence-register entry: the register covers calc output fields by fixture, and `data-parity`'s rules have no `game-truth` category; a `pob-derivation` rule is how a data difference where PoB's exporter derives the value is recorded.
 
 ## Tree flavour (E10)
 
 The tree screenshots show a keystone's flavour text under its lines, and an ascendancy's quote. The maintainer chose the game files over GGG's tree export as the source (2026-11-15).
 - **Built.** The bundle builder (`tools/parity-cli/src/tree_flavour.rs`) reads two tables:
   - `PassiveSkills.FlavourText` by `PassiveSkillGraphId`;
-  - `Ascendancy.FlavourText` and `FlavourTextColour` by `Id`.
+  - `Ascendancy.FlavourText` and `RGBFlavourTextColour` (`r,g,b`) by `Id`.
   It writes rows with text only, into `poe1/tree_flavour.json`. This is an optional file with no schema bump; the validator checks for duplicates and empty texts.
 - **Shown.**
   - The tree layout carries the texts: `TreeNodeView.flavour`, `TreeAscendancyView.flavour` and `flavour-colour`.
@@ -188,23 +188,28 @@ The tree screenshots show a keystone's flavour text under its lines, and an asce
 - **Tested.**
   - The fixture bundle has made-up texts.
   - Tests cover the validator, the reader's rows, the layout (`the_layout_should_carry_the_trees_flavour_texts`), and the screen (`tree.test.tsx`).
-- **Data run.** The real file needs the main workstation's next bundle build.
+- **Data run** (main workstation, 2026-11-15):
+  - **Fix.** The game's colour column is `RGBFlavourTextColour`; the reader asked for `FlavourTextColour`, which the extract does not have, so every quote would have shipped without its colour. Fixed, with the reader's test.
+  - **Real file.** 119 passive texts and 18 ascendancy quotes, each with its colour.
+  - **Against GGG's export at 3.29.1:** all 57 keystone texts of the export's tree are in the file, each equal to the export's (line by line, padding trimmed); the other 62 rows are passives not on the 3.29.1 tree, never shown. All 18 quotes and their colours equal the export's (`175,90,50` is `af5a32`).
+  - **Left without a text:** Scion's Ascendant, Reliquarian, and Luminary. The game data and the export both have no quote for them (the export has 21 ascendancies, 18 with a quote; the plan's "21 with a quote" was wrong). No keystone of the tree is left without one.
 
 ## Attribute totals on the tree (E11)
 
 The game's passive tree shows the character's Strength, Dexterity, and Intelligence next to the points. The tree screen now does too: it shows the totals from the open build's last calculation, so they follow every allocation. The line is hidden while a total is not computed. The Inventory panel's requirement check reads the totals the same way (`util.ts`, `useAttributes`). Test: `tree.test.tsx`.
 
-## For the main workstation's next data run
+## Main workstation data run
 
-This workstation has bundles only, no extract, so four items wait for the main workstation (build 26530219, after this PR merges):
-1. **Socket caps (E9).** Rebuild the bundle: `poe1/socket_caps.json` comes from the item type files already extracted. Then:
-   - check that `bundle-check` is clean and that two builds are byte-identical;
-   - list the corpus items with more sockets than their base's cap at their level (each one the card notes), and record the list here.
-2. **Tree flavour (E10).** The same rebuild writes `poe1/tree_flavour.json`. Check that `PassiveSkills` and `Ascendancy` are among the extracted tables. Then compare the counts with GGG's export at 3.29.1: 57 keystones with flavour, 21 ascendancies with a quote. Record any keystone or ascendancy left without a text.
-3. **The Light of Meaning's flavour.** Find the `FlavourText` row with "To name a thing is to give it power." and add its pair to `poe1::FLAVOUR_PAIRS`. Register the new `flavour_text` difference from PoB as `game-truth`, then remove the entry from the flavour test's expected list (`crates/loom-app/tests/game_truth_items.rs`).
-4. **The real-bundle tests.** Run the ignored tests with the new bundle: `LOOM_B2_BUNDLE=<bundle> cargo test -p loom-app --test game_truth_items -- --ignored`. The expected lists should then shrink only by The Light of Meaning.
+Done on this PR's branch on 2026-11-15 (the maintainer asked for it before the merge), Steam build 26530219. `local/b2ev/evidence.sh`, from clean commit `ce00a46` (the two fixes above):
+- **Input.** #116's extract (`local/b2card/f/extract-a`): the extractor is unchanged since it was made (`git diff d2f5f54 ce00a46 -- tools/extractor` is empty). `PassiveSkills`, `Ascendancy`, `FlavourText`, and the item type files are in it.
+- **`bundle`** twice, byte-identical; `bundle-check` no findings; `bundle.json` SHA-256 `2e9a11027fd1f0666b939432b97cb46c3b0cbafeb1e17d15146c0303f891f80a`. Against #116's bundle: `poe1/socket_caps.json` (863 bases) and `poe1/tree_flavour.json` are new, `poe1/unique_flavour.json` differs only in The Light of Meaning's row, and `bundle.json` differs.
+- **`data-parity`** at PoB export format 8, twice byte-identical: 614 differences (not-carried 163, patch-delta 130, pob-derivation 241, representation 80), `uncategorized` 0, 0 failed rules, 371 overlay rows; summary `data-parity-poe1-26530219-evidence.json`. The one new difference is The Light of Meaning's (above).
+- **`tree-layout`**, then `bundle-check` clean; against #116's tree bundle, the same files differ.
+- **`calc-run`** (public 136, corpus 21) on #116's app bundle and twice on the new one: every document identical. **No calculation changed.** The code's before and after on the corpus is under E4.
+- **Real-bundle tests** (`game_truth_items` 7, `game_truth_affixes` 3): all pass. The flavour test checks 9 uniques with no difference; the other expected lists are unchanged (Replica Dreamfeather's attack rate, Tempest Refuge's tier).
+- **Socket caps and tree flavour:** E9 and E10 above.
 
-Ship the new app bundle to the other workstation as before (OneDrive, with its `.sha256`).
+The app bundle is in OneDrive `Exiled-Studio-bundles` as `bundle-poe1-26530219-schema4-evidence.zip` (8.2 MB, top folder `bundle-poe1-tree-a/`), SHA-256 `ffa2dd01f2832ffa72eb4fa953e3ea60067a1b749b680d373203099d857dc973`, with its `.sha256` file (checked there; `bundle-check` clean on the unzipped copy). It replaces `bundle-poe1-26530219-schema4-flavour.zip`. Not committed (GGG's sprite sheets).
 
 ## Lines that stay reasons
 

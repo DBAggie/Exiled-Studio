@@ -172,7 +172,7 @@ The maintainer's 27 in-game items (29 copies) and tree screenshots, and what the
 - **The card's values.** Its defences, block, weapon damage, attack rate, and crit chance are what the calculation gives the item alone (`ItemCard.values`). A pasted armour piece takes its base roll from the defence its copy shows. Requirements are given as the game shows them. Affix headers were checked against the game's: one difference is left (influence tiers).
 - **Socket caps.** The card gives the base's socket cap at the item's level and notes an item over it (`ItemCard.max_sockets`; from the item type files).
 - **The passive tree.** It shows a keystone's flavour text and an ascendancy's quote, from the game files, plus the calculated Strength, Dexterity, and Intelligence beside the points.
-- **Still to come.** Socket caps and tree flavour need the main workstation's bundle build before they show with real data.
+- **Real data.** Socket caps and tree flavour show with real data on the main workstation's bundle (`bundle-poe1-26530219-schema4-evidence.zip`; `docs/ui/b2-data/item-evidence.md`, "Main workstation data run").
 
 ## Pick list (for the maintainer)
 Suggested groups, each about one PR; pick, reorder, or drop.

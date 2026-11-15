@@ -19,7 +19,7 @@ The maintainer's run after PR #109 (B-2's data part, PR 1), on the main workstat
 | `rules-rebuild.md`, `rules-public-calc-run-summary.json` | The bundle rebuilt for B-2 PR 2's item rules (`affix_generations`, `mod_tag_names`), 2026-11-15; manifest `4cdd0bdb…` |
 | `card-data.md` | The item card's game data, 2026-11-15: mod tag names from `Tags.Name` (Q-B2-2, bundle rebuilt), socket caps in the item type files, unique flavour text by name convention (Q-B2-1), shipped as `poe1/unique_flavour.json` |
 | `data-parity-poe1-26530219-flavour.json` | `data-parity` summary of the flavour text bundle (PoB export format 8, table `flavour_text`) |
-| `item-evidence.md`, `game-copies/` | The maintainer's in-game item copies, 2026-11-15, and what they settle: the game copy reader, PoB's reading of the same copies, the card's values, requirements, affix headers, socket caps (`poe1/socket_caps.json`), the tree flavour (`poe1/tree_flavour.json`), and what the next data run must do |
+| `item-evidence.md`, `game-copies/` | The maintainer's in-game item copies, 2026-11-15, and what they settle: the game copy reader, PoB's reading of the same copies, the card's values, requirements, affix headers, socket caps (`poe1/socket_caps.json`), the tree flavour (`poe1/tree_flavour.json`), and the main workstation's data run |
 
 ## Result
 **No calculation changed.**
