@@ -26,5 +26,6 @@
   "crashes",
   "dismiss_crash",
   "diagnostics",
-  "export_diagnostics"
+  "export_diagnostics",
+  "app_ready"
 ]

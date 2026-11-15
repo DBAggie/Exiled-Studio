@@ -1609,6 +1609,10 @@ export class FakeApi implements LoomApi {
     ])
   }
 
+  ready(): Promise<void> {
+    return Promise.resolve()
+  }
+
   exportDiagnostics(): Promise<Outcome> {
     this.diagnosticsExported += 1
     return Promise.resolve({ done: { version: this.version } } as Outcome)

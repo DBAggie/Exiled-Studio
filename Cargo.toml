@@ -1,8 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "tools/*"]
-# Oracle and tree export files (manifests, acquire scripts), not crates.
-exclude = ["tools/oracle", "tools/tree"]
+# Oracle and tree export files (manifests, acquire scripts) and packaging scripts, not crates.
+exclude = ["tools/oracle", "tools/tree", "tools/package"]
 
 [workspace.package]
 version = "0.0.0"

@@ -3,11 +3,12 @@
 // handlers), and the fake implements the same interface.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import commands from '../api/commands.json'
 import { FakeApi } from '../api/fake'
 import { tauriApi } from '../api/tauri'
+import { makeStore, startSync } from '../store'
 
 describe('client', () => {
   it('calls every committed command and no other', () => {
@@ -28,5 +29,13 @@ describe('client', () => {
         'function',
       )
     }
+  })
+
+  it('tells the shell once when the first screen has its data', async () => {
+    // A packaged smoke run quits on it (Phase 5, P1).
+    const api = new FakeApi()
+    const ready = vi.spyOn(api, 'ready')
+    await startSync(makeStore(api), api)
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledOnce())
   })
 })

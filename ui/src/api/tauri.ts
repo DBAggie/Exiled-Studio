@@ -74,6 +74,7 @@ export const tauriApi: LoomApi = {
   dismissCrash: (id) => call('dismiss_crash', { id }),
   diagnostics: () => call('diagnostics'),
   exportDiagnostics: () => call('export_diagnostics'),
+  ready: () => call('app_ready'),
   previewTree: (spec, node) => call('preview_tree', { spec, node }),
   uiPrefs: () => call('ui_prefs'),
   setUiPrefs: (text) => call('set_ui_prefs', { text }),

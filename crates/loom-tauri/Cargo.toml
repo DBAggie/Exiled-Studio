@@ -20,7 +20,7 @@ loom-persistence.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tracing.workspace = true
-tauri = "2.12.5"
+tauri = { version = "2.12.5", features = [] }
 # The file dialogs, called from Rust only (decision 10); MIT or Apache-2.0.
 tauri-plugin-dialog = "2"
 
@@ -31,4 +31,4 @@ tauri = { version = "2.12.5", features = ["test"] }
 workspace = true
 
 [build-dependencies]
-tauri-build = "2.7.4"
+tauri-build = { version = "2.7.4", features = [] }

@@ -6,7 +6,7 @@
 export const en = {
   'app.name': 'Exiled Studio',
   'app.notice':
-    'Exiled Studio is not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.',
+    "This product isn't affiliated with or endorsed by Grinding Gear Games in any way. Nor is it affiliated with or endorsed by the Path of Building Community project.",
   'app.licensed': 'Free and open source · MIT licensed',
   'app.untitled': 'Imported build',
 

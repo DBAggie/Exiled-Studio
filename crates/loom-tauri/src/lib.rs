@@ -18,6 +18,8 @@
 //! The command names are the committed list `ui/src/api/commands.json`,
 //! which the UI's client reads and a test compares with these handlers.
 
+pub mod release;
+
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -403,6 +405,17 @@ fn choose_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     with_pick(&ctx, Pick::BundleFolder, "", HostCommand::SetBundle)
 }
 
+/// The first screen has rendered. In a smoke run (`--smoke <file>`,
+/// [`release::Smoke`]) the build info is written and the application quits;
+/// otherwise nothing happens.
+#[tauri::command]
+fn app_ready<R: Runtime>(handle: tauri::AppHandle<R>) {
+    if let Some(smoke) = handle.try_state::<release::Smoke>() {
+        smoke.write(true);
+        handle.exit(0);
+    }
+}
+
 /// The crash records, newest first (Phase 5, P-f).
 #[tauri::command]
 fn crashes(ctx: State<'_, Ctx>) -> Vec<api::CrashRecord> {
@@ -479,7 +492,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 28] = [
+pub const COMMANDS: [&str; 29] = [
     "snapshot",
     "calc_document",
     "item",
@@ -508,6 +521,7 @@ pub const COMMANDS: [&str; 28] = [
     "dismiss_crash",
     "diagnostics",
     "export_diagnostics",
+    "app_ready",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -561,6 +575,7 @@ pub fn build<R: Runtime>(
             dismiss_crash,
             diagnostics,
             export_diagnostics,
+            app_ready,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -673,12 +688,20 @@ impl FilePicker for E2ePicker {
 /// # Errors
 /// Tauri's.
 pub fn run() -> tauri::Result<()> {
-    let builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    let smoke = release::Smoke::from_args(std::env::args_os());
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    if let Some(smoke) = smoke {
+        smoke.watchdog();
+        builder = builder.manage(smoke);
+    }
     let builder = build(
         builder,
         |handle| Paths {
+            // LOOM_DATA_DIR (development and tests), else the portable
+            // package's folder, else the user's application data folder.
             data: std::env::var_os("LOOM_DATA_DIR")
                 .map(PathBuf::from)
+                .or_else(release::portable_data)
                 .or_else(|| handle.path().app_data_dir().ok())
                 .unwrap_or_else(|| PathBuf::from(".loom")),
             bundle: std::env::var_os("LOOM_BUNDLE_DIR").map(PathBuf::from),

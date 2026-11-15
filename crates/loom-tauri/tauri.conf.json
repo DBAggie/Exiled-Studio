@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Exiled Studio",
-  "version": "0.0.0",
+  "mainBinaryName": "exiled-studio",
   "identifier": "io.github.dbaggie.exiledstudio",
   "build": {
     "devUrl": "http://localhost:5173",
@@ -20,13 +20,40 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
+    "targets": [
+      "nsis",
+      "msi",
+      "appimage",
+      "deb"
+    ],
+    "publisher": "Exiled Studio contributors",
+    "copyright": "Copyright (c) Exiled Studio contributors. MIT licensed.",
+    "category": "Game",
+    "shortDescription": "A build planner for Path of Exile",
+    "longDescription": "Exiled Studio plans Path of Exile builds offline. This product isn't affiliated with or endorsed by Grinding Gear Games in any way.",
+    "licenseFile": "installer/LICENSE.txt",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    },
+    "linux": {
+      "deb": {
+        "section": "games"
+      }
+    }
   }
 }

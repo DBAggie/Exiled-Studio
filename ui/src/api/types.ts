@@ -159,6 +159,9 @@ export interface LoomApi {
   uiPrefs(): Promise<string | null>
   /** Saves the UI's preferences (`UI_PREFS` when not JSON or too big). */
   setUiPrefs(text: string): Promise<void>
+  /** The first screen has rendered (a packaged smoke run quits on it;
+   * otherwise nothing happens). */
+  ready(): Promise<void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

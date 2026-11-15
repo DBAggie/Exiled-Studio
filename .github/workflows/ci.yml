@@ -472,13 +472,78 @@ jobs:
         # tauri-driver by its Windows path (the PATH entry above is Git Bash's form).
         run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER (Join-Path $HOME '.cargo-tools/bin/tauri-driver.exe')
 
+  # Phase 5, P1 (docs/phase-5/packaging.md): the two packages a PR builds,
+  # each started once (--smoke: the first screen comes up, then the app
+  # quits) with its build info checked: the portable zip on Windows, the
+  # AppImage on Linux (extract-and-run: no FUSE on runners). The release
+  # workflow builds and installs all five.
+  package:
+    name: package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Tauri system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev libxdo-dev \
+            xvfb file
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: ui/package.json # version from "packageManager"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: ui
+      - run: pnpm build
+        working-directory: ui
+      # The portable zip is made from the plain executable: `tauri build`
+      # patches the executable with its installer type in place.
+      - name: Portable zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
+          ./tools/package/portable.ps1 target/release/loom-tauri.exe out/package
+      - name: Smoke-run the portable package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tools/package/smoke.ps1 (Get-ChildItem out/package/*-portable.zip).FullName plain
+      - name: AppImage (Linux)
+        if: runner.os == 'Linux'
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        run: |
+          ui/node_modules/.bin/tauri build --bundles appimage
+          mkdir -p out/package
+          cp target/release/bundle/appimage/*.AppImage out/package/
+      - name: Smoke-run the AppImage (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a bash tools/package/smoke.sh out/package/*.AppImage app-image
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-${{ runner.os }}
+          path: out/package
+          if-no-files-found: error
+
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 
   # Required status check for branch protection (with "PR evidence" from pr-evidence.yml).
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend, e2e]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend, e2e, package]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs

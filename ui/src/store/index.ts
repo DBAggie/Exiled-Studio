@@ -387,6 +387,9 @@ export async function startSync(store: Store, api: LoomApi) {
   })
   await store.dispatch(refresh())
   await store.dispatch(refreshLists())
+  // The first screen has its data: a packaged smoke run quits here (Phase
+  // 5, P1); a failure only means the shell is older or absent.
+  setTimeout(() => void api.ready().catch(() => undefined), 0)
   await store.dispatch(loadPrefs())
   return () => {
     stop()
