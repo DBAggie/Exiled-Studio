@@ -87,6 +87,14 @@ The item tooltip's Alt view shows each mod's affix name and level, and the requi
 - **The first run found a converter bug.** The game keys `ComponentAttributeRequirements` by the base's ID string, not a row number, so the bundle carried no attribute requirements: 1,293 differences, all on Str, Dex, and Int. Fixed in `tools/parity-cli/src/bundle.rs`, with a test using the game's layout; the second run has none.
 - Review (`code-architecture-reviewer`) applied: PoB's values are checked against the candidates for the 23 rows (they were left out before), the 15 variant names are compared through the game's names, and a mod PoB's files disagree on is not compared value by value.
 
+## B-2: table `flavour_text` (the item card's flavour text, export format 8)
+The card shows a unique's flavour text (`docs/ui/b2-data/card-data.md`, Q-B2-1). The export (format 8) adds `flavour_text`: each `data.flavourText` entry (`src/Data/FlavourText.lua`) with its ID, name, and lines as PoB's exporter cleaned them (`src/Export/Scripts/flavourText.lua`, `cleanAndSplit`). `flavour_text` keys a row by the unique's name and the ID without trailing underscores, cleans the bundle's text the way PoB's exporter does (`data_parity::flavour::pob_lines`), and compares the lines. A PoB row the bundle lacks is a difference; a bundle row PoB lacks is listed, not gating.
+
+**Run on the B-2 card bundle** (Steam build 26530219, 2026-11-15, PoB export format 8, twice byte-identical): 1,356 PoB rows compared. **Every row both sides have is equal**: the bundle's text, cleaned as PoB cleans it, is PoB's.
+- 56 differences, all `row`, rule `flavour-upgraded-version-shares-base-art` (`pob-derivation`): upgraded versions (fated uniques and the like) whose stash row has `BaseVersion` set and their base's art. PoB's export gives every stash row its art's text, so these names carry their base version's (Kaom's Way with Kaom's Sign's). The bundle takes their text only from the per-game list (Kaom's Way: `FatedUnique1`), so it has no such row.
+- 32 bundle-only rows: base versions that share their art with an upgraded one (Blackheart, Bramblejack, ...). PoB's export keys its stash lookup by art, so one name per art survives there.
+- Totals: 613 differences (not-carried 163, patch-delta 130, pob-derivation 240, representation 80), `uncategorized` 0, 0 failed rules, 370 overlay rows (the 56 new rows are never read: no calculation reads `flavour_text`).
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 

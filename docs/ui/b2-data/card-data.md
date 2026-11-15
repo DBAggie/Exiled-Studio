@@ -10,7 +10,7 @@ Inputs: the tree data run's extract (`local/tree-data/extract-26530219`, 101 tab
 | --- | --- | --- | --- |
 | Q-B2-2: mod tag names | `Tags.Name` (the fourth column) | Yes: 25 named tags, the rest empty | `data/tags.json` reads `Tags.Name`; PoE1's hand list `MOD_TAG_NAMES` removed |
 | Maximum sockets | The `Sockets` component of the item type files: `socket_info` | Yes, by item level | None in this PR (the maintainer decides; see below) |
-| Q-B2-1: unique flavour text | `FlavourText`, joined by name convention, no key | Partly: 1,302 of 1,337 unique names; fated versions not | None (not approved) |
+| Q-B2-1: unique flavour text | `FlavourText`, joined by name convention, no key | Partly: 1,302 of 1,337 unique names by the join; fated versions need a list | `poe1/unique_flavour.json` (maintainer 2026-11-15: "add flavour text"); the card shows it |
 
 ## Q-B2-2: mod tag names
 
@@ -74,7 +74,14 @@ Where the convention fails:
 
 PoB v2.67.2 does the same join (`src/Export/Scripts/flavourText.lua`) plus a hand list of 105 forced `(Id, name)` pairs for these cases, and ships `src/Data/FlavourText.lua` (1,356 entries, 1,315 names). Against it, the plain join has 32 names PoB lacks (PoB keys by art Id, so for a shared art only one name survives) and lacks 45 that PoB's hand list adds.
 
-**What shipping it would add** (not done; the maintainer has not approved it): two extraction roots (`Words`, `UniqueStashLayout`; `UniqueStashTypes` comes with them), a per-game hand list for the fated and other exceptions (PoB's is the model), and a bundle file of about 1,350 `(name, text)` entries, about 150 KB of text (the whole `FlavourText` table is 390 KB as extracted JSON; zipped bundles shrink text about tenfold). The text is GGG's writing, as are the mod lines the bundle already carries.
+**Shipped** (maintainer 2026-11-15: "add flavour text"; socket caps are another session's work):
+
+- **Extraction:** `UniqueStashLayout` and `Words` are PoE1 roots (`tools/extractor/src/extract.rs`, `FLAVOUR_TABLES_POE1`); `UniqueStashTypes` comes with them; `Words` was already extracted (`EssenceType` references it). 103 tables.
+- **Converter** (`tools/parity-cli/src/flavour.rs`): the art join as above, skipping what PoB's export skips, and also skipping an upgraded version (`BaseVersion` set) whose art is its base's, so no unique gets another's text (56 rows). Then a PoE1 list, `FLAVOUR_PAIRS` in `tools/parity-cli/src/poe1.rs`: 74 `(FlavourText ID, name)` pairs, each replacing what the join gives that name. They are the pairs PoB v2.67.2 cites (`forcedNameList`) less the 31 the join already gives: 73 add a name the join cannot reach (fated uniques, Agnerod, the Descent and Demigod's uniques), and one corrects the join (Atziri's Reflection is `FatedUnique27`, not Atziri's Mirror's text). A pair whose ID the table lacks fails the bundle.
+- **Bundle:** `poe1/unique_flavour.json`, `loom_data::bundle::poe1::UniqueFlavour` `{name, id, text}`, the game's text with its markup, `\r\n` made `\n`. Optional, so no data schema change; the validator checks keys (`name:id`) unique and present and text not empty. 1,332 rows for 1,319 names, 247 KB.
+- **Card** (`loom_app::view`, app API v1 `ItemCard.flavour`, additive): a unique or relic whose name has exactly one text gets it as lines: `<<...>>` glyph runs (Harbinger script, no font) dropped, `<default>{...}` lines in the default colour (the Altar of Sacrifice notes), other markup removed, one gap where the game leaves blank lines. A Foulborn unique reads its plain version's text, as PoB's tooltip does. Grand Spectrum, Combat Focus, Lord of Steel, and Stormblood (a text per variant) show none until a variant can be told apart.
+- **Tooltip:** the lines after the flags (`Corrupted`, ...), in the game's flavour brown, as PoB's tooltip orders them; the game's own order is to be checked on the maintainer's screenshot.
+- **Gaps:** 28 upgraded versions with their base's art have no evidenced pair, so no text (Voidheart, Wall of Brambles, Cragfall, The Oak, ...; 61 `FatedUniqueN` rows exist, 33 are paired). A pair for each needs evidence (an in-game copy or screenshot).
 
 ## Bundle evidence
 
