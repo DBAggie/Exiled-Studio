@@ -110,7 +110,7 @@ fn a_radius_jewel_should_allocate_a_node_near_its_socket_alone() {
     let to_socket = poe1::allocate(&t, &brute(&[]), 11028).expect("the socket");
     let mut s = to_socket.spec;
     // The neighbouring group's nodes are 300 away; the made-up Small
-    // radius is 960.
+    // radius is 960 tree units (800 in the table, times the tree scale).
     let target = 11034;
     let before = poe1::path(&t, &s, target).expect("reachable");
     assert!(before.len() > 1, "{before:?}");

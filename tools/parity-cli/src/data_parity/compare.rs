@@ -1150,8 +1150,11 @@ fn compare_jewel_radii(out: &mut Comparison, bundle: &Bundle, export: &Export) {
             out.bundle_only(T, [row.id.clone()]);
             continue;
         };
+        // Exact, unlike `scaled`'s integer: a value that is not a multiple
+        // of 5 would show its fraction against PoB's.
+        let (n, d) = loom_tree::poe1::radius::TABLE_SCALE;
         #[expect(clippy::cast_precision_loss, reason = "radii are small integers")]
-        let num = |v: i64| json!(loom_tree::poe1::radius::scaled(v) as f64);
+        let num = |v: i64| json!((v * n) as f64 / d as f64);
         out.check(T, &row.id, "name", json!(row.name), json!(radius.label));
         out.check(T, &row.id, "radius", num(row.radius), json!(radius.outer));
         out.check(
