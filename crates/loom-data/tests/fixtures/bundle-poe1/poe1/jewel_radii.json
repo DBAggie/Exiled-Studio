@@ -2,15 +2,15 @@
  {
   "id": "TestSmall",
   "name": "Small",
-  "radius": 960,
-  "ring_inner": 960,
-  "ring_outer": 1320
+  "radius": 800,
+  "ring_inner": 800,
+  "ring_outer": 1100
  },
  {
   "id": "TestMedium",
   "name": "Medium",
-  "radius": 1440,
-  "ring_inner": 1320,
-  "ring_outer": 1680
+  "radius": 1200,
+  "ring_inner": 1100,
+  "ring_outer": 1400
  }
 ]

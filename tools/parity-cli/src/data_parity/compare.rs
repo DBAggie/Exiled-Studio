@@ -1125,7 +1125,9 @@ pub const PANTHEON_SCOPE: &str = "stat_descriptions";
 /// table's order) against PoB's `k`-th full radius (its name and outer
 /// radius) and its `k`-th ring (the entries labelled `Variable`, in order):
 /// the bundle reads a ring jewel's ring value `k` as row `k`'s ring
-/// (`loom_tree::poe1::radius`), which this checks.
+/// (`loom_tree::poe1::radius`), which this checks. The bundle's values are
+/// compared in tree units, times the game's tree scale
+/// (`loom_tree::poe1::radius::scaled`), as the tree reads them.
 fn compare_jewel_radii(out: &mut Comparison, bundle: &Bundle, export: &Export) {
     const T: &str = "jewel_radii";
     let rows = bundle
@@ -1148,8 +1150,11 @@ fn compare_jewel_radii(out: &mut Comparison, bundle: &Bundle, export: &Export) {
             out.bundle_only(T, [row.id.clone()]);
             continue;
         };
+        // Exact, unlike `scaled`'s integer: a value that is not a multiple
+        // of 5 would show its fraction against PoB's.
+        let (n, d) = loom_tree::poe1::radius::TABLE_SCALE;
         #[expect(clippy::cast_precision_loss, reason = "radii are small integers")]
-        let num = |v: i64| json!(v as f64);
+        let num = |v: i64| json!((v * n) as f64 / d as f64);
         out.check(T, &row.id, "name", json!(row.name), json!(radius.label));
         out.check(T, &row.id, "radius", num(row.radius), json!(radius.outer));
         out.check(

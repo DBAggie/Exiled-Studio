@@ -1,0 +1,38 @@
+{
+  "build": "tools/oracle/fixtures/community/essence-drain-contagion-occultist.xml",
+  "before": "tree-layout of the rules bundle (no radii)",
+  "after": "tree-layout of the tree data run bundle (radii read times 1.2)",
+  "held_nodes_added": [
+    27137,
+    36859,
+    49698
+  ],
+  "reasons_removed": [
+    "unconnected-node 27137",
+    "unconnected-node 36859",
+    "unconnected-node 49698"
+  ],
+  "reasons_added": [
+    "unmapped-stat 36859 X_armour_if_you_have_blocked_recently",
+    "unmapped-stat 36859 staff_hit_and_ailment_damage_+%"
+  ],
+  "changed_fields": [
+    {
+      "field": "energy-shield",
+      "before": 2648.0,
+      "after": 2761.0
+    },
+    {
+      "field": "armour",
+      "before": 2092.0,
+      "after": 2338.0
+    },
+    {
+      "field": "block-chance",
+      "before": 28.0,
+      "after": 42.0
+    }
+  ],
+  "other_public_documents_changed": 0,
+  "corpus_documents_changed": 0
+}
