@@ -21,6 +21,13 @@ Four minimalist directions on the canvas https://claude.ai/artifact/5993AyXC3qZC
 - `stat_descriptions/`: the game's text templates that turn stat IDs into the lines players read and back (import resolution, ADR-015).
 - No art, audio, or raw game files (ADR-000, ADR-005).
 
+## Maintainer tasks (reminders; keep until done)
+- [ ] **Ctrl+Alt+C copies from the current game** (asked 2026-11-15, for Q-B2-2): copy about five items with the game's advanced copy (Ctrl+Alt+C) and paste them into a session, ideally with elemental damage ("Adds # to # Fire Damage"), spell (caster) damage, chaos damage, life regeneration, and an influenced mod. They settle which tags the Alt view shows and their names (today `MOD_TAG_NAMES` in `tools/parity-cli/src/poe1.rs`, partly unconfirmed), and give game-truth fixtures for kinds, names, and tiers.
+- [ ] **Rebuild the PoE1 bundle** (`extract` is not needed; `bundle`, then `bundle-check`) so its item rules carry `affix_generations` and `mod_tag_names` (B-2 PR 2).
+
+## Maintainer answers (2026-11-15)
+- **Q-UX-1 (the main skill):** do better than PoB. Default the main skill to an active skill gem (supports, auras, and other gems that deal no damage weigh less), and among those to the highest-damage skill. Look for skills that deal damage together (Righteous Fire's burning with Fire Trap's ignite) and show their combined damage. Limited by what the engine computes (Ice Nova and Smite hits today): rank what is computed, else use the active-gem weighting. Not yet scheduled as a PR (`docs/ui/ux-walkthrough.md`, Q-UX-1).
+
 ## Bearing on later plans
 - Note 1 overlaps Phase 5 P-d in #107's plan (a signed bundle shipped with the installer, installed into the app data folder, chosen automatically). This side project can do the development-side part now (find and remember installed bundles without a folder picker) without the signing.
 - Note 5 is the "dashboard tabs and Customize" item the UI fidelity PR left for later (`docs/ui/fidelity/README.md`).

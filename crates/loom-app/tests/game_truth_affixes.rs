@@ -2,10 +2,12 @@
 //! maintainer's in-game screenshots (2026-11-14) of a Pig-Faced Bascinet
 //! with Urchin's, Athlete's, and Thorny prefixes and of the Genius, of the
 //! Lost, and of Abjuration suffixes. The screenshot shows `Prefix Modifier
-//! "Urchin's" (Tier: 2)`; the other tiers are the rule's
-//! (`loom_parser::import::affixes`, "Tier") and wait for the maintainer to
-//! confirm them from the same screenshots. The rolled values are ours, in
-//! each mod's range.
+//! "Urchin's" (Tier: 2)`. All six tiers also match poedb's tables for
+//! Str/Dex helmets (poedb.tw/us/Helmets_str_dex, read 2026-11-15 through
+//! the maintainer's browser: Urchin's T2 of 3 armour rows, Athlete's T2 of
+//! 10, Thorny T2 of 2, of the Genius T2 of 10, of the Lost T6 of 6, of
+//! Abjuration T2 of 5), a second reading of the same game data. The rolled
+//! values are ours, in each mod's range.
 //!
 //! The bundle is not in the repository (ADR-000); the tests are ignored and
 //! run with `LOOM_B2_BUNDLE` naming an unpacked PoE1 data schema 4 bundle
@@ -185,6 +187,43 @@ fn the_exported_helmet_should_head_only_the_mods_its_lines_allow_one_reading_of(
                 true,
                 &["+11% chance to Suppress Spell Damage"]
             ),
+        ]
+    );
+}
+
+#[test]
+#[ignore = "needs a real schema 4 bundle (LOOM_B2_BUNDLE)"]
+fn the_headers_should_name_the_tags_the_game_shows() {
+    let item = HELMET.replace("Implicits: 0", SPECS);
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle()));
+    session.import_text(&build(&item), None).unwrap();
+    let tags: Vec<(String, Vec<String>)> = session
+        .item(1)
+        .unwrap()
+        .card
+        .affixes
+        .into_iter()
+        .map(|a| (a.name.unwrap_or_default(), a.tags))
+        .collect();
+    let row = |name: &str, tags: &[&str]| {
+        (
+            name.to_owned(),
+            tags.iter().map(|t| (*t).to_owned()).collect::<Vec<_>>(),
+        )
+    };
+    // Urchin's and Thorny as real Ctrl+Alt+C copies of current-game items
+    // print them (`resource` and `physical_damage` hidden); the others as
+    // poedb shows them (Q-B2-2: to confirm with copies from the game).
+    assert_eq!(
+        tags,
+        [
+            row("Urchin's", &["Life", "Defences", "Armour"]),
+            row("Athlete's", &["Life"]),
+            row("Thorny", &["Damage", "Physical"]),
+            row("of the Genius", &["Attribute"]),
+            row("of the Lost", &["Chaos", "Resistance"]),
+            row("of Abjuration", &[]),
         ]
     );
 }

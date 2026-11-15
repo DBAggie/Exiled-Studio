@@ -203,3 +203,27 @@ fn an_older_bundle_should_give_headers_without_names_or_tags() {
         (None, None, 0)
     );
 }
+
+#[test]
+fn the_rules_tag_names_should_name_and_hide_tags() {
+    let mut bundle = common::bundle("bundle-poe1");
+    // The rules name `attack` only: `defences` is not shown.
+    bundle.item_rules.text.mod_tag_names = vec![("attack".to_owned(), "Attacks".to_owned())];
+    let body = item(vec![
+        spec("Prefix", "TestAccuracy1"),
+        spec("Suffix", "TestArmour1"),
+        line("+9 to Armour", &[("test_local_armour", 9)], false),
+        line("+15 to Accuracy", &[("test_accuracy_a", 15)], false),
+    ]);
+    let tags: Vec<_> = named_affixes(&body, &bundle)
+        .into_iter()
+        .map(|a| (a.mod_id, a.tags))
+        .collect();
+    assert_eq!(
+        tags,
+        [
+            ("TestAccuracy1".to_owned(), vec!["Attacks".to_owned()]),
+            ("TestArmour1".to_owned(), Vec::new()),
+        ]
+    );
+}

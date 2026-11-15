@@ -49,9 +49,11 @@
 //! the base by its tags (an essence, an influence, a crafted row) has no
 //! tier.
 //!
-//! The affix name, level, and tag names come from a data schema 4 bundle
+//! The affix name, level, and tags come from a data schema 4 bundle
 //! ([`bundle::AFFIX_SCHEMA`]); an older bundle gives the header without
-//! them, and no tier.
+//! them, and no tier. Tag names: the game's text rules
+//! ([`loom_data::rules::TextRules::mod_tag_names`]) when it has them, else
+//! the tag table's display names.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -233,16 +235,32 @@ fn affix(
         level: entry.and_then(|e| e.level).filter(|_| with_data),
         tier: None,
         tags: match entry {
-            Some(e) if with_data => e
-                .implicit_tags
-                .iter()
-                .filter_map(|t| bundle.tags.iter().find(|n| n.id == *t))
-                .map(|n| n.display.clone())
-                .collect(),
+            Some(e) if with_data => tag_names(bundle, &e.implicit_tags),
             _ => Vec::new(),
         },
         lines,
     }
+}
+
+/// The names the Alt view shows for a mod's tags, in the mod's order: the
+/// game's rules' names when it has them (tags not named there are not
+/// shown), else the tag table's display names.
+fn tag_names(bundle: &Bundle, tags: &[String]) -> Vec<String> {
+    let names = &bundle.item_rules.text.mod_tag_names;
+    tags.iter()
+        .filter_map(|t| {
+            if names.is_empty() {
+                bundle
+                    .tags
+                    .iter()
+                    .find(|n| n.id == *t)
+                    .map(|n| n.display.clone())
+            } else {
+                names.iter().find(|(id, _)| id == t).map(|(_, n)| n.clone())
+            }
+        })
+        .filter(|n| !n.is_empty())
+        .collect()
 }
 
 /// The named specs with their bundle row and lines, in spec order (module
