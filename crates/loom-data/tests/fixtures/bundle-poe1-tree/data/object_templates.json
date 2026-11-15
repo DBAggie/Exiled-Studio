@@ -1,0 +1,18 @@
+[
+ {
+  "id": "test/chars/character",
+  "stats": [
+   {
+    "stat": "test_life_per_level",
+    "value": 12
+   }
+  ],
+  "values": []
+ },
+ {
+  "extends": "test/chars/character",
+  "id": "test/chars/str",
+  "stats": [],
+  "values": []
+ }
+]

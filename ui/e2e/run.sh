@@ -20,11 +20,15 @@ case "$app" in
   /* | [A-Za-z]:*) ;;
   *) app="$root/$app" ;;
 esac
-cp tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml "$work/import.xml"
+# The synthetic build as the synthetic tree bundle's Test Brute (passive
+# tree plan T1a), so the workflow can allocate on the tree.
+sed -e 's/className="Scion"/className="Test Brute"/' \
+  -e 's/classId="0" ascendClassId="0" nodes=""/classId="1" ascendClassId="0" nodes="1000"/' \
+  tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml >"$work/import.xml"
 
 export LOOM_E2E_DIR="$work"
 export LOOM_DATA_DIR="$work/data"
-export LOOM_BUNDLE_DIR="$root/crates/loom-data/tests/fixtures/bundle-poe1"
+export LOOM_BUNDLE_DIR="$root/crates/loom-data/tests/fixtures/bundle-poe1-tree"
 
 if [ -n "$native" ] && [ ! -f "$native" ]; then
   echo "no native driver at $native" >&2

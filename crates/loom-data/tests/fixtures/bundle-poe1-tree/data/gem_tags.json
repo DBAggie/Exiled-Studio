@@ -1,0 +1,10 @@
+[
+ {
+  "id": "test_spell",
+  "name": "Spell"
+ },
+ {
+  "id": "test_support",
+  "name": "Support"
+ }
+]

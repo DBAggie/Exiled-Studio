@@ -1,0 +1,12 @@
+[
+ {
+  "description": "Quality (Test Modifiers)",
+  "id": "TestQuality",
+  "stats": [
+   [
+    "test_maximum_life",
+    1
+   ]
+  ]
+ }
+]

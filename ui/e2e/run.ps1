@@ -18,11 +18,15 @@ if (-not (Test-Path $EdgeDriver)) { throw "no native driver at $EdgeDriver" }
 $app = (Resolve-Path $App).Path
 $work = Join-Path ([IO.Path]::GetTempPath()) "loom-e2e-$PID"
 New-Item -ItemType Directory -Force $work | Out-Null
-Copy-Item tools\parity-cli\testdata\build-round-trip\synthetic-poe1.xml (Join-Path $work 'import.xml')
+# The synthetic build as the synthetic tree bundle's Test Brute (passive
+# tree plan T1a), so the workflow can allocate on the tree.
+$xml = [IO.File]::ReadAllText((Resolve-Path 'tools\parity-cli\testdata\build-round-trip\synthetic-poe1.xml').Path)
+$xml = $xml.Replace('className="Scion"', 'className="Test Brute"').Replace('classId="0" ascendClassId="0" nodes=""', 'classId="1" ascendClassId="0" nodes="1000"')
+[IO.File]::WriteAllText((Join-Path $work 'import.xml'), $xml)
 
 $env:LOOM_E2E_DIR = $work
 $env:LOOM_DATA_DIR = Join-Path $work 'data'
-$env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1').Path
+$env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1-tree').Path
 
 $driver = Start-Process $TauriDriver -ArgumentList '--native-driver', $EdgeDriver -PassThru -NoNewWindow
 try {

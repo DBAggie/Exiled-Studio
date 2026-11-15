@@ -131,6 +131,27 @@ try {
   await click(button('Undo'), 'undo')
   await text('Up to date')
 
+  step('allocate a node on the passive tree')
+  // run.sh and run.ps1 import the build as the synthetic tree bundle's
+  // Test Brute with only its start (crates/loom-data/tests/fixtures/
+  // bundle-poe1-tree, made by make_bundles.py).
+  await click(button('Passive tree'), 'the tree screen')
+  await text('Passive points: 0 ·')
+  await click(button('List'), 'the list view')
+  const search = await until('the node search', () =>
+    find(`//input[@type='search']`),
+  )
+  await wd('POST', `/session/${session}/element/${search}/value`, {
+    text: 'Test Notable 0-2',
+  })
+  await click(button('Allocate Test Notable 0-2'), 'the notable')
+  await text('Remove Test Notable 0-2')
+  await until('the points spent', async () => {
+    const source = await wd('GET', `/session/${session}/source`)
+    return !source.includes('Passive points: 0 ·')
+  })
+  await text('Up to date')
+
   step('save (the first save asks where)')
   await click(button('Save'), 'save')
   await until('saved.json', () => existsSync(join(work, 'saved.json')))
@@ -148,6 +169,10 @@ try {
   const xml = readFileSync(join(work, 'export.xml'), 'utf8')
   if (!xml.includes('<PathOfBuilding')) {
     throw new Error('export.xml is not a PoB build')
+  }
+  // The allocated notable (node 10023) is in the exported spec.
+  if (!/<Spec [^>]*nodes="[^"]*\b10023\b/.test(xml)) {
+    throw new Error('export.xml does not have the allocated notable')
   }
 
   console.log('e2e workflow passed')
