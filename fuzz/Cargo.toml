@@ -1,0 +1,64 @@
+# Fuzz targets of the hostile-input entry points (Phase 5, P6;
+# docs/phase-5/security.md). Its own workspace (cargo-fuzz needs nightly
+# and libFuzzer); CI only checks that it builds. Run with cargo-fuzz:
+#   cargo +nightly fuzz run <target> -- -max_total_time=600
+[package]
+name = "loom-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+license = "MIT"
+
+[package.metadata]
+cargo-fuzz = true
+
+[workspace]
+members = ["."]
+
+[dependencies]
+libfuzzer-sys = "0.4"
+loom-app = { path = "../crates/loom-app" }
+loom-data = { path = "../crates/loom-data" }
+loom-serialization = { path = "../crates/loom-serialization" }
+
+[[bin]]
+name = "pob_xml"
+path = "fuzz_targets/pob_xml.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "share_code"
+path = "fuzz_targets/share_code.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "build_document"
+path = "fuzz_targets/build_document.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "signature"
+path = "fuzz_targets/signature.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "install_pack"
+path = "fuzz_targets/install_pack.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "data_feed"
+path = "fuzz_targets/data_feed.rs"
+test = false
+doc = false
+bench = false

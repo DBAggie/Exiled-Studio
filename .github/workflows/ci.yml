@@ -351,13 +351,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Policy in deny.toml. Advisories are not checked yet: the advisory DB changes
-      # without a code change, so it needs its own non-blocking job (handoff follow-up).
+      # Policy in deny.toml. Advisories are their own job (`advisories`).
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1 (cargo-deny 0.20.2)
         with:
           arguments: --all-features --locked
           command: check
           command-arguments: licenses bans sources
+
+  # Phase 5, P6 (docs/phase-5/security.md): a RustSec advisory not ignored in
+  # deny.toml (each ignore with its reason) fails. The advisory database
+  # changes without a code change, so a new advisory can turn this red on
+  # any PR: that is the blocker the plan defines (P-g), fixed or ignored
+  # with a reason before anything merges.
+  advisories:
+    name: cargo-deny advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1 (cargo-deny 0.20.2)
+        with:
+          arguments: --all-features --locked
+          command: check
+          command-arguments: advisories
+
+  # Phase 5, P6: secrets in the whole history. gitleaks pinned by version and
+  # SHA-256 (the release's checksums file), default rules, no allow-list.
+  secrets:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks 8.30.1
+        run: |
+          curl -fsSL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Scan the history
+        run: ./gitleaks git --no-banner --redact --exit-code 1 .
+
+  # Phase 5, P6: the fuzz targets (fuzz/, its own workspace) still build; the
+  # fuzzing runs in fuzz.yml (weekly) and on the maintainer's machine.
+  fuzz-build:
+    name: fuzz targets build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz
+      - run: cargo check --locked --bins
+        working-directory: fuzz
 
   frontend:
     name: frontend (${{ matrix.os }})
@@ -543,7 +589,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend, e2e, package]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, frontend, e2e, package]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs

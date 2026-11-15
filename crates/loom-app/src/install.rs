@@ -299,8 +299,20 @@ pub fn install_pack(
     trust: &TrustList,
 ) -> Result<Installed, AppError> {
     let file = File::open(pack_path).map_err(|e| io(pack_path, &e))?;
-    let mut archive = zip::ZipArchive::new(std::io::BufReader::new(file))
-        .map_err(|e| AppError::layer("PACK_ZIP", e))?;
+    install_from(data_dir, std::io::BufReader::new(file), trust)
+}
+
+/// Installs a pack read from `pack`: [`install_pack`] without the file
+/// (the fuzz target and the properties give bytes).
+///
+/// # Errors
+/// As [`install_pack`], without `APP_READ` for the pack.
+pub fn install_from<R: Read + std::io::Seek>(
+    data_dir: &Path,
+    pack: R,
+    trust: &TrustList,
+) -> Result<Installed, AppError> {
+    let mut archive = zip::ZipArchive::new(pack).map_err(|e| AppError::layer("PACK_ZIP", e))?;
     let manifest_bytes = small_entry(&mut archive, MANIFEST)?
         .ok_or_else(|| pack_error(&PackError::Missing(MANIFEST.to_owned())))?;
     let signature = small_entry(&mut archive, SIGNATURE_FILE)?;

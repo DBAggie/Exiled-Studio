@@ -28,6 +28,7 @@ crc32fast.workspace = true
 
 [dev-dependencies]
 loom-persistence.workspace = true
+proptest.workspace = true
 loom-serialization.workspace = true
 
 [lints]

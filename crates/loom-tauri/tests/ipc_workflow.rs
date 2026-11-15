@@ -262,6 +262,49 @@ fn command_list_should_match_the_uis_and_every_command_should_be_registered() {
 }
 
 #[test]
+fn capabilities_should_equal_the_committed_allow_list() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let allow: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("capability-allow-list.json")).unwrap(),
+    )
+    .unwrap();
+    let mut seen = Vec::new();
+    for entry in std::fs::read_dir(root.join("capabilities")).unwrap() {
+        let cap: Value =
+            serde_json::from_str(&std::fs::read_to_string(entry.unwrap().path()).unwrap()).unwrap();
+        let id = cap["identifier"].as_str().unwrap().to_owned();
+        let mut granted: Vec<String> = cap["permissions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| {
+                p.as_str()
+                    .or_else(|| p["identifier"].as_str())
+                    .unwrap()
+                    .to_owned()
+            })
+            .collect();
+        granted.sort();
+        let mut allowed: Vec<String> = allow[&id]
+            .as_array()
+            .unwrap_or_else(|| panic!("capability {id} is not in the allow-list"))
+            .iter()
+            .map(|p| p.as_str().unwrap().to_owned())
+            .collect();
+        allowed.sort();
+        assert_eq!(granted, allowed, "capability {id}");
+        seen.push(id);
+    }
+    let listed = allow
+        .as_object()
+        .unwrap()
+        .keys()
+        .filter(|k| !k.starts_with('$'))
+        .count();
+    assert_eq!(seen.len(), listed, "every allow-listed capability exists");
+}
+
+#[test]
 fn capabilities_should_grant_no_dialog_or_file_system_permission() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("capabilities");
     let mut files = 0;
@@ -271,7 +314,10 @@ fn capabilities_should_grant_no_dialog_or_file_system_permission() {
         for p in cap["permissions"].as_array().unwrap() {
             let id = p.as_str().or_else(|| p["identifier"].as_str()).unwrap();
             assert!(
-                !id.starts_with("dialog:") && !id.starts_with("fs:") && !id.starts_with("shell:"),
+                !id.starts_with("dialog:")
+                    && !id.starts_with("fs:")
+                    && !id.starts_with("shell:")
+                    && !id.starts_with("updater:"),
                 "{id}"
             );
         }
