@@ -1,4 +1,4 @@
-Last Updated: 2026-11-15 (T1a, T2, T5a, T6 closed on `feat/ux-sprint-2` but for the parts tied to T3)
+Last Updated: 2026-11-15 (T1a, T2, T5a, T6 closed on `feat/ux-sprint-2`, PR #113, but for the parts tied to T3)
 
 # Passive tree editor and Phase 5 (tasks)
 
