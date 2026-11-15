@@ -41,3 +41,11 @@ Bundle: schema 4, Steam build 26530219 (tree version 3_29), copied with the layo
 - **The layout DTO prints every line.** `cargo test -p loom-app --test tree_workflow -- --ignored`: 4,272 node lines, each written from `passive_skill_stat_descriptions`. Eight stats have no description in the game data and are not declared hidden, so they are shown as their ID and value instead of being dropped (ADR-015): `has_trigger_when_ward_breaks`, `track_ward_broken_in_the_past_2_seconds`, `grants_a_crab_arm`, `unique_insanity_do_weird_things` (three nodes), `can_see_monster_type_beasts`, and `permanenet_mercenary_damage_+%_final_and_minion_damage_+%_final_from_luminary` (the game's spelling). The layout is 913 KB as JSON and is made once per data load.
 
 The per-node comparison with PoB's own tree (plan gate 1) is in [parity.md](parity.md), with its record. Main-tree nodes are within 0.01 and every edge set is equal. Ascendancies differ by one offset each, because PoB moves them, and some nodes differ by the export's rounding.
+
+## Sprites (T-a, 2026-11-15)
+
+The same `tree-layout` run adds the tree's sprites (ADR-005 Amendment 2; `loom_data::bundle::tree_sprites`):
+- **The sheets**: ten of the export's sprite categories at zoom `0.3835` (the fourth of five levels: the passives' icons allocated and not, the frames, which hold the jewel sockets' too, and the masteries' icons unconnected, connected, and chosen) are nine files, copied byte for byte from the export's `assets/` into `trees/assets/`, listed and hashed in the manifest. They are never committed; they ship only inside bundles.
+- **The index** `data/passive_tree_sprites.json`, ours: each category's sprites (name, place on its sheet) as the export's `sprites` gives them for that zoom, and each tree node's icons from the export's `nodes`, for the nodes the bundle's tree has. Its source block adds each sheet's SHA-256 to the layout's. `BUNDLE_TREE_SPRITES` checks it when listed: every sheet listed, every sprite on its sheet, every node icon on a sheet, rows in order.
+
+Evidence: from the latest rules bundle (Steam build 26530219) to `local/tree/bundle-poe1-tree-b`: 4.2 MB of sheets, 2,987 nodes with art, no node icon missing from a copied sheet; the bundle validates. In the running application the tree draws with the sprites ([editor.md](editor.md), "Seen in the running application").

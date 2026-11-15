@@ -103,8 +103,9 @@ cargo run --release -p loom-parity-cli -- bundle local/extract/<game>/<build> --
 cargo run --release -p loom-parity-cli -- bundle-check <bundle-dir>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
 cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<build>
-# The passive tree's layout constants (docs/tree/layout.md): fetch GGG's export at the pinned commit, then write a copy of
-# <bundle> with data/passive_tree_layout.json added (<dir> must not exist); the rules and layout against that bundle:
+# The passive tree's layout constants and sprites (docs/tree/layout.md): fetch GGG's export at the pinned commit, then write a
+# copy of <bundle> with data/passive_tree_layout.json, data/passive_tree_sprites.json, and the export's sprite sheets in
+# trees/assets/ added (<dir> must not exist; the sheets are never committed); the rules and layout against that bundle:
 powershell -ExecutionPolicy Bypass -File tools/tree/acquire.ps1      # or tools/tree/acquire.sh
 cargo run --release -p loom-parity-cli -- tree-layout tools/tree/manifest.json local/tree-export <bundle> --out <dir>
 cargo test -p loom-tree --test real_bundle -- --ignored --nocapture          # LOOM_TREE_BUNDLE, else local/tree/bundle-poe1-tree-a
@@ -177,6 +178,7 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# (PoB export format 7: table jewel_radii checks the bundle's poe1/jewel_radii.json, PassiveJewelRadii, against data.jewelRadius.)
 # Custom modifier lines against PoB's own parse (Phase 3 close-out, ADR-015 Amendment 2; maintainer-run): every custom line
 # of the fixtures read as a build does (notes, patterns, stats, unresolved) and compared with pob-parse.json
 # (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a
@@ -220,6 +222,7 @@ LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
 # The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
 # msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
 cargo build -p loom-tauri --features e2e,tauri/custom-protocol
+# (runs on the synthetic tree bundle crates/loom-data/tests/fixtures/bundle-poe1-tree, which make_bundles.py writes)
 ui/e2e/run.sh target/debug/loom-tauri                                   # Linux
 pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Windows (PowerShell, not Git Bash)
 ```
