@@ -9,6 +9,7 @@ import type {
   ConfigInputView,
   ConfigView,
   CrashRecord,
+  DataFeedStatus,
   UpdateOffer,
   UpdateStatus,
   QuarantinedBundle,
@@ -95,6 +96,7 @@ export type {
   UpdateStatus,
   WarningView,
   QuarantinedBundle,
+  DataFeedStatus,
 }
 
 export type Command = ApplicationAPIV1['command']
@@ -153,6 +155,11 @@ export interface LoomApi {
   /** Installs a data bundle pack (`.loombundle`) the user picks (Phase
    * 5, P-e); `nothing` when cancelled or already installed. */
   installBundle(): Promise<Outcome>
+  /** Checks the project's signed data feed (`UPDATE_OFFLINE` in strict
+   * offline mode; `FEED_*`). */
+  checkDataFeed(): Promise<DataFeedStatus>
+  /** Downloads a pack the last feed lists and installs it. */
+  downloadData(id: string): Promise<Outcome>
   /** Opens the last dropped file: imports a PoB build, opens a build
    * document; `UI_DROP` for anything else. */
   openDropped(): Promise<Outcome>

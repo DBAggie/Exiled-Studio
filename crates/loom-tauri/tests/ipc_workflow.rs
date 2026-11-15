@@ -245,7 +245,13 @@ fn command_list_should_match_the_uis_and_every_command_should_be_registered() {
     let names: Vec<String> = serde_json::from_str(&std::fs::read_to_string(file).unwrap()).unwrap();
     assert_eq!(names, loom_tauri::COMMANDS.map(str::to_owned).to_vec());
     let s = shell("commands");
+    // No command may reach the network from a test (the update check and
+    // the data feed): strict offline refuses both before connecting.
+    s.ok("set_update_mode", json!({"mode": "strict-offline"}));
     for name in &names {
+        if name == "set_update_mode" {
+            continue;
+        }
         if let Err(e) = s.invoke(name, json!({})) {
             let text = e.to_string();
             assert!(!text.contains("not found"), "{name}: {text}");

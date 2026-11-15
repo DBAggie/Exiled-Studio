@@ -26,5 +26,5 @@ This product isn't affiliated with or endorsed by Grinding Gear Games in any way
 It is not affiliated with or endorsed by the Path of Building Community project either.
 
 Exiled Studio works offline, with no account and no telemetry. Its only network use is
-the update check you can turn off in About (it reveals your IP address and app version
-to GitHub, which hosts the releases).
+the check for a new version and for new game data, which you can turn off in About (it
+reveals your IP address and app version to GitHub, which hosts the releases).

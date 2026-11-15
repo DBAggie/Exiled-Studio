@@ -175,6 +175,15 @@ export const en = {
   'data.verifyLabel': 'Verify {id}',
   'data.verified': 'Verified: every file of {id} matches its signed list.',
   'data.install': 'Install game data from a file…',
+  'data.feed.check': 'Check for new game data',
+  'data.feed.offline':
+    'Strict offline is on: Exiled Studio does not look for new game data.',
+  'data.feed.none': 'No game data is published yet.',
+  'data.feed.offer': '{id} · {bytes} bytes',
+  'data.feed.installed': 'Installed',
+  'data.feed.download': 'Download and install',
+  'data.feed.downloadLabel': 'Download and install {id}',
+  'data.feed.list': 'Game data the project publishes',
   'data.installed': 'Game data installed.',
   'data.quarantine.heading': 'Installed, not loaded',
   'data.quarantine.help':
@@ -877,7 +886,7 @@ export const en = {
   'about.title': 'About Exiled Studio',
   'about.license': 'Free and open source under the MIT license.',
   'about.privacy':
-    'Works offline. No account and no telemetry. The only connection it makes is the update check below, which you can turn off. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
+    'Works offline. No account and no telemetry. The only connections it makes are the checks for a new version and for new game data, which you can turn off under Updates. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
   'about.fonts':
     'Fonts: Inter, Space Grotesk and JetBrains Mono, under the SIL Open Font License 1.1; their license texts are below.',
   'about.version': 'Exiled Studio version',
@@ -993,6 +1002,19 @@ export const en = {
     'That game data file is too large. Nothing was installed.',
   'error.PACK_MANIFEST':
     'That game data file’s list is not readable. Nothing was installed.',
+  'error.FEED_HTTP':
+    'Exiled Studio could not reach GitHub for game data. Check your connection and try again later.',
+  'error.FEED_TOO_LARGE':
+    'The game data list was too large. Nothing was changed.',
+  'error.FEED_SIGNATURE':
+    'The game data list’s signature does not match. Nothing was changed.',
+  'error.FEED_MALFORMED':
+    'The game data list is not readable. Nothing was changed.',
+  'error.FEED_ROLLBACK':
+    'The game data list is older than one seen before, so it was refused.',
+  'error.FEED_MISMATCH':
+    'The downloaded game data does not match its list. Nothing was installed.',
+  'error.FEED_IO': 'The game data could not be saved for installing.',
   'error.APP_ADD_ITEM':
     'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':

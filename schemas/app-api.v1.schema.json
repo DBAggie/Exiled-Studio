@@ -15,6 +15,10 @@
         "$ref": "#/$defs/CrashRecord"
       }
     },
+    "data-feed": {
+      "description": "The data feed's answer (Phase 5, P-e).",
+      "$ref": "#/$defs/DataFeedStatus"
+    },
     "diagnostics": {
       "description": "The diagnostic package's preview (Phase 5, P-f).",
       "type": "array",
@@ -106,7 +110,8 @@
     "tree-sprites",
     "crashes",
     "diagnostics",
-    "updates"
+    "updates",
+    "data-feed"
   ],
   "$defs": {
     "AffixKind": {
@@ -2103,6 +2108,56 @@
       "required": [
         "text",
         "status"
+      ]
+    },
+    "DataFeedStatus": {
+      "description": "The data feed's answer (Phase 5, P-e): the game data the project\npublishes, from a feed whose signature verified and whose sequence\nis not lower than one seen before.",
+      "type": "object",
+      "properties": {
+        "offers": {
+          "description": "The packs it lists, newest first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataOffer"
+          }
+        },
+        "sequence": {
+          "description": "The feed's sequence number.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "offers"
+      ]
+    },
+    "DataOffer": {
+      "description": "A pack the data feed lists.",
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Its download size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its bundle ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "installed": {
+          "description": "Whether a bundle with this ID is installed (loaded or not).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bytes",
+        "installed"
       ]
     },
     "DataStatus": {

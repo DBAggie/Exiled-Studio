@@ -551,6 +551,7 @@ export interface ApplicationAPIV1 {
    * Crash records (Phase 5, P-f).
    */
   crashes: CrashRecord[]
+  'data-feed': DataFeedStatus
   /**
    * The diagnostic package's preview (Phase 5, P-f).
    */
@@ -665,6 +666,36 @@ export interface CrashRecord {
    * The application's version.
    */
   version: string
+}
+/**
+ * The data feed's answer (Phase 5, P-e).
+ */
+export interface DataFeedStatus {
+  /**
+   * The packs it lists, newest first.
+   */
+  offers: DataOffer[]
+  /**
+   * The feed's sequence number.
+   */
+  sequence: number
+}
+/**
+ * A pack the data feed lists.
+ */
+export interface DataOffer {
+  /**
+   * Its download size in bytes.
+   */
+  bytes: number
+  /**
+   * Its bundle ID: `<game>/<steam build>-s<data schema>`.
+   */
+  id: string
+  /**
+   * Whether a bundle with this ID is installed (loaded or not).
+   */
+  installed: boolean
 }
 /**
  * One file of the diagnostic package, as the user previews it and the

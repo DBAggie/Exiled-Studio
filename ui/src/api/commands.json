@@ -32,5 +32,7 @@
   "set_update_mode",
   "check_updates",
   "install_update",
-  "install_bundle"
+  "install_bundle",
+  "check_data_feed",
+  "download_data"
 ]

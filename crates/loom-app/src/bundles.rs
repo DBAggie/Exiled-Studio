@@ -84,6 +84,10 @@ pub struct Settings {
     /// absent means the default, `automatic-check`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub updates: Option<crate::api::UpdateMode>,
+    /// The highest data feed sequence seen (Phase 5, P-e): a feed with a
+    /// lower one is a replayed old feed, refused.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_feed_sequence: Option<u64>,
 }
 
 impl Settings {

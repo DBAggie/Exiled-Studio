@@ -5,6 +5,8 @@
 #
 # - LOOM_DATA_KEY set (the `release` environment's secret): its key must
 #   already be in release/trust.json, or the run fails.
+# Either way LOOM_DATA_KEY is exported for the later steps (GITHUB_ENV), so
+# they need no `env:` of their own (one would hide the throwaway key).
 # - LOOM_DATA_KEY absent: a throwaway key is made, added to the run's copy of
 #   release/trust.json (never committed), and exported as LOOM_DATA_KEY for
 #   the later steps. A tag's run refuses throwaway mode: a published release
@@ -17,6 +19,7 @@ if [ -n "${LOOM_DATA_KEY:-}" ]; then
     || { echo "the LOOM_DATA_KEY secret's key $id is not in release/trust.json" >&2; exit 1; }
   jq -e --arg id "$id" '.revoked[] | select(.key_id == $id)' release/trust.json >/dev/null \
     && { echo "the LOOM_DATA_KEY secret's key $id is revoked" >&2; exit 1; }
+  echo "LOOM_DATA_KEY=$LOOM_DATA_KEY" >> "${GITHUB_ENV:-/dev/null}"
   echo "data key: $id (release)"
 else
   case "${GITHUB_REF:-}" in

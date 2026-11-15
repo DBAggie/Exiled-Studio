@@ -181,7 +181,7 @@ fn run(args: &[String]) -> Result<(), String> {
                 .map_err(|e| e.to_string())?;
             loom_app::install::write_pack(Path::new(dir), sig.as_deref(), Path::new(out))
                 .map_err(|e| e.to_string())?;
-            eprintln!("pack: {out} ({})", pack_id(out)?);
+            println!("pack: {out} ({})", pack_id(out)?);
             Ok(())
         }
         "feed" => {

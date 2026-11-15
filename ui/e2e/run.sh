@@ -26,6 +26,10 @@ sed -e 's/className="Scion"/className="Test Brute"/' \
   -e 's/classId="0" ascendClassId="0" nodes=""/classId="1" ascendClassId="0" nodes="1000"/' \
   tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml >"$work/import.xml"
 
+# A pack of the synthetic tree bundle, signed with the public test key
+# (Phase 5, P4: the e2e installs it).
+cargo run -q --locked -p loom-release -- pack crates/loom-data/tests/fixtures/bundle-poe1-tree --test-key --out "$work/bundle.loombundle"
+
 export LOOM_E2E_DIR="$work"
 export LOOM_DATA_DIR="$work/data"
 export LOOM_BUNDLE_DIR="$root/crates/loom-data/tests/fixtures/bundle-poe1-tree"

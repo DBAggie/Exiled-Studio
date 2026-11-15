@@ -61,6 +61,28 @@ dto! {
         pub diagnostics: Vec<DiagnosticFile>,
         /// Application updates (Phase 5, P-d).
         pub updates: UpdateStatus,
+        /// The data feed's answer (Phase 5, P-e).
+        pub data_feed: DataFeedStatus,
+    }
+
+    /// The data feed's answer (Phase 5, P-e): the game data the project
+    /// publishes, from a feed whose signature verified and whose sequence
+    /// is not lower than one seen before.
+    pub struct DataFeedStatus {
+        /// The feed's sequence number.
+        pub sequence: u64,
+        /// The packs it lists, newest first.
+        pub offers: Vec<DataOffer>,
+    }
+
+    /// A pack the data feed lists.
+    pub struct DataOffer {
+        /// Its bundle ID: `<game>/<steam build>-s<data schema>`.
+        pub id: String,
+        /// Its download size in bytes.
+        pub bytes: u64,
+        /// Whether a bundle with this ID is installed (loaded or not).
+        pub installed: bool,
     }
 
     /// How the application looks for its own updates (Phase 5, P-d). Every

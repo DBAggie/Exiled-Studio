@@ -29,6 +29,7 @@ import {
   type TreeLayout,
   type TreeSprites,
   type CrashRecord,
+  type DataFeedStatus,
   type QuarantinedBundle,
   type UpdateMode,
   type UpdateOffer,
@@ -55,6 +56,8 @@ export interface FakeOptions {
   /** What the next "install from a file" installs: a signed or an
    * unsigned pack of this game build. */
   nextPack?: { build: number; signed: boolean }
+  /** What a data feed check finds (Phase 5, P-e). */
+  feed?: DataFeedStatus
   /** The Steam build the build was made with (its pinned data). */
   pinned?: number
   /** Why the passive tree cannot be edited (its version or class). */
@@ -1857,6 +1860,35 @@ export class FakeApi implements LoomApi {
 
   /** Bundles the user verified. */
   verified: string[] = []
+
+  checkDataFeed(): Promise<DataFeedStatus> {
+    if (this.updates.mode === 'strict-offline') {
+      return Promise.reject(
+        new ApiFailure({ code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' }),
+      )
+    }
+    const feed = this.options.feed ?? { sequence: 1, offers: [] }
+    return Promise.resolve(structuredClone(feed))
+  }
+
+  /** Packs downloaded from the feed. */
+  downloads: string[] = []
+
+  downloadData(id: string): Promise<Outcome> {
+    const offer = this.options.feed?.offers.find((o) => o.id === id)
+    if (offer === undefined) {
+      return Promise.reject(
+        new ApiFailure({ code: 'APP_NOT_FOUND', message: 'APP_NOT_FOUND' }),
+      )
+    }
+    const build = Number(/\/(\d+)-s/.exec(id)?.[1] ?? '0')
+    this.options.installed = [...(this.options.installed ?? []), build]
+    offer.installed = true
+    this.downloads.push(id)
+    this.version += 1
+    this.emit('build-changed')
+    return Promise.resolve(this.done())
+  }
 
   installBundle(): Promise<Outcome> {
     const pack = this.options.nextPack

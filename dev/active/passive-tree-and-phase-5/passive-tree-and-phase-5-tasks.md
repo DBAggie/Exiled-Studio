@@ -40,7 +40,7 @@ One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this ord
 - [x] P1 packaging (`docs/phase-5/packaging.md`)
 - [x] P2 signing (`docs/release/signing.md`)
 - [x] P3 app updates (`docs/phase-5/updates.md`)
-- [ ] P4 data bundles
+- [x] P4 data bundles (`docs/phase-5/data-bundles.md`)
 - [ ] P6 security
 - [ ] P7 performance
 - [ ] P8 reports and docs; review; PR

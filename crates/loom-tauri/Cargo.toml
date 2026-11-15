@@ -15,6 +15,7 @@ e2e = []
 
 [dependencies]
 loom-app.workspace = true
+loom-data.workspace = true
 loom-integrations.workspace = true
 loom-persistence.workspace = true
 serde.workspace = true

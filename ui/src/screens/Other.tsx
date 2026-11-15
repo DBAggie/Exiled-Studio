@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type {
   ChangeRequest,
+  DataFeedStatus,
   DiagnosticFile,
   FieldDelta,
   ItemSummary,
@@ -619,6 +620,33 @@ function GameData() {
   const [status, setStatus] = useState<string | null>(null)
   const installed = data?.installed ?? []
   const quarantined = data?.quarantined ?? []
+  const offline = useAppSelector(
+    (s) => s.lists.updates?.mode === 'strict-offline',
+  )
+  const [feed, setFeed] = useState<DataFeedStatus | null>(null)
+  const checkFeed = () => {
+    setStatus(null)
+    void dispatch(attempt((api) => api.checkDataFeed())).then((f) => {
+      if (f !== null) setFeed(f)
+    })
+  }
+  const download = (id: string) => {
+    setStatus(null)
+    void dispatch(attempt((api) => api.downloadData(id))).then((o) => {
+      if (o === null) return
+      setStatus(t('data.installed'))
+      setFeed((f) =>
+        f === null
+          ? f
+          : {
+              ...f,
+              offers: f.offers.map((x) =>
+                x.id === id ? { ...x, installed: true } : x,
+              ),
+            },
+      )
+    })
+  }
   const install = () => {
     setStatus(null)
     void dispatch(attempt((api) => api.installBundle())).then((o) => {
@@ -744,7 +772,40 @@ function GameData() {
           {status}
         </p>
       )}
+      {feed !== null &&
+        (feed.offers.length === 0 ? (
+          <p className="muted">{t('data.feed.none')}</p>
+        ) : (
+          <ul className="data-list" aria-label={t('data.feed.list')}>
+            {feed.offers.map((o) => (
+              <li key={o.id}>
+                <span>
+                  {t('data.feed.offer', { id: o.id, bytes: o.bytes })}
+                </span>
+                {o.installed ? (
+                  <Badge tone="ok">{t('data.feed.installed')}</Badge>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label={t('data.feed.downloadLabel', { id: o.id })}
+                    onClick={() => {
+                      download(o.id)
+                    }}
+                  >
+                    {t('data.feed.download')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))}
+      {offline && <p className="muted">{t('data.feed.offline')}</p>}
       <div className="row">
+        {!offline && (
+          <button type="button" onClick={checkFeed}>
+            {t('data.feed.check')}
+          </button>
+        )}
         <button type="button" onClick={install}>
           {t('data.install')}
         </button>

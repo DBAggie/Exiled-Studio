@@ -92,4 +92,42 @@ describe('installing game data', () => {
     )
     expect(api.verified).toEqual(['poe1/26530219-s4'])
   })
+
+  it('lists the feed game data and installs one on request', async () => {
+    const { user, api } = await renderApp({
+      installed: [26530219],
+      feed: {
+        sequence: 4,
+        offers: [
+          { id: 'poe1/26600000-s4', bytes: 2048, installed: false },
+          { id: 'poe1/26530219-s4', bytes: 1024, installed: true },
+        ],
+      },
+    })
+    await openAbout(user)
+    await user.click(
+      screen.getByRole('button', { name: 'Check for new game data' }),
+    )
+    const list = await screen.findByRole('list', {
+      name: 'Game data the project publishes',
+    })
+    expect(within(list).getByText('Installed')).toBeTruthy()
+    await expectAccessible()
+    await user.click(
+      within(list).getByRole('button', {
+        name: 'Download and install poe1/26600000-s4',
+      }),
+    )
+    await screen.findByText('Game data installed.')
+    expect(api.downloads).toEqual(['poe1/26600000-s4'])
+  })
+
+  it('strict offline offers no feed check', async () => {
+    const { user } = await renderApp({ updates: { mode: 'strict-offline' } })
+    await openAbout(user)
+    expect(
+      screen.queryByRole('button', { name: 'Check for new game data' }),
+    ).toBeNull()
+    expect(screen.getByText(/does not look for new game data/)).toBeTruthy()
+  })
 })

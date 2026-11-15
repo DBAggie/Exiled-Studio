@@ -48,6 +48,7 @@ Kept in `settings.json` (`updates`), set under About, Updates.
 - A check is an HTTPS request to GitHub. GitHub sees the IP address, and the URL and the user agent reveal the running version. Nothing else is sent: no identifier, no build data.
 - About shows this next to the setting. The README's privacy notes and the installer's license page say it too.
 - This is the one network path outside `loom-integrations`: a Tauri adapter, allowed by plan decision P-d and listed in AGENTS.md.
+- The mode governs the data feed too (`docs/phase-5/data-bundles.md`): strict offline refuses it.
 - The webview has no `updater:*` permission. Only the shell's own commands (`update_status`, `set_update_mode`, `check_updates`, `install_update`) reach the plugin.
 
 ## Error codes

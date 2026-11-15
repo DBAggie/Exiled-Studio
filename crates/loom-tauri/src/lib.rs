@@ -18,6 +18,7 @@
 //! The command names are the committed list `ui/src/api/commands.json`,
 //! which the UI's client reads and a test compares with these handlers.
 
+pub mod data_updates;
 pub mod release;
 pub mod updates;
 
@@ -562,7 +563,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 34] = [
+pub const COMMANDS: [&str; 36] = [
     "snapshot",
     "calc_document",
     "item",
@@ -597,6 +598,8 @@ pub const COMMANDS: [&str; 34] = [
     "check_updates",
     "install_update",
     "install_bundle",
+    "check_data_feed",
+    "download_data",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -687,6 +690,8 @@ pub fn build<R: Runtime>(
             check_updates,
             install_update,
             install_bundle,
+            data_updates::check_data_feed,
+            data_updates::download_data,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -744,6 +749,7 @@ pub fn build<R: Runtime>(
             });
             let plugin = handle.try_state::<updates::Plugin>().is_some();
             app.manage(updates::Updates::new(plugin, settings_for_updates));
+            app.manage(data_updates::DataFeed::default());
             updates::at_start(&handle);
             Ok(())
         })

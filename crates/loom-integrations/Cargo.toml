@@ -19,6 +19,11 @@ getrandom = "0.4"
 keyring = { version = "3.6.3", default-features = false, features = ["windows-native", "apple-native", "linux-native"] }
 serde.workspace = true
 serde_json.workspace = true
+# The data feed (Phase 5, P4): HTTPS through the OS's TLS (native-tls, not
+# rustls with webpki-roots: review M12); the same reqwest the updater uses.
+reqwest = { version = "0.13", default-features = false, features = ["native-tls", "blocking", "system-proxy"] }
+sha2.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]
 loom-serialization.workspace = true
