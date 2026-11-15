@@ -799,7 +799,9 @@ dto! {
 
     /// An item's requirements: the level, and attributes above 0.
     pub struct Requirements {
-        /// The level: as written on the item, else the base's drop level.
+        /// The level: as written on the item, else the base's (its drop
+        /// level for a weapon, armour, or flask, its implicits' levels; PoB's
+        /// rule, `loom_data::bundle::required_level`).
         pub level: Option<u32>,
         /// Strength (0: none).
         pub strength: u32,

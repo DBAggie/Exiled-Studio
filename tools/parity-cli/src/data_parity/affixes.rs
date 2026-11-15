@@ -21,38 +21,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::properties::PropertyTables;
-use loom_data::bundle::{AFFIX_SCHEMA, BaseItem, Bundle, ModEntry};
+use loom_data::bundle::{AFFIX_SCHEMA, BaseItem, Bundle, ModEntry, required_level};
 use serde_json::{Value, json};
 
 use super::compare::{Comparison, num, pob_name};
 use super::pob::Export;
-
-/// The bundle's required level in PoB's form
-/// (`v2.67.2:src/Export/Scripts/bases.lua:277-293`): the drop level when
-/// above 4 for a weapon or armour and above 2 for a flask, else 1; raised
-/// to `floor(level * 0.8)` of each implicit; written only when above 1.
-fn required_level(
-    drop_level: i64,
-    weapon_or_armour: bool,
-    flask: bool,
-    implicit_levels: impl IntoIterator<Item = i64>,
-) -> Option<i64> {
-    let mut level = 1;
-    if weapon_or_armour && drop_level > 4 {
-        level = drop_level;
-    }
-    if flask && drop_level > 2 {
-        level = drop_level;
-    }
-    for implicit in implicit_levels {
-        // Lua's math.floor(mod.Level * 0.8), in the same f64 arithmetic.
-        #[expect(clippy::cast_precision_loss, reason = "game levels")]
-        #[expect(clippy::cast_possible_truncation, reason = "floored game levels")]
-        let scaled = (implicit as f64 * 0.8).floor() as i64;
-        level = level.max(scaled);
-    }
-    (level > 1).then_some(level)
-}
 
 /// An integer field PoB writes only when not 0.
 fn written(x: i64) -> Value {

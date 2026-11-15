@@ -581,7 +581,59 @@ pub enum ScopeRootError {
     Several(usize),
 }
 
+/// The level a base requires, by PoB's exporter's rule
+/// (`v2.67.2:src/Export/Scripts/bases.lua:277-293`), which the game's
+/// tooltips agree with (B-2 item evidence: a jewel requires none): the drop
+/// level when above 4 for a weapon or armour and above 2 for a flask, else
+/// 1; raised to `floor(level x 0.8)` of each implicit; none when 1.
+#[must_use]
+pub fn required_level(
+    drop_level: i64,
+    weapon_or_armour: bool,
+    flask: bool,
+    implicit_levels: impl IntoIterator<Item = i64>,
+) -> Option<i64> {
+    let mut level = 1;
+    if weapon_or_armour && drop_level > 4 {
+        level = drop_level;
+    }
+    if flask && drop_level > 2 {
+        level = drop_level;
+    }
+    for implicit in implicit_levels {
+        // Lua's math.floor(mod.Level * 0.8), in the same f64 arithmetic.
+        #[expect(clippy::cast_precision_loss, reason = "game levels")]
+        #[expect(clippy::cast_possible_truncation, reason = "floored game levels")]
+        let scaled = (implicit as f64 * 0.8).floor() as i64;
+        level = level.max(scaled);
+    }
+    (level > 1).then_some(level)
+}
+
 impl Bundle {
+    /// The level `base` requires ([`required_level`]): a weapon or armour
+    /// base is one with a row in the property tables; a flask one whose
+    /// item class ends in `Flask` (as PoB's exporter tests the game's
+    /// flask table). None when the bundle has no drop levels (before data
+    /// schema 4).
+    #[must_use]
+    pub fn required_level(&self, base: &BaseItem) -> Option<i64> {
+        let drop_level = base.drop_level?;
+        let weapon_or_armour = self.properties.as_ref().is_some_and(|p| {
+            p.weapon_types.iter().any(|w| w.base_item == base.id)
+                || p.armour_types.iter().any(|a| a.base_item == base.id)
+        });
+        let flask = base
+            .item_class
+            .as_deref()
+            .is_some_and(|c| c.ends_with("Flask"));
+        let implicits = base
+            .implicits
+            .iter()
+            .filter_map(|id| self.mods.iter().find(|m| m.id == *id).and_then(|m| m.level));
+        required_level(drop_level, weapon_or_armour, flask, implicits)
+    }
+
     /// The source path of the stat-description file whose name, without
     /// folder or extension, is `scope` in any case (PoE1 writes `.txt`
     /// sources, PoE2 `.csd`): the root of the scope's chain.

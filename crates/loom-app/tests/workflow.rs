@@ -1549,9 +1549,10 @@ fn the_card_should_name_pob_affixes_and_the_base_requirements() {
     let view = session.item(9).unwrap();
     let last = view.lines.iter().rfind(|l| l.kind == "modifier").unwrap();
     assert_eq!(a[0].lines, [last.index]);
-    // No `LevelReq`: the base's drop level; the base's dexterity.
+    // No `LevelReq`: the base's level by PoB's rule, none for a ring
+    // without implicits whatever its drop level (5); the base's dexterity.
     let req = card.requirements.unwrap();
-    assert_eq!((req.level, req.strength, req.dexterity), (Some(5), 0, 10));
+    assert_eq!((req.level, req.strength, req.dexterity), (None, 0, 10));
 }
 
 #[test]

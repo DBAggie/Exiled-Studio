@@ -354,10 +354,14 @@ fn requirements(
         let find = |n: &str| b.base_items.iter().find(|x| x.name == n);
         find(&name).or_else(|| fallback.as_deref().and_then(find))
     });
+    // The base's level by PoB's rule (`Bundle::required_level`): a jewel
+    // or a ring without implicits requires none, as the game shows.
     let level = written
         .and_then(|w| w.trim().parse::<u32>().ok())
         .or_else(|| {
-            base.and_then(|b| b.drop_level)
+            bundle
+                .zip(base)
+                .and_then(|(b, base)| b.required_level(base))
                 .and_then(|l| u32::try_from(l).ok())
         });
     let attrs = base.and_then(|b| b.requirements).unwrap_or_default();

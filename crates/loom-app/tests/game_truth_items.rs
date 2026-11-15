@@ -372,3 +372,60 @@ fn each_cards_values_should_equal_what_its_copy_prints() {
     assert_eq!(partial, ["loath-crown", "replica-dreamfeather"]);
     assert_eq!(differences, ["replica-dreamfeather"]);
 }
+
+/// The copy's `Requirements:` section: `(name, value)`, `(unmet)` removed.
+fn copy_requirements(text: &str) -> Vec<(String, u32)> {
+    let mut out = Vec::new();
+    let mut inside = false;
+    for line in text.lines().map(str::trim) {
+        if line == "Requirements:" {
+            inside = true;
+        } else if line.starts_with("--------") {
+            inside = false;
+        } else if inside && let Some((name, value)) = line.split_once(": ") {
+            let value = value.trim_end_matches(" (unmet)").parse().unwrap();
+            out.push((name.to_owned(), value));
+        }
+    }
+    out
+}
+
+/// The card's requirements against the copy's (E6). The game's include
+/// the socketed gems' requirements, so the card takes the copy's level
+/// only for an item without sockets, as PoB's paste does (`LevelReq`), and
+/// the base's otherwise: without sockets the card's equal the copy's; with
+/// sockets they are at most the copy's.
+#[test]
+#[ignore = "needs the real bundle (LOOM_B2_BUNDLE)"]
+fn each_cards_requirements_should_be_the_copys_without_its_gems() {
+    let mut session = session();
+    let mut equal = 0;
+    for (name, text) in copies() {
+        let want = copy_requirements(&text);
+        session.add_item(&text, None).unwrap();
+        let card = session.item(added(&session)).unwrap().card;
+        let Some(req) = card.requirements else {
+            assert!(want.is_empty(), "{name}: {want:?}");
+            continue;
+        };
+        let get = |n: &str| want.iter().find(|(k, _)| k == n).map_or(0, |(_, v)| *v);
+        let got = [
+            ("Level", req.level.unwrap_or(0)),
+            ("Str", req.strength),
+            ("Dex", req.dexterity),
+            ("Int", req.intelligence),
+        ];
+        if text.contains("\nSockets:") {
+            for (n, v) in got {
+                assert!(v <= get(n), "{name}: {n} {v} over the copy's {}", get(n));
+            }
+        } else {
+            for (n, v) in got {
+                assert_eq!(v, get(n), "{name}: {n}");
+            }
+            equal += 1;
+        }
+    }
+    println!("{equal} cards without sockets equal their copy's requirements");
+    assert!(equal >= 6, "{equal}");
+}

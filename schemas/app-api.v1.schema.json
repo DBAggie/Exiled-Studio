@@ -3781,7 +3781,7 @@
           "minimum": 0
         },
         "level": {
-          "description": "The level: as written on the item, else the base's drop level.",
+          "description": "The level: as written on the item, else the base's (its drop\nlevel for a weapon, armour, or flask, its implicits' levels; PoB's\nrule, `loom_data::bundle::required_level`).",
           "type": [
             "integer",
             "null"

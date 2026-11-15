@@ -969,7 +969,9 @@ export interface Requirements {
    */
   intelligence: number
   /**
-   * The level: as written on the item, else the base's drop level.
+   * The level: as written on the item, else the base's (its drop
+   * level for a weapon, armour, or flask, its implicits' levels; PoB's
+   * rule, `loom_data::bundle::required_level`).
    */
   level?: number | null
   /**
