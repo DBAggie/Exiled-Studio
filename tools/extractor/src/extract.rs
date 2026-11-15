@@ -158,11 +158,19 @@ pub const ITEM_PROPERTY_TABLES: [&str; 6] = [
 /// from it, `src/Export/Scripts/pantheons.lua`).
 pub const CHOICE_TABLES_POE1: [&str; 1] = ["PantheonPanelLayout"];
 
+/// PoE1 passive tree tables the editor and the calc read (passive tree
+/// plan, T-f and T-i): the jewel radii (`PassiveJewelRadii`: which nodes a
+/// radius jewel reaches) and the jewel slots (`PassiveJewelSlots`: each
+/// cluster jewel socket's size, index, parent, and proxy). Nothing
+/// references them, so they are roots. PoE1 only until PoE2's install is
+/// checked for the files (a root without a file fails the run).
+pub const TREE_TABLES_POE1: [&str; 2] = ["PassiveJewelRadii", "PassiveJewelSlots"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
-/// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`], and
-/// [`CHOICE_TABLES_POE1`].
+/// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`],
+/// [`CHOICE_TABLES_POE1`], and [`TREE_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
@@ -176,6 +184,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
         roots.extend(REQUIREMENT_TABLES_POE1);
         roots.extend(ITEM_LINE_TABLES_POE1);
         roots.extend(CHOICE_TABLES_POE1);
+        roots.extend(TREE_TABLES_POE1);
     }
     roots
 }
@@ -1988,6 +1997,7 @@ mod tests {
                 .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
+                .chain(&TREE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
         assert!(
@@ -1996,6 +2006,7 @@ mod tests {
                 .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
                 .chain(&CHOICE_TABLES_POE1)
+                .chain(&TREE_TABLES_POE1)
                 .all(|t| !poe2.contains(t))
         );
     }

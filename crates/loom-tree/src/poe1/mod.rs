@@ -25,8 +25,13 @@
 //!   as imported) stays; a mastery is connected while a node linked to it
 //!   is;
 //! - nodes the editor does not model, and nodes the tree does not have,
-//!   count as connected and are kept by every edit except [`reset`] (T-g).
+//!   count as connected and are kept by every edit except [`reset`] (T-g);
+//! - a node in the radius of a socketed Intuitive Leap-like jewel
+//!   ([`radius::Leap`], the spec's `leaps`) is allocated alone, without a
+//!   path, and counts as connected while the jewel's socket does; no path
+//!   starts from it (PoB's `intuitiveLeapLikesAffecting`).
 
+pub mod radius;
 pub mod url;
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
@@ -45,6 +50,9 @@ pub struct Spec {
     pub nodes: BTreeSet<u32>,
     /// The chosen effect of each allocated mastery.
     pub masteries: BTreeMap<u32, u32>,
+    /// The socketed jewels that let nodes in their radius be allocated
+    /// without a path.
+    pub leaps: Vec<radius::Leap>,
 }
 
 /// Why an edit was refused.
@@ -229,6 +237,9 @@ pub fn connected(tree: &Tree, spec: &Spec) -> BTreeSet<u32> {
             queue.push_back(b);
         }
     }
+    // Nodes a radius jewel holds; no path goes on from them.
+    let held = radius::held(tree, &spec.leaps, &spec.nodes, &seen);
+    seen.extend(held);
     // A mastery hangs from the nodes linked to it (its group's notables).
     let masteries: Vec<u32> = spec
         .nodes
@@ -312,6 +323,39 @@ fn prune(tree: &Tree, before: &Spec, spec: &mut Spec) -> Vec<u32> {
 /// distance.
 type Steps = (BTreeMap<u32, u32>, BTreeSet<(u32, u32)>);
 
+/// Refuses a target that cannot be allocated whatever the path: unknown,
+/// kept, a start, a mastery, allocated, or of another ascendancy.
+fn check(tree: &Tree, spec: &Spec, target: u32) -> Result<(), EditError> {
+    let node = tree.node(target).ok_or(EditError::UnknownNode(target))?;
+    if !node.modelled {
+        return Err(EditError::NotModelled(target));
+    }
+    match node.kind {
+        Kind::ClassStart | Kind::AscendancyStart => return Err(EditError::Start(target)),
+        Kind::Mastery => return Err(EditError::Mastery(target)),
+        _ => {}
+    }
+    if spec.nodes.contains(&target) {
+        return Err(EditError::Allocated(target));
+    }
+    if !enterable(tree, target, ascendancy_id(tree, spec)) {
+        return Err(EditError::Unreachable(target));
+    }
+    Ok(())
+}
+
+/// Whether a radius jewel of the spec, in a connected socket, lets
+/// `target` be allocated without a path.
+fn leaped(tree: &Tree, spec: &Spec, target: u32) -> bool {
+    if spec.leaps.is_empty() {
+        return false;
+    }
+    let from = connected(tree, spec);
+    spec.leaps
+        .iter()
+        .any(|l| from.contains(&l.socket) && radius::leaps_to(tree, l, target))
+}
+
 fn steps(tree: &Tree, spec: &Spec, target: u32) -> Result<Steps, EditError> {
     let node = tree.node(target).ok_or(EditError::UnknownNode(target))?;
     if !node.modelled {
@@ -345,7 +389,10 @@ fn steps(tree: &Tree, spec: &Spec, target: u32) -> Result<Steps, EditError> {
             }
         }
     }
-    let from = connected(tree, spec);
+    // Paths start from the nodes connected without the radius jewels.
+    let mut plain = spec.clone();
+    plain.leaps.clear();
+    let from = connected(tree, &plain);
     let firsts: BTreeSet<(u32, u32)> = from
         .iter()
         .filter_map(|a| tree.node(*a))
@@ -385,6 +432,10 @@ fn nearer<'t>(
 /// When the node cannot be allocated: unknown, kept, a start, a mastery,
 /// allocated, or out of reach.
 pub fn path(tree: &Tree, spec: &Spec, target: u32) -> Result<Vec<u32>, EditError> {
+    check(tree, spec, target)?;
+    if leaped(tree, spec, target) {
+        return Ok(vec![target]);
+    }
     let (to_target, firsts) = steps(tree, spec, target)?;
     let first = *firsts.first().ok_or(EditError::Unreachable(target))?;
     let mut out = vec![first.1];
@@ -411,6 +462,10 @@ pub fn shortest_path_count(
     target: u32,
     cap: usize,
 ) -> Result<usize, EditError> {
+    check(tree, spec, target)?;
+    if leaped(tree, spec, target) {
+        return Ok(1);
+    }
     let (to_target, firsts) = steps(tree, spec, target)?;
     let best = firsts.first().map_or(0, |f| f.0);
     // Paths from each node to the target, by increasing distance.
@@ -587,6 +642,7 @@ pub fn reset(tree: &Tree, spec: &Spec) -> Spec {
         ascendancy: spec.ascendancy,
         nodes: starts(tree, spec).into_iter().collect(),
         masteries: BTreeMap::new(),
+        leaps: spec.leaps.clone(),
     }
 }
 

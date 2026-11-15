@@ -106,6 +106,7 @@ fn spec(class: u32, ascendancy: u32, nodes: &[u32]) -> Spec {
         ascendancy,
         nodes: nodes.iter().copied().collect(),
         masteries: BTreeMap::new(),
+        leaps: Vec::new(),
     }
 }
 
@@ -412,4 +413,82 @@ fn connected_to_start_should_follow_every_link_from_any_allocated_start() {
     );
     // No allocated start: nothing counts.
     assert!(connected_to_start(&t, &set(&[10, 11])).is_empty());
+}
+
+/// The test tree with positions: the socket 80 at the origin, 21 at 100,
+/// 12 at 150, 30 at 200, the mastery 40 at 50, the keystone-free rest far.
+fn placed() -> Tree {
+    let mut t = tree();
+    for n in t.nodes.values_mut() {
+        n.position = Some((10_000.0, f64::from(n.id) * 1_000.0));
+    }
+    for (id, x) in [(80, 0.0), (21, 100.0), (12, 150.0), (30, 200.0), (40, 50.0)] {
+        if let Some(n) = t.nodes.get_mut(&id) {
+            n.position = Some((x, 0.0));
+        }
+    }
+    t
+}
+
+fn leap(outer: i64) -> radius::Leap {
+    radius::Leap {
+        socket: 80,
+        ring: radius::Ring { inner: 0, outer },
+        centre: radius::Centre::Socket,
+        keystones_only: false,
+    }
+}
+
+#[test]
+fn a_ring_should_hold_the_nodes_at_its_distances_but_not_its_centre_or_masteries() {
+    let t = placed();
+    let full = radius::Ring {
+        inner: 0,
+        outer: 150,
+    };
+    assert_eq!(radius::in_ring(&t, 80, full, true), set(&[21, 12]));
+    let ring = radius::Ring {
+        inner: 150,
+        outer: 200,
+    };
+    assert_eq!(radius::in_ring(&t, 80, ring, true), set(&[12, 30]));
+    // Around a keystone, sockets are never in the radius.
+    assert!(!radius::in_ring(&t, 21, full, false).contains(&80));
+    assert!(radius::in_ring(&t, 21, full, true).contains(&80));
+}
+
+#[test]
+fn a_leap_should_allocate_alone_and_hold_while_its_socket_connects() {
+    let t = placed();
+    // Class B: 2 - 30 - 13 - 80 (the socket); 21 is two steps away.
+    let mut s = spec(2, 0, &[2, 30, 13, 80]);
+    assert_eq!(path(&t, &s, 21).unwrap(), vec![12, 21]);
+    s.leaps.push(leap(120));
+    assert_eq!(path(&t, &s, 21).unwrap(), vec![21]);
+    assert_eq!(shortest_path_count(&t, &s, 21, 9).unwrap(), 1);
+    let a = allocate(&t, &s, 21).unwrap();
+    assert_eq!(a.path, vec![21]);
+    assert!(connected(&t, &a.spec).contains(&21));
+    // No path starts from a held node: 20 (next to 21 and A's start) is
+    // out of reach.
+    assert_eq!(path(&t, &a.spec, 20), Err(EditError::Unreachable(20)));
+    // Out of the radius: a path as usual.
+    let mut far = s.clone();
+    far.leaps = vec![leap(50)];
+    assert_eq!(path(&t, &far, 21).unwrap(), vec![12, 21]);
+    // Losing the socket's connection drops what it held.
+    let r = deallocate(&t, &a.spec, 13).unwrap();
+    assert_eq!(r.removed, vec![13, 21, 80]);
+}
+
+#[test]
+fn held_should_add_nodes_in_counted_sockets_radii_until_nothing_changes() {
+    let t = placed();
+    let allocated = set(&[1, 21, 30, 80]);
+    let none = radius::held(&t, &[leap(250)], &allocated, &set(&[1]));
+    assert!(none.is_empty(), "the socket does not count: {none:?}");
+    assert_eq!(
+        radius::held(&t, &[leap(250)], &allocated, &set(&[1, 80])),
+        set(&[21, 30])
+    );
 }

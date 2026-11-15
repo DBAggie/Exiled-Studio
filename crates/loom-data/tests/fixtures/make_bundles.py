@@ -595,6 +595,11 @@ poe1["data/tags.json"] = [
     {"id": "attack", "display": "Attack"},
     {"id": "defences", "display": "Defences"},
 ]
+# Passive tree plan T-f: two made-up jewel radii with their rings.
+poe1["poe1/jewel_radii.json"] = [
+    {"id": "TestSmall", "name": "Small", "radius": 960, "ring_inner": 960, "ring_outer": 1320},
+    {"id": "TestMedium", "name": "Medium", "radius": 1440, "ring_inner": 1320, "ring_outer": 1680},
+]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))
 print("ok")

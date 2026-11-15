@@ -442,6 +442,7 @@ pub fn alloc_requests(bundle: &Path, count: usize, seed: u64) -> Result<String, 
             ascendancy,
             nodes: BTreeSet::new(),
             masteries: BTreeMap::new(),
+            leaps: Vec::new(),
         };
         spec.nodes.extend(poe1::starts(&tree, &spec));
         for _ in 0..rng.below(6) {
@@ -547,6 +548,7 @@ pub fn alloc(requests: &Path, pob: &Path, bundle: &Path) -> Result<(AllocRecord,
             ascendancy: q.ascendancy,
             nodes: q.allocated.iter().copied().collect(),
             masteries: BTreeMap::new(),
+            leaps: Vec::new(),
         };
         let pob_set: BTreeSet<u32> = p.allocated.iter().copied().collect();
         if pob_set != spec.nodes {

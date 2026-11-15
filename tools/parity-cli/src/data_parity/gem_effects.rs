@@ -892,7 +892,7 @@ mod tests {
             "skills": {"Precision": skill},
             "gems": {}, "bases": {}, "base_requirements": {}, "mods": {},
             "monster_tables": {}, "game_constants": {},
-            "character_constants": {}, "monster_constants": {}, "bosses": {}, "pantheons": {},
+            "character_constants": {}, "monster_constants": {}, "bosses": {}, "pantheons": {}, "jewel_radii": {},
             "tree": {"classes": {}, "nodes": {}}
         });
         super::super::pob::parse(&serde_json::to_vec(&doc).unwrap()).unwrap()

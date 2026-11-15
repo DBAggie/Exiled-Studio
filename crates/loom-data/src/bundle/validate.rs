@@ -938,6 +938,19 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (ids, findings) = p.radius_domain();
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add(
+                "BUNDLE_EMPTY_ID",
+                super::poe1::JEWEL_RADII,
+                format!("{empty} rows have no ID"),
+            );
+        }
+        duplicates(report, super::poe1::JEWEL_RADII, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
     }
 }
 

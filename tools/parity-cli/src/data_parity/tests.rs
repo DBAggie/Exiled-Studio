@@ -28,7 +28,7 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 6,
+        "format": 7,
         "pob": {"version": "2.67.2"},
         "base_requirements": {
             "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
@@ -127,6 +127,12 @@ fn equal_export() -> Value {
                 {"name": "Soul of Minor Test", "mods": [{"line": "+4 to maximum Life", "value": [4]}]}
             ]}
         },
+        "jewel_radii": [
+            {"inner": 0, "outer": 960, "label": "Small"},
+            {"inner": 0, "outer": 1440, "label": "Medium"},
+            {"inner": 960, "outer": 1320, "label": "Variable"},
+            {"inner": 1320, "outer": 1680, "label": "Variable"}
+        ],
         "tree": {
             "classes": [
                 {"name": "Test Brute", "base_str": 32, "base_dex": 14, "base_int": 14, "ascendancies": ["TestChampion"]},
@@ -192,7 +198,22 @@ fn equal_export_should_have_no_difference() {
 #[test]
 fn each_changed_value_should_be_one_difference() {
     // (pointer into the export, new value, expected (table, key, field)).
-    let cases: [(&str, Value, (&str, &str, &str)); 14] = [
+    let cases: [(&str, Value, (&str, &str, &str)); 17] = [
+        (
+            "/jewel_radii/1/outer",
+            json!(1500),
+            ("jewel_radii", "TestMedium", "radius"),
+        ),
+        (
+            "/jewel_radii/2/inner",
+            json!(900),
+            ("jewel_radii", "TestSmall", "ring"),
+        ),
+        (
+            "/jewel_radii/0/label",
+            json!("Tiny"),
+            ("jewel_radii", "TestSmall", "name"),
+        ),
         (
             "/skills/TestBolt/castTime",
             json!(0.8),

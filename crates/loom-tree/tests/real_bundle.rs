@@ -81,6 +81,7 @@ fn the_real_tree_should_be_placed_modelled_and_allocatable_from_every_class() {
             ascendancy: 0,
             nodes: [class.start].into_iter().collect(),
             masteries: Default::default(),
+            leaps: Vec::new(),
         };
         for &k in &keystones {
             let a = poe1::allocate(&t, &spec, k)

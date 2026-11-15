@@ -113,7 +113,9 @@ pub fn locked(
 }
 
 /// The spec as the rules see it: its class (`class_of`, else 0), its
-/// ascendancy (`ascendancy_of`), its nodes with the starts added.
+/// ascendancy (`ascendancy_of`), its nodes with the starts added, and its
+/// socketed radius jewels that allocate without a path
+/// ([`loom_pipeline::leaps`]).
 #[must_use]
 pub fn rules_spec(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Spec {
     let class = class_of(build, spec, tree).unwrap_or(0);
@@ -127,6 +129,7 @@ pub fn rules_spec(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Spec {
             .iter()
             .map(|m| (m.node.0, m.effect))
             .collect(),
+        leaps: loom_pipeline::leaps(build, spec, tree),
     };
     out.nodes.extend(poe1::starts(tree, &out));
     out
@@ -272,6 +275,7 @@ pub fn new_spec(
             ascendancy: rules.as_ref().map_or(0, |r| r.ascendancy),
             nodes: std::collections::BTreeSet::new(),
             masteries: BTreeMap::new(),
+            leaps: Vec::new(),
         };
         next.nodes.extend(poe1::starts(tree, &next));
         s.nodes.set(next.nodes.iter().map(|n| NodeId(*n)).collect());

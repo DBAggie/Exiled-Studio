@@ -126,10 +126,7 @@ impl GameData {
         let resolver: &'static Resolver<'static, 'static> = Box::leak(Box::new(resolver));
         let version = loom_parser::import::data_version(data);
         let tree_version = tree_version(&version);
-        let tree = bundle
-            .passives
-            .as_ref()
-            .map(|p| loom_tree::Tree::from_tables(p, bundle.tree_layout.as_ref()));
+        let tree = loom_tree::Tree::from_bundle(bundle);
         let tree_layout = tree.as_ref().map(|t| {
             Arc::new(crate::tree::layout(
                 t,

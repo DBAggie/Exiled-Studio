@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 6;
+pub const FORMAT: u32 = 7;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -50,8 +50,24 @@ pub struct Export {
     pub bosses: BTreeMap<String, Boss>,
     /// data.pantheons, by god ID (format 3, P3-12g).
     pub pantheons: BTreeMap<String, God>,
+    /// data.jewelRadius, in PoB's order: the full radii, then the rings
+    /// (format 7, passive tree plan T-f).
+    #[serde(deserialize_with = "list")]
+    pub jewel_radii: Vec<JewelRadius>,
     /// The tree.
     pub tree: Tree,
+}
+
+/// An entry of `data.jewelRadius`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JewelRadius {
+    /// The inner radius (0 for a full radius).
+    pub inner: f64,
+    /// The outer radius.
+    pub outer: f64,
+    /// `Small` ... `Massive`, or `Variable` for a ring.
+    pub label: String,
 }
 
 /// A boss of `data.bosses`.

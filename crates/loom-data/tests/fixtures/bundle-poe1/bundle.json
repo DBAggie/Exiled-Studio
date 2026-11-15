@@ -152,6 +152,11 @@
    "size": 163
   },
   {
+   "path": "poe1/jewel_radii.json",
+   "sha256": "8eaa32139243cd99e9334d0f169a4730694cb4917652586e05efc9afb148398b",
+   "size": 219
+  },
+  {
    "path": "poe1/pantheons.json",
    "sha256": "5c256f7cd586ee9d6812659661134bb052299fc5be11f7f676f34e989b582a73",
    "size": 512

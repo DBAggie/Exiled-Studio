@@ -2,7 +2,9 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{PassiveTables, StatAmount};
+use loom_data::bundle::poe1::JewelRadius;
 use loom_data::bundle::tree_layout::TreeLayout;
 
 /// What a node is, for drawing and for the rules.
@@ -118,6 +120,8 @@ pub struct Tree {
     pub mastery_effects: BTreeMap<String, Vec<u32>>,
     /// Each orbit's radius, when the bundle has the layout.
     pub orbit_radii: Vec<f64>,
+    /// The jewel radii, when the bundle has them (`poe1/jewel_radii.json`).
+    pub jewel_radii: Vec<JewelRadius>,
 }
 
 fn kind_of(p: &loom_data::bundle::passives::Passive, socket_outer: bool) -> Kind {
@@ -302,6 +306,7 @@ impl Tree {
             classes,
             mastery_effects,
             orbit_radii: layout.map(|l| l.orbit_radii.clone()).unwrap_or_default(),
+            jewel_radii: Vec::new(),
         };
         tree.mark_modelled();
         tree
@@ -344,6 +349,45 @@ impl Tree {
             node.modelled = seen.contains(&node.id)
                 || (node.kind == Kind::Mastery && node.neighbours.iter().any(|n| seen.contains(n)));
         }
+    }
+
+    /// The tree of `bundle`: its passive tables placed by its layout, with
+    /// its jewel radii; `None` without passive tables.
+    #[must_use]
+    pub fn from_bundle(bundle: &Bundle) -> Option<Self> {
+        let mut tree = Self::from_tables(bundle.passives.as_ref()?, bundle.tree_layout.as_ref());
+        tree.jewel_radii = bundle
+            .poe1
+            .as_ref()
+            .and_then(|p| p.jewel_radii.clone())
+            .unwrap_or_default();
+        Some(tree)
+    }
+
+    /// The full radius named `name` (an item's `Radius:` line), if the
+    /// bundle has it.
+    #[must_use]
+    pub fn radius_named(&self, name: &str) -> Option<crate::poe1::radius::Ring> {
+        self.jewel_radii
+            .iter()
+            .find(|r| !r.name.is_empty() && r.name.eq_ignore_ascii_case(name))
+            .map(|r| crate::poe1::radius::Ring {
+                inner: 0,
+                outer: r.radius,
+            })
+    }
+
+    /// The ring with value `k` (a ring jewel's `local_jewel_variable_ring_radius_value`):
+    /// the ring of the table's `k`-th row.
+    #[must_use]
+    pub fn ring(&self, k: i64) -> Option<crate::poe1::radius::Ring> {
+        let r = self
+            .jewel_radii
+            .get(usize::try_from(k.checked_sub(1)?).ok()?)?;
+        Some(crate::poe1::radius::Ring {
+            inner: r.ring_inner,
+            outer: r.ring_outer,
+        })
     }
 
     /// The node `id`, if the tree has it.

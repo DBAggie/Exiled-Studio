@@ -23,6 +23,7 @@ mod dto_hashes;
 mod extract;
 mod grafts;
 mod item_tags;
+mod jewel_radii;
 mod load_statdesc;
 mod lookup;
 mod mod_filter;
@@ -1384,10 +1385,7 @@ fn calc_run_run(
         }
         None => None,
     };
-    let tree = bundle
-        .passives
-        .as_ref()
-        .map(|p| loom_tree::Tree::from_tables(p, None));
+    let tree = loom_tree::Tree::from_bundle(&bundle);
     let request = calc_run::Request {
         scope,
         bundle: &bundle,
