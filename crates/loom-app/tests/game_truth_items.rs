@@ -198,12 +198,11 @@ fn each_unique_copys_flavour_should_equal_the_bundles() {
         }
     }
     println!("{checked} uniques checked");
-    // The game shows "To name a thing is to give it power." on The Light of
-    // Meaning; PoB v2.67.2 pairs it with `UniqueJewel181` ("Faith given
-    // under false pretenses ..."), and the bundle took PoB's pair. Fixed by
-    // the main workstation's next data run (`item-evidence.md`, "Flavour
-    // text"); this entry then goes.
-    assert_eq!(differences, ["the-light-of-meaning"]);
+    // The Light of Meaning prints "To name a thing is to give it power."
+    // (`UniqueJewel183_`), where PoB v2.67.2 gives it `UniqueJewel181`; the
+    // bundle follows the game (`poe1::FLAVOUR_PAIRS`, `item-evidence.md`,
+    // "Flavour text").
+    assert!(differences.is_empty(), "{differences:?}");
 }
 
 /// The rounded value of each armour piece's defence in a calculation

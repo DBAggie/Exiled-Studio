@@ -76,7 +76,7 @@ pub struct AscendancyFlavour {
     pub id: String,
     /// The quote.
     pub text: String,
-    /// The colour the game prints it in (`FlavourTextColour`, `r,g,b`),
+    /// The colour the game prints it in (`RGBFlavourTextColour`, `r,g,b`),
     /// when the table gives one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub colour: Option<String>,

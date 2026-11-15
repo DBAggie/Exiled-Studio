@@ -1,6 +1,6 @@
 //! The passive tree's flavour texts for the PoE1 bundle (B-2 item
 //! evidence, E10): `PassiveSkills.FlavourText` and `Ascendancy.FlavourText`
-//! (with `FlavourTextColour`) to `poe1/tree_flavour.json`
+//! (with `RGBFlavourTextColour`) to `poe1/tree_flavour.json`
 //! (`loom_data::bundle::poe1::TreeFlavour`).
 //!
 //! The game files are the source (ADR-005's main rule), not GGG's tree
@@ -38,7 +38,7 @@ pub fn rows(read: Read<'_>) -> Result<Option<TreeFlavour>, String> {
     if let Some(t) = Table::read(read, "Ascendancy")?
         && let (Ok(id), Ok(flavour)) = (t.column("Id"), t.column("FlavourText"))
     {
-        let colour = t.column("FlavourTextColour").ok();
+        let colour = t.column("RGBFlavourTextColour").ok();
         for r in &t.rows {
             if let (Some(id), Some(text)) = (Table::text(r, id), text(r, flavour)) {
                 out.ascendancies.push(AscendancyFlavour {
@@ -88,7 +88,7 @@ mod tests {
             ),
             table(
                 "Ascendancy",
-                &["Id", "FlavourText", "FlavourTextColour"],
+                &["Id", "FlavourText", "RGBFlavourTextColour"],
                 &json!([["Asc1", "A quote.", "255,200,100"], ["Asc2", "", null]]),
             ),
         ]
