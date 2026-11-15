@@ -458,6 +458,39 @@ fn a_ring_should_hold_the_nodes_at_its_distances_but_not_its_centre_or_masteries
 }
 
 #[test]
+fn the_table_radii_should_be_read_in_tree_units_times_the_tree_scale() {
+    // The game's Small row (PassiveJewelRadii) against PoB's 3_16 radii.
+    let mut t = placed();
+    t.jewel_radii = vec![loom_data::bundle::poe1::JewelRadius {
+        id: "Small".to_owned(),
+        name: "Small".to_owned(),
+        radius: 800,
+        ring_inner: 800,
+        ring_outer: 1100,
+    }];
+    assert_eq!(
+        t.radius_named("small"),
+        Some(radius::Ring {
+            inner: 0,
+            outer: 960
+        })
+    );
+    assert_eq!(
+        t.ring(1),
+        Some(radius::Ring {
+            inner: 960,
+            outer: 1320
+        })
+    );
+    assert_eq!(t.ring(2), None);
+    assert_eq!(t.ring(0), None);
+    // Every value of the game's table maps onto PoB's exactly.
+    for (game, pob) in [(1200, 1440), (1500, 1800), (2000, 2400), (2400, 2880)] {
+        assert_eq!(radius::scaled(game), pob);
+    }
+}
+
+#[test]
 fn a_leap_should_allocate_alone_and_hold_while_its_socket_connects() {
     let t = placed();
     // Class B: 2 - 30 - 13 - 80 (the socket); 21 is two steps away.

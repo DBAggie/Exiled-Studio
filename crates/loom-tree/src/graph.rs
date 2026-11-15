@@ -365,7 +365,7 @@ impl Tree {
     }
 
     /// The full radius named `name` (an item's `Radius:` line), if the
-    /// bundle has it.
+    /// bundle has it, in tree units (`poe1::radius::scaled`).
     #[must_use]
     pub fn radius_named(&self, name: &str) -> Option<crate::poe1::radius::Ring> {
         self.jewel_radii
@@ -373,20 +373,21 @@ impl Tree {
             .find(|r| !r.name.is_empty() && r.name.eq_ignore_ascii_case(name))
             .map(|r| crate::poe1::radius::Ring {
                 inner: 0,
-                outer: r.radius,
+                outer: crate::poe1::radius::scaled(r.radius),
             })
     }
 
     /// The ring with value `k` (a ring jewel's `local_jewel_variable_ring_radius_value`):
-    /// the ring of the table's `k`-th row.
+    /// the ring of the table's `k`-th row, in tree units
+    /// (`poe1::radius::scaled`).
     #[must_use]
     pub fn ring(&self, k: i64) -> Option<crate::poe1::radius::Ring> {
         let r = self
             .jewel_radii
             .get(usize::try_from(k.checked_sub(1)?).ok()?)?;
         Some(crate::poe1::radius::Ring {
-            inner: r.ring_inner,
-            outer: r.ring_outer,
+            inner: crate::poe1::radius::scaled(r.ring_inner),
+            outer: crate::poe1::radius::scaled(r.ring_outer),
         })
     }
 

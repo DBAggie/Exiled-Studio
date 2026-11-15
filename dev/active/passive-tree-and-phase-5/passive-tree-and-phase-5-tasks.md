@@ -1,4 +1,4 @@
-Last Updated: 2026-11-15 (T1a, T2, T5a, T6 closed on `feat/ux-sprint-2`, PR #113, but for the parts tied to T3)
+Last Updated: 2026-11-15 (T1a, T2, T5a, T6 closed on `feat/ux-sprint-2`, PR #113, merged as `565f5b0`, but for the parts tied to T3; the tree data run on `feat/tree-data-run`)
 
 # Passive tree editor and Phase 5 (tasks)
 
@@ -23,6 +23,7 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [ ] P2 Signing: trust list, revocation, verification in `loom-data`, runbook `docs/release/signing.md`, release environment
 - [ ] P3 App updates: plugin (`native-tls`), modes, per-artifact behaviour, prompt, downgrade refusal
 - [ ] P4 Data bundles: `.loombundle`, hostile-input unpacking, install, verify, pin, rollback, quarantine, signed feed, shipped bundle source
+- [x] Tree data run (the maintainer-run work #113 left; branch `feat/tree-data-run`): extraction with the jewel tables, bundle with `poe1/jewel_radii.json`, data-parity at format 7 (`jewel_radii` 0 differences once the table is read times the tree scale 1.2, maintainer decision 2026-11-15), `tree-layout` with sprites, calc check (`docs/tree/editor.md`, "The real radii")
 - [ ] **Cut line** (maintainer 2026-11-14): the steps above ship; the ones below may become their own PRs
 - [ ] T3 Cluster jewels: tables, socket expansion data, data-parity, subgraphs, hash formats, calc
 - [ ] T4 Tree versions: `tools/tree` acquire and manifest (sprites too), `tree-pack`, packs 3_25 to 3_28, calc picks the version
