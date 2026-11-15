@@ -77,6 +77,7 @@ fn rules() -> ModRules {
             item: "shell".to_owned(),
         },
         influences: vec![("Sky".to_owned(), 4)],
+        affix_generations: AffixGenerations::default(),
     }
 }
 

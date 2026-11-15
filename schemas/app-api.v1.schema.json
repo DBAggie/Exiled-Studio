@@ -74,8 +74,13 @@
   ],
   "$defs": {
     "AffixKind": {
-      "description": "Whether an affix is a prefix or a suffix.",
+      "description": "Where an affix is on the item.",
       "oneOf": [
+        {
+          "description": "An implicit modifier.",
+          "type": "string",
+          "const": "implicit"
+        },
         {
           "description": "A prefix.",
           "type": "string",
@@ -89,9 +94,17 @@
       ]
     },
     "AffixView": {
-      "description": "One mod of an item, as the tooltip's Alt view heads its lines\n(`Prefix Modifier \"Urchin's\" — Life, Defences`).",
+      "description": "One mod of an item, as the tooltip's Alt view heads its lines\n(`Prefix Modifier \"Urchin's\" (Tier: 2) — Life, Defences`).",
       "type": "object",
       "properties": {
+        "crafted": {
+          "description": "Whether it is crafted (`Master Crafted Prefix Modifier`).",
+          "type": "boolean"
+        },
+        "inferred": {
+          "description": "Whether it was inferred from the lines (the only reading the\ngame data allows) rather than named by the item.",
+          "type": "boolean"
+        },
         "kind": {
           "description": "Prefix or suffix.",
           "$ref": "#/$defs/AffixKind"
@@ -132,6 +145,8 @@
       "additionalProperties": false,
       "required": [
         "kind",
+        "crafted",
+        "inferred",
         "tags",
         "lines"
       ]
@@ -1913,7 +1928,7 @@
       "type": "object",
       "properties": {
         "affixes": {
-          "description": "The mods PoB names on the item and the lines each made, prefixes\nfirst (the tooltip's Alt view headers); lines no mod is found\nfor are in none.",
+          "description": "The item's mods and the lines each made, implicits first, then\nprefixes and suffixes, crafted last in each (the tooltip's Alt\nview headers): the mods PoB names, and those the lines allow\none reading of; lines no mod is found for are in none.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/AffixView"

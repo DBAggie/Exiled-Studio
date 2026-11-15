@@ -592,17 +592,21 @@ describe('the equipment panel (B-2)', () => {
     expect(tip.textContent).toContain('Requires Level 30, 10 Dex')
     expect(within(tip).queryByText(/Prefix Modifier/)).toBeNull()
 
-    // Alt held: each roll's range, the item level, and the named mod's
-    // header over its line.
+    // Alt held: each roll's range, the item level, and each mod's header
+    // over its lines, with its tier; a crafted mod as the game heads it.
     fireEvent.keyDown(window, { key: 'Alt' })
     expect(await within(tip).findByText('+12(10-15) to Accuracy')).toBeTruthy()
     expect(within(tip).getByText(/Item Level/)).toBeTruthy()
     const header = within(tip).getByText(
-      'Prefix Modifier \u201cSteady\u201d \u2014 Attack',
+      'Prefix Modifier \u201cSteady\u201d (Tier: 2) \u2014 Attack',
     )
     expect(header.nextElementSibling?.textContent).toBe(
       '+12(10-15) to Accuracy',
     )
+    const crafted = within(tip).getByText(
+      'Master Crafted Suffix Modifier \u201cof Craft\u201d',
+    )
+    expect(crafted.nextElementSibling?.textContent).toBe('+15 to maximum Life')
     fireEvent.keyUp(window, { key: 'Alt' })
     expect(await within(tip).findByText('+12 to Accuracy')).toBeTruthy()
     await user.unhover(ring)

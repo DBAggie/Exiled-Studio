@@ -98,10 +98,13 @@ try {
   ).sessionId
 
   step('the start screen')
-  await text('Import from Path of Building')
+  await text('What do you want to do?')
 
   step('import a file the user picks')
-  await click(button('Open a .xml file…'), 'the import button')
+  await click(
+    button('Import a Path of Building file (.xml)…'),
+    'the import button',
+  )
   await text('Item lines read')
   await click(button('Open the dashboard'), 'continue')
   await text('Up to date')
@@ -110,7 +113,9 @@ try {
   await click(button('Equipment'), 'the equipment menu')
   await click(button('Edit Loom Test Band'), 'the item')
   // The synthetic build's "+15 to maximum Life" is line 7 of item 1
-  // (tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml).
+  // (tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml). A
+  // modifier line shows as text until its Edit button is pressed.
+  await click(button('Edit line 7'), 'the edit button of the life line')
   const input = await until('the life line', () =>
     find(`//input[@aria-label='Line 7 text']`),
   )

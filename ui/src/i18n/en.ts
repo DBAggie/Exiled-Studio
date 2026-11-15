@@ -381,6 +381,8 @@ export const en = {
   'tooltip.prefix': 'Prefix Modifier',
   'tooltip.suffix': 'Suffix Modifier',
   'tooltip.tier': '(Tier: {n})',
+  'tooltip.implicit': 'Implicit Modifier',
+  'tooltip.crafted': 'Master Crafted',
   'league.label': 'League',
   'league.challenge': 'Challenge league',
   'league.standard': 'Standard',
