@@ -50,7 +50,9 @@ use sha2::{Digest, Sha256};
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::{self, ItemTags};
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
+use crate::{
+    flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties, tree_flavour,
+};
 
 mod base_properties;
 mod passives;
@@ -848,6 +850,16 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 bundle_poe1::UNIQUE_FLAVOUR,
                 to_json(&texts)?,
                 Some(texts.len()),
+            );
+        }
+        if let Some(texts) = tree_flavour::rows(read)? {
+            let n = texts.passives.len() + texts.ascendancies.len();
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::TREE_FLAVOUR,
+                to_json(&texts)?,
+                Some(n),
             );
         }
         if !socket_caps.is_empty() {

@@ -2505,6 +2505,11 @@ button.inv-slot:focus-visible {
   padding-left: 1rem;
 }
 
+.tree-flavour {
+  color: var(--c-muted);
+  font-style: italic;
+}
+
 .tree-list .segmented {
   margin-bottom: 8px;
 }

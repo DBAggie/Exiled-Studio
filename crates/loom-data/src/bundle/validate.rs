@@ -975,6 +975,15 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        let (nodes, ids, findings) = p.tree_flavour_domain();
+        duplicates(
+            report,
+            super::poe1::TREE_FLAVOUR,
+            nodes.iter().map(String::as_str).chain(ids.iter().copied()),
+        );
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
         let (bases, findings) = p.socket_domain();
         duplicates(report, super::poe1::SOCKET_CAPS, bases.iter().copied());
         let known: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();

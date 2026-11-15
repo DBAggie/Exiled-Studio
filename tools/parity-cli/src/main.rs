@@ -42,6 +42,7 @@ mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
+mod tree_flavour;
 mod tree_layout;
 mod tree_parity;
 

@@ -546,6 +546,20 @@ function Impact({ preview }: { preview: TreePreview }) {
   )
 }
 
+/** A flavour text or quote, line by line, as the game prints it. */
+function Flavour({ text }: { text: string }) {
+  return (
+    <p className="tree-flavour">
+      {text.split('\n').map((line, i) => (
+        <span key={i}>
+          {i > 0 && <br />}
+          {line}
+        </span>
+      ))}
+    </p>
+  )
+}
+
 /** What a node is and what clicking it would do. */
 function NodeCard({
   node,
@@ -563,6 +577,16 @@ function NodeCard({
     .find((g) => g.id === node['mastery-group'])
     ?.effects.find((e) => e.effect === chosen?.effect)
   const allocated = tree.nodes.includes(node.id)
+  // A keystone's flavour text; an ascendancy start shows its quote (B-2
+  // item evidence, E10: the game data's).
+  const flavour =
+    node.flavour ??
+    (node.kind === 'ascendancy-start'
+      ? layout.classes
+          .flatMap((c) => c.ascendancies)
+          .find((a) => a.id === node.ascendancy)?.flavour
+      : null) ??
+    null
   const jewel = tree.jewels?.find((j) => j.node === node.id)?.item
   const jewelName = useAppSelector(
     (s) =>
@@ -583,6 +607,7 @@ function NodeCard({
           ))}
         </ul>
       )}
+      {flavour != null && <Flavour text={flavour} />}
       {node.kind === 'jewel-socket' && allocated && (
         <p className="small-text">{jewelName ?? t('tree.emptySocket')}</p>
       )}
@@ -895,6 +920,7 @@ function TreeList({
                   {n.lines.length > 0 && (
                     <p className="small-text">{n.lines.join(' · ')}</p>
                   )}
+                  {n.flavour != null && <Flavour text={n.flavour} />}
                 </div>
                 {n.modelled && !start && tree.locked == null && (
                   <button type="button" onClick={() => onActivate(n)}>
@@ -1009,6 +1035,8 @@ export function Tree() {
 
   const view = mode ?? (layout.placed ? 'canvas' : 'list')
   const cls = layout.classes.find((c) => c.number === tree.class)
+  const quote =
+    cls?.ascendancies.find((a) => a.number === tree.ascendancy)?.flavour ?? null
   const locked = tree.locked ?? null
   const activate = (n: TreeNodeView) => {
     if (
@@ -1102,6 +1130,7 @@ export function Tree() {
             </option>
           ))}
         </select>
+        {quote != null && <Flavour text={quote} />}
         <p className="tree-points" aria-live="polite">
           {t('tree.points', {
             n: tree.points,

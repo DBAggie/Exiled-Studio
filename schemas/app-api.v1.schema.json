@@ -3974,6 +3974,22 @@
       "description": "An ascendancy on the tree.",
       "type": "object",
       "properties": {
+        "flavour": {
+          "description": "Its quote, as the game shows it in the ascendancy's circle (the\ngame data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "flavour-colour": {
+          "description": "The quote's colour (`r,g,b`), when the data gives one.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
         "id": {
           "description": "Its ID (what nodes name).",
           "type": "string"
@@ -4331,6 +4347,14 @@
           "description": "Whether it exists only once a cluster jewel is socketed (a\nnested socket or position proxy): not drawn, as PoB does not.",
           "type": "boolean",
           "default": false
+        },
+        "flavour": {
+          "description": "Its flavour text, as the game shows it under a keystone's lines\n(the game data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "group": {
           "description": "Its group's index.",

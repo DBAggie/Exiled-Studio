@@ -411,6 +411,10 @@ dto! {
         pub links: Vec<u32>,
         /// Its stat lines as the game prints them.
         pub lines: Vec<String>,
+        /// Its flavour text, as the game shows it under a keystone's lines
+        /// (the game data's; B-2 item evidence), lines split by `\n`.
+        #[serde(default)]
+        pub flavour: Option<String>,
     }
 
     /// A class on the tree.
@@ -435,6 +439,13 @@ dto! {
         pub name: String,
         /// Its start node, if any.
         pub start: Option<u32>,
+        /// Its quote, as the game shows it in the ascendancy's circle (the
+        /// game data's; B-2 item evidence), lines split by `\n`.
+        #[serde(default)]
+        pub flavour: Option<String>,
+        /// The quote's colour (`r,g,b`), when the data gives one.
+        #[serde(default)]
+        pub flavour_colour: Option<String>,
     }
 
     /// A mastery group's effects.

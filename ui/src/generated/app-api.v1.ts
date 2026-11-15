@@ -2200,6 +2200,15 @@ export interface TreeClassView {
  */
 export interface TreeAscendancyView {
   /**
+   * Its quote, as the game shows it in the ascendancy's circle (the
+   * game data's; B-2 item evidence), lines split by `\n`.
+   */
+  flavour?: string | null
+  /**
+   * The quote's colour (`r,g,b`), when the data gives one.
+   */
+  'flavour-colour'?: string | null
+  /**
    * Its ID (what nodes name).
    */
   id: string
@@ -2268,6 +2277,11 @@ export interface TreeNodeView {
    * nested socket or position proxy): not drawn, as PoB does not.
    */
   'cluster-area'?: boolean
+  /**
+   * Its flavour text, as the game shows it under a keystone's lines
+   * (the game data's; B-2 item evidence), lines split by `\n`.
+   */
+  flavour?: string | null
   /**
    * Its group's index.
    */

@@ -114,6 +114,22 @@ describe('passive tree', () => {
     )
   })
 
+  it('shows a keystone flavour text and the ascendancy quote', async () => {
+    const { user } = await openTree()
+    await user.click(screen.getByRole('button', { name: 'Keystones' }))
+    const list = screen.getByRole('list', { name: 'Nodes' })
+    const text = within(list).getByText('A made-up keystone line.')
+    expect(text.closest('.tree-flavour')?.textContent).toBe(
+      'A made-up keystone line.A second one.',
+    )
+    expect(screen.queryByText('A made-up quote.')).toBeNull()
+    await user.selectOptions(
+      screen.getByLabelText('Ascendancy'),
+      'Elementalist',
+    )
+    expect(await screen.findByText('A made-up quote.')).toBeTruthy()
+  })
+
   it('finds nodes by name and stat text', async () => {
     const { user } = await openTree()
     await user.type(screen.getByLabelText('Search nodes'), 'cold damage')

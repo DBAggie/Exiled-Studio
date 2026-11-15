@@ -182,6 +182,11 @@
    "size": 284
   },
   {
+   "path": "poe1/tree_flavour.json",
+   "sha256": "ac5d8101ab3c7d6a78266d6707a323d29f111981d4361ddbe235868d4b6a58c6",
+   "size": 293
+  },
+  {
    "path": "poe1/unique_flavour.json",
    "sha256": "0870ea1453f95667052a0b273d133dcb03f7af6f87866b01b4bd132d75c2a096",
    "size": 451

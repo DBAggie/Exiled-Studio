@@ -844,6 +844,16 @@ poe1["poe1/socket_caps.json"] = [
     {"base": "Test/Items/Shield1", "levels": [[1, 1], [2, 1], [3, 2], [4, 25], [5, 35], [6, 50]]},
     {"base": "Test/Items/Ring1", "levels": [[0, 1]]},
 ]
+# B-2 item evidence (E10): made-up tree flavour, the keystones' texts (102
+# in this bundle's passives, 11040 in tree_bundle's) and one ascendancy's
+# quote.
+poe1["poe1/tree_flavour.json"] = {
+    "passives": [
+        {"node": 102, "text": "A made-up keystone line.\nA second one."},
+        {"node": 11040, "text": "A made-up keystone line.\nA second one."},
+    ],
+    "ascendancies": [{"id": "TestChampion", "text": "A made-up quote.", "colour": "200,180,120"}],
+}
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)
 write("bundle-poe2", "poe2", with_skills("poe2", common("poe2", 7, "charm_stat_descriptions")))

@@ -1,0 +1,19 @@
+{
+ "ascendancies": [
+  {
+   "colour": "200,180,120",
+   "id": "TestChampion",
+   "text": "A made-up quote."
+  }
+ ],
+ "passives": [
+  {
+   "node": 102,
+   "text": "A made-up keystone line.\nA second one."
+  },
+  {
+   "node": 11040,
+   "text": "A made-up keystone line.\nA second one."
+  }
+ ]
+}
