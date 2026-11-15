@@ -95,9 +95,22 @@ PoB v2.67.2 does the same join (`src/Export/Scripts/flavourText.lua`) plus a han
 
 The app bundle (layout and sprites) is in the maintainer's OneDrive folder `Exiled-Studio-bundles` as `bundle-poe1-26530219-schema4-card.zip` (8.1 MB, `bundle-poe1-tree-a/`, 86 files), SHA-256 `4ebd337bb43cceaec6a75d68b0a183ebf5504d8fa05ca8e6997c326bc78d336f`, with a `.sha256` file beside it (checked there with `sha256sum -c`); its `bundle.json` SHA-256 is `bf5704a2db5e1448f2e29572f543dcb378b2532ddfe6dc8cb0baa8813f9f497a`. It replaces `bundle-poe1-26530219-schema4-tree.zip`. Not committed: it carries GGG's sprite sheets (ADR-000, ADR-005 Amendment 2).
 
+## Flavour text evidence
+
+`local/b2card/evidence2.sh`, from clean commit `d2f5f54` (the code of `8168fcd` with its docs):
+
+- **`extract`** of build 26530219 twice, byte-identical (`dirty: no`): 103 tables, all Ok, dangling keys 0. Against the tree data run's extract, `UniqueStashLayout` and `UniqueStashTypes` are new and the manifest differs.
+- **`bundle`** twice, byte-identical; `bundle-check` no findings; manifest SHA-256 `7f6aba0539cda9a2cd2b702fbf31730fbc623be57439ad41ae480440d14c267e`. Against the tag-name bundle above, `poe1/unique_flavour.json` is new (1,332 rows, 1,319 names, 247 KB) and `bundle.json` differs.
+- **`data-parity`** against PoB's export at format 8 (twice byte-identical): table `flavour_text` 1,356 PoB rows, every shared row's lines equal, 56 differences under one rule (`docs/phase-3/data-parity.md`, "B-2: table `flavour_text`"), 32 bundle-only rows; totals 613 (`uncategorized` 0), 0 failed rules, 370 overlay rows. Summary: `data-parity-poe1-26530219-flavour.json`.
+- **`tree-layout`** on it, `bundle-check` clean; against the tag-name layout bundle only `poe1/unique_flavour.json` and `bundle.json` differ.
+- **`calc-run`** before and after (public 136, corpus 21), and after twice: every document identical. **No calculation changed.**
+- **Game truth:** the three tests in `crates/loom-app/tests/game_truth_affixes.rs` pass on it. Spot checks in the file: Kaom's Heart, Goldrim, Headhunter as traced above; Kaom's Way `FatedUnique1`; Tabula Rasa and Voidheart none.
+
+The app bundle is in OneDrive `Exiled-Studio-bundles` as `bundle-poe1-26530219-schema4-flavour.zip` (8.2 MB, `bundle-poe1-tree-a/`), SHA-256 `a9b9f18c795118142c4c99fca533ac06baa8c4190e44fbc61105dfbd905e7d13`, with its `.sha256` file (checked there); its `bundle.json` SHA-256 is `7dfab3baace2dde6d9fe0afc3bd7030f063013de16d20c17634083b061d0c9f3`. It replaces `bundle-poe1-26530219-schema4-card.zip`. Not committed (GGG's sprite sheets).
+
 ## For the maintainer to decide
 
-1. **Flavour text in bundles.** Ship it (two extraction roots, a hand list for the fated and shared-art uniques, about 150 KB of text), or leave the card without it.
-2. **Socket caps from the data.** The item type files give them by base and item level, so no hard-coded table is needed. A follow-up PR would add a bundle file (each base's `socket_info` through its chain) and the card's "maximum sockets"; it would follow the game, not PoB, for Gnarled Branch, Corroded Blade, and items under item level 50 (display only; that PR would record the difference with this page as evidence, in the divergence register if the maintainer wants display differences there).
+1. **Flavour text in bundles:** decided 2026-11-15, "add flavour text" (shipped above). Open: pairs for the 28 upgraded versions without a text, from in-game evidence.
+2. **Socket caps from the data** (maintainer 2026-11-15: another session's work). The item type files give them by base and item level, so no hard-coded table is needed. A follow-up PR would add a bundle file (each base's `socket_info` through its chain) and the card's "maximum sockets"; it would follow the game, not PoB, for Gnarled Branch, Corroded Blade, and items under item level 50 (display only; that PR would record the difference with this page as evidence, in the divergence register if the maintainer wants display differences there).
 
 Still open: weapon and armour values checked against the game need the maintainer's in-game copies and Alt screenshots (`ux-improvements-notes.md`, "Maintainer tasks").
