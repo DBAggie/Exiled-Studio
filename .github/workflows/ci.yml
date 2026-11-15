@@ -391,6 +391,19 @@ jobs:
       - name: Scan the history
         run: ./gitleaks git --no-banner --redact --exit-code 1 .
 
+  # Phase 5, P7 (docs/phase-5/performance.md): instruction counts of the core
+  # paths (tools/bench, loom-bench) under callgrind on the synthetic tree
+  # bundle; a count 10% over tools/bench/baseline.json fails.
+  bench:
+    name: bench (instruction counts)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: bash tools/bench/count.sh
+
   # Phase 5, P6: the fuzz targets (fuzz/, its own workspace) still build; the
   # fuzzing runs in fuzz.yml (weekly) and on the maintainer's machine.
   fuzz-build:
@@ -589,7 +602,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, frontend, e2e, package]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, bench, frontend, e2e, package]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs

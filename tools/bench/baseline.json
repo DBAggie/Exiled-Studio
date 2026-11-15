@@ -1,0 +1,4 @@
+{
+  "$comment": "Instruction counts of loom-bench's scenarios under callgrind on CI's ubuntu-24.04 runner (tools/bench/count.sh; docs/phase-5/performance.md). CI fails on a count 10% over these.",
+  "instructions": {}
+}

@@ -36,7 +36,8 @@ The plan's step P4 and decision P-e (`dev/active/passive-tree-and-phase-5/`): ga
    - An ID installed with another manifest: refused (`APP_PACK_EXISTS`).
 
 ## At every start, and on request
-- **At start** (`loom_app::install::scan`), every installed folder's signature is checked against the trust list compiled into the build, and its files' sizes against the manifest. Checking hashes would cost the start too much on the real bundle (the startup budget); the tradeoff is recorded here.
+- **At start** (`loom_app::install::scan`), every installed folder's signature is checked against the trust list compiled into the build, and its files' sizes against the manifest.
+- **The bundle that loads** then goes through the full bundle validator (`GameData::load`), which checks every file's SHA-256 too. Plan decision P-e meant the start to check sizes only. The validator's cost is measured in `docs/phase-5/performance.md` (exception 1), and changing it is the maintainer's choice.
 - **Verify** (About, Game data, **Verify**; command `verify-bundle`) checks every file's SHA-256 (`APP_BUNDLE_DAMAGED`).
 - The installer checks hashes too, so a bundle is fully checked when it arrives and whenever the user asks.
 
