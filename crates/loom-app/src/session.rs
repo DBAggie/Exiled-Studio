@@ -64,6 +64,8 @@ pub struct Session {
     data_error: Option<AppError>,
     /// The installed bundles (B-1), for the snapshot.
     installed: Vec<crate::bundles::Installed>,
+    /// The quarantined bundles (Phase 5, P-e), for the snapshot.
+    quarantined: Vec<crate::install::Found>,
     /// A notice about the choice of data (`APP_BUNDLE_FALLBACK`).
     data_notice: Option<AppError>,
     current: Option<Arc<State>>,
@@ -114,6 +116,7 @@ impl Session {
             data: None,
             data_error: None,
             installed: Vec::new(),
+            quarantined: Vec::new(),
             data_notice: None,
             current: None,
             version: 0,
@@ -166,9 +169,14 @@ impl Session {
         self.version += 1;
     }
 
-    /// Sets the installed bundles the snapshot lists.
-    pub fn set_installed(&mut self, installed: Vec<crate::bundles::Installed>) {
+    /// Sets the installed and quarantined bundles the snapshot lists.
+    pub fn set_installed(
+        &mut self,
+        installed: Vec<crate::bundles::Installed>,
+        quarantined: Vec<crate::install::Found>,
+    ) {
         self.installed = installed;
+        self.quarantined = quarantined;
     }
 
     /// Sets a notice about the choice of data (after [`Self::set_loaded`]).
@@ -1346,6 +1354,11 @@ impl Session {
                         data_version: view::data_version(&i.version),
                         tree_version: crate::data::tree_version(&i.version)
                             .map(|t| t.as_str().to_owned()),
+                        signed_by: match &i.status {
+                            crate::install::Status::Trusted { key_id } => Some(key_id.clone()),
+                            _ => None,
+                        },
+                        accepted: matches!(i.status, crate::install::Status::Accepted(_)),
                     })
                     .collect(),
                 active: self.data.as_ref().and_then(|d| {
@@ -1356,9 +1369,29 @@ impl Session {
                 }),
                 notice: self.data_notice.as_ref().map(AppError::dto),
                 pinned: self.pinned_bundle(),
+                quarantined: self.quarantined.iter().map(quarantined_view).collect(),
             },
             notices: self.notices.iter().map(AppError::dto).collect(),
         }
+    }
+}
+
+/// A quarantined bundle's view.
+fn quarantined_view(q: &crate::install::Found) -> api::QuarantinedBundle {
+    use crate::install::{Quarantine, Status};
+    let reason = match q.status {
+        Status::Quarantined(r) | Status::Accepted(r) => r,
+        Status::Trusted { .. } => Quarantine::Damaged,
+    };
+    api::QuarantinedBundle {
+        id: q.id.clone(),
+        data_version: view::data_version(&q.version),
+        reason: reason.name().to_owned(),
+        acceptable: reason.acceptable(),
+        manifest_sha256: q.manifest_sha256.clone(),
+        key_id: q.key_id.clone(),
+        files: u32::try_from(q.files).unwrap_or(u32::MAX),
+        bytes: q.bytes,
     }
 }
 

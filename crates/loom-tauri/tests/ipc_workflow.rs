@@ -43,7 +43,7 @@ impl FilePicker for FakePicker {
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
             Pick::Diagnostics => "diagnostics.zip",
-            Pick::BundleFolder => return None,
+            Pick::BundleFolder | Pick::BundlePack => return None,
         };
         Some(self.0.join(file))
     }
@@ -79,6 +79,7 @@ fn shell(test: &str) -> Shell {
             data,
             bundle: Some(root().join("crates/loom-data/tests/fixtures/bundle-poe1")),
             keep_token: false,
+            shipped: None,
         },
         move |_| Box::new(FakePicker(picks)),
     )

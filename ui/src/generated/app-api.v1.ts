@@ -121,6 +121,26 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
+        'accept-bundle': {
+          /**
+           * The bundle's ID ([`QuarantinedBundle`]).
+           */
+          id: string
+          /**
+           * The manifest SHA-256 the user was shown.
+           */
+          'manifest-sha256': string
+        }
+      }
+    | {
+        'verify-bundle': {
+          /**
+           * The bundle's ID.
+           */
+          id: string
+        }
+      }
+    | {
         'import-text': {
           /**
            * The text.
@@ -2050,6 +2070,13 @@ export interface DataStatus {
    */
   pinned?: string | null
   /**
+   * Installed bundles that do not load (Phase 5, P-e): unsigned or
+   * signed by an unknown key until the user accepts them; for good
+   * when the signature fails, the key is revoked, or files are
+   * damaged.
+   */
+  quarantined?: QuarantinedBundle[]
+  /**
    * The passive tree version the application gives the engine for
    * this bundle, if known; it names the game's patch (`3_29` is
    * patch 3.29), which the UI shows (UX-14).
@@ -2060,11 +2087,20 @@ export interface DataStatus {
  * A bundle installed in the application's `bundles/` folder.
  */
 export interface InstalledBundle {
+  /**
+   * Whether the user accepted it from quarantine (unsigned, or an
+   * unknown key).
+   */
+  accepted?: boolean
   'data-version': DataVersionView1
   /**
    * Its ID: `<game>/<steam build>-s<data schema>`.
    */
   id: string
+  /**
+   * The key that signed it, when a trusted one did (Phase 5, P-e).
+   */
+  'signed-by'?: string | null
   /**
    * The passive tree version the application knows for it, if any:
    * the game's patch (`3_29` is patch 3.29; UX-14).
@@ -2075,6 +2111,60 @@ export interface InstalledBundle {
  * A data version.
  */
 export interface DataVersionView1 {
+  /**
+   * `poe1` or `poe2`.
+   */
+  game: string
+  /**
+   * The bundle's data schema version.
+   */
+  'schema-version': number
+  /**
+   * The Steam build it was extracted from, if known.
+   */
+  'steam-build'?: number | null
+}
+/**
+ * An installed bundle that does not load (Phase 5, P-e).
+ */
+export interface QuarantinedBundle {
+  /**
+   * Whether the user may accept it ([`Command::AcceptBundle`]):
+   * `unsigned` and `unknown-key` only.
+   */
+  acceptable: boolean
+  /**
+   * Its size in bytes.
+   */
+  bytes: number
+  'data-version': DataVersionView2
+  /**
+   * Its number of files.
+   */
+  files: number
+  /**
+   * Its ID: `<game>/<steam build>-s<data schema>`.
+   */
+  id: string
+  /**
+   * The signing key's ID, when signed.
+   */
+  'key-id'?: string | null
+  /**
+   * The SHA-256 of its manifest (`bundle.json`), shown to the user,
+   * who accepts exactly it.
+   */
+  'manifest-sha256': string
+  /**
+   * Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,
+   * `damaged`.
+   */
+  reason: string
+}
+/**
+ * A data version.
+ */
+export interface DataVersionView2 {
   /**
    * `poe1` or `poe2`.
    */

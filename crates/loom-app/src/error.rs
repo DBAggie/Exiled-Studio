@@ -65,6 +65,14 @@ pub enum Code {
     /// An item to add was refused: not an item's text, a base the data
     /// does not know, too long, or a slot it does not fit.
     AddItem,
+    /// A pack's bundle is installed already with other content.
+    PackExists,
+    /// The bundle is quarantined: not loaded until the user accepts it
+    /// (unsigned, or an unknown key), or never (a bad signature, a revoked
+    /// key, damaged files).
+    Quarantined,
+    /// An installed bundle's files are not its manifest's.
+    BundleDamaged,
 }
 
 impl Code {
@@ -98,6 +106,9 @@ impl Code {
             Self::NoBundle => "APP_NO_BUNDLE",
             Self::Tree => "APP_TREE",
             Self::AddItem => "APP_ADD_ITEM",
+            Self::PackExists => "APP_PACK_EXISTS",
+            Self::Quarantined => "APP_QUARANTINED",
+            Self::BundleDamaged => "APP_BUNDLE_DAMAGED",
         }
     }
 }

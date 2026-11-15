@@ -19,6 +19,7 @@ pub mod diagnostics;
 mod edit;
 mod error;
 pub mod gems;
+pub mod install;
 pub mod items;
 pub mod loadout;
 pub mod logs;

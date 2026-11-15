@@ -40,6 +40,9 @@ crc32fast = "1.4"
 # Ed25519 signatures over data bundles and feeds (Phase 5, P-c; BSD-3-Clause).
 # No default features: no precomputed tables, no RNG (core crates verify only).
 ed25519-dalek = { version = "2.2", default-features = false, features = ["std", "zeroize"] }
+# Data bundle packs (Phase 5, P4): deflate through flate2 with zlib-rs only;
+# no other codecs, no encryption.
+zip = { version = "9.6", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

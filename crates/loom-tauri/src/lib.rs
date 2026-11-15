@@ -115,6 +115,8 @@ pub enum Pick {
     BundleFolder,
     /// Where to write the diagnostic package (`.zip`).
     Diagnostics,
+    /// A data bundle pack to install (`.loombundle`; Phase 5, P-e).
+    BundlePack,
 }
 
 /// Opens the file dialogs. `None` when the user cancelled.
@@ -406,6 +408,14 @@ fn choose_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     with_pick(&ctx, Pick::BundleFolder, "", HostCommand::SetBundle)
 }
 
+/// Installs a data bundle pack the user picks (Phase 5, P-e): signed by a
+/// trusted key it loads; unsigned or by an unknown key it is quarantined
+/// until the user accepts it.
+#[tauri::command(async)]
+fn install_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
+    with_pick(&ctx, Pick::BundlePack, "", HostCommand::InstallBundle)
+}
+
 /// The first screen has rendered. In a smoke run (`--smoke <file>`,
 /// [`release::Smoke`]) the build info is written and the application quits;
 /// otherwise nothing happens.
@@ -552,7 +562,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 33] = [
+pub const COMMANDS: [&str; 34] = [
     "snapshot",
     "calc_document",
     "item",
@@ -586,6 +596,7 @@ pub const COMMANDS: [&str; 33] = [
     "set_update_mode",
     "check_updates",
     "install_update",
+    "install_bundle",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -601,6 +612,37 @@ pub struct Paths {
     /// store (ADR-017 Amendment 1); tests pass `false`, so they never
     /// touch the user's credentials.
     pub keep_token: bool,
+    /// The folder of data packs the installer ships (Phase 5, P-e), if
+    /// any: each one not installed yet is installed at start.
+    pub shipped: Option<PathBuf>,
+}
+
+/// Whether this build trusts the public test data key: debug and `e2e`
+/// builds only (`docs/release/signing.md`, "The test key"). A released
+/// build is neither; its smoke run checks so.
+pub const TEST_KEYS: bool = cfg!(debug_assertions) || cfg!(feature = "e2e");
+
+/// Installs the shipped packs not installed yet (a first start, or an
+/// update that ships newer data). A pack that fails is logged; the
+/// application starts without it.
+fn install_shipped(app: &App, dir: &std::path::Path) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    let mut packs: Vec<PathBuf> = entries
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| {
+            p.extension()
+                .is_some_and(|e| e == loom_app::install::PACK_EXTENSION)
+        })
+        .collect();
+    packs.sort();
+    for pack in packs {
+        if let Err(e) = app.execute(HostCommand::InstallBundle(pack.clone())) {
+            tracing::warn!(code = %e.code, pack = %pack.display(), "shipped bundle not installed");
+        }
+    }
 }
 
 /// Adds the commands and starts the application in `setup`.
@@ -644,6 +686,7 @@ pub fn build<R: Runtime>(
             set_update_mode,
             check_updates,
             install_update,
+            install_bundle,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -678,8 +721,14 @@ pub fn build<R: Runtime>(
             let sink: loom_app::Sink = Arc::new(move |event: api::Event| {
                 let _ = emitter.emit(EVENT, event);
             });
-            let application = App::start(Config::new(paths.data, paths.bundle), sink)
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+            let application = App::start(
+                Config::new(paths.data, paths.bundle).with_test_keys(TEST_KEYS),
+                sink,
+            )
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+            if let Some(shipped) = &paths.shipped {
+                install_shipped(&application, shipped);
+            }
             app.manage(Ctx {
                 app: Arc::new(application),
                 picker: picker(&handle),
@@ -731,6 +780,9 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
                 .add_filter("Diagnostic package", &["zip"])
                 .set_file_name(name)
                 .blocking_save_file(),
+            Pick::BundlePack => dialog
+                .add_filter("Exiled Studio game data", &["loombundle"])
+                .blocking_pick_file(),
         };
         path.and_then(|p| p.into_path().ok())
     }
@@ -749,6 +801,7 @@ impl FilePicker for E2ePicker {
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
             Pick::Diagnostics => "diagnostics.zip",
+            Pick::BundlePack => "bundle.loombundle",
             Pick::BundleFolder => return None,
         };
         Some(self.0.join(file))
@@ -782,6 +835,8 @@ pub fn run() -> tauri::Result<()> {
             bundle: std::env::var_os("LOOM_BUNDLE_DIR").map(PathBuf::from),
             // End-to-end runs keep nothing in the user's credentials.
             keep_token: !cfg!(feature = "e2e"),
+            // The installer's resources (`bundles/`), when it ships data.
+            shipped: handle.path().resource_dir().ok().map(|d| d.join("bundles")),
         },
         |handle| {
             #[cfg(feature = "e2e")]

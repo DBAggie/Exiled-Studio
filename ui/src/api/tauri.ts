@@ -71,6 +71,7 @@ export const tauriApi: LoomApi = {
   saveAs: () => call('save_as'),
   exportXml: () => call('export_xml'),
   chooseBundle: () => call('choose_bundle'),
+  installBundle: () => call('install_bundle'),
   openDropped: () => call('open_dropped'),
   treeLayout: () => call('tree_layout'),
   treeSprites: () => call('tree_sprites'),

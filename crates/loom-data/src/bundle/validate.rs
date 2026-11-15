@@ -3,7 +3,9 @@
 //! exists). Five kinds of check, each finding with a stable code (ADR-014):
 //!
 //! - **structural:** every listed file exists with its SHA-256 and size; no
-//!   file is unlisted; `signatures` is empty (formats 1 and 2);
+//!   file is unlisted (but the installer's side files, `signature.json` and
+//!   `accepted.json`, `crate::pack::SIDE_FILES`); `signatures` is empty
+//!   (formats 1 and 2);
 //! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
 //!   required files, every file parses);
 //! - **referential:** mod stats, quality stats, the stats of the PoE1
@@ -222,7 +224,10 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         Err(e) => report.add(e.code(), "", e.to_string()),
         Ok(paths) => {
             for p in paths {
-                if p != MANIFEST && manifest.files.iter().all(|f| f.path != p) {
+                if p != MANIFEST
+                    && !crate::pack::SIDE_FILES.contains(&p.as_str())
+                    && manifest.files.iter().all(|f| f.path != p)
+                {
                     report.add("BUNDLE_UNLISTED_FILE", &p, "not in the manifest");
                 }
             }

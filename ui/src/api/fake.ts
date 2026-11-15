@@ -29,6 +29,7 @@ import {
   type TreeLayout,
   type TreeSprites,
   type CrashRecord,
+  type QuarantinedBundle,
   type UpdateMode,
   type UpdateOffer,
   type UpdateStatus,
@@ -49,6 +50,11 @@ export interface FakeOptions {
   recovery?: RecoveryEntry[]
   /** Installed bundles by Steam build (B-1); the first is loaded. */
   installed?: number[]
+  /** Installed bundles that do not load (Phase 5, P-e). */
+  quarantined?: QuarantinedBundle[]
+  /** What the next "install from a file" installs: a signed or an
+   * unsigned pack of this game build. */
+  nextPack?: { build: number; signed: boolean }
   /** The Steam build the build was made with (its pinned data). */
   pinned?: number
   /** Why the passive tree cannot be edited (its version or class). */
@@ -857,7 +863,12 @@ export class FakeApi implements LoomApi {
             'steam-build': b,
           },
           'tree-version': b === 26530219 ? '3_29' : null,
+          'signed-by': this.acceptedBuilds.includes(b)
+            ? null
+            : 'ed25519:6e846054cb5c7102',
+          accepted: this.acceptedBuilds.includes(b),
         })),
+        quarantined: structuredClone(this.options.quarantined ?? []),
         active:
           this.options.data === true &&
           (this.options.installed ?? []).includes(this.activeBuild)
@@ -1017,6 +1028,25 @@ export class FakeApi implements LoomApi {
           this.changed(null)
           return this.done()
       }
+    }
+    if (typeof command === 'object' && 'accept-bundle' in command) {
+      const { id, 'manifest-sha256': hash } = command['accept-bundle']
+      const q = (this.options.quarantined ?? []).find((b) => b.id === id)
+      if (q === undefined) this.fail('APP_NO_BUNDLE')
+      if (!q.acceptable || q['manifest-sha256'] !== hash) {
+        this.fail('APP_QUARANTINED')
+      }
+      const build = q['data-version']['steam-build'] ?? 0
+      this.options.quarantined = (this.options.quarantined ?? []).filter(
+        (b) => b.id !== id,
+      )
+      this.options.installed = [...(this.options.installed ?? []), build]
+      this.acceptedBuilds.push(build)
+      return this.done()
+    }
+    if (typeof command === 'object' && 'verify-bundle' in command) {
+      this.verified.push(command['verify-bundle'].id)
+      return this.done()
     }
     if (typeof command === 'object' && 'use-bundle' in command) {
       const build = (this.options.installed ?? []).find(
@@ -1820,6 +1850,41 @@ export class FakeApi implements LoomApi {
   setUiPrefs(text: string) {
     this.prefs = text
     return Promise.resolve()
+  }
+
+  /** Builds the user accepted from quarantine. */
+  acceptedBuilds: number[] = []
+
+  /** Bundles the user verified. */
+  verified: string[] = []
+
+  installBundle(): Promise<Outcome> {
+    const pack = this.options.nextPack
+    if (pack === undefined) return Promise.resolve('nothing' as Outcome)
+    if (pack.signed) {
+      this.options.installed = [...(this.options.installed ?? []), pack.build]
+    } else {
+      this.options.quarantined = [
+        ...(this.options.quarantined ?? []),
+        {
+          id: this.bundleId(pack.build),
+          'data-version': {
+            game: 'poe1',
+            'schema-version': 4,
+            'steam-build': pack.build,
+          },
+          reason: 'unsigned',
+          acceptable: true,
+          'manifest-sha256': 'ab'.repeat(32),
+          'key-id': null,
+          files: 41,
+          bytes: 123456,
+        },
+      ]
+    }
+    this.version += 1
+    this.emit('build-changed')
+    return Promise.resolve(this.done())
   }
 
   chooseBundle() {

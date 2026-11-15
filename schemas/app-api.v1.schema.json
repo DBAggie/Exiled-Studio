@@ -761,6 +761,57 @@
           ]
         },
         {
+          "description": "Accepts a quarantined bundle (Phase 5, P-e): the user saw its\nmanifest's SHA-256 and approved it. Refused when the bundle\nchanged since (`APP_QUARANTINED`).",
+          "type": "object",
+          "properties": {
+            "accept-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID ([`QuarantinedBundle`]).",
+                  "type": "string"
+                },
+                "manifest-sha256": {
+                  "description": "The manifest SHA-256 the user was shown.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "manifest-sha256"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "accept-bundle"
+          ]
+        },
+        {
+          "description": "Checks every file of an installed bundle against its manifest's\nhashes (the user's \"verify data\"; the start checks sizes only).\n`APP_BUNDLE_DAMAGED` when one differs.",
+          "type": "object",
+          "properties": {
+            "verify-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "verify-bundle"
+          ]
+        },
+        {
           "description": "Imports a PoB share code or XML text.",
           "type": "object",
           "properties": {
@@ -2120,6 +2171,14 @@
             "null"
           ]
         },
+        "quarantined": {
+          "description": "Installed bundles that do not load (Phase 5, P-e): unsigned or\nsigned by an unknown key until the user accepts them; for good\nwhen the signature fails, the key is revoked, or files are\ndamaged.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/QuarantinedBundle"
+          }
+        },
         "tree-version": {
           "description": "The passive tree version the application gives the engine for\nthis bundle, if known; it names the game's patch (`3_29` is\npatch 3.29), which the UI shows (UX-14).",
           "type": [
@@ -2621,6 +2680,11 @@
       "description": "A bundle installed in the application's `bundles/` folder.",
       "type": "object",
       "properties": {
+        "accepted": {
+          "description": "Whether the user accepted it from quarantine (unsigned, or an\nunknown key).",
+          "type": "boolean",
+          "default": false
+        },
         "data-version": {
           "description": "Its data version.",
           "$ref": "#/$defs/DataVersionView"
@@ -2628,6 +2692,14 @@
         "id": {
           "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
           "type": "string"
+        },
+        "signed-by": {
+          "description": "The key that signed it, when a trusted one did (Phase 5, P-e).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "tree-version": {
           "description": "The passive tree version the application knows for it, if any:\nthe game's patch (`3_29` is patch 3.29; UX-14).",
@@ -3651,6 +3723,61 @@
           "type": "string",
           "const": "nothing"
         }
+      ]
+    },
+    "QuarantinedBundle": {
+      "description": "An installed bundle that does not load (Phase 5, P-e).",
+      "type": "object",
+      "properties": {
+        "acceptable": {
+          "description": "Whether the user may accept it ([`Command::AcceptBundle`]):\n`unsigned` and `unknown-key` only.",
+          "type": "boolean"
+        },
+        "bytes": {
+          "description": "Its size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "data-version": {
+          "description": "Its data version.",
+          "$ref": "#/$defs/DataVersionView"
+        },
+        "files": {
+          "description": "Its number of files.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "key-id": {
+          "description": "The signing key's ID, when signed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest-sha256": {
+          "description": "The SHA-256 of its manifest (`bundle.json`), shown to the user,\nwho accepts exactly it.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,\n`damaged`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data-version",
+        "reason",
+        "acceptable",
+        "manifest-sha256",
+        "files",
+        "bytes"
       ]
     },
     "RecentEntry": {

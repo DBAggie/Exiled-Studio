@@ -28,6 +28,10 @@ usage:
       prints release/trust-test.json (the public test key's trust list)
   loom-release test-sign <file> --out <signature.json>
       a signature with the public test key (fixtures; only debug and e2e builds trust it)
+  loom-release pack <bundle dir> (--secret <file> | --secret-env <NAME> | --test-key | --unsigned) --out <x.loombundle>
+      a data bundle pack: bundle.json, its signature, every listed file
+  loom-release feed --sequence <n> --base-url <https://.../download/vX> --out <data-feed.json> <pack>...
+      the data feed listing the packs (sign it with `sign`; the sequence must grow)
   loom-release verify <file> <signature.json> --trust <trust.json>
       exit 0 when the signature verifies with a trusted, unrevoked key";
 
@@ -58,7 +62,8 @@ fn positional(args: &[String]) -> Vec<&str> {
         if skip {
             skip = false;
         } else if a.starts_with("--") {
-            skip = true;
+            // Every flag takes a value but these.
+            skip = !matches!(a.as_str(), "--test-key" | "--unsigned");
         } else {
             out.push(a.as_str());
         }
@@ -157,6 +162,61 @@ fn run(args: &[String]) -> Result<(), String> {
             let sig = secret(rest)?.sign(&read(file)?);
             write(Path::new(out), json(&sig)?.as_bytes())
         }
+        "pack" => {
+            let [dir] = positional(rest)[..] else {
+                return Err(USAGE.to_owned());
+            };
+            let out = flag(rest, "--out").ok_or(USAGE)?;
+            let manifest = read(&format!("{dir}/bundle.json"))?;
+            let pair = if rest.iter().any(|a| a == "--unsigned") {
+                None
+            } else if rest.iter().any(|a| a == "--test-key") {
+                Some(KeyPair::test_key())
+            } else {
+                Some(secret(rest)?)
+            };
+            let sig = pair
+                .map(|p| serde_json::to_vec_pretty(&p.sign(&manifest)))
+                .transpose()
+                .map_err(|e| e.to_string())?;
+            loom_app::install::write_pack(Path::new(dir), sig.as_deref(), Path::new(out))
+                .map_err(|e| e.to_string())?;
+            eprintln!("pack: {out} ({})", pack_id(out)?);
+            Ok(())
+        }
+        "feed" => {
+            let sequence: u64 = flag(rest, "--sequence")
+                .ok_or(USAGE)?
+                .parse()
+                .map_err(|_| "--sequence: a whole number".to_owned())?;
+            let base = flag(rest, "--base-url").ok_or(USAGE)?.trim_end_matches('/');
+            if !base.starts_with("https://") {
+                return Err("--base-url must be https".to_owned());
+            }
+            let out = flag(rest, "--out").ok_or(USAGE)?;
+            let mut bundles = Vec::new();
+            for pack in positional(rest) {
+                let bytes = read(pack)?;
+                let name = Path::new(pack)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .ok_or_else(|| format!("{pack}: no file name"))?;
+                bundles.push(loom_data::pack::FeedBundle {
+                    id: pack_id(pack)?,
+                    url: format!("{base}/{name}"),
+                    sha256: signature::hex(&sha2::Digest::finalize(
+                        <sha2::Sha256 as sha2::Digest>::new_with_prefix(&bytes),
+                    )),
+                    size: bytes.len() as u64,
+                });
+            }
+            let feed = loom_data::pack::Feed {
+                format: loom_data::pack::FEED_FORMAT,
+                sequence,
+                bundles,
+            };
+            write(Path::new(out), json(&feed)?.as_bytes())
+        }
         "verify" => {
             let [file, sig] = positional(rest)[..] else {
                 return Err(USAGE.to_owned());
@@ -172,4 +232,26 @@ fn run(args: &[String]) -> Result<(), String> {
         }
         _ => Err(USAGE.to_owned()),
     }
+}
+
+/// The bundle ID a pack's manifest names.
+fn pack_id(pack: &str) -> Result<String, String> {
+    use std::io::Read as _;
+    let file = std::fs::File::open(pack).map_err(|e| format!("{pack}: {e}"))?;
+    let mut zip = zip::ZipArchive::new(file).map_err(|e| format!("{pack}: {e}"))?;
+    let mut bytes = Vec::new();
+    zip.by_name(loom_data::bundle::MANIFEST)
+        .map_err(|e| format!("{pack}: {e}"))?
+        .take(loom_data::pack::MAX_SMALL_FILE)
+        .read_to_end(&mut bytes)
+        .map_err(|e| format!("{pack}: {e}"))?;
+    let manifest = loom_data::pack::manifest(&bytes).map_err(|e| format!("{pack}: {e}"))?;
+    let game = manifest
+        .game()
+        .ok_or_else(|| format!("{pack}: unknown game"))?;
+    Ok(loom_app::bundles::bundle_id(&loom_domain::DataVersion {
+        game,
+        schema_version: manifest.data_schema,
+        steam_build: manifest.source.steam_build,
+    }))
 }

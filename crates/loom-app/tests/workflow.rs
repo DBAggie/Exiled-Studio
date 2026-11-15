@@ -72,7 +72,7 @@ fn start(data_dir: &Path, bundle: Option<PathBuf>, instance: &str) -> Running {
     let sink: loom_app::Sink = Arc::new(move |e| {
         let _ = tx.lock().unwrap().send(e);
     });
-    let mut config = Config::new(data_dir.to_owned(), bundle);
+    let mut config = Config::new(data_dir.to_owned(), bundle).with_test_keys(true);
     config.instance = instance.to_owned();
     config.autosave = Duration::from_millis(20);
     Running {
@@ -1621,8 +1621,85 @@ fn install(data: &Path, name: &str, steam: u64) -> PathBuf {
     let mut manifest: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     manifest["source"]["steam_build"] = serde_json::json!(steam);
-    std::fs::write(&path, manifest.to_string()).unwrap();
+    let bytes = manifest.to_string();
+    std::fs::write(&path, &bytes).unwrap();
+    // Signed with the public test key, which a test configuration trusts.
+    let sig = loom_data::signature::KeyPair::test_key().sign(bytes.as_bytes());
+    std::fs::write(
+        dir.join("signature.json"),
+        serde_json::to_vec(&sig).unwrap(),
+    )
+    .unwrap();
     dir
+}
+
+#[test]
+fn a_pack_installs_and_an_unsigned_one_waits_in_quarantine_until_accepted() {
+    let dir = Scratch::new("packs");
+    let data = dir.path("data");
+    let r = start(&data, None, "packs-1");
+    // An unsigned pack of the fixture: installed, quarantined, not offered.
+    let pack = dir.path("unsigned.loombundle");
+    loom_app::install::write_pack(&bundle_dir(), None, &pack).unwrap();
+    r.app
+        .execute(loom_app::HostCommand::InstallBundle(pack.clone()))
+        .unwrap();
+    let snap = r.app.snapshot();
+    assert!(snap.data.installed.is_empty());
+    let q = snap.data.quarantined.first().unwrap().clone();
+    assert_eq!(q.reason, "unsigned");
+    assert!(q.acceptable);
+    let e = r
+        .run(api::Command::UseBundle { id: q.id.clone() })
+        .unwrap_err();
+    assert_eq!(e.code, "APP_QUARANTINED");
+    // The user accepts the hash shown: it loads.
+    r.run(api::Command::AcceptBundle {
+        id: q.id.clone(),
+        manifest_sha256: q.manifest_sha256.clone(),
+    })
+    .unwrap();
+    let snap = r.app.snapshot();
+    assert!(snap.data.quarantined.is_empty());
+    let installed = snap.data.installed.first().unwrap();
+    assert!(installed.accepted);
+    assert_eq!(installed.signed_by, None);
+    r.run(api::Command::UseBundle { id: q.id.clone() }).unwrap();
+    assert_eq!(r.app.snapshot().data.active.as_deref(), Some(q.id.as_str()));
+    r.run(api::Command::VerifyBundle { id: q.id.clone() })
+        .unwrap();
+    // The same pack again: nothing changes.
+    let again = r
+        .app
+        .execute(loom_app::HostCommand::InstallBundle(pack))
+        .unwrap();
+    assert_eq!(again, api::Outcome::Nothing);
+}
+
+#[test]
+fn a_test_signed_pack_loads_at_once() {
+    let dir = Scratch::new("signed-pack");
+    let data = dir.path("data");
+    let r = start(&data, None, "signed-pack-1");
+    let manifest = std::fs::read(bundle_dir().join("bundle.json")).unwrap();
+    let sig =
+        serde_json::to_vec(&loom_data::signature::KeyPair::test_key().sign(&manifest)).unwrap();
+    let pack = dir.path("signed.loombundle");
+    loom_app::install::write_pack(&bundle_dir(), Some(&sig), &pack).unwrap();
+    r.app
+        .execute(loom_app::HostCommand::InstallBundle(pack))
+        .unwrap();
+    let snap = r.app.snapshot();
+    let installed = snap.data.installed.first().unwrap();
+    assert_eq!(
+        installed.signed_by.as_deref(),
+        Some(
+            loom_data::signature::KeyPair::test_key()
+                .trusted("")
+                .id
+                .as_str()
+        )
+    );
 }
 
 #[test]
@@ -1716,7 +1793,16 @@ fn installed_bundles_should_be_found_switched_remembered_and_offered_for_a_pinne
     let snap = r.app.snapshot();
     assert!(snap.data.error.is_none());
     assert_eq!(snap.data.active, None);
-    assert_eq!(snap.data.installed.len(), 2);
+    // The bundle missing a file is quarantined as damaged (Phase 5, P-e).
+    assert_eq!(snap.data.installed.len(), 1);
+    assert_eq!(
+        snap.data
+            .quarantined
+            .iter()
+            .map(|q| q.reason.as_str())
+            .collect::<Vec<_>>(),
+        ["damaged"]
+    );
     r.app.stop();
 }
 

@@ -31,5 +31,6 @@
   "update_status",
   "set_update_mode",
   "check_updates",
-  "install_update"
+  "install_update",
+  "install_bundle"
 ]

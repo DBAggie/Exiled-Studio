@@ -11,6 +11,7 @@
 #![warn(clippy::indexing_slicing)]
 
 pub mod bundle;
+pub mod pack;
 pub mod rules;
 pub mod signature;
 pub mod stat_desc;

@@ -11,6 +11,7 @@ import type {
   CrashRecord,
   UpdateOffer,
   UpdateStatus,
+  QuarantinedBundle,
   CustomBlockView,
   CustomLineView,
   DataVersionView,
@@ -93,6 +94,7 @@ export type {
   UpdateOffer,
   UpdateStatus,
   WarningView,
+  QuarantinedBundle,
 }
 
 export type Command = ApplicationAPIV1['command']
@@ -148,6 +150,9 @@ export interface LoomApi {
   saveAs(): Promise<Outcome>
   exportXml(): Promise<Outcome>
   chooseBundle(): Promise<Outcome>
+  /** Installs a data bundle pack (`.loombundle`) the user picks (Phase
+   * 5, P-e); `nothing` when cancelled or already installed. */
+  installBundle(): Promise<Outcome>
   /** Opens the last dropped file: imports a PoB build, opens a build
    * document; `UI_DROP` for anything else. */
   openDropped(): Promise<Outcome>

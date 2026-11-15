@@ -168,8 +168,31 @@ export const en = {
   'data.heading': 'Game data',
   'data.noneInstalled':
     'No game data is installed. Installed game data appears here and is chosen for you.',
-  'data.entry':
-    '{name} · game build {build}, data schema {schema} (unsigned: signing comes with the installer)',
+  'data.entry': '{name} · game build {build}, data schema {schema}',
+  'data.signed': 'Signed by the project',
+  'data.accepted': 'Accepted by you (not signed by the project)',
+  'data.verify': 'Verify',
+  'data.verifyLabel': 'Verify {id}',
+  'data.verified': 'Verified: every file of {id} matches its signed list.',
+  'data.install': 'Install game data from a file…',
+  'data.installed': 'Game data installed.',
+  'data.quarantine.heading': 'Installed, not loaded',
+  'data.quarantine.help':
+    'Exiled Studio loads game data signed by the project. This data is installed but not loaded until you decide.',
+  'data.quarantine.unsigned': 'Not signed.',
+  'data.quarantine.unknown-key':
+    'Signed by a key this version does not know ({key}).',
+  'data.quarantine.bad-signature':
+    'Its signature does not match: it changed after signing. It cannot be loaded.',
+  'data.quarantine.revoked':
+    'Signed by a key the project withdrew. It cannot be loaded.',
+  'data.quarantine.damaged':
+    'Files are missing or changed. Install it again. It cannot be loaded.',
+  'data.quarantine.hash':
+    'Check this fingerprint (SHA-256) with its source: {hash}',
+  'data.quarantine.size': '{files} files, {bytes} bytes',
+  'data.accept': 'Load it anyway: I trust this data',
+  'data.acceptLabel': 'Load {id} anyway: I trust this data',
   'data.inUse': 'In use',
   'data.use': 'Use',
   'data.unsignedInUse': 'In use: a folder chosen for development (unsigned).',
@@ -946,6 +969,30 @@ export const en = {
     'This package does not update itself. Download the new version from its release page.',
   'error.UPDATE_INSTALL':
     'The update could not be installed: the download failed or its signature did not match. Nothing was changed.',
+  'error.APP_QUARANTINED':
+    'That game data is quarantined: it is not signed by the project, or it changed since you saw it.',
+  'error.APP_PACK_EXISTS':
+    'Game data with that version is installed already, with other content. Nothing was changed.',
+  'error.APP_BUNDLE_DAMAGED':
+    'A file of that game data does not match its signed list. Install it again.',
+  'error.PACK_SIGNATURE':
+    'That game data file’s signature does not match, or its key was withdrawn. Nothing was installed.',
+  'error.PACK_ZIP':
+    'That is not an Exiled Studio game data file. Nothing was installed.',
+  'error.PACK_PATH':
+    'That game data file holds a file outside its folder. Nothing was installed.',
+  'error.PACK_UNLISTED':
+    'That game data file holds files its list does not name. Nothing was installed.',
+  'error.PACK_MISSING':
+    'That game data file lacks files its list names. Nothing was installed.',
+  'error.PACK_SIZE':
+    'A file in that game data file is not the size its list says. Nothing was installed.',
+  'error.PACK_CONTENT':
+    'A file in that game data file does not match its list. Nothing was installed.',
+  'error.PACK_TOO_LARGE':
+    'That game data file is too large. Nothing was installed.',
+  'error.PACK_MANIFEST':
+    'That game data file’s list is not readable. Nothing was installed.',
   'error.APP_ADD_ITEM':
     'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':
