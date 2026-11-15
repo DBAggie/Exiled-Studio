@@ -61,9 +61,10 @@ pub struct TextRules {
     /// The wrapper of a granted skill's line (`{1}` level, `{0}` name).
     pub granted_skill_wrapper: Option<String>,
     /// The mod tags the tooltip's Alt view names after a mod's header, and
-    /// their names (`(life, Life)`), for a game whose tag table has none;
-    /// tags not listed are not shown. Empty: the tag table's display
-    /// names are used.
+    /// their names (`(life, Life)`), for a game whose tag table has none
+    /// (PoE1 bundles built before `Tags.Name` was read carry 27 such
+    /// pairs; Q-B2-2); tags not listed are not shown. Empty: the tag
+    /// table's display names are used.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mod_tag_names: Vec<(String, String)>,
 }

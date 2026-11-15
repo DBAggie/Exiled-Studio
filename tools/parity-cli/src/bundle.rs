@@ -1081,6 +1081,27 @@ mod tests {
     }
 
     #[test]
+    fn tag_names_should_fall_back_to_the_display_string_without_a_name_column() {
+        // PoE2: the fourth column is unnamed in the schema.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": null, "references": null}],
+              "rows": [["boss", 1, "Boss", "Ignored"], ["life", 2, "", "Life"]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "boss".to_owned(),
+                display: "Boss".to_owned()
+            }]
+        );
+    }
+
+    #[test]
     fn tag_names_should_read_the_name_column_when_the_schema_has_it() {
         // PoE1: `Name` holds the mod tag names; `DisplayString` the monster
         // labels, ignored; an empty `Name` (a hidden tag) is left out.
