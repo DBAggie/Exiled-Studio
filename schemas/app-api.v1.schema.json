@@ -82,6 +82,10 @@
     "tree-sprites": {
       "description": "The loaded data's passive tree sprites, when its bundle has\nthem.",
       "$ref": "#/$defs/TreeSprites"
+    },
+    "updates": {
+      "description": "Application updates (Phase 5, P-d).",
+      "$ref": "#/$defs/UpdateStatus"
     }
   },
   "additionalProperties": false,
@@ -101,7 +105,8 @@
     "tree-preview",
     "tree-sprites",
     "crashes",
-    "diagnostics"
+    "diagnostics",
+    "updates"
   ],
   "$defs": {
     "AffixKind": {
@@ -4711,6 +4716,125 @@
         "kept",
         "points",
         "ascendancy-points"
+      ]
+    },
+    "UpdateMode": {
+      "description": "How the application looks for its own updates (Phase 5, P-d). Every\ninstall waits for the user's approval in each mode.",
+      "oneOf": [
+        {
+          "description": "Checks once at start, and when the user asks (the default).",
+          "type": "string",
+          "const": "automatic-check"
+        },
+        {
+          "description": "Checks only when the user asks.",
+          "type": "string",
+          "const": "manual"
+        },
+        {
+          "description": "Never connects: no check, no download.",
+          "type": "string",
+          "const": "strict-offline"
+        }
+      ]
+    },
+    "UpdateOffer": {
+      "description": "A newer version the update feed offers (lower or equal versions are\nnever offered).",
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "When it was published (RFC 3339), if the feed says.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Its release notes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "Its release page.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Its version.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "url"
+      ]
+    },
+    "UpdateStatus": {
+      "description": "Application updates: the mode, this build, and the last check's\nanswer (Phase 5, P-d).",
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "description": "The package this build came from: `nsis`, `msi`, `app-image`,\n`deb`, or `plain` (the portable zip, or a development build).",
+          "type": "string"
+        },
+        "available": {
+          "description": "Whether this build can check at all (it carries an update key).",
+          "type": "boolean"
+        },
+        "checked": {
+          "description": "Whether a check has answered since the application started.",
+          "type": "boolean"
+        },
+        "checking": {
+          "description": "A check runs.",
+          "type": "boolean"
+        },
+        "current": {
+          "description": "The running version.",
+          "type": "string"
+        },
+        "error": {
+          "description": "Why the last check or install failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installs": {
+          "description": "Whether this package installs an update itself (`nsis`, `msi`,\n`app-image`); the others only link to the release.",
+          "type": "boolean"
+        },
+        "mode": {
+          "description": "The mode.",
+          "$ref": "#/$defs/UpdateMode"
+        },
+        "offer": {
+          "description": "The last check's newer version, if it found one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UpdateOffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "current",
+        "artifact",
+        "installs",
+        "available",
+        "checking",
+        "checked"
       ]
     },
     "VariantEra": {

@@ -29,6 +29,9 @@ import {
   type TreeLayout,
   type TreeSprites,
   type CrashRecord,
+  type UpdateMode,
+  type UpdateOffer,
+  type UpdateStatus,
   type DiagnosticFile,
   type TreeChange,
   type TreePreview,
@@ -52,6 +55,10 @@ export interface FakeOptions {
   treeLocked?: string
   /** Crash records from an earlier run (Phase 5, P-f). */
   crashes?: CrashRecord[]
+  /** The update state at start (Phase 5, P-d). */
+  updates?: Partial<UpdateStatus>
+  /** What an update check finds. */
+  nextOffer?: UpdateOffer
 }
 
 function line(
@@ -599,6 +606,8 @@ export class FakeApi implements LoomApi {
     this.recentList = options.recent ?? []
     this.recoveryList = options.recovery ?? []
     this.crashList = options.crashes ?? []
+    this.updates = { ...this.updates, ...options.updates }
+    this.nextOffer = options.nextOffer ?? null
     this.activeBuild = options.installed?.[0] ?? 26530219
   }
 
@@ -1611,6 +1620,81 @@ export class FakeApi implements LoomApi {
 
   ready(): Promise<void> {
     return Promise.resolve()
+  }
+
+  /** Application updates (tests set the offer and the package). */
+  updates: UpdateStatus = {
+    mode: 'automatic-check',
+    current: '0.0.0',
+    artifact: 'nsis',
+    installs: true,
+    available: true,
+    checking: false,
+    checked: false,
+    offer: null,
+    error: null,
+  }
+
+  /** What the next check finds. */
+  nextOffer: UpdateOffer | null = null
+
+  /** How many installs were started. */
+  installs = 0
+
+  private updateListeners: ((s: UpdateStatus) => void)[] = []
+
+  updateStatus(): Promise<UpdateStatus> {
+    return Promise.resolve(structuredClone(this.updates))
+  }
+
+  setUpdateMode(mode: UpdateMode): Promise<UpdateStatus> {
+    this.updates.mode = mode
+    if (mode === 'strict-offline') this.updates.offer = null
+    return this.updateStatus()
+  }
+
+  checkUpdates(): Promise<UpdateStatus> {
+    if (this.updates.mode === 'strict-offline') {
+      return Promise.reject(
+        new ApiFailure({ code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' }),
+      )
+    }
+    this.updates.checked = true
+    this.updates.offer = structuredClone(this.nextOffer)
+    return this.updateStatus()
+  }
+
+  installUpdate(): Promise<void> {
+    const code =
+      this.updates.mode === 'strict-offline'
+        ? 'UPDATE_OFFLINE'
+        : !this.updates.installs
+          ? 'UPDATE_NOTIFY_ONLY'
+          : this.updates.offer === null
+            ? 'UPDATE_NONE'
+            : null
+    if (code !== null) {
+      return Promise.reject(new ApiFailure({ code, message: code }))
+    }
+    this.installs += 1
+    return Promise.resolve()
+  }
+
+  onUpdates(listener: (s: UpdateStatus) => void): Promise<() => void> {
+    this.updateListeners.push(listener)
+    return Promise.resolve(() => {
+      this.updateListeners = this.updateListeners.filter((l) => l !== listener)
+    })
+  }
+
+  /** The check at start reports (tests). */
+  emitUpdates() {
+    this.updates.checked = true
+    this.updates.offer = structuredClone(this.nextOffer)
+    const status = structuredClone(this.updates)
+    this.updateListeners.forEach((l) => {
+      l(status)
+    })
   }
 
   exportDiagnostics(): Promise<Outcome> {

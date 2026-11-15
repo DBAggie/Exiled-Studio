@@ -59,6 +59,59 @@ dto! {
         pub crashes: Vec<CrashRecord>,
         /// The diagnostic package's preview (Phase 5, P-f).
         pub diagnostics: Vec<DiagnosticFile>,
+        /// Application updates (Phase 5, P-d).
+        pub updates: UpdateStatus,
+    }
+
+    /// How the application looks for its own updates (Phase 5, P-d). Every
+    /// install waits for the user's approval in each mode.
+    #[derive(Copy, Eq, Default)]
+    pub enum UpdateMode {
+        #[default]
+        /// Checks once at start, and when the user asks (the default).
+        AutomaticCheck,
+        /// Checks only when the user asks.
+        Manual,
+        /// Never connects: no check, no download.
+        StrictOffline,
+    }
+
+    /// Application updates: the mode, this build, and the last check's
+    /// answer (Phase 5, P-d).
+    pub struct UpdateStatus {
+        /// The mode.
+        pub mode: UpdateMode,
+        /// The running version.
+        pub current: String,
+        /// The package this build came from: `nsis`, `msi`, `app-image`,
+        /// `deb`, or `plain` (the portable zip, or a development build).
+        pub artifact: String,
+        /// Whether this package installs an update itself (`nsis`, `msi`,
+        /// `app-image`); the others only link to the release.
+        pub installs: bool,
+        /// Whether this build can check at all (it carries an update key).
+        pub available: bool,
+        /// A check runs.
+        pub checking: bool,
+        /// The last check's newer version, if it found one.
+        pub offer: Option<UpdateOffer>,
+        /// Whether a check has answered since the application started.
+        pub checked: bool,
+        /// Why the last check or install failed, if it did.
+        pub error: Option<ApiError>,
+    }
+
+    /// A newer version the update feed offers (lower or equal versions are
+    /// never offered).
+    pub struct UpdateOffer {
+        /// Its version.
+        pub version: String,
+        /// Its release notes.
+        pub notes: Option<String>,
+        /// When it was published (RFC 3339), if the feed says.
+        pub date: Option<String>,
+        /// Its release page.
+        pub url: String,
     }
 
     /// A panic the application recorded (ADR-014; Phase 5, P-f), redacted.

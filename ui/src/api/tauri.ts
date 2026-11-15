@@ -12,11 +12,15 @@ import {
   type CalcResultDocumentV1,
   type DropNotice,
   type LoomApi,
+  type UpdateStatus,
 } from './types'
 
 export const COMMANDS: readonly string[] = commands
 export const EVENT = 'loom://event'
 export const DROP_EVENT = 'loom://drop'
+
+/** The update check's channel (Rust `updates::UPDATE_EVENT`). */
+export const UPDATE_EVENT = 'loom://updates'
 
 type Name = (typeof commands)[number]
 
@@ -75,6 +79,14 @@ export const tauriApi: LoomApi = {
   diagnostics: () => call('diagnostics'),
   exportDiagnostics: () => call('export_diagnostics'),
   ready: () => call('app_ready'),
+  updateStatus: () => call('update_status'),
+  setUpdateMode: (mode) => call('set_update_mode', { mode }),
+  checkUpdates: () => call('check_updates'),
+  installUpdate: () => call('install_update'),
+  onUpdates: (listener) =>
+    listen<UpdateStatus>(UPDATE_EVENT, (e) => {
+      listener(e.payload)
+    }),
   previewTree: (spec, node) => call('preview_tree', { spec, node }),
   uiPrefs: () => call('ui_prefs'),
   setUiPrefs: (text) => call('set_ui_prefs', { text }),

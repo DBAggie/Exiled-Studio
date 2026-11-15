@@ -854,7 +854,7 @@ export const en = {
   'about.title': 'About Exiled Studio',
   'about.license': 'Free and open source under the MIT license.',
   'about.privacy':
-    'Works offline. No account and no telemetry. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
+    'Works offline. No account and no telemetry. The only connection it makes is the update check below, which you can turn off. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
   'about.fonts':
     'Fonts: Inter, Space Grotesk and JetBrains Mono, under the SIL Open Font License 1.1; their license texts are below.',
   'about.version': 'Exiled Studio version',
@@ -872,6 +872,28 @@ export const en = {
   'diag.saved': 'Diagnostic package saved.',
   'diag.files': 'Files in the package',
   'diag.size': '{n} bytes',
+  'updates.title': 'Updates',
+  'updates.available': 'Update available',
+  'updates.mode': 'Look for new versions',
+  'updates.mode.automatic-check': 'Check at start',
+  'updates.mode.manual': 'Only when I ask',
+  'updates.mode.strict-offline': 'Never connect (strict offline)',
+  'updates.privacy':
+    'A check asks GitHub, where the releases are, for the newest version. GitHub sees your IP address and this version number; nothing else is sent. Nothing is installed without your approval.',
+  'updates.check': 'Check now',
+  'updates.checking': 'Checking…',
+  'updates.current': 'You have the newest version ({version}).',
+  'updates.unavailable':
+    'This build cannot check for updates (it carries no update key: a development build).',
+  'updates.offline': 'Strict offline: Exiled Studio never connects.',
+  'updates.offer': 'Version {version} is available. You have {current}.',
+  'updates.notes': 'What’s new',
+  'updates.install': 'Install and restart',
+  'updates.later': 'Later',
+  'updates.notifyOnly':
+    'This package does not update itself. Download version {version} from its release page: {url}',
+  'updates.installHelp':
+    'Exiled Studio downloads the update, checks its signature, installs it, and restarts. Unsaved changes are kept for recovery.',
   'crash.title': 'An internal error was recorded',
   'crash.body':
     'Exiled Studio recorded an internal error (version {version}, {when}): {message}. Any unsaved build is offered below for recovery. The record is in the diagnostic package (About).',
@@ -912,6 +934,18 @@ export const en = {
   'error.APP_ITEM_SET': 'This build has no such item set.',
   'error.APP_LOADOUT': 'This build has no such stage.',
   'error.APP_TREE': 'That tree change is not possible.',
+  'error.UPDATE_OFFLINE':
+    'Strict offline is on, so Exiled Studio does not connect. Change it under About, Updates.',
+  'error.UPDATE_UNAVAILABLE':
+    'This build cannot check for updates (a development build).',
+  'error.UPDATE_BUSY': 'A check is already running.',
+  'error.UPDATE_CHECK':
+    'The update check failed. Check your connection and try again later.',
+  'error.UPDATE_NONE': 'No update is offered. Check again.',
+  'error.UPDATE_NOTIFY_ONLY':
+    'This package does not update itself. Download the new version from its release page.',
+  'error.UPDATE_INSTALL':
+    'The update could not be installed: the download failed or its signature did not match. Nothing was changed.',
   'error.APP_ADD_ITEM':
     'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':

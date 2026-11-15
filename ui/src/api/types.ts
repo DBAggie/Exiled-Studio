@@ -9,6 +9,8 @@ import type {
   ConfigInputView,
   ConfigView,
   CrashRecord,
+  UpdateOffer,
+  UpdateStatus,
   CustomBlockView,
   CustomLineView,
   DataVersionView,
@@ -88,10 +90,13 @@ export type {
   TreePreview,
   TreeSprites,
   TreeView,
+  UpdateOffer,
+  UpdateStatus,
   WarningView,
 }
 
 export type Command = ApplicationAPIV1['command']
+export type UpdateMode = UpdateStatus['mode']
 export type Outcome = ApplicationAPIV1['outcome']
 export type ApiEvent = ApplicationAPIV1['event']
 
@@ -162,6 +167,16 @@ export interface LoomApi {
   /** The first screen has rendered (a packaged smoke run quits on it;
    * otherwise nothing happens). */
   ready(): Promise<void>
+  /** Application updates: mode, package, last check (Phase 5, P-d). */
+  updateStatus(): Promise<UpdateStatus>
+  setUpdateMode(mode: UpdateMode): Promise<UpdateStatus>
+  /** Checks now (`UPDATE_OFFLINE`, `UPDATE_UNAVAILABLE`, `UPDATE_BUSY`). */
+  checkUpdates(): Promise<UpdateStatus>
+  /** Installs the offered update and restarts; the user approved it.
+   * Refused for a package that only notifies (`UPDATE_NOTIFY_ONLY`). */
+  installUpdate(): Promise<void>
+  /** The check at start reports here. */
+  onUpdates(listener: (status: UpdateStatus) => void): Promise<() => void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

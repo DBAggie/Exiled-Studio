@@ -64,6 +64,18 @@ impl Artifact {
     pub fn self_updates(self) -> bool {
         matches!(self, Self::Nsis | Self::Msi | Self::AppImage)
     }
+
+    /// Its name, as the build info writes it.
+    #[must_use]
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Nsis => "nsis",
+            Self::Msi => "msi",
+            Self::AppImage => "app-image",
+            Self::Deb => "deb",
+            Self::Plain => "plain",
+        }
+    }
 }
 
 /// The build's own facts, written by a smoke run and shown nowhere else.

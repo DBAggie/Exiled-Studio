@@ -19,6 +19,7 @@
 //! which the UI's client reads and a test compares with these handlers.
 
 pub mod release;
+pub mod updates;
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -416,6 +417,65 @@ fn app_ready<R: Runtime>(handle: tauri::AppHandle<R>) {
     }
 }
 
+/// Application updates: the mode, this package, the last check (Phase 5,
+/// P-d; [`updates`]).
+#[tauri::command]
+fn update_status(updates: State<'_, updates::Updates>) -> api::UpdateStatus {
+    updates.status()
+}
+
+/// Sets how the application looks for its updates.
+#[tauri::command]
+fn set_update_mode(
+    updates: State<'_, updates::Updates>,
+    mode: api::UpdateMode,
+) -> api::UpdateStatus {
+    updates.set_mode(mode);
+    updates.status()
+}
+
+/// Checks for an update now (the user asked).
+#[tauri::command]
+async fn check_updates<R: Runtime>(
+    handle: tauri::AppHandle<R>,
+    updates: State<'_, updates::Updates>,
+) -> Answer<api::UpdateStatus> {
+    updates.check(&handle).await
+}
+
+/// Downloads, verifies, and installs the offered update, then restarts:
+/// the user approved it in the UI's prompt. Refused, before anything is
+/// downloaded, for a package that only notifies, in strict-offline mode,
+/// and without an offer.
+#[tauri::command]
+async fn install_update<R: Runtime>(
+    handle: tauri::AppHandle<R>,
+    updates: State<'_, updates::Updates>,
+) -> Answer<()> {
+    let update = updates.to_install()?;
+    tracing::info!(version = %update.version, "installing an update");
+    let result = update
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| api::ApiError::new("UPDATE_INSTALL", e.to_string()));
+    if let Err(e) = result {
+        updates.failed(e.clone());
+        return Err(e);
+    }
+    shutdown(&handle);
+    handle.restart()
+}
+
+/// Stops the application (a change made since the last autosave is kept
+/// for recovery) and the MCP server; before the process exits, also when
+/// an update's installer replaces it.
+pub(crate) fn shutdown<R: Runtime>(handle: &tauri::AppHandle<R>) {
+    if let Some(ctx) = handle.try_state::<Ctx>() {
+        drop(lock(&ctx).take());
+        ctx.app.stop();
+    }
+}
+
 /// The crash records, newest first (Phase 5, P-f).
 #[tauri::command]
 fn crashes(ctx: State<'_, Ctx>) -> Vec<api::CrashRecord> {
@@ -492,7 +552,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 29] = [
+pub const COMMANDS: [&str; 33] = [
     "snapshot",
     "calc_document",
     "item",
@@ -522,6 +582,10 @@ pub const COMMANDS: [&str; 29] = [
     "diagnostics",
     "export_diagnostics",
     "app_ready",
+    "update_status",
+    "set_update_mode",
+    "check_updates",
+    "install_update",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -576,6 +640,10 @@ pub fn build<R: Runtime>(
             diagnostics,
             export_diagnostics,
             app_ready,
+            update_status,
+            set_update_mode,
+            check_updates,
+            install_update,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -605,6 +673,7 @@ pub fn build<R: Runtime>(
             }
             loom_app::crash::install(paths.data.clone(), loom_app::logs::Redactor::from_env());
             let settings = paths.data.join(SETTINGS_FILE);
+            let settings_for_updates = settings.clone();
             let emitter = handle.clone();
             let sink: loom_app::Sink = Arc::new(move |event: api::Event| {
                 let _ = emitter.emit(EVENT, event);
@@ -624,6 +693,9 @@ pub fn build<R: Runtime>(
                 },
                 token_kept: std::sync::atomic::AtomicBool::new(false),
             });
+            let plugin = handle.try_state::<updates::Plugin>().is_some();
+            app.manage(updates::Updates::new(plugin, settings_for_updates));
+            updates::at_start(&handle);
             Ok(())
         })
 }
@@ -689,7 +761,10 @@ impl FilePicker for E2ePicker {
 /// Tauri's.
 pub fn run() -> tauri::Result<()> {
     let smoke = release::Smoke::from_args(std::env::args_os());
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updates::Plugin);
     if let Some(smoke) = smoke {
         smoke.watchdog();
         builder = builder.manage(smoke);
@@ -722,11 +797,8 @@ pub fn run() -> tauri::Result<()> {
         // Tauri's exit does not drop managed state: stop the application
         // here, so a change made since the last autosave is kept for
         // recovery and the MCP server stops.
-        if let tauri::RunEvent::Exit = event
-            && let Some(ctx) = handle.try_state::<Ctx>()
-        {
-            drop(lock(&ctx).take());
-            ctx.app.stop();
+        if let tauri::RunEvent::Exit = event {
+            shutdown(handle);
         }
     });
     Ok(())

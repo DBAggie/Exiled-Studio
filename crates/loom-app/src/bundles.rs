@@ -122,6 +122,10 @@ pub struct Settings {
     /// The MCP server's last port (UX-26), tried first at its next start.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mcp_port: Option<u16>,
+    /// How the application looks for its own updates (Phase 5, P-d);
+    /// absent means the default, `automatic-check`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub updates: Option<crate::api::UpdateMode>,
 }
 
 impl Settings {

@@ -27,5 +27,9 @@
   "dismiss_crash",
   "diagnostics",
   "export_diagnostics",
-  "app_ready"
+  "app_ready",
+  "update_status",
+  "set_update_mode",
+  "check_updates",
+  "install_update"
 ]

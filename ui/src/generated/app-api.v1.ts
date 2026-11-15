@@ -581,6 +581,7 @@ export interface ApplicationAPIV1 {
   'tree-layout': TreeLayout
   'tree-preview': TreePreview1
   'tree-sprites': TreeSprites
+  updates: UpdateStatus
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -2452,4 +2453,69 @@ export interface TreeSpriteSheet {
    * The image as a `data:` URL (the bundle's bytes, unmodified).
    */
   image: string
+}
+/**
+ * Application updates (Phase 5, P-d).
+ */
+export interface UpdateStatus {
+  /**
+   * The package this build came from: `nsis`, `msi`, `app-image`,
+   * `deb`, or `plain` (the portable zip, or a development build).
+   */
+  artifact: string
+  /**
+   * Whether this build can check at all (it carries an update key).
+   */
+  available: boolean
+  /**
+   * Whether a check has answered since the application started.
+   */
+  checked: boolean
+  /**
+   * A check runs.
+   */
+  checking: boolean
+  /**
+   * The running version.
+   */
+  current: string
+  /**
+   * Why the last check or install failed, if it did.
+   */
+  error?: ApiError3 | null
+  /**
+   * Whether this package installs an update itself (`nsis`, `msi`,
+   * `app-image`); the others only link to the release.
+   */
+  installs: boolean
+  /**
+   * The mode.
+   */
+  mode: 'automatic-check' | 'manual' | 'strict-offline'
+  /**
+   * The last check's newer version, if it found one.
+   */
+  offer?: UpdateOffer | null
+}
+/**
+ * A newer version the update feed offers (lower or equal versions are
+ * never offered).
+ */
+export interface UpdateOffer {
+  /**
+   * When it was published (RFC 3339), if the feed says.
+   */
+  date?: string | null
+  /**
+   * Its release notes.
+   */
+  notes?: string | null
+  /**
+   * Its release page.
+   */
+  url: string
+  /**
+   * Its version.
+   */
+  version: string
 }

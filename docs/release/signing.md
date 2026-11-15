@@ -5,7 +5,7 @@ The plan's step P2 and decision P-c (`dev/active/passive-tree-and-phase-5/`). Tw
 | Key | Signs | Verified by | Secret in the `release` environment |
 |---|---|---|---|
 | **Data key** (Ed25519) | data bundle manifests (`bundle.json`) and the data feed (P4) | `loom_data::signature`, against the trust list compiled into the app | `LOOM_DATA_KEY` |
-| **Updater key** (Tauri's minisign key) | application update packages (P3) | `tauri-plugin-updater`, against the public key in `tauri.conf.json` | `LOOM_UPDATER_KEY`, `LOOM_UPDATER_KEY_PASSWORD` |
+| **Updater key** (Tauri's minisign key) | application update packages (P3, `docs/phase-5/updates.md`) | `tauri-plugin-updater`, against `release/updater.pub`, compiled into the app | `LOOM_UPDATER_KEY`, `LOOM_UPDATER_KEY_PASSWORD` |
 
 ## Data signatures
 - **Format.** A detached `signature.json` beside the signed file:
@@ -46,7 +46,7 @@ cargo run -p loom-release -- test-sign bundle.json --out signature.json   # the 
    - Add the printed entry to `release/trust.json` in a PR to `dev`.
    - Put the secret's 64 hex digits into the `release` environment's secret `LOOM_DATA_KEY`.
 2. **Updater key.** `ui/node_modules/.bin/tauri signer generate -w <dir>/updater.key` (with a password).
-   - The public key goes into `crates/loom-tauri/tauri.conf.json`, `plugins.updater.pubkey`, in a PR (P3).
+   - The public key (the one line of `updater.key.pub`) goes into `release/updater.pub`, in a PR to `dev`. Until then a build cannot check for updates.
    - The private key file's content goes into `LOOM_UPDATER_KEY`, its password into `LOOM_UPDATER_KEY_PASSWORD`.
    - Losing it strands installed copies: they accept only updates signed by the key they shipped with. Keep two offline copies.
 
@@ -58,12 +58,16 @@ Settings → Environments → New environment `release`:
 - **Tag protection** (Settings → Rules → Rulesets): only the maintainer creates `v*` tags.
 
 ## Throwaway mode
+The update key works the same way (`tools/package/updater-key.sh`): without `LOOM_UPDATER_KEY`, a throwaway key from `tauri signer generate` signs the run's update packages and its public half goes into the run's `release/updater.pub`; a tag's run refuses it; with the secret, `release/updater.pub` must not be empty.
+
 When `LOOM_DATA_KEY` is absent (before the first key exists, or in a fork), `tools/package/data-key.sh` makes a throwaway key, adds it to the run's copy of `release/trust.json` (never committed), and exports it for the later steps. The artifacts then verify their own data, so the workflow is fully exercised, but no later build trusts that key. **A tag's run refuses throwaway mode.** With the secret set, its key must already be in `release/trust.json` and not revoked, or the run fails.
 
 ## Rotation
 1. Generate the new key (as above) and add its entry to `release/trust.json`, keeping the old one.
 2. Release a version carrying both; switch `LOOM_DATA_KEY` to the new secret.
 3. After users have had time to update (at least one release cycle), remove the old key in a later release. Bundles signed by it stop verifying only in versions that no longer list it.
+
+**The update key** cannot be rotated by a list: an installed copy accepts only packages signed with the key it was built with. Rotate it with a release signed with the old key whose `release/updater.pub` is the new key; every later release is signed with the new key. Copies that skip that release must update by hand.
 
 ## Revocation (a leaked key)
 1. Add `{ "key_id": "<id>", "reason": "<why>" }` to `revoked` in `release/trust.json`, and remove the key from `keys`. Revocation is checked before anything else, so a revoked key fails even if a later list lists it again.

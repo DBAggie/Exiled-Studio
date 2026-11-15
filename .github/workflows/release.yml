@@ -50,6 +50,12 @@ jobs:
         env:
           LOOM_DATA_KEY: ${{ secrets.LOOM_DATA_KEY }}
         run: bash tools/package/data-key.sh
+      - name: Update key (throwaway when the secret is absent)
+        shell: bash
+        env:
+          LOOM_UPDATER_KEY: ${{ secrets.LOOM_UPDATER_KEY }}
+          LOOM_UPDATER_KEY_PASSWORD: ${{ secrets.LOOM_UPDATER_KEY_PASSWORD }}
+        run: bash tools/package/updater-key.sh
       - name: Version
         id: version
         shell: bash
@@ -61,12 +67,12 @@ jobs:
           cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
           ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
       - name: NSIS setup (WebView2 offline installer inside)
-        run: ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json
+        run: ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json
       - name: MSI
-        run: ui/node_modules/.bin/tauri build --bundles msi
+        run: ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json
       - name: Collect
         shell: bash
-        run: cp target/release/bundle/nsis/*-setup.exe target/release/bundle/msi/*.msi out/release/
+        run: cp target/release/bundle/nsis/*-setup.exe* target/release/bundle/msi/*.msi* out/release/
       - name: Portable zip, started
         shell: pwsh
         run: ./tools/package/smoke.ps1 (Get-ChildItem out/release/*-portable.zip).FullName plain ${{ steps.version.outputs.version }}
@@ -113,6 +119,12 @@ jobs:
         env:
           LOOM_DATA_KEY: ${{ secrets.LOOM_DATA_KEY }}
         run: bash tools/package/data-key.sh
+      - name: Update key (throwaway when the secret is absent)
+        shell: bash
+        env:
+          LOOM_UPDATER_KEY: ${{ secrets.LOOM_UPDATER_KEY }}
+          LOOM_UPDATER_KEY_PASSWORD: ${{ secrets.LOOM_UPDATER_KEY_PASSWORD }}
+        run: bash tools/package/updater-key.sh
       - name: Version
         id: version
         run: echo "version=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "loom-tauri") | .version')" >> "$GITHUB_OUTPUT"
@@ -120,9 +132,9 @@ jobs:
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          ui/node_modules/.bin/tauri build --bundles appimage,deb
+          ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json
           mkdir -p out/release
-          cp target/release/bundle/appimage/*.AppImage target/release/bundle/deb/*.deb out/release/
+          cp target/release/bundle/appimage/*.AppImage* target/release/bundle/deb/*.deb out/release/
       - name: AppImage, started
         run: xvfb-run -a bash tools/package/smoke.sh out/release/*.AppImage app-image ${{ steps.version.outputs.version }}
       - name: .deb, installed, started, removed
@@ -149,6 +161,10 @@ jobs:
           pattern: release-*
           path: out
           merge-multiple: true
+      # The update feed; the published release serves it at
+      # releases/latest/download/latest.json (tauri.conf.json's endpoint).
+      - name: Update feed
+        run: bash tools/package/latest-json.sh out "${GITHUB_REF_NAME#v}" "$GITHUB_REPOSITORY" > out/latest.json
       - name: Draft the release
         env:
           GH_TOKEN: ${{ github.token }}

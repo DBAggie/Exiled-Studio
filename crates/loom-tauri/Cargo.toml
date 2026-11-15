@@ -23,6 +23,11 @@ tracing.workspace = true
 tauri = { version = "2.12.5", features = [] }
 # The file dialogs, called from Rust only (decision 10); MIT or Apache-2.0.
 tauri-plugin-dialog = "2"
+# Application updates (Phase 5, P-d; the one network path outside
+# loom-integrations): native-tls, not rustls with webpki-roots
+# (CDLA-Permissive-2.0 is not on the license allow-list; review M12).
+tauri-plugin-updater = { version = "2.14.1", default-features = false, features = ["native-tls", "system-proxy"] }
+semver = "1"
 
 [dev-dependencies]
 tauri = { version = "2.12.5", features = ["test"] }

@@ -22,6 +22,7 @@ import { Dashboard } from './screens/Dashboard'
 import { ImportReview } from './screens/ImportReview'
 import { ItemEditor, Items } from './screens/Items'
 import { About, AiConnection, Warnings } from './screens/Other'
+import { UpdatePrompt } from './screens/Updates'
 import { Config } from './screens/Config'
 import { Skills } from './screens/Skills'
 import { Start } from './screens/Start'
@@ -569,6 +570,7 @@ function StartFrame({ screen }: { screen: Screen }) {
       </header>
       <main className="start">
         <ErrorAlert />
+        <UpdatePrompt />
         {screen === 'about' ? <About /> : <Start />}
       </main>
       <footer className="app-footer">
@@ -730,6 +732,7 @@ function Workspace({ screen }: { screen: Screen }) {
       <SideNav />
       <main className="content">
         <ErrorAlert />
+        <UpdatePrompt />
         <Flash />
         <Notices />
         <PinnedData />

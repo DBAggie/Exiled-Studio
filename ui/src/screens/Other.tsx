@@ -29,6 +29,7 @@ import {
   withUnit,
 } from '../util'
 import { useTreeLayout } from './treeLayout'
+import { UpdateSettings } from './Updates'
 
 export function Warnings() {
   const build = useAppSelector((s) => s.session.snapshot?.build)
@@ -684,6 +685,7 @@ export function About() {
         </dd>
       </dl>
       <GameData />
+      <UpdateSettings />
       <Diagnostics />
       <p>{t('about.license')}</p>
       <p>{t('about.privacy')}</p>
