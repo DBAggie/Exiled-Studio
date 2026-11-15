@@ -388,7 +388,10 @@ impl App {
     /// `APP_NO_DATA` when no data is loaded or its bundle has no sprites
     /// (the tree screen then draws its own shapes).
     pub fn tree_sprites(&self) -> Result<Arc<api::TreeSprites>, AppError> {
-        self.read(|p| p.data.as_ref().and_then(|d| d.tree_sprites.clone()))
+        // The data is taken out of the lock first: the first call reads the
+        // sheets.
+        self.read(|p| p.data.clone())
+            .and_then(|d| d.tree_sprites())
             .ok_or_else(|| AppError::new(Code::NoData, "the game data has no tree sprites"))
     }
 

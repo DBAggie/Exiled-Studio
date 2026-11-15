@@ -402,9 +402,11 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         };
         // PoB drops allocated nodes not connected to a start when it
         // loads a build, and the game allows none; their stats do not
-        // count, and the fields say so. Jewels that allocate without a
-        // path (Thread of Hope, Intuitive Leap) are not modelled yet, so
-        // their nodes land here too: partial, never a silent value. A
+        // count, and the fields say so. Nodes a jewel lets be allocated
+        // without a path (Thread of Hope, Intuitive Leap, Impossible
+        // Escape) are connected in the resolved set when the bundle has
+        // the jewel radii (`loom_pipeline::resolve_passives`); without
+        // them they land here: partial, never a silent value. A
         // cluster jewel socket inside a subgraph (PoB's legacy IDs are
         // tree IDs) connects through the cluster jewel.
         match state {

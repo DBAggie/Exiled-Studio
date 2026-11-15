@@ -333,13 +333,18 @@ pub fn leaps(build: &Build, spec: &PassiveSpec, tree: &Tree) -> Vec<Leap> {
     out
 }
 
+// The tree and the engine name cluster jewel nodes by the same bit.
+const _: () = assert!(loom_tree::poe1::CLUSTER_NODE_BIT == PassiveState::CLUSTER_NODE_BIT);
+
 /// The active spec's allocated nodes resolved against `tree` (passive
 /// tree plan, T-e): connected to an allocated start
 /// ([`loom_tree::poe1::connected_to_start`]) or held by a radius jewel
 /// ([`leaps`], [`loom_tree::poe1::radius::held`]), a cluster jewel's
 /// socket or node, or not connected. Without a tree, empty: the engine
-/// then counts every node as not connected (a bundle without passive
-/// tables has no node's stats either).
+/// then counts every node as not connected, each with the visible
+/// `unconnected-node` reason (a bundle without passive tables has no
+/// node's stats either; the app and `calc-run` pass the bundle's tree
+/// whenever it has one).
 #[must_use]
 pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives {
     let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {

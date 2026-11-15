@@ -710,7 +710,8 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
 
 /// The sprites DTO (passive tree plan, T-a): the bundle's index with each
 /// sheet's bytes, read by `read` (the bundle's validated files), as a
-/// `data:` URL; `None` when a sheet cannot be read.
+/// `data:` URL; `None` when a sheet cannot be read or is not a PNG, JPEG,
+/// or WebP file.
 #[must_use]
 pub fn sprites(
     index: &loom_data::bundle::tree_sprites::TreeSprites,
@@ -721,11 +722,12 @@ pub fn sprites(
         .sheet_paths()
         .into_iter()
         .map(|path| {
-            let file = path.trim_start_matches(SPRITES_DIR).to_owned();
+            let file = path.strip_prefix(SPRITES_DIR)?.to_owned();
             let mime = match file.rsplit('.').next() {
                 Some("jpg" | "jpeg") => "image/jpeg",
                 Some("webp") => "image/webp",
-                _ => "image/png",
+                Some("png") => "image/png",
+                _ => return None,
             };
             let bytes = read(&path)?;
             Some(api::TreeSpriteSheet {

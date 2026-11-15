@@ -536,7 +536,7 @@ fn a_bundle_with_sprites_should_give_them_as_data_urls() {
     let data =
         loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1-tree"))
             .unwrap();
-    let sprites = data.tree_sprites.unwrap();
+    let sprites = data.tree_sprites().unwrap();
     assert!((sprites.zoom - 0.5).abs() < f64::EPSILON);
     assert_eq!(sprites.sheets.len(), 1);
     assert_eq!(sprites.sheets[0].file, "test-sheet.png");
@@ -557,5 +557,5 @@ fn a_bundle_with_sprites_should_give_them_as_data_urls() {
     let plain =
         loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1"))
             .unwrap();
-    assert!(plain.tree_sprites.is_none());
+    assert!(plain.tree_sprites().is_none());
 }
