@@ -6,6 +6,7 @@ import type {
   FieldDelta,
   ItemSummary,
   LineOp,
+  TreeLayout,
   WarningView,
 } from '../api/types'
 import { Badge, ErrorCode, Icon, ScreenHeading, type Tone } from '../components'
@@ -26,6 +27,7 @@ import {
   useAppSelector,
   withUnit,
 } from '../util'
+import { useTreeLayout } from './treeLayout'
 
 export function Warnings() {
   const build = useAppSelector((s) => s.session.snapshot?.build)
@@ -109,12 +111,14 @@ function WarningTable({
 /** A request's edit as what it removes and what it adds, in words: the
  * lines the AI saw (`expect`) and the text it asks for. */
 function changeBlocks(r: ChangeRequest): { remove: string[]; add: string[] } {
-  const seen = (line: number) =>
-    r.edit.expect.find((e) => e.line === line)?.text ??
-    t('ai.lineN', { n: line + 1 })
+  const edit = r.edit
   const remove: string[] = []
   const add: string[] = []
-  for (const op of r.edit.ops as LineOp[]) {
+  if (edit == null) return { remove, add }
+  const seen = (line: number) =>
+    edit.expect.find((e) => e.line === line)?.text ??
+    t('ai.lineN', { n: line + 1 })
+  for (const op of edit.ops as LineOp[]) {
     if ('replace' in op) {
       remove.push(seen(op.replace.line))
       add.push(op.replace.text)
@@ -133,6 +137,47 @@ function changeBlocks(r: ChangeRequest): { remove: string[]; add: string[] } {
     }
   }
   return { remove, add }
+}
+
+/** A tree request's change as the nodes it removes and adds, by name:
+ * the path an allocation takes, the nodes a removal drops, a mastery's
+ * effect. */
+function treeBlocks(
+  r: ChangeRequest,
+  layout: TreeLayout | null,
+): { remove: string[]; add: string[] } {
+  const name = (id: number) =>
+    layout?.nodes.find((n) => n.id === id)?.name ?? t('ai.nodeN', { n: id })
+  const preview = r['tree-preview']
+  const change = r.tree
+  if (change == null) return { remove: [], add: [] }
+  if ('allocate-node' in change) {
+    const path = preview?.path ?? [change['allocate-node'].node]
+    return { remove: [], add: path.map(name) }
+  }
+  if ('deallocate-node' in change) {
+    const node = change['deallocate-node'].node
+    const removed = preview?.removed ?? []
+    return {
+      remove: [node, ...removed.filter((n) => n !== node)].map(name),
+      add: [],
+    }
+  }
+  const { node, effect } = change['set-mastery-effect']
+  const group = layout?.nodes.find((n) => n.id === node)?.['mastery-group']
+  const lines =
+    layout?.masteries
+      .find((g) => g.id === group)
+      ?.effects.find((e) => e.effect === effect)?.lines ?? []
+  return {
+    remove: [],
+    add: [
+      t('ai.masteryEffect', {
+        node: name(node),
+        effect: lines.length > 0 ? lines.join(' · ') : `#${effect}`,
+      }),
+    ],
+  }
 }
 
 function effectChip(f: FieldDelta): { tone: Tone; text: string } {
@@ -159,10 +204,21 @@ const STATUS_TONE: Record<ChangeRequest['status'], Tone> = {
 
 function Request({ r, items }: { r: ChangeRequest; items: ItemSummary[] }) {
   const dispatch = useAppDispatch()
-  const item = items.find((i) => i.id === r.edit.item)
-  const name = item === undefined ? `#${r.edit.item}` : itemName(item)
-  const { remove, add } = changeBlocks(r)
-  const effects = (r.preview?.fields ?? []).filter((f) => f.before !== f.after)
+  const layout = useTreeLayout()
+  const item = items.find((i) => i.id === r.edit?.item)
+  const name =
+    r.tree != null
+      ? t('ai.passiveTree')
+      : item === undefined
+        ? `#${r.edit?.item ?? 0}`
+        : itemName(item)
+  const { remove, add } =
+    r.tree != null
+      ? treeBlocks(r, typeof layout === 'object' ? layout : null)
+      : changeBlocks(r)
+  const effects = (r.preview?.fields ?? r['tree-preview']?.fields ?? []).filter(
+    (f) => f.before !== f.after,
+  )
   const headingId = `request-${r.id}`
   return (
     <article
@@ -204,7 +260,7 @@ function Request({ r, items }: { r: ChangeRequest; items: ItemSummary[] }) {
             </div>
           )}
         </div>
-        {r.preview != null && (
+        {(r.preview != null || r['tree-preview'] != null) && (
           <div className="stack tight">
             <p className="muted small-text">{t('ai.calculatedBy')}</p>
             <ul className="chips" aria-label={t('ai.effect')}>

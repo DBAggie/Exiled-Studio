@@ -1,8 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "tools/*"]
-# Oracle files (adapter, manifest, acquire scripts), not a crate.
-exclude = ["tools/oracle"]
+# Oracle and tree export files (manifests, acquire scripts), not crates.
+exclude = ["tools/oracle", "tools/tree"]
 
 [workspace.package]
 version = "0.0.0"
@@ -22,6 +22,7 @@ loom-persistence = { path = "crates/loom-persistence" }
 loom-app = { path = "crates/loom-app" }
 loom-integrations = { path = "crates/loom-integrations" }
 loom-pipeline = { path = "crates/loom-pipeline" }
+loom-tree = { path = "crates/loom-tree" }
 
 # Third-party crates shared across the workspace.
 sha2 = "0.10"

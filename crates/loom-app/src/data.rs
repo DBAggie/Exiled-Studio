@@ -2,6 +2,7 @@
 //! decision 1): one validated bundle folder.
 
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use loom_data::bundle::{Bundle, BundleSource, SourceError, validate};
 use loom_domain::{DataVersion, Game, TreeVersion};
@@ -85,6 +86,10 @@ pub struct GameData {
     pub version: DataVersion,
     /// The tree version for it, if known.
     pub tree_version: Option<TreeVersion>,
+    /// Its passive tree, when it has one (the tree editor).
+    pub tree: Option<Arc<loom_tree::Tree>>,
+    /// The tree's layout DTO, made once.
+    pub tree_layout: Option<Arc<loom_serialization::dto::app::v1::TreeLayout>>,
 }
 
 impl std::fmt::Debug for GameData {
@@ -120,13 +125,27 @@ impl GameData {
             Resolver::new(data).map_err(|e| AppError::new(Code::Bundle, e.code().to_owned()))?;
         let resolver: &'static Resolver<'static, 'static> = Box::leak(Box::new(resolver));
         let version = loom_parser::import::data_version(data);
+        let tree_version = tree_version(&version);
+        let tree = bundle
+            .passives
+            .as_ref()
+            .map(|p| loom_tree::Tree::from_tables(p, bundle.tree_layout.as_ref()));
+        let tree_layout = tree.as_ref().map(|t| {
+            Arc::new(crate::tree::layout(
+                t,
+                bundle,
+                tree_version.as_ref().map(|v| v.as_str().to_owned()),
+            ))
+        });
         Ok(Self {
             dir: dir.to_owned(),
             bundle,
             data,
             resolver,
-            tree_version: tree_version(&version),
+            tree_version,
             version,
+            tree: tree.map(Arc::new),
+            tree_layout,
         })
     }
 }

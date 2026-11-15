@@ -30,6 +30,12 @@ import type {
   SetView,
   SkillGroupView,
   Snapshot,
+  TreeClassView,
+  TreeLayout,
+  TreeNodeView,
+  TreeChange,
+  TreePreview,
+  TreeView,
   WarningView,
 } from '../generated/app-api.v1'
 import type {
@@ -70,6 +76,12 @@ export type {
   SetView,
   SkillGroupView,
   Snapshot,
+  TreeClassView,
+  TreeLayout,
+  TreeNodeView,
+  TreeChange,
+  TreePreview,
+  TreeView,
   WarningView,
 }
 
@@ -119,6 +131,11 @@ export interface LoomApi {
   /** Opens the last dropped file: imports a PoB build, opens a build
    * document; `UI_DROP` for anything else. */
   openDropped(): Promise<Outcome>
+  /** The loaded data's passive tree (static while the data is loaded). */
+  treeLayout(): Promise<TreeLayout>
+  /** What clicking node `node` of spec `spec` would do: allocate it and
+   * its path, or deallocate it and its orphans; never committed. */
+  previewTree(spec: number, node: number): Promise<TreePreview>
   /** The UI's own preferences document (the user's dashboards), `null`
    * before one is saved. */
   uiPrefs(): Promise<string | null>

@@ -56,6 +56,51 @@ export type LineOp =
  * What a variant of an item is.
  */
 export type VariantEra = 'legacy' | 'current' | 'choice'
+/**
+ * A passive tree change an MCP client asks for: the tree commands
+ * of the same names.
+ */
+export type TreeChange =
+  | {
+      'allocate-node': {
+        /**
+         * The node.
+         */
+        node: number
+        /**
+         * The spec's ID.
+         */
+        spec: number
+      }
+    }
+  | {
+      'deallocate-node': {
+        /**
+         * The node.
+         */
+        node: number
+        /**
+         * The spec's ID.
+         */
+        spec: number
+      }
+    }
+  | {
+      'set-mastery-effect': {
+        /**
+         * The effect.
+         */
+        effect: number
+        /**
+         * The mastery node.
+         */
+        node: number
+        /**
+         * The spec's ID.
+         */
+        spec: number
+      }
+    }
 
 /**
  * Every top-level type of the API, so one schema names them all. Never
@@ -296,6 +341,126 @@ export interface ApplicationAPIV1 {
           league: 'challenge' | 'standard'
         }
       }
+    | {
+        'allocate-node': {
+          /**
+           * The node.
+           */
+          node: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'deallocate-node': {
+          /**
+           * The node.
+           */
+          node: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'set-mastery-effect': {
+          /**
+           * The effect's hash.
+           */
+          effect: number
+          /**
+           * The mastery node.
+           */
+          node: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'select-class': {
+          /**
+           * The class's number.
+           */
+          class: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'select-ascendancy': {
+          /**
+           * The ascendancy's number within the class.
+           */
+          ascendancy: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'reset-tree': {
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'socket-jewel': {
+          /**
+           * The item's ID; absent to empty the socket.
+           */
+          item?: number | null
+          /**
+           * The socket node.
+           */
+          node: number
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
+    | {
+        'new-spec': {
+          /**
+           * The spec it copies, if any.
+           */
+          copy?: number | null
+          /**
+           * Its name.
+           */
+          title: string
+        }
+      }
+    | {
+        'rename-spec': {
+          /**
+           * The spec's ID.
+           */
+          spec: number
+          /**
+           * Its new name.
+           */
+          title: string
+        }
+      }
+    | {
+        'delete-spec': {
+          /**
+           * The spec's ID.
+           */
+          spec: number
+        }
+      }
     | 'undo'
     | 'redo'
     | 'save'
@@ -392,6 +557,8 @@ export interface ApplicationAPIV1 {
    */
   recovery: RecoveryEntry[]
   snapshot: Snapshot
+  'tree-layout': TreeLayout
+  'tree-preview': TreePreview1
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -859,7 +1026,10 @@ export interface ChangeRequest {
    * The client's name, as it gave it.
    */
   client: string
-  edit: ItemEdit1
+  /**
+   * The item edit, for an item request; `null` for a tree request.
+   */
+  edit?: ItemEdit | null
   /**
    * Why it failed, if it did.
    */
@@ -873,34 +1043,21 @@ export interface ChangeRequest {
    */
   note?: string | null
   /**
-   * Its effect, calculated when it arrived.
+   * The item edit's effect, calculated when it arrived.
    */
   preview?: ItemEditPreview | null
   /**
    * Where it is.
    */
   status: 'pending' | 'applied' | 'declined' | 'failed'
-}
-/**
- * An item edit: line operations on one item. It is refused as stale
- * (`APP_STALE_EDIT`) when the item's lines it names are not the ones
- * it expects.
- */
-export interface ItemEdit1 {
   /**
-   * The text each line the operations name had when the edit was
-   * made, by line index.
+   * The passive tree change, for a tree request.
    */
-  expect: ExpectedLine[]
+  tree?: TreeChange | null
   /**
-   * The item's ID.
+   * The tree change's effect, calculated when it arrived.
    */
-  item: number
-  /**
-   * The operations, in order; line indices are the item's before
-   * the edit.
-   */
-  ops: LineOp[]
+  'tree-preview'?: TreePreview | null
 }
 /**
  * An error: a stable code (ADR-014) and a message for logs. The UI
@@ -982,6 +1139,30 @@ export interface ItemView1 {
    * The slot it is in, if any.
    */
   slot?: string | null
+}
+/**
+ * What clicking a node would do: allocate the path to it, or
+ * deallocate it and what it leaves unconnected; with each slice
+ * field before and after, when the build calculates.
+ */
+export interface TreePreview {
+  /**
+   * Each slice field before and after (empty without a
+   * calculation).
+   */
+  fields: FieldDelta[]
+  /**
+   * The node.
+   */
+  node: number
+  /**
+   * Nodes allocated, from the allocated ones to the node.
+   */
+  path: number[]
+  /**
+   * Nodes deallocated, ascending.
+   */
+  removed: number[]
 }
 /**
  * An item edit's effect, calculated by the application (never by the
@@ -1190,6 +1371,11 @@ export interface BuildView {
    * The passive tree specs, in build order.
    */
   specs: SetView[]
+  /**
+   * The active passive spec as the tree editor sees it, when the
+   * loaded data has a passive tree (passive tree plan, T5a).
+   */
+  tree?: TreeView | null
   /**
    * Lines with warnings: kept, shown, not calculated (ADR-015).
    */
@@ -1524,6 +1710,81 @@ export interface GemView {
   supports: number[]
 }
 /**
+ * The active passive spec as the tree editor sees it.
+ */
+export interface TreeView {
+  /**
+   * The ascendancy's number within the class, 0 for none.
+   */
+  ascendancy: number
+  /**
+   * Ascendancy points spent.
+   */
+  'ascendancy-points': number
+  /**
+   * The class's number (PoB's `classId`).
+   */
+  class: number
+  /**
+   * The jewels socketed in the spec's sockets.
+   */
+  jewels?: TreeJewel[]
+  /**
+   * Allocated nodes the editor keeps but does not edit: ones the
+   * tree lacks or does not model (bloodline passives, cluster
+   * jewels' nodes), ascending.
+   */
+  kept: number[]
+  /**
+   * Why the spec cannot be edited, when it cannot: its tree version
+   * differs from the loaded data's, or its class is not known. The
+   * tree is then shown, not edited.
+   */
+  locked?: string | null
+  /**
+   * The chosen mastery effects.
+   */
+  masteries: MasteryChoice[]
+  /**
+   * The allocated nodes, ascending (starts included).
+   */
+  nodes: number[]
+  /**
+   * Passive points spent (PoB's count, never enforced).
+   */
+  points: number
+  /**
+   * The spec's ID.
+   */
+  spec: number
+}
+/**
+ * A jewel in a tree socket.
+ */
+export interface TreeJewel {
+  /**
+   * The item's ID.
+   */
+  item: number
+  /**
+   * The socket node.
+   */
+  node: number
+}
+/**
+ * A mastery and its chosen effect.
+ */
+export interface MasteryChoice {
+  /**
+   * The effect (its hash, as builds name it).
+   */
+  effect: number
+  /**
+   * The mastery node.
+   */
+  node: number
+}
+/**
  * A line with a warning.
  */
 export interface WarningView {
@@ -1699,8 +1960,212 @@ export interface HistoryEntry {
     | 'config'
     | 'league'
     | 'weapon-set'
+    | 'tree'
+    | 'tree-specs'
+    | 'tree-request-applied'
   /**
    * The change request it applied, when an MCP client asked for it.
    */
   request?: number | null
+}
+/**
+ * The loaded data's passive tree.
+ */
+export interface TreeLayout {
+  /**
+   * The classes, by number.
+   */
+  classes: TreeClassView[]
+  /**
+   * The groups' centres, by group index.
+   */
+  groups: TreePoint[]
+  /**
+   * Each mastery group's effects.
+   */
+  masteries: MasteryGroupView[]
+  /**
+   * The nodes, ascending.
+   */
+  nodes: TreeNodeView[]
+  /**
+   * Each orbit's radius.
+   */
+  'orbit-radii': number[]
+  /**
+   * Whether nodes have positions (the bundle has the layout
+   * constants); without them the tree is listed, not drawn.
+   */
+  placed: boolean
+  /**
+   * The tree version, when known.
+   */
+  'tree-version'?: string | null
+}
+/**
+ * A class on the tree.
+ */
+export interface TreeClassView {
+  /**
+   * Its ascendancies.
+   */
+  ascendancies: TreeAscendancyView[]
+  /**
+   * Its name.
+   */
+  name: string
+  /**
+   * Its number (PoB's `classId`).
+   */
+  number: number
+  /**
+   * Its start node.
+   */
+  start: number
+}
+/**
+ * An ascendancy on the tree.
+ */
+export interface TreeAscendancyView {
+  /**
+   * Its ID (what nodes name).
+   */
+  id: string
+  /**
+   * Its name.
+   */
+  name: string
+  /**
+   * Its number within the class (PoB's `ascendClassId`).
+   */
+  number: number
+  /**
+   * Its start node, if any.
+   */
+  start?: number | null
+}
+/**
+ * A point on the tree.
+ */
+export interface TreePoint {
+  /**
+   * x.
+   */
+  x: number
+  /**
+   * y (down is positive).
+   */
+  y: number
+}
+/**
+ * A mastery group's effects.
+ */
+export interface MasteryGroupView {
+  /**
+   * Its effects.
+   */
+  effects: MasteryEffectView[]
+  /**
+   * Its ID.
+   */
+  id: string
+}
+/**
+ * A mastery effect.
+ */
+export interface MasteryEffectView {
+  /**
+   * Its hash (what builds name).
+   */
+  effect: number
+  /**
+   * Its stat lines as the game prints them.
+   */
+  lines: string[]
+}
+/**
+ * One node of the tree.
+ */
+export interface TreeNodeView {
+  /**
+   * The ascendancy it belongs to (its ID), if any.
+   */
+  ascendancy?: string | null
+  /**
+   * Whether it exists only once a cluster jewel is socketed (a
+   * nested socket or position proxy): not drawn, as PoB does not.
+   */
+  'cluster-area'?: boolean
+  /**
+   * Its group's index.
+   */
+  group: number
+  /**
+   * Its number.
+   */
+  id: number
+  /**
+   * What it is.
+   */
+  kind:
+    | 'normal'
+    | 'notable'
+    | 'keystone'
+    | 'mastery'
+    | 'jewel-socket'
+    | 'cluster-socket'
+    | 'class-start'
+    | 'ascendancy-start'
+  /**
+   * Its stat lines as the game prints them.
+   */
+  lines: string[]
+  /**
+   * The nodes it links to with a higher number (each link once).
+   */
+  links: number[]
+  /**
+   * For a mastery: its mastery group's ID.
+   */
+  'mastery-group'?: string | null
+  /**
+   * Whether the editor allocates it.
+   */
+  modelled: boolean
+  /**
+   * Its name.
+   */
+  name: string
+  /**
+   * Its orbit.
+   */
+  orbit: number
+  /**
+   * Where it is drawn, when the tree is placed.
+   */
+  position?: TreePoint | null
+}
+/**
+ * What clicking a node would do: allocate the path to it, or
+ * deallocate it and what it leaves unconnected; with each slice
+ * field before and after, when the build calculates.
+ */
+export interface TreePreview1 {
+  /**
+   * Each slice field before and after (empty without a
+   * calculation).
+   */
+  fields: FieldDelta[]
+  /**
+   * The node.
+   */
+  node: number
+  /**
+   * Nodes allocated, from the allocated ones to the node.
+   */
+  path: number[]
+  /**
+   * Nodes deallocated, ascending.
+   */
+  removed: number[]
 }

@@ -1,0 +1,8 @@
+{
+  "format": 1,
+  "export": {
+    "repository": "https://github.com/grindinggear/skilltree-export.git",
+    "tag": "3.29.1",
+    "commit": "8bd138b32ea2631455cac5935bfab089f826094f"
+  }
+}

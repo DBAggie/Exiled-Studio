@@ -24,13 +24,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-const CORE_CRATES: [&str; 6] = [
+const CORE_CRATES: [&str; 7] = [
     "loom-domain",
     "loom-data",
     "loom-parser",
     "loom-calc",
     "loom-serialization",
     "loom-pipeline",
+    "loom-tree",
 ];
 
 const POE1_ONLY: [&str; 32] = [

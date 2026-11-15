@@ -35,6 +35,7 @@ pub mod poe1;
 pub mod properties;
 pub mod skills;
 mod source;
+pub mod tree_layout;
 pub mod validate;
 
 use loom_domain::Game;
@@ -361,6 +362,9 @@ pub struct Bundle {
     pub passives: Option<passives::PassiveTables>,
     /// The item property and monster tables (format 2; `None` in format 1).
     pub properties: Option<properties::PropertyTables>,
+    /// The passive tree's layout constants, when listed
+    /// ([`tree_layout::TREE_LAYOUT`]; optional).
+    pub tree_layout: Option<tree_layout::TreeLayout>,
 }
 
 /// Why a bundle did not load.
@@ -541,6 +545,11 @@ impl Bundle {
             skills,
             passives,
             properties,
+            tree_layout: if listed(tree_layout::TREE_LAYOUT) {
+                Some(json(source, tree_layout::TREE_LAYOUT)?)
+            } else {
+                None
+            },
             game,
             manifest,
         })

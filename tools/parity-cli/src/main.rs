@@ -40,6 +40,8 @@ mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
+mod tree_layout;
+mod tree_parity;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -48,6 +50,21 @@ use std::process::ExitCode;
 use serde::Serialize;
 
 const USAGE: &str = "usage:
+  loom-parity-cli tree-parity layout <pob-layout.json> <bundle-dir>
+  loom-parity-cli tree-parity alloc-requests <bundle-dir> <count> <seed>
+  loom-parity-cli tree-parity alloc <requests.txt> <pob-alloc.json> <bundle-dir>
+  loom-parity-cli tree-parity readback <build.xml> <pob-readback.json>
+      The passive tree against PoB (docs/tree/parity.md): PoB's side from
+      tools/oracle/data/pob_tree.lua. Prints a JSON record; exit 0 when
+      everything matches, 1 otherwise. alloc-requests prints seeded
+      requests for pob_tree.lua alloc.
+  loom-parity-cli tree-layout <tools/tree/manifest.json> <export-dir> <bundle-dir> --out <dir>
+      Copy a bundle into <dir> (which must not exist) with the passive
+      tree's layout constants added (data/passive_tree_layout.json), read
+      from GGG's tree export at the pinned commit (ADR-005 Amendment 2;
+      fetch it with tools/tree/acquire). Refuses another commit, orbits
+      that differ from the bundle's, or a README angle table that differs
+      from the rule; validates before and after; prints a summary.
   loom-parity-cli bundle <extract-dir> --out <dir>
       Convert a `loom-extractor extract` output (PoE1 or PoE2) into a data
       bundle of format 2 (loom_data::bundle) in <dir>, which must not
@@ -1462,6 +1479,13 @@ fn calc_parity_cmd(args: &[String]) -> ExitCode {
     }
 }
 
+/// Prints a tree-parity record; whether it matched.
+fn print_record<T: Serialize>((record, ok): (T, bool)) -> Result<bool, String> {
+    let json = serde_json::to_string_pretty(&record).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(ok)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if let [cmd, rest @ ..] = args.as_slice()
@@ -1514,6 +1538,39 @@ fn main() -> ExitCode {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, pin, export, bundle, flag, out] if cmd == "tree-layout" && flag == "--out" => {
+            tree_layout::run(
+                Path::new(pin),
+                Path::new(export),
+                Path::new(bundle),
+                Path::new(out),
+            )
+            .and_then(|summary| {
+                let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+                println!("{json}");
+                Ok(true)
+            })
+        }
+        [cmd, mode, pob, bundle] if cmd == "tree-parity" && mode == "layout" => {
+            tree_parity::layout(Path::new(pob), Path::new(bundle)).and_then(print_record)
+        }
+        [cmd, mode, bundle, count, seed] if cmd == "tree-parity" && mode == "alloc-requests" => {
+            let count = count.parse().map_err(|e| format!("count: {e}"));
+            let seed = seed.parse().map_err(|e| format!("seed: {e}"));
+            count.and_then(|c| seed.map(|s| (c, s))).and_then(|(c, s)| {
+                tree_parity::alloc_requests(Path::new(bundle), c, s).map(|text| {
+                    print!("{text}");
+                    true
+                })
+            })
+        }
+        [cmd, mode, requests, pob, bundle] if cmd == "tree-parity" && mode == "alloc" => {
+            tree_parity::alloc(Path::new(requests), Path::new(pob), Path::new(bundle))
+                .and_then(print_record)
+        }
+        [cmd, mode, build, pob] if cmd == "tree-parity" && mode == "readback" => {
+            tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
+        }
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
         [cmd, bundle, pob, flag, out] if cmd == "custom-lines" && flag == "--out" => {

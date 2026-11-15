@@ -25,6 +25,7 @@ import { About, AiConnection, Warnings } from './screens/Other'
 import { Config } from './screens/Config'
 import { Skills } from './screens/Skills'
 import { Start } from './screens/Start'
+import { Tree } from './screens/Tree'
 import {
   buildStatus,
   dataName,
@@ -323,6 +324,9 @@ function SideNav() {
         <NavButton screen="skills" current={current('skills')}>
           {t('nav.skills')}
         </NavButton>
+        <NavButton screen="tree" current={current('tree')}>
+          {t('nav.tree')}
+        </NavButton>
         <NavButton screen="config" current={current('config')}>
           {t('nav.config')}
         </NavButton>
@@ -496,6 +500,8 @@ function Content({ screen }: { screen: Screen }) {
       return <Items />
     case 'skills':
       return <Skills />
+    case 'tree':
+      return <Tree />
     case 'config':
       return <Config />
     case 'item':

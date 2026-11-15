@@ -17,7 +17,9 @@
 //!   object template, mastery group, and mastery effect, every passive of a
 //!   tree node, and every tree node of a connection or root; no object
 //!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
-//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`); the
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`), and the tree
+//!   layout, when present, has a radius and an angle per slot
+//!   (`BUNDLE_TREE_LAYOUT`); the
 //!   weapon, armour, and shield types' base items exist;
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
 //!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
@@ -116,8 +118,24 @@ pub fn validate(source: &dyn BundleSource) -> Report {
     };
     referential(&bundle, &mut report);
     domain(&bundle, &mut report);
+    layout(&bundle, &mut report);
     smoke(&bundle, &mut report);
     report
+}
+
+/// The tree layout, when present, fits the tree's orbits
+/// (`BUNDLE_TREE_LAYOUT`).
+fn layout(b: &Bundle, report: &mut Report) {
+    let (Some(layout), Some(p)) = (&b.tree_layout, &b.passives) else {
+        return;
+    };
+    if !layout.fits(&p.tree.orbit_slots) {
+        report.add(
+            "BUNDLE_TREE_LAYOUT",
+            super::tree_layout::TREE_LAYOUT,
+            "the layout does not give one radius and one angle in [0, 360) per slot of every orbit",
+        );
+    }
 }
 
 fn at_of(e: &BundleError) -> String {

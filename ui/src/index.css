@@ -2378,3 +2378,98 @@ button.inv-slot:focus-visible {
 .main-skill-gems li + li {
   margin-top: 4px;
 }
+
+/* The passive tree (screens/Tree.tsx). */
+.tree-bar {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tree-points {
+  margin: 0 0 0 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tree-stage {
+  position: relative;
+}
+
+.tree-canvas-wrap {
+  position: relative;
+}
+
+.tree-canvas {
+  display: block;
+  width: 100%;
+  height: 70vh;
+  min-height: 360px;
+  background: var(--c-tree-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-panel);
+  cursor: grab;
+  touch-action: none;
+}
+
+.tree-canvas:active {
+  cursor: grabbing;
+}
+
+.tree-zoom {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.tree-card {
+  position: absolute;
+  z-index: 5;
+  max-width: 22rem;
+  padding: 10px 12px;
+  background: var(--c-raised);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius);
+  pointer-events: none;
+}
+
+.tree-card p {
+  margin: 0 0 4px;
+}
+
+.tree-card-name {
+  font-weight: 600;
+}
+
+.tree-lines {
+  margin: 4px 0;
+  padding-left: 1rem;
+}
+
+.tree-list .segmented {
+  margin-bottom: 8px;
+}
+
+.tree-node-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree-node-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--c-row);
+}
+
+.tree-node-list li.on {
+  background: var(--c-selected);
+}
+
+.tree-node-list p {
+  margin: 2px 0 0;
+}

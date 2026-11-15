@@ -418,6 +418,17 @@ impl Session {
         item: u32,
         change: impl FnOnce(&mut Build) -> Result<(), AppError>,
     ) -> Result<Option<u64>, AppError> {
+        self.change_build_for(kind, item, None, change)
+    }
+
+    /// [`Session::change_build`], recording the change request it applies.
+    fn change_build_for(
+        &mut self,
+        kind: api::ChangeKind,
+        item: u32,
+        request: Option<u64>,
+        change: impl FnOnce(&mut Build) -> Result<(), AppError>,
+    ) -> Result<Option<u64>, AppError> {
         let state = self.need_state()?;
         let mut build = state.build.clone();
         change(&mut build)?;
@@ -431,7 +442,7 @@ impl Session {
         let entry = api::HistoryEntry {
             kind,
             item,
-            request: None,
+            request,
         };
         Ok(Some(self.commit(state, next, entry)))
     }
@@ -775,6 +786,113 @@ impl Session {
             }
             Ok(())
         })
+    }
+
+    /// A passive tree edit of spec `spec` (passive tree plan, T5a), as one
+    /// undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn edit_tree(
+        &mut self,
+        spec: u32,
+        edit: crate::tree::Edit,
+    ) -> Result<Option<u64>, AppError> {
+        self.edit_tree_for(spec, edit, None)
+    }
+
+    /// [`Session::edit_tree`] for change request `request`, when it is one
+    /// (history kind `tree-request-applied`).
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn edit_tree_for(
+        &mut self,
+        spec: u32,
+        edit: crate::tree::Edit,
+        request: Option<u64>,
+    ) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let version = self.data.as_ref().and_then(|d| d.tree_version.clone());
+        let kind = if request.is_some() {
+            api::ChangeKind::TreeRequestApplied
+        } else {
+            api::ChangeKind::Tree
+        };
+        self.change_build_for(kind, spec, request, |build| {
+            let outcome = crate::tree::run(build, spec, &tree, version.as_ref(), edit)?;
+            crate::tree::write_spec(build, spec, &tree, &outcome.spec)
+        })
+    }
+
+    /// Sockets a jewel in a tree socket of spec `spec`
+    /// (`crate::tree::socket_jewel`), as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn socket_jewel(
+        &mut self,
+        spec: u32,
+        node: u32,
+        item: Option<u32>,
+    ) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let data = self.data.clone();
+        self.change_build(api::ChangeKind::Tree, spec, |build| {
+            crate::tree::socket_jewel(
+                build,
+                spec,
+                &tree,
+                data.as_ref().map(|d| d.bundle),
+                node,
+                item,
+            )
+        })
+    }
+
+    /// Adds a passive spec (`crate::tree::new_spec`), as one undoable
+    /// change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA` (no tree), `APP_TREE`.
+    pub fn new_spec(&mut self, title: &str, copy: Option<u32>) -> Result<Option<u64>, AppError> {
+        let tree = self.tree()?;
+        let version = self.data.as_ref().and_then(|d| d.tree_version.clone());
+        let item = crate::tree::spec_count(&self.need_state()?.build) + 1;
+        self.change_build(api::ChangeKind::TreeSpecs, item, |build| {
+            crate::tree::new_spec(build, &tree, version.as_ref(), title, copy).map(|_| ())
+        })
+    }
+
+    /// Renames passive spec `spec`, as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_TREE`.
+    pub fn rename_spec(&mut self, spec: u32, title: &str) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::TreeSpecs, spec, |build| {
+            crate::tree::rename_spec(build, spec, title)
+        })
+    }
+
+    /// Deletes passive spec `spec`, as one undoable change.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_TREE`.
+    pub fn delete_spec(&mut self, spec: u32) -> Result<Option<u64>, AppError> {
+        self.change_build(api::ChangeKind::TreeSpecs, spec, |build| {
+            crate::tree::delete_spec(build, spec)
+        })
+    }
+
+    /// The loaded data's passive tree.
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or it has no passive tree.
+    pub fn tree(&self) -> Result<Arc<loom_tree::Tree>, AppError> {
+        self.data
+            .as_ref()
+            .and_then(|d| d.tree.clone())
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))
     }
 
     /// Sets the league the build is planned for.
@@ -1174,7 +1292,12 @@ impl Session {
         api::Snapshot {
             version: self.version,
             build: self.current.as_ref().map(|s| {
-                view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle))
+                let mut v =
+                    view::build_view(&s.build, self.name(), self.data.as_ref().map(|d| d.bundle));
+                v.tree = self.data.as_ref().and_then(|d| {
+                    crate::tree::view(&s.build, d.tree.as_ref()?, d.tree_version.as_ref())
+                });
+                v
             }),
             calc,
             history: api::HistoryView {
@@ -1405,6 +1528,68 @@ pub fn preview(
         .map(|i| view::item_view(&after_state.build, i, Some(data.data)))
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", e.item)))?;
     Ok(api::ItemEditPreview { item, fields })
+}
+
+/// A tree edit's effect, calculated off the writer thread as an item
+/// edit's: the path allocated, the nodes removed, each field before and
+/// after (empty when the build does not calculate with the data).
+///
+/// # Errors
+/// `APP_NO_DATA` (no tree), `APP_TREE`; the calculation's.
+pub fn preview_tree(
+    state: &State,
+    data: &GameData,
+    spec: u32,
+    edit: crate::tree::Edit,
+    before: Option<&CalcResult>,
+    cancel: &dyn Fn() -> bool,
+) -> Result<api::TreePreview, AppError> {
+    let tree = data
+        .tree
+        .as_ref()
+        .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))?;
+    let outcome = crate::tree::run(&state.build, spec, tree, data.tree_version.as_ref(), edit)?;
+    let node = match edit {
+        crate::tree::Edit::Allocate(n)
+        | crate::tree::Edit::Deallocate(n)
+        | crate::tree::Edit::Mastery { node: n, .. } => n,
+        _ => 0,
+    };
+    let mut fields = Vec::new();
+    if check_data(&state.build, data).is_ok() {
+        let mut build = state.build.clone();
+        crate::tree::write_spec(&mut build, spec, tree, &outcome.spec)?;
+        let computed;
+        let before = match before {
+            Some(b) => b,
+            None => {
+                computed = calculate(state, data, cancel)?;
+                &computed
+            }
+        };
+        let after_state = State {
+            build,
+            ends: state.ends.clone(),
+        };
+        let after = calculate(&after_state, data, cancel)?;
+        fields = view::fields(before)
+            .into_iter()
+            .zip(view::fields(&after))
+            .map(|((field, b, sb), (_, a, sa))| api::FieldDelta {
+                field,
+                before: b,
+                after: a,
+                state_before: sb,
+                state_after: sa,
+            })
+            .collect();
+    }
+    Ok(api::TreePreview {
+        node,
+        path: outcome.path,
+        removed: outcome.removed,
+        fields,
+    })
 }
 
 /// Whether two paths name the same file (by canonical path when both

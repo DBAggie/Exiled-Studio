@@ -32,6 +32,7 @@ export type Screen =
   | 'items'
   | 'item'
   | 'skills'
+  | 'tree'
   | 'config'
   | 'warnings'
   | 'ai'

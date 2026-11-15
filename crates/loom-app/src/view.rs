@@ -793,6 +793,7 @@ pub fn build_view(build: &Build, name: String, bundle: Option<&Bundle>) -> api::
             Some(League::Standard) => api::League::Standard,
             Some(League::Challenge) | None => api::League::Challenge,
         },
+        tree: None,
     }
 }
 
@@ -809,7 +810,7 @@ fn variant_names(item: &Item) -> Vec<String> {
 }
 
 /// The item's base's item class in `bundle`, if the base is known.
-fn item_class(bundle: &Bundle, item: &Item) -> Option<String> {
+pub(crate) fn item_class(bundle: &Bundle, item: &Item) -> Option<String> {
     let (name, fallback) = pob_item::item_base(
         &item.body,
         bundle.base_items.iter().map(|b| b.name.as_str()),

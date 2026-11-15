@@ -371,6 +371,87 @@ impl App {
         session::preview(&state, &data, edit, before, &cancel).map(|p| (p, generation))
     }
 
+    /// The loaded data's passive tree layout (static while the data is
+    /// loaded; the UI caches it by the data version).
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or it has no passive tree.
+    pub fn tree_layout(&self) -> Result<Arc<api::TreeLayout>, AppError> {
+        self.read(|p| p.data.as_ref().and_then(|d| d.tree_layout.clone()))
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))
+    }
+
+    /// What clicking a node of spec `spec` would do: allocate it (when it
+    /// is not allocated) or deallocate it, with each field before and
+    /// after; calculated on the caller's thread, never committed.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_TREE`, the calculation's codes.
+    pub fn preview_tree(&self, spec: u32, node: u32) -> Result<api::TreePreview, AppError> {
+        self.preview_tree_edit(spec, node, None).map(|(p, _)| p)
+    }
+
+    /// A requested tree change's effect, as [`App::preview_tree`]
+    /// calculates it.
+    ///
+    /// # Errors
+    /// `APP_NO_BUILD`, `APP_NO_DATA`, `APP_TREE`, the calculation's codes.
+    pub fn preview_tree_change(
+        &self,
+        change: &api::TreeChange,
+    ) -> Result<api::TreePreview, AppError> {
+        let (spec, edit) = crate::tree::change_edit(change);
+        self.preview_tree_edit(spec, 0, Some(edit)).map(|(p, _)| p)
+    }
+
+    /// The preview of `edit` on spec `spec`, or, without one, of clicking
+    /// `node`; with the build generation it was made against.
+    fn preview_tree_edit(
+        &self,
+        spec: u32,
+        node: u32,
+        edit: Option<crate::tree::Edit>,
+    ) -> Result<(api::TreePreview, u64), AppError> {
+        let (state, data, calc, version, generation) = self.read(|p| {
+            (
+                p.state.clone(),
+                p.data.clone(),
+                p.calc.clone(),
+                p.snapshot.version,
+                p.generation,
+            )
+        });
+        let state = state.ok_or_else(|| AppError::new(Code::NoBuild, "no build is open"))?;
+        let data = data.ok_or_else(|| AppError::new(Code::NoData, "no game data is loaded"))?;
+        let tree = data
+            .tree
+            .clone()
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))?;
+        let edit = if let Some(e) = edit {
+            e
+        } else {
+            let allocated = crate::tree::rules_spec(
+                &state.build,
+                crate::tree::spec_of(&state.build, spec)?,
+                &tree,
+            )
+            .nodes
+            .contains(&node);
+            if allocated {
+                crate::tree::Edit::Deallocate(node)
+            } else {
+                crate::tree::Edit::Allocate(node)
+            }
+        };
+        let before = calc
+            .as_ref()
+            .filter(|(v, _, _)| *v == version)
+            .map(|(_, r, _)| r.as_ref());
+        let shared = &self.shared;
+        let cancel = || shared.latest.load(Ordering::SeqCst) != version;
+        session::preview_tree(&state, &data, spec, edit, before, &cancel).map(|p| (p, generation))
+    }
+
     /// The recent builds.
     #[must_use]
     pub fn recent(&self) -> Vec<api::RecentEntry> {
@@ -431,6 +512,70 @@ impl App {
         edit: api::ItemEdit,
         note: Option<String>,
     ) -> Result<api::ChangeRequest, AppError> {
+        self.admit()?;
+        let (preview, generation) = self.preview_with_generation(&edit)?;
+        let mut request = self.new_request(client, note);
+        request.edit = Some(edit);
+        request.preview = Some(preview);
+        self.submit(request, generation)
+    }
+
+    /// An MCP client asks for a passive tree change (passive tree plan,
+    /// A-b), as [`App::request_change`] asks for an item edit.
+    ///
+    /// # Errors
+    /// `APP_REQUESTS_OFF`, `APP_REQUESTS_FULL`, the preview's codes
+    /// (`APP_TREE` for a change the editor refuses).
+    pub fn request_tree_change(
+        &self,
+        client: &str,
+        change: api::TreeChange,
+        note: Option<String>,
+    ) -> Result<api::ChangeRequest, AppError> {
+        self.admit()?;
+        let (spec, edit) = crate::tree::change_edit(&change);
+        let (preview, generation) = self.preview_tree_edit(spec, 0, Some(edit))?;
+        let mut request = self.new_request(client, note);
+        request.tree = Some(change);
+        request.tree_preview = Some(preview);
+        self.submit(request, generation)
+    }
+
+    /// A pending request with no change yet.
+    fn new_request(&self, client: &str, note: Option<String>) -> api::ChangeRequest {
+        api::ChangeRequest {
+            id: self.shared.requests.fetch_add(1, Ordering::Relaxed) + 1,
+            client: client.chars().take(64).collect(),
+            edit: None,
+            note: note.map(|n| n.chars().take(500).collect()),
+            preview: None,
+            status: api::RequestStatus::Pending,
+            error: None,
+            tree: None,
+            tree_preview: None,
+        }
+    }
+
+    /// Hands a request to the writer, which checks it again.
+    fn submit(
+        &self,
+        request: api::ChangeRequest,
+        generation: u64,
+    ) -> Result<api::ChangeRequest, AppError> {
+        let (reply, answer) = mpsc::channel();
+        self.tx
+            .send(Msg::Request {
+                request: Box::new(request),
+                generation,
+                reply,
+            })
+            .map_err(|_| stopped())?;
+        answer.recv().map_err(|_| stopped())?
+    }
+
+    /// Whether clients may request changes now (checked again on the
+    /// writer).
+    fn admit(&self) -> Result<(), AppError> {
         let (allowed, pending) = self.read(|p| {
             (
                 p.permissions.requests,
@@ -452,25 +597,7 @@ impl App {
                 "too many change requests are waiting",
             ));
         }
-        let (preview, generation) = self.preview_with_generation(&edit)?;
-        let request = api::ChangeRequest {
-            id: self.shared.requests.fetch_add(1, Ordering::Relaxed) + 1,
-            client: client.chars().take(64).collect(),
-            edit,
-            note: note.map(|n| n.chars().take(500).collect()),
-            preview: Some(preview),
-            status: api::RequestStatus::Pending,
-            error: None,
-        };
-        let (reply, answer) = mpsc::channel();
-        self.tx
-            .send(Msg::Request {
-                request: Box::new(request),
-                generation,
-                reply,
-            })
-            .map_err(|_| stopped())?;
-        answer.recv().map_err(|_| stopped())?
+        Ok(())
     }
 
     /// Stops the threads, cancelling a running calculation, and keeps a
@@ -1006,6 +1133,46 @@ impl Writer {
                 .session
                 .remove_custom_block(block)?
                 .map_or(api::Outcome::Nothing, done)),
+            api::Command::AllocateNode { spec, node } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Allocate(node))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::DeallocateNode { spec, node } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Deallocate(node))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SetMasteryEffect { spec, node, effect } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Mastery { node, effect })?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SelectClass { spec, class } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Class(class))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SelectAscendancy { spec, ascendancy } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Ascendancy(ascendancy))?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::ResetTree { spec } => Ok(self
+                .session
+                .edit_tree(spec, crate::tree::Edit::Reset)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::SocketJewel { spec, node, item } => Ok(self
+                .session
+                .socket_jewel(spec, node, item)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::NewSpec { title, copy } => Ok(self
+                .session
+                .new_spec(&title, copy)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::RenameSpec { spec, title } => Ok(self
+                .session
+                .rename_spec(spec, &title)?
+                .map_or(api::Outcome::Nothing, done)),
+            api::Command::DeleteSpec { spec } => Ok(self
+                .session
+                .delete_spec(spec)?
+                .map_or(api::Outcome::Nothing, done)),
             api::Command::Undo => Ok(self.session.undo().map_or(api::Outcome::Nothing, done)),
             api::Command::Redo => Ok(self.session.redo().map_or(api::Outcome::Nothing, done)),
             api::Command::Save => {
@@ -1087,18 +1254,14 @@ impl Writer {
             }
             api::Command::Approve { id } => {
                 let index = self.pending(id)?;
-                let edit = self.requests.get(index).map(|r| r.edit.clone());
-                let result = match edit {
-                    Some(_)
-                        if self.request_generation.get(&id) != Some(&self.session.generation()) =>
-                    {
-                        Err(AppError::new(
-                            Code::StaleEdit,
-                            "the request is for another build",
-                        ))
-                    }
-                    Some(e) => self.session.edit(&e, Some(id)),
-                    None => Err(AppError::new(Code::Request, "no such request")),
+                let result = if self.request_generation.get(&id) == Some(&self.session.generation())
+                {
+                    self.apply_request(index)
+                } else {
+                    Err(AppError::new(
+                        Code::StaleEdit,
+                        "the request is for another build",
+                    ))
                 };
                 self.settle(index, &result);
                 self.publish();
@@ -1132,6 +1295,25 @@ impl Writer {
             .iter()
             .position(|r| r.id == id && r.status == api::RequestStatus::Pending)
             .ok_or_else(|| AppError::new(Code::Request, format!("no pending request {id}")))
+    }
+
+    /// Applies request `index`: its item edit or its tree change. A tree
+    /// change that changes nothing is applied at the current version.
+    fn apply_request(&mut self, index: usize) -> Result<u64, AppError> {
+        let request = self
+            .requests
+            .get(index)
+            .cloned()
+            .ok_or_else(|| AppError::new(Code::Request, "no such request"))?;
+        match (request.edit, request.tree) {
+            (Some(e), _) => self.session.edit(&e, Some(request.id)),
+            (None, Some(change)) => {
+                let (spec, edit) = crate::tree::change_edit(&change);
+                let applied = self.session.edit_tree_for(spec, edit, Some(request.id))?;
+                Ok(applied.unwrap_or_else(|| self.session.version()))
+            }
+            (None, None) => Err(AppError::new(Code::Request, "the request has no change")),
+        }
     }
 
     fn settle(&mut self, index: usize, result: &Result<u64, AppError>) {
@@ -1179,12 +1361,8 @@ impl Writer {
         self.requests.push(request);
         let index = self.requests.len() - 1;
         if self.permissions.standing_grant {
-            let edit = self.requests.get(index).map(|r| r.edit.clone());
             let before = self.session.version();
-            let result = match edit {
-                Some(e) => self.session.edit(&e, Some(id)),
-                None => Err(AppError::new(Code::Request, "no such request")),
-            };
+            let result = self.apply_request(index);
             self.settle(index, &result);
             if self.session.version() != before {
                 self.changed(None);

@@ -56,6 +56,14 @@
     "snapshot": {
       "description": "The snapshot query's answer.",
       "$ref": "#/$defs/Snapshot"
+    },
+    "tree-layout": {
+      "description": "The loaded data's passive tree.",
+      "$ref": "#/$defs/TreeLayout"
+    },
+    "tree-preview": {
+      "description": "A tree edit's preview.",
+      "$ref": "#/$defs/TreePreview"
     }
   },
   "additionalProperties": false,
@@ -70,7 +78,9 @@
     "mcp",
     "recovery",
     "recent",
-    "gems"
+    "gems",
+    "tree-layout",
+    "tree-preview"
   ],
   "$defs": {
     "AffixKind": {
@@ -310,6 +320,18 @@
             "$ref": "#/$defs/SetView"
           }
         },
+        "tree": {
+          "description": "The active passive spec as the tree editor sees it, when the\nloaded data has a passive tree (passive tree plan, T5a).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreeView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "warnings": {
           "description": "Lines with warnings: kept, shown, not calculated (ADR-015).",
           "type": "array",
@@ -468,6 +490,21 @@
           "description": "The active item set's weapon set switched (weapon swap).",
           "type": "string",
           "const": "weapon-set"
+        },
+        {
+          "description": "A passive tree edit: a node, a mastery effect, the class, the\nascendancy, or a reset.",
+          "type": "string",
+          "const": "tree"
+        },
+        {
+          "description": "A passive tree added, copied, renamed, or deleted.",
+          "type": "string",
+          "const": "tree-specs"
+        },
+        {
+          "description": "A passive tree change an MCP client requested.",
+          "type": "string",
+          "const": "tree-request-applied"
         }
       ]
     },
@@ -480,8 +517,15 @@
           "type": "string"
         },
         "edit": {
-          "description": "The edit.",
-          "$ref": "#/$defs/ItemEdit"
+          "description": "The item edit, for an item request; `null` for a tree request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemEdit"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "error": {
           "description": "Why it failed, if it did.",
@@ -508,7 +552,7 @@
           ]
         },
         "preview": {
-          "description": "Its effect, calculated when it arrived.",
+          "description": "The item edit's effect, calculated when it arrived.",
           "anyOf": [
             {
               "$ref": "#/$defs/ItemEditPreview"
@@ -521,13 +565,36 @@
         "status": {
           "description": "Where it is.",
           "$ref": "#/$defs/RequestStatus"
+        },
+        "tree": {
+          "description": "The passive tree change, for a tree request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreeChange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tree-preview": {
+          "description": "The tree change's effect, calculated when it arrived.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreePreview"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "additionalProperties": false,
       "required": [
         "id",
         "client",
-        "edit",
         "status"
       ]
     },
@@ -1124,6 +1191,328 @@
           "additionalProperties": false,
           "required": [
             "set-league"
+          ]
+        },
+        {
+          "description": "Allocates a node of a passive spec and the path to it (the\npath is the application's, never sent), as one undoable\nchange.",
+          "type": "object",
+          "properties": {
+            "allocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "allocate-node"
+          ]
+        },
+        {
+          "description": "Deallocates a node and every node it leaves unconnected.",
+          "type": "object",
+          "properties": {
+            "deallocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "deallocate-node"
+          ]
+        },
+        {
+          "description": "Sets a mastery's effect, allocating the mastery.",
+          "type": "object",
+          "properties": {
+            "set-mastery-effect": {
+              "type": "object",
+              "properties": {
+                "effect": {
+                  "description": "The effect's hash.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The mastery node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node",
+                "effect"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-mastery-effect"
+          ]
+        },
+        {
+          "description": "Changes a spec's class: no ascendancy, nodes no longer\nconnected deallocated (the UI confirms first).",
+          "type": "object",
+          "properties": {
+            "select-class": {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "description": "The class's number.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "class"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "select-class"
+          ]
+        },
+        {
+          "description": "Changes a spec's ascendancy (0 for none): the old one's nodes\ndeallocated.",
+          "type": "object",
+          "properties": {
+            "select-ascendancy": {
+              "type": "object",
+              "properties": {
+                "ascendancy": {
+                  "description": "The ascendancy's number within the class.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "ascendancy"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "select-ascendancy"
+          ]
+        },
+        {
+          "description": "Deallocates every node of a spec but the starts, kept ones\ntoo.",
+          "type": "object",
+          "properties": {
+            "reset-tree": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "reset-tree"
+          ]
+        },
+        {
+          "description": "Sockets a jewel of the build in an allocated jewel socket of a\nspec, or empties the socket (`item` absent). Cluster jewels\nare refused for now.",
+          "type": "object",
+          "properties": {
+            "socket-jewel": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "description": "The item's ID; absent to empty the socket.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "default": null,
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The socket node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "socket-jewel"
+          ]
+        },
+        {
+          "description": "Adds a passive tree at the end of the list (a stage of its\nown): a copy of spec `copy`, or a new one with the active\nspec's class and ascendancy and only the starts. It does not\nbecome active.",
+          "type": "object",
+          "properties": {
+            "new-spec": {
+              "type": "object",
+              "properties": {
+                "copy": {
+                  "description": "The spec it copies, if any.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "default": null,
+                  "minimum": 0
+                },
+                "title": {
+                  "description": "Its name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "title"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "new-spec"
+          ]
+        },
+        {
+          "description": "Renames a passive tree.",
+          "type": "object",
+          "properties": {
+            "rename-spec": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "title": {
+                  "description": "Its new name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "title"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "rename-spec"
+          ]
+        },
+        {
+          "description": "Deletes a passive tree; never the last one. The specs after it\nare renumbered; when it was active, the one before it becomes\nactive.",
+          "type": "object",
+          "properties": {
+            "delete-spec": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delete-spec"
           ]
         },
         {
@@ -2737,6 +3126,75 @@
         "active"
       ]
     },
+    "MasteryChoice": {
+      "description": "A mastery and its chosen effect.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "The effect (its hash, as builds name it).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The mastery node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "effect"
+      ]
+    },
+    "MasteryEffectView": {
+      "description": "A mastery effect.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "Its hash (what builds name).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "Its stat lines as the game prints them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "lines"
+      ]
+    },
+    "MasteryGroupView": {
+      "description": "A mastery group's effects.",
+      "type": "object",
+      "properties": {
+        "effects": {
+          "description": "Its effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryEffectView"
+          }
+        },
+        "id": {
+          "description": "Its ID.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "effects"
+      ]
+    },
     "McpPermissions": {
       "description": "What MCP clients may do. Reading is allowed while the server runs.",
       "type": "object",
@@ -3236,6 +3694,561 @@
       "required": [
         "id",
         "value"
+      ]
+    },
+    "TreeAscendancyView": {
+      "description": "An ascendancy on the tree.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Its ID (what nodes name).",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "number": {
+          "description": "Its number within the class (PoB's `ascendClassId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "Its start node, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "id",
+        "name"
+      ]
+    },
+    "TreeChange": {
+      "description": "A passive tree change an MCP client asks for: the tree commands\nof the same names.",
+      "oneOf": [
+        {
+          "description": "Allocates a node and the shortest path to it.",
+          "type": "object",
+          "properties": {
+            "allocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "allocate-node"
+          ]
+        },
+        {
+          "description": "Deallocates a node and the nodes it leaves unconnected.",
+          "type": "object",
+          "properties": {
+            "deallocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "deallocate-node"
+          ]
+        },
+        {
+          "description": "Chooses a mastery's effect, allocating the mastery.",
+          "type": "object",
+          "properties": {
+            "set-mastery-effect": {
+              "type": "object",
+              "properties": {
+                "effect": {
+                  "description": "The effect.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The mastery node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node",
+                "effect"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-mastery-effect"
+          ]
+        }
+      ]
+    },
+    "TreeClassView": {
+      "description": "A class on the tree.",
+      "type": "object",
+      "properties": {
+        "ascendancies": {
+          "description": "Its ascendancies.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeAscendancyView"
+          }
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "number": {
+          "description": "Its number (PoB's `classId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "Its start node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "name",
+        "start",
+        "ascendancies"
+      ]
+    },
+    "TreeJewel": {
+      "description": "A jewel in a tree socket.",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The socket node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "item"
+      ]
+    },
+    "TreeLayout": {
+      "description": "The loaded data's passive tree, for the tree screen: static while\nthe data is loaded.",
+      "type": "object",
+      "properties": {
+        "classes": {
+          "description": "The classes, by number.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeClassView"
+          }
+        },
+        "groups": {
+          "description": "The groups' centres, by group index.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreePoint"
+          }
+        },
+        "masteries": {
+          "description": "Each mastery group's effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryGroupView"
+          }
+        },
+        "nodes": {
+          "description": "The nodes, ascending.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeNodeView"
+          }
+        },
+        "orbit-radii": {
+          "description": "Each orbit's radius.",
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "placed": {
+          "description": "Whether nodes have positions (the bundle has the layout\nconstants); without them the tree is listed, not drawn.",
+          "type": "boolean"
+        },
+        "tree-version": {
+          "description": "The tree version, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "placed",
+        "orbit-radii",
+        "groups",
+        "nodes",
+        "classes",
+        "masteries"
+      ]
+    },
+    "TreeNodeKind": {
+      "description": "What a node is.",
+      "oneOf": [
+        {
+          "description": "A small passive.",
+          "type": "string",
+          "const": "normal"
+        },
+        {
+          "description": "A notable.",
+          "type": "string",
+          "const": "notable"
+        },
+        {
+          "description": "A keystone.",
+          "type": "string",
+          "const": "keystone"
+        },
+        {
+          "description": "A mastery.",
+          "type": "string",
+          "const": "mastery"
+        },
+        {
+          "description": "A jewel socket.",
+          "type": "string",
+          "const": "jewel-socket"
+        },
+        {
+          "description": "A cluster jewel socket.",
+          "type": "string",
+          "const": "cluster-socket"
+        },
+        {
+          "description": "A class's start.",
+          "type": "string",
+          "const": "class-start"
+        },
+        {
+          "description": "An ascendancy's start.",
+          "type": "string",
+          "const": "ascendancy-start"
+        }
+      ]
+    },
+    "TreeNodeView": {
+      "description": "One node of the tree.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy it belongs to (its ID), if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cluster-area": {
+          "description": "Whether it exists only once a cluster jewel is socketed (a\nnested socket or position proxy): not drawn, as PoB does not.",
+          "type": "boolean",
+          "default": false
+        },
+        "group": {
+          "description": "Its group's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its number.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it is.",
+          "$ref": "#/$defs/TreeNodeKind"
+        },
+        "lines": {
+          "description": "Its stat lines as the game prints them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "description": "The nodes it links to with a higher number (each link once).",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "mastery-group": {
+          "description": "For a mastery: its mastery group's ID.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "modelled": {
+          "description": "Whether the editor allocates it.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "orbit": {
+          "description": "Its orbit.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "position": {
+          "description": "Where it is drawn, when the tree is placed.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreePoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "group",
+        "orbit",
+        "modelled",
+        "links",
+        "lines"
+      ]
+    },
+    "TreePoint": {
+      "description": "A point on the tree.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "x.",
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "description": "y (down is positive).",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "TreePreview": {
+      "description": "What clicking a node would do: allocate the path to it, or\ndeallocate it and what it leaves unconnected; with each slice\nfield before and after, when the build calculates.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Each slice field before and after (empty without a\ncalculation).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          }
+        },
+        "node": {
+          "description": "The node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "path": {
+          "description": "Nodes allocated, from the allocated ones to the node.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "removed": {
+          "description": "Nodes deallocated, ascending.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "path",
+        "removed",
+        "fields"
+      ]
+    },
+    "TreeView": {
+      "description": "The active passive spec as the tree editor sees it.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy's number within the class, 0 for none.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "ascendancy-points": {
+          "description": "Ascendancy points spent.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "class": {
+          "description": "The class's number (PoB's `classId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "jewels": {
+          "description": "The jewels socketed in the spec's sockets.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeJewel"
+          }
+        },
+        "kept": {
+          "description": "Allocated nodes the editor keeps but does not edit: ones the\ntree lacks or does not model (bloodline passives, cluster\njewels' nodes), ascending.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "locked": {
+          "description": "Why the spec cannot be edited, when it cannot: its tree version\ndiffers from the loaded data's, or its class is not known. The\ntree is then shown, not edited.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "masteries": {
+          "description": "The chosen mastery effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryChoice"
+          }
+        },
+        "nodes": {
+          "description": "The allocated nodes, ascending (starts included).",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "points": {
+          "description": "Passive points spent (PoB's count, never enforced).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "spec": {
+          "description": "The spec's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "spec",
+        "class",
+        "ascendancy",
+        "nodes",
+        "masteries",
+        "kept",
+        "points",
+        "ascendancy-points"
       ]
     },
     "VariantEra": {

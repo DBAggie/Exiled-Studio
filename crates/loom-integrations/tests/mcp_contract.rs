@@ -43,6 +43,21 @@ impl Drop for Fixture {
 }
 
 fn fixture(test: &str) -> Fixture {
+    fixture_with(test, synthetic())
+}
+
+/// The synthetic build with a tree spec on the fixture bundle's tree
+/// (class 1, start 100, and 999, a node the tree lacks).
+fn with_tree() -> String {
+    synthetic()
+        .replace(r#"className="Scion""#, r#"className="Test Brute""#)
+        .replace(
+            r#"<Spec treeVersion="3_29" classId="0" ascendClassId="0" nodes=""/>"#,
+            r#"<Spec treeVersion="3_29" classId="1" ascendClassId="0" nodes="100,999"/>"#,
+        )
+}
+
+fn fixture_with(test: &str, text: String) -> Fixture {
     let dir = std::env::temp_dir().join(format!("loom-mcp-{test}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let mut config = Config::new(
@@ -51,10 +66,8 @@ fn fixture(test: &str) -> Fixture {
     );
     config.instance = test.to_owned();
     let app = Arc::new(App::start(config, Arc::new(|_| {})).unwrap());
-    app.execute(HostCommand::Api(api::Command::ImportText {
-        text: synthetic(),
-    }))
-    .unwrap();
+    app.execute(HostCommand::Api(api::Command::ImportText { text }))
+        .unwrap();
     // Wait for the calculation.
     for _ in 0..3000 {
         if app.snapshot().calc.state == api::CalcState::Done {
@@ -399,6 +412,107 @@ fn change_requests_should_need_the_users_permission_and_approval() {
     // The same request again is stale.
     let stale = tool(&f, "request_item_edit", json!({"edit": edit}));
     assert_eq!(stale["structuredContent"]["code"], "APP_STALE_EDIT");
+}
+
+#[test]
+fn tree_tools_should_read_the_tree_and_request_changes_the_user_approves() {
+    let f = fixture_with("tree", with_tree());
+    rpc(
+        &f,
+        "initialize",
+        json!({"protocolVersion": mcp::PROTOCOL_VERSION, "capabilities": {}, "clientInfo": {"name": "tree-client", "version": "1"}}),
+    );
+    // The fixture tree: start 100, then 101 and 102; mastery 103.
+    let tree = tool(&f, "get_tree", json!({}));
+    let t = &tree["structuredContent"];
+    assert_eq!(t["tree"]["nodes"], json!([100, 999]), "{t}");
+    assert_eq!(t["allocated"][0]["id"], 100);
+    assert_eq!(
+        t["allocated"].as_array().unwrap().len(),
+        1,
+        "999 is not in the tree"
+    );
+
+    let node = tool(&f, "get_tree_node", json!({"node": 102}));
+    let n = &node["structuredContent"];
+    assert_eq!(n["allocated"], false);
+    assert!(
+        n["neighbours"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|m| m["id"] == 101),
+        "{n}"
+    );
+    let name = n["node"]["name"].as_str().unwrap().to_uppercase();
+    let found = tool(&f, "find_tree_nodes", json!({"text": name}));
+    assert!(
+        found["structuredContent"]["nodes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|m| m["id"] == 102),
+        "{found}"
+    );
+    let mastery = tool(&f, "get_tree_node", json!({"node": 103}));
+    assert_eq!(
+        mastery["structuredContent"]["mastery-effects"][0]["effect"],
+        4242
+    );
+
+    let change = json!({"allocate-node": {"spec": 1, "node": 102}});
+    let preview = tool(&f, "preview_tree_change", json!({"change": change}));
+    let path = preview["structuredContent"]["path"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert_eq!(path.last(), Some(&json!(102)), "{preview}");
+    assert!(
+        !f.app.snapshot().history.can_undo,
+        "a preview never commits"
+    );
+
+    // Read-only by default.
+    let refused = tool(&f, "request_tree_change", json!({"change": change}));
+    assert_eq!(refused["structuredContent"]["code"], "APP_REQUESTS_OFF");
+    f.app.set_permissions(api::McpPermissions {
+        requests: true,
+        standing_grant: false,
+    });
+    // A change the editor refuses is not queued: a start never goes.
+    let start = tool(
+        &f,
+        "request_tree_change",
+        json!({"change": {"deallocate-node": {"spec": 1, "node": 100}}}),
+    );
+    assert_eq!(start["structuredContent"]["code"], "APP_TREE", "{start}");
+
+    let pending = tool(
+        &f,
+        "request_tree_change",
+        json!({"change": change, "note": "more damage"}),
+    );
+    let r = &pending["structuredContent"];
+    assert_eq!(r["status"], "pending", "{r}");
+    assert_eq!(r["tree"], change);
+    assert_eq!(r["edit"], Value::Null);
+    assert_eq!(r["tree-preview"]["path"], json!(path));
+    let id = r["id"].as_u64().unwrap();
+    assert!(!f.app.snapshot().history.can_undo);
+
+    // The user approves in the app: one undoable step, named as a request.
+    f.app
+        .execute(HostCommand::Api(api::Command::Approve { id }))
+        .unwrap();
+    let status = tool(&f, "get_request", json!({"id": id}));
+    assert_eq!(status["structuredContent"]["status"], "applied");
+    let snap = f.app.snapshot();
+    let undo = snap.history.undo.unwrap();
+    assert_eq!(
+        (undo.kind, undo.request),
+        (api::ChangeKind::TreeRequestApplied, Some(id))
+    );
+    assert!(snap.build.unwrap().tree.unwrap().nodes.contains(&102));
 }
 
 #[test]

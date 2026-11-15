@@ -16,6 +16,7 @@ loom-calc.workspace = true
 loom-serialization.workspace = true
 loom-persistence.workspace = true
 loom-pipeline.workspace = true
+loom-tree.workspace = true
 thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true

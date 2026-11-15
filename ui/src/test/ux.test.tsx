@@ -90,7 +90,7 @@ describe('UX High fixes', () => {
     ).closest('section') as HTMLElement
     expect(within(inUse).getByText('Loom Test Band')).toBeTruthy()
     expect(within(inUse).queryByText('Spare Band')).toBeNull()
-    expect(screen.getByText('1 item not in use')).toBeTruthy()
+    expect(screen.getByText('2 items not in use')).toBeTruthy()
     await expectAccessible()
 
     // Switching the set is a command, undoable like an edit.

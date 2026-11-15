@@ -48,6 +48,10 @@ dto! {
         pub recent: Vec<RecentEntry>,
         /// The gems the game data offers.
         pub gems: Vec<GemCatalogEntry>,
+        /// The loaded data's passive tree.
+        pub tree_layout: TreeLayout,
+        /// A tree edit's preview.
+        pub tree_preview: TreePreview,
     }
 
     /// The application's state at one version. Queries return it whole;
@@ -187,6 +191,189 @@ dto! {
         /// The league the build is planned for (`challenge` when not
         /// chosen).
         pub league: League,
+        /// The active passive spec as the tree editor sees it, when the
+        /// loaded data has a passive tree (passive tree plan, T5a).
+        #[serde(default)]
+        pub tree: Option<TreeView>,
+    }
+
+    /// The active passive spec as the tree editor sees it.
+    pub struct TreeView {
+        /// The spec's ID.
+        pub spec: u32,
+        /// The class's number (PoB's `classId`).
+        pub class: u32,
+        /// The ascendancy's number within the class, 0 for none.
+        pub ascendancy: u32,
+        /// The allocated nodes, ascending (starts included).
+        pub nodes: Vec<u32>,
+        /// The chosen mastery effects.
+        pub masteries: Vec<MasteryChoice>,
+        /// Allocated nodes the editor keeps but does not edit: ones the
+        /// tree lacks or does not model (bloodline passives, cluster
+        /// jewels' nodes), ascending.
+        pub kept: Vec<u32>,
+        /// Passive points spent (PoB's count, never enforced).
+        pub points: u32,
+        /// Ascendancy points spent.
+        pub ascendancy_points: u32,
+        /// Why the spec cannot be edited, when it cannot: its tree version
+        /// differs from the loaded data's, or its class is not known. The
+        /// tree is then shown, not edited.
+        #[serde(default)]
+        pub locked: Option<String>,
+        /// The jewels socketed in the spec's sockets.
+        #[serde(default)]
+        pub jewels: Vec<TreeJewel>,
+    }
+
+    /// A jewel in a tree socket.
+    pub struct TreeJewel {
+        /// The socket node.
+        pub node: u32,
+        /// The item's ID.
+        pub item: u32,
+    }
+
+    /// A mastery and its chosen effect.
+    pub struct MasteryChoice {
+        /// The mastery node.
+        pub node: u32,
+        /// The effect (its hash, as builds name it).
+        pub effect: u32,
+    }
+
+    /// The loaded data's passive tree, for the tree screen: static while
+    /// the data is loaded.
+    pub struct TreeLayout {
+        /// The tree version, when known.
+        pub tree_version: Option<String>,
+        /// Whether nodes have positions (the bundle has the layout
+        /// constants); without them the tree is listed, not drawn.
+        pub placed: bool,
+        /// Each orbit's radius.
+        pub orbit_radii: Vec<f64>,
+        /// The groups' centres, by group index.
+        pub groups: Vec<TreePoint>,
+        /// The nodes, ascending.
+        pub nodes: Vec<TreeNodeView>,
+        /// The classes, by number.
+        pub classes: Vec<TreeClassView>,
+        /// Each mastery group's effects.
+        pub masteries: Vec<MasteryGroupView>,
+    }
+
+    /// A point on the tree.
+    pub struct TreePoint {
+        /// x.
+        pub x: f64,
+        /// y (down is positive).
+        pub y: f64,
+    }
+
+    /// What a node is.
+    pub enum TreeNodeKind {
+        /// A small passive.
+        Normal,
+        /// A notable.
+        Notable,
+        /// A keystone.
+        Keystone,
+        /// A mastery.
+        Mastery,
+        /// A jewel socket.
+        JewelSocket,
+        /// A cluster jewel socket.
+        ClusterSocket,
+        /// A class's start.
+        ClassStart,
+        /// An ascendancy's start.
+        AscendancyStart,
+    }
+
+    /// One node of the tree.
+    pub struct TreeNodeView {
+        /// Its number.
+        pub id: u32,
+        /// Its name.
+        pub name: String,
+        /// What it is.
+        pub kind: TreeNodeKind,
+        /// Its group's index.
+        pub group: u32,
+        /// Its orbit.
+        pub orbit: u32,
+        /// Where it is drawn, when the tree is placed.
+        pub position: Option<TreePoint>,
+        /// The ascendancy it belongs to (its ID), if any.
+        pub ascendancy: Option<String>,
+        /// For a mastery: its mastery group's ID.
+        pub mastery_group: Option<String>,
+        /// Whether the editor allocates it.
+        pub modelled: bool,
+        /// Whether it exists only once a cluster jewel is socketed (a
+        /// nested socket or position proxy): not drawn, as PoB does not.
+        #[serde(default)]
+        pub cluster_area: bool,
+        /// The nodes it links to with a higher number (each link once).
+        pub links: Vec<u32>,
+        /// Its stat lines as the game prints them.
+        pub lines: Vec<String>,
+    }
+
+    /// A class on the tree.
+    pub struct TreeClassView {
+        /// Its number (PoB's `classId`).
+        pub number: u32,
+        /// Its name.
+        pub name: String,
+        /// Its start node.
+        pub start: u32,
+        /// Its ascendancies.
+        pub ascendancies: Vec<TreeAscendancyView>,
+    }
+
+    /// An ascendancy on the tree.
+    pub struct TreeAscendancyView {
+        /// Its number within the class (PoB's `ascendClassId`).
+        pub number: u32,
+        /// Its ID (what nodes name).
+        pub id: String,
+        /// Its name.
+        pub name: String,
+        /// Its start node, if any.
+        pub start: Option<u32>,
+    }
+
+    /// A mastery group's effects.
+    pub struct MasteryGroupView {
+        /// Its ID.
+        pub id: String,
+        /// Its effects.
+        pub effects: Vec<MasteryEffectView>,
+    }
+
+    /// A mastery effect.
+    pub struct MasteryEffectView {
+        /// Its hash (what builds name).
+        pub effect: u32,
+        /// Its stat lines as the game prints them.
+        pub lines: Vec<String>,
+    }
+
+    /// What clicking a node would do: allocate the path to it, or
+    /// deallocate it and what it leaves unconnected; with each slice
+    /// field before and after, when the build calculates.
+    pub struct TreePreview {
+        /// The node.
+        pub node: u32,
+        /// Nodes allocated, from the allocated ones to the node.
+        pub path: Vec<u32>,
+        /// Nodes deallocated, ascending.
+        pub removed: Vec<u32>,
+        /// Each slice field before and after (empty without a
+        /// calculation).
+        pub fields: Vec<FieldDelta>,
     }
 
     /// The active config set: its inputs and custom modifier blocks.
@@ -669,16 +856,50 @@ dto! {
         pub id: u64,
         /// The client's name, as it gave it.
         pub client: String,
-        /// The edit.
-        pub edit: ItemEdit,
+        /// The item edit, for an item request; `null` for a tree request.
+        pub edit: Option<ItemEdit>,
         /// The client's note, if any.
         pub note: Option<String>,
-        /// Its effect, calculated when it arrived.
+        /// The item edit's effect, calculated when it arrived.
         pub preview: Option<ItemEditPreview>,
         /// Where it is.
         pub status: RequestStatus,
         /// Why it failed, if it did.
         pub error: Option<ApiError>,
+        /// The passive tree change, for a tree request.
+        #[serde(default)]
+        pub tree: Option<TreeChange>,
+        /// The tree change's effect, calculated when it arrived.
+        #[serde(default)]
+        pub tree_preview: Option<TreePreview>,
+    }
+
+    /// A passive tree change an MCP client asks for: the tree commands
+    /// of the same names.
+    pub enum TreeChange {
+        /// Allocates a node and the shortest path to it.
+        AllocateNode {
+            /// The spec's ID.
+            spec: u32,
+            /// The node.
+            node: u32,
+        },
+        /// Deallocates a node and the nodes it leaves unconnected.
+        DeallocateNode {
+            /// The spec's ID.
+            spec: u32,
+            /// The node.
+            node: u32,
+        },
+        /// Chooses a mastery's effect, allocating the mastery.
+        SetMasteryEffect {
+            /// The spec's ID.
+            spec: u32,
+            /// The mastery node.
+            node: u32,
+            /// The effect.
+            effect: u32,
+        },
     }
 
     /// A recovery snapshot (autosave) found at start.
@@ -803,6 +1024,13 @@ dto_enum! {
         League,
         /// The active item set's weapon set switched (weapon swap).
         WeaponSet,
+        /// A passive tree edit: a node, a mastery effect, the class, the
+        /// ascendancy, or a reset.
+        Tree,
+        /// A passive tree added, copied, renamed, or deleted.
+        TreeSpecs,
+        /// A passive tree change an MCP client requested.
+        TreeRequestApplied,
     }
 
     /// The league a build is planned for.
@@ -1045,6 +1273,90 @@ dto_enum! {
         SetLeague {
             /// The league.
             league: League,
+        },
+        /// Allocates a node of a passive spec and the path to it (the
+        /// path is the application's, never sent), as one undoable
+        /// change.
+        AllocateNode {
+            /// The spec's ID.
+            spec: u32,
+            /// The node.
+            node: u32,
+        },
+        /// Deallocates a node and every node it leaves unconnected.
+        DeallocateNode {
+            /// The spec's ID.
+            spec: u32,
+            /// The node.
+            node: u32,
+        },
+        /// Sets a mastery's effect, allocating the mastery.
+        SetMasteryEffect {
+            /// The spec's ID.
+            spec: u32,
+            /// The mastery node.
+            node: u32,
+            /// The effect's hash.
+            effect: u32,
+        },
+        /// Changes a spec's class: no ascendancy, nodes no longer
+        /// connected deallocated (the UI confirms first).
+        SelectClass {
+            /// The spec's ID.
+            spec: u32,
+            /// The class's number.
+            class: u32,
+        },
+        /// Changes a spec's ascendancy (0 for none): the old one's nodes
+        /// deallocated.
+        SelectAscendancy {
+            /// The spec's ID.
+            spec: u32,
+            /// The ascendancy's number within the class.
+            ascendancy: u32,
+        },
+        /// Deallocates every node of a spec but the starts, kept ones
+        /// too.
+        ResetTree {
+            /// The spec's ID.
+            spec: u32,
+        },
+        /// Sockets a jewel of the build in an allocated jewel socket of a
+        /// spec, or empties the socket (`item` absent). Cluster jewels
+        /// are refused for now.
+        SocketJewel {
+            /// The spec's ID.
+            spec: u32,
+            /// The socket node.
+            node: u32,
+            /// The item's ID; absent to empty the socket.
+            #[serde(default)]
+            item: Option<u32>,
+        },
+        /// Adds a passive tree at the end of the list (a stage of its
+        /// own): a copy of spec `copy`, or a new one with the active
+        /// spec's class and ascendancy and only the starts. It does not
+        /// become active.
+        NewSpec {
+            /// Its name.
+            title: String,
+            /// The spec it copies, if any.
+            #[serde(default)]
+            copy: Option<u32>,
+        },
+        /// Renames a passive tree.
+        RenameSpec {
+            /// The spec's ID.
+            spec: u32,
+            /// Its new name.
+            title: String,
+        },
+        /// Deletes a passive tree; never the last one. The specs after it
+        /// are renumbered; when it was active, the one before it becomes
+        /// active.
+        DeleteSpec {
+            /// The spec's ID.
+            spec: u32,
         },
         /// Reverts the latest change.
         Undo,

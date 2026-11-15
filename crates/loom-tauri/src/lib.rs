@@ -189,6 +189,21 @@ fn preview(ctx: State<'_, Ctx>, edit: api::ItemEdit) -> Answer<api::ItemEditPrev
     ctx.app.preview(&edit).map_err(dto)
 }
 
+/// The loaded data's passive tree (static while the data is loaded).
+#[tauri::command(async)]
+fn tree_layout(ctx: State<'_, Ctx>) -> Answer<api::TreeLayout> {
+    ctx.app
+        .tree_layout()
+        .map(|l| l.as_ref().clone())
+        .map_err(dto)
+}
+
+/// What clicking a node would do (runs off the main thread).
+#[tauri::command(async)]
+fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePreview> {
+    ctx.app.preview_tree(spec, node).map_err(dto)
+}
+
 /// Runs an API command.
 #[tauri::command(async)]
 fn execute(ctx: State<'_, Ctx>, command: api::Command) -> Answer<api::Outcome> {
@@ -423,7 +438,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 21] = [
+pub const COMMANDS: [&str; 23] = [
     "snapshot",
     "calc_document",
     "item",
@@ -445,6 +460,8 @@ pub const COMMANDS: [&str; 21] = [
     "open_dropped",
     "ui_prefs",
     "set_ui_prefs",
+    "tree_layout",
+    "preview_tree",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -491,6 +508,8 @@ pub fn build<R: Runtime>(
             open_dropped,
             ui_prefs,
             set_ui_prefs,
+            tree_layout,
+            preview_tree,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
