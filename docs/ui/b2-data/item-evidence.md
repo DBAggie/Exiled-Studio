@@ -211,6 +211,8 @@ Done on this PR's branch on 2026-11-15 (the maintainer asked for it before the m
 
 The app bundle is in OneDrive `Exiled-Studio-bundles` as `bundle-poe1-26530219-schema4-evidence.zip` (8.2 MB, top folder `bundle-poe1-tree-a/`), SHA-256 `ffa2dd01f2832ffa72eb4fa953e3ea60067a1b749b680d373203099d857dc973`, with its `.sha256` file (checked there; `bundle-check` clean on the unzipped copy). It replaces `bundle-poe1-26530219-schema4-flavour.zip`. Not committed (GGG's sprite sheets).
 
+**On the other workstation** (2026-11-15): the zip's hash checked, unzipped to `local/b2ev/bundle-poe1-tree-a`, `bundle-check` clean, and the ignored real-bundle tests pass on it: `game_truth_items` (7), `game_truth_affixes` (3), and the real-bundle tests of `tree_workflow` and `loom-tree`. The files hold 119 passive texts, 18 quotes with their colours, and caps for 863 bases, as above.
+
 ## Lines that stay reasons
 
 On the real bundle every copy adds, and every line resolves or warns visibly. Warnings left:
