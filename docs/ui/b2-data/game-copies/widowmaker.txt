@@ -1,0 +1,37 @@
+Item Class: Rune Daggers
+Rarity: Unique
+Widowmaker
+Boot Blade
+--------
+Rune Dagger
+Physical Damage: 55-118 (augmented)
+Critical Strike Chance: 10.88% (augmented)
+Attacks per Second: 1.40
+Weapon Range: 1 metre
+--------
+Requirements:
+Level: 44
+Dex: 63
+Int: 90 (unmet)
+--------
+Sockets: G-G B 
+--------
+Item Level: 69
+--------
+{ Implicit Modifier — Critical }
+30(40-45)% increased Global Critical Strike Chance
+--------
+{ Unique Modifier — Damage, Physical, Attack }
+Adds 40(35-40) to 59(55-60) Physical Damage
+{ Unique Modifier — Attack, Critical }
+28(22-30)% increased Critical Strike Chance
+{ Unique Modifier — Damage, Critical }
++40(30-40)% to Global Critical Strike Multiplier
+{ Unique Modifier — Critical }
+100% increased Critical Strike Chance against Enemies that are on Full Life
+{ Unique Modifier — Life, Attack }
+1% of Attack Damage Leeched as Life on Critical Strike
+(Leeched Life is recovered over time. Multiple Leeches can occur simultaneously, up to a maximum rate)
+--------
+Love only death
+For she shall never let you go.

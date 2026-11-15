@@ -1,0 +1,20 @@
+Item Class: Bows
+Rarity: Magic
+Glaciated Spine Bow
+--------
+Bow
+Physical Damage: 38-115
+Elemental Damage: 92-164 (augmented)
+Critical Strike Chance: 6.50%
+Attacks per Second: 1.40
+--------
+Requirements:
+Level: 64
+Dex: 212 (unmet)
+--------
+Sockets: G G-G-G-G B 
+--------
+Item Level: 72
+--------
+{ Prefix Modifier "Glaciated" (Tier: 4) — Damage, Elemental, Cold, Attack }
+Adds 92(77-104) to 164(154-178) Cold Damage

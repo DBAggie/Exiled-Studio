@@ -1,0 +1,26 @@
+Item Class: Skill Gems
+Rarity: Gem
+Shield Crush
+--------
+Attack, Melee, AoE, Physical
+Level: 20 (Max)
+Cost: 13 Mana
+Attack Time: 0.80 sec
+Critical Strike Chance: 5.00%
+Attack Damage: 100% of base
+Quality: +20% (augmented)
+--------
+Requirements:
+Level: 70
+Str: 155
+--------
+Swipe your shield, dealing area damage in three waves in front of you. Enemies can be hit by two of the waves where they overlap.
+--------
+300 to 450 Base Off Hand Physical Damage
+8 to 12 Added Physical Damage per 15 Armour or Evasion Rating on Shield
++0.6 metres to radius
+
+Additional Effects From Quality:
+Deals up to 10(0-10)% more Damage with Hits to closer targets
+--------
+Place into an item socket to gain this skill. Right click to remove from a socket.

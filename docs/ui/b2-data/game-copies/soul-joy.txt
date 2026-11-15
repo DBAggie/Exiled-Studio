@@ -1,0 +1,27 @@
+Item Class: Jewels
+Rarity: Rare
+Soul Joy
+Large Cluster Jewel
+--------
+Requirements:
+Level: 67
+--------
+Item Level: 84
+--------
+Adds 8 Passive Skills (enchant)
+(Added Passive Skills are never considered to be in Radius by other Jewels) (enchant)
+(All Added Passive Skills are Small unless otherwise specified) (enchant)
+2 Added Passive Skills are Jewel Sockets (enchant)
+Added Small Passive Skills grant: 12% increased Attack Damage while holding a Shield (enchant)
+(Passive Skills that are not Notable, Masteries, Keystones, or Jewel Sockets are Small) (enchant)
+--------
+{ Prefix Modifier "Notable" (Tier: 1) — Physical, Attack, Ailment }
+1 Added Passive Skill is Vicious Skewering — Unscalable Value
+{ Prefix Modifier "Notable" (Tier: 1) — Defences, Elemental, Resistance, Attribute }
+1 Added Passive Skill is Veteran Defender — Unscalable Value
+{ Suffix Modifier "of Significance" (Tier: 1) — Damage, Attack, Speed }
+1 Added Passive Skill is Martial Prowess — Unscalable Value
+{ Suffix Modifier "of Mastery" (Tier: 1) — Attack, Speed }
+Added Small Passive Skills also grant: 3% increased Attack Speed
+--------
+Place into an allocated Large Jewel Socket on the Passive Skill Tree. Added passives do not interact with jewel radiuses. Right click to remove from the Socket.

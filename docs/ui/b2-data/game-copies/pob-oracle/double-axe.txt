@@ -1,0 +1,7 @@
+Rarity: NORMAL
+Double Axe
+Item Level: 25
+Quality: 0
+Sockets: W W-W
+LevelReq: 23
+Implicits: 0

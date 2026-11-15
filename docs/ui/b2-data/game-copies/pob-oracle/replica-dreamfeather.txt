@@ -1,0 +1,16 @@
+Rarity: UNIQUE
+Replica Dreamfeather
+Eternal Sword
+Item Level: 84
+Quality: 0
+Sockets: W-W-W
+LevelReq: 66
+Implicits: 1
+{tags:attack}{range:0.5}Melee Hits have (10-15)% chance to Fortify
+{tags:damage,physical,attack}{range:0.2}Adds (40-65) to (70-100) Physical Damage
+{tags:attack,speed}{range:1}(5-10)% increased Attack Speed
+{tags:defences,armour}{range:0.4}+(180-200) to Armour
+{tags:speed}3% reduced Movement Speed
+{tags:attack}{range:0}+(280-300) to Accuracy Rating
+{tags:damage,attack}1% increased Attack Damage per 450 Armour
+Corrupted

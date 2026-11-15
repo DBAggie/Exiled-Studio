@@ -1,0 +1,21 @@
+Item Class: Two Hand Swords
+Rarity: Normal
+Bastard Sword
+--------
+Two Handed Sword
+Physical Damage: 17-29
+Critical Strike Chance: 5.00%
+Attacks per Second: 1.45
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 12
+Str: 21
+Dex: 30
+--------
+Sockets: W-W-W-W 
+--------
+Item Level: 25
+--------
+{ Implicit Modifier — Attack }
+60% increased Global Accuracy Rating

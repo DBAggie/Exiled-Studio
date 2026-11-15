@@ -1,0 +1,31 @@
+Rarity: RARE
+Loath Crown
+Archdemon Crown
+Armour: 313
+ArmourBasePercentile: 0.8152
+Energy Shield: 64
+EnergyShieldBasePercentile: 0.8656
+Elder Item
+Crafted: true
+Prefix: {range:0.5}ChanceToGainFrenzyChargeOnKillUberElder1
+Prefix: {range:1}LocalIncreasedArmourAndEnergyShieldAndStunRecovery3
+Prefix: {range:1}IncreasedMana8
+Suffix: {range:0.5}BleedingDamageUber2
+Suffix: {range:0}ItemFoundRarityIncrease2
+Suffix: None
+Item Level: 82
+Quality: 20
+Sockets: G-G-G-R
+LevelReq: 75
+Implicits: 2
+-2 to Level of Socketed Support Gems
++2 to Level of Socketed Skill Gems
+{tags:damage,elemental,fire,gem}{unscalable}{suffix}Socketed Gems are Supported by Level 16 Burning Damage Support
+{tags:defences,armour,energyshield}{prefix}26% increased Armour and Energy Shield
+{tags:mana}{prefix}+54 to maximum Mana
+{tags:drop}{suffix}+11% to Item Rarity
+{tags:damage,gem}{unscalable}{prefix}Socketed Gems are Supported by Level 18 Concentrated Effect Support
+{tags:damage,gem}{prefix}{range:0.333333}(19-22)% increased Area Damage
+{tags:defences,armour,energyshield}{prefix}{range:1}(10-11)% increased Stun and Block Recovery
+{tags:damage,elemental,fire,gem}{suffix}{range:0.2}(20-25)% increased Burning Damage
+{tags:elemental,fire,resistance}{suffix}{custom}{crafted}{range:0.833333}+(29-35)% to Fire Resistance

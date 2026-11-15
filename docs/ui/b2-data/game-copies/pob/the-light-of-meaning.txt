@@ -1,0 +1,11 @@
+Item Class: Jewels
+Rarity: UNIQUE
+The Light of Meaning
+Prismatic Jewel
+Limited to: 1
+Radius: Large
+Item Level: 85
+Corrupted
+Implicits: 1
+{implicit}{tags:physical}{range:1}Hits have (10-15)% chance to ignore Enemy Physical Damage Reduction
+{tags:defences,armour}Passive Skills in Radius also grant 7% increased Armour - Unscalable Value

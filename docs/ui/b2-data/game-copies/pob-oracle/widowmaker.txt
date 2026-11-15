@@ -1,0 +1,15 @@
+Rarity: UNIQUE
+Widowmaker
+Boot Blade
+Item Level: 69
+Quality: 0
+Sockets: G-G B
+LevelReq: 44
+Implicits: 1
+{tags:critical}30% increased Global Critical Strike Chance
+{tags:damage,physical,attack}Adds 40 to 59 Physical Damage
+{tags:attack,critical}{range:0.75}(22-30)% increased Critical Strike Chance
+{tags:damage,critical}{range:1}+(30-40)% to Global Critical Strike Multiplier
+{tags:critical}100% increased Critical Strike Chance against Enemies that are on Full Life
+{tags:life,attack}1% of Attack Damage Leeched as Life on Critical Strike
+Rune Dagger

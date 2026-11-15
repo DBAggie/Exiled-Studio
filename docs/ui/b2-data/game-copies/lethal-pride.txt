@@ -1,0 +1,19 @@
+Item Class: Jewels
+Rarity: Unique
+Lethal Pride
+Timeless Jewel
+--------
+Limited to: 1 Historic
+Radius: Large
+--------
+Item Level: 84
+--------
+{ Unique Modifier }
+Commanded leadership over 13927(10000-18000) warriors under Akoya(...)
+Passives in radius are Conquered by the Karui
+(Conquered Passive Skills cannot be modified by other Jewels)
+Historic — Unscalable Value
+--------
+They believed themselves the greatest warriors, but that savagery turned upon their own.
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

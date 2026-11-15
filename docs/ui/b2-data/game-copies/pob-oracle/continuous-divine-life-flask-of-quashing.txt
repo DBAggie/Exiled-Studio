@@ -1,0 +1,13 @@
+Rarity: MAGIC
+Continuous Divine Life Flask of Quashing
+Crafted: true
+Prefix: {range:0.75}FlaskChargesAddedIncreasePercent2_
+Suffix: {range:0}FlaskIgniteImmunity2_
+Item Level: 64
+Quality: 0
+LevelReq: 60
+Implicits: 0
+{prefix}24% increased Charge Recovery
+{suffix}Grants Immunity to Ignite for 9 seconds if used while Ignited
+Recovers 2400 Life over 3.50 Seconds
+{suffix}Removes all Burning when used

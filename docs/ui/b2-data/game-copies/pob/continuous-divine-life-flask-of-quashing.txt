@@ -1,0 +1,9 @@
+Item Class: Life Flasks
+Rarity: MAGIC
+Continuous Divine Life Flask of Quashing
+LevelReq: 60
+Item Level: 64
+Implicits: 0
+{prefix}24% increased Charge Recovery
+{suffix}Grants Immunity to Ignite for 9 seconds if used while Ignited
+{suffix}Removes all Burning when used

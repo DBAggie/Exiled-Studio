@@ -1,0 +1,15 @@
+Item Class: Rings
+Rarity: RARE
+Corpse Finger
+Iron Ring
+LevelReq: 68
+Item Level: 85
+Corrupted
+Fractured Item
+Implicits: 1
+{implicit}+1 to Maximum Endurance Charges
+{prefix}{tags:damage,physical,attack}Adds 6 to 10 Physical Damage to Attacks
+{prefix}{tags:mana}+75 to maximum Mana
+{fractured}{suffix}{tags:mana}46% increased Mana Regeneration Rate
+{suffix}{tags:chaos,resistance}+23% to Chaos Resistance
+{suffix}{tags:drop}+15% to Item Rarity

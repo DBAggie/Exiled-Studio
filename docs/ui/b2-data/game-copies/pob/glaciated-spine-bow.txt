@@ -1,0 +1,7 @@
+Item Class: Bows
+Rarity: MAGIC
+Glaciated Spine Bow
+Sockets: G G-G-G-G B
+Item Level: 72
+Implicits: 0
+{prefix}{tags:damage,elemental,cold,attack}Adds 92 to 164 Cold Damage

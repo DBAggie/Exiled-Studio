@@ -1,0 +1,14 @@
+Rarity: MAGIC
+Combatant's Iron Staff of Absorption
+Crafted: true
+Prefix: {range:0.5}LocalIncreaseSocketedMeleeGemLevel1
+Suffix: {range:0}ManaGainedFromEnemyDeath1
+Item Level: 14
+Quality: 0
+Sockets: W-W-W
+LevelReq: 13
+Implicits: 1
++20% Chance to Block Attack Damage
+{tags:attack,gem}{prefix}+1 to Level of Socketed Melee Gems
+{tags:mana}{suffix}Gain 4 Mana per Enemy Killed
+Warstaff

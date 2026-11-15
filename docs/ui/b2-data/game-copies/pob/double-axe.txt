@@ -1,0 +1,6 @@
+Item Class: Two Hand Axes
+Rarity: NORMAL
+Double Axe
+Sockets: W W-W
+Item Level: 25
+Implicits: 0

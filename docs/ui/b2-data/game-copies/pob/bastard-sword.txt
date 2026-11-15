@@ -1,0 +1,7 @@
+Item Class: Two Hand Swords
+Rarity: NORMAL
+Bastard Sword
+Sockets: W-W-W-W
+Item Level: 25
+Implicits: 1
+{implicit}{tags:attack}60% increased Global Accuracy Rating

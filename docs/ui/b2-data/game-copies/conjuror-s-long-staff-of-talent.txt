@@ -1,0 +1,27 @@
+Item Class: Staves
+Rarity: Magic
+Conjuror's Long Staff of Talent
+--------
+Staff
+Physical Damage: 24-41
+Critical Strike Chance: 7.50%
+Attacks per Second: 1.30
+Weapon Range: 1.3 metres
+--------
+Requirements:
+Level: 18
+Str: 35
+Int: 35
+--------
+Sockets: W W 
+--------
+Item Level: 24
+--------
+{ Implicit Modifier }
++20% Chance to Block Spell Damage
+--------
+{ Prefix Modifier "Conjuror's" (Tier: 6) — Mana, Damage, Caster }
+30(23-32)% increased Spell Damage
++31(31-35) to maximum Mana
+{ Suffix Modifier "of Talent" (Tier: 7) — Caster, Speed }
+9(8-13)% increased Cast Speed

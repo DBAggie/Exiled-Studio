@@ -1,0 +1,21 @@
+Item Class: Jewels
+Rarity: Unique
+The Light of Meaning
+Prismatic Jewel
+--------
+Limited to: 1
+Radius: Large
+--------
+Item Level: 85
+--------
+{ Corruption Implicit Modifier — Physical }
+Hits have 15(10-15)% chance to ignore Enemy Physical Damage Reduction
+--------
+{ Unique Modifier — Defences, Armour }
+Passive Skills in Radius also grant 7% increased Armour — Unscalable Value
+--------
+To name a thing is to give it power.
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.
+--------
+Corrupted

@@ -1,0 +1,13 @@
+Item Class: Jewels
+Rarity: UNIQUE
+Watcher's Eye
+Prismatic Jewel
+Limited to: 1
+Item Level: 86
+Implicits: 0
+{tags:life}{range:1}(4-6)% increased maximum Life
+{tags:defences,energyshield}{range:0.5}(4-6)% increased maximum Energy Shield
+{tags:mana}{range:0}(4-6)% increased maximum Mana
+{tags:physical}25% chance to Impale Enemies on Hit with Attacks while using Pride
+{tags:physical}{range:0}(5-8)% additional Physical Damage Reduction while affected by Determination
+{tags:damage,critical}{range:0.8}+(20-30)% to Critical Strike Multiplier while affected by Precision

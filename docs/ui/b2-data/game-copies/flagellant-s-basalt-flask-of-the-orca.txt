@@ -1,0 +1,27 @@
+Item Class: Utility Flasks
+Rarity: Magic
+Flagellant's Basalt Flask of the Orca
+--------
+Lasts 8 Seconds
+Consumes 40 of 60 Charges on use
+Currently has 60 Charges
+20% more Armour
+--------
+Requirements:
+Level: 64
+--------
+Item Level: 84
+--------
+Used when Charges reach full (enchant)
+--------
+{ Implicit Modifier }
+Taunts Enemies within 3 metres on use
+(Enemies you Taunt can only target you, and deal 10% less damage to anyone else. Taunt lasts for 3 seconds)
+--------
+{ Prefix Modifier "Flagellant's" (Tier: 1) }
+Gain 3 Charges when you are Hit by an Enemy
+{ Suffix Modifier "of the Orca" (Tier: 5) }
+35(31-35)% chance to Avoid being Chilled during Effect
+32(31-35)% chance to Avoid being Frozen during Effect
+--------
+Right click to drink. Can only hold charges while in belt. Refills as you kill monsters.
