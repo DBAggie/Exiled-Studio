@@ -1,6 +1,7 @@
 // The passive tree (passive tree plan, T6; ADR-008 Amendment 1): the
-// loaded data's tree drawn on a canvas in our own shapes (never game art,
-// ADR-000), with a DOM card over it, and a list view that does everything
+// loaded data's tree drawn on a canvas, with GGG's published sprites when
+// the bundle carries them (T-a, ADR-005 Amendment 2) and in our own shapes
+// otherwise, with a DOM card over it, and a list view that does everything
 // the canvas does, for keyboard and screen reader users.
 //
 // Clicking a node allocates it and the path to it, or deallocates it and
@@ -32,7 +33,12 @@ import { ScreenHeading } from '../components'
 import { fieldLabel, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
 import { useAppDispatch, useAppSelector, withUnit } from '../util'
-import { useTreeLayout } from './treeLayout'
+import {
+  type LoadedSprites,
+  type SpriteRect,
+  useTreeLayout,
+  useTreeSprites,
+} from './treeLayout'
 
 /** A node's drawn radius by kind, in tree units. */
 const RADIUS: Record<TreeNodeView['kind'], number> = {
@@ -83,8 +89,74 @@ interface Camera {
   scale: number
 }
 
+/**
+ * Draws a node's sprites centred on `p` (`scale`: screen pixels per tree
+ * unit): its icon, then its frame, allocated or not, as the export names
+ * them; a mastery's icon unconnected, connected (`groupOn`), or chosen.
+ * False, drawing nothing, when the sprites lack the node's art (class and
+ * ascendancy starts are always our shapes).
+ */
+function drawArt(
+  ctx: CanvasRenderingContext2D,
+  s: LoadedSprites,
+  n: TreeNodeView,
+  p: { x: number; y: number },
+  scale: number,
+  on: boolean,
+  groupOn: boolean,
+): boolean {
+  const art = s.art.get(n.id)
+  const put = (r: SpriteRect | null) => {
+    if (r === null) return false
+    const w = r.w * s.unit * scale
+    const h = r.h * s.unit * scale
+    ctx.drawImage(r.image, r.x, r.y, r.w, r.h, p.x - w / 2, p.y - h / 2, w, h)
+    return true
+  }
+  const framed = (icons: string, frame: string) => {
+    const icon = s.sprite(`${icons}${on ? 'Active' : 'Inactive'}`, art?.icon)
+    const border = s.sprite('frame', frame)
+    if (icon === null || border === null) return false
+    put(icon)
+    put(border)
+    return true
+  }
+  switch (n.kind) {
+    case 'normal':
+      return framed('normal', on ? 'PSSkillFrameActive' : 'PSSkillFrame')
+    case 'notable':
+      return framed(
+        'notable',
+        on ? 'NotableFrameAllocated' : 'NotableFrameUnallocated',
+      )
+    case 'keystone':
+      return framed(
+        'keystone',
+        on ? 'KeystoneFrameAllocated' : 'KeystoneFrameUnallocated',
+      )
+    case 'jewel-socket':
+    case 'cluster-socket':
+      return put(
+        s.sprite('frame', on ? 'JewelFrameAllocated' : 'JewelFrameUnallocated'),
+      )
+    case 'mastery':
+      return on
+        ? put(s.sprite('masteryActiveSelected', art?.['active-icon']))
+        : put(
+            s.sprite(
+              groupOn ? 'masteryConnected' : 'masteryInactive',
+              art?.['inactive-icon'],
+            ),
+          )
+    case 'class-start':
+    case 'ascendancy-start':
+      return false
+  }
+}
+
 function TreeCanvas({
   layout,
+  sprites,
   tree,
   found,
   preview,
@@ -92,6 +164,7 @@ function TreeCanvas({
   onActivate,
 }: {
   layout: TreeLayout
+  sprites: LoadedSprites | null
   tree: TreeView
   found: Set<number>
   preview: TreePreview | null
@@ -113,6 +186,16 @@ function TreeCanvas({
     [layout],
   )
   const allocated = useMemo(() => new Set(tree.nodes), [tree])
+  // The groups with an allocated node: their masteries show as connected.
+  const groupsOn = useMemo(
+    () =>
+      new Set(
+        layout.nodes
+          .filter((n) => n.kind !== 'mastery' && allocated.has(n.id))
+          .map((n) => n.group),
+      ),
+    [allocated, layout],
+  )
   const path = useMemo(() => new Set(preview?.path ?? []), [preview])
   const removed = useMemo(() => new Set(preview?.removed ?? []), [preview])
 
@@ -219,9 +302,34 @@ function TreeCanvas({
     ctx.globalAlpha = 1
     for (const n of placed) {
       const p = at(n)
-      const r = Math.max(2, RADIUS[n.kind] * camera.scale)
+      // A class start keeps a readable size when the whole tree shows.
+      const r = Math.max(
+        n.kind === 'class-start' ? 8 : 2,
+        RADIUS[n.kind] * camera.scale,
+      )
       const on = allocated.has(n.id)
       ctx.globalAlpha = n.modelled ? 1 : 0.4
+      if (
+        sprites !== null &&
+        drawArt(ctx, sprites, n, p, camera.scale, on, groupsOn.has(n.group))
+      ) {
+        // The preview's path and removals as rings over the art.
+        if (path.has(n.id) || removed.has(n.id)) {
+          ctx.lineWidth = Math.max(2, 8 * camera.scale)
+          ctx.strokeStyle = removed.has(n.id) ? c.removed : c.path
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, r + 2, 0, 2 * Math.PI)
+          ctx.stroke()
+        }
+        if (found.has(n.id)) {
+          ctx.lineWidth = 2
+          ctx.strokeStyle = c.match
+          ctx.beginPath()
+          ctx.arc(p.x, p.y, r + 5, 0, 2 * Math.PI)
+          ctx.stroke()
+        }
+        continue
+      }
       ctx.fillStyle = removed.has(n.id)
         ? c.removed
         : path.has(n.id)
@@ -258,8 +366,16 @@ function TreeCanvas({
       } else {
         ctx.fill()
       }
-      if (n.kind === 'notable' || n.kind === 'keystone') {
-        ctx.lineWidth = Math.max(1, 4 * camera.scale)
+      if (
+        n.kind === 'notable' ||
+        n.kind === 'keystone' ||
+        n.kind === 'class-start'
+      ) {
+        // The class start's outline keeps its octagon readable when small.
+        ctx.lineWidth = Math.max(
+          n.kind === 'class-start' ? 2 : 1,
+          4 * camera.scale,
+        )
         ctx.strokeStyle = c.ring
         ctx.stroke()
       }
@@ -272,7 +388,19 @@ function TreeCanvas({
       }
     }
     ctx.globalAlpha = 1
-  }, [allocated, byId, camera, found, layout, path, placed, removed, toScreen])
+  }, [
+    allocated,
+    byId,
+    camera,
+    found,
+    groupsOn,
+    layout,
+    path,
+    placed,
+    removed,
+    sprites,
+    toScreen,
+  ])
 
   const hit = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const el = canvas.current
@@ -792,6 +920,7 @@ export function Tree() {
   const dispatch = useAppDispatch()
   const tree = useAppSelector((s) => s.session.snapshot?.build?.tree ?? null)
   const layout = useTreeLayout()
+  const sprites = useTreeSprites()
   const [search, setSearch] = useState('')
   const [mode, setMode] = useState<'canvas' | 'list' | null>(null)
   const [hover, setHover] = useState<{
@@ -1148,6 +1277,7 @@ export function Tree() {
         <div className="tree-stage">
           <TreeCanvas
             layout={layout}
+            sprites={sprites}
             tree={tree}
             found={found}
             preview={preview === 'refused' ? null : preview}

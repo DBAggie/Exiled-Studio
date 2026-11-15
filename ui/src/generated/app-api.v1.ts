@@ -559,6 +559,7 @@ export interface ApplicationAPIV1 {
   snapshot: Snapshot
   'tree-layout': TreeLayout
   'tree-preview': TreePreview1
+  'tree-sprites': TreeSprites
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -2168,4 +2169,102 @@ export interface TreePreview1 {
    * Nodes deallocated, ascending.
    */
   removed: number[]
+}
+/**
+ * The loaded data's passive tree sprites, when its bundle has
+ * them.
+ */
+export interface TreeSprites {
+  /**
+   * The export's categories (`normalActive`, `frame`, ...).
+   */
+  categories: TreeSpriteCategory[]
+  /**
+   * The nodes' art, by node.
+   */
+  nodes: TreeNodeArt[]
+  /**
+   * The sheets, each once.
+   */
+  sheets: TreeSpriteSheet[]
+  /**
+   * The export's zoom level the sheets are for.
+   */
+  zoom: number
+}
+/**
+ * One export category's sprites.
+ */
+export interface TreeSpriteCategory {
+  /**
+   * Its sheet's file name.
+   */
+  file: string
+  /**
+   * Its name.
+   */
+  name: string
+  /**
+   * Its sprites, by name.
+   */
+  sprites: TreeSprite[]
+}
+/**
+ * One sprite on a sheet, in pixels.
+ */
+export interface TreeSprite {
+  /**
+   * Height.
+   */
+  h: number
+  /**
+   * Its name (an icon path, or a frame's name).
+   */
+  name: string
+  /**
+   * Width.
+   */
+  w: number
+  /**
+   * Left.
+   */
+  x: number
+  /**
+   * Top.
+   */
+  y: number
+}
+/**
+ * A node's art, as the export names it.
+ */
+export interface TreeNodeArt {
+  /**
+   * A mastery's icon once it is chosen.
+   */
+  'active-icon'?: string | null
+  /**
+   * Its icon (a passive's).
+   */
+  icon?: string | null
+  /**
+   * A mastery's icon until it is chosen.
+   */
+  'inactive-icon'?: string | null
+  /**
+   * The node.
+   */
+  node: number
+}
+/**
+ * A sheet's image.
+ */
+export interface TreeSpriteSheet {
+  /**
+   * Its file name, as the categories name it.
+   */
+  file: string
+  /**
+   * The image as a `data:` URL (the bundle's bytes, unmodified).
+   */
+  image: string
 }

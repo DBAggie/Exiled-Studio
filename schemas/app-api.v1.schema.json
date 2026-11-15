@@ -64,6 +64,10 @@
     "tree-preview": {
       "description": "A tree edit's preview.",
       "$ref": "#/$defs/TreePreview"
+    },
+    "tree-sprites": {
+      "description": "The loaded data's passive tree sprites, when its bundle has\nthem.",
+      "$ref": "#/$defs/TreeSprites"
     }
   },
   "additionalProperties": false,
@@ -80,7 +84,8 @@
     "recent",
     "gems",
     "tree-layout",
-    "tree-preview"
+    "tree-preview",
+    "tree-sprites"
   ],
   "$defs": {
     "AffixKind": {
@@ -3960,6 +3965,43 @@
         "masteries"
       ]
     },
+    "TreeNodeArt": {
+      "description": "A node's art, as the export names it.",
+      "type": "object",
+      "properties": {
+        "active-icon": {
+          "description": "A mastery's icon once it is chosen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Its icon (a passive's).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inactive-icon": {
+          "description": "A mastery's icon until it is chosen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "node": {
+          "description": "The node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ]
+    },
     "TreeNodeKind": {
       "description": "What a node is.",
       "oneOf": [
@@ -4161,6 +4203,133 @@
         "path",
         "removed",
         "fields"
+      ]
+    },
+    "TreeSprite": {
+      "description": "One sprite on a sheet, in pixels.",
+      "type": "object",
+      "properties": {
+        "h": {
+          "description": "Height.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Its name (an icon path, or a frame's name).",
+          "type": "string"
+        },
+        "w": {
+          "description": "Width.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "x",
+        "y",
+        "w",
+        "h"
+      ]
+    },
+    "TreeSpriteCategory": {
+      "description": "One export category's sprites.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Its sheet's file name.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "sprites": {
+          "description": "Its sprites, by name.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSprite"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "file",
+        "sprites"
+      ]
+    },
+    "TreeSpriteSheet": {
+      "description": "A sheet's image.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Its file name, as the categories name it.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The image as a `data:` URL (the bundle's bytes, unmodified).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "image"
+      ]
+    },
+    "TreeSprites": {
+      "description": "The passive tree's sprites (GGG's export sheets, ADR-005\nAmendment 2): static while the data is loaded. A sprite covers its\npixel size divided by `zoom` in tree units.",
+      "type": "object",
+      "properties": {
+        "categories": {
+          "description": "The export's categories (`normalActive`, `frame`, ...).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSpriteCategory"
+          }
+        },
+        "nodes": {
+          "description": "The nodes' art, by node.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeNodeArt"
+          }
+        },
+        "sheets": {
+          "description": "The sheets, each once.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSpriteSheet"
+          }
+        },
+        "zoom": {
+          "description": "The export's zoom level the sheets are for.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "zoom",
+        "sheets",
+        "categories",
+        "nodes"
       ]
     },
     "TreeView": {

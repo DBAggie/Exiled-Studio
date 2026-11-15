@@ -381,6 +381,17 @@ impl App {
             .ok_or_else(|| AppError::new(Code::NoData, "the game data has no passive tree"))
     }
 
+    /// The loaded data's passive tree sprites (static while the data is
+    /// loaded).
+    ///
+    /// # Errors
+    /// `APP_NO_DATA` when no data is loaded or its bundle has no sprites
+    /// (the tree screen then draws its own shapes).
+    pub fn tree_sprites(&self) -> Result<Arc<api::TreeSprites>, AppError> {
+        self.read(|p| p.data.as_ref().and_then(|d| d.tree_sprites.clone()))
+            .ok_or_else(|| AppError::new(Code::NoData, "the game data has no tree sprites"))
+    }
+
     /// What clicking a node of spec `spec` would do: allocate it (when it
     /// is not allocated) or deallocate it, with each field before and
     /// after; calculated on the caller's thread, never committed.

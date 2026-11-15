@@ -707,3 +707,107 @@ pub fn layout(tree: &Tree, bundle: &Bundle, tree_version: Option<String>) -> api
             .collect(),
     }
 }
+
+/// The sprites DTO (passive tree plan, T-a): the bundle's index with each
+/// sheet's bytes, read by `read` (the bundle's validated files), as a
+/// `data:` URL; `None` when a sheet cannot be read.
+#[must_use]
+pub fn sprites(
+    index: &loom_data::bundle::tree_sprites::TreeSprites,
+    read: impl Fn(&str) -> Option<Vec<u8>>,
+) -> Option<api::TreeSprites> {
+    use loom_data::bundle::tree_sprites::SPRITES_DIR;
+    let sheets = index
+        .sheet_paths()
+        .into_iter()
+        .map(|path| {
+            let file = path.trim_start_matches(SPRITES_DIR).to_owned();
+            let mime = match file.rsplit('.').next() {
+                Some("jpg" | "jpeg") => "image/jpeg",
+                Some("webp") => "image/webp",
+                _ => "image/png",
+            };
+            let bytes = read(&path)?;
+            Some(api::TreeSpriteSheet {
+                image: format!("data:{mime};base64,{}", base64(&bytes)),
+                file,
+            })
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some(api::TreeSprites {
+        zoom: index.zoom,
+        sheets,
+        categories: index
+            .categories
+            .iter()
+            .map(|c| api::TreeSpriteCategory {
+                name: c.name.clone(),
+                file: c.file.clone(),
+                sprites: c
+                    .sprites
+                    .iter()
+                    .map(|s| api::TreeSprite {
+                        name: s.name.clone(),
+                        x: s.x,
+                        y: s.y,
+                        w: s.w,
+                        h: s.h,
+                    })
+                    .collect(),
+            })
+            .collect(),
+        nodes: index
+            .nodes
+            .iter()
+            .map(|n| api::TreeNodeArt {
+                node: n.node,
+                icon: n.icon.clone(),
+                inactive_icon: n.inactive_icon.clone(),
+                active_icon: n.active_icon.clone(),
+            })
+            .collect(),
+    })
+}
+
+/// Standard base64 with padding (RFC 4648, section 4).
+fn base64(bytes: &[u8]) -> String {
+    const ABC: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let b = [
+            chunk[0],
+            chunk.get(1).copied().unwrap_or(0),
+            chunk.get(2).copied().unwrap_or(0),
+        ];
+        let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
+        for (i, shift) in [18, 12, 6, 0].into_iter().enumerate() {
+            if i <= chunk.len() {
+                out.push(char::from(ABC[((n >> shift) & 63) as usize]));
+            } else {
+                out.push('=');
+            }
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod sprite_tests {
+    use super::*;
+
+    #[test]
+    fn base64_should_match_rfc_4648_vectors() {
+        for (plain, coded) in [
+            ("", ""),
+            ("f", "Zg=="),
+            ("fo", "Zm8="),
+            ("foo", "Zm9v"),
+            ("foob", "Zm9vYg=="),
+            ("fooba", "Zm9vYmE="),
+            ("foobar", "Zm9vYmFy"),
+        ] {
+            assert_eq!(base64(plain.as_bytes()), coded, "{plain}");
+        }
+        assert_eq!(base64(&[0xff, 0xfe]), "//4=");
+    }
+}

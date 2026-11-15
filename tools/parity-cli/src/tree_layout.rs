@@ -12,14 +12,26 @@
 //!   (`tree_layout::orbit_angles(16)`);
 //! - the bundle validates before, and the written one after.
 //!
-//! The output is a copy of the bundle with `data/passive_tree_layout.json`
-//! added and the manifest's file list updated (nothing else changes), in a
-//! new folder.
+//! It adds the tree's sprites too (passive tree plan, T-a;
+//! `loom_data::bundle::tree_sprites`): the sheets of [`CATEGORIES`] at
+//! the zoom level [`ZOOM`], copied unmodified from the export's `assets/`
+//! into `trees/assets/`, and the index `data/passive_tree_sprites.json`
+//! (each category's sprites, and the icons of the bundle's tree nodes
+//! that a copied sheet has). The sheets live only in the written bundle,
+//! never in the repository (ADR-005 Amendment 2).
+//!
+//! The output is a copy of the bundle with those files added and the
+//! manifest's file list updated (nothing else changes), in a new folder.
 
 use std::path::Path;
 
+use std::collections::{BTreeMap, BTreeSet};
+
 use loom_data::bundle::tree_layout::{
     ANGLE_RULE, ExportFile, TREE_LAYOUT, TreeExport, TreeLayout, orbit_angles,
+};
+use loom_data::bundle::tree_sprites::{
+    NodeArt, SPRITES_DIR, Sprite, SpriteCategory, TREE_SPRITES, TreeSprites,
 };
 use loom_data::bundle::{Bundle, FileEntry, MANIFEST, Manifest, MemorySource};
 use serde::{Deserialize, Serialize};
@@ -38,6 +50,27 @@ struct Pinned {
     commit: String,
 }
 
+/// The export's zoom level whose sheets the bundle carries: the
+/// fourth of five (`0.3835`), sharp at the tree screen's usual zooms and
+/// about a third of the largest level's bytes.
+pub const ZOOM: &str = "0.3835";
+
+/// The export's sprite categories the tree screen draws: the passives'
+/// icons (allocated and not), their frames (the jewel sockets' too), and
+/// the masteries' icons (unconnected, connected, chosen).
+pub const CATEGORIES: [&str; 10] = [
+    "frame",
+    "keystoneActive",
+    "keystoneInactive",
+    "masteryActiveSelected",
+    "masteryConnected",
+    "masteryInactive",
+    "normalActive",
+    "normalInactive",
+    "notableActive",
+    "notableInactive",
+];
+
 /// What the run did.
 #[derive(Serialize)]
 pub struct Summary {
@@ -46,7 +79,131 @@ pub struct Summary {
     orbit_radii: Vec<f64>,
     orbit_slots: Vec<i64>,
     layout_sha256: String,
+    sprites_sha256: String,
+    sheets: Vec<String>,
+    nodes_with_art: usize,
+    icons_without_sprite: usize,
     manifest_sha256: String,
+}
+
+#[derive(Deserialize)]
+struct ExportSheet {
+    filename: String,
+    w: u32,
+    h: u32,
+    coords: BTreeMap<String, ExportRect>,
+}
+
+#[derive(Deserialize)]
+struct ExportRect {
+    x: u32,
+    y: u32,
+    w: u32,
+    h: u32,
+}
+
+/// The sprite index, its sheets by bundle path, and how many icons no
+/// copied sheet has.
+type Sprites = (TreeSprites, BTreeMap<String, Vec<u8>>, usize);
+
+/// The index and the sheets (bundle path, bytes) from the export's
+/// `data.json` and `assets/`: the categories of [`CATEGORIES`] at
+/// [`ZOOM`], and the art of each node in `nodes`. Returns the icons it
+/// left out because no copied sheet has them, too.
+fn sprites(
+    data: &Value,
+    export: &Path,
+    nodes: &BTreeSet<u32>,
+    source: TreeExport,
+) -> Result<Sprites, String> {
+    let zoom: f64 = ZOOM.parse().map_err(|_| "ZOOM")?;
+    let mut categories = Vec::new();
+    let mut sheets = BTreeMap::new();
+    for name in CATEGORIES {
+        let sheet: ExportSheet = serde_json::from_value(data["sprites"][name][ZOOM].clone())
+            .map_err(|e| format!("data.json sprites.{name}.{ZOOM}: {e}"))?;
+        // `https://.../passive-skill/skills-3.jpg?64320931`: the file name.
+        let file = sheet
+            .filename
+            .split('?')
+            .next()
+            .and_then(|u| u.rsplit('/').next())
+            .filter(|f| !f.is_empty() && !f.starts_with('.'))
+            .ok_or_else(|| format!("{name}: file {}", sheet.filename))?
+            .to_owned();
+        let path = format!("{SPRITES_DIR}{file}");
+        if let std::collections::btree_map::Entry::Vacant(e) = sheets.entry(path) {
+            e.insert(read(&export.join("assets").join(&file))?);
+        }
+        categories.push(SpriteCategory {
+            name: name.to_owned(),
+            file,
+            width: sheet.w,
+            height: sheet.h,
+            sprites: sheet
+                .coords
+                .into_iter()
+                .map(|(name, r)| Sprite {
+                    name,
+                    x: r.x,
+                    y: r.y,
+                    w: r.w,
+                    h: r.h,
+                })
+                .collect(),
+        });
+    }
+    let known: BTreeSet<&str> = categories
+        .iter()
+        .flat_map(|c| c.sprites.iter().map(|s| s.name.as_str()))
+        .collect();
+    let mut missing = 0;
+    let mut keep = |v: &Value| -> Option<String> {
+        let icon = v.as_str()?;
+        if known.contains(icon) {
+            Some(icon.to_owned())
+        } else {
+            missing += 1;
+            None
+        }
+    };
+    let mut art = Vec::new();
+    if let Some(all) = data["nodes"].as_object() {
+        for (id, n) in all {
+            let Some(node) = id.parse::<u32>().ok().filter(|n| nodes.contains(n)) else {
+                continue;
+            };
+            let a = NodeArt {
+                node,
+                icon: keep(&n["icon"]),
+                inactive_icon: keep(&n["inactiveIcon"]),
+                active_icon: keep(&n["activeIcon"]),
+            };
+            if a.icon.is_some() || a.inactive_icon.is_some() || a.active_icon.is_some() {
+                art.push(a);
+            }
+        }
+    }
+    art.sort_by_key(|a| a.node);
+    let mut source = source;
+    for path in sheets.keys() {
+        let file = path.trim_start_matches(SPRITES_DIR);
+        source.files.push(ExportFile {
+            path: format!("assets/{file}"),
+            sha256: hex(&Sha256::digest(&sheets[path])),
+        });
+    }
+    let index = TreeSprites {
+        zoom,
+        categories,
+        nodes: art,
+        source,
+    };
+    let problems = index.problems();
+    if !problems.is_empty() {
+        return Err(format!("the sprite index: {problems:?}"));
+    }
+    Ok((index, sheets, missing))
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -162,15 +319,38 @@ pub fn run(pin: &Path, export: &Path, bundle: &Path, out: &Path) -> Result<Summa
     }
     let mut layout_json = serde_json::to_vec_pretty(&layout).map_err(|e| e.to_string())?;
     layout_json.push(b'\n');
+    let tree_nodes: BTreeSet<u32> = loaded
+        .passives
+        .as_ref()
+        .map(|p| {
+            p.tree
+                .groups
+                .iter()
+                .flat_map(|g| g.nodes.iter())
+                .filter_map(|n| u32::try_from(n.node).ok())
+                .collect()
+        })
+        .unwrap_or_default();
+    let (index, sheets, icons_without_sprite) =
+        sprites(&data, export, &tree_nodes, layout.source.clone())?;
+    let mut sprites_json = serde_json::to_vec_pretty(&index).map_err(|e| e.to_string())?;
+    sprites_json.push(b'\n');
+    let mut added: BTreeMap<String, Vec<u8>> = sheets;
+    added.insert(TREE_LAYOUT.to_owned(), layout_json.clone());
+    added.insert(TREE_SPRITES.to_owned(), sprites_json.clone());
 
-    // The copy: every listed file, the layout, the manifest with it.
+    // The copy: every listed file, the added ones, the manifest with them.
     let mut manifest: Manifest = loaded.manifest.clone();
-    manifest.files.retain(|f| f.path != TREE_LAYOUT);
-    manifest.files.push(FileEntry {
-        path: TREE_LAYOUT.to_owned(),
-        sha256: hex(&Sha256::digest(&layout_json)),
-        size: layout_json.len() as u64,
-    });
+    manifest
+        .files
+        .retain(|f| !added.contains_key(&f.path) && !f.path.starts_with(SPRITES_DIR));
+    for (path, bytes) in &added {
+        manifest.files.push(FileEntry {
+            path: path.clone(),
+            sha256: hex(&Sha256::digest(bytes)),
+            size: bytes.len() as u64,
+        });
+    }
     manifest.files.sort_by(|a, b| a.path.cmp(&b.path));
     let mut manifest_json =
         serde_json::to_vec_pretty(&serde_json::to_value(&manifest).map_err(|e| e.to_string())?)
@@ -186,10 +366,9 @@ pub fn run(pin: &Path, export: &Path, bundle: &Path, out: &Path) -> Result<Summa
     }
     let mut written = MemorySource::new();
     for f in &manifest.files {
-        let bytes = if f.path == TREE_LAYOUT {
-            layout_json.clone()
-        } else {
-            read(&bundle.join(&f.path))?
+        let bytes = match added.get(&f.path) {
+            Some(b) => b.clone(),
+            None => read(&bundle.join(&f.path))?,
         };
         let target = partial.join(&f.path);
         if let Some(parent) = target.parent() {
@@ -215,6 +394,10 @@ pub fn run(pin: &Path, export: &Path, bundle: &Path, out: &Path) -> Result<Summa
         orbit_radii: radii,
         orbit_slots: slots,
         layout_sha256: hex(&Sha256::digest(&layout_json)),
+        sprites_sha256: hex(&Sha256::digest(&sprites_json)),
+        sheets: index.sheet_paths(),
+        nodes_with_art: index.nodes.len(),
+        icons_without_sprite,
         manifest_sha256: hex(&Sha256::digest(&manifest_json)),
     })
 }

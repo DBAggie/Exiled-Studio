@@ -35,6 +35,7 @@ import type {
   TreeNodeView,
   TreeChange,
   TreePreview,
+  TreeSprites,
   TreeView,
   WarningView,
 } from '../generated/app-api.v1'
@@ -81,6 +82,7 @@ export type {
   TreeNodeView,
   TreeChange,
   TreePreview,
+  TreeSprites,
   TreeView,
   WarningView,
 }
@@ -133,6 +135,9 @@ export interface LoomApi {
   openDropped(): Promise<Outcome>
   /** The loaded data's passive tree (static while the data is loaded). */
   treeLayout(): Promise<TreeLayout>
+  /** The loaded data's tree sprites (static while the data is loaded);
+   * `APP_NO_DATA` when the bundle has none. */
+  treeSprites(): Promise<TreeSprites>
   /** What clicking node `node` of spec `spec` would do: allocate it and
    * its path, or deallocate it and its orphans; never committed. */
   previewTree(spec: number, node: number): Promise<TreePreview>

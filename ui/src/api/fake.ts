@@ -27,6 +27,7 @@ import {
   type SkillGroupView,
   type Snapshot,
   type TreeLayout,
+  type TreeSprites,
   type TreeChange,
   type TreePreview,
 } from './types'
@@ -1439,6 +1440,13 @@ export class FakeApi implements LoomApi {
       )
     }
     return Promise.resolve(fakeTree.FAKE_LAYOUT)
+  }
+
+  // The fake data has no sprites: the tree is drawn in our own shapes.
+  treeSprites(): Promise<TreeSprites> {
+    return Promise.reject(
+      new ApiFailure({ code: 'APP_NO_DATA', message: 'APP_NO_DATA' }),
+    )
   }
 
   previewTree(spec: number, node: number): Promise<TreePreview> {

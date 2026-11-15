@@ -117,6 +117,11 @@
    "size": 322
   },
   {
+   "path": "data/passive_tree_sprites.json",
+   "sha256": "637d35b1b0238b2a3c69a56d388e02e390b9a9b40cba768618dd4a7b12e91927",
+   "size": 12477
+  },
+  {
    "path": "data/passives.json",
    "sha256": "aba2bc8c736a613401660852d7ede3d57e3804933129ec1730c4e65f79bd5d7b",
    "size": 28296
@@ -180,6 +185,11 @@
    "path": "stat_descriptions/stat_descriptions.json",
    "sha256": "5cecfbebbba64d4c5feb6c8ba9a1332b97636ad838ef6e3e751f389290f6f513",
    "size": 4380
+  },
+  {
+   "path": "trees/assets/test-sheet.png",
+   "sha256": "bf10853de0259f9bc0d6613ac0ac6c76edd411b3455acf2fc4cf98a7091a7b64",
+   "size": 127
   }
  ],
  "format": 2,

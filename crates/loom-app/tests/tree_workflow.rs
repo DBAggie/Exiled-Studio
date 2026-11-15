@@ -528,3 +528,34 @@ fn passive_trees_should_be_added_copied_renamed_and_deleted_undoably() {
         "undo goes back byte for byte"
     );
 }
+
+#[test]
+fn a_bundle_with_sprites_should_give_them_as_data_urls() {
+    // The synthetic tree bundle carries a made-up sheet (make_bundles.py,
+    // `tree_sprites`); the plain fixture bundle has none.
+    let data =
+        loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1-tree"))
+            .unwrap();
+    let sprites = data.tree_sprites.unwrap();
+    assert!((sprites.zoom - 0.5).abs() < f64::EPSILON);
+    assert_eq!(sprites.sheets.len(), 1);
+    assert_eq!(sprites.sheets[0].file, "test-sheet.png");
+    assert!(
+        sprites.sheets[0]
+            .image
+            .starts_with("data:image/png;base64,iVBORw0KGgo"),
+        "the PNG's signature, base64"
+    );
+    let frame = sprites
+        .categories
+        .iter()
+        .find(|c| c.name == "frame")
+        .unwrap();
+    assert!(frame.sprites.iter().any(|s| s.name == "PSSkillFrame"));
+    let mastery = sprites.nodes.iter().find(|n| n.node == 10029).unwrap();
+    assert_eq!(mastery.inactive_icon.as_deref(), Some("Test/Mastery"));
+    let plain =
+        loom_app::GameData::load(&root().join("crates/loom-data/tests/fixtures/bundle-poe1"))
+            .unwrap();
+    assert!(plain.tree_sprites.is_none());
+}

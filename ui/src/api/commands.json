@@ -21,5 +21,6 @@
   "ui_prefs",
   "set_ui_prefs",
   "tree_layout",
+  "tree_sprites",
   "preview_tree"
 ]

@@ -198,6 +198,16 @@ fn tree_layout(ctx: State<'_, Ctx>) -> Answer<api::TreeLayout> {
         .map_err(dto)
 }
 
+/// The loaded data's passive tree sprites (static while the data is
+/// loaded; `APP_NO_DATA` without them).
+#[tauri::command(async)]
+fn tree_sprites(ctx: State<'_, Ctx>) -> Answer<api::TreeSprites> {
+    ctx.app
+        .tree_sprites()
+        .map(|s| s.as_ref().clone())
+        .map_err(dto)
+}
+
 /// What clicking a node would do (runs off the main thread).
 #[tauri::command(async)]
 fn preview_tree(ctx: State<'_, Ctx>, spec: u32, node: u32) -> Answer<api::TreePreview> {
@@ -438,7 +448,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 23] = [
+pub const COMMANDS: [&str; 24] = [
     "snapshot",
     "calc_document",
     "item",
@@ -461,6 +471,7 @@ pub const COMMANDS: [&str; 23] = [
     "ui_prefs",
     "set_ui_prefs",
     "tree_layout",
+    "tree_sprites",
     "preview_tree",
 ];
 
@@ -509,6 +520,7 @@ pub fn build<R: Runtime>(
             ui_prefs,
             set_ui_prefs,
             tree_layout,
+            tree_sprites,
             preview_tree,
         ])
         .on_window_event(|window, event| {

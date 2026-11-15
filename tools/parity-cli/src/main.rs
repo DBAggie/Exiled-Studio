@@ -61,8 +61,9 @@ const USAGE: &str = "usage:
       requests for pob_tree.lua alloc.
   loom-parity-cli tree-layout <tools/tree/manifest.json> <export-dir> <bundle-dir> --out <dir>
       Copy a bundle into <dir> (which must not exist) with the passive
-      tree's layout constants added (data/passive_tree_layout.json), read
-      from GGG's tree export at the pinned commit (ADR-005 Amendment 2;
+      tree's layout constants (data/passive_tree_layout.json) and sprites
+      (data/passive_tree_sprites.json, the sheets in trees/assets/) added,
+      read from GGG's tree export at the pinned commit (ADR-005 Amendment 2;
       fetch it with tools/tree/acquire). Refuses another commit, orbits
       that differ from the bundle's, or a README angle table that differs
       from the rule; validates before and after; prints a summary.

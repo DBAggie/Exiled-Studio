@@ -14,12 +14,16 @@ in sorted-key form and `bundle.json` listing every file's SHA-256 and size.
 import hashlib
 import json
 import shutil
+import struct
+import zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
 
 def dump(value):
+    if isinstance(value, bytes):
+        return value
     return (json.dumps(value, sort_keys=True, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
 
 
@@ -555,6 +559,72 @@ def write(name, game, files, data_schema=2):
     (out / "bundle.json").write_bytes(dump(manifest))
 
 
+def png(width, height, pixel):
+    """A plain RGBA PNG, `pixel(x, y)` giving each pixel's four bytes: the
+    synthetic tree's made-up sprite sheet (our own, never GGG's art)."""
+    def chunk(kind, data):
+        body = kind + data
+        return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
+    rows = b"".join(b"\x00" + b"".join(bytes(pixel(x, y)) for x in range(width)) for y in range(height))
+    header = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b"")
+
+
+def tree_sprites(passives):
+    """Passive tree plan T-a: a made-up sprite sheet (four 16-pixel squares:
+    an icon, a frame, a mastery icon, a jewel frame) and its index, so CI
+    covers the bundle's sprites, the app's sprites query, and the canvas."""
+    colours = [(200, 160, 60, 255), (90, 90, 90, 255), (60, 120, 200, 255), (160, 60, 160, 255)]
+
+    def pixel(x, y):
+        inside = 2 <= x % 16 < 14 and 2 <= y < 14
+        return colours[x // 16] if inside else (0, 0, 0, 0)
+
+    sheet = png(64, 16, pixel)
+
+    def at(k, name):
+        return {"name": name, "x": 16 * k, "y": 0, "w": 16, "h": 16}
+
+    icons = [at(0, "Test/Icon")]
+    frames = sorted(
+        [at(1, n) for n in ("KeystoneFrameAllocated", "KeystoneFrameUnallocated", "NotableFrameAllocated",
+                            "NotableFrameUnallocated", "PSSkillFrame", "PSSkillFrameActive")]
+        + [at(3, "JewelFrameAllocated"), at(3, "JewelFrameUnallocated")],
+        key=lambda r: r["name"],
+    )
+    masteries = [at(2, "Test/Mastery")]
+    categories = [{"name": "frame", "sprites": frames}]
+    for kind in ("keystone", "normal", "notable"):
+        for state in ("Active", "Inactive"):
+            categories.append({"name": kind + state, "sprites": icons})
+    for name in ("masteryActiveSelected", "masteryConnected", "masteryInactive"):
+        categories.append({"name": name, "sprites": masteries})
+    for c in categories:
+        c.update({"file": "test-sheet.png", "width": 64, "height": 16})
+    categories.sort(key=lambda c: c["name"])
+    nodes = []
+    for row in sorted(passives, key=lambda r: r["node"]):
+        if row.get("characters") or row.get("ascendancy_start"):
+            continue
+        if row.get("mastery_group"):
+            nodes.append({"node": row["node"], "inactive_icon": "Test/Mastery", "active_icon": "Test/Mastery"})
+        else:
+            nodes.append({"node": row["node"], "icon": "Test/Icon"})
+    index = {
+        "zoom": 0.5,
+        "categories": categories,
+        "nodes": nodes,
+        "source": {
+            "repository": "synthetic",
+            "tag": "synthetic",
+            "commit": "0" * 40,
+            "files": [],
+            "angle_rule": "synthetic: equal steps",
+        },
+    }
+    return index, sheet
+
+
 def tree_bundle(files):
     """Passive tree plan T1a: the PoE1 bundle with a larger made-up tree for
     the tree editor's tests and the e2e workflow. Two classes (Test Brute
@@ -562,7 +632,8 @@ def tree_bundle(files):
     between the class starts (a ring of six nodes each, notables, two
     masteries, a keystone, jewel sockets), a large cluster socket with a
     nested medium and small socket and their proxies, a multiple choice in
-    each ascendancy, the layout constants, and the jewel radii. Every value
+    each ascendancy, the layout constants, the jewel radii, and a made-up
+    sprite sheet with its index (`tree_sprites`). Every value
     is made up; only the shapes follow the game's."""
     out = dict(files)
     passives = []
@@ -703,6 +774,9 @@ def tree_bundle(files):
             "angle_rule": "synthetic: equal steps",
         },
     }
+    index, sheet = tree_sprites(passives)
+    out["data/passive_tree_sprites.json"] = index
+    out["trees/assets/test-sheet.png"] = sheet
     return out
 
 

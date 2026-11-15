@@ -90,6 +90,8 @@ pub struct GameData {
     pub tree: Option<Arc<loom_tree::Tree>>,
     /// The tree's layout DTO, made once.
     pub tree_layout: Option<Arc<loom_serialization::dto::app::v1::TreeLayout>>,
+    /// The tree's sprites DTO, when the bundle has them, made once.
+    pub tree_sprites: Option<Arc<loom_serialization::dto::app::v1::TreeSprites>>,
 }
 
 impl std::fmt::Debug for GameData {
@@ -134,6 +136,12 @@ impl GameData {
                 tree_version.as_ref().map(|v| v.as_str().to_owned()),
             ))
         });
+        let tree_sprites = bundle
+            .tree_sprites
+            .as_ref()
+            .filter(|_| tree.as_ref().is_some_and(loom_tree::Tree::placed))
+            .and_then(|index| crate::tree::sprites(index, |path| source.read(path).ok()))
+            .map(Arc::new);
         Ok(Self {
             dir: dir.to_owned(),
             bundle,
@@ -143,6 +151,7 @@ impl GameData {
             version,
             tree: tree.map(Arc::new),
             tree_layout,
+            tree_sprites,
         })
     }
 }

@@ -24,6 +24,8 @@
 //! | `data/skill_types.json`, ... | format 2: the skill tables ([`skills`]) |
 //! | `data/characters.json`, ... | format 2: the character and passive tables ([`passives`]) |
 //! | `data/weapon_types.json`, ... | format 2: the item property and monster tables ([`properties`]) |
+//! | `data/passive_tree_layout.json` | optional: the tree's layout constants ([`tree_layout`]) |
+//! | `data/passive_tree_sprites.json`, `trees/assets/*` | optional: the tree's sprites ([`tree_sprites`]) |
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
@@ -36,6 +38,7 @@ pub mod properties;
 pub mod skills;
 mod source;
 pub mod tree_layout;
+pub mod tree_sprites;
 pub mod validate;
 
 use loom_domain::Game;
@@ -365,6 +368,10 @@ pub struct Bundle {
     /// The passive tree's layout constants, when listed
     /// ([`tree_layout::TREE_LAYOUT`]; optional).
     pub tree_layout: Option<tree_layout::TreeLayout>,
+    /// The passive tree's sprite index, when listed
+    /// ([`tree_sprites::TREE_SPRITES`]; optional). Its sheets are read by
+    /// path, not loaded.
+    pub tree_sprites: Option<tree_sprites::TreeSprites>,
 }
 
 /// Why a bundle did not load.
@@ -547,6 +554,11 @@ impl Bundle {
             properties,
             tree_layout: if listed(tree_layout::TREE_LAYOUT) {
                 Some(json(source, tree_layout::TREE_LAYOUT)?)
+            } else {
+                None
+            },
+            tree_sprites: if listed(tree_sprites::TREE_SPRITES) {
+                Some(json(source, tree_sprites::TREE_SPRITES)?)
             } else {
                 None
             },

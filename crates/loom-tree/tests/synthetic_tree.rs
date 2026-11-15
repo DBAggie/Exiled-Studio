@@ -36,7 +36,10 @@ fn tree() -> Tree {
         .join("../loom-data/tests/fixtures/bundle-poe1-tree");
     let mut source = MemorySource::new();
     read_dir(&dir, &dir, &mut source);
-    assert!(validate::validate(&source).is_valid(), "the bundle is valid");
+    assert!(
+        validate::validate(&source).is_valid(),
+        "the bundle is valid"
+    );
     let bundle = Bundle::load(&source).expect("the bundle loads");
     Tree::from_bundle(&bundle).expect("a passive tree")
 }
@@ -45,7 +48,10 @@ fn brute(nodes: &[u32]) -> Spec {
     Spec {
         class: 1,
         ascendancy: 1,
-        nodes: [1000, 3000].into_iter().chain(nodes.iter().copied()).collect(),
+        nodes: [1000, 3000]
+            .into_iter()
+            .chain(nodes.iter().copied())
+            .collect(),
         masteries: Default::default(),
         leaps: Vec::new(),
     }
@@ -114,7 +120,10 @@ fn a_radius_jewel_should_allocate_a_node_near_its_socket_alone() {
         centre: Centre::Socket,
         keystones_only: false,
     });
-    assert_eq!(poe1::path(&t, &s, target).expect("in the radius"), vec![target]);
+    assert_eq!(
+        poe1::path(&t, &s, target).expect("in the radius"),
+        vec![target]
+    );
     assert_eq!(
         t.ring(2),
         Some(Ring {

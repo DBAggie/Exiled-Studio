@@ -52,6 +52,9 @@ dto! {
         pub tree_layout: TreeLayout,
         /// A tree edit's preview.
         pub tree_preview: TreePreview,
+        /// The loaded data's passive tree sprites, when its bundle has
+        /// them.
+        pub tree_sprites: TreeSprites,
     }
 
     /// The application's state at one version. Queries return it whole;
@@ -261,6 +264,64 @@ dto! {
         pub classes: Vec<TreeClassView>,
         /// Each mastery group's effects.
         pub masteries: Vec<MasteryGroupView>,
+    }
+
+    /// The passive tree's sprites (GGG's export sheets, ADR-005
+    /// Amendment 2): static while the data is loaded. A sprite covers its
+    /// pixel size divided by `zoom` in tree units.
+    pub struct TreeSprites {
+        /// The export's zoom level the sheets are for.
+        pub zoom: f64,
+        /// The sheets, each once.
+        pub sheets: Vec<TreeSpriteSheet>,
+        /// The export's categories (`normalActive`, `frame`, ...).
+        pub categories: Vec<TreeSpriteCategory>,
+        /// The nodes' art, by node.
+        pub nodes: Vec<TreeNodeArt>,
+    }
+
+    /// A sheet's image.
+    pub struct TreeSpriteSheet {
+        /// Its file name, as the categories name it.
+        pub file: String,
+        /// The image as a `data:` URL (the bundle's bytes, unmodified).
+        pub image: String,
+    }
+
+    /// One export category's sprites.
+    pub struct TreeSpriteCategory {
+        /// Its name.
+        pub name: String,
+        /// Its sheet's file name.
+        pub file: String,
+        /// Its sprites, by name.
+        pub sprites: Vec<TreeSprite>,
+    }
+
+    /// One sprite on a sheet, in pixels.
+    pub struct TreeSprite {
+        /// Its name (an icon path, or a frame's name).
+        pub name: String,
+        /// Left.
+        pub x: u32,
+        /// Top.
+        pub y: u32,
+        /// Width.
+        pub w: u32,
+        /// Height.
+        pub h: u32,
+    }
+
+    /// A node's art, as the export names it.
+    pub struct TreeNodeArt {
+        /// The node.
+        pub node: u32,
+        /// Its icon (a passive's).
+        pub icon: Option<String>,
+        /// A mastery's icon until it is chosen.
+        pub inactive_icon: Option<String>,
+        /// A mastery's icon once it is chosen.
+        pub active_icon: Option<String>,
     }
 
     /// A point on the tree.

@@ -19,7 +19,9 @@
 //!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
 //!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`), and the tree
 //!   layout, when present, has a radius and an angle per slot
-//!   (`BUNDLE_TREE_LAYOUT`); the
+//!   (`BUNDLE_TREE_LAYOUT`), and the tree sprites, when present, have
+//!   every sheet listed, every sprite on its sheet, and every node icon
+//!   on a sheet (`BUNDLE_TREE_SPRITES`); the
 //!   weapon, armour, and shield types' base items exist;
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
 //!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
@@ -119,6 +121,7 @@ pub fn validate(source: &dyn BundleSource) -> Report {
     referential(&bundle, &mut report);
     domain(&bundle, &mut report);
     layout(&bundle, &mut report);
+    sprites(&bundle, &mut report);
     smoke(&bundle, &mut report);
     report
 }
@@ -135,6 +138,27 @@ fn layout(b: &Bundle, report: &mut Report) {
             super::tree_layout::TREE_LAYOUT,
             "the layout does not give one radius and one angle in [0, 360) per slot of every orbit",
         );
+    }
+}
+
+/// The tree sprites, when present: a sound index whose sheets are listed
+/// (`BUNDLE_TREE_SPRITES`).
+fn sprites(b: &Bundle, report: &mut Report) {
+    use super::tree_sprites::TREE_SPRITES;
+    let Some(sprites) = &b.tree_sprites else {
+        return;
+    };
+    for p in sprites.problems() {
+        report.add("BUNDLE_TREE_SPRITES", TREE_SPRITES, p);
+    }
+    for path in sprites.sheet_paths() {
+        if b.manifest.files.iter().all(|f| f.path != path) {
+            report.add(
+                "BUNDLE_TREE_SPRITES",
+                &path,
+                "a sheet the index names is not listed",
+            );
+        }
     }
 }
 
