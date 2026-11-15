@@ -1,6 +1,6 @@
 # B-2 data part: modifier headers, tiers, and attribute requirements
 
-Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (PR #109, merged into `dev` as `3102ad2`); the maintainer's data run done 2026-11-14 (B-2 data run PR #110, branch `feat/b2-data-run`, `docs/ui/b2-data/`; found and fixed the converter's `ComponentAttributeRequirements` key); PR 2 done 2026-11-15 (open, branch `feat/b2-inferred-mods`, base `dev`; "PR 2, as built" below). Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
+Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (PR #109, merged into `dev` as `3102ad2`); the maintainer's data run done 2026-11-14 (B-2 data run PR #110, branch `feat/b2-data-run`, `docs/ui/b2-data/`; found and fixed the converter's `ComponentAttributeRequirements` key); PR 2 done 2026-11-15 (PR #112, open, branch `feat/b2-inferred-mods`, base `dev`; "PR 2, as built" below). Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
 
 ## Goal
 
