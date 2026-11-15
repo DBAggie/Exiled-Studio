@@ -383,6 +383,76 @@ const CARD_PROPERTIES: [&str; 8] = [
     "Requires Class",
 ];
 
+/// A unique's flavour text (B-2), from the game data's rows for its name:
+/// none when it has none, or several texts (variants with their own).
+fn flavour(item: &Item, bundle: &loom_data::bundle::Bundle) -> Vec<api::FlavourLine> {
+    let unique = item
+        .body
+        .rarity
+        .is_some_and(|r| matches!(r.name(), "unique" | "relic"));
+    let (true, Some(name), Some(poe1)) = (unique, item.body.name.as_deref(), &bundle.poe1) else {
+        return Vec::new();
+    };
+    // A Foulborn unique reads its plain version's text, as PoB v2.67.2's
+    // tooltip does (`ItemsTab.lua`, "Show flavour text").
+    let name = name.trim();
+    let name = match name.strip_prefix("Foulborn ") {
+        Some(plain) if poe1.flavour_of(name).next().is_none() => plain,
+        _ => name,
+    };
+    // Distinct texts: variants that print the same text still show it.
+    let texts: std::collections::BTreeSet<&str> =
+        poe1.flavour_of(name).map(|r| r.text.as_str()).collect();
+    match (texts.first(), texts.len()) {
+        (Some(text), 1) => flavour_lines(text),
+        _ => Vec::new(),
+    }
+}
+
+/// The game's flavour text as lines: `<<...>>` glyph runs (a script the
+/// app has no font for) dropped, a `<default>{...}` line marked for the
+/// default colour, other tags and braces removed; blank lines kept as one
+/// gap between text, none at the ends.
+fn flavour_lines(text: &str) -> Vec<api::FlavourLine> {
+    let mut out: Vec<api::FlavourLine> = Vec::new();
+    for raw in text.lines() {
+        let (mut line, mut default_colour) = (String::new(), false);
+        let mut rest = raw;
+        while let Some(c) = rest.chars().next() {
+            if let Some(after) = rest.strip_prefix("<<") {
+                rest = after.find(">>").map_or("", |end| &after[end + 2..]);
+            } else if let Some(after) = rest.strip_prefix('<') {
+                let end = after.find('>').unwrap_or(after.len());
+                default_colour |= &after[..end] == "default";
+                rest = after.get(end + 1..).unwrap_or("");
+            } else {
+                if c != '{' && c != '}' {
+                    line.push(c);
+                }
+                rest = &rest[c.len_utf8()..];
+            }
+        }
+        let line = line.trim();
+        if line.is_empty() {
+            if out.last().is_some_and(|l| !l.text.is_empty()) {
+                out.push(api::FlavourLine {
+                    text: String::new(),
+                    default_colour: false,
+                });
+            }
+        } else if !(raw.contains("<<") && line.chars().all(|c| !c.is_alphanumeric())) {
+            out.push(api::FlavourLine {
+                text: line.to_owned(),
+                default_colour,
+            });
+        }
+    }
+    while out.last().is_some_and(|l| l.text.is_empty()) {
+        out.pop();
+    }
+    out
+}
+
 /// An item's card (UX-08): the header and spec lines a player reads.
 fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
     let bundle = data.map(BundleData::bundle);
@@ -438,6 +508,7 @@ fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
             .and_then(|v| pob_item::current_variant(&variant_names(item), v)),
         affixes: data.map(|d| affixes(item, d)).unwrap_or_default(),
         requirements: item_requirements(item, bundle),
+        flavour: bundle.map(|b| flavour(item, b)).unwrap_or_default(),
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
     }
@@ -934,5 +1005,41 @@ mod tests {
         let texts: Vec<&str> = n.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(texts, ["10", "20.5"]);
         assert_eq!(n[0].start, 13);
+    }
+
+    #[test]
+    fn flavour_lines_should_drop_glyphs_mark_default_text_and_keep_one_gap() {
+        let lines = |text: &str| {
+            flavour_lines(text)
+                .into_iter()
+                .map(|l| (l.text, l.default_colour))
+                .collect::<Vec<_>>()
+        };
+        let line = |t: &str, d: bool| (t.to_owned(), d);
+        assert_eq!(
+            lines("The warrior who\nfears will fall."),
+            [
+                line("The warrior who", false),
+                line("fears will fall.", false)
+            ]
+        );
+        assert_eq!(
+            lines("Great works take time.\n\n\n<default>{This item can be transformed}\n"),
+            [
+                line("Great works take time.", false),
+                line("", false),
+                line("This item can be transformed", true),
+            ]
+        );
+        assert!(lines("<<HBGAa>><<HBG01>>\n<<HBGAb>>").is_empty());
+        assert_eq!(lines("<size:31>{Big} words"), [line("Big words", false)]);
+        // An unclosed tag drops the rest of its line; text outside ASCII
+        // is kept whole.
+        assert_eq!(lines("Kept <unclosed"), [line("Kept", false)]);
+        assert_eq!(lines("Kept <<glyphs"), [line("Kept", false)]);
+        assert_eq!(
+            lines("Çà et là — «déjà»\n<default>{Ünïcode}"),
+            [line("Çà et là — «déjà»", false), line("Ünïcode", true)]
+        );
     }
 }

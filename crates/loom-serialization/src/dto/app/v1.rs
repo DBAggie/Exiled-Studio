@@ -714,6 +714,23 @@ dto! {
         pub affixes: Vec<AffixView>,
         /// What the item requires, when known.
         pub requirements: Option<Requirements>,
+        /// A unique's flavour text, line by line, as the game prints it
+        /// under the mods (B-2): empty when the game data has none for the
+        /// unique's name, or several (a unique whose variants each have
+        /// their own text).
+        #[serde(default)]
+        pub flavour: Vec<FlavourLine>,
+    }
+
+    /// One line of a unique's flavour text. An empty line is the gap the
+    /// game leaves between parts.
+    pub struct FlavourLine {
+        /// The text, the game's markup removed.
+        pub text: String,
+        /// The game prints it in the default text colour (`<default>{...}`:
+        /// a note such as "This item can be transformed on the Altar of
+        /// Sacrifice"), not the flavour colour.
+        pub default_colour: bool,
     }
 
     /// One mod of an item, as the tooltip's Alt view heads its lines

@@ -39,13 +39,98 @@ pub fn item_rules() -> ItemRules {
             property_ids: PROPERTY_IDS.iter().map(|i| (*i).to_owned()).collect(),
             label_ids: LABEL_IDS.iter().map(|i| (*i).to_owned()).collect(),
             granted_skill_wrapper: Some(GRAFT_WRAPPER_ID.to_owned()),
-            mod_tag_names: MOD_TAG_NAMES
-                .iter()
-                .map(|(id, name)| ((*id).to_owned(), (*name).to_owned()))
-                .collect(),
+            // Tag names come from `Tags.Name` in the bundle's tag table
+            // (Q-B2-2): no rule list.
+            mod_tag_names: Vec::new(),
         },
     }
 }
+
+/// Unique flavour text the art join does not reach (B-2's item card,
+/// `docs/ui/b2-data/card-data.md`, Q-B2-1): `(FlavourText ID, unique name)`,
+/// each replacing what the join gives that name. The game links a unique
+/// to its text by no key; these are upgraded versions that share their
+/// base's art (`FatedUniqueN`), variants under another art's text
+/// (Agnerod), and renamed items. Source: the pairs PoB v2.67.2 cites
+/// (`src/Export/Scripts/flavourText.lua`, `forcedNameList`), minus the 31
+/// the join already gives; checked against the game by the maintainer's
+/// copies as they come. Upgraded versions with no pair here get no text.
+pub const FLAVOUR_PAIRS: [(&str, &str); 74] = [
+    ("UniqueOneHandAxe5", "Jack, the Axe"),
+    ("UniqueBootsDIY", "Doryani's Delusion"),
+    ("UniqueGlovesStrDex9", "Tombfist"),
+    ("UniqueAmulet45", "Impresence"),
+    ("UniqueAmuletVictor1", "Talisman of the Victor"),
+    ("UniqueStaff8", "Agnerod South"),
+    ("UniqueStaff8", "Agnerod North"),
+    ("UniqueStaff8", "Agnerod West"),
+    ("Ring11", "Gifts from Above"),
+    ("Ring12", "Death Rush"),
+    ("Ring13", "Shavronne's Revelation"),
+    ("Belt5", "Auxium"),
+    ("Amulet13", "Daresso's Salute"),
+    ("Amulet14", "Voll's Devotion"),
+    ("Amulet15", "Victario's Acuity"),
+    ("UniqueAmulet27", "Star of Wraeclast"),
+    ("UniqueAmulet29x", "Replica Winterheart"),
+    ("UniqueJewel82x", "Replica Primordial Might"),
+    ("UniqueBootsDex10", "Abberath's Hooves"),
+    ("UniqueRing54", "Precursor's Emblem"),
+    ("UniqueHelmetStrInt11", "Lightpoacher"),
+    ("UniqueBootsDexInt6", "Bubonic Trail"),
+    ("UniqueBodyDexInt9", "Shroud of the Lightless"),
+    ("UniqueGlovesStrInt6", "Volkuur's Guidance"),
+    ("UniqueBootsAtlas1", "Beacon of Madness"),
+    ("UniqueBootsAtlas1", "Demigod's Eye"),
+    ("UniqueShieldDemigods", "Demigod's Beacon"),
+    ("UniqueBootsDemigods1", "Demigod's Stride"),
+    ("UniqueBeltDemigods1", "Demigod's Bounty"),
+    ("UniqueBodyDemigods", "Demigod's Dominance"),
+    ("UniqueHelmetDemigods1", "Demigod's Immortality"),
+    ("FatedUnique8", "The Signal Fire"),
+    ("FatedUnique35", "Windshriek"),
+    ("FatedUnique31", "Wildwrap"),
+    ("FatedUnique61", "Whakatutuki o Matua"),
+    ("FatedUnique21", "The Tempest"),
+    ("FatedUnique46", "The Tactician"),
+    ("FatedUnique47", "The Nomad"),
+    ("FatedUnique29", "The Stormwall"),
+    ("FatedUnique18", "The Cauteriser"),
+    ("FatedUnique25", "Queen's Escape"),
+    ("FatedUnique43", "Malachai's Awakening"),
+    ("FatedUnique1", "Kaom's Way"),
+    ("FatedUnique49", "Hyrri's Demise"),
+    ("FatedUnique10", "Hrimburn"),
+    ("FatedUnique52", "Geofri's Devotion"),
+    ("FatedUnique36", "Frostferno"),
+    ("FatedUnique26", "Duskblight"),
+    ("FatedUnique54", "Dreadbeak"),
+    ("FatedUnique19", "Doomfletch's Prism"),
+    ("FatedUnique28", "Doedre's Malevolence"),
+    ("FatedUnique5", "Death's Opus"),
+    ("FatedUnique58", "Chaber Cairn"),
+    ("FatedUnique53", "Cameria's Avarice"),
+    ("FatedUnique41", "Asenath's Chant"),
+    ("FatedUnique23", "Amplification Rod"),
+    ("FatedUnique50", "Dreadsurge"),
+    ("UniqueDescentOneHandSword1", "Blood of Summer"),
+    ("UniqueDescentOneHandAxe1", "Rust of Winter"),
+    ("UniqueDescentOneHandMace1", "Ashes of the Sun"),
+    ("UniqueDescentWand1", "Splinter of the Moon"),
+    ("UniqueDescentTwoHandSword1", "Thunder of the Dawn"),
+    ("UniqueDescentStaff1", "Vestige of Divinity"),
+    ("UniqueDescentDagger1", "Fragment of Eternity"),
+    ("UniqueDescentBow1", "Relic of the Cycle"),
+    ("UniqueDescentClaw1", "Scar of Fate"),
+    ("UniqueDescentHelmet1", "Tears of Entropy"),
+    ("UniqueDescentShield1", "Remnant of Empires"),
+    ("UniqueDescentBelt1", "Chains of Time"),
+    ("UniqueDescentQuiver1", "Slivers of Providence"),
+    ("FatedUnique57", "The Iron Fortress"),
+    ("FatedUnique48", "Winterweave"),
+    ("FatedUnique27", "Atziri's Reflection"),
+    ("Ring11x", "Replica Gifts from Above"),
+];
 
 /// `ClientStrings` ids of item-display property texts (the categorizer's
 /// `item-property` ids with numeric placeholders; Spike B PR B5d).
@@ -62,46 +147,6 @@ pub const PROPERTY_IDS: [&str; 8] = [
 
 /// `ClientStrings` ids of property labels PoB writes as `<label>: <number>`.
 pub const LABEL_IDS: [&str; 1] = ["ZanaInfluencedItem"];
-
-/// The mod tags the game's Alt view names after a mod's header (B-2,
-/// Q-B2-2). `Tags.DisplayString` is empty for mod tags, so the names are
-/// ours. **Unconfirmed in part** (`dev/active/ux-improvements/
-/// b2-item-data-plan.md`, Q-B2-2): real Ctrl+Alt+C copies of current-game
-/// items show `Life, Defences, Armour` / `Evasion` / `Energy Shield` and
-/// `Damage, Physical`, with `resource` and `physical_damage` hidden; poedb
-/// also shows `Attribute`, `Chaos, Resistance`. The other plain gameplay
-/// words are named the same way until copies from the game confirm them;
-/// compound and internal tags (`elemental_damage`, `flat_life_regen`,
-/// `influence_mod`, ...) are left out, so not shown.
-pub const MOD_TAG_NAMES: [(&str, &str); 27] = [
-    ("life", "Life"),
-    ("mana", "Mana"),
-    ("defences", "Defences"),
-    ("armour", "Armour"),
-    ("evasion", "Evasion"),
-    ("energy_shield", "Energy Shield"),
-    ("damage", "Damage"),
-    ("physical", "Physical"),
-    ("elemental", "Elemental"),
-    ("fire", "Fire"),
-    ("cold", "Cold"),
-    ("lightning", "Lightning"),
-    ("chaos", "Chaos"),
-    ("resistance", "Resistance"),
-    ("attribute", "Attribute"),
-    ("attack", "Attack"),
-    ("caster", "Caster"),
-    ("speed", "Speed"),
-    ("critical", "Critical"),
-    ("minion", "Minion"),
-    ("ailment", "Ailment"),
-    ("bleed", "Bleed"),
-    ("poison", "Poison"),
-    ("aura", "Aura"),
-    ("curse", "Curse"),
-    ("gem", "Gem"),
-    ("block", "Block"),
-];
 
 /// The `ClientStrings` id of the graft skill wrapper (`Uses level {1} {0}`;
 /// Spike B PR B5g).

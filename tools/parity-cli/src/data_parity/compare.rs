@@ -305,7 +305,11 @@ impl Comparison {
         });
     }
 
-    fn bundle_only(&mut self, table: &'static str, keys: impl IntoIterator<Item = String>) {
+    pub(super) fn bundle_only(
+        &mut self,
+        table: &'static str,
+        keys: impl IntoIterator<Item = String>,
+    ) {
         let before = self.bundle_only.len();
         self.bundle_only
             .extend(keys.into_iter().map(|key| BundleOnly { table, key }));
@@ -402,6 +406,7 @@ pub fn compare(
     compare_bosses(&mut out, properties, export, bosses);
     compare_pantheons(&mut out, bundle, export)?;
     compare_jewel_radii(&mut out, bundle, export);
+    super::flavour::compare_flavour_text(&mut out, bundle, export);
     let effects: std::collections::BTreeSet<&str> = skills
         .granted_effects
         .iter()

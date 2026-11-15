@@ -74,6 +74,8 @@
   --c-tt-enchant: #b4b4ff;
   --c-tt-fractured: #a29162;
   --c-tt-corrupted: #ff4a4a;
+  /* A unique's flavour text (the game's brown, as PoB's tooltip). */
+  --c-tt-flavour: #af6025;
   /* A requirement the character does not meet (the game's red). */
   --c-tt-unmet: #ff4a4a;
   --c-tt-separator: #5a4a2c;

@@ -166,11 +166,21 @@ pub const CHOICE_TABLES_POE1: [&str; 1] = ["PantheonPanelLayout"];
 /// checked for the files (a root without a file fails the run).
 pub const TREE_TABLES_POE1: [&str; 2] = ["PassiveJewelRadii", "PassiveJewelSlots"];
 
+/// PoE1 tables for unique flavour text (B-2's item card; `docs/ui/b2-data/
+/// card-data.md`, Q-B2-1): the unique stash layout (each unique's name,
+/// `Words`, and art, `ItemVisualIdentity`) and the words. A unique's text
+/// is the `FlavourText` row whose ID is its art's (a name convention, no
+/// key). Nothing references the layout, so it is a root; `Words` comes with
+/// it and is a root too, so a schema change cannot drop it unnoticed. PoE1
+/// only until PoE2's install is checked for the files.
+pub const FLAVOUR_TABLES_POE1: [&str; 2] = ["UniqueStashLayout", "Words"];
+
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
 /// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`],
-/// [`CHOICE_TABLES_POE1`], and [`TREE_TABLES_POE1`].
+/// [`CHOICE_TABLES_POE1`], [`TREE_TABLES_POE1`], and
+/// [`FLAVOUR_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
@@ -185,6 +195,7 @@ pub fn roots(game: Game) -> Vec<&'static str> {
         roots.extend(ITEM_LINE_TABLES_POE1);
         roots.extend(CHOICE_TABLES_POE1);
         roots.extend(TREE_TABLES_POE1);
+        roots.extend(FLAVOUR_TABLES_POE1);
     }
     roots
 }

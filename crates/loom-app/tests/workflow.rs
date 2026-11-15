@@ -1413,6 +1413,59 @@ fn an_item_card_readable_lines_and_a_variant_pick_should_be_shown() {
 }
 
 #[test]
+fn a_uniques_card_should_carry_its_flavour_text_when_the_data_has_one() {
+    use loom_serialization::dto::app::v1::FlavourLine;
+    let unique = |id: u32, name: &str, rarity: &str| {
+        format!(
+            "<Item id=\"{id}\">\nRarity: {rarity}\n{name}\nPlain Test Ring\n\
+             Implicits: 0\n+10 to maximum Life\n</Item>\n"
+        )
+    };
+    let items = [
+        unique(9, "Test Flavoured", "UNIQUE"),
+        unique(10, "Test Variants", "UNIQUE"),
+        unique(11, "Test Flavoured", "RARE"),
+        unique(12, "Not In The Data", "UNIQUE"),
+        unique(13, "Foulborn Test Flavoured", "UNIQUE"),
+        unique(14, "Test Same", "UNIQUE"),
+    ]
+    .concat();
+    let xml = synthetic().replacen("<ItemSet ", &format!("{items}<ItemSet "), 1);
+    let mut session = Session::new(Store::new());
+    session.set_data(loom_app::GameData::load(&bundle_dir()));
+    session.import_text(&xml, None).unwrap();
+
+    let line = |text: &str, default_colour| FlavourLine {
+        text: text.to_owned(),
+        default_colour,
+    };
+    assert_eq!(
+        session.item(9).unwrap().card.flavour,
+        [
+            line("A made-up line.", false),
+            line("Another one.", false),
+            line("", false),
+            line("A made-up note", true),
+        ]
+    );
+    // Two variants with their own text: which one is not known, so none.
+    assert!(session.item(10).unwrap().card.flavour.is_empty());
+    // Only a unique has flavour text; a name the data lacks has none.
+    assert!(session.item(11).unwrap().card.flavour.is_empty());
+    assert!(session.item(12).unwrap().card.flavour.is_empty());
+    // Two variants with the same text: that text.
+    assert_eq!(
+        session.item(14).unwrap().card.flavour,
+        [line("One text.", false)]
+    );
+    // A Foulborn unique reads its plain version's text.
+    assert_eq!(
+        session.item(13).unwrap().card.flavour,
+        session.item(9).unwrap().card.flavour
+    );
+}
+
+#[test]
 fn the_league_should_flag_legacy_versions_and_be_saved() {
     use loom_serialization::dto::app::v1::{League, VariantEra};
     let item = "<Item id=\"9\">\nRarity: UNIQUE\nTest Circle\nPlain Test Ring\n\

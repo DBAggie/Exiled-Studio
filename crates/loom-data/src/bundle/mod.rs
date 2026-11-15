@@ -272,8 +272,10 @@ pub struct AttributeRequirements {
     pub intelligence: i64,
 }
 
-/// A tag's display name (the game's `Tags.DisplayString`: `Life`,
-/// `Defences`), as the tooltip's modifier headers print it.
+/// A tag's display name, as the tooltip's modifier headers print it
+/// (`Life`, `Defences`): PoE1's `Tags.Name`, where a tag the Alt view hides
+/// has none (Q-B2-2). Bundles built before that read `Tags.DisplayString`,
+/// which holds monster labels only.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TagName {

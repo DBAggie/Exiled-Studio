@@ -322,6 +322,24 @@ export function TooltipBody({
       )),
     )
   }
+  // A unique's flavour text, after the flags as PoB's tooltip has it.
+  const flavour = c.flavour ?? []
+  if (flavour.length > 0) {
+    blocks.push(
+      flavour.map((l, i) =>
+        l.text === '' ? (
+          <p key={`f${i}`} className="tt-gap" aria-hidden="true" />
+        ) : (
+          <p
+            key={`f${i}`}
+            className={l['default-colour'] ? 'tt-flag' : 'tt-flavour'}
+          >
+            {l.text}
+          </p>
+        ),
+      ),
+    )
+  }
   return (
     <>
       <div className={`tt-header rarity-frame-${rarity}`}>

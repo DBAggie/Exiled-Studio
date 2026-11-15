@@ -177,6 +177,11 @@
    "size": 136
   },
   {
+   "path": "poe1/unique_flavour.json",
+   "sha256": "0870ea1453f95667052a0b273d133dcb03f7af6f87866b01b4bd132d75c2a096",
+   "size": 451
+  },
+  {
    "path": "stat_descriptions/charm_stat_descriptions.json",
    "sha256": "d993c0f7f1c4c323bc20409c3d394fb658c2bcf1713261fe54d76439ca4a12b9",
    "size": 624

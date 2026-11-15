@@ -2249,6 +2249,25 @@
         "state-after"
       ]
     },
+    "FlavourLine": {
+      "description": "One line of a unique's flavour text. An empty line is the gap the\ngame leaves between parts.",
+      "type": "object",
+      "properties": {
+        "default-colour": {
+          "description": "The game prints it in the default text colour (`<default>{...}`:\na note such as \"This item can be transformed on the Altar of\nSacrifice\"), not the flavour colour.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "The text, the game's markup removed.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "default-colour"
+      ]
+    },
     "GemCatalogEntry": {
       "description": "A gem the game data offers, for a gem picker.",
       "type": "object",
@@ -2509,6 +2528,14 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "flavour": {
+          "description": "A unique's flavour text, line by line, as the game prints it\nunder the mods (B-2): empty when the game data has none for the\nunique's name, or several (a unique whose variants each have\ntheir own text).",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FlavourLine"
           }
         },
         "influences": {

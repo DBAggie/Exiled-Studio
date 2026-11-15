@@ -19,7 +19,9 @@
 //! - PoE1: `poe1/quality_types.json` (`properties::quality_types`),
 //!   `poe1/grafts.json` (`grafts::rows`), and `poe1/pantheons.json`
 //!   (`pantheons::rows`, P3-12g), and `poe1/jewel_radii.json`
-//!   (`jewel_radii::rows`, passive tree plan T-f);
+//!   (`jewel_radii::rows`, passive tree plan T-f), and
+//!   `poe1/unique_flavour.json` (`flavour::rows` with
+//!   `poe1::FLAVOUR_PAIRS`, B-2's item card);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
 //!   and passive tables ([`passives`]; the extract's manifest format 5), and
@@ -48,7 +50,7 @@ use sha2::{Digest, Sha256};
 use crate::extract::{Extract, Read, Table};
 use crate::item_tags::ItemTags;
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
+use crate::{flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties};
 
 mod base_properties;
 mod passives;
@@ -426,11 +428,18 @@ fn attribute_requirements(
     Ok(out)
 }
 
-/// Each tag's display name (`Tags.DisplayString`), sorted by ID; tags with
-/// none left out.
+/// Each tag's display name, sorted by ID; tags with none left out.
+///
+/// The name is `Tags.Name` where the schema has that column (PoE1): the
+/// names the Alt view prints after a mod's header (`Life`, `Defences`,
+/// `Armour`), empty for the tags it hides (`resource`, `physical_damage`;
+/// Q-B2-2, `docs/ui/b2-data/card-data.md`). Without it (PoE2's schema
+/// leaves the fourth column unnamed), `Tags.DisplayString`, which holds
+/// monster labels, not mod tag names.
 fn tag_names(read: Read<'_>) -> Result<Vec<TagName>, String> {
     let t = Table::require(read, "Tags")?;
-    let (id, display) = (t.column("Id")?, t.column("DisplayString")?);
+    let id = t.column("Id")?;
+    let display = t.column("Name").or_else(|_| t.column("DisplayString"))?;
     let mut out: Vec<TagName> = t
         .rows
         .iter()
@@ -815,6 +824,15 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(n),
             );
         }
+        if let Some(texts) = flavour::rows(read, &poe1::FLAVOUR_PAIRS)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::UNIQUE_FLAVOUR,
+                to_json(&texts)?,
+                Some(texts.len()),
+            );
+        }
         if let Some(radii) = jewel_radii::rows(read)? {
             put(
                 &mut files,
@@ -1070,6 +1088,50 @@ mod tests {
                     display: "Life".to_owned()
                 },
             ]
+        );
+    }
+
+    #[test]
+    fn tag_names_should_fall_back_to_the_display_string_without_a_name_column() {
+        // PoE2: the fourth column is unnamed in the schema.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": null, "references": null}],
+              "rows": [["boss", 1, "Boss", "Ignored"], ["life", 2, "", "Life"]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "boss".to_owned(),
+                display: "Boss".to_owned()
+            }]
+        );
+    }
+
+    #[test]
+    fn tag_names_should_read_the_name_column_when_the_schema_has_it() {
+        // PoE1: `Name` holds the mod tag names; `DisplayString` the monster
+        // labels, ignored; an empty `Name` (a hidden tag) is left out.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": "Name", "references": null}],
+              "rows": [["life", 1, "", "Life"], ["resource", 2, "", ""],
+                       ["pinnacle_boss", 3, "Pinnacle Atlas Boss", ""]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "life".to_owned(),
+                display: "Life".to_owned()
+            }]
         );
     }
 

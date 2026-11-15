@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 7;
+pub const FORMAT: u32 = 8;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -54,8 +54,24 @@ pub struct Export {
     /// (format 7, passive tree plan T-f).
     #[serde(deserialize_with = "list")]
     pub jewel_radii: Vec<JewelRadius>,
+    /// `data.flavourText`, in PoB's order (format 8, B-2).
+    #[serde(deserialize_with = "list")]
+    pub flavour_text: Vec<FlavourEntry>,
     /// The tree.
     pub tree: Tree,
+}
+
+/// An entry of `data.flavourText`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlavourEntry {
+    /// The `FlavourText` ID, trailing underscores dropped.
+    pub id: String,
+    /// The unique's name.
+    pub name: String,
+    /// The lines as PoB's exporter cleaned them.
+    #[serde(deserialize_with = "list")]
+    pub text: Vec<String>,
 }
 
 /// An entry of `data.jewelRadius`.

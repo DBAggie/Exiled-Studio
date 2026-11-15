@@ -23,6 +23,7 @@
 
 pub mod affixes;
 pub mod compare;
+pub mod flavour;
 pub mod gem_effects;
 pub mod pob;
 pub mod rules;
@@ -42,7 +43,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 15] = [
+pub const TABLES: [&str; 16] = [
     "skills",
     "gems",
     "bases",
@@ -58,6 +59,7 @@ pub const TABLES: [&str; 15] = [
     "pantheons",
     "gem_effects",
     "jewel_radii",
+    "flavour_text",
 ];
 
 /// Summary and overlay format.

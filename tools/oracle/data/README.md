@@ -1,6 +1,6 @@
 # PoB data export (Phase 3 plan, step 2)
 
-`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 7; format 6 before the passive tree's T-f had no `jewel_radii`, format 5 before B-2 had no `mods` or `base_requirements`, format 2 before P3-12g no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
+`pob_data.lua` (ours, MIT) writes the game data Path of Building v2.67.2 holds after startup, for the values a calculation reads, as one JSON document (format 8; format 7 before B-2's card data had no `flavour_text`, format 6 before the passive tree's T-f had no `jewel_radii`, format 5 before B-2 had no `mods` or `base_requirements`, format 2 before P3-12g no `pantheons`, format 1 before P3-1d no `bosses`). `loom-parity-cli data-parity` compares it with a PoE1 bundle of format 2 (`docs/phase-3/data-parity.md`).
 
 It is maintainer-run, not in CI, and outside the oracle adapter and its protocol (it reads no build, so the adapter protocol does not apply). It runs on the pinned oracle runtime (`local/oracle/`, built by `tools/oracle/acquire.ps1` or `acquire.sh`, checked by `oracle-verify`), starts PoB with its own `HeadlessWrapper.lua`, and copies plain values from:
 
@@ -15,6 +15,7 @@ It is maintainer-run, not in CI, and outside the oracle adapter and its protocol
 | `bosses` | `data.bosses` (`src/Data/Bosses.lua`): each boss's armour and evasion multipliers and uber mark |
 | `pantheons` | `data.pantheons` (`src/Data/Pantheons.lua`): each god's major mark, its souls' names, and their mods' lines and values |
 | `jewel_radii` | `data.jewelRadius` (`src/Modules/Data.lua`): the radii of the tree version picked, each entry's label, inner, and outer radius (format 7) |
+| `flavour_text` | `data.flavourText` (`src/Data/FlavourText.lua`): each unique flavour text entry's ID, name, and lines as PoB's exporter cleaned them (format 8) |
 | `tree` | `src/TreeData/<version>/tree.lua` as PoB reads it, before `PassiveTree.lua` adds display lines |
 
 No value is converted; the comparison names each conversion PoB's exporter made. Not copied: skills' level requirements, Vaal soul costs, and stat interpolation kinds (the bundle does not carry the first two; the third stays raw until P3-9a). Writes go only to the output file: `io.open` is the oracle's write guard, and a refused write stops the run.
