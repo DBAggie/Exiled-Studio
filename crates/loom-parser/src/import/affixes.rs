@@ -503,7 +503,7 @@ fn infer(ctx: &Context<'_>, inputs: &Inputs<'_>) -> Vec<(usize, Vec<usize>)> {
             }
         }
     }
-    let dropped: BTreeSet<usize> = twice.iter().filter_map(|s| at.get(s).copied()).collect();
+    let mut dropped: BTreeSet<usize> = twice.iter().filter_map(|s| at.get(s).copied()).collect();
     let bounds = |stat: &str| -> Option<(i64, i64)> {
         let p = at.get(stat)?;
         lines
@@ -531,6 +531,32 @@ fn infer(ctx: &Context<'_>, inputs: &Inputs<'_>) -> Vec<(usize, Vec<usize>)> {
                 })
         }
     };
+    // A line a fitting, possible row could join to a line left out is left
+    // out too: without its partner's value the row is not a reading the
+    // search can weigh, and the line's other readings would look like the
+    // only one (Ghoul Pelt's "Mammoth's": increased armour, on two lines,
+    // with stun recovery; B-2 item evidence).
+    loop {
+        let out_stats: BTreeSet<&str> = lines
+            .iter()
+            .enumerate()
+            .filter(|(p, _)| dropped.contains(p))
+            .flat_map(|(_, l)| l.stats.iter().map(|(s, _)| *s))
+            .collect();
+        let joined: BTreeSet<usize> = out_stats
+            .iter()
+            .flat_map(|s| ctx.mods.row_indexes_with_stat(s).iter().copied())
+            .filter_map(|n| Some((n, ctx.mods.row(n)?)))
+            .filter(|(n, row)| ctx.fits(row, line) && possible(*n, row))
+            .flat_map(|(_, row)| row.stats.iter().filter_map(|(s, _, _)| at.get(s.as_str())))
+            .copied()
+            .filter(|p| !dropped.contains(p))
+            .collect();
+        if joined.is_empty() {
+            break;
+        }
+        dropped.extend(joined);
+    }
     // Candidate rows: every stat shown on a kept line, values not out of
     // reach, fitting and possible.
     let mut candidates: BTreeSet<usize> = BTreeSet::new();

@@ -429,3 +429,93 @@ fn each_cards_requirements_should_be_the_copys_without_its_gems() {
     println!("{equal} cards without sockets equal their copy's requirements");
     assert!(equal >= 6, "{equal}");
 }
+
+/// One affix as `kind name (tier) crafted [tags]`, from a copy's header or
+/// the card.
+fn affix_text(
+    kind: &str,
+    name: Option<&str>,
+    tier: Option<u32>,
+    crafted: bool,
+    tags: &[String],
+) -> String {
+    format!(
+        "{kind} {:?} {tier:?}{} {tags:?}",
+        name.unwrap_or("-"),
+        if crafted { " crafted" } else { "" }
+    )
+}
+
+/// Each copy's prefix, suffix, and implicit headers (affix name, tier,
+/// crafted, tags) against the card's affixes, named and inferred (E8).
+/// A unique's lines have no affix headers in the game's sense
+/// (`Unique Modifier`) and are not compared. The card names only the mods
+/// the lines allow one reading of, so it may name fewer.
+#[test]
+#[ignore = "needs the real bundle (LOOM_B2_BUNDLE)"]
+fn each_copys_affix_headers_should_equal_the_cards_affixes() {
+    use loom_serialization::dto::app::v1::AffixKind;
+    let mut session = session();
+    let (mut compared, mut named) = (0, 0);
+    let mut differences = Vec::new();
+    for (name, text) in copies() {
+        let converted = game_copy::convert(&text).unwrap();
+        session.add_item(&text, None).unwrap();
+        let card = session.item(added(&session)).unwrap().card;
+        let want: Vec<String> = converted
+            .headers
+            .iter()
+            .filter_map(|h| {
+                let kind = if h.kind.ends_with("Prefix") {
+                    "prefix"
+                } else if h.kind.ends_with("Suffix") {
+                    "suffix"
+                } else if h.kind.ends_with("Implicit") && h.name.is_some() {
+                    "implicit"
+                } else {
+                    return None;
+                };
+                let crafted = h.kind.starts_with("Master Crafted");
+                Some(affix_text(
+                    kind,
+                    h.name.as_deref(),
+                    h.tier,
+                    crafted,
+                    &h.tags,
+                ))
+            })
+            .collect();
+        let got: Vec<String> = card
+            .affixes
+            .iter()
+            .filter(|a| a.kind != AffixKind::Implicit || a.name.is_some())
+            .map(|a| {
+                let kind = match a.kind {
+                    AffixKind::Prefix => "prefix",
+                    AffixKind::Suffix => "suffix",
+                    AffixKind::Implicit => "implicit",
+                };
+                affix_text(kind, a.name.as_deref(), a.tier, a.crafted, &a.tags)
+            })
+            .collect();
+        compared += want.len();
+        named += got.len();
+        // Every affix the card names is one the copy heads: the card may
+        // leave a mod out (lines with several readings), never name one the
+        // item does not have, or another tier.
+        for g in got {
+            if !want.contains(&g) {
+                println!("{name}: card {g}, copy {want:#?}");
+                differences.push(format!("{name}: {g}"));
+            }
+        }
+    }
+    println!("{compared} headers; the cards name {named}; differences {differences:?}");
+    assert!(named >= 40, "{named}");
+    // The card gives an influence mod no tier (`affixes::tier`); the game
+    // counts its tier among the influence's rows (Tier 1).
+    assert_eq!(
+        differences,
+        [r#"tempest-refuge: suffix "of Shaping" None ["Life"]"#]
+    );
+}
