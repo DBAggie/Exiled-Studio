@@ -477,11 +477,7 @@ impl App {
             .items
             .item(loom_domain::ItemId(id))
             .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {id}")))?;
-        Ok(crate::view::item_view(
-            &state.build,
-            item,
-            data.as_ref().map(|d| d.data),
-        ))
+        Ok(crate::view::item_view_of(&state, item, data.as_deref()))
     }
 
     /// An item edit's effect, calculated on the caller's thread with the

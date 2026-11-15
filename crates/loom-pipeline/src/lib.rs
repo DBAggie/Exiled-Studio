@@ -454,6 +454,24 @@ pub fn calculate(
         .map_err(|e| Error::new(Step::Calculate, e.code(), &e))
 }
 
+/// The values of the items `build` has in use ([`loom_calc::item_values`]:
+/// the item card's defences, block, and weapon values).
+///
+/// # Errors
+/// The engine's code ([`Step::Calculate`]).
+pub fn item_values(
+    build: &Build,
+    data: &dyn CalcData,
+    options: &CalcOptions,
+) -> Result<loom_calc::ItemValues, Error> {
+    let input = CalcInput {
+        build,
+        data,
+        options,
+    };
+    loom_calc::item_values(&input).map_err(|e| Error::new(Step::Calculate, e.code(), &e))
+}
+
 /// The calc result document v1 of a result, as JSON.
 ///
 /// # Errors

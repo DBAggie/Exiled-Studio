@@ -720,6 +720,50 @@ dto! {
         /// their own text).
         #[serde(default)]
         pub flavour: Vec<FlavourLine>,
+        /// The item's own values as the calculation computes them (B-2
+        /// item evidence): an armour piece's defences, a shield's block, a
+        /// weapon's damage, rate, and critical strike chance. None for an
+        /// item without such values, or when the data or the base is
+        /// missing.
+        #[serde(default)]
+        pub values: Option<CardValues>,
+    }
+
+    /// An item's own values ([`ItemCard::values`]), each as the game's
+    /// tooltip shows it before rounding for display.
+    pub struct CardValues {
+        /// The defences above 0, in the game's order (armour, evasion,
+        /// energy shield).
+        pub defences: Vec<CardDefence>,
+        /// A shield's chance to block, percent.
+        pub block: Option<f64>,
+        /// A weapon's damage per type, physical first.
+        pub damage: Vec<CardDamage>,
+        /// A weapon's attacks per second.
+        pub attack_rate: Option<f64>,
+        /// A weapon's critical strike chance, percent.
+        pub crit_chance: Option<f64>,
+        /// The values leave out something the engine does not model on
+        /// this item (an unmodelled line or base, missing data).
+        pub partial: bool,
+    }
+
+    /// One defence on an item card.
+    pub struct CardDefence {
+        /// `armour`, `evasion`, or `energy-shield`.
+        pub defence: String,
+        /// The value.
+        pub value: f64,
+    }
+
+    /// One damage type's range on an item card.
+    pub struct CardDamage {
+        /// `physical`, `fire`, `cold`, `lightning`, or `chaos`.
+        pub damage_type: String,
+        /// The minimum.
+        pub min: f64,
+        /// The maximum.
+        pub max: f64,
     }
 
     /// One line of a unique's flavour text. An empty line is the gap the

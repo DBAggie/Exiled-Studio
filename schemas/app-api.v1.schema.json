@@ -445,6 +445,52 @@
         "version"
       ]
     },
+    "CardDamage": {
+      "description": "One damage type's range on an item card.",
+      "type": "object",
+      "properties": {
+        "damage-type": {
+          "description": "`physical`, `fire`, `cold`, `lightning`, or `chaos`.",
+          "type": "string"
+        },
+        "max": {
+          "description": "The maximum.",
+          "type": "number",
+          "format": "double"
+        },
+        "min": {
+          "description": "The minimum.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "damage-type",
+        "min",
+        "max"
+      ]
+    },
+    "CardDefence": {
+      "description": "One defence on an item card.",
+      "type": "object",
+      "properties": {
+        "defence": {
+          "description": "`armour`, `evasion`, or `energy-shield`.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defence",
+        "value"
+      ]
+    },
     "CardProperty": {
       "description": "One base value on an item card.",
       "type": "object",
@@ -462,6 +508,60 @@
       "required": [
         "name",
         "value"
+      ]
+    },
+    "CardValues": {
+      "description": "An item's own values ([`ItemCard::values`]), each as the game's\ntooltip shows it before rounding for display.",
+      "type": "object",
+      "properties": {
+        "attack-rate": {
+          "description": "A weapon's attacks per second.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "block": {
+          "description": "A shield's chance to block, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "crit-chance": {
+          "description": "A weapon's critical strike chance, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "damage": {
+          "description": "A weapon's damage per type, physical first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDamage"
+          }
+        },
+        "defences": {
+          "description": "The defences above 0, in the game's order (armour, evasion,\nenergy shield).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDefence"
+          }
+        },
+        "partial": {
+          "description": "The values leave out something the engine does not model on\nthis item (an unmodelled line or base, missing data).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defences",
+        "damage",
+        "partial"
       ]
     },
     "ChangeKind": {
@@ -2641,6 +2741,18 @@
           "items": {
             "type": "string"
           }
+        },
+        "values": {
+          "description": "The item's own values as the calculation computes them (B-2\nitem evidence): an armour piece's defences, a shield's block, a\nweapon's damage, rate, and critical strike chance. None for an\nitem without such values, or when the data or the base is\nmissing.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardValues"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "variant-eras": {
           "description": "What each variant is, in the order of `variants`.",

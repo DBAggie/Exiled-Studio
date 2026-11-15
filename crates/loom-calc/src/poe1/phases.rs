@@ -551,34 +551,9 @@ const SUPPRESSION_CHANCE_CAP: f64 = 100.0;
 fn block(calc: &mut Calc<'_>) -> Result<(), CalcError> {
     let cx = calc.context(Flags::NONE);
     let mut reasons = Reasons::new();
-    let shield_q = Quantity::Poe1(Poe1Quantity::Piece(ArmourSlot::Weapon2, PieceValue::Block));
     let mut base_terms = Vec::new();
-    if has(calc, shield_q) {
-        let b = sum(
-            calc,
-            shield_q,
-            Op::Base,
-            Term::Step("shield-block-base"),
-            &mut reasons,
-        )?;
-        let inc = sum(
-            calc,
-            shield_q,
-            Op::Increased,
-            Term::Step("shield-block-increased-sum"),
-            &mut reasons,
-        )?;
-        let inc = factor(calc, inc, Term::Step("shield-block-increased"))?;
-        let raw = product(calc, &[b, inc], Term::Step("shield-block-unrounded"))?;
-        let value = math::floor(raw.value);
-        let node = calc.graph_mut().push(
-            Node::Floor {
-                term: Term::Step("shield-block"),
-                of: raw.node,
-            },
-            value,
-        )?;
-        base_terms.push(Valued { node, value });
+    if let Some(shield) = shield_block(calc, &mut reasons)? {
+        base_terms.push(shield);
     }
     base_terms.push(sum(
         calc,
@@ -697,6 +672,43 @@ fn defence_modifier(
     )
 }
 
+/// The shield's own chance to block, when the off hand holds one:
+/// `floor(base x (1 + local inc / 100))` (`Classes/Item.lua`).
+pub(super) fn shield_block(
+    calc: &mut Calc<'_>,
+    reasons: &mut Reasons,
+) -> Result<Option<Valued>, CalcError> {
+    let shield_q = Quantity::Poe1(Poe1Quantity::Piece(ArmourSlot::Weapon2, PieceValue::Block));
+    if !has(calc, shield_q) {
+        return Ok(None);
+    }
+    let b = sum(
+        calc,
+        shield_q,
+        Op::Base,
+        Term::Step("shield-block-base"),
+        reasons,
+    )?;
+    let inc = sum(
+        calc,
+        shield_q,
+        Op::Increased,
+        Term::Step("shield-block-increased-sum"),
+        reasons,
+    )?;
+    let inc = factor(calc, inc, Term::Step("shield-block-increased"))?;
+    let raw = product(calc, &[b, inc], Term::Step("shield-block-unrounded"))?;
+    let value = math::floor(raw.value);
+    let node = calc.graph_mut().push(
+        Node::Floor {
+            term: Term::Step("shield-block"),
+            of: raw.node,
+        },
+        value,
+    )?;
+    Ok(Some(Valued { node, value }))
+}
+
 /// The value of `defence` on the armour piece in `slot` (`Classes/
 /// Item.lua`): `round((min + local flat + range x percentile) x (1 + local
 /// inc / 100) x (1 + quality / 100))`. The percentile is the item's
@@ -707,7 +719,7 @@ fn defence_modifier(
 /// adds them after, ours keeps them, so a hybrid piece shows its own
 /// value; `docs/ui/b2-data/item-evidence.md`); else 1. Its nodes are
 /// `step.piece-*`, and the value's term is [`Term::Base`]: the row's base.
-fn piece(
+pub(super) fn piece(
     calc: &mut Calc<'_>,
     slot: ArmourSlot,
     defence: Defence,

@@ -2211,3 +2211,52 @@ fn two_runs_should_give_the_same_result() {
     let b = with_spec(witch(90), spec(&[1, 2, 3]));
     assert_eq!(format!("{:?}", run(&b)), format!("{:?}", run(&b)));
 }
+
+// ------------------------------------------------------- an item's values
+
+/// `loom_calc::item_values` (B-2 item evidence, E5): the nodes the
+/// calculation builds for an item's own values, read for the item card.
+#[test]
+fn item_values_should_be_the_calculations_own_nodes() {
+    use loom_calc::poe1::{ArmourSlot, Defence};
+    let values = |b: &Build, o: &CalcOptions| {
+        let data = Data::new();
+        let options = with_passives(b, o);
+        loom_calc::item_values(&CalcInput {
+            build: b,
+            data: &data,
+            options: &options,
+        })
+        .unwrap()
+    };
+    // A body armour's shown armour gives its roll back (E4); a shield's
+    // block is floored.
+    let b = with_items(
+        witch(1),
+        vec![item(2, vec![spec_line("Armour", "113")]), item(3, vec![])],
+        &[("Body Armour", 2, false), ("Weapon 2", 3, false)],
+    );
+    let v = values(&b, &with_bases(&[(2, "Test Plate"), (3, "Test Shield")]));
+    assert_eq!(
+        v.defences,
+        [
+            (ArmourSlot::BodyArmour, Defence::Armour, 113.0),
+            (ArmourSlot::Weapon2, Defence::Armour, 10.0)
+        ]
+    );
+    assert_eq!(v.block, Some(24.0));
+    assert_eq!(v.weapon, None);
+    // A sword at 20% quality: 4-9 physical scaled and rounded, 645 ms, 5%.
+    let b = with_items(
+        witch(1),
+        vec![item(2, vec![spec_line("Quality", "+20%")])],
+        &[("Weapon 1", 2, false)],
+    );
+    let v = values(&b, &with_bases(&[(2, "Test Sword")]));
+    let weapon = v.weapon.unwrap();
+    assert_eq!(weapon.damage, [(DamageType::Physical, 5.0, 11.0)]);
+    assert_eq!(weapon.attack_rate, 1000.0 / 645.0);
+    assert_eq!(weapon.crit_chance, 5.0);
+    assert!(v.defences.is_empty());
+    assert_eq!(v.block, None);
+}

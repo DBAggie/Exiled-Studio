@@ -288,6 +288,18 @@ pub fn item_view(build: &Build, item: &Item, data: Option<&BundleData<'_>>) -> a
     }
 }
 
+/// [`item_view`] with the card's values ([`crate::card_values`]), which
+/// need the item's range ends and the game data.
+pub(crate) fn item_view_of(
+    state: &crate::State,
+    item: &Item,
+    data: Option<&crate::GameData>,
+) -> api::ItemView {
+    let mut view = item_view(&state.build, item, data.map(|d| d.data));
+    view.card.values = data.and_then(|d| crate::card_values::values(item, &state.ends, d));
+    view
+}
+
 /// The item's affixes, named and inferred, with tiers
 /// ([`loom_parser::import::affixes`]).
 fn affixes(item: &Item, data: &BundleData<'_>) -> Vec<api::AffixView> {
@@ -509,6 +521,7 @@ fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
         affixes: data.map(|d| affixes(item, d)).unwrap_or_default(),
         requirements: item_requirements(item, bundle),
         flavour: bundle.map(|b| flavour(item, b)).unwrap_or_default(),
+        values: None,
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
     }

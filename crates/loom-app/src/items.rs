@@ -33,7 +33,7 @@ pub struct Added {
 }
 
 /// One-handed weapon classes (the bundle's `item_class`).
-const ONE_HANDED: [&str; 9] = [
+pub(crate) const ONE_HANDED: [&str; 9] = [
     "One Hand Axe",
     "One Hand Mace",
     "One Hand Sword",
@@ -46,7 +46,7 @@ const ONE_HANDED: [&str; 9] = [
 ];
 
 /// Two-handed weapon classes.
-const TWO_HANDED: [&str; 7] = [
+pub(crate) const TWO_HANDED: [&str; 7] = [
     "Two Hand Axe",
     "Two Hand Mace",
     "Two Hand Sword",
@@ -214,7 +214,7 @@ fn equip(
     Ok(())
 }
 
-fn put(set: &mut ItemSet, slot: &str, item: Option<ItemId>) {
+pub(crate) fn put(set: &mut ItemSet, slot: &str, item: Option<ItemId>) {
     if let Some(e) = set.slots.typed_mut().find(|e| e.slot.as_str() == slot) {
         e.item = item;
     } else if item.is_some() {

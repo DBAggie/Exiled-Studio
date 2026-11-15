@@ -47,6 +47,7 @@ pub use input::{
     MonsterDefences, MonsterStats, PassiveState, Range, ResolvedPassives, Scaling, SkillChoice,
     SkillGem, StatAmount, StatSet, StatSetLevel, WeaponBase,
 };
+pub use poe1::item_values::{ItemValues, WeaponValues, item_values};
 pub use quantity::{Bound, DamageType, Op, Quantity};
 pub use result::{CalcResult, Field, FieldResult};
 pub use source::Source;

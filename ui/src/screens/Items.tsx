@@ -23,6 +23,7 @@ import {
   ScreenHeading,
   Sockets,
 } from '../components'
+import { valueLines, writtenProperties } from '../cardValues'
 import { fieldLabel, t, tDynamic } from '../i18n'
 import { actions, attempt, query, run } from '../store'
 import { Inventory } from './Inventory'
@@ -415,7 +416,9 @@ function ItemCardView({ item, locked }: { item: ItemView; locked: boolean }) {
       ? null
       : t('card.itemLevel', { n: c['item-level'] }),
     c['level-req'] == null ? null : t('card.levelReq', { n: c['level-req'] }),
-    ...c.properties.map((p) => `${p.name}: ${p.value}`),
+    ...valueLines(c).map((v) => `${v.name}: ${v.value}`),
+    c.values?.partial === true ? t('values.partial') : null,
+    ...writtenProperties(c).map((p) => `${p.name}: ${p.value}`),
     ...c.influences.map((i) => t('card.influence', { name: i })),
     ...c.flags,
   ].filter((f): f is string => f != null && f !== '')

@@ -876,6 +876,14 @@ export interface ItemCard {
    */
   sockets: string[]
   /**
+   * The item's own values as the calculation computes them (B-2
+   * item evidence): an armour piece's defences, a shield's block, a
+   * weapon's damage, rate, and critical strike chance. None for an
+   * item without such values, or when the data or the base is
+   * missing.
+   */
+  values?: CardValues | null
+  /**
    * What each variant is, in the order of `variants`.
    */
   'variant-eras': VariantEra[]
@@ -968,6 +976,68 @@ export interface Requirements {
    * Strength (0: none).
    */
   strength: number
+}
+/**
+ * An item's own values ([`ItemCard::values`]), each as the game's
+ * tooltip shows it before rounding for display.
+ */
+export interface CardValues {
+  /**
+   * A weapon's attacks per second.
+   */
+  'attack-rate'?: number | null
+  /**
+   * A shield's chance to block, percent.
+   */
+  block?: number | null
+  /**
+   * A weapon's critical strike chance, percent.
+   */
+  'crit-chance'?: number | null
+  /**
+   * A weapon's damage per type, physical first.
+   */
+  damage: CardDamage[]
+  /**
+   * The defences above 0, in the game's order (armour, evasion,
+   * energy shield).
+   */
+  defences: CardDefence[]
+  /**
+   * The values leave out something the engine does not model on
+   * this item (an unmodelled line or base, missing data).
+   */
+  partial: boolean
+}
+/**
+ * One damage type's range on an item card.
+ */
+export interface CardDamage {
+  /**
+   * `physical`, `fire`, `cold`, `lightning`, or `chaos`.
+   */
+  'damage-type': string
+  /**
+   * The maximum.
+   */
+  max: number
+  /**
+   * The minimum.
+   */
+  min: number
+}
+/**
+ * One defence on an item card.
+ */
+export interface CardDefence {
+  /**
+   * `armour`, `evasion`, or `energy-shield`.
+   */
+  defence: string
+  /**
+   * The value.
+   */
+  value: number
 }
 /**
  * One source line of an item.

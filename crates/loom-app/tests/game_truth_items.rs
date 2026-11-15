@@ -255,3 +255,120 @@ fn a_pasted_armour_piece_should_calculate_the_defences_its_copy_shows() {
         assert_eq!(got, want, "{name}");
     }
 }
+
+/// What a copy's property lines print: `(name, values)`, the
+/// `(augmented)` marks removed; `Elemental Damage` lists one range per
+/// element.
+fn printed(text: &str) -> Vec<(String, Vec<String>)> {
+    const NAMES: [&str; 8] = [
+        "Physical Damage",
+        "Elemental Damage",
+        "Chaos Damage",
+        "Critical Strike Chance",
+        "Attacks per Second",
+        "Armour",
+        "Evasion Rating",
+        "Energy Shield",
+    ];
+    text.lines()
+        .filter_map(|l| {
+            let (name, value) = l.trim().split_once(": ")?;
+            (NAMES.contains(&name) || name == "Chance to Block").then(|| {
+                let values = value
+                    .split(", ")
+                    .map(|v| v.replace(" (augmented)", "").trim().to_owned())
+                    .collect();
+                (name.to_owned(), values)
+            })
+        })
+        .collect()
+}
+
+/// The same lines from the card's values, as the game prints them:
+/// ranges whole, rate and crit to two places, block a whole percent.
+fn shown(v: &api::CardValues) -> Vec<(String, Vec<String>)> {
+    let range = |d: &api::CardDamage| format!("{}-{}", d.min, d.max);
+    let mut out = Vec::new();
+    let of = |t: &'static str| v.damage.iter().filter(move |d| d.damage_type == t);
+    if let Some(d) = of("physical").next() {
+        out.push(("Physical Damage".to_owned(), vec![range(d)]));
+    }
+    let elemental: Vec<String> = ["fire", "cold", "lightning"]
+        .iter()
+        .flat_map(|t| of(t).map(range))
+        .collect();
+    if !elemental.is_empty() {
+        out.push(("Elemental Damage".to_owned(), elemental));
+    }
+    if let Some(d) = of("chaos").next() {
+        out.push(("Chaos Damage".to_owned(), vec![range(d)]));
+    }
+    if let Some(c) = v.crit_chance {
+        out.push((
+            "Critical Strike Chance".to_owned(),
+            vec![format!("{c:.2}%")],
+        ));
+    }
+    if let Some(r) = v.attack_rate {
+        out.push(("Attacks per Second".to_owned(), vec![format!("{r:.2}")]));
+    }
+    if let Some(b) = v.block {
+        out.push(("Chance to Block".to_owned(), vec![format!("{b}%")]));
+    }
+    for d in &v.defences {
+        let name = match d.defence.as_str() {
+            "armour" => "Armour",
+            "evasion" => "Evasion Rating",
+            _ => "Energy Shield",
+        };
+        out.push((name.to_owned(), vec![format!("{}", d.value)]));
+    }
+    out
+}
+
+/// The card's values equal what each copy's property lines print: weapon
+/// damage per type, critical strike chance, attacks per second, a
+/// shield's block, and the defences (E5). The elements' order on the
+/// card's side is fire, cold, lightning, as the copies print them.
+#[test]
+#[ignore = "needs the real bundle (LOOM_B2_BUNDLE)"]
+fn each_cards_values_should_equal_what_its_copy_prints() {
+    let mut session = session();
+    let mut checked = 0;
+    let (mut partial, mut differences) = (Vec::new(), Vec::new());
+    for (name, text) in copies() {
+        session.add_item(&text, None).unwrap();
+        let card = session.item(added(&session)).unwrap().card;
+        let mut want = printed(&text);
+        let Some(values) = card.values else {
+            assert!(
+                want.is_empty(),
+                "{name}: no values, the copy prints {want:?}"
+            );
+            continue;
+        };
+        if values.partial {
+            partial.push(name.clone());
+        }
+        let mut got = shown(&values);
+        for v in [&mut want, &mut got] {
+            for (_, values) in v.iter_mut() {
+                values.sort();
+            }
+            v.sort();
+        }
+        if got != want {
+            println!("{name}:\n  card {got:?}\n  copy {want:?}");
+            differences.push(name);
+        }
+        checked += 1;
+    }
+    println!("{checked} cards checked; partial {partial:?}");
+    assert!(checked >= 15, "{checked}");
+    // Replica Dreamfeather's "(5-10)% increased Attack Speed" is one of its
+    // three lines the resolver finds ambiguous (`LINE_AMBIGUOUS`, local or
+    // global), so the card leaves it out (1.50 for the game's 1.65) and
+    // says so; Loath Crown's unresolved lines are not local ones.
+    assert_eq!(partial, ["loath-crown", "replica-dreamfeather"]);
+    assert_eq!(differences, ["replica-dreamfeather"]);
+}

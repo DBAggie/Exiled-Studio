@@ -12,6 +12,7 @@
 
 mod app;
 pub mod bundles;
+mod card_values;
 pub mod crash;
 mod data;
 pub mod diagnostics;

@@ -24,6 +24,7 @@ pub mod exposure;
 pub mod gem_levels;
 pub mod gems;
 pub mod hit;
+pub mod item_values;
 pub mod keystones;
 pub mod mapping;
 pub mod minions;

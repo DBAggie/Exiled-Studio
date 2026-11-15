@@ -202,7 +202,7 @@ pub const SKILL_PARTS: [(&str, &[SkillPart]); 1] = [(
 
 /// PoB's damage types in its conversion order (`dmgTypeList`), the order
 /// it sums each pass in.
-const TYPES: [DamageType; 5] = [
+pub(super) const TYPES: [DamageType; 5] = [
     DamageType::Physical,
     DamageType::Lightning,
     DamageType::Cold,
@@ -1042,18 +1042,18 @@ fn intimidating_uptime(
 }
 
 /// The weapon's values (module docs, step 8).
-struct WeaponData {
+pub(super) struct WeaponData {
     /// Damage per type in [`TYPES`] order: `[min, max]` when both are
     /// above 0.
-    damage: [Option<[Valued; 2]>; 5],
+    pub(super) damage: [Option<[Valued; 2]>; 5],
     /// Attacks per second.
-    rate: Valued,
+    pub(super) rate: Valued,
     /// Critical strike chance, percent.
-    crit: Valued,
+    pub(super) crit: Valued,
 }
 
 /// The weapon in the main hand's values (module docs, step 8).
-fn weapon_data(
+pub(super) fn weapon_data(
     calc: &mut Calc<'_>,
     item: ItemId,
     reasons: &mut Reasons,

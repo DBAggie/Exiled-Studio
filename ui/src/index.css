@@ -2234,6 +2234,27 @@ button.inv-slot:focus-visible {
   color: var(--c-tt-unmet);
 }
 
+.tt-fire {
+  color: var(--c-tt-fire);
+}
+
+.tt-cold {
+  color: var(--c-tt-cold);
+}
+
+.tt-lightning {
+  color: var(--c-tt-lightning);
+}
+
+.tt-chaos {
+  color: var(--c-tt-chaos);
+}
+
+.tt-note {
+  color: var(--c-tt-label);
+  font-style: italic;
+}
+
 .tt-augmented,
 .tt-mod {
   color: var(--c-tt-mod);
