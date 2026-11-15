@@ -123,9 +123,20 @@ function sampleItems(): ItemView[] {
           {
             kind: 'prefix',
             name: 'Steady',
-            tier: null,
+            tier: 2,
+            crafted: false,
+            inferred: false,
             tags: ['Attack'],
             lines: [4],
+          },
+          {
+            kind: 'suffix',
+            name: 'of Craft',
+            tier: null,
+            crafted: true,
+            inferred: true,
+            tags: [],
+            lines: [3],
           },
         ],
         requirements: {

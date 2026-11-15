@@ -396,16 +396,17 @@ dto! {
         /// When the selected variant is a legacy version: the variant the
         /// current game makes instead, if one matches.
         pub current_variant: Option<u32>,
-        /// The mods PoB names on the item and the lines each made, prefixes
-        /// first (the tooltip's Alt view headers); lines no mod is found
-        /// for are in none.
+        /// The item's mods and the lines each made, implicits first, then
+        /// prefixes and suffixes, crafted last in each (the tooltip's Alt
+        /// view headers): the mods PoB names, and those the lines allow
+        /// one reading of; lines no mod is found for are in none.
         pub affixes: Vec<AffixView>,
         /// What the item requires, when known.
         pub requirements: Option<Requirements>,
     }
 
     /// One mod of an item, as the tooltip's Alt view heads its lines
-    /// (`Prefix Modifier "Urchin's" — Life, Defences`).
+    /// (`Prefix Modifier "Urchin's" (Tier: 2) — Life, Defences`).
     pub struct AffixView {
         /// Prefix or suffix.
         pub kind: AffixKind,
@@ -413,6 +414,11 @@ dto! {
         pub name: Option<String>,
         /// Its tier on the item's base (1 is the best), when known.
         pub tier: Option<u32>,
+        /// Whether it is crafted (`Master Crafted Prefix Modifier`).
+        pub crafted: bool,
+        /// Whether it was inferred from the lines (the only reading the
+        /// game data allows) rather than named by the item.
+        pub inferred: bool,
         /// Its tags as the game prints them (`Life`, `Defences`).
         pub tags: Vec<String>,
         /// The line indices it made, in item order.
@@ -771,8 +777,10 @@ dto_enum! {
         Standard,
     }
 
-    /// Whether an affix is a prefix or a suffix.
+    /// Where an affix is on the item.
     pub enum AffixKind {
+        /// An implicit modifier.
+        Implicit,
         /// A prefix.
         Prefix,
         /// A suffix.

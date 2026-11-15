@@ -52,6 +52,7 @@ fn data(rows: &[(&str, i64)]) -> Data {
                 sections: Vec::new(),
                 local_carriers: crate::import::mods::LocalCarriers::default(),
                 influences: Vec::new(),
+                affix_generations: crate::import::mods::AffixGenerations::default(),
             },
             text: TextRules::default(),
         },

@@ -12,7 +12,7 @@
 
 use loom_domain::ModSection;
 use loom_parser::import::mods::{
-    DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, Unflagged,
+    AffixGenerations, DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, Unflagged,
 };
 use loom_parser::import::{ItemRules, TextRules};
 
@@ -87,6 +87,10 @@ pub fn item_rules() -> ItemRules {
             },
             sections: Vec::new(),
             influences: Vec::new(),
+            affix_generations: AffixGenerations {
+                prefix: vec![g::PREFIX],
+                suffix: vec![g::SUFFIX],
+            },
         },
         text: TextRules::default(),
     }

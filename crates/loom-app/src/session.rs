@@ -1020,7 +1020,7 @@ impl Session {
         Ok(view::item_view(
             &state.build,
             item,
-            self.data.as_ref().map(|d| d.bundle),
+            self.data.as_ref().map(|d| d.data),
         ))
     }
 
@@ -1226,7 +1226,7 @@ pub fn preview(
         .build
         .items
         .item(ItemId(e.item))
-        .map(|i| view::item_view(&after_state.build, i, Some(data.bundle)))
+        .map(|i| view::item_view(&after_state.build, i, Some(data.data)))
         .ok_or_else(|| AppError::new(Code::EditItem, format!("no item {}", e.item)))?;
     Ok(api::ItemEditPreview { item, fields })
 }

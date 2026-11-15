@@ -572,9 +572,10 @@ export interface ItemView {
  */
 export interface ItemCard {
   /**
-   * The mods PoB names on the item and the lines each made, prefixes
-   * first (the tooltip's Alt view headers); lines no mod is found
-   * for are in none.
+   * The item's mods and the lines each made, implicits first, then
+   * prefixes and suffixes, crafted last in each (the tooltip's Alt
+   * view headers): the mods PoB names, and those the lines allow
+   * one reading of; lines no mod is found for are in none.
    */
   affixes: AffixView[]
   /**
@@ -634,13 +635,22 @@ export interface ItemCard {
 }
 /**
  * One mod of an item, as the tooltip's Alt view heads its lines
- * (`Prefix Modifier "Urchin's" — Life, Defences`).
+ * (`Prefix Modifier "Urchin's" (Tier: 2) — Life, Defences`).
  */
 export interface AffixView {
   /**
+   * Whether it is crafted (`Master Crafted Prefix Modifier`).
+   */
+  crafted: boolean
+  /**
+   * Whether it was inferred from the lines (the only reading the
+   * game data allows) rather than named by the item.
+   */
+  inferred: boolean
+  /**
    * Prefix or suffix.
    */
-  kind: 'prefix' | 'suffix'
+  kind: 'implicit' | 'prefix' | 'suffix'
   /**
    * The line indices it made, in item order.
    */

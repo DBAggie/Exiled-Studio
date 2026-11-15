@@ -198,6 +198,29 @@ pub struct ModRules {
     /// Influence names (the domain's [`InfluenceId`]) to the rows'
     /// influence values.
     pub influences: Vec<(String, i64)>,
+    /// Which generation types are prefixes and which suffixes (the
+    /// tooltip's Alt view headers, B-2). Empty in rules written before
+    /// the field: then no mod is inferred as a prefix or suffix.
+    #[serde(default, skip_serializing_if = "AffixGenerations::is_empty")]
+    pub affix_generations: AffixGenerations,
+}
+
+/// The generation types of prefixes and suffixes (part of [`ModRules`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AffixGenerations {
+    /// Prefix generation types.
+    pub prefix: Vec<i64>,
+    /// Suffix generation types.
+    pub suffix: Vec<i64>,
+}
+
+impl AffixGenerations {
+    /// Whether neither list names a generation type.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.prefix.is_empty() && self.suffix.is_empty()
+    }
 }
 
 /// Why a game's [`ModRules`] cannot be used.

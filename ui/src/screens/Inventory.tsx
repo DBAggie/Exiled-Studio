@@ -124,11 +124,15 @@ function requirementParts(
   return parts
 }
 
+type AffixView = ItemView['card']['affixes'][number]
+
 /** A mod's Alt header: `Prefix Modifier "Urchin's" (Tier: 2) — Life,
- * Defences`, the parts the data has. */
-function affixHeader(a: ItemView['card']['affixes'][number]): string {
-  let out = t(a.kind === 'prefix' ? 'tooltip.prefix' : 'tooltip.suffix')
-  if (a.name != null) out += ` “${a.name}”`
+ * Defences`, `Master Crafted Suffix Modifier "of Craft"`, `Implicit
+ * Modifier`; the parts the data has. */
+function affixHeader(a: AffixView): string {
+  let out = t(`tooltip.${a.kind}`)
+  if (a.crafted) out = `${t('tooltip.crafted')} ${out}`
+  if (a.name != null && a.kind !== 'implicit') out += ` “${a.name}”`
   if (a.tier != null) out += ` ${t('tooltip.tier', { n: a.tier })}`
   if (a.tags.length > 0) out += ` — ${a.tags.join(', ')}`
   return out
@@ -224,12 +228,15 @@ export function TooltipBody({
   for (const section of ['enchant', 'implicit', 'explicit']) {
     const lines = mods(section)
     if (lines.length === 0) continue
-    // Alt: each named mod's lines under its header, the rest after.
-    if (details && section === 'explicit' && c.affixes.length > 0) {
+    // Alt: each found mod's lines under its header, the rest after.
+    const found = c.affixes.filter(
+      (a) => (a.kind === 'implicit') === (section === 'implicit'),
+    )
+    if (details && section !== 'enchant' && found.length > 0) {
       const byIndex = new Map(lines.map((l) => [l.index, l]))
-      const headed = new Set(c.affixes.flatMap((a) => a.lines))
+      const headed = new Set(found.flatMap((a) => a.lines))
       blocks.push([
-        ...c.affixes.flatMap((a, ai) => [
+        ...found.flatMap((a, ai) => [
           <p key={`h${ai}`} className="tt-affix">
             {affixHeader(a)}
           </p>,

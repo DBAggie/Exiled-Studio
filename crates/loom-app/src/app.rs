@@ -324,7 +324,7 @@ impl App {
         Ok(crate::view::item_view(
             &state.build,
             item,
-            data.as_ref().map(|d| d.bundle),
+            data.as_ref().map(|d| d.data),
         ))
     }
 

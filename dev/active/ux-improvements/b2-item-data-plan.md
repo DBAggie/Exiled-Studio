@@ -1,6 +1,6 @@
 # B-2 data part: modifier headers, tiers, and attribute requirements
 
-Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (PR #109, merged into `dev` as `3102ad2`); the maintainer's data run done 2026-11-14 (B-2 data run PR #110, branch `feat/b2-data-run`, `docs/ui/b2-data/`; found and fixed the converter's `ComponentAttributeRequirements` key); PR 2 open. Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
+Status: reviewed 2026-11-14 (plan-reviewer: proceed with changes; this version takes them). PR 1 done 2026-11-14 (PR #109, merged into `dev` as `3102ad2`); the maintainer's data run done 2026-11-14 (B-2 data run PR #110, branch `feat/b2-data-run`, `docs/ui/b2-data/`; found and fixed the converter's `ComponentAttributeRequirements` key); PR 2 done 2026-11-15 (open, branch `feat/b2-inferred-mods`, base `dev`; "PR 2, as built" below). Part of the UX sprint (`ux-improvements-notes.md`); B-2's first part (the equipment panel and the game's tooltip, `docs/ui/ux-walkthrough.md`, "B-2, first part") is done.
 
 ## Goal
 
@@ -35,6 +35,17 @@ and the requirement line names attributes: `Requires Level 65, 85 Str, 62 Dex`. 
 - Lines with no PoB spec: candidates from the parser's mod filter (fit rules, spawn weights, essences, influences), one candidate or no header.
 - Tier: the grouping key (mod type, family, or both) is proven against game-truth fixtures from the maintainer's screenshots (Urchin's, Tier 2 on a Pig-Faced Bascinet; Thorny, Athlete's, of the Lost, of the Genius, of Abjuration) before it is used; PoB has no tier oracle.
 - Implicit (`Implicit Modifier — Tags`) and crafted (`Master Crafted Suffix Modifier "Name" (Rank: n)`) headers.
+
+### PR 2, as built (2026-11-15)
+
+- **Inference** (`loom_parser::import::affixes::item_affixes`): the lines no named mod took, in three pools (explicit, crafted, unflagged implicit). Candidate rows fit the line on the base and can be on it (explicit: spawn on the base's tags, an essence for its class or a legacy essence row of unknown classes, one of the item's influences, every row when the base's tags are unknown; crafted: any fitting row; implicit: the base's own implicit rows and rows that spawn), every row stat shown on a pool line. Lines no row spans are searched apart: every set of rows of distinct mod types whose summed ranges hold each line's value is an explanation, and a row is headed only when it is in every explanation (at most 8 rows and 20,000 steps per group, else no header). Unique items get no explicit inference.
+- **Kind:** a new item rule, `ModRules.affix_generations` (prefix and suffix generation types, PoE1 and PoE2 both 1 and 2), written by `parity-cli`; rules without it infer no prefix or suffix. Not a data schema bump: rules, and no calculation reads it. The maintainer's bundle rebuild adds it.
+- **Tier:** 1 plus the rows of the same mod type, domain, and generation with a higher level that spawn on the base's tags (no essence or influence rows); none for a row that does not spawn there, crafted rows, and implicits. Game truth: Urchin's Tier 2 on a Pig-Faced Bascinet (Nautilus's above; Crocodile's does not spawn on helmets). The helmet's five other mods give Athlete's 2, Thorny 2, of the Genius 2, of the Lost 6, of Abjuration 2: **to be confirmed by the maintainer** from the same screenshots (`crates/loom-app/tests/game_truth_affixes.rs`, ignored, `LOOM_B2_BUNDLE`).
+- **Strict on purpose:** on the helmet as the game exports it, Athlete's and of the Genius get no header: a legacy essence row of unknown classes (`IncreasedLifeEssenceChest1`) also makes the summed life line with Urchin's, and an essence row (`IntelligenceEssence7`) also holds 53 Intelligence.
+- **Review (code-architecture-reviewer, 2026-11-15), taken:** a row's stat a line carries with no shown value (hidden, lookup) counts as on the item, so such a hybrid is a reading too; mod types the named mods hold are not inferred again; `named` reads selected lines only; a stat twice on one line no longer drops it; a unique's implicits only from its base's rows; no bases, no inference. Not checked, documented: the number of prefixes and suffixes (it can only take a header away). Measured: under 0.1 ms per item view in a release build on the real bundle, so nothing is cached.
+- **Crafted rank** is left out: no game-truth fixture for its direction yet. Headers read `Master Crafted Suffix Modifier "Name"`.
+- **App API v1, additive:** `AffixKind::Implicit`, `AffixView.crafted`, `AffixView.inferred`; `tier` filled.
+- **Q-B2-2 (open, found by this PR):** the bundle's `data/tags.json` holds 20 monster tags only: `Tags.DisplayString` is empty for mod tags (`life`, `defences`), so headers show no tag names. Where the game keeps the names the Alt view prints (it shows "Life, Defences" for a mod tagged `resource, life, defences, armour`) is to be found on the main workstation.
 
 ## Later
 

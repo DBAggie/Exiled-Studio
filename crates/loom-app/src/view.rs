@@ -10,6 +10,7 @@ use loom_domain::{
     Build, ConfigInputKind, ConfigValue, DataVersion, Item, ItemId, ItemLine, League, LineKind,
     LineResolution, QuarantineReason, Resolved, StatValue, UnresolvedReason,
 };
+use loom_parser::import::{BundleData, ItemData as _};
 use loom_serialization::dto::app::v1 as api;
 use loom_serialization::legacy::pob_item;
 
@@ -269,7 +270,7 @@ pub fn line_view(index: usize, line: &ItemLine) -> api::LineView {
 
 /// One item's view.
 #[must_use]
-pub fn item_view(build: &Build, item: &Item, bundle: Option<&Bundle>) -> api::ItemView {
+pub fn item_view(build: &Build, item: &Item, data: Option<&BundleData<'_>>) -> api::ItemView {
     api::ItemView {
         id: item.id.0,
         name: item.body.name.clone(),
@@ -283,22 +284,38 @@ pub fn item_view(build: &Build, item: &Item, bundle: Option<&Bundle>) -> api::It
             .enumerate()
             .map(|(i, l)| line_view(i, l))
             .collect(),
-        card: card(item, bundle),
+        card: card(item, data),
     }
 }
 
-/// The item's named affixes ([`loom_parser::import::affixes`]).
-fn affixes(item: &Item, bundle: &Bundle) -> Vec<api::AffixView> {
-    use loom_parser::import::affixes::{AffixKind, named_affixes};
-    named_affixes(&item.body, bundle)
+/// The item's affixes, named and inferred, with tiers
+/// ([`loom_parser::import::affixes`]).
+fn affixes(item: &Item, data: &BundleData<'_>) -> Vec<api::AffixView> {
+    use loom_parser::import::affixes::{AffixKind, item_affixes};
+    use loom_parser::import::{BaseQuery, find_base};
+    let names = pob_item::item_base(&item.body, data.base_names()).ok();
+    let base = names.as_ref().and_then(|(name, fallback)| {
+        find_base(
+            data,
+            BaseQuery {
+                name,
+                fallback: fallback.as_deref(),
+            },
+        )
+        .ok()
+    });
+    item_affixes(&item.body, data, base.map(|b| b.rows))
         .into_iter()
         .map(|a| api::AffixView {
             kind: match a.kind {
+                AffixKind::Implicit => api::AffixKind::Implicit,
                 AffixKind::Prefix => api::AffixKind::Prefix,
                 AffixKind::Suffix => api::AffixKind::Suffix,
             },
             name: a.name,
-            tier: None,
+            tier: a.tier,
+            crafted: a.crafted,
+            inferred: a.inferred,
             tags: a.tags,
             lines: a
                 .lines
@@ -355,7 +372,8 @@ const CARD_PROPERTIES: [&str; 8] = [
 ];
 
 /// An item's card (UX-08): the header and spec lines a player reads.
-fn card(item: &Item, bundle: Option<&Bundle>) -> api::ItemCard {
+fn card(item: &Item, data: Option<&BundleData<'_>>) -> api::ItemCard {
+    let bundle = data.map(BundleData::bundle);
     let spec = |name: &str| {
         item.body.lines.iter().find_map(|l| match &l.kind {
             LineKind::Spec { key, value, .. } if key == name => Some(value.trim().to_owned()),
@@ -406,7 +424,7 @@ fn card(item: &Item, bundle: Option<&Bundle>) -> api::ItemCard {
             .variants
             .selected
             .and_then(|v| pob_item::current_variant(&variant_names(item), v)),
-        affixes: bundle.map(|b| affixes(item, b)).unwrap_or_default(),
+        affixes: data.map(|d| affixes(item, d)).unwrap_or_default(),
         requirements: requirements(item, spec("LevelReq").as_deref(), bundle),
         variants: variant_names(item),
         selected_variant: item.body.variants.selected,
