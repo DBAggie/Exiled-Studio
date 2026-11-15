@@ -112,8 +112,8 @@ mod tests {
                 "PassiveJewelRadii",
                 &COLUMNS,
                 &json!([
-                    ["Small", 1320, 960, 960, 0],
-                    ["Medium", 1680, 1320, 1440, 1],
+                    ["Small", 1100, 800, 800, 0],
+                    ["Medium", 1400, 1100, 1200, 1],
                     ["X", 0, 0, 5, null]
                 ]),
             ),
@@ -126,9 +126,9 @@ mod tests {
             JewelRadius {
                 id: "Small".to_owned(),
                 name: "Small".to_owned(),
-                radius: 960,
-                ring_inner: 960,
-                ring_outer: 1320,
+                radius: 800,
+                ring_inner: 800,
+                ring_outer: 1100,
             }
         );
         assert_eq!(r[1].name, "Medium");

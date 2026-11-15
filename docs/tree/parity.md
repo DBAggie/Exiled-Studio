@@ -43,6 +43,6 @@ The first allocation run showed that loom allocated cluster jewels' position pro
 ## Not covered
 
 - Masteries in `alloc`: the requests carry none, so mastery choice is checked only by the read-back.
-- Radius jewels (Intuitive Leap and the like, T-f): modelled ([editor.md](editor.md)), but not in `alloc`'s requests, and the bundles here lack the game's radius table. PoB's read-back of the Essence Drain build keeps the three nodes its jewel holds, as loom's rule does with PoB's radii. The radii themselves are checked by the data-parity table `jewel_radii` once a bundle has them.
+- Radius jewels (Intuitive Leap and the like, T-f): modelled ([editor.md](editor.md)), but not in `alloc`'s requests. PoB's read-back of the Essence Drain build keeps the three nodes its jewel holds, as loom's rule does with the game's radii times the tree scale (equal to PoB's). The data-parity table `jewel_radii` checks the scaled radii: 15 values, 0 differences ([editor.md](editor.md), "The real radii").
 - Other tree versions (T4) and cluster subgraphs (T3).
 - CI cannot re-run the records, because their inputs are local. `tree_parity`'s test `the_committed_tree_records_should_match_and_add_up` checks that each committed record has no differences, that its counts account for every node, request, and spec, and that its hashes are SHA-256.

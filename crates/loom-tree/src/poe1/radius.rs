@@ -14,13 +14,34 @@
 //!
 //! The radii are the game's (`PassiveJewelRadii`, the bundle's
 //! `poe1/jewel_radii.json`): a jewel's `Radius:` line names a row, and a
-//! ring jewel's ring value `k` is the ring of the table's `k`-th row (the
-//! data-parity table `jewel_radii` checks both against PoB's
-//! `data.jewelRadii`).
+//! ring jewel's ring value `k` is the ring of the table's `k`-th row, each
+//! value times [`scaled`]'s tree scale (the data-parity table
+//! `jewel_radii` checks the scaled values against PoB's `data.jewelRadii`).
 
 use std::collections::BTreeSet;
 
 use crate::graph::{Kind, Tree};
+
+/// The tree scale the game applies to `PassiveJewelRadii`, as a fraction:
+/// 6/5. The table still holds the radii of the tree before 3.16 (Small
+/// 800, Medium 1200, Large 1500; the rings from 800), while the layout's
+/// positions (the game's `.psg` and GGG's export alike) have been 1.2 times
+/// as far apart since 3.16. Evidence (`docs/tree/editor.md`,
+/// "Calculation"): PoB has used the table times 1.2 for trees from 3.16 on
+/// (`data.jewelRadii["3_16"]`, `Modules/Data.lua`, PoB PR #3315), all 15 of
+/// the table's values relate to PoB's by exactly 6/5, and in the game a
+/// Small Impossible Escape on Glancing Blows reaches Sanctum of Thought,
+/// 860 units away, as the community Essence Drain build's author
+/// describes it. Every tree the bundle can hold is from 3.16 or later.
+pub const TABLE_SCALE: (i64, i64) = (6, 5);
+
+/// A `PassiveJewelRadii` value in the layout's tree units: `value` times
+/// [`TABLE_SCALE`]. The game's values are multiples of 100, so this is
+/// exact; another value rounds down.
+#[must_use]
+pub const fn scaled(value: i64) -> i64 {
+    value * TABLE_SCALE.0 / TABLE_SCALE.1
+}
 
 /// The distances a jewel reaches, in tree units, both ends included.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

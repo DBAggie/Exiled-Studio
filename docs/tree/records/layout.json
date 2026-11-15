@@ -1,7 +1,7 @@
 {
   "tree_version": "3_29",
   "pob_layout_sha256": "e43f5478cc8c9a8fd618cb06ad9b021d1945fe9fd580a5cc1cb427f427c11dac",
-  "bundle_manifest_sha256": "65952be5d142b904b5ea6539a002fe09c9e7618ab712d13de94529f7bb30b780",
+  "bundle_manifest_sha256": "305c12071145f1b2d7abdb73b26f5f22226e0170d995225fbb913296e5416c2a",
   "nodes": 2987,
   "placed_within_tolerance": 2884,
   "largest_offset": 0.009281994047341868,

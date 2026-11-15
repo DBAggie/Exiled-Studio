@@ -31,10 +31,12 @@ pub const PANTHEONS: &str = "poe1/pantheons.json";
 /// Jewel radii.
 pub const JEWEL_RADII: &str = "poe1/jewel_radii.json";
 
-/// A jewel radius (`PassiveJewelRadii`), in tree units. A jewel with this
-/// radius reaches the nodes whose distance from its socket is at most
-/// `radius`; a ring jewel (Thread of Hope) the nodes from `ring_inner` to
-/// `ring_outer`, both included.
+/// A jewel radius (`PassiveJewelRadii`), in the game table's units: the
+/// tree before 3.16's, which `loom_tree::poe1::radius::scaled` turns into
+/// the layout's tree units (times 1.2). A jewel with this radius reaches
+/// the nodes whose distance from its socket is at most `radius`; a ring
+/// jewel (Thread of Hope) the nodes from `ring_inner` to `ring_outer`,
+/// both included.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct JewelRadius {

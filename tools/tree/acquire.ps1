@@ -12,7 +12,9 @@ $pin = (Get-Content (Join-Path $here 'manifest.json') -Raw | ConvertFrom-Json).e
 $out = Join-Path $root 'local\tree-export'
 
 if (-not (Test-Path (Join-Path $out '.git'))) {
-    git clone --quiet --depth 1 --branch $pin.tag $pin.repository $out
+    # Without the advice off, cloning a tag writes its detached HEAD note to
+    # stderr, which Windows PowerShell 5.1 stops on under 'Stop'.
+    git -c advice.detachedHead=false clone --quiet --depth 1 --branch $pin.tag $pin.repository $out
     if ($LASTEXITCODE -ne 0) { throw "git clone failed" }
 } else {
     git -C $out fetch --quiet --depth 1 origin tag $pin.tag

@@ -820,10 +820,12 @@ poe1["data/tags.json"] = [
     {"id": "attack", "display": "Attack"},
     {"id": "defences", "display": "Defences"},
 ]
-# Passive tree plan T-f: two made-up jewel radii with their rings.
+# Passive tree plan T-f: two made-up jewel radii with their rings, in the
+# game table's units (loom_tree::poe1::radius::scaled makes them 960, 960 to
+# 1320, 1440, and 1320 to 1680 tree units).
 poe1["poe1/jewel_radii.json"] = [
-    {"id": "TestSmall", "name": "Small", "radius": 960, "ring_inner": 960, "ring_outer": 1320},
-    {"id": "TestMedium", "name": "Medium", "radius": 1440, "ring_inner": 1320, "ring_outer": 1680},
+    {"id": "TestSmall", "name": "Small", "radius": 800, "ring_inner": 800, "ring_outer": 1100},
+    {"id": "TestMedium", "name": "Medium", "radius": 1200, "ring_inner": 1100, "ring_outer": 1400},
 ]
 write("bundle-poe1", "poe1", poe1, data_schema=4)
 write("bundle-poe1-tree", "poe1", tree_bundle(poe1), data_schema=4)

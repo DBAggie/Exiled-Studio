@@ -178,7 +178,7 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
-# (PoB export format 7: table jewel_radii checks the bundle's poe1/jewel_radii.json, PassiveJewelRadii, against data.jewelRadius.)
+# (PoB export format 7: table jewel_radii checks the bundle's poe1/jewel_radii.json, PassiveJewelRadii, times the tree scale 1.2, against data.jewelRadius.)
 # Custom modifier lines against PoB's own parse (Phase 3 close-out, ADR-015 Amendment 2; maintainer-run): every custom line
 # of the fixtures read as a build does (notes, patterns, stats, unresolved) and compared with pob-parse.json
 # (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a

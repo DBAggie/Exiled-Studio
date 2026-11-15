@@ -2,7 +2,7 @@
   "tree_version": "3_29",
   "requests_sha256": "3bff8c0ae099c7d4d943f46f85063885fd0b87e1e1db308db06bae5b1ef11445",
   "pob_alloc_sha256": "d6d4d4ab589bda2a4c1b56e06fe1623fcbda8e9cc70bba5f98b296af196e4f87",
-  "bundle_manifest_sha256": "65952be5d142b904b5ea6539a002fe09c9e7618ab712d13de94529f7bb30b780",
+  "bundle_manifest_sha256": "305c12071145f1b2d7abdb73b26f5f22226e0170d995225fbb913296e5416c2a",
   "requests": 2000,
   "allocations": 1364,
   "unique_paths_equal": 766,
