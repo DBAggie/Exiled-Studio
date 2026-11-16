@@ -1,0 +1,99 @@
+{
+  "tree_version": "3_25",
+  "pob_layout_sha256": "9d069253544a760ef7338d601049d782c567ff947f7cbad3a816755f4f42fcef",
+  "bundle_manifest_sha256": "4814e3acafeb69a423b48e9bc2b17a93690f86545c2bfdd1813a55bc9eabebad",
+  "nodes": 2735,
+  "placed_within_tolerance": 2735,
+  "largest_offset": 0.00046875000043655746,
+  "links_equal": 2734,
+  "links_to_nodes_not_carried": 0,
+  "pob_nodes_not_carried": 407,
+  "ascendancy_offsets": {
+    "Ascendant": [
+      826.329998007015,
+      -1250.9698497289537
+    ],
+    "Assassin": [
+      -640.599609375,
+      -92.60009765625
+    ],
+    "Berserker": [
+      894.2001953125,
+      -98.699951171875
+    ],
+    "Champion": [
+      54.435001373291016,
+      -223.7998046875
+    ],
+    "Chieftain": [
+      322.5,
+      144.0
+    ],
+    "Deadeye": [
+      -2230.900390625,
+      -453.3798828125
+    ],
+    "Elementalist": [
+      140.875,
+      687.2001953125
+    ],
+    "Gladiator": [
+      865.449951171875,
+      293.0302734375
+    ],
+    "Guardian": [
+      762.0,
+      -490.29003906250006
+    ],
+    "Hierophant": [
+      340.599609375,
+      -534.530029296875
+    ],
+    "Inquisitor": [
+      101.400390625,
+      -86.800048828125
+    ],
+    "Juggernaut": [
+      456.29988281249973,
+      373.7500390625001
+    ],
+    "Necromancer": [
+      -143.4300537109375,
+      839.7998046875
+    ],
+    "Occultist": [
+      407.1600341796875,
+      611.0
+    ],
+    "Pathfinder": [
+      -775.2001953125,
+      840.909912109375
+    ],
+    "Raider": [
+      -1785.7998046875,
+      875.22998046875
+    ],
+    "Saboteur": [
+      -1152.7998046875,
+      -381.6700439453125
+    ],
+    "Slayer": [
+      -577.8798828125,
+      273.4599609375
+    ],
+    "Trickster": [
+      -832.0,
+      21.639892578125
+    ]
+  },
+  "removed_by_pob": {},
+  "pob_only_mastery_links": {
+    "49391": [
+      20953
+    ]
+  },
+  "placed_within_export_rounding": {},
+  "classes": 7,
+  "starts_equal": 26,
+  "differences": []
+}

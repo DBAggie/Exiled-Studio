@@ -1,0 +1,12 @@
+{
+  "from_version": "3_26",
+  "to_version": "3_29",
+  "requests_sha256": "cba0cf0348d89948a98f9fe099ddb6eaad752e6bf46e5fb9913ce232f6c29d6f",
+  "pob_alloc_sha256": "1f16d4e97964e83f5cd99a79659dfee8e7a83bde26829f5ed52d31de473ef22c",
+  "bundle_manifest_sha256": "4814e3acafeb69a423b48e9bc2b17a93690f86545c2bfdd1813a55bc9eabebad",
+  "requests": 2000,
+  "converted_with_drops": 4,
+  "nodes_dropped": 8,
+  "specs_equal": 2000,
+  "differences": []
+}

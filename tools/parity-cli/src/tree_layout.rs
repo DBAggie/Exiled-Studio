@@ -206,11 +206,11 @@ fn sprites(
     Ok((index, sheets, missing))
 }
 
-fn hex(bytes: &[u8]) -> String {
+pub(crate) fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-fn read(path: &Path) -> Result<Vec<u8>, String> {
+pub(crate) fn read(path: &Path) -> Result<Vec<u8>, String> {
     std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))
 }
 
@@ -339,12 +339,46 @@ pub fn run(pin: &Path, export: &Path, bundle: &Path, out: &Path) -> Result<Summa
     added.insert(TREE_LAYOUT.to_owned(), layout_json.clone());
     added.insert(TREE_SPRITES.to_owned(), sprites_json.clone());
 
-    // The copy: every listed file, the added ones, the manifest with them.
-    let mut manifest: Manifest = loaded.manifest.clone();
+    let manifest_json = write_copy(
+        bundle,
+        loaded.manifest.clone(),
+        &added,
+        |path| path.starts_with(SPRITES_DIR),
+        out,
+    )?;
+    Ok(Summary {
+        tag: pin.tag,
+        commit: pin.commit,
+        orbit_radii: radii,
+        orbit_slots: slots,
+        layout_sha256: hex(&Sha256::digest(&layout_json)),
+        sprites_sha256: hex(&Sha256::digest(&sprites_json)),
+        sheets: index.sheet_paths(),
+        nodes_with_art: index.nodes.len(),
+        icons_without_sprite,
+        manifest_sha256: hex(&Sha256::digest(&manifest_json)),
+    })
+}
+
+/// Writes a copy of the bundle folder `bundle` (its manifest `manifest`)
+/// into `out`, which must not exist: every listed file but those `drop`
+/// names and those in `added`, then `added`, with the manifest's file list
+/// updated; through `<out>.partial`, renamed when the copy validates.
+/// Returns the written manifest's bytes.
+pub(crate) fn write_copy(
+    bundle: &Path,
+    mut manifest: Manifest,
+    added: &BTreeMap<String, Vec<u8>>,
+    drop: impl Fn(&str) -> bool,
+    out: &Path,
+) -> Result<Vec<u8>, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
     manifest
         .files
-        .retain(|f| !added.contains_key(&f.path) && !f.path.starts_with(SPRITES_DIR));
-    for (path, bytes) in &added {
+        .retain(|f| !added.contains_key(&f.path) && !drop(&f.path));
+    for (path, bytes) in added {
         manifest.files.push(FileEntry {
             path: path.clone(),
             sha256: hex(&Sha256::digest(bytes)),
@@ -388,18 +422,7 @@ pub fn run(pin: &Path, export: &Path, bundle: &Path, out: &Path) -> Result<Summa
         ));
     }
     std::fs::rename(&partial, out).map_err(|e| format!("{}: {e}", out.display()))?;
-    Ok(Summary {
-        tag: pin.tag,
-        commit: pin.commit,
-        orbit_radii: radii,
-        orbit_slots: slots,
-        layout_sha256: hex(&Sha256::digest(&layout_json)),
-        sprites_sha256: hex(&Sha256::digest(&sprites_json)),
-        sheets: index.sheet_paths(),
-        nodes_with_art: index.nodes.len(),
-        icons_without_sprite,
-        manifest_sha256: hex(&Sha256::digest(&manifest_json)),
-    })
+    Ok(manifest_json)
 }
 
 #[cfg(test)]
