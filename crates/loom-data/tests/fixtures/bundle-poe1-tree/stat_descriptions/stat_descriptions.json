@@ -279,6 +279,186 @@
      "text": "{0:+d} first half\n{1:+d} second half"
     }
    ]
+  },
+  {
+   "handed": false,
+   "line": 101,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_jewel_expansion_passive_node_count"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 102,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "Adds {0:+d} Test Cluster Passive Skills"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 103,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_jewel_expansion_jewels_count"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 104,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} Test Cluster Jewel Sockets"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 105,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_jewel_expansion_passive_node_index"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 106,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} Test Cluster Skill Row"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 107,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_affliction_jewel_small_nodes_have_effect_+%"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 108,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d}% Test Cluster Small Effect"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 109,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_affliction_notable_test_a"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 110,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} Test Cluster Notable A"
+    }
+   ]
+  },
+  {
+   "handed": false,
+   "line": 111,
+   "name": null,
+   "off_hand_stats": null,
+   "stats": [
+    "local_affliction_notable_test_b"
+   ],
+   "variants": [
+    {
+     "conditions": [
+      {
+       "kind": "range",
+       "max": null,
+       "min": null
+      }
+     ],
+     "flags": [],
+     "handlers": [],
+     "line": 112,
+     "placeholders": [
+      {
+       "format": "+d",
+       "index": 0
+      }
+     ],
+     "text": "{0:+d} Test Cluster Notable B"
+    }
+   ]
   }
  ],
  "file_flags": [],

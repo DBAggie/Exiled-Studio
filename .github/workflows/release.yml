@@ -106,6 +106,10 @@ jobs:
           # tauri CLI passes --config files the same way).
           if ($env:LOOM_CHANNEL -eq 'experimental') { $env:TAURI_CONFIG = Get-Content -Raw crates/loom-tauri/tauri.experimental.conf.json }
           cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
+          # The knowledge MCP server (ADR-018): in the portable zip and its own asset.
+          cargo build --release --locked -p loom-knowledge-mcp
+          $v = & target/release/exiled-studio-knowledge-mcp.exe --version
+          if ($v -ne "exiled-studio-knowledge-mcp ${{ steps.version.outputs.version }}") { throw "knowledge MCP version: $v" }
           ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
       - name: NSIS setup (WebView2 offline installer inside)
         shell: bash
@@ -117,6 +121,7 @@ jobs:
         shell: bash
         run: |
           cp target/release/bundle/nsis/*-setup.exe* target/release/bundle/msi/*.msi* out/release/
+          cp target/release/exiled-studio-knowledge-mcp.exe "out/release/exiled-studio-knowledge-mcp_${{ steps.version.outputs.version }}_x64.exe"
           # The shipped pack once, for the data feed (the Windows job's).
           cp crates/loom-tauri/shipped/*.loombundle out/release/ 2>/dev/null || true
       - name: Portable zip, started
@@ -196,6 +201,14 @@ jobs:
           bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
           mkdir -p out/release
           cp target/release/bundle/appimage/*.AppImage* target/release/bundle/deb/*.deb out/release/
+      - name: Knowledge MCP server (ADR-018)
+        run: |
+          cargo build --release --locked -p loom-knowledge-mcp
+          target/release/exiled-studio-knowledge-mcp --version | grep -qx "exiled-studio-knowledge-mcp ${{ steps.version.outputs.version }}"
+          # Started over stdio: it answers `initialize` with no bundle installed.
+          reply="$(echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | target/release/exiled-studio-knowledge-mcp --data-dir "$RUNNER_TEMP/no-data")"
+          grep -q '"protocolVersion"' <<<"$reply"
+          cp target/release/exiled-studio-knowledge-mcp "out/release/exiled-studio-knowledge-mcp_${{ steps.version.outputs.version }}_amd64"
       - name: AppImage, started
         run: xvfb-run -a bash tools/package/smoke.sh out/release/*.AppImage app-image ${{ steps.version.outputs.version }}
       - name: .deb, installed, started, removed

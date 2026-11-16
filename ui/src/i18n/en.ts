@@ -809,7 +809,7 @@ export const en = {
     'Delete the passive tree “{name}”? Undo brings it back.',
   'tree.specUntitled': 'Default',
   'tree.jewelHelp':
-    'Choose a jewel of the build for this socket. Cluster jewels are not socketed here yet.',
+    'Choose a jewel of the build for this socket. A cluster jewel fits a cluster socket of its size or larger.',
   'tree.jewels': 'Jewels',
   'tree.noJewels': 'The build has no jewels.',
   'tree.inAnotherSocket': 'in another socket',
@@ -818,6 +818,9 @@ export const en = {
   'tree.removeSocket': 'Remove socket',
   'tree.chooseJewelFor': 'Choose jewel for {node}',
   'tree.locked': 'This passive tree is shown, not edited: {why}.',
+  'tree.convert': 'Convert to {version}',
+  'tree.convertAsk':
+    'Convert this passive tree to {version}? A converted copy is added after it and becomes active; {n} allocated nodes the new tree lacks or no longer connects are left out. The old tree stays.',
   'tree.keptNote': 'Kept as imported; Exiled Studio does not edit this node.',
   'tree.unreachable': 'No path reaches this node.',
   'tree.allocates': 'Click to allocate {n} nodes.',

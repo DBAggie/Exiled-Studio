@@ -19,9 +19,12 @@ $app = (Resolve-Path $App).Path
 $work = Join-Path ([IO.Path]::GetTempPath()) "loom-e2e-$PID"
 New-Item -ItemType Directory -Force $work | Out-Null
 # The synthetic build as the synthetic tree bundle's Test Brute (passive
-# tree plan T1a), so the workflow can allocate on the tree.
+# tree plan T1a), so the workflow can allocate on the tree, with a large
+# cluster jewel (item 5, the bundle's made-up base and lines; T5b).
 $xml = [IO.File]::ReadAllText((Resolve-Path 'tools\parity-cli\testdata\build-round-trip\synthetic-poe1.xml').Path)
 $xml = $xml.Replace('className="Scion"', 'className="Test Brute"').Replace('classId="0" ascendClassId="0" nodes=""', 'classId="1" ascendClassId="0" nodes="1000"')
+$cluster = "<Item id=`"5`">`nRarity: RARE`nLoom Test Cluster`nLarge Test Cluster Jewel`nImplicits: 0`nAdds +8 Test Cluster Passive Skills`n+2 Test Cluster Jewel Sockets`n+2 Test Cluster Skill Row`n+1 Test Cluster Notable A`n+1 Test Cluster Notable B`n+25% Test Cluster Small Effect`n</Item>`n`t`t<ItemSet id=`"1`""
+$xml = $xml.Replace('<ItemSet id="1"', $cluster)
 [IO.File]::WriteAllText((Join-Path $work 'import.xml'), $xml)
 
 # A pack of the synthetic tree bundle, signed with the public test key

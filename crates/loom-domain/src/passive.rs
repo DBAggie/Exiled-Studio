@@ -129,6 +129,26 @@ impl PassiveSpec {
         self.set(Self::SECONDARY_ASCENDANCY, ascendancy);
     }
 
+    /// PoB's attribute for the spec's cluster node numbering
+    /// (`PassiveSpec.lua` 95): 2 is the current one.
+    pub const CLUSTER_HASH_FORMAT: &'static str = "clusterHashFormatVersion";
+
+    /// The spec's cluster node numbering as PoB reads it: the attribute,
+    /// else 1 (legacy) for a spec that lists its nodes, else 2. A legacy
+    /// spec's cluster node numbers are migrated when the jewels are built
+    /// (passive tree plan, T-i).
+    #[must_use]
+    pub fn cluster_hash_format(&self) -> u32 {
+        self.number(Self::CLUSTER_HASH_FORMAT)
+            .unwrap_or(if self.nodes.source().is_some() { 1 } else { 2 })
+    }
+
+    /// Sets the cluster node numbering, in place when the spec has the
+    /// attribute.
+    pub fn set_cluster_hash_format(&mut self, format: u32) {
+        self.set(Self::CLUSTER_HASH_FORMAT, format);
+    }
+
     fn number(&self, name: &str) -> Option<u32> {
         self.attributes
             .iter()

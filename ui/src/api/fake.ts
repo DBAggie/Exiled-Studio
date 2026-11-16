@@ -71,6 +71,9 @@ export interface FakeOptions {
   pinned?: number
   /** Why the passive tree cannot be edited (its version or class). */
   treeLocked?: string
+  /** What converting the locked tree would do (T5b): offered with
+   * `treeLocked`, which conversion lifts. */
+  treeConvert?: { version: string; dropped: number[] }
   /** Crash records from an earlier run (Phase 5, P-f). */
   crashes?: CrashRecord[]
   /** The update state at start (Phase 5, P-d). */
@@ -982,7 +985,14 @@ export class FakeApi implements LoomApi {
                 this.options.data === true && this.current !== null
                   ? {
                       ...fakeTree.view(this.current.tree, this.current.spec),
-                      locked: this.options.treeLocked ?? null,
+                      locked:
+                        this.current.tree.version === undefined
+                          ? (this.options.treeLocked ?? null)
+                          : null,
+                      convert:
+                        this.current.tree.version === undefined
+                          ? (this.options.treeConvert ?? null)
+                          : null,
                     }
                   : null,
               config: this.current?.config ?? null,
@@ -1572,7 +1582,11 @@ export class FakeApi implements LoomApi {
     ): Outcome => {
       if (this.current === null) this.fail('APP_NO_BUILD')
       if (spec !== this.current.spec) this.fail('APP_TREE')
-      if (this.options.treeLocked !== undefined) this.fail('APP_TREE')
+      if (
+        this.options.treeLocked !== undefined &&
+        this.current.tree.version === undefined
+      )
+        this.fail('APP_TREE')
       let next: fakeTree.FakeSpec
       try {
         next = f(this.current.tree)
@@ -1683,6 +1697,29 @@ export class FakeApi implements LoomApi {
       )
         this.fail('APP_TREE')
       return edit(c.spec, (s) => fakeTree.socketJewel(s, c.node, item))
+    }
+    if ('convert-tree-version' in command) {
+      const c = command['convert-tree-version']
+      const to = this.options.treeConvert
+      if (this.current === null) this.fail('APP_NO_BUILD')
+      if (
+        c.spec !== this.current.spec ||
+        to === undefined ||
+        this.current.tree.version !== undefined
+      )
+        this.fail('APP_TREE')
+      const dropped = new Set(to.dropped)
+      return this.commit(
+        {
+          ...this.current,
+          tree: {
+            ...this.current.tree,
+            version: to.version,
+            nodes: this.current.tree.nodes.filter((n) => !dropped.has(n)),
+          },
+        },
+        { kind: 'tree-specs', item: c.spec },
+      )
     }
     if ('reset-tree' in command) {
       const c = command['reset-tree']

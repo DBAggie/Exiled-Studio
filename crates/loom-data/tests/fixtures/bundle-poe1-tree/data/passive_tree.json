@@ -2381,6 +2381,10 @@
       {
        "node": 12042,
        "orbit": null
+      },
+      {
+       "node": 5005,
+       "orbit": null
       }
      ],
      "node": 5000,
@@ -2397,24 +2401,62 @@
     {
      "connections": [
       {
-       "node": 5000,
+       "node": 5001,
+       "orbit": null
+      },
+      {
+       "node": 5007,
+       "orbit": null
+      },
+      {
+       "node": 5008,
+       "orbit": null
+      }
+     ],
+     "node": 5005,
+     "orbit": 2,
+     "orbit_index": 3
+    },
+    {
+     "connections": [
+      {
+       "node": 5002,
+       "orbit": null
+      },
+      {
+       "node": 5007,
        "orbit": null
       }
      ],
      "node": 5001,
-     "orbit": 0,
+     "orbit": 1,
      "orbit_index": 0
     },
     {
      "connections": [
       {
-       "node": 5001,
+       "node": 5009,
+       "orbit": null
+      },
+      {
+       "node": 5008,
        "orbit": null
       }
      ],
-     "node": 5002,
+     "node": 5007,
      "orbit": 1,
-     "orbit_index": 0
+     "orbit_index": 2
+    },
+    {
+     "connections": [
+      {
+       "node": 5010,
+       "orbit": null
+      }
+     ],
+     "node": 5008,
+     "orbit": 1,
+     "orbit_index": 4
     }
    ],
    "x": 0.0,
@@ -2426,33 +2468,74 @@
     {
      "connections": [
       {
-       "node": 5000,
+       "node": 5003,
        "orbit": null
       }
      ],
-     "node": 5003,
+     "node": 5002,
      "orbit": 0,
      "orbit_index": 0
     },
     {
      "connections": [
       {
-       "node": 5003,
+       "node": 5004,
        "orbit": null
       }
      ],
-     "node": 5004,
+     "node": 5003,
      "orbit": 1,
-     "orbit_index": 0
+     "orbit_index": 3
     }
    ],
    "x": 300.0,
    "y": 1300.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [],
+     "node": 5004,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 300.0,
+   "y": 1700.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [],
+     "node": 5009,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": -300.0,
+   "y": 1300.0
+  },
+  {
+   "flags": 0,
+   "nodes": [
+    {
+     "connections": [],
+     "node": 5010,
+     "orbit": 0,
+     "orbit_index": 0
+    }
+   ],
+   "x": 0.0,
+   "y": 1700.0
   }
  ],
  "orbit_slots": [
   1,
-  6
+  6,
+  16,
+  16
  ],
  "roots": [
   1000,

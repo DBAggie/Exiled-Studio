@@ -2283,3 +2283,35 @@ fn item_values_should_be_the_calculations_own_nodes() {
     assert!(v.defences.is_empty());
     assert_eq!(v.block, None);
 }
+
+#[test]
+fn a_granted_passive_should_read_the_tree_packs_stats() {
+    // A ring that allocates node 5 (the data's: +50 maximum life).
+    let ring = item(1, vec![modifier(vec![stat("mod_granted_passive_hash", 5)])]);
+    let b = with_items(witch(90), vec![ring], &[("Ring 1", 1, false)]);
+    let table = value(&run(&b), Field::Life);
+    // The spec's tree version is a pack whose node 5 gives 70: the pack's
+    // stats count, not the table's.
+    let mut options = options(Some("3_29"));
+    let mut pack = loom_calc::PackStats::default();
+    pack.passives.insert(
+        NodeId(5),
+        loom_calc::PackNode {
+            stats: vec![amount("base_maximum_life", 70)],
+            kind: loom_calc::input::PassiveKind {
+                notable: true,
+                ascendancy: false,
+            },
+            unresolved: Vec::new(),
+        },
+    );
+    options.passives.pack = Some(pack.clone());
+    let packed = value(&run_with(&b, &options), Field::Life);
+    // 20 more base life, times the level's increase (none here).
+    assert_eq!(packed - table, 20.0);
+    // A node the pack lacks is not read from the table.
+    pack.passives.clear();
+    options.passives.pack = Some(pack);
+    let r = run_with(&b, &options);
+    assert_eq!(state(&r, Field::Life), StateKind::Indeterminate);
+}

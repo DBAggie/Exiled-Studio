@@ -26,6 +26,7 @@
 //! | `data/weapon_types.json`, ... | format 2: the item property and monster tables ([`properties`]) |
 //! | `data/passive_tree_layout.json` | optional: the tree's layout constants ([`tree_layout`]) |
 //! | `data/passive_tree_sprites.json`, `trees/assets/*` | optional: the tree's sprites ([`tree_sprites`]) |
+//! | `trees/<version>.json` | optional: older tree versions ([`tree_packs`]) |
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
@@ -38,6 +39,7 @@ pub mod properties;
 pub mod skills;
 mod source;
 pub mod tree_layout;
+pub mod tree_packs;
 pub mod tree_sprites;
 pub mod validate;
 
@@ -374,6 +376,8 @@ pub struct Bundle {
     /// ([`tree_sprites::TREE_SPRITES`]; optional). Its sheets are read by
     /// path, not loaded.
     pub tree_sprites: Option<tree_sprites::TreeSprites>,
+    /// The older tree versions listed ([`tree_packs`]), by version.
+    pub tree_packs: std::collections::BTreeMap<String, tree_packs::TreePack>,
 }
 
 /// Why a bundle did not load.
@@ -563,6 +567,15 @@ impl Bundle {
                 Some(json(source, tree_sprites::TREE_SPRITES)?)
             } else {
                 None
+            },
+            tree_packs: {
+                let mut packs = std::collections::BTreeMap::new();
+                for f in &manifest.files {
+                    if let Some(version) = tree_packs::version_of(&f.path) {
+                        packs.insert(version.to_owned(), json(source, &f.path)?);
+                    }
+                }
+                packs
             },
             game,
             manifest,

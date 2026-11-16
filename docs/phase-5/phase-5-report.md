@@ -26,7 +26,7 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
 | 6 | The `package` job's smoke runs (CI); one recorded `release` run installing, starting, and uninstalling the five artifacts, `e2e` absent | `package`: in CI on every PR, first run on this PR. The portable zip's smoke run passed here (P1). **The recorded `release` run is the maintainer's.** `release.yml` reaches `workflow_dispatch` once it is on the default branch. Until the `release` environment has its secrets, it runs on throwaway keys (fallback). |
 | 7 | Update, signature, rollback, quarantine, revocation, downgrade, feed-rollback, zip-slip, zip-bomb tests (CI) | pass here: `crates/loom-tauri/tests/updater.rs`, `crates/loom-app/tests/install.rs`, `loom_data::pack` and `signature` units, the properties; in CI's `rust` job |
 | 8 | Security: no unignored RustSec advisory, no gitleaks finding, no open fuzz crash | advisories: two ignores with reasons, both on Tauri's Linux GTK3 path, otherwise clean; gitleaks: no leaks in 170 commits; properties: 20,000 cases each, no failure; fuzzing: this PR's `fuzz.yml` run (43779992583), six targets at 10 minutes each, 1.4 to 10.4 million runs, no crash (`security.md`, "Records"). libFuzzer does not link on this Windows workstation, so fuzzing runs on Linux CI. **Met.** |
-| 9 | Budgets met on the reference tier or exceptions listed (MR); CI instruction-count check passes | Startup with the real bundle (1.77 s median against 2.0 s, after the startup fix), import and first calculation, item-edit preview, allocation preview, and the application's memory are inside budget. **Exceptions for the maintainer:** the NSIS setup's size, tree paint and fps (to measure), version conversion (no feature yet), and memory counted without WebView2. The instruction-count baseline is committed from this PR's first `bench` run (43779626395), and the `bench` job passes against it. |
+| 9 | Budgets met on the reference tier or exceptions listed (MR); CI instruction-count check passes | Startup with the real bundle (1.77 s median against 2.0 s, after the startup fix), import and first calculation, item-edit preview, allocation preview, and the application's memory are inside budget. **Exceptions for the maintainer:** the NSIS setup's size, tree paint and fps (to measure), and memory counted without WebView2. Version conversion, which had no feature then, is measured since T5b and inside budget (`performance.md`). The instruction-count baseline is committed from this PR's first `bench` run (43779626395), and the `bench` job passes against it. |
 | 10 | Logs, redaction, diagnostic preview, crash record tests (CI) | pass (PR #115, in CI's `rust` job) |
 
 ## Found on the way
@@ -74,11 +74,11 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
 ## For the maintainer
 1. **Keys and secrets:** done 2026-11-16 for 0.9 (`docs/release/signing.md`, "First keys"). Left: copy the private keys offline twice, then delete the workstation folder if you like.
 2. **The shipped bundle:** done 2026-11-16 (`docs/phase-5/data-bundles.md`, "The shipped bundle": a draft release's asset).
-3. **Gate 6:** run `release.yml` by hand once it reaches `main`, and record the run in `packaging.md`.
+3. **Gate 6:** run `release.yml` by hand once it reaches `main`, and record the run in `packaging.md`. The tagged 0.9 runs passed every job (`v0.9.0-1`: 43822600359; `v0.9.0`: 43866901437), installers built, installed, started, and uninstalled; whether they stand for the recorded run is the maintainer's call.
 4. **Gate 9:** accept or refuse the NSIS size exception; measure tree paint and pan and zoom fps in the release app; say whether peak memory includes WebView2. (Startup is met.)
 5. **After two releases:** a real update from one to the next (`updates.md`, "Not tested here").
 6. **SmartScreen:** the installers are not code signed (MQ4); the README says how to run them.
-7. **The release environment** allows `experimental` (made 2026-11-16). The first releases are 0.9: `v0.9.0-1` on `experimental`, `v0.9.0` on `main` (`docs/release/channels.md`, "Releases").
+7. **The release environment** allows `experimental` (made 2026-11-16). The first releases are 0.9: `v0.9.0-1` on `experimental`, `v0.9.0` on `main`, both published 2026-11-16 (`docs/release/channels.md`, "Releases").
 
 ## Not in Phase 5
 The passive tree steps below the cut line (T3 cluster jewels, T4 older versions, T5b, T8's corpus run) are their own PRs.

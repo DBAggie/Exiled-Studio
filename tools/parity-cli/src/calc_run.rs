@@ -512,6 +512,8 @@ pub struct Request<'a> {
     pub resolver: &'a Resolver<'a, 'a>,
     /// Its passive tree, if it has one (the resolved passive set).
     pub tree: Option<&'a loom_tree::Tree>,
+    /// Its older tree versions ([`loom_pipeline::pack_trees`]).
+    pub trees: &'a std::collections::BTreeMap<String, loom_tree::Tree>,
     /// Its data (for the item base names).
     pub data: &'a BundleData<'a>,
     /// The bundle's record.
@@ -562,16 +564,16 @@ fn one(
         Format::BuildDocument => loom_pipeline::read_document(text).map_err(step)?,
     };
     let ends = loom_pipeline::resolve(request.resolver, request.data, &mut build).map_err(step)?;
-    let options = loom_pipeline::options(
+    let (tree, version) = loom_pipeline::pick_tree(
         &build,
-        request.data,
-        &ends,
+        request.tree,
         request
             .scope
             .as_ref()
             .map(|s| TreeVersion::new(s.tree_version.as_str())),
-        request.tree,
+        request.trees,
     );
+    let options = loom_pipeline::options(&build, request.data, &ends, version, tree);
     let data: &dyn CalcData = match &request.overlay {
         Some((overlay, _)) => *overlay,
         None => request.bundle,

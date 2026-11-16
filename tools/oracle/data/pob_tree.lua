@@ -3,7 +3,7 @@
 -- not in CI, and outside the oracle adapter and its protocol.
 --
 --   luajit pob_tree.lua layout <out.json> [tree=<version>] [zlib=<library>]
---   luajit pob_tree.lua alloc <requests.txt> <out.json> [zlib=<library>]
+--   luajit pob_tree.lua alloc <requests.txt> <out.json> [tree=<version>] [zlib=<library>]
 --   luajit pob_tree.lua readback <build.xml> <out.json> [zlib=<library>]
 --
 -- zlib (the manifest's library, as oracle-run passes it) installs the
@@ -19,7 +19,8 @@
 --   tree file that the class removed.
 -- alloc: one request per line, `<classId> <ascendClassId> <target>
 --   <allocated,...>` (the allocated list may be empty). For each, PoB's
---   spec is set with ImportFromNodeList on its latest tree, then the
+--   spec is set with ImportFromNodeList on its latest tree (or the
+--   `tree=` version: an older tree, passive tree plan T4/T8), then the
 --   target's state is read: when not allocated, `path` (PoB's node.path,
 --   from the target back to the allocated set) or none; when allocated,
 --   `depends` (what DeallocNode would remove). Also the spec's allocated
@@ -53,7 +54,7 @@ end
 for i = first, select("#", ...) do
 	local argument = select(i, ...)
 	local kind, value = argument:match("^(%a+)=(.+)$")
-	if kind == "tree" and mode == "layout" then
+	if kind == "tree" and (mode == "layout" or mode == "alloc") then
 		treeArgument = value
 	elseif kind == "zlib" then
 		zlibLibrary = value
@@ -62,7 +63,7 @@ for i = first, select("#", ...) do
 	end
 end
 if mode ~= "layout" and mode ~= "alloc" and mode ~= "readback" then
-	die("usage: luajit pob_tree.lua layout <out.json> [tree=<version>] | alloc <requests.txt> <out.json> | readback <build.xml> <out.json>")
+	die("usage: luajit pob_tree.lua layout <out.json> [tree=<version>] | alloc <requests.txt> <out.json> [tree=<version>] | readback <build.xml> <out.json>")
 end
 if not output then
 	die("no output path")
@@ -182,6 +183,7 @@ if mode == "layout" then
 elseif mode == "alloc" then
 	newBuild()
 	local spec = build.spec
+	local allocVersion = treeArgument or latestTreeVersion
 	local results = {}
 	local line = 0
 	for text in inputText:gmatch("[^\r\n]+") do
@@ -194,7 +196,15 @@ elseif mode == "alloc" then
 		for id in list:gmatch("%d+") do
 			hashes[#hashes + 1] = tonumber(id)
 		end
-		spec:ImportFromNodeList(nil, tonumber(class), tonumber(ascend), 0, hashes, {}, {}, latestTreeVersion)
+		-- Each request on a clean spec: PoB's ResetNodes keeps every
+		-- ascendancy start allocated, so a bloodline's start from an earlier
+		-- request would carry over (SelectSecondaryAscendClass(0) does not
+		-- remove it).
+		for _, node in pairs(spec.allocNodes) do
+			node.alloc = false
+		end
+		wipeTable(spec.allocNodes)
+		spec:ImportFromNodeList(nil, tonumber(class), tonumber(ascend), 0, hashes, {}, {}, allocVersion)
 		local used, ascUsed = spec:CountAllocNodes()
 		local node = spec.nodes[tonumber(target)]
 		local result = {
@@ -215,7 +225,7 @@ elseif mode == "alloc" then
 		end
 		results[line] = result
 	end
-	document = { mode = mode, pob = { version = launch.versionNumber }, tree_version = latestTreeVersion, results = results }
+	document = { mode = mode, pob = { version = launch.versionNumber }, tree_version = allocVersion, results = results }
 else
 	local loaded, loadError = xpcall(function()
 		loadBuildFromXML(inputText, "readback")

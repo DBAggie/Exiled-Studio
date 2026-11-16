@@ -22,8 +22,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 use loom_data::bundle::Bundle;
-use loom_tree::Tree;
 use loom_tree::poe1::{self, Spec};
+use loom_tree::{Kind, Tree};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -72,7 +72,9 @@ fn sha256(bytes: &[u8]) -> String {
 }
 
 /// The bundle's tree and its manifest's SHA-256.
-fn load_tree(bundle: &Path) -> Result<(Tree, String), String> {
+/// The bundle's tree, or its pack of `version` when it carries one (an
+/// older tree version, passive tree plan T4), and its manifest's SHA-256.
+fn load_tree(bundle: &Path, version: Option<&str>) -> Result<(Tree, String), String> {
     let source = crate::DirSource(bundle);
     let loaded = Bundle::load(&source).map_err(|e| format!("{}: {e}", bundle.display()))?;
     let tables = loaded
@@ -80,10 +82,15 @@ fn load_tree(bundle: &Path) -> Result<(Tree, String), String> {
         .as_ref()
         .ok_or("the bundle has no passive tree (format 1)")?;
     let manifest = read(&bundle.join("bundle.json"))?;
-    Ok((
-        Tree::from_tables(tables, loaded.tree_layout.as_ref()),
-        sha256(&manifest),
-    ))
+    let pack = version.and_then(|v| loaded.tree_packs.get(v));
+    let tree = match pack {
+        Some(pack) => {
+            let base = Tree::from_tables(tables, loaded.tree_layout.as_ref());
+            Tree::from_pack(&loaded, &base, pack).ok_or("the pack does not build a tree")?
+        }
+        None => Tree::from_tables(tables, loaded.tree_layout.as_ref()),
+    };
+    Ok((tree, sha256(&manifest)))
 }
 
 #[derive(Deserialize)]
@@ -149,6 +156,11 @@ pub struct LayoutRecord {
     /// Nodes PoB's tree file has and its `PassiveTree` class removes (the
     /// legacy alternate ascendancies), by ascendancy.
     removed_by_pob: BTreeMap<String, usize>,
+    /// Nodes whose links differ only by links to or from a mastery that
+    /// PoB's tree file has and GGG's export does not (3_25's node 49391),
+    /// each with those links: a mastery is never on a path, so no
+    /// allocation can differ (the alloc record checks it).
+    pob_only_mastery_links: BTreeMap<u32, Vec<u32>>,
     /// Nodes placed within `ROUNDING` but not `TOLERANCE` (the export's
     /// rounded group centres), each with its offset.
     placed_within_export_rounding: BTreeMap<u32, f64>,
@@ -165,7 +177,7 @@ pub fn layout(pob: &Path, bundle: &Path) -> Result<(LayoutRecord, bool), String>
     let pob_bytes = read(pob)?;
     let theirs: PobLayout =
         serde_json::from_slice(&pob_bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
-    let (tree, manifest) = load_tree(bundle)?;
+    let (tree, manifest) = load_tree(bundle, Some(theirs.tree_version.as_str()))?;
     if !tree.placed() {
         return Err(format!(
             "{}: the bundle has no layout constants",
@@ -201,6 +213,8 @@ pub fn layout(pob: &Path, bundle: &Path) -> Result<(LayoutRecord, bool), String>
         .collect();
     let mut offsets: BTreeMap<String, [f64; 2]> = BTreeMap::new();
     let mut removed: BTreeMap<String, usize> = BTreeMap::new();
+    let mut mastery_links: BTreeMap<u32, Vec<u32>> = BTreeMap::new();
+    let is_mastery = |id: &u32| tree.nodes.get(id).is_some_and(|n| n.kind == Kind::Mastery);
     for node in tree.nodes.values() {
         let Some(other) = theirs.nodes.get(&node.id.to_string()) else {
             if let Some(asc) = theirs.removed.get(&node.id.to_string()) {
@@ -262,8 +276,13 @@ pub fn layout(pob: &Path, bundle: &Path) -> Result<(LayoutRecord, bool), String>
                 carried
             })
             .collect();
+        let extra: Vec<u32> = pobs.difference(&ours).copied().collect();
         if ours == pobs {
             links_equal += 1;
+        } else if ours.is_subset(&pobs)
+            && extra.iter().all(|e| is_mastery(&node.id) || is_mastery(e))
+        {
+            mastery_links.insert(node.id, extra);
         } else {
             differences.push(Difference {
                 what: format!("node {}: links", node.id),
@@ -335,6 +354,7 @@ pub fn layout(pob: &Path, bundle: &Path) -> Result<(LayoutRecord, bool), String>
             pob_nodes_not_carried: pob_not_carried,
             ascendancy_offsets: offsets,
             removed_by_pob: removed,
+            pob_only_mastery_links: mastery_links,
             placed_within_export_rounding: rounded,
             classes: class_count,
             starts_equal: starts,
@@ -412,8 +432,13 @@ impl Rng {
 ///
 /// # Errors
 /// An unreadable bundle.
-pub fn alloc_requests(bundle: &Path, count: usize, seed: u64) -> Result<String, String> {
-    let (tree, _) = load_tree(bundle)?;
+pub fn alloc_requests(
+    bundle: &Path,
+    count: usize,
+    seed: u64,
+    version: Option<&str>,
+) -> Result<String, String> {
+    let (tree, _) = load_tree(bundle, version)?;
     let mut rng = Rng(seed.max(1));
     let targets: Vec<u32> = tree
         .nodes
@@ -520,7 +545,7 @@ pub fn alloc(requests: &Path, pob: &Path, bundle: &Path) -> Result<(AllocRecord,
     let pob_bytes = read(pob)?;
     let theirs: PobAlloc =
         serde_json::from_slice(&pob_bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
-    let (tree, manifest) = load_tree(bundle)?;
+    let (tree, manifest) = load_tree(bundle, Some(theirs.tree_version.as_str()))?;
     let text = String::from_utf8(request_bytes.clone()).map_err(|e| e.to_string())?;
     let requests: Vec<Request> = text
         .lines()
@@ -794,6 +819,111 @@ pub fn readback(build: &Path, pob: &Path) -> Result<(ReadbackRecord, bool), Stri
     ))
 }
 
+/// The conversion record: specs of an older version imported on the
+/// bundle's own tree (plan gate item 2, "version-conversion drops").
+#[derive(Serialize, Default)]
+pub struct ConvertRecord {
+    from_version: String,
+    to_version: String,
+    requests_sha256: String,
+    pob_alloc_sha256: String,
+    bundle_manifest_sha256: String,
+    requests: usize,
+    /// Specs that lose nodes in the conversion.
+    converted_with_drops: usize,
+    /// The nodes they lose, summed.
+    nodes_dropped: usize,
+    /// Specs whose converted nodes equal PoB's.
+    specs_equal: usize,
+    differences: Vec<Difference>,
+}
+
+/// `tree-parity convert`: `requests` made on the `from` pack
+/// (`alloc-requests <bundle> <n> <seed> <from>`), `pob` PoB's `alloc` of
+/// them on its latest tree (no `tree=`). PoB's spec after the import is
+/// what its `ConvertToVersion` keeps (`RestoreUndoState` imports the node
+/// list on the new version); loom's is `poe1::convert` on the bundle's
+/// own tree, as the app's `convert-tree-version`.
+///
+/// # Errors
+/// An unreadable input, a request line that does not parse, or PoB's
+/// output not on the bundle's own tree.
+pub fn convert(
+    requests: &Path,
+    pob: &Path,
+    bundle: &Path,
+    from: &str,
+) -> Result<(ConvertRecord, bool), String> {
+    let request_bytes = read(requests)?;
+    let pob_bytes = read(pob)?;
+    let theirs: PobAlloc =
+        serde_json::from_slice(&pob_bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
+    if theirs.tree_version == from {
+        return Err(format!(
+            "PoB's output is on {from}, the version converted from: run it without tree="
+        ));
+    }
+    let (tree, manifest) = load_tree(bundle, None)?;
+    let (old, _) = load_tree(bundle, Some(from))?;
+    let text = String::from_utf8(request_bytes.clone()).map_err(|e| e.to_string())?;
+    let requests: Vec<Request> = text
+        .lines()
+        .map(|l| Request::parse(l).ok_or_else(|| format!("request {l:?}")))
+        .collect::<Result<_, _>>()?;
+    if requests.len() != theirs.results.len() {
+        return Err(format!(
+            "{} requests, {} PoB results",
+            requests.len(),
+            theirs.results.len()
+        ));
+    }
+    let mut r = ConvertRecord {
+        from_version: from.to_owned(),
+        to_version: theirs.tree_version.clone(),
+        requests_sha256: sha256(&request_bytes),
+        pob_alloc_sha256: sha256(&pob_bytes),
+        bundle_manifest_sha256: manifest,
+        requests: requests.len(),
+        ..ConvertRecord::default()
+    };
+    for (i, (q, p)) in requests.iter().zip(&theirs.results).enumerate() {
+        // A request carries no jewels, so no cluster area: PoB's spec leaves
+        // those nodes out without their jewels (`PassiveSpec:Init`).
+        let spec = Spec {
+            class: q.class,
+            ascendancy: q.ascendancy,
+            nodes: q
+                .allocated
+                .iter()
+                .copied()
+                .filter(|n| tree.node(*n).is_none_or(|x| !x.cluster_area))
+                .collect(),
+            masteries: BTreeMap::new(),
+            leaps: Vec::new(),
+        };
+        // The request's set as the old tree has it (starts included).
+        let before = poe1::connected(&old, &spec);
+        let ours = poe1::convert(&tree, &spec).nodes;
+        let dropped = before.difference(&ours).count();
+        if dropped > 0 {
+            r.converted_with_drops += 1;
+            r.nodes_dropped += dropped;
+        }
+        let pobs: BTreeSet<u32> = p.allocated.iter().copied().collect();
+        if ours == pobs {
+            r.specs_equal += 1;
+        } else {
+            r.differences.push(Difference {
+                what: format!("request {} ({}): converted nodes", i + 1, q.target),
+                loom: serde_json::json!(ours.difference(&pobs).collect::<Vec<_>>()),
+                pob: serde_json::json!(pobs.difference(&ours).collect::<Vec<_>>()),
+            });
+        }
+    }
+    let ok = r.differences.is_empty();
+    Ok((r, ok))
+}
+
 #[cfg(test)]
 mod tests {
     use super::Request;
@@ -849,7 +979,7 @@ mod tests {
         for (name, r) in &records {
             assert_eq!(r["differences"].as_array().map(Vec::len), Some(0), "{name}");
             match name.as_str() {
-                "layout.json" => {
+                n if n == "layout.json" || n.starts_with("layout-") => {
                     hash(r, "pob_layout_sha256");
                     hash(r, "bundle_manifest_sha256");
                     let rounded = r["placed_within_export_rounding"]
@@ -867,13 +997,16 @@ mod tests {
                         count(r, "nodes"),
                         "{name}"
                     );
+                    let mastery_links = r["pob_only_mastery_links"]
+                        .as_object()
+                        .map_or(0, |m| m.len() as u64);
                     assert_eq!(
-                        count(r, "links_equal") + removed,
+                        count(r, "links_equal") + removed + mastery_links,
                         count(r, "nodes"),
                         "{name}"
                     );
                 }
-                "alloc.json" => {
+                n if n == "alloc.json" || n.starts_with("alloc-") => {
                     for k in [
                         "requests_sha256",
                         "pob_alloc_sha256",
@@ -894,6 +1027,20 @@ mod tests {
                         "{name}"
                     );
                     assert_eq!(count(r, "points_equal"), count(r, "requests"), "{name}");
+                }
+                n if n.starts_with("convert-") => {
+                    for k in [
+                        "requests_sha256",
+                        "pob_alloc_sha256",
+                        "bundle_manifest_sha256",
+                    ] {
+                        hash(r, k);
+                    }
+                    assert_eq!(count(r, "specs_equal"), count(r, "requests"), "{name}");
+                    assert!(
+                        count(r, "converted_with_drops") <= count(r, "requests"),
+                        "{name}"
+                    );
                 }
                 n if n.starts_with("readback-") => {
                     hash(r, "build_sha256");

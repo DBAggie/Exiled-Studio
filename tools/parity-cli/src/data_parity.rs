@@ -22,6 +22,7 @@
 //! 1 otherwise; 2 on a usage error; 3 when an input does not read.
 
 pub mod affixes;
+pub mod cluster;
 pub mod compare;
 pub mod flavour;
 pub mod gem_effects;
@@ -43,7 +44,7 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 16] = [
+pub const TABLES: [&str; 17] = [
     "skills",
     "gems",
     "bases",
@@ -60,6 +61,7 @@ pub const TABLES: [&str; 16] = [
     "gem_effects",
     "jewel_radii",
     "flavour_text",
+    "cluster_jewels",
 ];
 
 /// Summary and overlay format.

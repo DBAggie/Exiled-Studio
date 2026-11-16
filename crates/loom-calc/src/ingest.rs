@@ -216,6 +216,21 @@ impl<'m> Ingest<'m> {
         }
     }
 
+    /// [`Ingest::stats`] with each effect's value scaled by `scale` as
+    /// `scaled` gives it (`(quantity, op, value)` to the scaled value): a
+    /// passive whose effect is increased (PoB's `PassiveSkillEffect`,
+    /// `ScaleAddList` on the node's mods).
+    pub fn stats_scaled(
+        &mut self,
+        source: &Source,
+        stats: &[StatLine],
+        scaled: &dyn Fn(Quantity, Op, f64) -> f64,
+    ) {
+        let start = self.store.effects().len();
+        self.stats(source, stats);
+        self.store.rescale_from(start, scaled);
+    }
+
     /// Adds the effects of one stat line from `source`.
     pub fn stat(&mut self, source: &Source, line: &StatLine) {
         let mapping = self.mapping;
