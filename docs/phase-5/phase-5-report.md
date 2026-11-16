@@ -74,11 +74,11 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
 ## For the maintainer
 1. **Keys and secrets:** done 2026-11-16 for 0.9 (`docs/release/signing.md`, "First keys"). Left: copy the private keys offline twice, then delete the workstation folder if you like.
 2. **The shipped bundle:** done 2026-11-16 (`docs/phase-5/data-bundles.md`, "The shipped bundle": a draft release's asset).
-3. **Gate 6:** run `release.yml` by hand once it reaches `main`, and record the run in `packaging.md`.
+3. **Gate 6:** run `release.yml` by hand once it reaches `main`, and record the run in `packaging.md`. The tagged 0.9 runs passed every job (`v0.9.0-1`: 43822600359; `v0.9.0`: 43866901437), installers built, installed, started, and uninstalled; whether they stand for the recorded run is the maintainer's call.
 4. **Gate 9:** accept or refuse the NSIS size exception; measure tree paint and pan and zoom fps in the release app; say whether peak memory includes WebView2. (Startup is met.)
 5. **After two releases:** a real update from one to the next (`updates.md`, "Not tested here").
 6. **SmartScreen:** the installers are not code signed (MQ4); the README says how to run them.
-7. **The release environment** allows `experimental` (made 2026-11-16). The first releases are 0.9: `v0.9.0-1` on `experimental`, `v0.9.0` on `main` (`docs/release/channels.md`, "Releases").
+7. **The release environment** allows `experimental` (made 2026-11-16). The first releases are 0.9: `v0.9.0-1` on `experimental`, `v0.9.0` on `main`, both published 2026-11-16 (`docs/release/channels.md`, "Releases").
 
 ## Not in Phase 5
 The passive tree steps below the cut line (T3 cluster jewels, T4 older versions, T5b, T8's corpus run) are their own PRs.
