@@ -25,9 +25,20 @@ if ($Kind -eq 'nsis') {
     $dir = Join-Path $env:LOCALAPPDATA $product
     Run $Installer @('/S')
 } else {
-    $dir = Join-Path $env:ProgramFiles $product
     $log = Join-Path ([System.IO.Path]::GetTempPath()) 'loom-msi-install.log'
     Run 'msiexec.exe' @('/i', "`"$Installer`"", '/qn', '/l*v', "`"$log`"")
+    # The MSI installs per machine into Program Files, unless it finds an
+    # earlier install folder in the registry: the NSIS setup (run before it
+    # in the release workflow, as on a user's machine that had it) records
+    # its per-user folder under the product's key, which the MSI's
+    # INSTALLDIR search reads. Either is a working install.
+    $candidates = @((Join-Path $env:ProgramFiles $product), (Join-Path $env:LOCALAPPDATA $product))
+    $dir = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if ($null -eq $dir) {
+        Get-Content $log | Select-String -Pattern 'INSTALLDIR|Installation success or error status|Return value 3' |
+            Select-Object -Last 40 | ForEach-Object { Write-Output $_.Line }
+        throw "the MSI installed no folder at $($candidates -join ' or ')"
+    }
 }
 $exe = Get-ChildItem -Path $dir -Filter '*.exe' | Where-Object { $_.Name -notlike 'uninstall*' } | Select-Object -First 1
 if ($null -eq $exe) { throw "no application in $dir" }
