@@ -1,6 +1,6 @@
 # Phase 5 report: packaging, signing, updates
 
-The Phase 5 steps of the passive tree and Phase 5 plan (`dev/active/passive-tree-and-phase-5/`), done in one sprint at the maintainer's request (2026-11-15: "perform all open p5 steps in this next sprint"). P5 (logs, crash records, the diagnostic package) was its own PR, #115. P1 to P4 and P6 to P8 are one PR from `feat/p5-release`.
+The Phase 5 steps of the passive tree and Phase 5 plan (`dev/active/passive-tree-and-phase-5/`), done in one sprint at the maintainer's request (2026-11-15: "perform all open p5 steps in this next sprint"). P5 (logs, crash records, the diagnostic package) was its own PR, #115. P1 to P4 and P6 to P8 are one PR, #118, from `feat/p5-release`.
 
 **Gate status: not met yet.** Every CI item passes on this workstation, and CI runs them on the PR. Two maintainer items remain:
 - the `release` workflow's recorded run (gate 6);
