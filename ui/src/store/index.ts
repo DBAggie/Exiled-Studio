@@ -24,6 +24,7 @@ import {
 } from '../api/types'
 import { type Prefs, defaultPrefs, readPrefs } from '../dashboards'
 import { t } from '../i18n'
+import { historyText } from '../util'
 import { importFlow, importActions } from './importFlow'
 
 export type Screen =
@@ -85,6 +86,38 @@ interface UiState {
   confirm: Replace | null
   /** The user's dashboards (B-5). */
   prefs: Prefs
+  /** The numbers the user pinned to compare against (UX audit D-03);
+   * kept for the session, never in a build. */
+  baseline: Mark | null
+  /** The numbers after each change this session, oldest first: what the
+   * history charts draw. */
+  trail: Mark[]
+}
+
+/** Every computed field's value at one moment of the build. */
+export interface Mark {
+  /** The calculation's version. */
+  version: number
+  /** What made these numbers, in words ("Opened", "edit of Shiny Wand"). */
+  label: string
+  /** Each field's value; `null` when it was not computed. */
+  fields: Record<string, number | null>
+}
+
+/** The most steps a session's trail keeps. */
+export const MAX_TRAIL = 60
+
+/** A calculation's fields as a mark. */
+export function markOf(
+  calc: [number, CalcResultDocumentV1],
+  label: string,
+): Mark {
+  const fields: Record<string, number | null> = {}
+  for (const f of calc[1].result.fields) {
+    const value = (f as { value?: unknown }).value
+    fields[f.field] = typeof value === 'number' ? value : null
+  }
+  return { version: calc[0], label, fields }
 }
 
 /** What replaces the open build: a new one, a file the user picks, a
@@ -108,6 +141,8 @@ const ui = createSlice({
     dragging: false,
     confirm: null,
     prefs: defaultPrefs(),
+    baseline: null,
+    trail: [],
   } as UiState,
   reducers: {
     go(state, action: PayloadAction<Screen>) {
@@ -142,6 +177,23 @@ const ui = createSlice({
     },
     prefs(state, action: PayloadAction<Prefs>) {
       state.prefs = action.payload
+    },
+    baseline(state, action: PayloadAction<Mark | null>) {
+      state.baseline = action.payload
+    },
+    /** A new calculation's numbers join the trail (once per version). */
+    tracked(state, action: PayloadAction<Mark>) {
+      const last = state.trail[state.trail.length - 1]
+      if (last !== undefined && last.version === action.payload.version) {
+        return
+      }
+      state.trail.push(action.payload)
+      if (state.trail.length > MAX_TRAIL) state.trail.shift()
+    },
+    /** Another build (or none): its numbers start over. */
+    forgetNumbers(state) {
+      state.baseline = null
+      state.trail = []
     },
   },
 })
@@ -219,11 +271,40 @@ function codeOf(e: unknown): string {
 
 /** Reads the snapshot (and the calculation, when it changed). */
 export const refresh = (): Thunk => async (dispatch, getState, api) => {
+  const before = getState().session.snapshot
   const snapshot = await api.snapshot()
   dispatch(actions.snapshot(snapshot))
+  // Another build's numbers are not this one's history: a build opened,
+  // imported, or closed starts the trail and the baseline over. (A build
+  // is the same while its version only grows by its own changes; the
+  // application starts each build's history empty.)
+  const replaced =
+    snapshot.build == null ||
+    before?.build == null ||
+    (snapshot.history['can-undo'] !== true &&
+      snapshot.history['can-redo'] !== true &&
+      snapshot.version !== before.version)
+  const ui = getState().ui
+  if (replaced && (ui.trail.length > 0 || ui.baseline !== null)) {
+    dispatch(actions.forgetNumbers())
+  }
   const held = getState().session.calc
   if (held === null || held[0] !== snapshot.calc.version) {
-    dispatch(actions.calc(await api.calcDocument()))
+    const calc = await api.calcDocument()
+    dispatch(actions.calc(calc))
+    if (calc !== null && snapshot.build != null) {
+      const undo = snapshot.history.undo
+      dispatch(
+        actions.tracked(
+          markOf(
+            calc,
+            undo == null
+              ? t('trail.opened')
+              : historyText(undo, snapshot.build),
+          ),
+        ),
+      )
+    }
   }
 }
 

@@ -37,12 +37,19 @@ import {
   type DiagnosticFile,
   type TreeChange,
   type TreePreview,
+  type WhatIfRequest,
+  type WhatIfSeries,
 } from './types'
+import { type DemoInput, demoDocument, demoValues } from './fakeDemo'
 import * as fakeTree from './fakeTree'
 
 export interface FakeOptions {
   /** Whether game data is loaded. */
   data?: boolean
+  /** A full set of sample fields that follow the stage, the main gem's
+   * level, and the enemy's level (`fakeDemo`): for running the UI in a
+   * browser. Off, the fields are the small fixed set the tests read. */
+  demo?: boolean
   /** A code every import fails with. */
   importFails?: string
   /** A code every calculation fails with. */
@@ -300,6 +307,149 @@ function sampleItems(): ItemView[] {
       ],
     },
   ]
+}
+
+/** A piece of sample gear for the browser's demo data: name, base, and
+ * modifier lines (sample text for layout; nothing is calculated). */
+function gear(
+  id: number,
+  name: string,
+  base: string,
+  rarity: string,
+  itemClass: string,
+  mods: string[],
+  extra: Partial<ItemCard> = {},
+): ItemView {
+  return {
+    id,
+    name,
+    base,
+    rarity,
+    slot: null,
+    card: card({ 'item-class': itemClass, 'item-level': '84', ...extra }),
+    lines: [
+      line(0, `Rarity: ${rarity.toUpperCase()}`, {
+        kind: 'rarity',
+        section: null,
+        status: 'other',
+      }),
+      line(1, name, { kind: 'name', section: null, status: 'other' }),
+      line(2, base, { kind: 'base', section: null, status: 'other' }),
+      ...mods.map((text, i) => line(3 + i, text)),
+    ],
+  } as ItemView
+}
+
+/** The demo's gear and the slot each piece sits in. */
+function demoGear(): { items: ItemView[]; placed: Record<string, number> } {
+  const flask = (id: number, name: string, base: string, mods: string[]) =>
+    gear(id, name, base, 'magic', 'UtilityFlask', mods, {
+      quality: '20',
+      'level-req': '40',
+      properties: [
+        { name: 'Lasts', value: '6.00 Seconds' },
+        { name: 'Consumes', value: '30 of 60 Charges on use' },
+        { name: 'Currently has', value: '60 Charges' },
+      ],
+    } as Partial<ItemCard>)
+  const items = [
+    gear(101, 'Dread Crown', 'Sample Circlet', 'rare', 'Helmet', [
+      '+92 to maximum Life',
+      '+41% to Cold Resistance',
+      '+38% to Lightning Resistance',
+      '+64 to maximum Energy Shield',
+    ]),
+    gear(
+      102,
+      'Stormweave',
+      'Sample Robe',
+      'unique',
+      'Body Armour',
+      [
+        '+118 to maximum Life',
+        '+2 to Level of Socketed Gems',
+        '35% increased Cold Damage',
+        '+44% to Fire Resistance',
+        '12% increased Cast Speed',
+      ],
+      {
+        quality: '20',
+        flavour: [
+          { text: 'The loom remembers every thread', 'default-colour': false },
+          { text: 'that the storm pulled loose.', 'default-colour': false },
+        ],
+      },
+    ),
+    gear(103, 'Grim Clutch', 'Sample Gloves', 'rare', 'Gloves', [
+      '+71 to maximum Life',
+      '14% increased Cast Speed',
+      '+33% to Fire Resistance',
+    ]),
+    gear(104, 'Storm Stride', 'Sample Boots', 'rare', 'Boots', [
+      '30% increased Movement Speed',
+      '+66 to maximum Life',
+      '+29% to Chaos Resistance',
+    ]),
+    gear(105, 'Rune Heart', 'Sample Amulet', 'rare', 'Amulet', [
+      '+38% to Global Critical Strike Multiplier',
+      '+1 to Level of all Cold Skill Gems',
+      '+54 to maximum Life',
+    ]),
+    gear(106, 'Vortex Cord', 'Sample Belt', 'rare', 'Belt', [
+      '+101 to maximum Life',
+      '+40% to Cold Resistance',
+      '20% increased Flask Charges gained',
+    ]),
+    flask(107, 'Seething Life Flask of Sealing', 'Sample Life Flask', [
+      'Recovers 2080 Life over 3.00 Seconds',
+      '66% reduced Amount Recovered',
+      'Instant Recovery',
+      'Grants Immunity to Bleeding for 17 seconds if used while Bleeding',
+      'Grants Immunity to Corrupted Blood for 17 seconds if used while affected by Corrupted Blood',
+    ]),
+    flask(108, "Alchemist's Quicksilver Flask of the Cheetah", 'Sample Flask', [
+      '40% increased Movement Speed',
+      '25% increased effect',
+      '33% reduced Duration',
+      '14% increased Movement Speed during Effect',
+      'Used when Charges reach full',
+    ]),
+    flask(109, "Chemist's Granite Flask of the Armadillo", 'Sample Flask', [
+      '+1500 to Armour',
+      '26% reduced Charges per use',
+      '60% increased Armour during Effect',
+      'Used when Charges reach full',
+    ]),
+    flask(110, "Surgeon's Diamond Flask of the Order", 'Sample Flask', [
+      'Your Critical Strike Chance is Lucky',
+      '35% chance to gain a Flask Charge when you deal a Critical Strike',
+      '60% reduced Effect of Curses on you during Effect',
+      'Used when Charges reach full',
+    ]),
+    flask(111, "Experimenter's Quartz Flask of the Owl", 'Sample Flask', [
+      'Phasing',
+      '10% chance to Suppress Spell Damage',
+      '38% increased Duration',
+      '55% reduced Effect of Freeze on you during Effect',
+      'Used when Charges reach full',
+    ]),
+  ]
+  return {
+    items,
+    placed: {
+      Helmet: 101,
+      'Body Armour': 102,
+      Gloves: 103,
+      Boots: 104,
+      Amulet: 105,
+      Belt: 106,
+      'Flask 1': 107,
+      'Flask 2': 108,
+      'Flask 3': 109,
+      'Flask 4': 110,
+      'Flask 5': 111,
+    },
+  }
 }
 
 /** The sample build's item sets: each set's slots, by item ID. */
@@ -669,7 +819,13 @@ export class FakeApi implements LoomApi {
       if (version !== this.version || this.current === null) {
         return
       }
-      this.calc = [version, sampleDocument(this.current.items)]
+      const doc = sampleDocument(this.current.items)
+      this.calc = [
+        version,
+        this.options.demo === true
+          ? demoDocument(doc, this.demoInput(this.current))
+          : doc,
+      ]
       this.calcState = {
         state: 'done',
         version,
@@ -760,9 +916,11 @@ export class FakeApi implements LoomApi {
                 'item-class':
                   i.card['item-class'] === 'Jewel'
                     ? 'Jewel'
-                    : i.id === 2
-                      ? 'Wand'
-                      : 'Ring',
+                    : i.id > 100
+                      ? i.card['item-class']
+                      : i.id === 2
+                        ? 'Wand'
+                        : 'Ring',
                 name: i.name,
                 base: i.base,
                 rarity: i.rarity,
@@ -1355,7 +1513,7 @@ export class FakeApi implements LoomApi {
       }
       this.path = 'recent.json'
       this.dirty = false
-      this.changed(fresh())
+      this.changed(this.fresh())
       return this.done()
     }
     if ('restore' in command) {
@@ -1363,7 +1521,7 @@ export class FakeApi implements LoomApi {
         (r) => r.id !== command.restore.id,
       )
       this.dirty = true
-      this.changed(fresh())
+      this.changed(this.fresh())
       return this.done()
     }
     if ('forget-recent' in command) {
@@ -1590,7 +1748,7 @@ export class FakeApi implements LoomApi {
     this.redoStack = []
     this.path = null
     this.dirty = true
-    this.changed(fresh())
+    this.changed(this.fresh())
     return this.done()
   }
 
@@ -1827,7 +1985,7 @@ export class FakeApi implements LoomApi {
     this.dirty = false
     this.undoStack = []
     this.redoStack = []
-    this.changed(fresh())
+    this.changed(this.fresh())
     return Promise.resolve(this.done())
   }
 
@@ -1844,6 +2002,123 @@ export class FakeApi implements LoomApi {
 
   exportXml() {
     return Promise.resolve(this.done())
+  }
+
+  /** A fresh sample build; with the demo data, in full gear. */
+  private fresh(): State {
+    const state = fresh()
+    if (this.options.demo !== true) return state
+    const extra = demoGear()
+    return {
+      ...state,
+      items: [...state.items, ...extra.items],
+      placed: extra.placed,
+    }
+  }
+
+  /** What the sample numbers follow (`fakeDemo`). */
+  private demoInput(state: State): DemoInput {
+    const group = state.skills[state.skillSet]?.[state.main]
+    const enemy = state.config.inputs.find((i) => i.name === 'enemyLevel')
+    return {
+      life: life(state.items),
+      stage: Math.max(
+        0,
+        state.stages.findIndex((s) => s.spec === state.spec),
+      ),
+      gemLevel: group?.gems[state.mainGem]?.level ?? 1,
+      level: 90,
+      enemyLevel:
+        enemy != null &&
+        typeof enemy.value === 'object' &&
+        'number' in enemy.value
+          ? enemy.value.number
+          : 83,
+    }
+  }
+
+  /** The what-if query over the sample numbers: the fields at each stage,
+   * or with one input swept (never a change to the build). */
+  whatIf(request: WhatIfRequest): Promise<WhatIfSeries> {
+    const state = this.current
+    if (state === null) this.fail('APP_NO_BUILD')
+    const now = this.demoInput(state)
+    const point = (
+      label: string,
+      x: number,
+      current: boolean,
+      input: DemoInput,
+    ) => ({
+      label,
+      x,
+      current,
+      fields: demoValues(input).map(([field, value]) => ({
+        field,
+        value,
+        state: 'complete',
+      })),
+    })
+    const vary = request.vary
+    const span = (from: number, to: number, step: number) => {
+      const n = Math.floor((to - from) / step) + 1
+      if (!(step > 0) || from > to || n > 41) this.fail('APP_WHAT_IF')
+      return Array.from({ length: n }, (_, i) => from + i * step)
+    }
+    if (vary === 'stages') {
+      return Promise.resolve({
+        points: state.stages.map((s, i) =>
+          point(s.title, i, i === now.stage, { ...now, stage: i }),
+        ),
+      })
+    }
+    if ('gem-level' in vary) {
+      const v = vary['gem-level']
+      const gem = state.skills[state.skillSet]?.[v.group]?.gems[v.gem]
+      if (gem === undefined) this.fail('APP_WHAT_IF')
+      const main = v.group === state.main && v.gem === state.mainGem
+      return Promise.resolve({
+        points: span(v.from, v.to, 1).map((level) =>
+          point(
+            String(level),
+            level,
+            level === gem.level,
+            main ? { ...now, gemLevel: level } : now,
+          ),
+        ),
+      })
+    }
+    if ('character-level' in vary) {
+      const v = vary['character-level']
+      return Promise.resolve({
+        points: span(v.from, v.to, v.step).map((level) =>
+          point(String(level), level, level === now.level, { ...now, level }),
+        ),
+      })
+    }
+    const v = vary['config-number']
+    const input = state.config.inputs.find((i) => i.name === v.name)
+    if (
+      input === undefined ||
+      typeof input.value !== 'object' ||
+      !('number' in input.value) ||
+      v.steps < 2 ||
+      v.steps > 41 ||
+      v.from > v.to
+    ) {
+      this.fail('APP_WHAT_IF')
+    }
+    const held = input.value.number
+    return Promise.resolve({
+      points: Array.from({ length: v.steps }, (_, i) => {
+        const x = v.from + ((v.to - v.from) * i) / (v.steps - 1)
+        return point(
+          String(Math.round(x * 100) / 100),
+          x,
+          x === held,
+          v.name === 'enemyLevel' ? { ...now, enemyLevel: x } : now,
+        )
+      }),
+    })
   }
 
   /** The saved preferences document (for tests). */

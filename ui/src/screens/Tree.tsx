@@ -21,6 +21,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react'
 
 import type {
@@ -29,7 +30,8 @@ import type {
   TreePreview,
   TreeView,
 } from '../api/types'
-import { ScreenHeading } from '../components'
+import { Hint, ScreenHeading } from '../components'
+import { floatingStyle, placeByPoint, useFloating } from '../floating'
 import { fieldLabel, formatNumber, t, tDynamic } from '../i18n'
 import { query, run } from '../store'
 import {
@@ -44,6 +46,37 @@ import {
   useTreeLayout,
   useTreeSprites,
 } from './treeLayout'
+
+/** The hovered node's card, by the pointer and always whole in the
+ * window. `sized` changes when its content does. */
+function HoverCard({
+  x,
+  y,
+  sized,
+  children,
+}: {
+  x: number
+  y: number
+  sized: unknown
+  children: ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const placement = useFloating(
+    ref,
+    (box, view) => placeByPoint({ x, y }, box, view),
+    `${x}:${y}:${sized === null ? 0 : 1}`,
+  )
+  return (
+    <div
+      ref={ref}
+      className="tree-card"
+      role="tooltip"
+      style={floatingStyle(placement)}
+    >
+      {children}
+    </div>
+  )
+}
 
 /** A node's drawn radius by kind, in tree units. */
 const RADIUS: Record<TreeNodeView['kind'], number> = {
@@ -480,8 +513,9 @@ function TreeCanvas({
               return
             }
           }
-          const rect = e.currentTarget.getBoundingClientRect()
-          onHover(hit(e), { x: e.clientX - rect.left, y: e.clientY - rect.top })
+          // Window coordinates: the card is placed in the window, so it is
+          // never cut off by the canvas or the page (UX audit A-02).
+          onHover(hit(e), { x: e.clientX, y: e.clientY })
         }}
         onPointerUp={(e) => {
           const d = drag.current
@@ -1092,7 +1126,51 @@ export function Tree() {
 
   return (
     <section className="screen tree-screen">
-      <ScreenHeading>{t('tree.title')}</ScreenHeading>
+      {/* The heading row: the page, how to use it (one press away), and
+          the tree's own actions; then one row of controls. */}
+      <div className="page-head">
+        <ScreenHeading>{t('tree.title')}</ScreenHeading>
+        <Hint>{t('tree.canvasHelp')}</Hint>
+        <span className="spacer" />
+        <div
+          className="row tree-specs"
+          role="group"
+          aria-label={t('tree.specs')}
+        >
+          <span className="muted small-text">{specTitle}</span>
+          <button
+            type="button"
+            className="small"
+            onClick={() => setSpecForm({ kind: 'new', title: '' })}
+          >
+            {t('tree.specNew')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            onClick={() =>
+              setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
+            }
+          >
+            {t('tree.specCopy')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
+          >
+            {t('tree.specRename')}
+          </button>
+          <button
+            type="button"
+            className="small"
+            disabled={specs.length <= 1}
+            onClick={() => setConfirm({ kind: 'delete' })}
+          >
+            {t('tree.specDelete')}
+          </button>
+        </div>
+      </div>
       <div className="row tree-bar">
         <label htmlFor={classId}>{t('tree.class')}</label>
         <select
@@ -1195,36 +1273,6 @@ export function Tree() {
           onClick={() => setConfirm({ kind: 'reset' })}
         >
           {t('tree.reset')}
-        </button>
-      </div>
-      <div className="row tree-specs" role="group" aria-label={t('tree.specs')}>
-        <span className="muted small-text">{specTitle}</span>
-        <button
-          type="button"
-          onClick={() => setSpecForm({ kind: 'new', title: '' })}
-        >
-          {t('tree.specNew')}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setSpecForm({ kind: 'copy', title: `${specTitle} (copy)` })
-          }
-        >
-          {t('tree.specCopy')}
-        </button>
-        <button
-          type="button"
-          onClick={() => setSpecForm({ kind: 'rename', title: specTitle })}
-        >
-          {t('tree.specRename')}
-        </button>
-        <button
-          type="button"
-          disabled={specs.length <= 1}
-          onClick={() => setConfirm({ kind: 'delete' })}
-        >
-          {t('tree.specDelete')}
         </button>
       </div>
       {specForm !== null && (
@@ -1335,20 +1383,15 @@ export function Tree() {
             onActivate={activate}
           />
           {hover !== null && (
-            <div
-              className="tree-card"
-              style={{ left: hover.x + 16, top: hover.y + 16 }}
-              role="tooltip"
-            >
+            <HoverCard x={hover.x} y={hover.y} sized={preview}>
               <NodeCard
                 node={hover.node}
                 tree={tree}
                 layout={layout}
                 preview={preview}
               />
-            </div>
+            </HoverCard>
           )}
-          <p className="muted small-text">{t('tree.canvasHelp')}</p>
         </div>
       ) : (
         <TreeList

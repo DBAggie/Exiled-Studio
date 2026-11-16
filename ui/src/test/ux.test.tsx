@@ -722,7 +722,8 @@ describe('dashboards (B-5)', () => {
     await user.click(screen.getByRole('button', { name: 'Add stat' }))
     const life = screen.getByRole('group', { name: 'Stat: Life: arrange' })
     await user.click(within(life).getByRole('button', { name: 'Move up' }))
-    await user.click(within(life).getByRole('button', { name: 'Full width' }))
+    // Any of four widths on the six-column grid.
+    await user.selectOptions(within(life).getByLabelText('Width'), 'full')
     await expectAccessible()
 
     let saved = JSON.parse(api.prefs ?? '{}') as {
@@ -740,17 +741,21 @@ describe('dashboards (B-5)', () => {
     await user.click(screen.getByRole('button', { name: 'Done' }))
     expect(within(tabs).getByRole('button', { name: 'Bossing' })).toBeTruthy()
 
-    // Up to four dashboards; then deleting one.
-    await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    // Up to eight dashboards; then deleting one.
+    for (let n = 4; n < 8; n += 1) {
+      await user.click(screen.getByRole('button', { name: 'Add a dashboard' }))
+    }
     expect(screen.queryByRole('button', { name: 'Add a dashboard' })).toBeNull()
     await user.click(
       screen.getByRole('button', { name: 'Delete this dashboard' }),
     )
     saved = JSON.parse(api.prefs ?? '{}')
-    expect(saved.dashboards.map((d) => d.name)).toEqual([
+    expect(saved.dashboards.map((d) => d.name).slice(0, 4)).toEqual([
       'Overview',
       'Defence',
+      'Trends',
       'Bossing',
     ])
+    expect(saved.dashboards).toHaveLength(7)
   })
 })

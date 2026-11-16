@@ -1,28 +1,89 @@
 // The user's dashboards (UX brief note 5, B-5; docs/ui UI-DESIGN-BRIEF.md
-// screens 3 and 9): up to four, each a list of components laid out two to a
-// row, each half or full width. Kept in the UI's preferences document
+// screens 3 and 9; UX audit 2026-11-15, section D): up to eight, each a
+// list of components on a six-column grid, each a third, a half, two
+// thirds, or the full width. Kept in the UI's preferences document
 // (`ui_prefs`, beside the application's settings), never in a build.
+// An application older than a kind or a width drops that component when
+// it reads the document (a preference, never an error).
 
 /** What a component shows. */
 export type ComponentKind =
-  'offence' | 'defence' | 'warnings' | 'equipment' | 'main-skill' | 'stat'
+  // Summaries.
+  | 'offence'
+  | 'defence'
+  | 'warnings'
+  | 'equipment'
+  | 'main-skill'
+  | 'stat'
+  | 'attributes'
+  | 'resistances'
+  | 'pools'
+  | 'all-stats'
+  // Comparison and time (UX audit, section D).
+  | 'compare'
+  | 'history'
+  | 'progression'
+  | 'curve'
+  | 'timeline'
+
+/** A group of the component library. */
+export type Category = 'summary' | 'defence' | 'charts' | 'build'
+export const CATEGORIES: Category[] = ['summary', 'defence', 'charts', 'build']
+
+/** What a scaling curve varies (the application's what-if query). */
+export type CurveVary = 'gem-level' | 'character-level' | 'config-number'
+export const CURVE_VARIES: CurveVary[] = [
+  'gem-level',
+  'character-level',
+  'config-number',
+]
+
+/** A component's width on the dashboard's six-column grid. */
+export type Width = 'third' | 'half' | 'two-thirds' | 'full'
+export const WIDTHS: Width[] = ['third', 'half', 'two-thirds', 'full']
+
+/** The library: every kind but `stat`, in order, with its group and the
+ * width it starts with. */
+export const CATALOG: {
+  kind: Exclude<ComponentKind, 'stat'>
+  category: Category
+  width: Width
+  /** May be added more than once (each charts its own stat). */
+  many?: boolean
+}[] = [
+  { kind: 'offence', category: 'summary', width: 'half' },
+  { kind: 'defence', category: 'summary', width: 'half' },
+  { kind: 'all-stats', category: 'summary', width: 'full' },
+  { kind: 'attributes', category: 'summary', width: 'half' },
+  { kind: 'pools', category: 'defence', width: 'half' },
+  { kind: 'resistances', category: 'defence', width: 'half' },
+  { kind: 'compare', category: 'charts', width: 'half' },
+  { kind: 'history', category: 'charts', width: 'half', many: true },
+  { kind: 'progression', category: 'charts', width: 'full', many: true },
+  { kind: 'curve', category: 'charts', width: 'half', many: true },
+  { kind: 'timeline', category: 'charts', width: 'half' },
+  { kind: 'main-skill', category: 'build', width: 'half' },
+  { kind: 'equipment', category: 'build', width: 'half' },
+  { kind: 'warnings', category: 'build', width: 'full' },
+]
 
 /** Every kind but `stat`, in the library's order. */
-export const PANEL_KINDS: Exclude<ComponentKind, 'stat'>[] = [
-  'offence',
-  'defence',
-  'main-skill',
-  'equipment',
-  'warnings',
-]
+export const PANEL_KINDS = CATALOG.map((c) => c.kind)
 
 export interface DashComponent {
   id: string
   kind: ComponentKind
-  /** For `stat`: the calc result field it shows. */
+  /** For `stat`, `history`, `curve`: the calc result field it shows. */
   field?: string
-  /** Half (one of two in a row) or full width. */
-  width: 'half' | 'full'
+  /** For `progression`: the fields charted, one small chart each. */
+  fields?: string[]
+  /** For `curve`: what is varied. */
+  vary?: CurveVary
+  /** For `curve` over a config input: the input's name. */
+  input?: string
+  /** For `timeline`: the life to deal damage to. */
+  target?: number
+  width: Width
 }
 
 export interface DashboardDef {
@@ -36,12 +97,16 @@ export interface Prefs {
   dashboards: DashboardDef[]
   /** The dashboard shown. */
   active: string
+  /** The side menu as a narrow rail of icons. */
+  rail?: boolean
 }
 
-/** The brief's limit. */
-export const MAX_DASHBOARDS = 4
+/** Enough for any build's views; the tabs still fit one row. */
+export const MAX_DASHBOARDS = 8
 /** Enough for any layout; keeps the preferences document small. */
 export const MAX_COMPONENTS = 24
+/** A progression chart's small charts. */
+export const MAX_FIELDS = 6
 
 let counter = 0
 /** A fresh ID, unique within the preferences. */
@@ -55,8 +120,9 @@ export function newId(prefix: string, taken: Iterable<string>): string {
   return id
 }
 
-/** The dashboards a user starts with: the brief's Overview (offence and
- * defence, main skill and equipment, warnings), and Defence. */
+/** The dashboards a user starts with: a short Overview (headline numbers
+ * first, detail one click away), Defence, and Trends (comparison and
+ * time). */
 export function defaultPrefs(): Prefs {
   return {
     version: 1,
@@ -66,6 +132,9 @@ export function defaultPrefs(): Prefs {
         id: 'overview',
         name: 'Overview',
         components: [
+          { id: 'c6', kind: 'stat', field: 'hit-dps', width: 'third' },
+          { id: 'c7', kind: 'stat', field: 'life', width: 'third' },
+          { id: 'c8', kind: 'stat', field: 'energy-shield', width: 'third' },
           { id: 'c1', kind: 'offence', width: 'half' },
           { id: 'c2', kind: 'defence', width: 'half' },
           { id: 'c3', kind: 'main-skill', width: 'half' },
@@ -79,7 +148,31 @@ export function defaultPrefs(): Prefs {
         components: [
           { id: 'd1', kind: 'stat', field: 'life', width: 'half' },
           { id: 'd2', kind: 'stat', field: 'energy-shield', width: 'half' },
+          { id: 'd4', kind: 'pools', width: 'half' },
+          { id: 'd5', kind: 'resistances', width: 'half' },
           { id: 'd3', kind: 'defence', width: 'full' },
+        ],
+      },
+      {
+        id: 'trends',
+        name: 'Trends',
+        components: [
+          { id: 't1', kind: 'compare', width: 'half' },
+          { id: 't2', kind: 'history', field: 'hit-dps', width: 'half' },
+          {
+            id: 't3',
+            kind: 'progression',
+            fields: ['hit-dps', 'life', 'energy-shield'],
+            width: 'full',
+          },
+          {
+            id: 't4',
+            kind: 'curve',
+            vary: 'gem-level',
+            field: 'hit-dps',
+            width: 'half',
+          },
+          { id: 't5', kind: 'timeline', width: 'half' },
         ],
       },
     ],
@@ -95,8 +188,20 @@ function isComponent(x: unknown): x is DashComponent {
     typeof c.id === 'string' &&
     typeof c.kind === 'string' &&
     KINDS.has(c.kind) &&
-    (c.width === 'half' || c.width === 'full') &&
-    (c.kind !== 'stat' || typeof c.field === 'string')
+    typeof c.width === 'string' &&
+    (WIDTHS as string[]).includes(c.width) &&
+    (c.kind !== 'stat' || typeof c.field === 'string') &&
+    (c.field === undefined || typeof c.field === 'string') &&
+    (c.fields === undefined ||
+      (Array.isArray(c.fields) &&
+        c.fields.length <= MAX_FIELDS &&
+        c.fields.every((f) => typeof f === 'string'))) &&
+    (c.vary === undefined ||
+      (typeof c.vary === 'string' &&
+        (CURVE_VARIES as string[]).includes(c.vary))) &&
+    (c.input === undefined || typeof c.input === 'string') &&
+    (c.target === undefined ||
+      (typeof c.target === 'number' && Number.isFinite(c.target)))
   )
 }
 
@@ -130,7 +235,9 @@ export function readPrefs(text: string | null): Prefs {
       dashboards.some((d) => d.id === raw.active)
         ? raw.active
         : dashboards[0]!.id
-    return { version: 1, dashboards, active }
+    return raw.rail === true
+      ? { version: 1, dashboards, active, rail: true }
+      : { version: 1, dashboards, active }
   } catch {
     return defaultPrefs()
   }
@@ -144,4 +251,9 @@ export function moved<T>(list: T[], from: number, by: number): T[] {
   const [x] = out.splice(from, 1)
   out.splice(to, 0, x!)
   return out
+}
+
+/** The next width up, wrapping to the smallest (the resize control). */
+export function nextWidth(w: Width): Width {
+  return WIDTHS[(WIDTHS.indexOf(w) + 1) % WIDTHS.length]!
 }

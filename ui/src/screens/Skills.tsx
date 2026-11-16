@@ -13,7 +13,7 @@ import type {
   SetView,
   SkillGroupView,
 } from '../api/types'
-import { Badge, Icon, ScreenHeading, Sockets } from '../components'
+import { Badge, Hint, Icon, ScreenHeading, Sockets } from '../components'
 import { t } from '../i18n'
 import { actions, run } from '../store'
 import { cleanTitle, itemName, useAppDispatch, useAppSelector } from '../util'
@@ -576,10 +576,10 @@ export function Skills() {
     <>
       <div className="page-head">
         <ScreenHeading>{t('skills.title')}</ScreenHeading>
+        <Hint>{t('skills.help')}</Hint>
         <span className="spacer" />
         {sets.length > 1 && <SkillSetPicker sets={sets} />}
       </div>
-      <p className="lead">{t('skills.help')}</p>
       {groups.length === 0 && <p>{t('skills.none')}</p>}
       {
         <div className="skill-grid">

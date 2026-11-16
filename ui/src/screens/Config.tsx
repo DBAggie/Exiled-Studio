@@ -11,7 +11,7 @@ import type {
   CustomBlockView,
   SetView,
 } from '../api/types'
-import { Badge, Icon, ScreenHeading } from '../components'
+import { Badge, Hint, Icon, ScreenHeading } from '../components'
 import {
   initialValue,
   matches,
@@ -571,11 +571,11 @@ export function Config() {
     <>
       <div className="page-head">
         <ScreenHeading>{t('config.title')}</ScreenHeading>
+        <Hint>{t('config.help')}</Hint>
         <span className="spacer" />
         <LeaguePicker league={build.league} />
         {sets.length > 1 && <ConfigSetPicker sets={sets} />}
       </div>
-      <p className="lead">{t('config.help')}</p>
       {unmodelled > 0 && (
         <p className="muted">{t('config.unmodelledHelp', { n: unmodelled })}</p>
       )}

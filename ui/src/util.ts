@@ -33,6 +33,12 @@ export function fieldValue(f: FieldResult): string {
   return typeof f.value === 'number' ? withUnit(f.field, f.value) : '—'
 }
 
+/** A field's value, when it has one. */
+export function numberOf(f: FieldResult | undefined): number | null {
+  const value = (f as { value?: unknown } | undefined)?.value
+  return typeof value === 'number' ? value : null
+}
+
 /** A field's state in words, as its badge says it. */
 export function fieldStateText(f: FieldResult): string {
   return tDynamic(`state.${f.state}`, 'state.unsupported')

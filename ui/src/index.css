@@ -380,10 +380,19 @@ th.right {
 /* -------------------------------------------------------------- shell */
 
 .app {
+  --nav-width: 220px;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
-  min-height: 100vh;
+  grid-template-columns: var(--nav-width) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  /* The window is the frame: the header and the side menu stay put and
+     only the page scrolls (UX audit A-01). */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.app.nav-rail {
+  --nav-width: 60px;
 }
 
 .app-header,
@@ -419,10 +428,12 @@ th.right {
 .side-nav {
   background: var(--c-nav);
   border-right: 1px solid var(--c-border);
-  padding: 16px 12px;
+  padding: 12px 10px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .side-nav ul {
@@ -441,8 +452,9 @@ th.right {
 
 .side-nav button {
   width: 100%;
-  min-height: 44px;
-  padding: 0 12px;
+  min-height: 40px;
+  padding: 0 10px;
+  gap: 10px;
   justify-content: flex-start;
   border: 0;
   background: transparent;
@@ -461,14 +473,60 @@ th.right {
 .side-nav button[aria-current='page'] {
   background: var(--c-hover);
   color: var(--c-text);
+  box-shadow: inset 2px 0 0 var(--c-accent);
+}
+
+.side-nav button > svg {
+  flex: none;
+}
+
+.nav-rail .side-nav {
+  padding: 12px 8px;
+}
+
+.nav-rail .side-nav button {
+  justify-content: center;
+  padding: 0;
+  position: relative;
+}
+
+.nav-rail .side-nav .nav-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nav-rail .side-nav button .badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin: 0;
+  min-width: 0;
+  padding: 0 5px;
+  font-size: 0.65rem;
 }
 
 .content {
   padding: 20px 24px 48px;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* Pages read best under a measure: wide windows get air, not longer
+   lines. */
+.content > * {
+  width: 100%;
+  max-width: 1320px;
+  margin-inline: auto;
+  flex: none;
 }
 
 .page-head {
@@ -1411,6 +1469,11 @@ details > summary {
 @media (max-width: 48rem) {
   .app {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .side-nav {
+    overflow: visible;
   }
 
   .side-nav {
@@ -2460,7 +2523,8 @@ button.inv-slot:focus-visible {
 .tree-canvas {
   display: block;
   width: 100%;
-  height: 70vh;
+  /* The canvas fills what the window leaves under the page's controls. */
+  height: max(360px, calc(100dvh - 300px));
   min-height: 360px;
   background: var(--c-tree-bg);
   border: 1px solid var(--c-border);
@@ -2482,8 +2546,8 @@ button.inv-slot:focus-visible {
 }
 
 .tree-card {
-  position: absolute;
-  z-index: 5;
+  position: fixed;
+  z-index: 50;
   max-width: 22rem;
   padding: 10px 12px;
   background: var(--c-raised);

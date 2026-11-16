@@ -113,6 +113,20 @@
   --c-tree-kept: #3a3f47;
   --c-tree-ring: #c9ced6;
 
+  /* Charts (UX audit, section D): one series hue for lines and bars, the
+     pools' own hues, more and less for a change (always with a glyph and
+     the number in text), and the lines behind a plot. Each mark clears
+     3:1 on a panel (theme/pairs.ts). */
+  --c-chart-series: #3987e5;
+  --c-chart-life: #d55e55;
+  --c-chart-mana: #5b8be6;
+  --c-chart-shield: #8fc7d6;
+  --c-chart-good: #3fae6a;
+  --c-chart-bad: #e0665a;
+  --c-chart-grid: #2a2f37;
+  --c-chart-axis: #6b7380;
+  --c-scrim: rgb(8 9 11 / 0.6);
+
   /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
   --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
   --font-heading:

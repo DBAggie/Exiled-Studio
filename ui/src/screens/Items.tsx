@@ -18,6 +18,7 @@ import type {
 import {
   Badge,
   ErrorCode,
+  Hint,
   Icon,
   LineBadge,
   ScreenHeading,
@@ -136,7 +137,7 @@ function ItemSetPicker({ sets }: { sets: SetView[] }) {
           </option>
         ))}
       </select>
-      <span className="muted small-text">{t('items.setHelp')}</span>
+      <Hint>{t('items.setHelp')}</Hint>
     </div>
   )
 }
@@ -194,54 +195,63 @@ export function Items() {
         <LeaguePicker league={build.league} />
         {sets.length > 1 && <ItemSetPicker sets={sets} />}
       </div>
-      <Inventory />
-      <PasteItem />
-      {items.length === 0 ? (
-        <p>{t('items.none')}</p>
-      ) : (
-        <>
-          <section className="panel table-panel" aria-labelledby="items-used">
-            <div className="panel-head">
-              <h2 id="items-used">{t('items.inUse')}</h2>
-            </div>
-            {used.length === 0 ? (
-              <p className="panel-foot">{t('items.inUseNone')}</p>
-            ) : (
-              <ul className="item-list">
-                {used.map((item) => (
-                  <ItemRow
-                    key={item.id}
-                    item={item}
-                    place={
-                      item['tree-socket'] != null
-                        ? t('items.treeSocket')
-                        : (item.slot ?? '—')
-                    }
-                  />
-                ))}
-              </ul>
-            )}
-          </section>
-          {unused.length > 0 && (
-            <details className="panel table-panel unused-items">
-              <summary>
-                {unused.length === 1
-                  ? t('items.notInUseCount1')
-                  : t('items.notInUseCount', { n: unused.length })}
-                <span className="muted small-text">
-                  {' '}
-                  {t('items.notInUseHelp')}
-                </span>
-              </summary>
-              <ul className="item-list">
-                {unused.map((item) => (
-                  <ItemRow key={item.id} item={item} place={inSets(item)} />
-                ))}
-              </ul>
-            </details>
+      {/* The inventory stays in view beside the list (the brief's screen
+          7); one column where the window is narrow. */}
+      <div className="equip-layout">
+        <Inventory />
+        <div className="equip-side">
+          <PasteItem />
+          {items.length === 0 ? (
+            <p>{t('items.none')}</p>
+          ) : (
+            <>
+              <section
+                className="panel table-panel"
+                aria-labelledby="items-used"
+              >
+                <div className="panel-head">
+                  <h2 id="items-used">{t('items.inUse')}</h2>
+                </div>
+                {used.length === 0 ? (
+                  <p className="panel-foot">{t('items.inUseNone')}</p>
+                ) : (
+                  <ul className="item-list">
+                    {used.map((item) => (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        place={
+                          item['tree-socket'] != null
+                            ? t('items.treeSocket')
+                            : (item.slot ?? '—')
+                        }
+                      />
+                    ))}
+                  </ul>
+                )}
+              </section>
+              {unused.length > 0 && (
+                <details className="panel table-panel unused-items">
+                  <summary>
+                    {unused.length === 1
+                      ? t('items.notInUseCount1')
+                      : t('items.notInUseCount', { n: unused.length })}
+                    <span className="muted small-text">
+                      {' '}
+                      {t('items.notInUseHelp')}
+                    </span>
+                  </summary>
+                  <ul className="item-list">
+                    {unused.map((item) => (
+                      <ItemRow key={item.id} item={item} place={inSets(item)} />
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </>
   )
 }

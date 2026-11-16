@@ -91,6 +91,9 @@ export const tauriApi: LoomApi = {
       listener(e.payload)
     }),
   previewTree: (spec, node) => call('preview_tree', { spec, node }),
+  // Named as text until the committed command list has it (the list is
+  // checked against the shell's handlers by a Rust test).
+  whatIf: (request) => call('what_if' as Name, { request }),
   uiPrefs: () => call('ui_prefs'),
   setUiPrefs: (text) => call('set_ui_prefs', { text }),
   onEvent: (listener) =>
