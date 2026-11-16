@@ -988,6 +988,9 @@ fn domain(b: &Bundle, report: &mut Report) {
     if let Some(p) = &b.passives {
         passive_domain(p, report);
     }
+    for (version, pack) in &b.tree_packs {
+        pack_domain(b, version, pack, report);
+    }
     if let Some(p) = &b.properties {
         property_domain(p, b.game, report);
     }
@@ -1056,6 +1059,143 @@ fn domain(b: &Bundle, report: &mut Report) {
             cluster_domain(b, c, report);
         }
     }
+}
+
+/// A tree pack's checks (`tree_packs`): its version is its file's and its
+/// node numbers and effect hashes fit a u32 (`BUNDLE_VALUE_RANGE`); it
+/// names only its own nodes, mastery groups, mastery effects, and stats,
+/// and the bundle's ascendancies and characters, its unread lines included
+/// (`BUNDLE_DANGLING_REF`); node numbers and effect hashes are unique
+/// (`BUNDLE_DUPLICATE_ID`).
+fn pack_domain(b: &Bundle, version: &str, pack: &super::tree_packs::TreePack, report: &mut Report) {
+    let file = super::tree_packs::path(version);
+    if pack.version != version {
+        report.add(
+            "BUNDLE_VALUE_RANGE",
+            file.clone(),
+            format!("version {:?} is not its file's", pack.version),
+        );
+    }
+    let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
+    let nodes: BTreeSet<i64> = pack.passives.iter().map(|p| p.node).collect();
+    let ascendancies: BTreeSet<&str> = b
+        .passives
+        .iter()
+        .flat_map(|p| p.ascendancies.iter().map(|a| a.id.as_str()))
+        .collect();
+    let characters: BTreeSet<&str> = b
+        .passives
+        .iter()
+        .flat_map(|p| p.characters.iter().map(|c| c.id.as_str()))
+        .collect();
+    let effects: BTreeSet<&str> = pack.mastery_effects.iter().map(|e| e.id.as_str()).collect();
+    let mut dangling = |at: String, what: String| report.add("BUNDLE_DANGLING_REF", at, what);
+    for p in &pack.passives {
+        let at = format!("{file}:passives:{}", p.node);
+        for s in p.stats.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+            dangling(at.clone(), format!("stat {} does not exist", s.stat));
+        }
+        for a in p
+            .ascendancy
+            .iter()
+            .filter(|a| !ascendancies.contains(a.as_str()))
+        {
+            dangling(at.clone(), format!("ascendancy {a} does not exist"));
+        }
+        for c in p
+            .characters
+            .iter()
+            .filter(|c| !characters.contains(c.as_str()))
+        {
+            dangling(at.clone(), format!("character {c} does not exist"));
+        }
+    }
+    for e in &pack.mastery_effects {
+        for s in e.stats.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+            dangling(
+                format!("{file}:mastery_effects:{}", e.id),
+                format!("stat {} does not exist", s.stat),
+            );
+        }
+    }
+    for g in &pack.mastery_groups {
+        for e in g.effects.iter().filter(|e| !effects.contains(e.as_str())) {
+            dangling(
+                format!("{file}:mastery_groups:{}", g.id),
+                format!("mastery effect {e} does not exist"),
+            );
+        }
+    }
+    for g in &pack.tree.groups {
+        for n in &g.nodes {
+            for m in std::iter::once(n.node).chain(n.connections.iter().map(|c| c.node)) {
+                if !nodes.contains(&m) {
+                    dangling(
+                        format!("{file}:tree"),
+                        format!("passive {m} does not exist"),
+                    );
+                }
+            }
+        }
+    }
+    for r in pack.tree.roots.iter().filter(|r| !nodes.contains(r)) {
+        dangling(format!("{file}:tree"), format!("root {r} does not exist"));
+    }
+    let groups: BTreeSet<&str> = pack.mastery_groups.iter().map(|g| g.id.as_str()).collect();
+    for p in &pack.passives {
+        if let Some(g) = p.mastery_group.as_deref().filter(|g| !groups.contains(g)) {
+            dangling(
+                format!("{file}:passives:{}", p.node),
+                format!("mastery group {g} does not exist"),
+            );
+        }
+    }
+    let hashes: BTreeSet<i64> = pack.mastery_effects.iter().map(|e| e.hash).collect();
+    for l in &pack.unresolved {
+        let known = if l.mastery_effect {
+            hashes.contains(&l.node)
+        } else {
+            nodes.contains(&l.node)
+        };
+        if !known {
+            let what = if l.mastery_effect {
+                "mastery effect"
+            } else {
+                "passive"
+            };
+            dangling(
+                format!("{file}:unresolved"),
+                format!("{what} {} does not exist", l.node),
+            );
+        }
+    }
+    // The tree indexes nodes and effects by u32: a number outside it would
+    // be left out of the tree, so it is refused here.
+    let out_of_range = pack
+        .passives
+        .iter()
+        .map(|p| ("passive", p.node))
+        .chain(
+            pack.mastery_effects
+                .iter()
+                .map(|e| ("mastery effect", e.hash)),
+        )
+        .filter(|(_, n)| u32::try_from(*n).is_err());
+    for (what, n) in out_of_range {
+        report.add(
+            "BUNDLE_VALUE_RANGE",
+            file.clone(),
+            format!("{what} {n} is not a u32"),
+        );
+    }
+    let numbers: Vec<String> = pack.passives.iter().map(|p| p.node.to_string()).collect();
+    duplicates(report, &file, numbers.iter().map(String::as_str));
+    let hashes: Vec<String> = pack
+        .mastery_effects
+        .iter()
+        .map(|e| e.hash.to_string())
+        .collect();
+    duplicates(report, &file, hashes.iter().map(String::as_str));
 }
 
 /// `poe1/cluster_jewels.json`: every passive, stat, and base it names

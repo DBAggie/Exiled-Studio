@@ -23,8 +23,8 @@
 use std::collections::BTreeMap;
 
 use loom_calc::{
-    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, ClusterPassive, PassiveState,
-    ResolvedPassives,
+    BaseName, CalcData, CalcInput, CalcOptions, CalcResult, ClusterPassive, PackNode, PackStats,
+    PassiveState, ResolvedPassives,
 };
 use loom_data::bundle::passives::StatAmount;
 use loom_domain::{
@@ -473,6 +473,7 @@ pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives 
     let (Some(tree), Some(spec)) = (tree, loom_calc::poe1::collect::active_spec(build)) else {
         return ResolvedPassives::default();
     };
+    let pack = tree.version.is_some().then(|| pack_stats(tree));
     let legacy = spec.cluster_hash_format() < 2;
     let subgraphs = cluster::subgraphs_for(tree, &cluster_jewels(build, spec, tree), legacy);
     let expanded;
@@ -535,6 +536,79 @@ pub fn resolve_passives(build: &Build, tree: Option<&Tree>) -> ResolvedPassives 
                 ))
             })
             .collect(),
+        pack,
+    }
+}
+
+/// A pack tree's stats for the engine ([`ResolvedPassives::pack`]; passive
+/// tree plan, T4): every node's and mastery effect's, with the lines the
+/// pack could not read.
+fn pack_stats(tree: &Tree) -> PackStats {
+    let node = |stats: &[StatAmount],
+                kind: loom_calc::input::PassiveKind,
+                unresolved: Option<&Vec<String>>| PackNode {
+        stats: stats.to_vec(),
+        kind,
+        unresolved: unresolved.cloned().unwrap_or_default(),
+    };
+    PackStats {
+        passives: tree
+            .nodes
+            .iter()
+            .map(|(n, x)| {
+                let kind = loom_calc::input::PassiveKind {
+                    notable: x.kind == loom_tree::Kind::Notable,
+                    ascendancy: x.ascendancy.is_some(),
+                };
+                (NodeId(*n), node(&x.stats, kind, tree.unresolved.get(n)))
+            })
+            .collect(),
+        mastery_effects: tree
+            .effect_stats
+            .iter()
+            .map(|(e, stats)| {
+                let unresolved = tree.effect_unresolved.get(e);
+                (
+                    *e,
+                    node(stats, loom_calc::input::PassiveKind::default(), unresolved),
+                )
+            })
+            .collect(),
+    }
+}
+
+/// The bundle's older tree versions ([`loom_data::bundle::tree_packs`]),
+/// each built as a tree ([`Tree::from_pack`]) on `base`, the bundle's own
+/// tree, by version.
+#[must_use]
+pub fn pack_trees(bundle: &loom_data::bundle::Bundle, base: &Tree) -> BTreeMap<String, Tree> {
+    bundle
+        .tree_packs
+        .iter()
+        .filter_map(|(v, pack)| Some((v.clone(), Tree::from_pack(bundle, base, pack)?)))
+        .collect()
+}
+
+/// The tree to calculate `build` on and its version (passive tree plan,
+/// T4): the data's own (`own`, of `version`), unless the active spec names
+/// another version the bundle carries as a pack (`packs`, [`pack_trees`]),
+/// then that one, so the spec reads the stats of its own tree as PoB does.
+/// A spec of a version with no pack keeps the data's tree, and the
+/// engine's version check gives its reason.
+#[must_use]
+pub fn pick_tree<'a>(
+    build: &Build,
+    own: Option<&'a Tree>,
+    version: Option<TreeVersion>,
+    packs: &'a BTreeMap<String, Tree>,
+) -> (Option<&'a Tree>, Option<TreeVersion>) {
+    let named = loom_calc::poe1::collect::active_spec(build).and_then(|s| s.tree_version.as_ref());
+    match named {
+        Some(v) if Some(v) != version.as_ref() => match packs.get(v.as_str()) {
+            Some(tree) => (Some(tree), Some(v.clone())),
+            None => (own, version),
+        },
+        _ => (own, version),
     }
 }
 

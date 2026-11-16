@@ -202,9 +202,19 @@
    "size": 624
   },
   {
+   "path": "stat_descriptions/passive_skill_stat_descriptions.json",
+   "sha256": "ff0e18c8a24d6ec7b897fe440eae2f90f6c27b696be35b3ea0b499586cef82d0",
+   "size": 1083
+  },
+  {
    "path": "stat_descriptions/stat_descriptions.json",
    "sha256": "f045d82d51ba3e6a22a96db54ac976069a1a89abf7e194b3895a3978779d9142",
    "size": 7311
+  },
+  {
+   "path": "trees/3_28.json",
+   "sha256": "ee43144f54a802802eebef41df25f4b42f82662208f43dd81ac876a5270f2fef",
+   "size": 71495
   },
   {
    "path": "trees/assets/test-sheet.png",

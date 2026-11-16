@@ -521,6 +521,32 @@ pub struct ResolvedPassives {
     /// `loom_tree::poe1::cluster`), with their stats: a node listed here
     /// takes these, not the passives table's.
     pub cluster: BTreeMap<NodeId, ClusterPassive>,
+    /// The tree version's own stats, when the host resolved the spec
+    /// against an older version than the data's (a tree pack; passive tree
+    /// plan, T4): the passives table and mastery effects are then not
+    /// read.
+    pub pack: Option<PackStats>,
+}
+
+/// The stats of a tree version the host resolved the spec against
+/// ([`ResolvedPassives::pack`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct PackStats {
+    /// Every node's stats and kind in that version.
+    pub passives: BTreeMap<NodeId, PackNode>,
+    /// Every mastery effect's stats in that version, by hash.
+    pub mastery_effects: BTreeMap<u32, PackNode>,
+}
+
+/// A node's or mastery effect's stats in a tree version ([`PackStats`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct PackNode {
+    /// Its stats.
+    pub stats: Vec<StatAmount>,
+    /// A node's kind in that version (a mastery effect's is the default).
+    pub kind: PassiveKind,
+    /// Its lines the pack could not read as stats: each one a reason.
+    pub unresolved: Vec<String>,
 }
 
 /// A node a cluster jewel adds ([`ResolvedPassives::cluster`]).

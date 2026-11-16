@@ -45,6 +45,7 @@ mod resolve_corpus;
 mod round_trip;
 mod tree_flavour;
 mod tree_layout;
+mod tree_pack;
 mod tree_parity;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -55,13 +56,24 @@ use serde::Serialize;
 
 const USAGE: &str = "usage:
   loom-parity-cli tree-parity layout <pob-layout.json> <bundle-dir>
-  loom-parity-cli tree-parity alloc-requests <bundle-dir> <count> <seed>
+  loom-parity-cli tree-parity alloc-requests <bundle-dir> <count> <seed> [<tree-version>]
   loom-parity-cli tree-parity alloc <requests.txt> <pob-alloc.json> <bundle-dir>
   loom-parity-cli tree-parity readback <build.xml> <pob-readback.json>
+  loom-parity-cli tree-parity convert <requests.txt> <pob-alloc.json> <bundle-dir> <from-version>
       The passive tree against PoB (docs/tree/parity.md): PoB's side from
       tools/oracle/data/pob_tree.lua. Prints a JSON record; exit 0 when
       everything matches, 1 otherwise. alloc-requests prints seeded
-      requests for pob_tree.lua alloc.
+      requests for pob_tree.lua alloc. convert compares converting specs
+      of <from-version>'s pack (requests made on it) to the bundle's own
+      tree with PoB's import of them on its latest tree.
+  loom-parity-cli tree-pack <tools/tree/manifest.json> <version> <export-dir> <bundle-dir> [--accept-unread] --out <dir>
+      Copy a bundle into <dir> (which must not exist) with an older tree
+      version added as a tree pack (trees/<version>.json; passive tree plan,
+      T4), converted from GGG's tree export at the commit pinned for the
+      version (fetch it with tools/tree/acquire <version>): the lines read
+      as stat IDs through the bundle's passive descriptions, the ones that
+      do not kept as text. Refuses another commit or other orbits. Prints a
+      JSON summary.
   loom-parity-cli tree-layout <tools/tree/manifest.json> <export-dir> <bundle-dir> --out <dir>
       Copy a bundle into <dir> (which must not exist) with the passive
       tree's layout constants (data/passive_tree_layout.json) and sprites
@@ -1390,11 +1402,16 @@ fn calc_run_run(
         None => None,
     };
     let tree = loom_tree::Tree::from_bundle(&bundle);
+    let trees = tree
+        .as_ref()
+        .map(|t| loom_pipeline::pack_trees(&bundle, t))
+        .unwrap_or_default();
     let request = calc_run::Request {
         scope,
         bundle: &bundle,
         resolver: &resolver,
         tree: tree.as_ref(),
+        trees: &trees,
         data: &data,
         bundle_record: calc_run::BundleRecord {
             game: bundle.game.name().to_owned(),
@@ -1545,6 +1562,25 @@ fn main() -> ExitCode {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, pins, version, export, bundle, rest @ .., flag, out]
+            if cmd == "tree-pack"
+                && flag == "--out"
+                && (rest.is_empty() || rest == ["--accept-unread"]) =>
+        {
+            tree_pack::run(
+                Path::new(pins),
+                version,
+                Path::new(export),
+                Path::new(bundle),
+                Path::new(out),
+                !rest.is_empty(),
+            )
+            .and_then(|summary| {
+                let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+                println!("{json}");
+                Ok(true)
+            })
+        }
         [cmd, pin, export, bundle, flag, out] if cmd == "tree-layout" && flag == "--out" => {
             tree_layout::run(
                 Path::new(pin),
@@ -1561,11 +1597,14 @@ fn main() -> ExitCode {
         [cmd, mode, pob, bundle] if cmd == "tree-parity" && mode == "layout" => {
             tree_parity::layout(Path::new(pob), Path::new(bundle)).and_then(print_record)
         }
-        [cmd, mode, bundle, count, seed] if cmd == "tree-parity" && mode == "alloc-requests" => {
+        [cmd, mode, bundle, count, seed, version @ ..]
+            if cmd == "tree-parity" && mode == "alloc-requests" && version.len() <= 1 =>
+        {
             let count = count.parse().map_err(|e| format!("count: {e}"));
             let seed = seed.parse().map_err(|e| format!("seed: {e}"));
+            let version = version.first().map(String::as_str);
             count.and_then(|c| seed.map(|s| (c, s))).and_then(|(c, s)| {
-                tree_parity::alloc_requests(Path::new(bundle), c, s).map(|text| {
+                tree_parity::alloc_requests(Path::new(bundle), c, s, version).map(|text| {
                     print!("{text}");
                     true
                 })
@@ -1573,6 +1612,10 @@ fn main() -> ExitCode {
         }
         [cmd, mode, requests, pob, bundle] if cmd == "tree-parity" && mode == "alloc" => {
             tree_parity::alloc(Path::new(requests), Path::new(pob), Path::new(bundle))
+                .and_then(print_record)
+        }
+        [cmd, mode, requests, pob, bundle, from] if cmd == "tree-parity" && mode == "convert" => {
+            tree_parity::convert(Path::new(requests), Path::new(pob), Path::new(bundle), from)
                 .and_then(print_record)
         }
         [cmd, mode, build, pob] if cmd == "tree-parity" && mode == "readback" => {

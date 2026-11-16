@@ -1,8 +1,26 @@
 {
-  "format": 1,
+  "format": 2,
   "export": {
     "repository": "https://github.com/grindinggear/skilltree-export.git",
     "tag": "3.29.1",
     "commit": "8bd138b32ea2631455cac5935bfab089f826094f"
+  },
+  "versions": {
+    "3_25": {
+      "tag": "3.25.3d",
+      "commit": "d355f6a16aadfa5d73e3b9a31ca9d7346fa84673"
+    },
+    "3_26": {
+      "tag": "3.26.0",
+      "commit": "9785205dca9cb617ea5a7d77faefd3608693ce77"
+    },
+    "3_27": {
+      "tag": "3.27.0g",
+      "commit": "765dda38b9dd21ec28429fd81dd2d17ad6390623"
+    },
+    "3_28": {
+      "tag": "3.28.0",
+      "commit": "648e492b17d49d7213c63f4c1e0aa561617d5ad1"
+    }
   }
 }

@@ -828,7 +828,47 @@ def tree_bundle(files):
     ]
     out["stat_descriptions/stat_descriptions.json"] = default
     out["data/passives.json"] = sorted(passives, key=lambda row: row["node"])
+    # The tree's lines (made up), for `loom-parity-cli tree-pack`'s test.
+    out["stat_descriptions/passive_skill_stat_descriptions.json"] = stat_file(
+        "Metadata/StatDescriptions/passive_skill_stat_descriptions.txt",
+        [
+            description(1, "test_passive_life", "{0:+d} to Test Life"),
+            description(3, "test_mastery_stat", "{0:+d} to Test Mastery"),
+        ],
+    )
+    out["trees/3_28.json"] = tree_pack(out)
     return out
+
+
+def tree_pack(files):
+    """Passive tree plan T4: an older tree version, `3_28`, as a tree pack:
+    the bundle's tree with node 10000 granting 7 instead of 5, node 10001
+    with a line the pack could not read (and no stats), and the second
+    life mastery effect granting 22 instead of 20. Made up."""
+    passives = [dict(row) for row in files["data/passives.json"]]
+    for row in passives:
+        if row["node"] == 10000:
+            row["stats"] = [{"stat": "test_passive_life", "value": 7}]
+        if row["node"] == 10001:
+            row["stats"] = []
+    effects = [dict(e) for e in files["data/mastery_effects.json"]]
+    for e in effects:
+        if e["hash"] == 4243:
+            e["stats"] = [{"stat": "test_passive_life", "value": 22}]
+    return {
+        "version": "3_28",
+        "source": {
+            "repository": "synthetic",
+            "tag": "synthetic",
+            "commit": "0" * 40,
+            "file": {"path": "data.json", "sha256": "0" * 64},
+        },
+        "passives": passives,
+        "mastery_groups": files["data/mastery_groups.json"],
+        "mastery_effects": effects,
+        "tree": files["data/passive_tree.json"],
+        "unresolved": [{"node": 10001, "text": "Test Old Line", "reason": "no-template"}],
+    }
 
 
 # The cluster jewel stats the synthetic tree's jewels name (the game's IDs

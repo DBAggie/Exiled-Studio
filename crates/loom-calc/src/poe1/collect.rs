@@ -360,6 +360,45 @@ fn lines(stats: &[StatAmount]) -> Vec<StatLine> {
         .collect()
 }
 
+/// A node's stats: the tree version's own (a pack, T4) when the host
+/// resolved the spec against one, else the data's passives table.
+pub(crate) fn node_stats<'a>(input: &'a CalcInput<'_>, node: u32) -> Option<&'a [StatAmount]> {
+    match &input.options.passives.pack {
+        Some(pack) => pack.passives.get(&NodeId(node)).map(|p| p.stats.as_slice()),
+        None => input.data.passive_stats(node),
+    }
+}
+
+/// A node's kind, as [`node_stats`].
+fn node_kind(input: &CalcInput<'_>, node: u32) -> Option<crate::input::PassiveKind> {
+    match &input.options.passives.pack {
+        Some(pack) => pack.passives.get(&NodeId(node)).map(|p| p.kind),
+        None => input.data.passive_kind(node),
+    }
+}
+
+/// A mastery effect's stats, by hash, as [`node_stats`].
+pub(crate) fn effect_stats<'a>(input: &'a CalcInput<'_>, effect: u32) -> Option<&'a [StatAmount]> {
+    match &input.options.passives.pack {
+        Some(pack) => pack
+            .mastery_effects
+            .get(&effect)
+            .map(|p| p.stats.as_slice()),
+        None => input.data.mastery_effect_stats(effect),
+    }
+}
+
+/// A tree version's lines that did not read as stats (T4): a reason each,
+/// on the node.
+fn unread_lines(pack: Option<&crate::input::PackNode>, node: NodeId, ingest: &mut Ingest<'_>) {
+    for _ in pack.map_or(&[][..], |p| p.unresolved.as_slice()) {
+        ingest.reason(UnsupportedReason::UnmodelledPassive {
+            source: Source::Passive { node },
+            what: "unresolved-tree-line",
+        });
+    }
+}
+
 /// The allocated nodes and chosen mastery effects of `spec`, after the
 /// tree version check.
 fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) {
@@ -420,7 +459,7 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             });
             continue;
         }
-        let Some(stats) = input.data.passive_stats(node.0) else {
+        let Some(stats) = node_stats(input, node.0) else {
             ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "passives",
                 key: node.0.to_string(),
@@ -454,6 +493,11 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
             }
         }
         ingest.stats(&Source::Passive { node: *node }, &lines(stats));
+        unread_lines(
+            resolved.pack.as_ref().and_then(|p| p.passives.get(node)),
+            *node,
+            ingest,
+        );
     }
     for m in masteries {
         // A mastery effect counts only on an allocated mastery (PoB keeps
@@ -464,7 +508,15 @@ fn passives(input: &CalcInput<'_>, spec: &PassiveSpec, ingest: &mut Ingest<'_>) 
         if !nodes.contains(&m.node) || !resolved.connected(m.node) {
             continue;
         }
-        match input.data.mastery_effect_stats(m.effect) {
+        unread_lines(
+            resolved
+                .pack
+                .as_ref()
+                .and_then(|p| p.mastery_effects.get(&m.effect)),
+            m.node,
+            ingest,
+        );
+        match effect_stats(input, m.effect) {
             Some(stats) => ingest.stats(&Source::Passive { node: m.node }, &lines(stats)),
             None => ingest.indeterminate(IndeterminateReason::MissingData {
                 table: "mastery_effects",
@@ -544,7 +596,7 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
                 )]
                 let node = (hash.fract() == 0.0 && (0.0..65536.0).contains(&hash))
                     .then_some(hash as u32)?;
-                input.data.passive_stats(node).map(|_| node)
+                node_stats(input, node).map(|_| node)
             })
             .collect();
         // Of several, PoB's order: a tree notable, then an ascendancy node.
@@ -552,12 +604,7 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
             known
                 .iter()
                 .copied()
-                .filter(|&n| {
-                    input
-                        .data
-                        .passive_kind(n)
-                        .is_some_and(|k| k.notable && k.ascendancy != tree)
-                })
+                .filter(|&n| node_kind(input, n).is_some_and(|k| k.notable && k.ascendancy != tree))
                 .collect()
         };
         let known = if known.len() > 1 {
@@ -577,7 +624,7 @@ fn granted_passives(input: &CalcInput<'_>, spec: Option<&PassiveSpec>, ingest: &
         if allocated.contains(&node) || !granted.insert(node) {
             continue;
         }
-        if let Some(stats) = input.data.passive_stats(node) {
+        if let Some(stats) = node_stats(input, node) {
             ingest.stats(&Source::Passive { node: NodeId(node) }, &lines(stats));
         }
     }

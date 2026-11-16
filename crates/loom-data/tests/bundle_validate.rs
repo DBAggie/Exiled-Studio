@@ -1015,3 +1015,47 @@ fn tree_flavour_mutations_should_each_give_their_code() {
         assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
     }
 }
+
+/// A tree pack's references, each pointed at nothing, give
+/// `BUNDLE_DANGLING_REF` alone; a version unlike its file's,
+/// `BUNDLE_VALUE_RANGE` (passive tree plan, T4).
+#[test]
+fn a_tree_packs_bad_references_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let cases: [(&str, Edit); 8] = [
+        ("stat", |v| {
+            v["passives"][0]["stats"] = json!([{"stat": "nope", "value": 1}])
+        }),
+        ("ascendancy", |v| {
+            v["passives"][0]["ascendancy"] = "Nope".into()
+        }),
+        ("character", |v| {
+            v["passives"][0]["characters"] = json!(["Nope"])
+        }),
+        ("mastery effect", |v| {
+            v["mastery_groups"][0]["effects"] = json!(["Nope"])
+        }),
+        ("tree node", |v| {
+            v["tree"]["groups"][0]["nodes"][0]["connections"] = json!([{"node": 1, "orbit": null}]);
+        }),
+        ("root", |v| v["tree"]["roots"] = json!([1])),
+        ("mastery group", |v| {
+            v["passives"][0]["mastery_group"] = "Nope".into()
+        }),
+        ("unread line", |v| {
+            v["unresolved"] = json!([{"node": 1, "text": "x", "reason": "no-template"}]);
+        }),
+    ];
+    for (what, edit) in cases {
+        let src = edited("bundle-poe1-tree", "trees/3_28.json", edit);
+        assert_eq!(codes(&src), ["BUNDLE_DANGLING_REF"], "{what}");
+    }
+    let src = edited("bundle-poe1-tree", "trees/3_28.json", |v| {
+        v["version"] = "3_27".into();
+    });
+    assert_eq!(codes(&src), ["BUNDLE_VALUE_RANGE"]);
+    let src = edited("bundle-poe1-tree", "trees/3_28.json", |v| {
+        v["mastery_effects"][0]["hash"] = json!(1_i64 << 40);
+    });
+    assert_eq!(codes(&src), ["BUNDLE_VALUE_RANGE"]);
+}
