@@ -48,4 +48,4 @@ One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this ord
   - [x] the startup fix: sizes for installed bundles, one load, the window before the data, shipped packs checked by sizes (`performance.md`, "Startup": median 3.11 s to 1.77 s)
   - [x] channels: the `experimental` branch made and protected like `main`; the experimental application (`docs/release/channels.md`)
   - [x] the download page: `site/`, `tools/site/`, `pages.yml`; Pages turned on
-  - [ ] the `bench` baseline for the new `start` scenario, from this push's first CI run
+  - [x] the `bench` baseline for the new `start` scenario (5,679,942, CI run 43787174465; `count.sh` now counts it)

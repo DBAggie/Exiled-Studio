@@ -3,6 +3,7 @@
   "instructions": {
     "validate": 10460879,
     "load": 4788501,
+    "start": 5679942,
     "import": 174568115,
     "calculate": 18083064,
     "allocate": 445995

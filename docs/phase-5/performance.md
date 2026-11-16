@@ -34,7 +34,7 @@ bash tools/bench/count.sh [--update]      # Linux with valgrind
 
 ## The baseline
 - `tools/bench/baseline.json` holds CI's own counts: the ubuntu-24.04 runner and the pinned toolchain.
-- A scenario without a baseline fails in CI (`CI` set), after printing its counts. This PR's first `bench` run therefore fails, and its counts are committed from that log. The baseline: validate 10,460,879; load 4,788,501; import 174,568,115; calculate 18,083,064; allocate 445,995 instructions (CI run 43779626395, 2026-11-15). `start`, added with the startup fix, takes its count from that change's first CI run the same way.
+- A scenario without a baseline fails in CI (`CI` set), after printing its counts. This PR's first `bench` run therefore fails, and its counts are committed from that log. The baseline: validate 10,460,879; load 4,788,501; import 174,568,115; calculate 18,083,064; allocate 445,995 instructions (CI run 43779626395, 2026-11-15). `start`, added with the startup fix: 5,679,942 instructions, from that change's first run that counted it (CI run 43787174465, 2026-11-16; `count.sh` had left it out of its loop until `3bce84e`, and a `loom-bench` test now holds the script's list equal to the binary's).
 - A change meant to cost more updates the baseline from its CI log (`count.sh --update` on Linux, or the printed counts), and says so in the PR.
 
 ## Budgets on the reference tier

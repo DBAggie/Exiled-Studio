@@ -62,7 +62,7 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
   - The validator hands over the tables it loaded.
   - The window comes up before the data, which loads on the writer thread; the start screen says "Loading game data…".
   - Startup with the real bundle went from a median of 3.11 s to 1.77 s, under the 2.0 s budget.
-  - A new `bench` scenario, `start`, takes its baseline from this change's first CI run.
+  - A new `bench` scenario, `start`, with its baseline from CI run 43787174465 (5,679,942 instructions).
 - **Channels** (`docs/release/channels.md`).
   - `main` holds the stable application. The new `experimental` branch, made from `dev` and protected like `main`, holds the experimental one.
   - An experimental release is a pre-release tagged `v1.2.0-3` on `experimental`. It builds Exiled Studio Experimental: another application, with its own identifier, data folder, MCP token, and update and data feeds.
