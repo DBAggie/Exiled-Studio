@@ -24,8 +24,8 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
 |---|---|---|
 | 6 | The `package` job's smoke runs (CI); one recorded `release` run installing, starting, and uninstalling the five artifacts, `e2e` absent | `package`: in CI on every PR, first run on this PR. The portable zip's smoke run passed here (P1). **The recorded `release` run is the maintainer's.** `release.yml` reaches `workflow_dispatch` once it is on the default branch. Until the `release` environment has its secrets, it runs on throwaway keys (fallback). |
 | 7 | Update, signature, rollback, quarantine, revocation, downgrade, feed-rollback, zip-slip, zip-bomb tests (CI) | pass here: `crates/loom-tauri/tests/updater.rs`, `crates/loom-app/tests/install.rs`, `loom_data::pack` and `signature` units, the properties; in CI's `rust` job |
-| 8 | Security: no unignored RustSec advisory, no gitleaks finding, no open fuzz crash | advisories: two ignores with reasons, both on Tauri's Linux GTK3 path, otherwise clean; gitleaks: no leaks in 170 commits; properties: 20,000 cases each, no failure. **The coverage-guided fuzz record is this PR's `fuzz.yml` run**, since libFuzzer does not link on this Windows workstation. |
-| 9 | Budgets met on the reference tier or exceptions listed (MR); CI instruction-count check passes | Import and first calculation, item-edit preview, allocation preview, and the application's memory are well inside budget. **Exceptions for the maintainer:** startup with the real bundle (3.5 to 4.7 s against 2.0 s), the NSIS setup's size, tree paint and fps (to measure), version conversion (no feature yet), and memory counted without WebView2. The instruction-count baseline comes from this PR's first `bench` run. |
+| 8 | Security: no unignored RustSec advisory, no gitleaks finding, no open fuzz crash | advisories: two ignores with reasons, both on Tauri's Linux GTK3 path, otherwise clean; gitleaks: no leaks in 170 commits; properties: 20,000 cases each, no failure; fuzzing: this PR's `fuzz.yml` run (43779992583), six targets at 10 minutes each, 1.4 to 10.4 million runs, no crash (`security.md`, "Records"). libFuzzer does not link on this Windows workstation, so fuzzing runs on Linux CI. **Met.** |
+| 9 | Budgets met on the reference tier or exceptions listed (MR); CI instruction-count check passes | Import and first calculation, item-edit preview, allocation preview, and the application's memory are well inside budget. **Exceptions for the maintainer:** startup with the real bundle (3.5 to 4.7 s against 2.0 s), the NSIS setup's size, tree paint and fps (to measure), version conversion (no feature yet), and memory counted without WebView2. The instruction-count baseline is committed from this PR's first `bench` run (43779626395), and the `bench` job passes against it. |
 | 10 | Logs, redaction, diagnostic preview, crash record tests (CI) | pass (PR #115, in CI's `rust` job) |
 
 ## Found on the way
@@ -49,7 +49,6 @@ The real keys and the shipped bundle are the maintainer's too. The fallback lets
 - **Docs.** The documents now match the code.
 
 **Left, recorded:**
-- the fuzz record and the bench baseline, which come from this PR's checks;
 - feed expiry and signature domain separation, for the next feed format (`data-bundles.md`, "Not done here");
 - the update key readable by build steps through its file during a release job (`signing.md`);
 - the fuzz workspace outside the advisories job (`security.md`).

@@ -41,6 +41,6 @@ One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this ord
 - [x] P2 signing (`docs/release/signing.md`)
 - [x] P3 app updates (`docs/phase-5/updates.md`)
 - [x] P4 data bundles (`docs/phase-5/data-bundles.md`)
-- [x] P6 security (`docs/phase-5/security.md`; the CI fuzz record is filled in from the PR's `fuzz.yml` run)
+- [x] P6 security (`docs/phase-5/security.md`; the CI fuzz record from PR #118's `fuzz.yml` run 43779992583: no crash)
 - [x] P7 performance (`docs/phase-5/performance.md`; the baseline is committed from the PR's `bench` log; startup is exception 1 for the maintainer)
 - [x] P8 reports and docs; review; PR #118 (`docs/phase-5/phase-5-report.md`)

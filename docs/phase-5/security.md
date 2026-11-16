@@ -80,7 +80,18 @@ The fuzz workspace (`fuzz/Cargo.lock`) is not checked by this job. Its targets a
 | Date | Where | What | Result |
 |---|---|---|---|
 | 2026-11-15 | this workstation | the 15 properties of `loom-data` and `loom-serialization` at 20,000 cases each (`PROPTEST_CASES=20000`, release, 72 s with the build), not coverage-guided; the pack properties at their fixed 128 cases | all passed, no failure |
-| | this PR's `fuzz.yml` run | 6 targets, 10 minutes each, coverage-guided | recorded when the PR's checks finish |
+| 2026-11-15 | CI, PR #118's `fuzz.yml` run 43779992583 at `f7fd002` (ubuntu, nightly-2026-11-01) | 6 targets, 600 s each, coverage-guided from `fuzz/seed.sh`'s seeds | no crash, timeout, or leak in any target |
+
+The run's executions and coverage (libFuzzer's final line):
+
+| Target | Runs | Coverage (`cov`) | Corpus |
+|---|---|---|---|
+| `pob_xml` | 8,019,681 | 4,010 | 3,322 inputs |
+| `share_code` | 10,383,060 | 3,291 | 1,426 inputs |
+| `build_document` | 4,894,333 | 6,649 | 1,762 inputs |
+| `signature` | 4,298,388 | 2,267 | 1,060 inputs |
+| `install_pack` | 1,375,501 | 3,877 | 1,018 inputs |
+| `data_feed` | 6,017,752 | 2,383 | 1,243 inputs |
 
 ## The other hostile-input tests
 | Concern | Tests |
