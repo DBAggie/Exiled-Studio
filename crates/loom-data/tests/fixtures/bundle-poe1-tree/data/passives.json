@@ -244,6 +244,116 @@
   "node": 5004
  },
  {
+  "id": "t5005",
+  "name": "Test Large Proxy",
+  "node": 5005
+ },
+ {
+  "expansion": true,
+  "id": "t5007",
+  "jewel_socket": true,
+  "name": "Test Medium Cluster Socket 2",
+  "node": 5007
+ },
+ {
+  "expansion": true,
+  "id": "t5008",
+  "jewel_socket": true,
+  "name": "Test Medium Cluster Socket 3",
+  "node": 5008
+ },
+ {
+  "id": "t5009",
+  "name": "Test Medium Proxy 2",
+  "node": 5009
+ },
+ {
+  "id": "t5010",
+  "name": "Test Medium Proxy 3",
+  "node": 5010
+ },
+ {
+  "expansion": true,
+  "id": "t6000",
+  "name": "Test Small Fire",
+  "node": 6000,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 3
+   }
+  ]
+ },
+ {
+  "expansion": true,
+  "id": "t6001",
+  "name": "Test Small Cold",
+  "node": 6001,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 4
+   }
+  ]
+ },
+ {
+  "expansion": true,
+  "id": "t6002",
+  "name": "Test Small Lightning",
+  "node": 6002,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "expansion": true,
+  "id": "t6003",
+  "name": "Test Cluster Mastery",
+  "node": 6003
+ },
+ {
+  "expansion": true,
+  "id": "t6010",
+  "name": "Test Cluster Notable A",
+  "node": 6010,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 30
+   }
+  ]
+ },
+ {
+  "expansion": true,
+  "id": "t6011",
+  "name": "Test Cluster Notable B",
+  "node": 6011,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 31
+   }
+  ]
+ },
+ {
+  "expansion": true,
+  "id": "t6020",
+  "keystone": true,
+  "name": "Test Cluster Keystone",
+  "node": 6020,
+  "stats": [
+   {
+    "stat": "test_mastery_stat",
+    "value": 1
+   }
+  ]
+ },
+ {
   "id": "t10000",
   "name": "Test Life 0-0-0",
   "node": 10000,

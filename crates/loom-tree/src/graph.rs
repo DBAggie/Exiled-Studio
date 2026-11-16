@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{PassiveTables, StatAmount};
-use loom_data::bundle::poe1::JewelRadius;
+use loom_data::bundle::poe1::{ClusterJewels, JewelRadius};
 use loom_data::bundle::tree_layout::TreeLayout;
 
 /// What a node is, for drawing and for the rules.
@@ -122,6 +122,27 @@ pub struct Tree {
     pub orbit_radii: Vec<f64>,
     /// The jewel radii, when the bundle has them (`poe1/jewel_radii.json`).
     pub jewel_radii: Vec<JewelRadius>,
+    /// The slots on each orbit (the passive graph's `orbit_slots`).
+    pub orbit_slots: Vec<u32>,
+    /// The layout constants, when the bundle has them and they fit the
+    /// orbits: they place nodes a cluster jewel adds.
+    pub layout: Option<TreeLayout>,
+    /// What cluster jewels add, when the bundle has it
+    /// (`poe1/cluster_jewels.json`; [`crate::poe1::cluster`]).
+    pub cluster_jewels: Option<ClusterJewels>,
+    /// The passives off the graph, by number: the ones a cluster jewel's
+    /// nodes copy (its small passives, notables, keystones, masteries).
+    pub templates: BTreeMap<u32, Template>,
+}
+
+/// A passive off the graph that a cluster jewel's nodes copy
+/// ([`Tree::templates`]).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Template {
+    /// Its name.
+    pub name: String,
+    /// Its stats.
+    pub stats: Vec<StatAmount>,
 }
 
 fn kind_of(p: &loom_data::bundle::passives::Passive, socket_outer: bool) -> Kind {
@@ -307,7 +328,32 @@ impl Tree {
             mastery_effects,
             orbit_radii: layout.map(|l| l.orbit_radii.clone()).unwrap_or_default(),
             jewel_radii: Vec::new(),
+            orbit_slots: p
+                .tree
+                .orbit_slots
+                .iter()
+                .map(|n| u32::try_from(*n).unwrap_or(0))
+                .collect(),
+            layout: layout.cloned(),
+            cluster_jewels: None,
+            templates: BTreeMap::new(),
         };
+        tree.templates = p
+            .passives
+            .iter()
+            .filter_map(|x| {
+                let id = u32::try_from(x.node).ok()?;
+                (!tree.nodes.contains_key(&id)).then(|| {
+                    (
+                        id,
+                        Template {
+                            name: x.name.clone(),
+                            stats: x.stats.clone(),
+                        },
+                    )
+                })
+            })
+            .collect();
         tree.mark_modelled();
         tree
     }
@@ -352,7 +398,7 @@ impl Tree {
     }
 
     /// The tree of `bundle`: its passive tables placed by its layout, with
-    /// its jewel radii; `None` without passive tables.
+    /// its jewel radii and cluster jewels; `None` without passive tables.
     #[must_use]
     pub fn from_bundle(bundle: &Bundle) -> Option<Self> {
         let mut tree = Self::from_tables(bundle.passives.as_ref()?, bundle.tree_layout.as_ref());
@@ -361,6 +407,7 @@ impl Tree {
             .as_ref()
             .and_then(|p| p.jewel_radii.clone())
             .unwrap_or_default();
+        tree.cluster_jewels = bundle.poe1.as_ref().and_then(|p| p.cluster_jewels.clone());
         Some(tree)
     }
 

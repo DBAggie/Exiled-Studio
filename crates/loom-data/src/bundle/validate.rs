@@ -1052,6 +1052,51 @@ fn domain(b: &Bundle, report: &mut Report) {
         for (at, detail) in findings {
             report.add("BUNDLE_VALUE_RANGE", at, detail);
         }
+        if let Some(c) = &p.cluster_jewels {
+            cluster_domain(b, c, report);
+        }
+    }
+}
+
+/// `poe1/cluster_jewels.json`: every passive, stat, and base it names
+/// exists, each socket and base is on one row, and the rows' values fit.
+fn cluster_domain(b: &Bundle, c: &super::poe1::ClusterJewels, report: &mut Report) {
+    use super::poe1::CLUSTER_JEWELS;
+    let (nodes, findings) = c.domain();
+    let known: BTreeSet<i64> = b
+        .passives
+        .iter()
+        .flat_map(|p| p.passives.iter().map(|x| x.node))
+        .collect();
+    for (at, node) in nodes.iter().filter(|(_, n)| !known.contains(n)) {
+        report.add(
+            "BUNDLE_DANGLING_REF",
+            at.clone(),
+            format!("passive {node} does not exist"),
+        );
+    }
+    let stats: BTreeSet<&str> = b.stats.iter().map(|s| s.id.as_str()).collect();
+    for s in c.specials.iter().filter(|s| !stats.contains(s.stat.as_str())) {
+        report.add(
+            "BUNDLE_DANGLING_REF",
+            format!("{CLUSTER_JEWELS}:specials:{}", s.node),
+            format!("stat {} does not exist", s.stat),
+        );
+    }
+    let bases: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();
+    for j in c.jewels.iter().filter(|j| !bases.contains(j.base.as_str())) {
+        report.add(
+            "BUNDLE_DANGLING_REF",
+            format!("{CLUSTER_JEWELS}:jewels:{}", j.base),
+            format!("base item {} does not exist", j.base),
+        );
+    }
+    duplicates(report, CLUSTER_JEWELS, c.jewels.iter().map(|j| j.base.as_str()));
+    let sockets: Vec<String> = c.slots.iter().map(|s| s.socket.to_string()).collect();
+    duplicates(report, CLUSTER_JEWELS, sockets.iter().map(String::as_str));
+    duplicates(report, CLUSTER_JEWELS, c.specials.iter().map(|s| s.stat.as_str()));
+    for (at, detail) in findings {
+        report.add("BUNDLE_VALUE_RANGE", at, detail);
     }
 }
 

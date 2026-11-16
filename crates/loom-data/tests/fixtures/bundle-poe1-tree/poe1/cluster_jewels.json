@@ -1,0 +1,176 @@
+{
+ "jewels": [
+  {
+   "base": "Test/Items/ClusterSmall",
+   "max_nodes": 3,
+   "min_nodes": 2,
+   "notable_indices": [
+    4
+   ],
+   "size": 0,
+   "small_indices": [
+    0,
+    4,
+    2
+   ],
+   "socket_indices": [
+    4
+   ],
+   "total_indices": 6
+  },
+  {
+   "base": "Test/Items/ClusterMedium",
+   "max_nodes": 6,
+   "min_nodes": 4,
+   "notable_indices": [
+    6,
+    10,
+    2,
+    0
+   ],
+   "size": 1,
+   "small_indices": [
+    0,
+    6,
+    8,
+    4,
+    10,
+    2
+   ],
+   "socket_indices": [
+    6
+   ],
+   "total_indices": 12
+  },
+  {
+   "base": "Test/Items/ClusterLarge",
+   "max_nodes": 12,
+   "min_nodes": 8,
+   "notable_indices": [
+    6,
+    4,
+    8,
+    10,
+    2
+   ],
+   "size": 2,
+   "small_indices": [
+    0,
+    4,
+    6,
+    8,
+    10,
+    2,
+    7,
+    5,
+    9,
+    3,
+    11,
+    1
+   ],
+   "socket_indices": [
+    4,
+    8,
+    6
+   ],
+   "total_indices": 12
+  }
+ ],
+ "sizes": [
+  "Small",
+  "Medium",
+  "Large"
+ ],
+ "skills": [
+  {
+   "node": 6000,
+   "size": 0,
+   "tag": "test_cluster_fire"
+  },
+  {
+   "mastery": 6003,
+   "node": 6001,
+   "size": 1,
+   "tag": "test_cluster_cold"
+  },
+  {
+   "mastery": 6003,
+   "node": 6002,
+   "size": 2,
+   "tag": "test_cluster_lightning"
+  }
+ ],
+ "slots": [
+  {
+   "index": 0,
+   "proxy": 5005,
+   "size": 2,
+   "socket": 5000,
+   "start_indices": [
+    3,
+    5,
+    5
+   ]
+  },
+  {
+   "index": 0,
+   "parent": 5000,
+   "proxy": 5002,
+   "size": 1,
+   "socket": 5001,
+   "start_indices": [
+    2,
+    3
+   ]
+  },
+  {
+   "index": 1,
+   "parent": 5000,
+   "proxy": 5009,
+   "size": 1,
+   "socket": 5007,
+   "start_indices": [
+    1,
+    1
+   ]
+  },
+  {
+   "index": 2,
+   "parent": 5000,
+   "proxy": 5010,
+   "size": 1,
+   "socket": 5008,
+   "start_indices": [
+    0,
+    11
+   ]
+  },
+  {
+   "index": 0,
+   "parent": 5001,
+   "proxy": 5004,
+   "size": 0,
+   "socket": 5003,
+   "start_indices": [
+    1
+   ]
+  }
+ ],
+ "specials": [
+  {
+   "node": 6011,
+   "order": 20,
+   "stat": "local_affliction_notable_test_b"
+  },
+  {
+   "node": 6010,
+   "order": 10,
+   "stat": "local_affliction_notable_test_a"
+  },
+  {
+   "node": 6020,
+   "order": 30,
+   "stat": "local_jewel_expansion_keystone_test"
+  }
+ ]
+}

@@ -18,8 +18,8 @@
   },
   {
    "path": "data/base_items.json",
-   "sha256": "310d5f3a4b021471c482e3457570e9e96794f542b4eb22921129bc1bebd3980e",
-   "size": 1076
+   "sha256": "046ea1e24bfc6ea7fd47a50421b246be68e2f5ce5b8a0fafa810805eb5bd755b",
+   "size": 1588
   },
   {
    "path": "data/characters.json",
@@ -63,8 +63,8 @@
   },
   {
    "path": "data/item_classes.json",
-   "sha256": "94b5364bb457ca29ca8fa2f4c1c8e58718eaef7fce0396453f7af935f985d2d5",
-   "size": 30
+   "sha256": "413a2b23661f372e9b20ec371691ca65f90445b8cffbaae77d4d99335f79dca7",
+   "size": 44
   },
   {
    "path": "data/item_rules.json",
@@ -108,23 +108,23 @@
   },
   {
    "path": "data/passive_tree.json",
-   "sha256": "357431babeb7ef8bb7c46b271e76b5a97e148bdabb95d735a7fb92da51c01ad0",
-   "size": 34968
+   "sha256": "c13129973e574b63b259d7cd0b9e795d5a5697ee4135e9aa8c3d61cf4a9bdf54",
+   "size": 36096
   },
   {
    "path": "data/passive_tree_layout.json",
-   "sha256": "368295b2c7be979b9c04db63f15c0f055d21adf6012bc07d814a63ac798550bb",
-   "size": 322
+   "sha256": "6e314a93f5a9e7179cfcadba9c49b28344e2758c4afb727760dfa788cd2982a7",
+   "size": 664
   },
   {
    "path": "data/passive_tree_sprites.json",
-   "sha256": "637d35b1b0238b2a3c69a56d388e02e390b9a9b40cba768618dd4a7b12e91927",
-   "size": 12477
+   "sha256": "62299f1b876dcce4f0cf8cc90e2ff05f1051459cb504cc4ef02a848aaac0c8b0",
+   "size": 12722
   },
   {
    "path": "data/passives.json",
-   "sha256": "aba2bc8c736a613401660852d7ede3d57e3804933129ec1730c4e65f79bd5d7b",
-   "size": 28296
+   "sha256": "5e6f9c62113d0e2791bd65351b3b28e13a596fb6635cccc96a96e10077029808",
+   "size": 29930
   },
   {
    "path": "data/shield_types.json",
@@ -143,8 +143,8 @@
   },
   {
    "path": "data/stats.json",
-   "sha256": "e5a16b162c312e85bff67524f411fb780b35623c907fa150cb16cc291f5d624a",
-   "size": 782
+   "sha256": "f9a34f2098de1c105a732d9f9c4312829671a13abaabc58906f642dcdd6f3115",
+   "size": 1533
   },
   {
    "path": "data/tags.json",
@@ -155,6 +155,11 @@
    "path": "data/weapon_types.json",
    "sha256": "86108c9750ecce57dd177de567bb3f57693377eb0884b872be2b3ca9357e93a0",
    "size": 142
+  },
+  {
+   "path": "poe1/cluster_jewels.json",
+   "sha256": "f2396d9bb7557e63a9c6e1441b045b715d25ab86f63d7c14a8aaf2537931cf1d",
+   "size": 2165
   },
   {
    "path": "poe1/grafts.json",

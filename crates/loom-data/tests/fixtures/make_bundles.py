@@ -726,20 +726,41 @@ def tree_bundle(files):
             }
         )
     # A large cluster socket on the main tree (linked to row 2; a plain
-    # jewel socket in the passives table, as the game's) and its area: a
-    # nested medium socket with a proxy, a nested small socket with one.
+    # jewel socket in the passives table, as the game's) and its area, as
+    # the game nests them: the large socket's proxy (5005) shares its group
+    # with three medium sockets (cluster indices 0 to 2); the first one's
+    # proxy (5002) shares its group with a small socket (5003), whose proxy
+    # (5004) has a group of its own, as do the other mediums' (5009, 5010).
     add(5000, "Test Large Jewel Socket", jewel_socket=True)
     add(5001, "Test Medium Cluster Socket", jewel_socket=True, expansion=True)
     add(5002, "Test Medium Proxy")
     add(5003, "Test Small Cluster Socket", jewel_socket=True, expansion=True)
     add(5004, "Test Small Proxy")
-    groups.append({"x": 0.0, "y": 900.0, "flags": 0, "nodes": [tnode(5000, 0, 0, [ring[(2, 4)][2]])]})
+    add(5005, "Test Large Proxy")
+    add(5007, "Test Medium Cluster Socket 2", jewel_socket=True, expansion=True)
+    add(5008, "Test Medium Cluster Socket 3", jewel_socket=True, expansion=True)
+    add(5009, "Test Medium Proxy 2")
+    add(5010, "Test Medium Proxy 3")
+    groups.append({"x": 0.0, "y": 900.0, "flags": 0, "nodes": [tnode(5000, 0, 0, [ring[(2, 4)][2], 5005])]})
     groups.append(
-        {"x": 0.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5001, 0, 0, [5000]), tnode(5002, 1, 0, [5001])]}
+        {
+            "x": 0.0,
+            "y": 1300.0,
+            "flags": 0,
+            "nodes": [
+                tnode(5005, 0, 0, [5001, 5007, 5008]),
+                tnode(5001, 1, 0, [5002, 5007]),
+                tnode(5007, 1, 2, [5009, 5008]),
+                tnode(5008, 1, 4, [5010]),
+            ],
+        }
     )
     groups.append(
-        {"x": 300.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5003, 0, 0, [5000]), tnode(5004, 1, 0, [5003])]}
+        {"x": 300.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5002, 0, 0, [5003]), tnode(5003, 1, 3, [5004])]}
     )
+    groups.append({"x": 300.0, "y": 1700.0, "flags": 0, "nodes": [tnode(5004, 0, 0)]})
+    groups.append({"x": -300.0, "y": 1300.0, "flags": 0, "nodes": [tnode(5009, 0, 0)]})
+    groups.append({"x": 0.0, "y": 1700.0, "flags": 0, "nodes": [tnode(5010, 0, 0)]})
     # Links stored once, on the first node.
     by_node = {n["node"]: n for g in groups for n in g["nodes"]}
     for a, b in links:
@@ -759,13 +780,20 @@ def tree_bundle(files):
     out["data/passive_tree.json"] = {
         "tree": "Default",
         "graph": "Metadata/PassiveSkillGraph",
-        "orbit_slots": [1, 6],
+        # Orbits 2 and 3 hold only the cluster jewels' generated rings
+        # (medium on orbit 2, large on orbit 3, as the game's sizes 1 and 2).
+        "orbit_slots": [1, 6, 16, 16],
         "roots": [1000, 2000],
         "groups": groups,
     }
     out["data/passive_tree_layout.json"] = {
-        "orbit_radii": [0.0, 82.0],
-        "orbit_angles": [[0.0], [0.0, 60.0, 120.0, 180.0, 240.0, 300.0]],
+        "orbit_radii": [0.0, 82.0, 162.0, 335.0],
+        "orbit_angles": [
+            [0.0],
+            [0.0, 60.0, 120.0, 180.0, 240.0, 300.0],
+            [22.5 * k for k in range(16)],
+            [22.5 * k for k in range(16)],
+        ],
         "source": {
             "repository": "synthetic",
             "tag": "synthetic",
@@ -777,7 +805,113 @@ def tree_bundle(files):
     index, sheet = tree_sprites(passives)
     out["data/passive_tree_sprites.json"] = index
     out["trees/assets/test-sheet.png"] = sheet
+    # Copies: the plain bundle shares `files`' lists.
+    out["data/stats.json"] = list(files["data/stats.json"])
+    out["data/base_items.json"] = list(files["data/base_items.json"])
+    out["data/item_classes.json"] = sorted(set(files["data/item_classes.json"]) | {"TestJewel"})
+    out["poe1/cluster_jewels.json"] = cluster_jewels(passives, out["data/stats.json"], out["data/base_items.json"])
+    out["data/passives.json"] = sorted(passives, key=lambda row: row["node"])
     return out
+
+
+# The cluster jewel stats the synthetic tree's jewels name (the game's IDs
+# for the counts and kinds; made-up ones for the notables and keystone).
+CLUSTER_STATS = [
+    "local_jewel_expansion_passive_node_count",
+    "local_jewel_expansion_jewels_count",
+    "local_jewel_expansion_jewels_count_override",
+    "local_jewel_expansion_passive_node_index",
+    "local_unique_jewel_grants_x_empty_passives",
+    "local_affliction_jewel_display_small_nodes_grant_nothing",
+    "local_affliction_jewel_small_nodes_have_effect_+%",
+    "local_affliction_notable_test_a",
+    "local_affliction_notable_test_b",
+    "local_jewel_expansion_keystone_test",
+]
+
+
+def cluster_jewels(passives, stats, bases):
+    """Passive tree plan T-i: made-up cluster jewel tables in the game's
+    shape for the synthetic tree's cluster area (`tree_bundle`). The jewel
+    layouts follow the game's index scheme (12 slots for large and medium,
+    6 for small, filled in the game's order); the passives, stats, and
+    bases they name are added here: one small passive per size, a mastery,
+    two notables, a keystone, three jewel bases. Every value is made up."""
+
+    def add(node, name, **extra):
+        passives.append({"id": f"t{node}", "node": node, "name": name, "expansion": True, **extra})
+
+    add(6000, "Test Small Fire", stats=[{"stat": "test_passive_life", "value": 3}])
+    add(6001, "Test Small Cold", stats=[{"stat": "test_passive_life", "value": 4}])
+    add(6002, "Test Small Lightning", stats=[{"stat": "test_passive_life", "value": 5}])
+    add(6003, "Test Cluster Mastery")
+    add(6010, "Test Cluster Notable A", notable=True, stats=[{"stat": "test_passive_life", "value": 30}])
+    add(6011, "Test Cluster Notable B", notable=True, stats=[{"stat": "test_passive_life", "value": 31}])
+    add(6020, "Test Cluster Keystone", keystone=True, stats=[{"stat": "test_mastery_stat", "value": 1}])
+    stats.extend({"id": s, "local": True} for s in CLUSTER_STATS)
+    bases.extend(
+        {
+            "id": f"Test/Items/Cluster{size}",
+            "name": f"{size} Test Cluster Jewel",
+            "domain": 1,
+            "item_class": "TestJewel",
+            "tags": ["jewel"],
+            "implicits": [],
+        }
+        for size in ("Small", "Medium", "Large")
+    )
+    return {
+        "sizes": ["Small", "Medium", "Large"],
+        "jewels": [
+            {
+                "base": "Test/Items/ClusterSmall",
+                "size": 0,
+                "min_nodes": 2,
+                "max_nodes": 3,
+                "small_indices": [0, 4, 2],
+                "notable_indices": [4],
+                "socket_indices": [4],
+                "total_indices": 6,
+            },
+            {
+                "base": "Test/Items/ClusterMedium",
+                "size": 1,
+                "min_nodes": 4,
+                "max_nodes": 6,
+                "small_indices": [0, 6, 8, 4, 10, 2],
+                "notable_indices": [6, 10, 2, 0],
+                "socket_indices": [6],
+                "total_indices": 12,
+            },
+            {
+                "base": "Test/Items/ClusterLarge",
+                "size": 2,
+                "min_nodes": 8,
+                "max_nodes": 12,
+                "small_indices": [0, 4, 6, 8, 10, 2, 7, 5, 9, 3, 11, 1],
+                "notable_indices": [6, 4, 8, 10, 2],
+                "socket_indices": [4, 8, 6],
+                "total_indices": 12,
+            },
+        ],
+        "skills": [
+            {"node": 6000, "tag": "test_cluster_fire", "size": 0},
+            {"node": 6001, "mastery": 6003, "tag": "test_cluster_cold", "size": 1},
+            {"node": 6002, "mastery": 6003, "tag": "test_cluster_lightning", "size": 2},
+        ],
+        "specials": [
+            {"node": 6011, "stat": "local_affliction_notable_test_b", "order": 20},
+            {"node": 6010, "stat": "local_affliction_notable_test_a", "order": 10},
+            {"node": 6020, "stat": "local_jewel_expansion_keystone_test", "order": 30},
+        ],
+        "slots": [
+            {"socket": 5000, "size": 2, "index": 0, "proxy": 5005, "start_indices": [3, 5, 5]},
+            {"socket": 5001, "size": 1, "index": 0, "parent": 5000, "proxy": 5002, "start_indices": [2, 3]},
+            {"socket": 5007, "size": 1, "index": 1, "parent": 5000, "proxy": 5009, "start_indices": [1, 1]},
+            {"socket": 5008, "size": 1, "index": 2, "parent": 5000, "proxy": 5010, "start_indices": [0, 11]},
+            {"socket": 5003, "size": 0, "index": 0, "parent": 5001, "proxy": 5004, "start_indices": [1]},
+        ],
+    }
 
 
 poe1 = with_skills("poe1", common("poe1", 34, "charm_stat_descriptions"))

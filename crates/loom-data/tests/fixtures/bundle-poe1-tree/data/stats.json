@@ -65,5 +65,45 @@
  },
  {
   "id": "test_mastery_stat"
+ },
+ {
+  "id": "local_jewel_expansion_passive_node_count",
+  "local": true
+ },
+ {
+  "id": "local_jewel_expansion_jewels_count",
+  "local": true
+ },
+ {
+  "id": "local_jewel_expansion_jewels_count_override",
+  "local": true
+ },
+ {
+  "id": "local_jewel_expansion_passive_node_index",
+  "local": true
+ },
+ {
+  "id": "local_unique_jewel_grants_x_empty_passives",
+  "local": true
+ },
+ {
+  "id": "local_affliction_jewel_display_small_nodes_grant_nothing",
+  "local": true
+ },
+ {
+  "id": "local_affliction_jewel_small_nodes_have_effect_+%",
+  "local": true
+ },
+ {
+  "id": "local_affliction_notable_test_a",
+  "local": true
+ },
+ {
+  "id": "local_affliction_notable_test_b",
+  "local": true
+ },
+ {
+  "id": "local_jewel_expansion_keystone_test",
+  "local": true
  }
 ]

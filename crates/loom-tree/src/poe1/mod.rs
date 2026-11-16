@@ -31,6 +31,7 @@
 //!   path, and counts as connected while the jewel's socket does; no path
 //!   starts from it (PoB's `intuitiveLeapLikesAffecting`).
 
+pub mod cluster;
 pub mod radius;
 pub mod url;
 
@@ -261,8 +262,9 @@ pub fn connected(tree: &Tree, spec: &Spec) -> BTreeSet<u32> {
 /// `Classes/PassiveSpec.lua` `BuildAllDependsAndPaths`, `connectedToStart`;
 /// PoB drops the others when it loads a build). Unlike [`connected`] (the
 /// editor's), kept nodes do not count unless connected, and a node the
-/// tree lacks or PoB numbers as a cluster jewel's links nothing. The
-/// calculation's resolved passive set (`loom-pipeline`) reads this.
+/// tree lacks links nothing; a node PoB numbers as a cluster jewel's
+/// counts only on a tree its jewel's subgraph is on ([`cluster::expand`]).
+/// The calculation's resolved passive set (`loom-pipeline`) reads this.
 #[must_use]
 pub fn connected_to_start<'a>(
     tree: &Tree,
@@ -271,7 +273,7 @@ pub fn connected_to_start<'a>(
     let allocated: BTreeSet<u32> = nodes
         .into_iter()
         .copied()
-        .filter(|n| n & CLUSTER_NODE_BIT == 0)
+        .filter(|n| n & CLUSTER_NODE_BIT == 0 || tree.node(*n).is_some())
         .collect();
     let mut seen: BTreeSet<u32> = allocated
         .iter()
