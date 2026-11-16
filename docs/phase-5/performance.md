@@ -50,7 +50,7 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 | Item-edit preview ≤ 300 ms | one calculation, 6.7 ms (the preview applies the edit and calculates the edited build; the current result is reused) | yes |
 | Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms | yes |
 | Tree first paint ≤ 500 ms, pan and zoom ≥ 50 fps | not measured here: a webview measurement | exception: maintainer-run (below) |
-| Version conversion preview ≤ 300 ms | no version conversion yet (T4 is not done) | not applicable |
+| Version conversion preview ≤ 300 ms | 0.01 to 0.41 ms: `loom_app::tree::converted` on four public builds saved on 3_27 and 3_28, with the real bundle and its packs (release build, 21 runs each; measured 2026-11-16 on `feat/tree-remaining`) | yes |
 | Peak memory ≤ 600 MB | 319 MB, the application's process at startup with the real bundle (peak working set); the WebView2 processes are not counted | yes, for the application's process |
 | Installer ≤ 40 MB without the bundle | the MSI, the AppImage, the `.deb`, the portable zip: measured by the release workflow's run (gate 6); the NSIS setup with the WebView2 bootstrapper was 5.8 MB locally (P1) | exception: the NSIS setup |
 
@@ -110,7 +110,7 @@ The maintainer asked for the recommended fixes (2026-11-15). All three are in:
    - They are the webview's. The core part, the tree's layout, is in `load`.
    - Proposed: the maintainer measures them in the release app with the browser tools (WebView2 DevTools, Performance panel) on the real bundle and records them here.
    - The CI e2e on the synthetic bundle checks the tree renders.
-4. **Version conversion** has no feature to measure until T4.
+4. **Version conversion** is measured since T5b (2026-11-16): inside budget by three orders of magnitude.
 5. **Peak memory counts the application's process only.** The WebView2 processes are Microsoft's runtime, so they are not counted. The maintainer can add them from Task Manager's process tree if the budget means the whole tree.
 
 ## Accessibility (WCAG 2.2 AA)

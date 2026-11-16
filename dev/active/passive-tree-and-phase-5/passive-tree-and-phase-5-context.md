@@ -1,4 +1,4 @@
-Last Updated: 2026-11-14
+Last Updated: 2026-11-16 (tree remaining notes, branch `feat/tree-remaining`)
 
 # Passive tree editor and Phase 5 (context)
 
@@ -90,3 +90,15 @@ Last Updated: 2026-11-14
     - the `github-pages` environment's `v*` tag policy.
   - Timing note: `Start-Process -Wait` rounds to whole seconds. Time a start with `Process.WaitForExit`.
 - **Left for the maintainer:** `docs/phase-5/phase-5-report.md`, "For the maintainer".
+
+## Tree remaining notes (2026-11-16, branch `feat/tree-remaining`)
+- **Scope:** T3, T4, T5b, T8 in one PR (maintainer 2026-11-16: "complete tasks all in a single pr one by one until we have gotten through the remaining plan items"). Report: `docs/tree/tree-report.md`.
+- **Decisions taken here** (defaults; the maintainer may change them):
+  - T1's last item, the layout as a required schema 4 file, is closed as decided on `feat/ux-sprint-2`. The file stays optional, so released bundles (0.9's included) stay valid.
+  - Older wordings are read only through rewordings a person accepted (`tools/tree/rewordings.json`: 11 accepted, 13 rejected, each with a reason). Same numbers on the same node do not prove the same stat.
+  - The plan's 1% fallback is enforced by `tree-pack`, which refuses a version over it. `--accept-unread` is for the maintainer to decide on a version over the line. All four packs are under it.
+  - Conversion keeps a mastery only with a valid chosen effect, as PoB does. It drops nodes the data's tree lacks, as PoB does; plan T-g allows this for a confirmed conversion.
+  - An older spec is calculated on its pack but edited only after conversion.
+- **Harness fix:** `pob_tree.lua alloc` clears the spec before each request (PoB's `ResetNodes` keeps ascendancy starts).
+- **Local paths used:** exports `local/tree-export-<version>`; the chained bundle `local/t4c/to-3_25` (manifest `4814e3ac…`); PoB's outputs `local/tree/pobv/`; the public builds' runs `local/t8/`.
+- **Left for the maintainer:** `docs/tree/tree-report.md`, "Maintainer-run".
