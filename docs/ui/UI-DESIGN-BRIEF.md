@@ -163,8 +163,10 @@ connections (count) on some screens.
     with the rest one click away. See `ux-audit.md`.
 13. **Dashboards per build, kept snapshots, a Skills table (UX audit follow-up, 2026-11-16).** The
     owner's answers to the audit's "left for later" list: a build may keep its **own dashboards**
-    (a choice in Customize; the user's set stays the default), and **snapshots** of its numbers by
-    name, both in the build file (ADR-009 Amendment 1); components are arranged by **dragging**;
+    (a choice in Customize; the user's set stays the default) in the build file: the layout only,
+    never a number, so the build looks the same to whoever opens it, and AI clients can read it
+    (ADR-009 Amendment 1). **Snapshots** of its numbers by name are kept on the user's computer,
+    never in the build file. Components are arranged by **dragging**;
     a stage is **compared with another** on the tree and the equipment pages; the Skills page has
     the **Cards / Table** switch of screen 10. **No light theme.** See `ux-audit.md`, "Follow-up".
 

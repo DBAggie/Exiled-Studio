@@ -76,7 +76,7 @@ pub fn list() -> Value {
         {
             "name": "get_build",
             "title": "Get the open build",
-            "description": "The open build: class, level, main skill, data version, line counts, items, and lines with warnings (app-api.v1 BuildView), with the snapshot version and the calculation's status (CalcStatus). Read-only.",
+            "description": "The open build: class, level, main skill, data version, line counts, items, and lines with warnings (app-api.v1 BuildView), with the snapshot version and the calculation's status (CalcStatus). The build's `dashboards`, when it has any, are the layout its author chose to show: which components and stats matter for this build, no numbers. Read-only.",
             "inputSchema": empty(),
             "annotations": {"readOnlyHint": true, "openWorldHint": false}
         },
@@ -236,11 +236,9 @@ pub fn call(app: &App, client: &str, name: &str, args: &Value) -> Result<Value, 
     match name {
         "get_build" => {
             let snap = app.snapshot();
-            let mut build = snap.build.ok_or_else(no_build)?;
-            // The UI's own document for the build (dashboards, kept
-            // snapshots; up to 256 KiB) is not part of what a client
-            // reads here.
-            build.workspace = None;
+            // With the build's dashboards: the layout its author chose to
+            // show, so which components and stats matter for this build.
+            let build = snap.build.ok_or_else(no_build)?;
             Ok(
                 json!({"version": snap.version, "build": to_value(&build), "calc": to_value(&snap.calc)}),
             )

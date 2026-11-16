@@ -158,7 +158,7 @@ impl HostCommand {
             // Named without serializing its text.
             Self::Api(api::Command::ImportText { .. }) => "import-text".to_owned(),
             Self::Api(api::Command::AddItem { .. }) => "add-item".to_owned(),
-            Self::Api(api::Command::SetWorkspace { .. }) => "set-workspace".to_owned(),
+            Self::Api(api::Command::SetDashboards { .. }) => "set-dashboards".to_owned(),
             Self::Api(c) => match serde_json::to_value(c) {
                 Ok(serde_json::Value::String(s)) => s,
                 Ok(serde_json::Value::Object(m)) => m.keys().next().cloned().unwrap_or_default(),
@@ -1512,9 +1512,9 @@ impl Writer {
                 .session
                 .set_league(&league)?
                 .map_or(api::Outcome::Nothing, done)),
-            api::Command::SetWorkspace { document } => Ok(self
+            api::Command::SetDashboards { dashboards } => Ok(self
                 .session
-                .set_workspace(document)?
+                .set_dashboards(dashboards)?
                 .map_or(api::Outcome::Nothing, done)),
             api::Command::UseConfigSet { id } => Ok(self
                 .session

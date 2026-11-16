@@ -36,7 +36,8 @@ pub use compare::fields_of_file;
 pub use data::{GameData, TREE_VERSIONS, tree_version};
 pub use error::{AppError, Code};
 pub use session::{
-    GroupPlace, HISTORY_LIMIT, MAX_WORKSPACE, Session, State, calculate, check_data, preview,
+    GroupPlace, HISTORY_LIMIT, MAX_DASHBOARD_COMPONENTS, MAX_DASHBOARD_FIELDS, MAX_DASHBOARD_NAME,
+    MAX_DASHBOARD_TEXT, MAX_DASHBOARDS, Session, State, calculate, check_data, preview,
     preview_tree,
 };
 pub use view::{build_view, item_view, stage_view};

@@ -604,32 +604,89 @@ fn empty_builds_should_round_trip_through_json() {
 }
 
 /// The planner's settings PoB's format has no place for (the league, the
-/// UI's workspace document) are additive: written when set, left out when
-/// not, so a document from before them still reads.
+/// dashboards) are additive: written when set, left out when not, so a
+/// document from before them still reads.
 #[test]
 fn planner_settings_should_round_trip_and_be_left_out_when_absent() {
     let plain = round_trip(&poe1_build());
     assert!(!plain.contains("\"league\""), "{plain}");
-    assert!(!plain.contains("\"workspace\""), "{plain}");
+    assert!(!plain.contains("\"dashboards\""), "{plain}");
     let old = from_json(&plain).unwrap();
     assert_eq!(old.league, None);
-    assert_eq!(old.workspace, None);
+    assert_eq!(old.dashboards, None);
 
     let mut b = poe1_build();
     b.league = Some(loom_domain::League::Standard);
-    // Opaque text: kept byte for byte, JSON or not.
-    let document = "{\"dashboards\":[{\"name\":\"Überblick\"}],\"snapshots\":[]}\n not json";
-    b.workspace = Some(document.to_owned());
+    let component = |id: &str, kind: &str, width: &str| loom_domain::DashboardComponent {
+        id: id.to_owned(),
+        kind: kind.to_owned(),
+        width: width.to_owned(),
+        ..Default::default()
+    };
+    let dashboards = loom_domain::Dashboards {
+        active: "overview".to_owned(),
+        list: vec![loom_domain::Dashboard {
+            id: "overview".to_owned(),
+            name: "Überblick".to_owned(),
+            components: vec![
+                loom_domain::DashboardComponent {
+                    field: Some("hit-dps".to_owned()),
+                    ..component("c1", "stat", "third")
+                },
+                loom_domain::DashboardComponent {
+                    fields: vec!["life".to_owned(), "hit-dps".to_owned()],
+                    ..component("c2", "progression", "full")
+                },
+                loom_domain::DashboardComponent {
+                    target: Some(5_000_000),
+                    ..component("c3", "timeline", "half")
+                },
+                loom_domain::DashboardComponent {
+                    field: Some("hit-dps".to_owned()),
+                    vary: Some("config-number".to_owned()),
+                    input: Some("enemyLevel".to_owned()),
+                    // A kind this application does not know is kept.
+                    ..component("c4", "a-kind-of-later", "wide")
+                },
+            ],
+        }],
+    };
+    b.dashboards = Some(dashboards.clone());
     let json = round_trip(&b);
     assert!(json.contains("\"league\": \"standard\""), "{json}");
-    assert!(json.contains("\"workspace\": \"{"), "{json}");
     let back = from_json(&json).unwrap();
-    assert_eq!(back.workspace.as_deref(), Some(document));
+    assert_eq!(back.dashboards, Some(dashboards));
 
-    // An empty document is a document, not an absent one.
-    b.workspace = Some(String::new());
-    let json = round_trip(&b);
-    assert!(json.contains("\"workspace\": \"\""), "{json}");
+    // The section's own JSON: absent values and an empty `fields` are left
+    // out.
+    let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(
+        value["build"]["dashboards"],
+        serde_json::json!({"active": "overview", "list": [{"id": "overview", "name": "Überblick", "components": [
+            {"id": "c1", "kind": "stat", "width": "third", "field": "hit-dps"},
+            {"id": "c2", "kind": "progression", "width": "full", "fields": ["life", "hit-dps"]},
+            {"id": "c3", "kind": "timeline", "width": "half", "target": 5_000_000},
+            {"id": "c4", "kind": "a-kind-of-later", "width": "wide", "field": "hit-dps", "vary": "config-number", "input": "enemyLevel"},
+        ]}]})
+    );
+
+    // The section as the UI writes it reads back as written, and reading
+    // applies no limit: a build is never refused over its dashboards.
+    let text = r#"{"active":"overview","list":[{"id":"overview","name":"Overview","components":[{"id":"c1","kind":"stat","width":"third","field":"hit-dps"},{"id":"c2","kind":"progression","width":"full","fields":["life","hit-dps"]},{"id":"c3","kind":"timeline","width":"half","target":5000000}]}]}"#;
+    let mut document: serde_json::Value = serde_json::from_str(&plain).unwrap();
+    document["build"]["dashboards"] = serde_json::from_str(text).unwrap();
+    let read = from_json(&document.to_string()).unwrap();
+    assert_eq!(
+        read.dashboards.as_ref().unwrap().list[0].components.len(),
+        3
+    );
+    assert_eq!(
+        serde_json::from_str::<serde_json::Value>(&to_json(&read).unwrap()).unwrap()["build"]["dashboards"],
+        document["build"]["dashboards"]
+    );
+    document["build"]["dashboards"] = serde_json::json!({"active": "gone", "list": []});
+    let read = from_json(&document.to_string()).unwrap();
+    assert_eq!(read.dashboards.unwrap().active, "gone");
 }
 
 /// The bytes are fixed: the committed files are what every platform

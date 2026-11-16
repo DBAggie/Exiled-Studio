@@ -3,7 +3,7 @@
 // list of components on a six-column grid, each a third, a half, two
 // thirds, or the full width. Kept in the UI's preferences document
 // (`ui_prefs`, beside the application's settings); a build may keep its
-// own set in its workspace document (`../workspace`).
+// own set in its file (`../buildDashboards`): the layout only.
 // An application older than a kind or a width drops that component when
 // it reads the document (a preference, never an error).
 

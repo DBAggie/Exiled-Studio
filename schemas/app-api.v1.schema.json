@@ -293,6 +293,18 @@
             "$ref": "#/$defs/SetView"
           }
         },
+        "dashboards": {
+          "description": "The build's dashboards, if it has any: the layout its author\nchose to show it with (which components, which fields), never\ncalculated numbers; kept in the build file\n(`set-dashboards`).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Dashboards"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "data-version": {
           "description": "The data version the build is pinned to.",
           "anyOf": [
@@ -411,14 +423,6 @@
           "items": {
             "$ref": "#/$defs/WarningView"
           }
-        },
-        "workspace": {
-          "description": "The UI's document for this build (its dashboards and kept\nsnapshots of the numbers), if it has one: opaque text the\napplication keeps in the build file and never reads\n(`set-workspace`).",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
         }
       },
       "additionalProperties": false,
@@ -693,9 +697,9 @@
           "const": "item-added"
         },
         {
-          "description": "The UI's document for the build changed (a dashboard, a kept\nsnapshot).",
+          "description": "The build's dashboards changed.",
           "type": "string",
-          "const": "workspace"
+          "const": "dashboards"
         }
       ]
     },
@@ -1486,17 +1490,21 @@
           ]
         },
         {
-          "description": "Sets the UI's document for the build ([`BuildView::workspace`]),\nas one undoable change; the same document again changes\nnothing. `APP_WORKSPACE` for a document over 262,144 bytes.",
+          "description": "Sets the build's dashboards ([`BuildView::dashboards`]), as one\nundoable change; the same dashboards again change nothing.\n`APP_DASHBOARDS`, with nothing changed, for dashboards outside\nthe limits their types name, a repeated ID, or an `active` that\nis none of them.",
           "type": "object",
           "properties": {
-            "set-workspace": {
+            "set-dashboards": {
               "type": "object",
               "properties": {
-                "document": {
-                  "description": "The document; absent or null to clear it.",
-                  "type": [
-                    "string",
-                    "null"
+                "dashboards": {
+                  "description": "The dashboards; absent or null to clear them.",
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Dashboards"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ],
                   "default": null
                 }
@@ -1506,7 +1514,7 @@
           },
           "additionalProperties": false,
           "required": [
-            "set-workspace"
+            "set-dashboards"
           ]
         },
         {
@@ -2232,6 +2240,116 @@
       "required": [
         "text",
         "status"
+      ]
+    },
+    "Dashboard": {
+      "description": "One dashboard: a named list of components.",
+      "type": "object",
+      "properties": {
+        "components": {
+          "description": "The components, in order: at most 24.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DashboardComponent"
+          }
+        },
+        "id": {
+          "description": "The dashboard's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name its author gave it: 1 to 40 characters.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "components"
+      ]
+    },
+    "DashboardComponent": {
+      "description": "One component of a dashboard: what it shows, never the numbers.\nEvery text here is 1 to 64 characters.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The calc result field a stat, history, or curve component\nshows.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fields": {
+          "description": "The calc result fields a progression component charts: at most\n6.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "The component's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "input": {
+          "description": "The config input a scaling curve varies.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The component's kind (`stat`, `progression`, `timeline`, ...):\nopen text, so the UI adds kinds without a schema change and an\nolder application still opens the build.",
+          "type": "string"
+        },
+        "target": {
+          "description": "The life a fight timeline deals damage to.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "vary": {
+          "description": "What a scaling curve varies (`gem-level`, `character-level`,\n`config-number`): open text, as `kind`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "description": "The component's width (`third`, `half`, `full`, ...): open\ntext, as `kind`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "width"
+      ]
+    },
+    "Dashboards": {
+      "description": "A build's dashboards and which one is shown.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The ID of the dashboard shown: one of `list`.",
+          "type": "string"
+        },
+        "list": {
+          "description": "The dashboards, in order: 1 to 8.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Dashboard"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "list"
       ]
     },
     "DataFeedStatus": {

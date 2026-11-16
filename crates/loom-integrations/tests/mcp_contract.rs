@@ -295,6 +295,10 @@ fn read_tools_should_answer_with_the_apps_projections() {
     assert_eq!(build["isError"], false);
     assert_eq!(build["structuredContent"]["build"]["game"], "poe1");
     assert!(!build.to_string().contains("\"path\""), "no file paths");
+    assert_eq!(
+        build["structuredContent"]["build"]["dashboards"],
+        Value::Null
+    );
 
     let fields = tool(&f, "list_fields", json!({}));
     let list = fields["structuredContent"]["fields"].as_array().unwrap();
@@ -359,6 +363,44 @@ fn read_tools_should_answer_with_the_apps_projections() {
     assert_eq!(unknown["error"]["code"], -32602);
     let unknown = rpc(&f, "resources/list", json!({}));
     assert_eq!(unknown["error"]["code"], -32601);
+}
+
+/// The build's dashboards are part of what a client reads: the layout its
+/// author chose, so which components and stats matter for this build.
+#[test]
+fn get_build_should_show_the_builds_dashboards() {
+    let f = fixture("dashboards");
+    let dashboards = json!({"active": "overview", "list": [{"id": "overview", "name": "Overview", "components": [
+        {"id": "c1", "kind": "stat", "width": "third", "field": "hit-dps"},
+        {"id": "c2", "kind": "progression", "width": "full", "fields": ["life", "hit-dps"]},
+        {"id": "c3", "kind": "timeline", "width": "half", "target": 5_000_000},
+    ]}]});
+    let set: api::Command =
+        serde_json::from_value(json!({"set-dashboards": {"dashboards": dashboards}})).unwrap();
+    let outcome = f.app.execute(HostCommand::Api(set)).unwrap();
+    assert!(matches!(outcome, api::Outcome::Done { .. }), "{outcome:?}");
+
+    let build = tool(&f, "get_build", json!({}));
+    assert_eq!(build["isError"], false);
+    assert_eq!(
+        build["structuredContent"]["build"]["dashboards"],
+        dashboards
+    );
+    assert_eq!(
+        build["structuredContent"]["version"],
+        f.app.snapshot().version
+    );
+
+    f.app
+        .execute(HostCommand::Api(api::Command::SetDashboards {
+            dashboards: None,
+        }))
+        .unwrap();
+    let build = tool(&f, "get_build", json!({}));
+    assert_eq!(
+        build["structuredContent"]["build"]["dashboards"],
+        Value::Null
+    );
 }
 
 #[test]

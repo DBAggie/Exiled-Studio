@@ -274,8 +274,15 @@ fn comparing_a_file_should_need_only_data_and_leave_the_open_build_alone() {
     // With a build open and changed: its version, dirtiness, history,
     // name, and the recent list stay as they are.
     running.run(api::Command::ImportText { text: synthetic() });
-    let version = running.run(api::Command::SetWorkspace {
-        document: Some("{}".to_owned()),
+    let version = running.run(api::Command::SetDashboards {
+        dashboards: Some(api::Dashboards {
+            active: "overview".to_owned(),
+            list: vec![api::Dashboard {
+                id: "overview".to_owned(),
+                name: "Overview".to_owned(),
+                components: Vec::new(),
+            }],
+        }),
     });
     running.calculated(version);
     let before = running.app.snapshot();

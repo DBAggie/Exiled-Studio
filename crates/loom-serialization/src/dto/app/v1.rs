@@ -433,12 +433,62 @@ dto! {
         /// loaded data has a passive tree (passive tree plan, T5a).
         #[serde(default)]
         pub tree: Option<TreeView>,
-        /// The UI's document for this build (its dashboards and kept
-        /// snapshots of the numbers), if it has one: opaque text the
-        /// application keeps in the build file and never reads
-        /// (`set-workspace`).
+        /// The build's dashboards, if it has any: the layout its author
+        /// chose to show it with (which components, which fields), never
+        /// calculated numbers; kept in the build file
+        /// (`set-dashboards`).
         #[serde(default)]
-        pub workspace: Option<String>,
+        pub dashboards: Option<Dashboards>,
+    }
+
+    /// A build's dashboards and which one is shown.
+    pub struct Dashboards {
+        /// The ID of the dashboard shown: one of `list`.
+        pub active: String,
+        /// The dashboards, in order: 1 to 8.
+        pub list: Vec<Dashboard>,
+    }
+
+    /// One dashboard: a named list of components.
+    pub struct Dashboard {
+        /// The dashboard's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The name its author gave it: 1 to 40 characters.
+        pub name: String,
+        /// The components, in order: at most 24.
+        pub components: Vec<DashboardComponent>,
+    }
+
+    /// One component of a dashboard: what it shows, never the numbers.
+    /// Every text here is 1 to 64 characters.
+    pub struct DashboardComponent {
+        /// The component's ID, unique among the build's dashboards.
+        pub id: String,
+        /// The component's kind (`stat`, `progression`, `timeline`, ...):
+        /// open text, so the UI adds kinds without a schema change and an
+        /// older application still opens the build.
+        pub kind: String,
+        /// The component's width (`third`, `half`, `full`, ...): open
+        /// text, as `kind`.
+        pub width: String,
+        /// The calc result field a stat, history, or curve component
+        /// shows.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub field: Option<String>,
+        /// The calc result fields a progression component charts: at most
+        /// 6.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        pub fields: Vec<String>,
+        /// What a scaling curve varies (`gem-level`, `character-level`,
+        /// `config-number`): open text, as `kind`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub vary: Option<String>,
+        /// The config input a scaling curve varies.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub input: Option<String>,
+        /// The life a fight timeline deals damage to.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub target: Option<u64>,
     }
 
     /// The active passive spec as the tree editor sees it.
@@ -1457,9 +1507,8 @@ dto_enum! {
         TreeRequestApplied,
         /// An item added (and perhaps put in a slot).
         ItemAdded,
-        /// The UI's document for the build changed (a dashboard, a kept
-        /// snapshot).
-        Workspace,
+        /// The build's dashboards changed.
+        Dashboards,
     }
 
     /// The league a build is planned for.
@@ -1773,13 +1822,15 @@ dto_enum! {
             /// The league.
             league: League,
         },
-        /// Sets the UI's document for the build ([`BuildView::workspace`]),
-        /// as one undoable change; the same document again changes
-        /// nothing. `APP_WORKSPACE` for a document over 262,144 bytes.
-        SetWorkspace {
-            /// The document; absent or null to clear it.
+        /// Sets the build's dashboards ([`BuildView::dashboards`]), as one
+        /// undoable change; the same dashboards again change nothing.
+        /// `APP_DASHBOARDS`, with nothing changed, for dashboards outside
+        /// the limits their types name, a repeated ID, or an `active` that
+        /// is none of them.
+        SetDashboards {
+            /// The dashboards; absent or null to clear them.
             #[serde(default)]
-            document: Option<String>,
+            dashboards: Option<Dashboards>,
         },
         /// Allocates a node of a passive spec and the path to it (the
         /// path is the application's, never sent), as one undoable
@@ -2067,32 +2118,84 @@ mod tests {
     }
 
     #[test]
-    fn workspace_and_comparison_types_should_read_and_write_their_wire_form() {
-        let set = Command::SetWorkspace {
-            document: Some("{\"dashboards\":[]}".to_owned()),
+    fn dashboards_and_comparison_types_should_read_and_write_their_wire_form() {
+        let component = |id: &str, kind: &str, width: &str| DashboardComponent {
+            id: id.to_owned(),
+            kind: kind.to_owned(),
+            width: width.to_owned(),
+            field: None,
+            fields: Vec::new(),
+            vary: None,
+            input: None,
+            target: None,
         };
-        let json = r#"{"set-workspace":{"document":"{\"dashboards\":[]}"}}"#;
+        let dashboards = Dashboards {
+            active: "overview".to_owned(),
+            list: vec![Dashboard {
+                id: "overview".to_owned(),
+                name: "Overview".to_owned(),
+                components: vec![
+                    DashboardComponent {
+                        field: Some("hit-dps".to_owned()),
+                        ..component("c1", "stat", "third")
+                    },
+                    DashboardComponent {
+                        fields: vec!["life".to_owned(), "hit-dps".to_owned()],
+                        ..component("c2", "progression", "full")
+                    },
+                    DashboardComponent {
+                        target: Some(5_000_000),
+                        ..component("c3", "timeline", "half")
+                    },
+                    DashboardComponent {
+                        field: Some("hit-dps".to_owned()),
+                        vary: Some("config-number".to_owned()),
+                        input: Some("enemyLevel".to_owned()),
+                        ..component("c4", "curve", "half")
+                    },
+                ],
+            }],
+        };
+        // Absent values and an empty `fields` are left out.
+        let shape = r#"{"active":"overview","list":[{"id":"overview","name":"Overview","components":[{"id":"c1","kind":"stat","width":"third","field":"hit-dps"},{"id":"c2","kind":"progression","width":"full","fields":["life","hit-dps"]},{"id":"c3","kind":"timeline","width":"half","target":5000000},{"id":"c4","kind":"curve","width":"half","field":"hit-dps","vary":"config-number","input":"enemyLevel"}]}]}"#;
+        assert_eq!(serde_json::to_string(&dashboards).unwrap(), shape);
+        assert_eq!(
+            serde_json::from_str::<Dashboards>(shape).unwrap(),
+            dashboards
+        );
+
+        let set = Command::SetDashboards {
+            dashboards: Some(dashboards),
+        };
+        let json = format!(r#"{{"set-dashboards":{{"dashboards":{shape}}}}}"#);
         assert_eq!(serde_json::to_string(&set).unwrap(), json);
-        assert_eq!(serde_json::from_str::<Command>(json).unwrap(), set);
-        let clear = Command::SetWorkspace { document: None };
+        assert_eq!(serde_json::from_str::<Command>(&json).unwrap(), set);
+        let clear = Command::SetDashboards { dashboards: None };
         assert_eq!(
             serde_json::to_string(&clear).unwrap(),
-            r#"{"set-workspace":{"document":null}}"#
+            r#"{"set-dashboards":{"dashboards":null}}"#
         );
         for json in [
-            r#"{"set-workspace":{"document":null}}"#,
-            r#"{"set-workspace":{}}"#,
+            r#"{"set-dashboards":{"dashboards":null}}"#,
+            r#"{"set-dashboards":{}}"#,
         ] {
             assert_eq!(serde_json::from_str::<Command>(json).unwrap(), clear);
         }
+        // A field the shape does not have is refused, not dropped.
+        assert!(
+            serde_json::from_str::<Command>(
+                r#"{"set-dashboards":{"dashboards":{"active":"a","list":[],"snapshots":[]}}}"#
+            )
+            .is_err()
+        );
         assert_eq!(
             serde_json::to_string(&HistoryEntry {
-                kind: ChangeKind::Workspace,
+                kind: ChangeKind::Dashboards,
                 item: 0,
                 request: None,
             })
             .unwrap(),
-            r#"{"kind":"workspace","item":0,"request":null}"#
+            r#"{"kind":"dashboards","item":0,"request":null}"#
         );
 
         let fields = BuildFields {

@@ -35,7 +35,8 @@ import {
   attempt,
   markOf,
   setPrefs,
-  setWorkspace,
+  setBuildDashboards,
+  setKept,
 } from '../store'
 import {
   AllStatsPanel,
@@ -60,7 +61,8 @@ import {
   useAppSelector,
   useDataName,
 } from '../util'
-import { MAX_NAME, MAX_SNAPSHOTS, markOfKept, useWorkspace } from '../workspace'
+import { useBuildDashboards } from '../buildDashboards'
+import { MAX_NAME, MAX_SNAPSHOTS, markOfKept } from '../kept'
 
 function why(f: FieldResult): string | null {
   if (f.state === 'unsupported' && f.reason != null) {
@@ -713,35 +715,32 @@ function CommitField({
   )
 }
 
-/** The snapshots kept in the build, by name: keep the numbers as they
- * are, compare against a kept one, or against another build file. */
+/** The snapshots kept for the build on this computer, by name: keep the
+ * numbers as they are, compare against a kept one, or against another
+ * build file. */
 function Snapshots() {
   const dispatch = useAppDispatch()
   const calc = useAppSelector((s) => s.session.calc)
   const baseline = useAppSelector((s) => s.ui.baseline)
-  const workspace = useWorkspace()
+  const kept = useAppSelector((s) => s.ui.kept)
   const [name, setName] = useState('')
-  const kept = workspace.snapshots
   const full = kept.length >= MAX_SNAPSHOTS
   const keep = () => {
     const title = name.trim()
     if (calc === null || title === '' || full) return
     const mark = markOf(calc, title)
     void dispatch(
-      setWorkspace({
-        ...workspace,
-        snapshots: [
-          ...kept,
-          {
-            id: newId(
-              's',
-              kept.map((k) => k.id),
-            ),
-            name: title,
-            fields: mark.fields,
-          },
-        ],
-      }),
+      setKept([
+        ...kept,
+        {
+          id: newId(
+            's',
+            kept.map((k) => k.id),
+          ),
+          name: title,
+          fields: mark.fields,
+        },
+      ]),
     )
     setName('')
   }
@@ -805,10 +804,7 @@ function Snapshots() {
                       onClick={() => {
                         if (on) dispatch(actions.baseline(null))
                         void dispatch(
-                          setWorkspace({
-                            ...workspace,
-                            snapshots: kept.filter((x) => x.id !== k.id),
-                          }),
+                          setKept(kept.filter((x) => x.id !== k.id)),
                         )
                       }}
                     >
@@ -861,7 +857,7 @@ function Snapshots() {
 
 /** Pins the numbers as they are, to compare what comes after against
  * (UX audit D-03); with numbers compared, says against what and lets go.
- * Beside it, the snapshots kept in the build. */
+ * Beside it, the kept snapshots. */
 function BaselineControl() {
   const dispatch = useAppDispatch()
   const calc = useAppSelector((s) => s.session.calc)
@@ -917,7 +913,7 @@ export function Dashboard() {
   const prefs = useAppSelector((s) => s.ui.prefs)
   const baseline = useAppSelector((s) => s.ui.baseline)
   const shown = useAppSelector((s) => s.ui.dashActive)
-  const workspace = useWorkspace()
+  const own = useBuildDashboards()
   const [editing, setEditing] = useState(false)
   const [drag, setDrag] = useState<{
     id: string
@@ -932,7 +928,6 @@ export function Dashboard() {
   const fields = calc?.[1].result.fields ?? []
   const version = build['data-version']
   // The build's own dashboards when it keeps a set, else the user's.
-  const own = workspace.dashboards
   const list = own?.list ?? prefs.dashboards
   const activeId = own === undefined ? prefs.active : (shown ?? own.active)
   const dash = list.find((d) => d.id === activeId) ?? list[0]!
@@ -945,12 +940,7 @@ export function Dashboard() {
     // build; what they hold is.
     dispatch(actions.dashActive(active))
     if (dashboards !== list) {
-      void dispatch(
-        setWorkspace({
-          ...workspace,
-          dashboards: { list: dashboards, active },
-        }),
-      )
+      void dispatch(setBuildDashboards({ list: dashboards, active }))
     }
   }
   const change = (f: (list: DashComponent[]) => DashComponent[]) =>
@@ -966,15 +956,10 @@ export function Dashboard() {
     dispatch(actions.dashActive(null))
     if (on) {
       void dispatch(
-        setWorkspace({
-          ...workspace,
-          dashboards: { list: prefs.dashboards, active: dash.id },
-        }),
+        setBuildDashboards({ list: prefs.dashboards, active: dash.id }),
       )
     } else {
-      void dispatch(
-        setWorkspace({ version: 1, snapshots: workspace.snapshots }),
-      )
+      void dispatch(setBuildDashboards(null))
     }
   }
   const handlers: DragHandlers = {

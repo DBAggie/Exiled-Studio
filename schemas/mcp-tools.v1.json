@@ -8,7 +8,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "description": "The open build: class, level, main skill, data version, line counts, items, and lines with warnings (app-api.v1 BuildView), with the snapshot version and the calculation's status (CalcStatus). Read-only.",
+      "description": "The open build: class, level, main skill, data version, line counts, items, and lines with warnings (app-api.v1 BuildView), with the snapshot version and the calculation's status (CalcStatus). The build's `dashboards`, when it has any, are the layout its author chose to show: which components and stats matter for this build, no numbers. Read-only.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {},

@@ -3,6 +3,7 @@
 //! config, and keeps untyped content in place.
 
 use crate::config::Config;
+use crate::dashboard::Dashboards;
 use crate::error::DomainError;
 use crate::game::{DataVersion, Game, GameSpecific};
 use crate::id::{AscendancyId, ClassId};
@@ -66,11 +67,10 @@ pub struct Build {
     /// item versions can be had (a planner's setting; PoB's format has no
     /// place for it).
     pub league: Option<League>,
-    /// The UI's document for this build (its dashboards and kept
-    /// snapshots of the numbers), if it has one: opaque text here, as the
-    /// UI's preferences document is to the application (a planner's
-    /// setting; PoB's format has no place for it).
-    pub workspace: Option<String>,
+    /// The build's dashboards, if it has any: the layout its author chose
+    /// to show it with, never calculated numbers (a planner's setting;
+    /// PoB's format has no place for it).
+    pub dashboards: Option<Dashboards>,
     /// The character.
     pub character: Character,
     /// Passive specs.
@@ -113,7 +113,7 @@ impl Build {
             game_specific: GameSpecific::empty(game),
             data: None,
             league: None,
-            workspace: None,
+            dashboards: None,
             character: Character::default(),
             passives: Passives::default(),
             skills: Skills::default(),

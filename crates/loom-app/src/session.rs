@@ -2,14 +2,16 @@
 //! build as an immutable state, its version, history, and file paths.
 //! [`crate::App`] owns one on its writer thread; tests drive it directly.
 
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use loom_calc::CalcResult;
 use loom_domain::{
     Attribute, Attributes, Build, ConfigInput, ConfigInputKind, ConfigSet, ConfigSetId,
-    ConfigValue, CustomModifierBlock, CustomModifierLine, ItemId, ItemSetId, ItemsEntry, League,
-    LineResolution, Number, Ordered, SkillSetId, SlotId, SocketGroup, Sourced,
+    ConfigValue, CustomModifierBlock, CustomModifierLine, Dashboard, DashboardComponent,
+    Dashboards, ItemId, ItemSetId, ItemsEntry, League, LineResolution, Number, Ordered, SkillSetId,
+    SlotId, SocketGroup, Sourced,
 };
 use loom_persistence::{Overwrite, SaveOptions, Store};
 use loom_pipeline::{RangeEnds, Reresolved};
@@ -56,9 +58,23 @@ pub struct UndoStep {
 /// How many changes undo keeps.
 pub const HISTORY_LIMIT: usize = 100;
 
-/// The largest document of the UI's a build keeps
-/// ([`Session::set_workspace`]), in bytes.
-pub const MAX_WORKSPACE: usize = 262_144;
+/// The most dashboards a build keeps ([`Session::set_dashboards`]); it
+/// keeps at least one, or none at all.
+pub const MAX_DASHBOARDS: usize = 8;
+
+/// The most components one dashboard holds.
+pub const MAX_DASHBOARD_COMPONENTS: usize = 24;
+
+/// The most fields one dashboard component charts.
+pub const MAX_DASHBOARD_FIELDS: usize = 6;
+
+/// The longest name of a dashboard, in characters; at least one.
+pub const MAX_DASHBOARD_NAME: usize = 40;
+
+/// The longest of every other text of a dashboard (an ID, a kind, a
+/// width, a field, what a curve varies, a config input), in characters; at
+/// least one.
+pub const MAX_DASHBOARD_TEXT: usize = 64;
 
 /// The application core.
 #[derive(Debug)]
@@ -924,27 +940,21 @@ impl Session {
         })
     }
 
-    /// Sets the UI's document for the build (its dashboards and kept
-    /// snapshots; opaque here), or clears it, as one undoable change. The
-    /// same document again changes nothing.
+    /// Sets the build's dashboards (the layout its author chose to show
+    /// it with; never numbers), or clears them, as one undoable change.
+    /// The same dashboards again change nothing.
     ///
     /// # Errors
-    /// `APP_NO_BUILD`; `APP_WORKSPACE` for a document over
-    /// [`MAX_WORKSPACE`] bytes.
-    pub fn set_workspace(&mut self, document: Option<String>) -> Result<Option<u64>, AppError> {
-        if let Some(d) = &document
-            && d.len() > MAX_WORKSPACE
-        {
-            return Err(AppError::new(
-                Code::Workspace,
-                format!(
-                    "a workspace document of {} bytes; at most {MAX_WORKSPACE}",
-                    d.len()
-                ),
-            ));
-        }
-        self.change_build(api::ChangeKind::Workspace, 0, |build| {
-            build.workspace = document;
+    /// `APP_DASHBOARDS`, with nothing changed, for dashboards outside the
+    /// limits ([`MAX_DASHBOARDS`] and the limits beside it), with a
+    /// repeated ID, or whose `active` is none of them; `APP_NO_BUILD`.
+    pub fn set_dashboards(
+        &mut self,
+        dashboards: Option<api::Dashboards>,
+    ) -> Result<Option<u64>, AppError> {
+        let dashboards = dashboards.map(checked_dashboards).transpose()?;
+        self.change_build(api::ChangeKind::Dashboards, 0, |build| {
+            build.dashboards = dashboards;
             Ok(())
         })
     }
@@ -1835,4 +1845,115 @@ fn custom_lines(text: &str) -> Vec<CustomModifierLine> {
 fn resolve_pending(build: &mut Build, data: &GameData) -> Result<(), AppError> {
     loom_pipeline::resolve(data.resolver, data.data, build)?;
     Ok(())
+}
+
+/// Whether `text` has 1 to `max` characters.
+fn within(text: &str, max: usize) -> bool {
+    !text.is_empty() && text.chars().count() <= max
+}
+
+/// One text of a dashboard, checked against [`MAX_DASHBOARD_TEXT`].
+fn dashboard_text(what: &str, text: &str) -> Result<(), AppError> {
+    if within(text, MAX_DASHBOARD_TEXT) {
+        Ok(())
+    } else {
+        Err(AppError::new(
+            Code::Dashboards,
+            format!("a dashboard's {what} must have 1 to {MAX_DASHBOARD_TEXT} characters"),
+        ))
+    }
+}
+
+/// The dashboards a command sent as the build keeps them, once every rule
+/// of [`Session::set_dashboards`] holds.
+fn checked_dashboards(dashboards: api::Dashboards) -> Result<Dashboards, AppError> {
+    let refuse = |message: String| AppError::new(Code::Dashboards, message);
+    let count = dashboards.list.len();
+    if count == 0 || count > MAX_DASHBOARDS {
+        return Err(refuse(format!(
+            "{count} dashboards; a build keeps 1 to {MAX_DASHBOARDS}"
+        )));
+    }
+    let mut ids = BTreeSet::new();
+    let mut component_ids = BTreeSet::new();
+    for dashboard in &dashboards.list {
+        dashboard_text("ID", &dashboard.id)?;
+        if !ids.insert(dashboard.id.as_str()) {
+            return Err(refuse(format!(
+                "two dashboards have the ID {}",
+                dashboard.id
+            )));
+        }
+        if !within(&dashboard.name, MAX_DASHBOARD_NAME) {
+            return Err(refuse(format!(
+                "a dashboard's name must have 1 to {MAX_DASHBOARD_NAME} characters"
+            )));
+        }
+        if dashboard.components.len() > MAX_DASHBOARD_COMPONENTS {
+            return Err(refuse(format!(
+                "a dashboard of {} components; at most {MAX_DASHBOARD_COMPONENTS}",
+                dashboard.components.len()
+            )));
+        }
+        for component in &dashboard.components {
+            dashboard_text("component ID", &component.id)?;
+            if !component_ids.insert(component.id.as_str()) {
+                return Err(refuse(format!(
+                    "two dashboard components have the ID {}",
+                    component.id
+                )));
+            }
+            dashboard_text("component kind", &component.kind)?;
+            dashboard_text("component width", &component.width)?;
+            if component.fields.len() > MAX_DASHBOARD_FIELDS {
+                return Err(refuse(format!(
+                    "a dashboard component of {} fields; at most {MAX_DASHBOARD_FIELDS}",
+                    component.fields.len()
+                )));
+            }
+            let texts = [
+                ("field", &component.field),
+                ("varied value", &component.vary),
+                ("config input", &component.input),
+            ];
+            for (what, text) in texts {
+                if let Some(text) = text {
+                    dashboard_text(what, text)?;
+                }
+            }
+            for field in &component.fields {
+                dashboard_text("field", field)?;
+            }
+        }
+    }
+    if !ids.contains(dashboards.active.as_str()) {
+        return Err(refuse(
+            "the active dashboard is none of the build's dashboards".to_owned(),
+        ));
+    }
+    Ok(Dashboards {
+        active: dashboards.active,
+        list: dashboards
+            .list
+            .into_iter()
+            .map(|d| Dashboard {
+                id: d.id,
+                name: d.name,
+                components: d
+                    .components
+                    .into_iter()
+                    .map(|c| DashboardComponent {
+                        id: c.id,
+                        kind: c.kind,
+                        width: c.width,
+                        field: c.field,
+                        fields: c.fields,
+                        vary: c.vary,
+                        input: c.input,
+                        target: c.target,
+                    })
+                    .collect(),
+            })
+            .collect(),
+    })
 }

@@ -77,9 +77,10 @@ pub enum Code {
     /// one, or a group, gem, or numeric config input the build does not
     /// have.
     WhatIf,
-    /// The UI's document for a build is too large to keep
-    /// ([`crate::MAX_WORKSPACE`]).
-    Workspace,
+    /// A build's dashboards are outside their limits
+    /// ([`crate::MAX_DASHBOARDS`] and the limits beside it), repeat an
+    /// ID, or name an active dashboard they do not hold.
+    Dashboards,
 }
 
 impl Code {
@@ -117,7 +118,7 @@ impl Code {
             Self::Quarantined => "APP_QUARANTINED",
             Self::BundleDamaged => "APP_BUNDLE_DAMAGED",
             Self::WhatIf => "APP_WHAT_IF",
-            Self::Workspace => "APP_WORKSPACE",
+            Self::Dashboards => "APP_DASHBOARDS",
         }
     }
 }

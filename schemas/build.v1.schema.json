@@ -107,6 +107,17 @@
           "description": "Config.",
           "$ref": "#/$defs/Config"
         },
+        "dashboards": {
+          "description": "The build's dashboards, if it has any: the layout its author\nchose to show it with, never calculated numbers (additive,\naccepted 2026-11-16).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Dashboards"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "data": {
           "description": "The data bundle the build was made with, if recorded.",
           "anyOf": [
@@ -169,13 +180,6 @@
         "skills": {
           "description": "Skills.",
           "$ref": "#/$defs/Skills"
-        },
-        "workspace": {
-          "description": "The UI's document for this build (dashboards, kept snapshots\nof the numbers), if it has one: opaque text (additive, accepted\n2026-11-16).",
-          "type": [
-            "string",
-            "null"
-          ]
         }
       },
       "additionalProperties": false,
@@ -620,6 +624,116 @@
       "required": [
         "text",
         "resolution"
+      ]
+    },
+    "Dashboard": {
+      "description": "One dashboard: a named list of components.",
+      "type": "object",
+      "properties": {
+        "components": {
+          "description": "The components, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DashboardComponent"
+          }
+        },
+        "id": {
+          "description": "The dashboard's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name its author gave it.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "components"
+      ]
+    },
+    "DashboardComponent": {
+      "description": "One component of a dashboard: what it shows, never the numbers.",
+      "type": "object",
+      "properties": {
+        "field": {
+          "description": "The calc result field a stat, history, or curve component\nshows.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fields": {
+          "description": "The calc result fields a progression component charts.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "id": {
+          "description": "The component's ID, unique among the build's dashboards.",
+          "type": "string"
+        },
+        "input": {
+          "description": "The config input a scaling curve varies.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The component's kind (`stat`, `progression`, `timeline`, ...):\nopen text, so the UI adds kinds without a schema change and an\nolder application still opens the document.",
+          "type": "string"
+        },
+        "target": {
+          "description": "The life a fight timeline deals damage to.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "vary": {
+          "description": "What a scaling curve varies (`gem-level`, `character-level`,\n`config-number`): open text, as `kind`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "width": {
+          "description": "The component's width (`third`, `half`, `full`, ...): open\ntext, as `kind`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "width"
+      ]
+    },
+    "Dashboards": {
+      "description": "A build's dashboards and which one is shown.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The ID of the dashboard shown.",
+          "type": "string"
+        },
+        "list": {
+          "description": "The dashboards, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Dashboard"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "list"
       ]
     },
     "DataVersion": {
