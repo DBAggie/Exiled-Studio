@@ -15,6 +15,12 @@
 //! application keeps its data in `data/` beside the executable instead of
 //! the user's application data folder, so the folder can be moved or
 //! deleted as a whole.
+//!
+//! **Channel.** A build is made for the stable or the experimental
+//! channel ([`Channel`], `LOOM_CHANNEL` at build time;
+//! `docs/release/channels.md`). The experimental application is another
+//! application beside the stable one: its own name, identifier, data
+//! folder, MCP token, update feed, and data feed.
 
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -78,6 +84,66 @@ impl Artifact {
     }
 }
 
+/// The release channel a build was made for (`docs/release/channels.md`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Channel {
+    /// Released from `main`; updates from the latest GitHub release.
+    Stable,
+    /// Released from `experimental` as GitHub pre-releases; updates from
+    /// the project site, which follows the newest pre-release.
+    Experimental,
+}
+
+/// The project site (GitHub Pages; `site/`, `.github/workflows/pages.yml`).
+pub const SITE: &str = "https://dbaggie.github.io/Exiled-Studio";
+
+impl Channel {
+    /// This build's channel (`LOOM_CHANNEL` when it was built).
+    pub const CURRENT: Self = if cfg!(loom_experimental) {
+        Self::Experimental
+    } else {
+        Self::Stable
+    };
+
+    /// Its name, as the build info writes it.
+    #[must_use]
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Stable => "stable",
+            Self::Experimental => "experimental",
+        }
+    }
+
+    /// The signed data feed and its detached signature (Phase 5, P4).
+    /// Stable: the latest release's assets. Experimental: the site's copy
+    /// of the newest pre-release's (GitHub's `latest` never names a
+    /// pre-release).
+    #[must_use]
+    pub const fn data_feed(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Stable => (
+                "https://github.com/DBAggie/Exiled-Studio/releases/latest/download/data-feed.json",
+                "https://github.com/DBAggie/Exiled-Studio/releases/latest/download/data-feed.json.sig",
+            ),
+            Self::Experimental => (
+                "https://dbaggie.github.io/Exiled-Studio/experimental/data-feed.json",
+                "https://dbaggie.github.io/Exiled-Studio/experimental/data-feed.json.sig",
+            ),
+        }
+    }
+
+    /// The OS credential entry the MCP token is kept under (ADR-017
+    /// Amendment 1): one per application, so the two never share a token.
+    #[must_use]
+    pub const fn token_service(self) -> &'static str {
+        match self {
+            Self::Stable => loom_integrations::mcp::token::SERVICE,
+            Self::Experimental => "Exiled Studio Experimental MCP server",
+        }
+    }
+}
+
 /// The build's own facts, written by a smoke run and shown nowhere else.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct BuildInfo {
@@ -85,6 +151,8 @@ pub struct BuildInfo {
     pub ready: bool,
     /// The application version (the workspace version).
     pub version: &'static str,
+    /// The release channel it was built for.
+    pub channel: Channel,
     /// Whether the end-to-end test feature is in (never in a release).
     pub e2e: bool,
     /// Whether this is a debug build.
@@ -102,6 +170,7 @@ impl BuildInfo {
         Self {
             ready,
             version: env!("CARGO_PKG_VERSION"),
+            channel: Channel::CURRENT,
             e2e: cfg!(feature = "e2e"),
             debug: cfg!(debug_assertions),
             artifact: Artifact::current(),

@@ -80,6 +80,7 @@ fn shell(test: &str) -> Shell {
             bundle: Some(root().join("crates/loom-data/tests/fixtures/bundle-poe1")),
             keep_token: false,
             shipped: None,
+            load_in_background: false,
         },
         move |_| Box::new(FakePicker(picks)),
     )

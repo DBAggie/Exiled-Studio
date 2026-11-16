@@ -27,7 +27,7 @@ use std::sync::Arc;
 use loom_data::signature::TrustList;
 use loom_domain::DataVersion;
 
-use crate::data::GameData;
+use crate::data::{GameData, Integrity};
 use crate::error::{AppError, Code};
 use crate::install::{self, Found};
 
@@ -192,6 +192,31 @@ impl Library {
         result
     }
 
+    /// Installs the packs the application ships in `dir` that are not
+    /// installed yet ([`install::install_shipped`]; a first start, or an
+    /// update that ships newer data), in name order. A pack that fails is
+    /// logged; the start goes on without it.
+    pub fn install_shipped(&mut self, dir: &Path) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        let mut packs: Vec<PathBuf> = entries
+            .flatten()
+            .map(|e| e.path())
+            .filter(|p| p.extension().is_some_and(|e| e == install::PACK_EXTENSION))
+            .collect();
+        packs.sort();
+        for pack in &packs {
+            match install::install_shipped(&self.data_dir, pack, &self.trust) {
+                Ok(i) => tracing::info!(id = %i.found.id, already = i.already, "shipped bundle"),
+                Err(e) => tracing::warn!(code = %e.code, "shipped bundle not installed"),
+            }
+        }
+        if !packs.is_empty() {
+            self.rescan();
+        }
+    }
+
     /// Accepts a quarantined bundle the user approved with its manifest's
     /// SHA-256 shown.
     ///
@@ -238,7 +263,15 @@ impl Library {
         if let Some(d) = self.loaded.get(&key) {
             return Ok(Arc::clone(d));
         }
-        let data = Arc::new(GameData::load(dir)?);
+        // An installed bundle's hashes were checked at install, and its
+        // sizes and signature by the scan; any other folder in full.
+        let installed = self.installed.iter().any(|i| cache_key(&i.dir) == key);
+        let integrity = if installed {
+            Integrity::Sizes
+        } else {
+            Integrity::Hashes
+        };
+        let data = Arc::new(GameData::load_checked(dir, integrity)?);
         self.loaded.insert(key, Arc::clone(&data));
         Ok(data)
     }

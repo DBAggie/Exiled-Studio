@@ -618,35 +618,16 @@ pub struct Paths {
     /// The folder of data packs the installer ships (Phase 5, P-e), if
     /// any: each one not installed yet is installed at start.
     pub shipped: Option<PathBuf>,
+    /// Whether the window comes up before the data loads (Phase 5, P7;
+    /// `loom_app::Config::load_in_background`): the application's run;
+    /// tests that read the data right after the start pass `false`.
+    pub load_in_background: bool,
 }
 
 /// Whether this build trusts the public test data key: debug and `e2e`
 /// builds only (`docs/release/signing.md`, "The test key"). A released
 /// build is neither; its smoke run checks so.
 pub const TEST_KEYS: bool = cfg!(debug_assertions) || cfg!(feature = "e2e");
-
-/// Installs the shipped packs not installed yet (a first start, or an
-/// update that ships newer data). A pack that fails is logged; the
-/// application starts without it.
-fn install_shipped(app: &App, dir: &std::path::Path) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
-        return;
-    };
-    let mut packs: Vec<PathBuf> = entries
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| {
-            p.extension()
-                .is_some_and(|e| e == loom_app::install::PACK_EXTENSION)
-        })
-        .collect();
-    packs.sort();
-    for pack in packs {
-        if let Err(e) = app.execute(HostCommand::InstallBundle(pack.clone())) {
-            tracing::warn!(code = %e.code, pack = %pack.display(), "shipped bundle not installed");
-        }
-    }
-}
 
 /// Adds the commands and starts the application in `setup`.
 pub fn build<R: Runtime>(
@@ -727,13 +708,13 @@ pub fn build<R: Runtime>(
                 let _ = emitter.emit(EVENT, event);
             });
             let application = App::start(
-                Config::new(paths.data, paths.bundle).with_test_keys(TEST_KEYS),
+                Config::new(paths.data, paths.bundle)
+                    .with_test_keys(TEST_KEYS)
+                    .with_background_load(paths.load_in_background)
+                    .with_shipped(paths.shipped.clone()),
                 sink,
             )
             .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-            if let Some(shipped) = &paths.shipped {
-                install_shipped(&application, shipped);
-            }
             app.manage(Ctx {
                 app: Arc::new(application),
                 picker: picker(&handle),
@@ -741,7 +722,7 @@ pub fn build<R: Runtime>(
                 settings,
                 drop: Mutex::new(None),
                 tokens: if paths.keep_token {
-                    Box::new(OsStore::new())
+                    Box::new(OsStore::named(release::Channel::CURRENT.token_service()))
                 } else {
                     Box::new(NoStore)
                 },
@@ -843,6 +824,7 @@ pub fn run() -> tauri::Result<()> {
             keep_token: !cfg!(feature = "e2e"),
             // The installer's resources (`bundles/`), when it ships data.
             shipped: handle.path().resource_dir().ok().map(|d| d.join("bundles")),
+            load_in_background: true,
         },
         |handle| {
             #[cfg(feature = "e2e")]

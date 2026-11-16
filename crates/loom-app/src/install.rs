@@ -340,6 +340,45 @@ pub fn install_pack(
     install_from(data_dir, std::io::BufReader::new(file), trust)
 }
 
+/// Installs a pack the application ships, at start (plan decision P-e):
+/// [`install_pack`], but a pack whose exact manifest is installed already,
+/// signed by a trusted key with every file at its listed size, is left as
+/// it is without hashing its files. That is the start's own check
+/// ([`status_of`]); **Verify** hashes them. Anything else, a first install,
+/// another manifest, damage the sizes show, or an installed copy that is
+/// not trusted, goes through [`install_pack`].
+///
+/// # Errors
+/// As [`install_pack`].
+pub fn install_shipped(
+    data_dir: &Path,
+    pack_path: &Path,
+    trust: &TrustList,
+) -> Result<Installed, AppError> {
+    if let Some(found) = shipped_already(data_dir, pack_path, trust) {
+        return Ok(Installed {
+            found,
+            already: true,
+        });
+    }
+    install_pack(data_dir, pack_path, trust)
+}
+
+/// The installed bundle a shipped pack names, when [`install_shipped`] can
+/// leave it as it is.
+fn shipped_already(data_dir: &Path, pack_path: &Path, trust: &TrustList) -> Option<Found> {
+    let file = File::open(pack_path).ok()?;
+    let mut archive = zip::ZipArchive::new(std::io::BufReader::new(file)).ok()?;
+    let manifest_bytes = small_entry(&mut archive, MANIFEST).ok()??;
+    let version = version_of(&pack::manifest(&manifest_bytes).ok()?)?;
+    let target = data_dir.join(BUNDLES_DIR).join(bundle_id(&version));
+    let installed = read_capped(&target.join(MANIFEST), pack::MAX_SMALL_FILE).ok()?;
+    if installed != manifest_bytes {
+        return None;
+    }
+    status_of(&target, trust).filter(|f| matches!(f.status, Status::Trusted { .. }))
+}
+
 /// Installs a pack read from `pack`: [`install_pack`] without the file
 /// (the fuzz target and the properties give bytes).
 ///

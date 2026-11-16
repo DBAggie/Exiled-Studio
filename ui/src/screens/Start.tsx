@@ -137,6 +137,7 @@ export function Start() {
   const barRef = useRef<HTMLTextAreaElement>(null)
   const barId = useId()
   const hasData = snapshot?.data?.['data-version'] != null
+  const loading = snapshot?.data?.loading === true
   const reading = flow.state === 'reading'
 
   const importText = (value: string) => {
@@ -314,7 +315,11 @@ export function Start() {
           </button>
         </form>
         <p id={`${barId}-help`} className="muted small">
-          {hasData ? t('start.importSafe') : t('start.needData')}
+          {hasData
+            ? t('start.importSafe')
+            : loading
+              ? t('start.dataLoading')
+              : t('start.needData')}
         </p>
         {reading && <p role="status">{t('import.reading')}</p>}
         {hint !== null && <p role="status">{hint}</p>}

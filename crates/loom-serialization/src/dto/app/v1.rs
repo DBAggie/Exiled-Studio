@@ -226,6 +226,11 @@ dto! {
         /// damaged.
         #[serde(default)]
         pub quarantined: Vec<QuarantinedBundle>,
+        /// The game data is still loading at start (Phase 5, P7): the
+        /// first screen comes before it. Its version, or why it did not
+        /// load, follows in a later snapshot.
+        #[serde(default)]
+        pub loading: bool,
     }
 
     /// An installed bundle that does not load (Phase 5, P-e).

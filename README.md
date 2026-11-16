@@ -15,20 +15,24 @@ An independent, open-source build planner for Path of Exile, written in Rust wit
 - The calculation core compiles to WebAssembly.
 
 ## Installing
-Releases are on the GitHub releases page once the first one is published:
+Download from **https://dbaggie.github.io/Exiled-Studio/** once the first release is published. The page lists two channels (`docs/release/channels.md`):
+- **Stable**, released from `main`: the tested version.
+- **Experimental**, released from the `experimental` branch: newer and tested less. It installs as a separate application, Exiled Studio Experimental, with its own settings and data, beside the stable one.
+
+Each channel has these packages:
 - **Windows:**
   - the setup (`*_x64-setup.exe`), which also installs Microsoft's WebView2 runtime if it is missing, with no network needed;
   - the MSI;
   - a portable zip, which keeps its data in a `data` folder beside the program.
 - **Linux:** an AppImage and a `.deb`.
 
-The setup, the MSI, and the AppImage update themselves when you approve. The `.deb` and the portable zip tell you a new version exists.
+The setup, the MSI, and the AppImage update themselves, within their channel, when you approve. The `.deb` and the portable zip tell you a new version exists.
 
 **Windows SmartScreen:** the installers are not code signed. The first time you run a downloaded setup, Windows shows "Windows protected your PC". Click **More info**, then **Run anyway**. Updates and game data are signed with the project's own keys and checked before they are used (`docs/release/signing.md`).
 
 ## Privacy
 Exiled Studio has no account and no telemetry, and it works offline. It connects to the network only for these:
-- **The check for a new version and the check for new game data.** Each is an HTTPS request to GitHub, which hosts the releases. GitHub sees your IP address, and the request shows the application's version. Nothing else is sent. Under About, Updates, choose **manual** (check only when you ask) or **strict offline** (never connect).
+- **The check for a new version and the check for new game data.** Each is an HTTPS request to GitHub, which hosts the releases and the download page (the experimental application reads its feeds from the download page's site). GitHub sees your IP address, and the request shows the application's version. Nothing else is sent. Under About, Updates, choose **manual** (check only when you ask) or **strict offline** (never connect).
 - **The local MCP server**, when you turn it on: loopback only, with a token, and changes need your approval.
 
 Logs and crash records stay on your computer. A diagnostic package is made only when you ask, and you see its contents before saving it.
@@ -51,6 +55,7 @@ crates/        Rust workspace: core crates (domain, data, parser, calc, serializ
 tools/         maintainer tools: game-data extractor, parity (oracle) CLI, schema generator, release tool, benchmarks, packaging scripts
 fuzz/          fuzz targets of the hostile-input readers (cargo-fuzz; its own workspace)
 release/       the trust lists and public keys compiled into the application
+site/          the download page on GitHub Pages (docs/release/channels.md)
 schemas/       generated JSON Schemas (build, calc result, app API) and the MCP tool contract
 ui/            React + TypeScript + Vite frontend
 docs/adr/      Architecture Decision Records (authoritative) + index

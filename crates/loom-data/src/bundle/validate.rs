@@ -48,6 +48,12 @@
 //!
 //! Structural findings stop before the schema check (a file whose bytes
 //! are not the listed ones is not parsed); a schema finding stops the rest.
+//!
+//! [`validate`] checks every file's SHA-256. [`check`] also returns the
+//! bundle it loaded, so a host loads the tables once, and can check sizes
+//! only ([`Integrity::Sizes`]) for a bundle whose hashes were checked
+//! before (an installed bundle: at install and on Verify; plan decision
+//! P-e; `docs/phase-5/performance.md`).
 
 use std::collections::BTreeSet;
 
@@ -106,18 +112,36 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-/// Validates the bundle `source` holds (module docs).
+/// What the structural check compares a listed file with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Integrity {
+    /// Its size and its SHA-256: every file is read and hashed.
+    Hashes,
+    /// Its size alone ([`BundleSource::size`]), for a bundle whose hashes
+    /// were checked before. Every other check still runs.
+    Sizes,
+}
+
+/// Validates the bundle `source` holds (module docs), hashes included.
 #[must_use]
 pub fn validate(source: &dyn BundleSource) -> Report {
+    check(source, Integrity::Hashes).err().unwrap_or_default()
+}
+
+/// Validates the bundle `source` holds and returns it loaded.
+///
+/// # Errors
+/// The report, with at least one finding, when the bundle is not valid.
+pub fn check(source: &dyn BundleSource, integrity: Integrity) -> Result<Bundle, Report> {
     let mut report = Report::default();
-    if !structural(source, &mut report) {
-        return report;
+    if !structural(source, integrity, &mut report) {
+        return Err(report);
     }
     let bundle = match Bundle::load(source) {
         Ok(b) => b,
         Err(e) => {
             report.add(e.code(), at_of(&e), e.to_string());
-            return report;
+            return Err(report);
         }
     };
     referential(&bundle, &mut report);
@@ -125,7 +149,11 @@ pub fn validate(source: &dyn BundleSource) -> Report {
     layout(&bundle, &mut report);
     sprites(&bundle, &mut report);
     smoke(&bundle, &mut report);
-    report
+    if report.is_valid() {
+        Ok(bundle)
+    } else {
+        Err(report)
+    }
 }
 
 /// The tree layout, when present, fits the tree's orbits
@@ -176,9 +204,9 @@ fn at_of(e: &BundleError) -> String {
     }
 }
 
-/// Hashes, sizes, unlisted files, signatures; `false` when the schema check
-/// must not run.
-fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
+/// Hashes (with [`Integrity::Hashes`]), sizes, unlisted files, signatures;
+/// `false` when the schema check must not run.
+fn structural(source: &dyn BundleSource, integrity: Integrity, report: &mut Report) -> bool {
     let bytes = match source.read(MANIFEST) {
         Ok(b) => b,
         Err(e) => {
@@ -203,18 +231,24 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         );
     }
     for f in &manifest.files {
-        match source.read(&f.path) {
+        let read = match integrity {
+            Integrity::Hashes => source.read(&f.path).map(|b| {
+                let size = b.len() as u64;
+                (size, Some(hex(&Sha256::digest(&b))))
+            }),
+            Integrity::Sizes => source.size(&f.path).map(|size| (size, None)),
+        };
+        match read {
             Err(e) => report.add(e.code(), &f.path, e.to_string()),
-            Ok(b) => {
-                if b.len() as u64 != f.size {
+            Ok((size, sha)) => {
+                if size != f.size {
                     report.add(
                         "BUNDLE_SIZE_MISMATCH",
                         &f.path,
-                        format!("listed {} bytes, found {}", f.size, b.len()),
+                        format!("listed {} bytes, found {size}", f.size),
                     );
                 }
-                let sha = hex(&Sha256::digest(&b));
-                if sha != f.sha256 {
+                if let Some(sha) = sha.filter(|sha| *sha != f.sha256) {
                     report.add("BUNDLE_HASH_MISMATCH", &f.path, format!("SHA-256 {sha}"));
                 }
             }

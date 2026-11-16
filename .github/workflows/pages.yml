@@ -1,0 +1,64 @@
+name: Pages
+
+# The project site on GitHub Pages (docs/release/channels.md): the download
+# page for the stable and experimental channels, and the experimental
+# application's update and data feeds (experimental/), copied from the
+# newest published pre-release because GitHub's `latest` never names one.
+# Rebuilt whenever a release changes and when the site's sources change on
+# main. A release event runs this file as it is on main.
+
+on:
+  release:
+    types: [published, unpublished, edited, deleted, released, prereleased]
+  push:
+    branches: [main]
+    paths: [site/**, tools/site/**, .github/workflows/pages.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer run waits rather than cancelling one
+# that is deploying.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# Third-party actions are pinned to commit SHAs (tag in the trailing comment).
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/releases" > "$RUNNER_TEMP/releases.json"
+      - name: Page
+        run: python3 tools/site/build.py "$RUNNER_TEMP/releases.json" _site --repo "$GITHUB_REPOSITORY" --feeds "$RUNNER_TEMP/feeds.txt"
+      - name: Experimental feeds
+        run: |
+          mkdir -p _site/experimental
+          while read -r name url; do
+            curl -fsSL --retry 3 -o "_site/experimental/$name" "$url"
+            echo "experimental/$name"
+          done < "$RUNNER_TEMP/feeds.txt"
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

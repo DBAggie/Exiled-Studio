@@ -2208,6 +2208,11 @@
             "$ref": "#/$defs/InstalledBundle"
           }
         },
+        "loading": {
+          "description": "The game data is still loading at start (Phase 5, P7): the\nfirst screen comes before it. Its version, or why it did not\nload, follows in a later snapshot.",
+          "type": "boolean",
+          "default": false
+        },
         "notice": {
           "description": "Something to tell the user about the choice of data that is not\nan error: `APP_BUNDLE_FALLBACK` when the remembered bundle did\nnot load and the newest installed one was taken instead.",
           "anyOf": [

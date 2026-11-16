@@ -135,6 +135,85 @@ fn replace(app: &App, from: &str, to: &str) -> api::ItemEdit {
     }
 }
 
+/// The shell's start (Phase 5, P7): `App::start` returns before the data
+/// loads; the snapshot says it is loading, never that there is none, and a
+/// command sent at once waits behind the load.
+#[test]
+fn a_background_start_should_say_loading_then_publish_the_data() {
+    let dir = Scratch::new("background");
+    let (tx, events) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    let sink: loom_app::Sink = Arc::new(move |e| {
+        let _ = tx.lock().unwrap().send(e);
+    });
+    let mut config = Config::new(dir.path("data"), Some(bundle_dir()))
+        .with_test_keys(true)
+        .with_background_load(true);
+    config.instance = "background".to_owned();
+    let running = Running {
+        app: App::start(config, sink).unwrap(),
+        events,
+    };
+    let first = running.app.snapshot().data;
+    assert!(first.error.is_none(), "{first:?}");
+    assert_ne!(first.loading, first.data_version.is_some(), "{first:?}");
+    let api::Outcome::Done { version } = running
+        .app
+        .execute(HostCommand::Api(api::Command::ImportText {
+            text: synthetic(),
+        }))
+        .unwrap()
+    else {
+        panic!("the import waits for the data and succeeds");
+    };
+    running.calculated(version);
+    let data = running.app.snapshot().data;
+    assert!(!data.loading);
+    assert!(data.data_version.is_some(), "{data:?}");
+    running.app.stop();
+}
+
+/// The installer's shipped pack at a background start: installed on the
+/// writer thread while the snapshot says loading, then chosen and loaded.
+#[test]
+fn a_background_start_should_install_the_shipped_pack_then_load_it() {
+    let dir = Scratch::new("background-shipped");
+    let shipped = dir.path("shipped");
+    std::fs::create_dir_all(&shipped).unwrap();
+    let manifest = std::fs::read(bundle_dir().join("bundle.json")).unwrap();
+    let signature =
+        serde_json::to_vec(&loom_data::signature::KeyPair::test_key().sign(&manifest)).unwrap();
+    loom_app::install::write_pack(
+        &bundle_dir(),
+        Some(&signature),
+        &shipped.join("game-data.loombundle"),
+    )
+    .unwrap();
+    let (tx, events) = mpsc::channel();
+    let tx = Mutex::new(tx);
+    let sink: loom_app::Sink = Arc::new(move |e| {
+        let _ = tx.lock().unwrap().send(e);
+    });
+    let mut config = Config::new(dir.path("data"), None)
+        .with_test_keys(true)
+        .with_background_load(true)
+        .with_shipped(Some(shipped));
+    config.instance = "background-shipped".to_owned();
+    let running = Running {
+        app: App::start(config, sink).unwrap(),
+        events,
+    };
+    running.wait("build-changed", |e| {
+        matches!(e.kind, api::EventKind::BuildChanged)
+    });
+    let data = running.app.snapshot().data;
+    assert!(!data.loading);
+    assert!(data.data_version.is_some(), "{data:?}");
+    assert_eq!(data.installed.len(), 1, "{data:?}");
+    assert_eq!(data.active.as_ref(), Some(&data.installed[0].id));
+    running.app.stop();
+}
+
 #[test]
 fn workflow_should_import_edit_recalculate_undo_save_reopen_and_export() {
     let dir = Scratch::new("workflow");

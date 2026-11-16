@@ -8,7 +8,9 @@
 #   smoke.sh <AppImage or installed executable> <artifact> [<version>]
 #
 # <artifact> is what the build must report: app-image or deb. An AppImage
-# runs extracted (APPIMAGE_EXTRACT_AND_RUN: runners have no FUSE).
+# runs extracted (APPIMAGE_EXTRACT_AND_RUN: runners have no FUSE). The
+# build must report LOOM_CHANNEL's channel (stable when unset;
+# docs/release/channels.md).
 set -euo pipefail
 package="$1"
 artifact="$2"
@@ -38,6 +40,7 @@ check '.e2e == false'
 check '.debug == false'
 check ".artifact == \"$artifact\""
 check '.portable == false'
+check ".channel == \"${LOOM_CHANNEL:-stable}\""
 [ -z "$version" ] || check ".version == \"$version\""
 rm -rf "$work"
 [ "$fail" -eq 0 ] || exit 1

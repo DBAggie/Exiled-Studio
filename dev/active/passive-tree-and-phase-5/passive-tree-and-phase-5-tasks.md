@@ -42,5 +42,10 @@ One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this ord
 - [x] P3 app updates (`docs/phase-5/updates.md`)
 - [x] P4 data bundles (`docs/phase-5/data-bundles.md`)
 - [x] P6 security (`docs/phase-5/security.md`; the CI fuzz record from PR #118's `fuzz.yml` run 43779992583: no crash)
-- [x] P7 performance (`docs/phase-5/performance.md`; the baseline is committed from the PR's `bench` log; startup is exception 1 for the maintainer)
+- [x] P7 performance (`docs/phase-5/performance.md`; the baseline is committed from the PR's `bench` log)
 - [x] P8 reports and docs; review; PR #118 (`docs/phase-5/phase-5-report.md`)
+- [x] The maintainer's requests after the review (2026-11-15), on the same PR:
+  - [x] the startup fix: sizes for installed bundles, one load, the window before the data, shipped packs checked by sizes (`performance.md`, "Startup": median 3.11 s to 1.77 s)
+  - [x] channels: the `experimental` branch made and protected like `main`; the experimental application (`docs/release/channels.md`)
+  - [x] the download page: `site/`, `tools/site/`, `pages.yml`; Pages turned on
+  - [ ] the `bench` baseline for the new `start` scenario, from this push's first CI run

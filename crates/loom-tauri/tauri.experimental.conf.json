@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Exiled Studio Experimental",
+  "mainBinaryName": "exiled-studio-experimental",
+  "identifier": "io.github.dbaggie.exiledstudio.experimental",
+  "app": {
+    "windows": [
+      {
+        "title": "Exiled Studio Experimental",
+        "width": 1280,
+        "height": 800
+      }
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://dbaggie.github.io/Exiled-Studio/experimental/latest.json"
+      ]
+    }
+  }
+}

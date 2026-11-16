@@ -43,7 +43,10 @@ The plan's step P4 and decision P-e (`dev/active/passive-tree-and-phase-5/`): ga
 
 ## At every start, and on request
 - **At start** (`loom_app::install::scan`), every installed folder's signature is checked against the trust list compiled into the build, and its files' sizes against the manifest.
-- **The bundle that loads** then goes through the full bundle validator (`GameData::load`), which checks every file's SHA-256 too. Plan decision P-e meant the start to check sizes only. The validator's cost is measured in `docs/phase-5/performance.md` (exception 1), and changing it is the maintainer's choice.
+- **The bundle that loads** then goes through the bundle validator with sizes only (`validate::Integrity::Sizes`), as plan decision P-e intends: references, domain rules, and the rest, but no hashes.
+  - Its tables are loaded once: the validator hands over what it loaded.
+  - A folder chosen by hand for development, or `LOOM_BUNDLE_DIR`, is not installed, so it is hashed in full.
+  - Measured in `docs/phase-5/performance.md`, "Startup".
 - **Verify** (About, Game data, **Verify**; command `verify-bundle`) checks every file's SHA-256 (`APP_BUNDLE_DAMAGED`).
 - The installer checks hashes too, so a bundle is fully checked when it arrives and whenever the user asks.
 
@@ -61,7 +64,10 @@ The plan's step P4 and decision P-e (`dev/active/passive-tree-and-phase-5/`): ga
 Debug and `e2e` builds trust the public test key (`loom_tauri::TEST_KEYS`, `loom_app::Config::with_test_keys`); a released build does not, and its smoke run checks it is neither debug nor `e2e`. Test packs: `loom-release pack <dir> --test-key`.
 
 ## The data feed
-- **What it is.** `data-feed.json` on the GitHub release, with `data-feed.json.sig` beside it, signed with the data key:
+- **What it is.** `data-feed.json` on the GitHub release, with `data-feed.json.sig` beside it, signed with the data key.
+  - A stable build reads the latest release's.
+  - An experimental build reads the project site's copy of the newest pre-release's (`docs/release/channels.md`), since GitHub's `latest` never names a pre-release.
+  - Each build's URLs are `loom_tauri::release::Channel::data_feed`. The feed:
 
   ```json
   { "format": 1, "sequence": 42, "bundles": [ { "id": "poe1/26530219-s4", "url": "https://github.com/.../game-data.loombundle", "sha256": "...", "size": 123 } ] }
@@ -98,14 +104,16 @@ The `release` workflow's `tools/package/shipped-bundle.sh` then:
 - packs it signed with `LOOM_DATA_KEY` into `crates/loom-tauri/shipped/game-data.loombundle` (ignored by git);
 - puts it in the installers' resources (`tauri.shipped.conf.json`, `bundles/`) and in the portable zip's `bundles\`.
 
-At start the application installs each shipped pack not installed yet (`loom_tauri::install_shipped`). The first one installed is loaded at once when no data is.
+At start the application installs each shipped pack not installed yet (`bundles::Library::install_shipped`, `install::install_shipped`), then chooses the data to load. Both happen on the writer thread after the window is up, while the start screen says "Loading game data…" (`docs/phase-5/performance.md`, "Startup").
+- **A pack already installed** is left as it is when the installed copy has the same manifest, a trusted signature, and every file at its listed size. Its files are not hashed, the same check as the start's scan; **Verify** hashes them.
+- **Anything else** goes through the full install: a first start, an update that ships newer data, damage the sizes show, or an installed copy that is only accepted, not trusted.
 - **Until `release/bundle.json` exists** nothing is shipped, and a tag's run fails: a release ships its data.
 
 ## Tests
 | Where | What |
 |---|---|
 | `loom_data::pack` (unit) | listing checks: zip slip paths, links and folders, extra, missing, duplicate, and resized entries, the caps; trust (trusted, unknown, unsigned, changed, revoked); feed signature, unknown key, rollback |
-| `crates/loom-app/tests/install.rs` | a signed pack installs, loads, and verifies, and installs again as a no-op; unsigned and unknown-key packs are quarantined and accepted only with the shown hash; a changed manifest or a revoked key is refused with nothing left; revoking an installed bundle's key quarantines it for good; zip slip entries are refused with nothing written; an extra entry and a bomb-sized file (8 MiB of zeros in a pack under 1 MiB) are refused by declared size; same-size other bytes are refused while extracting; another manifest with the same ID is refused; damage is caught by sizes at start or by hashes on verify |
+| `crates/loom-app/tests/install.rs` | a signed pack installs, loads, and verifies, and installs again as a no-op; unsigned and unknown-key packs are quarantined and accepted only with the shown hash; a changed manifest or a revoked key is refused with nothing left; revoking an installed bundle's key quarantines it for good; zip slip entries are refused with nothing written; an extra entry and a bomb-sized file (8 MiB of zeros in a pack under 1 MiB) are refused by declared size; same-size other bytes are refused while extracting; another manifest with the same ID is refused; damage is caught by sizes at start or by hashes on verify; the start loads an installed bundle checking sizes, and any other folder hashing every file; a shipped pack installs once, is then checked by sizes, is repaired when the sizes show damage, and gives an accepted unsigned copy its trusted signature |
 | `crates/loom-app/tests/workflow.rs` | install, quarantine, accept, use, and verify through the application; a test-signed pack loads at once; a damaged installed bundle is listed as quarantined |
 | `loom_app::bundles` (unit) | only signed bundles are listed; a quarantined one cannot be used |
 | `loom_integrations::data_feed` (unit, loopback) | fetch caps; a download's hash and size checked, nothing left on failure |

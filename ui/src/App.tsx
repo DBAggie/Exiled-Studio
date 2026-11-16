@@ -600,9 +600,11 @@ function DataLine({
         ? t('start.dataReady', {
             name: dataName(version, data?.['tree-version']),
           })
-        : error != null
-          ? t('start.dataFailed')
-          : t('start.dataNoneYet')}{' '}
+        : data?.loading === true
+          ? t('start.dataLoading')
+          : error != null
+            ? t('start.dataFailed')
+            : t('start.dataNoneYet')}{' '}
       {data?.notice != null && (
         <>{tDynamic(`notice.${data.notice.code}`, 'error.generic')} </>
       )}

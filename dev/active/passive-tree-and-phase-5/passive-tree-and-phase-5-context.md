@@ -75,7 +75,18 @@ Last Updated: 2026-11-14
   - reqwest's blocking client panics on Tauri's async runtime; the feed commands use `spawn_blocking`.
 - **Decisions taken in the sprint, open to the maintainer:**
   - The data feed shares the update mode; strict offline refuses both.
-  - The start checks installed bundles' signatures and sizes, but the loaded bundle still goes through the full validator (`performance.md`, exception 1).
+  - The start checks installed bundles' signatures and sizes, and loads the installed bundle with the validator's sizes-only mode, as P-e intends (done at the maintainer's request; `performance.md`, "Startup").
   - The CI instruction-count baseline is CI's own first run.
   - Two advisory ignores, both on Tauri's Linux GTK3 path.
+- **The maintainer's requests after the review (2026-11-15):** "Make performance improvements you would recommend", a download page on GitHub Pages, and a protected `experimental` branch for approved states of `dev`, with experimental installers.
+  - Choices made here:
+    - The experimental application installs beside the stable one: its own identifier, data folder, MCP token, and feeds.
+    - Experimental versions carry a numeric pre-release (`1.2.0-3`) for the MSI.
+    - The experimental feeds come from the site, since `releases/latest` never names a pre-release.
+    - The page is built from GitHub's releases, with no script.
+  - Settings made on GitHub:
+    - the `experimental` branch, from `dev` at `7644be8`, with `main`'s protection;
+    - Pages, built by Actions;
+    - the `github-pages` environment's `v*` tag policy.
+  - Timing note: `Start-Process -Wait` rounds to whole seconds. Time a start with `Process.WaitForExit`.
 - **Left for the maintainer:** `docs/phase-5/phase-5-report.md`, "For the maintainer".

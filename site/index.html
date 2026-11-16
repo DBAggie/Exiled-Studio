@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- The download page's template: tools/site/build.py fills the channel
+     sections from GitHub's releases; pages.yml publishes it
+     (docs/release/channels.md). No script, nothing loaded from elsewhere. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Exiled Studio downloads</title>
+    <meta
+      name="description"
+      content="Download Exiled Studio, an offline build planner for Path of Exile, for Windows and Linux."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Exiled Studio</h1>
+      <p class="lead">
+        A build planner for Path of Exile. It works offline, needs no account, and sends
+        nothing about you or your builds anywhere.
+      </p>
+    </header>
+    <main>
+      {{stable}}
+      {{experimental}}
+      <section class="notes" aria-labelledby="notes-h">
+        <h2 id="notes-h">Before you install</h2>
+        <ul>
+          <li>
+            <strong>Windows may warn about the installer.</strong> It is not code signed yet, so
+            SmartScreen can say it does not recognise it. Choose <em>More info</em>, then
+            <em>Run anyway</em>. The SHA-256 in the table lets you check the file is the one
+            published here.
+          </li>
+          <li>
+            <strong>Updates.</strong> The Windows installers and the AppImage offer each new
+            version of their own channel when it is published, and install it only when you
+            agree. The portable zip and the Debian package tell you about it.
+          </li>
+          <li>
+            <strong>Game data</strong> comes with the installers. The application can check
+            for newer game data; you can turn every check off in its settings.
+          </li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <p>
+        <a href="https://github.com/{{repo}}">Source code</a> ·
+        <a href="https://github.com/{{repo}}/releases">All releases</a> · MIT licensed
+      </p>
+      <p class="notice">
+        This product isn't affiliated with or endorsed by Grinding Gear Games in any way.
+      </p>
+    </footer>
+  </body>
+</html>

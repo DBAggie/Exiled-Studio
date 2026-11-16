@@ -161,6 +161,7 @@ export const en = {
   'data.gameBuild': '{game}, game build {build}',
   'data.steamBuild': 'game build {build}',
   'start.dataNoneYet': 'No game data yet.',
+  'start.dataLoading': 'Loading game data…',
   'start.dataFailed': 'The game data did not load.',
   'start.dataAdd': 'Add game data…',
   'start.dataChange': 'Change',

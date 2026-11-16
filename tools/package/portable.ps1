@@ -6,6 +6,9 @@
 #
 #   portable.ps1 <loom-tauri.exe> <out dir> [<version>]
 #
+# The product name follows LOOM_CHANNEL (docs/release/channels.md):
+# "Exiled Studio Experimental.exe" in an experimental zip.
+#
 # Give the executable before `tauri build` runs: the bundler patches its
 # installer type into the executable in place, and a patched one would
 # report itself as an installer (and try to update itself).
@@ -17,11 +20,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$product = if ($env:LOOM_CHANNEL -eq 'experimental') { 'Exiled Studio Experimental' } else { 'Exiled Studio' }
 $stage = Join-Path ([System.IO.Path]::GetTempPath()) ("loom-portable-" + [guid]::NewGuid())
 New-Item -ItemType Directory -Force $stage | Out-Null
 try {
-    Copy-Item $Exe (Join-Path $stage 'Exiled Studio.exe')
-    Set-Content -Path (Join-Path $stage 'portable') -Value 'Exiled Studio keeps its data in the data folder beside it while this file is here.' -Encoding ascii
+    Copy-Item $Exe (Join-Path $stage "$product.exe")
+    Set-Content -Path (Join-Path $stage 'portable') -Value "$product keeps its data in the data folder beside it while this file is here." -Encoding ascii
     Copy-Item (Join-Path $root 'crates/loom-tauri/installer/LICENSE.txt') (Join-Path $stage 'LICENSE.txt')
     $shipped = Get-ChildItem -ErrorAction SilentlyContinue (Join-Path $root 'crates/loom-tauri/shipped/*.loombundle')
     if ($shipped) {
@@ -29,7 +33,7 @@ try {
         $shipped | Copy-Item -Destination (Join-Path $stage 'bundles')
     }
     New-Item -ItemType Directory -Force $OutDir | Out-Null
-    $zip = Join-Path $OutDir "Exiled-Studio_${Version}_x64-portable.zip"
+    $zip = Join-Path $OutDir "$($product.Replace(' ', '-'))_${Version}_x64-portable.zip"
     if (Test-Path $zip) { Remove-Item -Force $zip }
     Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $zip
     Write-Output $zip

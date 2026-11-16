@@ -1,6 +1,8 @@
 //! The data feed adapter (Phase 5, P4; plan decision P-e;
 //! `docs/phase-5/data-bundles.md`): fetches `data-feed.json` and its
-//! signature from the GitHub release, and downloads a pack it lists. Every
+//! signature from the URLs the shell gives (its release channel's,
+//! `loom_tauri::release::Channel::data_feed`), and downloads a pack it
+//! lists. Every
 //! check is elsewhere: the feed's signature and sequence in
 //! `loom_data::pack::verify_feed`, the pack's in `loom_app::install`; this
 //! module only moves bytes, with size caps, and checks a download's size
@@ -15,14 +17,6 @@ use std::path::Path;
 use std::time::Duration;
 
 use sha2::{Digest, Sha256};
-
-/// The feed on the latest release.
-pub const FEED_URL: &str =
-    "https://github.com/DBAggie/Exiled-Studio/releases/latest/download/data-feed.json";
-
-/// Its detached signature (`loom_data::signature` format).
-pub const FEED_SIGNATURE_URL: &str =
-    "https://github.com/DBAggie/Exiled-Studio/releases/latest/download/data-feed.json.sig";
 
 /// How long a small fetch (the feed, its signature) may take in all.
 const FETCH_TIMEOUT: Duration = Duration::from_secs(60);

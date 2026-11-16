@@ -2089,6 +2089,12 @@ export interface DataStatus {
    */
   installed?: InstalledBundle[]
   /**
+   * The game data is still loading at start (Phase 5, P7): the
+   * first screen comes before it. Its version, or why it did not
+   * load, follows in a later snapshot.
+   */
+  loading?: boolean
+  /**
    * Something to tell the user about the choice of data that is not
    * an error: `APP_BUNDLE_FALLBACK` when the remembered bundle did
    * not load and the newest installed one was taken instead.

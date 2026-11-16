@@ -381,6 +381,86 @@ fn a_temporary_folder_left_by_another_process_is_swept() {
     assert!(!stale.exists());
 }
 
+/// The start loads an installed bundle checking sizes only (plan decision
+/// P-e; `docs/phase-5/performance.md`): a same-size change still loads
+/// there, where Verify and any folder not installed hash every file.
+#[test]
+fn the_start_checks_an_installed_bundles_sizes_and_other_folders_hashes() {
+    let tmp = temp("start-sizes");
+    let data = tmp.0.join("data");
+    let found = install::install_pack(&data, &pack(&tmp.0, Some(&key())), &trust())
+        .unwrap()
+        .found;
+    let (path, _) = first_file();
+    let file = found.dir.join(&path);
+    let mut bytes = std::fs::read(&file).unwrap();
+    let at = bytes.iter().position(|b| *b == b' ').unwrap();
+    bytes[at] = b'\t';
+    std::fs::write(&file, &bytes).unwrap();
+    let mut library = loom_app::bundles::Library::new(&data, trust());
+    library.load(&found.dir).unwrap();
+    assert_eq!(
+        loom_app::GameData::load(&found.dir).unwrap_err().code,
+        "APP_BUNDLE"
+    );
+    assert_eq!(
+        install::verify_full(&found.dir).unwrap_err().code,
+        "APP_BUNDLE_DAMAGED"
+    );
+    // The same folder copied elsewhere is not installed: hashed.
+    let copy = tmp.0.join("copy");
+    for f in walk(&found.dir) {
+        let to = copy.join(f.strip_prefix(&found.dir).unwrap());
+        std::fs::create_dir_all(to.parent().unwrap()).unwrap();
+        std::fs::copy(&f, &to).unwrap();
+    }
+    assert_eq!(library.load(&copy).unwrap_err().code, "APP_BUNDLE");
+}
+
+/// A shipped pack at start (plan decision P-e): installed once; at each
+/// later start, a trusted copy of the same manifest with every size right
+/// is left as it is, its files not hashed (a same-size change stays for
+/// Verify to find); damage the sizes show is repaired; an accepted
+/// unsigned copy gets the shipped pack's trusted signature.
+#[test]
+fn a_shipped_pack_installs_once_and_is_then_checked_by_sizes() {
+    let tmp = temp("shipped");
+    let data = tmp.0.join("data");
+    let signed = pack(&tmp.0, Some(&key()));
+    let first = install::install_shipped(&data, &signed, &trust()).unwrap();
+    assert!(!first.already);
+    let (path, _) = first_file();
+    let file = first.found.dir.join(&path);
+    let mut bytes = std::fs::read(&file).unwrap();
+    let at = bytes.iter().position(|b| *b == b' ').unwrap();
+    bytes[at] = b'\t';
+    std::fs::write(&file, &bytes).unwrap();
+    let again = install::install_shipped(&data, &signed, &trust()).unwrap();
+    assert!(again.already);
+    assert!(
+        install::verify_full(&first.found.dir).is_err(),
+        "not hashed"
+    );
+    // Another size: repaired.
+    std::fs::write(&file, b"short").unwrap();
+    let repaired = install::install_shipped(&data, &signed, &trust()).unwrap();
+    assert!(!repaired.already);
+    install::verify_full(&first.found.dir).unwrap();
+
+    let tmp = temp("shipped-accepted");
+    let data = tmp.0.join("data");
+    let unsigned = install::install_pack(&data, &pack(&tmp.0, None), &trust())
+        .unwrap()
+        .found;
+    install::accept(&unsigned, &unsigned.manifest_sha256).unwrap();
+    let trusted = install::install_shipped(&data, &pack(&tmp.0, Some(&key())), &trust()).unwrap();
+    assert!(
+        matches!(trusted.found.status, Status::Trusted { .. }),
+        "{:?}",
+        trusted.found.status
+    );
+}
+
 #[test]
 fn a_damaged_installed_bundle_is_quarantined_or_fails_verification() {
     let tmp = temp("damaged");

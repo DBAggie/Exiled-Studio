@@ -53,6 +53,8 @@ export interface FakeOptions {
   installed?: number[]
   /** Installed bundles that do not load (Phase 5, P-e). */
   quarantined?: QuarantinedBundle[]
+  /** The data is still loading at start (Phase 5, P7). */
+  loading?: boolean
   /** What the next "install from a file" installs: a signed or an
    * unsigned pack of this game build. */
   nextPack?: { build: number; signed: boolean }
@@ -872,6 +874,7 @@ export class FakeApi implements LoomApi {
           accepted: this.acceptedBuilds.includes(b),
         })),
         quarantined: structuredClone(this.options.quarantined ?? []),
+        loading: this.options.loading ?? false,
         active:
           this.options.data === true &&
           (this.options.installed ?? []).includes(this.activeBuild)

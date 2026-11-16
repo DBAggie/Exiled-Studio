@@ -20,8 +20,9 @@ Each is one `measured_*` function, so callgrind counts only that work and `wall`
 
 | Scenario | Work |
 |---|---|
-| `validate` | the bundle validator, which the application runs before loading a bundle (structure, every file's SHA-256, references, domain rules) |
-| `load` | the bundle's tables loaded, the resolver built, the passive tree built (the core part of startup) |
+| `validate` | the bundle validator with every file's SHA-256 (structure, references, domain rules), as a folder chosen by hand is checked |
+| `load` | the bundle's tables loaded, the resolver built, the passive tree built |
+| `start` | what the start does with an installed bundle: the validator with sizes only, which hands over the tables it loaded, then the resolver and the passive tree |
 | `import` | a PoB build read and its lines resolved against the bundle |
 | `calculate` | one calculation of the resolved build, its passives resolved against the tree |
 | `allocate` | the path to a node on the tree: the first node by ID with a path of five or more |
@@ -33,7 +34,7 @@ bash tools/bench/count.sh [--update]      # Linux with valgrind
 
 ## The baseline
 - `tools/bench/baseline.json` holds CI's own counts: the ubuntu-24.04 runner and the pinned toolchain.
-- A scenario without a baseline fails in CI (`CI` set), after printing its counts. This PR's first `bench` run therefore fails, and its counts are committed from that log. The baseline: validate 10,460,879; load 4,788,501; import 174,568,115; calculate 18,083,064; allocate 445,995 instructions (CI run 43779626395, 2026-11-15).
+- A scenario without a baseline fails in CI (`CI` set), after printing its counts. This PR's first `bench` run therefore fails, and its counts are committed from that log. The baseline: validate 10,460,879; load 4,788,501; import 174,568,115; calculate 18,083,064; allocate 445,995 instructions (CI run 43779626395, 2026-11-15). `start`, added with the startup fix, takes its count from that change's first CI run the same way.
 - A change meant to cost more updates the baseline from its CI log (`count.sh --update` on Linux, or the printed counts), and says so in the PR.
 
 ## Budgets on the reference tier
@@ -44,7 +45,7 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 
 | Budget | Measured | Met |
 |---|---|---|
-| Startup to first screen ≤ 2.0 s | 3.46 to 4.69 s with the real bundle (5 runs, the first cold); 0.59 to 1.48 s with no bundle (3 runs) | **no: exception 1** |
+| Startup to first screen ≤ 2.0 s | 1.41 to 1.84 s with the real bundle installed (median 1.77 s, 11 runs); 0.71 to 0.82 s with no bundle (7 runs). Was 3.0 to 3.8 s (median 3.11 s) before the startup fix ("Startup", below) | yes |
 | Import and first calculation ≤ 1.5 s | import 28.8 ms + calculate 6.7 ms (medians; slowest 31.0 + 7.8 ms) | yes |
 | Item-edit preview ≤ 300 ms | one calculation, 6.7 ms (the preview applies the edit and calculates the edited build; the current result is reused) | yes |
 | Allocation preview (hover) ≤ 150 ms | allocate 1.0 ms + calculate 6.7 ms | yes |
@@ -59,27 +60,47 @@ Workstation: Windows 11, the maintainer's machine. Release builds, 2026-11-15:
 |---|---|---|---|
 | `validate` | 585.0 ms | 625.0 ms | 5 |
 | `load` | 726.2 ms | 886.4 ms | 20 |
+| `start` | 994.4 ms | 1,040.0 ms | 7 (after the startup fix; the same session had `validate` at 690 ms and `load` at 870 ms) |
 | `import` | 28.8 ms | 31.0 ms | 20 |
 | `calculate` | 6.7 ms | 7.8 ms | 20 |
 | `allocate` | 1.0 ms | 1.3 ms | 20 |
 
-**Startup** is the release application's `--smoke` run, timed from launch to exit.
-- The run exits when the first screen has its data (`app_ready`, after the UI's first refresh), so the time includes the exit.
-- The data folder is a scratch folder (`LOOM_DATA_DIR`), and the bundle is `LOOM_BUNDLE_DIR`.
+**Startup** is the release application's `--smoke` run, timed from launch to the process's exit.
+- The run exits when the first screen has rendered (`app_ready`, after the UI's first refresh), so the time includes the exit.
+- The data folder is a scratch folder (`LOOM_DATA_DIR`).
+- The bundle is installed and accepted there, or given by `LOOM_BUNDLE_DIR`.
+
+### Startup
+The first measurement, 3.5 to 4.7 s with the real bundle, was over the 2.0 s budget. Its timer counted in whole seconds (`Start-Process -Wait`); timed again with the process's own exit (`WaitForExit`), the same build took 3.0 to 3.8 s, median 3.11 s. The data loaded before the window, and paid twice:
+- the validator ran on every start: every file's SHA-256 over 130 MB, references, domain rules, and its own load of the tables;
+- then the tables loaded a second time, with the resolver and the tree.
+
+The maintainer asked for the recommended fixes (2026-11-15). All three are in:
+- **(a) Sizes, not hashes, for an installed bundle** (`loom_data::bundle::validate::Integrity::Sizes`; `bundles::Library::load`).
+  - The start's scan has already checked the signature and every file's size (`loom_app::install::status_of`).
+  - The hashes were checked at install, and are checked again on **Verify**.
+  - The validator's other checks still run.
+  - A folder chosen by hand, or `LOOM_BUNDLE_DIR`, is still hashed in full.
+  - This is what plan decision P-e meant. Test: `install.rs`, `the_start_checks_an_installed_bundles_sizes_and_other_folders_hashes`.
+- **(b) One load** (`validate::check`). The validator returns the bundle it loaded, and the application uses it.
+- **(c) The window before the data** (`loom_app::Config::load_in_background`, which the shell sets).
+  - `App::start` returns at once, and the data loads on the writer thread before any command, so a command sent at once waits for it.
+  - The snapshot says `loading` until then (app API v1 `DataStatus.loading`, additive), and the start screen says "Loading game data…" instead of "No game data yet."
+  - Tests: `workflow.rs`, `a_background_start_should_say_loading_then_publish_the_data`; UI `errors.test.tsx`.
+
+| Start, release build, median of 7 | Before | (a) and (b) | (a), (b), and (c) |
+|---|---|---|---|
+| the real bundle installed | 3.11 s | 2.15 s | 1.77 s (11 runs: 1.41 to 1.84 s) |
+| the real bundle from `LOOM_BUNDLE_DIR` (hashed) | 3.10 s | 2.35 s | 1.92 s |
+| no bundle | 1.23 s | 1.21 s | 0.76 s |
+
+- With (c) the data loads while the webview starts. The log's `data at start` line gives its time: about 1.08 s from the application's start. So the data is ready at about the same time as the first screen.
+- `loom-bench wall` on the real bundle: `start` 994 ms, against `validate` 690 ms plus `load` 870 ms run one after the other.
+  - In one `start`: parsing the tables 350 to 490 ms, the validator's other checks 125 to 250 ms, the resolver 250 to 325 ms, `BundleData` 60 ms, the tree 5 ms.
+- How it was timed: `tools/package/smoke.ps1`'s `--smoke` start, timed from launch to the process's exit. The bundle was installed and accepted in a scratch data folder.
 
 ### Exceptions for the maintainer
-1. **Startup with the real bundle takes 3.5 to 4.7 s, over the 2.0 s budget.** Without a bundle it is 0.6 to 1.5 s, so loading the data costs about 3 s. Measured parts:
-   - the validator, 585 ms. `GameData::load` runs it on every start: every file's SHA-256 over 130 MB, references, domain rules, and its own load of the tables;
-   - the load, 726 ms: the tables a second time, the resolver, the tree;
-   - reading the 130 MB from disk;
-   - the rest of the first snapshot.
-
-   The data loads before the first screen. Proposed, for the maintainer to choose, cheapest first:
-   - (a) For an installed bundle the start checks only the signature and the file sizes, as plan decision P-e intends: its hashes were checked at install and on **Verify**. The validator's other checks stay, and a folder chosen for development is validated in full.
-   - (b) The validator hands the tables it loaded to the application, which then does not load them a second time.
-   - (c) The first screen comes before the data, with the data loading in the background.
-
-   (a) and (b) together should save roughly 1 s. Only (c) is sure to meet 2.0 s on this workstation.
+1. **Startup:** met since the startup fix (above). Nothing to decide.
 2. **The NSIS setup is over 40 MB.**
    - It carries Microsoft's offline WebView2 installer, about 130 MB, so installing needs no network (ADR-010; `docs/phase-5/packaging.md`).
    - Without it the setup is about 6 MB.

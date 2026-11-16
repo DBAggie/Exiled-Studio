@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, dev]
+    branches: [main, experimental, dev]
   workflow_dispatch:
 
 permissions:
@@ -418,6 +418,14 @@ jobs:
       - run: cargo check --locked --bins
         working-directory: fuzz
 
+  # The project site's builder (tools/site/build.py; docs/release/channels.md).
+  site:
+    name: site builder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 -m unittest discover -s tools/site -p 'test_*.py' -v
+
   frontend:
     name: frontend (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -602,7 +610,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, bench, frontend, e2e, package]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, bench, site, frontend, e2e, package]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs

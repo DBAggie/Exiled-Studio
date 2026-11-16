@@ -7,8 +7,9 @@
 //!
 //! | Scenario | Work | Budget it feeds |
 //! |---|---|---|
-//! | `validate` | the bundle validator, as the application runs it before loading | startup |
+//! | `validate` | the bundle validator with every file's hash, as a folder chosen by hand is checked | startup (development folders) |
 //! | `load` | the bundle's tables, the resolver, the passive tree | startup |
+//! | `start` | what the start does with an installed bundle: the validator with sizes only, which loads the tables once, then the resolver and the passive tree | startup |
 //! | `import` | a PoB build read and resolved against the bundle | import and first calculation |
 //! | `calculate` | one calculation of the resolved build | import and first calculation; item-edit and allocation previews |
 //! | `allocate` | the path to a node on the tree (an allocation preview's tree part) | allocation preview |
@@ -25,7 +26,7 @@ use loom_tree::poe1::{self as rules, Spec};
 
 const USAGE: &str = "\
 usage:
-  loom-bench run <validate|load|import|calculate|allocate> [--bundle <dir>] [--build <file>]
+  loom-bench run <validate|load|start|import|calculate|allocate> [--bundle <dir>] [--build <file>]
       one measured run (for callgrind; tools/bench/count.sh)
   loom-bench wall [--bundle <dir>] [--build <file>] [--runs <n>]
       each scenario's median and slowest wall-clock time over <n> runs (default 20)
@@ -33,7 +34,14 @@ usage:
 The defaults are the synthetic tree bundle (crates/loom-data/tests/fixtures/
 bundle-poe1-tree) and the largest public PoB fixture.";
 
-const SCENARIOS: [&str; 5] = ["validate", "load", "import", "calculate", "allocate"];
+const SCENARIOS: [&str; 6] = [
+    "validate",
+    "load",
+    "start",
+    "import",
+    "calculate",
+    "allocate",
+];
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -187,6 +195,7 @@ fn once(scenario: &str, inputs: &Inputs, loaded: &Loaded) -> Result<(), String> 
     match scenario {
         "validate" => measured_validate(&inputs.source),
         "load" => measured_load(&inputs.source),
+        "start" => measured_start(&inputs.source),
         "import" => measured_import(&inputs.pob, loaded),
         "calculate" => measured_calculate(loaded),
         "allocate" => measured_allocate(loaded),
@@ -209,6 +218,18 @@ fn measured_validate(source: &MemorySource) -> Result<(), String> {
 #[inline(never)]
 fn measured_load(source: &MemorySource) -> Result<(), String> {
     let bundle = Bundle::load(source).map_err(|e| e.to_string())?;
+    let data = BundleData::new(&bundle);
+    let resolver = Resolver::new(&data).map_err(|e| e.to_string())?;
+    black_box(&resolver);
+    black_box(Tree::from_bundle(&bundle));
+    Ok(())
+}
+
+#[inline(never)]
+fn measured_start(source: &MemorySource) -> Result<(), String> {
+    use loom_data::bundle::validate::{Integrity, check};
+    let bundle = check(source, Integrity::Sizes)
+        .map_err(|report| format!("not a valid bundle ({})", report.codes().join(", ")))?;
     let data = BundleData::new(&bundle);
     let resolver = Resolver::new(&data).map_err(|e| e.to_string())?;
     black_box(&resolver);

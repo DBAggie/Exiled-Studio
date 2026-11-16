@@ -68,6 +68,8 @@ pub struct Session {
     quarantined: Vec<crate::install::Found>,
     /// A notice about the choice of data (`APP_BUNDLE_FALLBACK`).
     data_notice: Option<AppError>,
+    /// The data is loading at start ([`Self::set_loading`]).
+    loading: bool,
     current: Option<Arc<State>>,
     version: u64,
     undo: Vec<Change>,
@@ -118,6 +120,7 @@ impl Session {
             installed: Vec::new(),
             quarantined: Vec::new(),
             data_notice: None,
+            loading: false,
             current: None,
             version: 0,
             undo: Vec::new(),
@@ -177,6 +180,11 @@ impl Session {
     ) {
         self.installed = installed;
         self.quarantined = quarantined;
+    }
+
+    /// Marks the data as loading at start, or no longer loading.
+    pub fn set_loading(&mut self, loading: bool) {
+        self.loading = loading;
     }
 
     /// Sets a notice about the choice of data (after [`Self::set_loaded`]).
@@ -1370,6 +1378,7 @@ impl Session {
                 notice: self.data_notice.as_ref().map(AppError::dto),
                 pinned: self.pinned_bundle(),
                 quarantined: self.quarantined.iter().map(quarantined_view).collect(),
+                loading: self.loading,
             },
             notices: self.notices.iter().map(AppError::dto).collect(),
         }

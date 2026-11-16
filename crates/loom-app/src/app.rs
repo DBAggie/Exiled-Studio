@@ -64,6 +64,15 @@ pub struct Config {
     /// the release list; the shell adds the public test key in debug and
     /// `e2e` builds ([`Config::with_test_keys`]).
     pub trust: loom_data::signature::TrustList,
+    /// Whether [`App::start`] returns before the data loads, which then
+    /// loads on the writer thread before any command (the shell: its first
+    /// screen comes first; Phase 5, P7). Off by default: the data is
+    /// loaded when `start` returns.
+    pub load_in_background: bool,
+    /// The folder of data packs the installer ships (Phase 5, P-e), if
+    /// any: each one not installed yet is installed at start, before the
+    /// start chooses the data to load.
+    pub shipped: Option<PathBuf>,
 }
 
 impl Config {
@@ -80,7 +89,25 @@ impl Config {
             instance: format!("{}-{nanos:x}", std::process::id()),
             autosave: Duration::from_secs(2),
             trust: crate::trust::trust_list(false).unwrap_or_default(),
+            load_in_background: false,
+            shipped: None,
         }
+    }
+
+    /// The configuration with the shipped packs' folder
+    /// ([`Config::shipped`]).
+    #[must_use]
+    pub fn with_shipped(mut self, shipped: Option<PathBuf>) -> Self {
+        self.shipped = shipped;
+        self
+    }
+
+    /// The configuration that loads the data on the writer thread
+    /// ([`Config::load_in_background`]).
+    #[must_use]
+    pub fn with_background_load(mut self, background: bool) -> Self {
+        self.load_in_background = background;
+        self
     }
 
     /// The configuration with the public test key trusted too (debug and
@@ -187,6 +214,12 @@ enum Msg {
     },
     Permissions(api::McpPermissions, Sender<()>),
     Endpoint(Option<(String, String)>, Sender<()>),
+    /// Install the shipped packs, then load the data, at start
+    /// ([`Config::load_in_background`]).
+    LoadAtStart {
+        bundle: Option<PathBuf>,
+        shipped: Option<PathBuf>,
+    },
     Stop,
 }
 
@@ -253,12 +286,19 @@ impl App {
         );
         let mut session = Session::new(store);
         let mut library = Library::new(&config.data_dir, config.trust.clone());
-        let (data, notice) = library.start(config.bundle.as_deref());
-        session.set_installed(library.installed().to_vec(), library.quarantined().to_vec());
-        if let Some(data) = data {
-            session.set_loaded(data);
-            session.set_data_notice(notice);
+        if config.load_in_background {
+            session.set_loading(true);
+        } else {
+            if let Some(dir) = &config.shipped {
+                library.install_shipped(dir);
+            }
+            let (data, notice) = library.start(config.bundle.as_deref());
+            if let Some(data) = data {
+                session.set_loaded(data);
+                session.set_data_notice(notice);
+            }
         }
+        session.set_installed(library.installed().to_vec(), library.quarantined().to_vec());
         let idle = api::CalcStatus {
             state: api::CalcState::Idle,
             version: 0,
@@ -287,6 +327,13 @@ impl App {
             requests: AtomicU64::new(0),
         });
         let (tx, rx) = mpsc::channel();
+        if config.load_in_background {
+            // The writer's first message: every command waits behind it.
+            let _ = tx.send(Msg::LoadAtStart {
+                bundle: config.bundle.clone(),
+                shipped: config.shipped.clone(),
+            });
+        }
         let (jobs_tx, jobs_rx) = mpsc::channel::<Job>();
         let worker = {
             let tx = tx.clone();
@@ -981,6 +1028,9 @@ impl Writer {
                     let _ = done.send(());
                     self.emit(None, api::EventKind::McpChanged);
                 }
+                Msg::LoadAtStart { bundle, shipped } => {
+                    self.load_at_start(bundle.as_deref(), shipped.as_deref());
+                }
                 Msg::Stop => break,
             }
         }
@@ -1265,6 +1315,30 @@ impl Writer {
             }
             HostCommand::Api(c) => self.api(c),
         }
+    }
+
+    /// Installs the shipped packs, loads the data the start chose
+    /// ([`Config::load_in_background`]), then publishes it as any change
+    /// is. The snapshot says `loading` throughout.
+    fn load_at_start(&mut self, bundle: Option<&Path>, shipped: Option<&Path>) {
+        let started = Instant::now();
+        if let Some(dir) = shipped {
+            self.library.install_shipped(dir);
+        }
+        let (data, notice) = self.library.start(bundle);
+        self.list_bundles();
+        self.session.set_loading(false);
+        if let Some(data) = data {
+            self.session.set_loaded(data);
+            self.session.set_data_notice(notice);
+        }
+        tracing::info!(
+            target: "loom::app",
+            loaded = self.session.data().is_some(),
+            ms = started.elapsed().as_millis(),
+            "data at start"
+        );
+        self.changed(None);
     }
 
     /// Gives the session the library's lists again.

@@ -64,7 +64,7 @@ cargo run -p loom-release -- feed --sequence <n> --base-url https://.../download
 ## Release environment (GitHub)
 Settings → Environments → New environment `release`:
 - **Required reviewers:** the maintainer. Every `release` workflow job waits for approval.
-- **Deployment branches and tags:** selected; `main` and the tag pattern `v*`. A pull request's workflow can never reach the secrets.
+- **Deployment branches and tags:** selected; `main`, `experimental`, and the tag pattern `v*` (`docs/release/channels.md`). A pull request's workflow can never reach the secrets.
 - **Secrets:** `LOOM_DATA_KEY`, `LOOM_UPDATER_KEY`, `LOOM_UPDATER_KEY_PASSWORD`.
 - **Tag protection** (Settings → Rules → Rulesets): only the maintainer creates `v*` tags.
 

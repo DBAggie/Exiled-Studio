@@ -4,7 +4,9 @@ The plan's step P3 and decision P-d (`dev/active/passive-tree-and-phase-5/`). Th
 
 ## How it works
 - **Plugin.** `tauri-plugin-updater` 2.14 with `native-tls` and `system-proxy` and no default features. The default `rustls-tls` would bring `webpki-roots`, whose CDLA-Permissive-2.0 license is not on the allow-list (review M12). `native-tls` uses SChannel on Windows and OpenSSL on Linux.
-- **Feed.** `latest.json`, an asset of the GitHub release, at `https://github.com/DBAggie/Exiled-Studio/releases/latest/download/latest.json` (`tauri.conf.json`, `plugins.updater.endpoints`). `tools/package/latest-json.sh` writes it in the `release` workflow's draft job.
+- **Feed.** `latest.json`, an asset of the GitHub release. `tools/package/latest-json.sh` writes it in the `release` workflow's draft job. Each channel reads its own (`docs/release/channels.md`):
+  - **stable:** `https://github.com/DBAggie/Exiled-Studio/releases/latest/download/latest.json` (`tauri.conf.json`, `plugins.updater.endpoints`);
+  - **experimental:** `https://dbaggie.github.io/Exiled-Studio/experimental/latest.json` (`tauri.experimental.conf.json`), the project site's copy of the newest pre-release's, since GitHub's `latest` never names a pre-release. The packages it names are that release's assets, signed with the same update key.
 
   | Entry | Package | Found by |
   |---|---|---|
@@ -47,7 +49,7 @@ Kept in `settings.json` (`updates`), set under About, Updates.
   - A second install while one runs is refused (`UPDATE_BUSY`). A check that ends any way, including a dropped request, clears its busy flag.
 
 ## Privacy (ADR-011)
-- A check is an HTTPS request to GitHub. GitHub sees the IP address, and the URL and the user agent reveal the running version. Nothing else is sent: no identifier, no build data.
+- A check is an HTTPS request to GitHub: `github.com` for a stable build, the project site on `dbaggie.github.io` (GitHub Pages) for an experimental one. GitHub sees the IP address, and the URL and the user agent reveal the running version. Nothing else is sent: no identifier, no build data.
 - About shows this next to the setting. The README's privacy notes and the installer's license page say it too.
 - This is the one network path outside `loom-integrations`: a Tauri adapter, allowed by plan decision P-d and listed in AGENTS.md.
 - The mode governs the data feed too (`docs/phase-5/data-bundles.md`): strict offline refuses it.

@@ -25,24 +25,29 @@ The plan's step P1 and decision P-a (`dev/active/passive-tree-and-phase-5/`): in
 ## Version policy
 - **One version:** the workspace's (`Cargo.toml`, `[workspace.package] version`). `tauri.conf.json` names none, so the bundler takes the crate's. The UI shows `ui/package.json`'s, which must equal it. Test: `crates/loom-tauri/tests/release_config.rs`.
 - **SemVer.** Tags are `v<version>`; the first release is `0.1.0`.
-- **The version moves only in a release commit:** one commit on `dev` that changes `Cargo.toml`, `Cargo.lock`, and `ui/package.json` together, merged to `main` and tagged there. Until then it stays `0.0.0`, which no release carries.
+- **Two channels** (`docs/release/channels.md`):
+  - a stable version (`1.2.0`) is tagged on `main`;
+  - an experimental one carries a numeric pre-release (`1.2.0-3`, which the MSI takes as `1.2.0.3`) and is tagged on `experimental`.
+  - `tools/package/channel.sh` refuses any other tag, a tag that differs from the workspace version, and a tag on the wrong branch.
+- **The version moves only in a release commit:** one commit on `dev` that changes `Cargo.toml`, `Cargo.lock`, and `ui/package.json` together, merged to `experimental` or `main` and tagged there. Until then it stays `0.0.0`, which no release carries.
 - **Downgrades:** the updater refuses a version lower than or equal to the running one (P3).
 
 ## Smoke run
 `--smoke <file>` starts the application as usual (`loom_tauri::release`).
-- **When the first screen has its data**, the UI calls `app_ready`; the application then writes its build info to `<file>` and quits with exit code 0. A GUI executable on Windows has no console to print to, hence the file. If the screen does not come up within 90 seconds, it writes `ready: false` and quits with exit code 2.
+- **When the first screen has rendered**, the UI calls `app_ready`; the application then writes its build info to `<file>` and quits with exit code 0. A GUI executable on Windows has no console to print to, hence the file. If the screen does not come up within 90 seconds, it writes `ready: false` and quits with exit code 2.
 - **What it writes:**
 
   ```json
-  { "ready": true, "version": "0.0.0", "e2e": false, "debug": false, "artifact": "nsis", "portable": false }
+  { "ready": true, "version": "0.0.0", "channel": "stable", "e2e": false, "debug": false, "artifact": "nsis", "portable": false }
   ```
 
-  `artifact` is `nsis`, `msi`, `app-image`, `deb`, or `plain` (the portable zip, or a development build).
+  `artifact` is `nsis`, `msi`, `app-image`, `deb`, or `plain` (the portable zip, or a development build). `channel` is `stable` or `experimental`.
 - **The checks.** `tools/package/smoke.ps1` and `smoke.sh` check the build info. The release workflow passes the expected version.
   - The first screen came up, and the exit code is 0.
   - The `e2e` feature is absent; this is gate 6's check that the end-to-end test picker never ships.
   - It is not a debug build.
   - The artifact is the expected one.
+  - The channel is `LOOM_CHANNEL`'s (stable when unset).
   - A zip is portable; anything else is not.
 
   An installed build runs with a throwaway `LOOM_DATA_DIR`, never the user's application data.

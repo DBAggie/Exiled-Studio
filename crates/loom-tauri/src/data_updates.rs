@@ -112,9 +112,9 @@ fn check<R: Runtime>(handle: &AppHandle<R>) -> Answer<api::DataFeedStatus> {
     let last = handle.state::<DataFeed>();
     offline(&handle.state::<updates::Updates>())?;
     let fetch_error = |e: data_feed::FetchError| api::ApiError::new(e.code(), e.to_string());
-    let feed = data_feed::fetch(data_feed::FEED_URL, pack::MAX_SMALL_FILE).map_err(fetch_error)?;
-    let signature =
-        data_feed::fetch(data_feed::FEED_SIGNATURE_URL, MAX_SIGNATURE).map_err(fetch_error)?;
+    let (feed_url, signature_url) = crate::release::Channel::CURRENT.data_feed();
+    let feed = data_feed::fetch(feed_url, pack::MAX_SMALL_FILE).map_err(fetch_error)?;
+    let signature = data_feed::fetch(signature_url, MAX_SIGNATURE).map_err(fetch_error)?;
     let trust = loom_app::trust::trust_list(TEST_KEYS)
         .map_err(|e| api::ApiError::new("FEED_SIGNATURE", e.to_string()))?;
     let settings_path = ctx.settings.clone();

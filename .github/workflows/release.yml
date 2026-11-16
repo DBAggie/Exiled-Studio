@@ -5,7 +5,13 @@ name: Release
 # on a v* tag, a draft GitHub release the maintainer publishes. Run by hand
 # (workflow_dispatch) for the gate's recorded run. Secrets live in the
 # `release` environment (required reviewer: the maintainer; deployments
-# limited to v* tags and main), so pull requests never see them.
+# limited to v* tags, main, and experimental), so pull requests never see
+# them.
+#
+# Two channels (docs/release/channels.md; tools/package/channel.sh): a tag
+# v1.2.0 on main releases the stable application; a tag v1.2.0-3 on
+# experimental releases the experimental one, another application beside
+# it (tauri.experimental.conf.json, LOOM_CHANNEL), as a pre-release.
 
 on:
   workflow_dispatch:
@@ -30,11 +36,27 @@ env:
 # (with-updater-key.sh). The draft job's feed step gets the data key alone.
 # Third-party actions are pinned to commit SHAs (tag in the trailing comment).
 jobs:
+  channel:
+    name: Channel
+    runs-on: ubuntu-latest
+    outputs:
+      channel: ${{ steps.channel.outputs.channel }}
+      config: ${{ steps.channel.outputs.config }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - id: channel
+        run: bash tools/package/channel.sh
+
   windows:
     name: Windows artifacts
+    needs: channel
     runs-on: windows-latest
     environment: release
     timeout-minutes: 90
+    env:
+      LOOM_CHANNEL: ${{ needs.channel.outputs.channel }}
+      CHANNEL_CONFIG: ${{ needs.channel.outputs.config }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install # reads rust-toolchain.toml
@@ -72,14 +94,17 @@ jobs:
       - name: Portable zip
         shell: pwsh
         run: |
+          # A plain build reads the channel's config from TAURI_CONFIG (the
+          # tauri CLI passes --config files the same way).
+          if ($env:LOOM_CHANNEL -eq 'experimental') { $env:TAURI_CONFIG = Get-Content -Raw crates/loom-tauri/tauri.experimental.conf.json }
           cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
           ./tools/package/portable.ps1 target/release/loom-tauri.exe out/release ${{ steps.version.outputs.version }}
       - name: NSIS setup (WebView2 offline installer inside)
         shell: bash
-        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles nsis --config crates/loom-tauri/tauri.nsis.conf.json --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
       - name: MSI
         shell: bash
-        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+        run: bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles msi --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
       - name: Collect
         shell: bash
         run: |
@@ -103,9 +128,13 @@ jobs:
 
   linux:
     name: Linux artifacts
+    needs: channel
     runs-on: ubuntu-24.04
     environment: release
     timeout-minutes: 90
+    env:
+      LOOM_CHANNEL: ${{ needs.channel.outputs.channel }}
+      CHANNEL_CONFIG: ${{ needs.channel.outputs.config }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Tauri system dependencies
@@ -148,7 +177,7 @@ jobs:
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $SHIPPED_CONFIG
+          bash tools/package/with-updater-key.sh ui/node_modules/.bin/tauri build --bundles appimage,deb --config crates/loom-tauri/tauri.updater.conf.json $CHANNEL_CONFIG $SHIPPED_CONFIG
           mkdir -p out/release
           cp target/release/bundle/appimage/*.AppImage* target/release/bundle/deb/*.deb out/release/
       - name: AppImage, started
@@ -162,11 +191,13 @@ jobs:
           if-no-files-found: error
 
   # On a v* tag only: a draft release with every artifact; the maintainer
-  # reviews and publishes it (MQ5).
+  # reviews and publishes it (MQ5). An experimental one is a pre-release,
+  # so GitHub's `latest` (the stable feeds) never names it; publishing it
+  # runs pages.yml, which copies its feeds to the project site.
   draft:
     name: Draft release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [windows, linux]
+    needs: [channel, windows, linux]
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -180,8 +211,10 @@ jobs:
           pattern: release-*
           path: out
           merge-multiple: true
-      # The update feed; the published release serves it at
-      # releases/latest/download/latest.json (tauri.conf.json's endpoint).
+      # The update feed. A stable release serves it at
+      # releases/latest/download/latest.json (tauri.conf.json's endpoint);
+      # an experimental one through the site
+      # (tauri.experimental.conf.json's).
       - name: Update feed
         run: bash tools/package/latest-json.sh out "${GITHUB_REF_NAME#v}" "$GITHUB_REPOSITORY" > out/latest.json
       # The data feed listing the shipped pack, signed with the data key
@@ -194,7 +227,11 @@ jobs:
       - name: Draft the release
         env:
           GH_TOKEN: ${{ github.token }}
+          CHANNEL: ${{ needs.channel.outputs.channel }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
-            --title "Exiled Studio ${GITHUB_REF_NAME#v}" --notes "Draft: the maintainer writes the notes and publishes." \
-            out/*
+          args=(--draft --title "Exiled Studio ${GITHUB_REF_NAME#v}")
+          if [ "$CHANNEL" = experimental ]; then
+            args=(--draft --prerelease --title "Exiled Studio Experimental ${GITHUB_REF_NAME#v}")
+          fi
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" "${args[@]}" \
+            --notes "Draft: the maintainer writes the notes and publishes." out/*

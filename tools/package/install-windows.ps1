@@ -6,13 +6,15 @@
 # NSIS installs per user (`/S`) into %LOCALAPPDATA%\Exiled Studio and is
 # removed by its uninstall.exe (`/S`); the MSI installs per machine
 # (`msiexec /qn`) and is removed with `msiexec /x`. The installed folder
-# must be gone afterwards.
+# must be gone afterwards. The folder is the product's, which follows
+# LOOM_CHANNEL (docs/release/channels.md).
 param(
     [Parameter(Mandatory = $true)][ValidateSet('nsis', 'msi')][string]$Kind,
     [Parameter(Mandatory = $true)][string]$Installer,
     [string]$Version = ''
 )
 $ErrorActionPreference = 'Stop'
+$product = if ($env:LOOM_CHANNEL -eq 'experimental') { 'Exiled Studio Experimental' } else { 'Exiled Studio' }
 
 function Run([string]$file, [string[]]$arguments) {
     $p = Start-Process -FilePath $file -ArgumentList $arguments -PassThru -Wait
@@ -20,10 +22,10 @@ function Run([string]$file, [string[]]$arguments) {
 }
 
 if ($Kind -eq 'nsis') {
-    $dir = Join-Path $env:LOCALAPPDATA 'Exiled Studio'
+    $dir = Join-Path $env:LOCALAPPDATA $product
     Run $Installer @('/S')
 } else {
-    $dir = Join-Path $env:ProgramFiles 'Exiled Studio'
+    $dir = Join-Path $env:ProgramFiles $product
     $log = Join-Path ([System.IO.Path]::GetTempPath()) 'loom-msi-install.log'
     Run 'msiexec.exe' @('/i', "`"$Installer`"", '/qn', '/l*v', "`"$log`"")
 }
