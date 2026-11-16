@@ -53,6 +53,12 @@ jobs:
     needs: channel
     runs-on: windows-latest
     environment: release
+    # contents: write only to read the shipped data's source, a draft
+    # release's asset (release/bundle.json; drafts are visible only with
+    # push access). This job already holds the signing keys, so it is
+    # gated by the environment's required reviewer either way.
+    permissions:
+      contents: write
     timeout-minutes: 90
     env:
       LOOM_CHANNEL: ${{ needs.channel.outputs.channel }}
@@ -83,8 +89,10 @@ jobs:
           LOOM_UPDATER_KEY: ${{ secrets.LOOM_UPDATER_KEY }}
           LOOM_UPDATER_KEY_PASSWORD: ${{ secrets.LOOM_UPDATER_KEY_PASSWORD }}
         run: bash tools/package/updater-key.sh
-      - name: Shipped game data (release/bundle.json; none until the maintainer's)
+      - name: Shipped game data (release/bundle.json)
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash tools/package/shipped-bundle.sh
       - name: Version
         id: version
@@ -131,6 +139,12 @@ jobs:
     needs: channel
     runs-on: ubuntu-24.04
     environment: release
+    # contents: write only to read the shipped data's source, a draft
+    # release's asset (release/bundle.json; drafts are visible only with
+    # push access). This job already holds the signing keys, so it is
+    # gated by the environment's required reviewer either way.
+    permissions:
+      contents: write
     timeout-minutes: 90
     env:
       LOOM_CHANNEL: ${{ needs.channel.outputs.channel }}
@@ -167,8 +181,10 @@ jobs:
           LOOM_UPDATER_KEY: ${{ secrets.LOOM_UPDATER_KEY }}
           LOOM_UPDATER_KEY_PASSWORD: ${{ secrets.LOOM_UPDATER_KEY_PASSWORD }}
         run: bash tools/package/updater-key.sh
-      - name: Shipped game data (release/bundle.json; none until the maintainer's)
+      - name: Shipped game data (release/bundle.json)
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash tools/package/shipped-bundle.sh
       - name: Version
         id: version

@@ -91,12 +91,16 @@ Debug and `e2e` builds trust the public test key (`loom_tauri::TEST_KEYS`, `loom
 ## The shipped bundle
 CI cannot extract game data (ADR-005). The maintainer:
 1. builds the bundle locally (`docs/handoff/SUCCESSOR-HANDOFF.md`, the data run);
-2. zips the bundle folder and uploads the zip as an asset of a release (a draft is fine);
-3. commits `release/bundle.json`:
+2. zips the bundle folder and uploads the zip as an asset of a **draft** release, which stays a draft: the zip holds GGG's tree sprites unsigned, and ADR-005 Amendment 2 lets them ship only inside signed bundles. A draft's assets are visible only to the repository's members;
+3. commits `release/bundle.json` with that asset's API URL:
 
    ```json
-   { "url": "https://github.com/DBAggie/Exiled-Studio/releases/download/<tag>/bundle-poe1-<build>-schema<n>.zip", "sha256": "<the zip's SHA-256>" }
+   { "url": "https://api.github.com/repos/DBAggie/Exiled-Studio/releases/assets/<asset id>", "sha256": "<the zip's SHA-256>" }
    ```
+
+The release jobs fetch it with their own token (`GH_TOKEN`; the two build jobs have `contents: write` to see the draft). A plain `https://` URL still works, without a token.
+
+**The first one (2026-11-16, for 0.9):** `bundle-poe1-26530219-schema4-evidence.zip` (steam build 26530219, schema 4, SHA-256 `ffa2dd01…dc973`), the asset of the draft release "Game data source: poe1 26530219 schema 4 (not for users)", tag name `data-poe1-26530219-s4` (never created: the release stays a draft). An anonymous request for the asset gets 404.
 
 The `release` workflow's `tools/package/shipped-bundle.sh` then:
 - downloads the zip and checks its hash;
