@@ -1,0 +1,124 @@
+Last Updated: 2026-11-13 (P3-8n: every stat the in-scope builds left unmapped)
+
+# Phase 3: calc slice (tasks)
+
+Order and evidence per PR are in the plan, "Planned PR breakdown". Tick a task in the PR that does it, with the PR number.
+
+## P3-0: plan
+- [x] Plan, context, tasks in `dev/completed/phase-3-calc-slice/`
+- [x] plan-reviewer run; all findings applied (context file)
+- [x] Handoff, CLAUDE.md Status, ACTION-PLAN Next action updated
+- [x] Open PR: #59 (base `feat/p2-1-domain-model`, per the maintainer's 2026-11-11 instruction)
+
+## P3-1a: bundle v2 manifest and skill tables
+- [x] v2 manifest (v1 still loads for import)
+- [x] Skills, skill types, granted effects, per-level and per-quality stat sets, gems, gem tags: types, loader, validator codes with mutation cases, synthetic rows, extractor table, converter (plus cost types and gem effects)
+- [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-skills.md`)
+- [x] Open PR: #60 (base `plan/phase-3-calc-slice`)
+
+## P3-1b: character and passive tables
+- [x] Characters, ascendancies, passives, passive graph with tree version, mastery effects (same checklist as 1a); per-level growth from the character object template (extractor reads `*.ot`, manifest format 5)
+- [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-passives.md`)
+- [x] Open PR: #61 (base `feat/p3-1a-bundle-v2-skills`)
+
+## P3-1c: item property and monster tables
+- [x] Weapon, armour, shield properties; default monster stats (same checklist as 1a); game constants
+- [x] Two-run determinism and `bundle-check` on real bundles; summaries (`docs/phase-3/bundle-v2-items-monsters.md`)
+- [x] Open PR: #63 (base `docs/ui-draft-v1`, #62)
+
+## P3-2: data parity
+- [x] `data-parity` (PoB data read by a script in `tools/oracle/data/`, outside the adapter protocol)
+- [x] Categories with cited evidence and tests; overlay file; report with `uncategorized` 0 (`docs/phase-3/data-parity.md`)
+- [x] Open PR: #64 (base `feat/p3-1c-bundle-v2-items-monsters`, #63)
+
+## P3-3: survey and slice
+- [x] `calc-survey`: archetype classifier, tree-version rule, excluded-mechanics rules (tests each), mechanic inventory (P3-3)
+- [x] Proposed excluded mechanics (Q7) in `docs/phase-3/calc-scope-poe1.json`; `docs/phase-3/slice-fields.json` with comparison rules and breakdown groupings (Q3, Q6); survey summaries (`docs/phase-3/calc-survey.md`) (P3-3)
+- [x] Plan updated (P3-3)
+- [x] Open PR: #66 (base `dev`)
+- [x] Maintainer: Q2 (Ice Nova, Smite), Q7 (three exclusions), Q8 (derived setups; minimum 3), 2026-11-11
+- [x] P3-3b: chosen skills in the scope file (`confirmed`); seven credited derived fixtures; Ice Nova 3, Smite 4 in scope; public `calc-survey` exit 0
+- [x] Open PR: #67 (base `dev`)
+
+## P3-4: engine core
+- [x] `CalcInput`, `CalcData`, options, `DataVersion` check
+- [x] Modifier store with conditions and provenance; graph evaluation
+- [x] Field states, `UnsupportedReason`, `CALC_*`, cancellation hook, `math`
+- [x] Property tests; calc PoE1-only names in `POE1_ONLY`; wasm32
+- [x] `code-architecture-reviewer` run; findings applied (context file)
+- [x] Open PR: #68 (base `dev`)
+
+## P3-13: calc result document v1 (right after P3-4)
+- [x] `loom_serialization::dto::calc::v1` (DTO, `to_json`, `from_json`, `DTO_CALC_*`); `loom-calc` <- `loom-serialization` in AGENTS.md
+- [x] Golden bytes for 4 results, second run, read-back, names, error codes
+- [x] `schemas/calc-result.v1.schema.json`, `ui/src/generated/calc-result.v1.ts`, schema validation tests
+- [x] Cross-platform: golden test in the `rust` job on Windows and Linux (calc-run documents join `dto cross-platform` in P3-5)
+- [x] `code-architecture-reviewer` run; findings in the context file
+- [x] Open PR: #69 (base `dev`)
+
+## P3-5: parity harness
+- [x] `calc-run` (with `--data-overlay`, timing), `calc-parity` (field mapping, rules, breakdown terms at displayed decimals, completeness, register, overlay rule, PoB's views check, mechanic targets)
+- [x] `mechanic` tier in `oracle_fixtures.rs` (`mechanic/`, `targets`); the CI `oracle` job runs every tier of the manifest; CI runs `calc-run` on the synthetic builds and `dto cross-platform` diffs the documents
+- [x] Tests per outcome; breakdown parser on every public-fixture breakdown (`testdata/calc-parity/breakdown-lines.json`); AGENTS.md commands; `slice-fields.json` revision 2 (`graph` per term)
+- [x] Evidence (`docs/phase-3/calc-parity.md`): public and corpus runs byte-identical twice; `calc-parity` exit 5 `incomplete` (all fields `not-computed`, nothing passed); PoB's views differed in 12 public (all 7 in-scope) and 11 corpus builds (Q9)
+- [x] Q9 (a), maintainer 2026-11-11: oracle adapter protocol 4 sets PoB's CALCS view to the main view (`probe.calcs_view`); `main_output` unchanged in 57 outputs; views agree everywhere; breakdown test data regenerated
+- [x] `code-architecture-reviewer` run; findings in the context file
+- [x] Open PR: #70 (base `dev`)
+
+## P3-6 to P3-12: engine
+- [x] P3-6 character, attributes, life, mana, ES (PR #71; `docs/phase-3/character-fields.md`; 19 mechanic fixtures match on their targets)
+- [x] P3-7 core defences (PR #72; `docs/phase-3/defence-fields.md`; 23 mechanic fixtures match on 17 fields)
+- [x] P3-8 stat mappings (one or more PRs; coverage summary each)
+  - [x] P3-8a stats that reach no slice field (PR #73; `docs/phase-3/stat-mapping.md`; in-scope unmapped 153 to 113)
+  - [x] P3-8b rolled values of PoB's ranged lines, scaled lines as reasons (PR #80; `docs/phase-3/rolled-values.md`; in-scope builds no longer `indeterminate`)
+  - [x] P3-8c the Smite builds' global stats (PR #83, merged into `dev` as `bcb8c6d`; `docs/phase-3/stat-mapping.md`; 3 hit rows, 2 `NoEffect` rows with `NO_EFFECT_DEPENDS_ON`; `smite-inquisitor-act1` has no `unmapped-stat`; in-scope unmapped 108 to 103; mechanic fixtures `smite-global-attack-stats-templar.xml`, `ice-nova-attack-and-cast-speed-witch.xml`)
+- [x] P3-1d monster types for the default enemy (PR #75; `docs/phase-3/monster-types.md`; 22 bosses equal PoB's)
+- [x] P3-9a skill model (PR #74; `docs/phase-3/skill-model.md`; survey byte-identical on the core rule)
+- [x] P3-11 enemy model (PR #76; `docs/phase-3/enemy-model.md`; the default enemy equals PoB's; hit fixtures in P3-9b)
+- [x] P3-9b spell hits (PR #77; `docs/phase-3/spell-hits.md`; 11 Ice Nova mechanic fixtures match PoB on every target)
+- [x] P3-10 attacks (PR #78; `docs/phase-3/attack-hits.md`; 10 Smite mechanic fixtures match PoB on every target; Q11 open)
+  - [x] Q11 switch (PR #81): a weapon's attack time in floored ms (`docs/phase-3/attack-hits.md`, "The switch"; 25 `game-truth` entries; Q12 open)
+- [x] P3-12 buffs and config (one or more PRs)
+  - [x] P3-12a config inputs that only set named conditions (PR #82, merged into `dev` with #81 as `636a482`; `docs/phase-3/config-inputs.md`; 16 inputs, reasons only; mechanic fixture `ice-nova-config-conditions-witch.xml`)
+  - [x] P3-12b PoB's config placeholders (PR #84, merged into `dev` as `95b53a6`; `docs/phase-3/config-inputs.md`, "P3-12b"; placeholders typed in the domain, build v1 `kind`; classified as their inputs; reasons only; mechanic fixture `ice-nova-config-placeholders-witch.xml`)
+  - [x] P3-12c custom modifier blocks in full (PR #85, merged into `dev` as `8c2998d`; `docs/phase-3/config-inputs.md`, "P3-12c"; lines resolved and applied; build v1 `custom_modifiers`, calc result v1 source `custom-modifier`; mechanic fixture `ice-nova-custom-modifiers-witch.xml`)
+  - [x] P3-12d the legacy `customMods` input (PR #86, merged into `dev` as `e04419f`; `docs/phase-3/config-inputs.md`, "P3-12d"; PoB's attribute reading for a config string; lines applied by PoB's `Load` migration; build v1 input `lines`, calc result v1 source `config-input-line`; mechanic fixture `ice-nova-legacy-custom-mods-witch.xml`)
+  - [x] P3-12e the old config layout (`ConfigLayout::Flat`, build v1 `layout`), block text PoB reads otherwise kept whole, power/frenzy/endurance charges (`poe1::charges`), fortification in `NAMED_ONLY` (PR #87, merged into `dev` as `4753b28`; `docs/phase-3/config-inputs.md`, "P3-12e"; mechanic fixtures `ice-nova-old-config-layout-witch.xml`, `ice-nova-charges-witch.xml`, `smite-charges-templar.xml`)
+  - [x] P3-12f the enemy's damage taken in the hit (`poe1::damage_taken`: shock, the Uber boss kind, delirium), the bandit from the config set, Onslaught (`poe1::buffs`), rage and exposure in `NAMED_ONLY` with their source stats, culling strike `NoEffect` (PR #88, merged; `docs/phase-3/config-inputs.md`, "P3-12f"; mechanic fixtures `ice-nova-shocked-uber-witch.xml`, `smite-shocked-templar.xml`, `ice-nova-onslaught-rage-exposure-witch.xml`; DIV-0029, DIV-0030; merged into `dev` as `6d1d7ac`)
+  - [x] P3-12g the pantheon (bundle `poe1/pantheons.json`, `data-parity` table, `poe1::pantheon`, 41 `NoEffect` soul stats), Intimidate, Unnerve, Blind (`Poe1Quantity::EnemyEvasion`), ten inputs in `NAMED_ONLY` (PR #89, merged into `dev` as `de85329`; `docs/phase-3/config-inputs.md`, "P3-12g"; six mechanic fixtures; DIV-0031 to DIV-0033)
+  - [x] P3-12h other gems, first PR: `poe1::gems` (inert skills and supports, reservation with the supports' cost multipliers, eight buff and aura skills merged per name), `Ceil` node, PoB export format 4 and `data-parity` table `gem_effects` (PR #90, merged into `dev` as `0814131`; `docs/phase-3/other-gems.md`; four mechanic fixtures)
+  - [x] P3-12i socket colour quality: the granted effect's colour in the bundle, PoB export format 5 and `data-parity` `color`, `poe1::sockets` (+10 quality in a socket of the gem's colour, PoB's index rule), `melee_physical_damage_+%` row (PR #91, merged into `dev` as `0fad371`; `docs/phase-3/other-gems.md`, "P3-12i"; two mechanic fixtures)
+  - [x] P3-12j the custom "Onslaught" line: custom-line rule (the only global, item-backed reading), `Poe1Quantity::Onslaught`, Onslaught once (PR #92, merged into `dev` with #91; `docs/phase-3/config-inputs.md`, "P3-12j"; two mechanic fixtures)
+  - [x] P3-8d charge modifiers: `Poe1Quantity::Charge`, `charges::MODIFIERS`, PoB's count with minima and maxima (PR #93, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8d"; two mechanic fixtures)
+  - [x] P3-8e area damage, spell crit multiplier, area and light radius rows (PR #94, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8e"; one mechanic fixture)
+  - [x] P3-8f weapon conditions: `poe1::states` (`UsingStaff`, `UsingShield`), `STATE_ROWS` (eight stats) (PR #95, merged into `dev` with #91; `docs/phase-3/stat-mapping.md`, "P3-8f"; two mechanic fixtures)
+  - [x] P3-8g the settled conditions once per calculation: `Ruleset::states`, `Calc::context` (PR #96, merged into `dev` with #91; documents identical, calc time 229 to 78 ms)
+  - [x] P3-8h skill keywords: `Flags::SKILL_*` from the main skill's types (PoB's `KeywordFlag`), 23 hit rows ("with Cold Skills" cast speed, crit chance, crit multiplier; damage with attack or spell skills) (PR #97, merged into `dev` as `1b15375`; `docs/phase-3/stat-mapping.md`, "P3-8h"; two mechanic fixtures; DIV-0034, DIV-0035)
+  - [x] P3-8i global gem levels: `poe1::gem_levels` (23 stats, PoB's keywords and `gemIsType`), each gem's level raised in `main_skill`/`group_skills`, gems collected after config (PR #98, merged into `dev` as `5f8df17`; `docs/phase-3/stat-mapping.md`, "P3-8i"; two mechanic fixtures; DIV-0036 to DIV-0038 `game-truth`, Q11)
+  - [x] P3-8j minion modifiers that also affect you: `poe1::minions` (minion damage and speeds, the redirects of Spiritual Aid and Spiritual Command and kin, PoB's `CalcOffence.lua` 613 to 643; a main skill gem's minion stats too) (PR #99, merged into `dev` as `c24146b`; `docs/phase-3/stat-mapping.md`, "P3-8j"; two mechanic fixtures; DIV-0039 to DIV-0041 `game-truth`, Q11)
+  - [x] P3-8k the enemy's exposure and the guaranteed shock: `poe1::exposure` (PoB's exposure checks with the chances that enable them, Elemental Army's type, and the extras, Mastermind of Discord's among them; the enemy's resistance in the hit), `poe1::damage_taken` (the shock's guaranteed minimums scaled by shock effect, Shaper of Storms; "Hits always Shock" and "All Damage can Shock" `NoEffect`) (PR #100, merged into `dev` as `9f3a344`; `docs/phase-3/stat-mapping.md`, "P3-8k"; three mechanic fixtures; DIV-0042 to DIV-0044 `game-truth`, Q11)
+  - [x] P3-8l reservation efficiency and aura effect for the other gems: `poe1::skill_modifiers` (mana, life, and generic reservation efficiency, "Reservation of Skills", the effect of non-curse auras; each reserving skill's terms and each aura scaled before the merge as PoB's `ScaleAddMod`; Smite's own aura scaled too) (PR #101, merged into `dev` as `639d6e2`; `docs/phase-3/stat-mapping.md`, "P3-8l"; two mechanic fixtures, both equal PoB)
+  - [x] P3-8m Resolute Technique, Elemental Overload, Bitter Frost, and chill: `poe1::keystones`, `damage_taken::chill` with the modelled chilling skills' guaranteed chill, per-type enemy damage taken (PR #102, merged into `dev` 2026-11-13 as `52ff67d`; `docs/phase-3/stat-mapping.md`, "P3-8m"; three mechanic fixtures, each equal to PoB)
+  - [x] P3-8n every stat the eight in-scope builds left unmapped (56): config conditions (`poe1::conditions`), stacks (`poe1::stacks`), action speed, double damage, global conversion, Arcane Surge, Convergence, consecrated ground, exposure on hit, granted anoints, alternate weapon quality, 24 `NoEffect` rows; data schema 3 for the body armour's Life Modifiers (PR #103, merged into `dev` 2026-11-13 21:10 UTC as `bc4172e`; `docs/phase-3/stat-mapping.md`, "P3-8n"; nine mechanic fixtures, each equal to PoB but the registered Q11 rate)
+
+## P3-close: one PR closing Phase 3 (maintainer 2026-11-13; PR #104, branch `feat/p3-close-out` from `dev` at `bc4172e`)
+Maintainer, 2026-11-13: every item left in P3-8, P3-12, P3-14, and P3-15, plus whatever comes up, in one PR that closes Phase 3. Decisions the same day:
+- **Q13: option (b)**, a typed custom note (asked to look online first: "Perfect Forest Warrior" is the spectre whose buffs are Onslaught and Culling Strike, the two lines under it, so the line is a heading; poewiki.net/wiki/Forest_Warrior). Applies to every custom line that matches neither a game stat description nor a PoB parser pattern ("Ice Nova Buffs", "Mana Infused Staff" too). ADR-015 clarification in the PR.
+- **PoB-only custom lines** ("20% more damage", "24% more spell block chance", "30% less mana cost of skills"): applied as PoB's parser reads them, as typed custom modifiers with provenance, recorded under ADR-015.
+- **Fallback pre-approved**: when a mechanic is too large, apply the plan's fallback myself (excluded mechanic or build out of the denominator), record the reason in the plan and report.
+Gate denominator: the 7 builds of the chosen skills (3 Ice Nova, 4 Smite); Winter Orb is in scope by archetype but not a chosen skill (survey), so it is not counted; its shared gems are modelled anyway.
+
+Reasons on the 7 at the start (`local/p3/p3-8n/evidence/public`): Ice Nova lab1/campaign: Arcane Surge, Frost Bomb, Flame Wall, Herald of Ash, golems (Flame, Ice, Lightning, Stone), Frostbite; 6 `customMods` lines; `summonLightningGolemEnableWrath`. Ice Nova mapping: Arcane Surge, golems (Flame, Stone, Lightning, Stone of Safeguarding), Righteous Fire of Arcane Devotion, Guardian's Blessing, Automation, Convocation, Frostbite; the 6 lines; Wrath; an abyssal socket (belt). Smite act1: Q13 only. Smite act2: Shockwave (its own granted skill), Herald of Ash, Herald of Purity, Intimidating Cry; Q13. Smite act5/act10: those plus Flesh and Stone, Elemental Weakness, Rallying Cry, Summon Lightning Golem.
+- [x] Q13 custom notes; PoB-only custom lines applied (ADR-015 Amendment 2; `docs/phase-3/custom-lines.md`; `custom-lines` check: 46 notes all ignored by PoB, 7 patterns each equal to PoB's mod)
+- [x] Gems: Herald of Ash, Herald of Purity, Arcane Surge support, Frost Bomb, Flame Wall, Frostbite, Elemental Weakness, golems and Wrath, Intimidating Cry, Rallying Cry, Flesh and Stone, RF of Arcane Devotion, Guardian's Blessing, Automation, Convocation, Shockwave's skill (`docs/phase-3/other-gems.md`, "Phase 3 close-out"; `gem_effects` 453 values, 0 differences)
+- [x] Abyssal socket; config inputs left (`docs/phase-3/config-inputs.md`, "Phase 3 close-out")
+- [x] Every slice field of the 7 `Complete`; values equal PoB or registered with evidence (158 complete, 10 `HitSpeed`/`HitChance` PoB leaves absent; 20 differences, DIV-0052 to DIV-0071, Q11 `game-truth`; Ice Nova campaign's life settled by PoB's affix record)
+- [x] Winter Orb's own items where they fit: not done, by the pre-approved fallback (Winter Orb is not a chosen skill and not in the gate's denominator; channelling and stages are a mechanic of their own); its shared gems are modelled. Recorded in the report, "Known limitations"
+- [x] Smaller P3-8 items (socketed gem levels, "with Brand/Minion Skills", other weapon conditions) where the 7 need them: none of the 7 needs them (no `unmapped-stat` left); left for Phase 6+ expansion
+
+## P3-14: corpus run and register
+- [x] `calc-parity` on public fixtures and corpus; every difference fixed or registered (public: 0 unexpected; corpus: 0 builds in scope, every field `Indeterminate` or `Unsupported` with reasons; `docs/phase-3/phase-3-report.md`)
+- [x] CI calc-parity job if Q1 is yes: Q1 stays no (default), so no job; CI runs `calc-run` on the synthetic builds and compares the documents across platforms
+
+## P3-15: report and gate
+- [x] `docs/phase-3/phase-3-report.md`; handoff, CLAUDE.md, ACTION-PLAN; folder to `dev/completed/`

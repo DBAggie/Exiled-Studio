@@ -1,6 +1,7 @@
-//! The generated schemas (Phase 2 plan, step 7): the committed files are
-//! fresh, and the documents `dto::v1::to_json` writes validate against
-//! the schema (draft 2020-12, with `boon`), while broken ones do not.
+//! The generated schemas (Phase 2 plan, step 7; Phase 3 plan, step 13):
+//! the committed files are fresh, and the documents `dto::v1::to_json` and
+//! `dto::calc::v1::to_json` write validate against their schema (draft
+//! 2020-12, with `boon`), while broken ones do not.
 
 #![expect(
     clippy::unwrap_used,
@@ -36,15 +37,25 @@ struct Validator {
 
 impl Validator {
     fn new() -> Self {
-        let schema: Value = serde_json::from_str(&loom_schema_gen::build_v1().unwrap()).unwrap();
+        Self::of(
+            "build.v1.schema.json",
+            &loom_schema_gen::build_v1().unwrap(),
+        )
+    }
+
+    fn calc() -> Self {
+        Self::of(
+            "calc-result.v1.schema.json",
+            &loom_schema_gen::calc_result_v1().unwrap(),
+        )
+    }
+
+    fn of(name: &str, text: &str) -> Self {
+        let schema: Value = serde_json::from_str(text).unwrap();
         let mut compiler = boon::Compiler::new();
-        compiler
-            .add_resource("build.v1.schema.json", schema)
-            .unwrap();
+        compiler.add_resource(name, schema).unwrap();
         let mut schemas = boon::Schemas::new();
-        let index = compiler
-            .compile("build.v1.schema.json", &mut schemas)
-            .unwrap();
+        let index = compiler.compile(name, &mut schemas).unwrap();
         Self { schemas, index }
     }
 
@@ -64,6 +75,24 @@ fn golden(name: &str) -> String {
     )
     .unwrap()
 }
+
+/// A calc result document `dto::calc::v1::to_json` wrote (its golden
+/// files, which its own tests compare byte for byte with the writer).
+fn calc_golden(name: &str) -> String {
+    fs::read_to_string(
+        root()
+            .join("crates/loom-serialization/src/dto/calc/v1/testdata")
+            .join(name),
+    )
+    .unwrap()
+}
+
+const CALC_GOLDENS: [&str; 4] = [
+    "every-kind.json",
+    "engine.json",
+    "poe1-empty.json",
+    "poe2-empty.json",
+];
 
 #[test]
 fn synthetic_documents_should_validate() {
@@ -116,6 +145,46 @@ fn broken_documents_should_not_validate() {
         ("\"7ff0000000000000\"", "\"7FF0\""),
         // A missing required field.
         ("\"enabled\": true,", ""),
+    ] {
+        let changed = doc.replacen(from, to, 1);
+        assert_ne!(changed, doc, "{from} not found");
+        assert!(v.check(&changed).is_err(), "{from} -> {to} validated");
+    }
+}
+
+#[test]
+fn calc_result_documents_should_validate() {
+    let v = Validator::calc();
+    for name in CALC_GOLDENS {
+        let doc = calc_golden(name);
+        // The DTO reader takes it too.
+        loom_serialization::dto::calc::v1::from_json(&doc).unwrap();
+        if let Err(e) = v.check(&doc) {
+            panic!("{name}: {e}");
+        }
+    }
+}
+
+#[test]
+fn broken_calc_result_documents_should_not_validate() {
+    let v = Validator::calc();
+    let doc = calc_golden("every-kind.json");
+    for (from, to) in [
+        // An unknown field.
+        ("\"game\": \"poe1\",", "\"game\": \"poe1\", \"x\": 1,"),
+        // Another format or version.
+        ("\"loom-calc-result\"", "\"loom-build\""),
+        ("\"version\": 1,", "\"version\": 2,"),
+        // An unknown state, reason, or node kind.
+        ("\"state\": \"complete\"", "\"state\": \"made-up\""),
+        ("\"not-computed\"", "\"made-up\""),
+        ("\"kind\": \"sum\"", "\"kind\": \"made-up\""),
+        // A malformed non-finite number.
+        ("\"7ff0000000000000\"", "\"7FF0\""),
+        // A missing required field.
+        ("\"field\": \"life\",", ""),
+        // A negative passive node ID.
+        ("\"node\": 42", "\"node\": -1"),
     ] {
         let changed = doc.replacen(from, to, 1);
         assert_ne!(changed, doc, "{from} not found");

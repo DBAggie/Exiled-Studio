@@ -1,0 +1,364 @@
+{
+ "builds_with_reason_changes": 19,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 19}}, \"stat\": \"fire_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42649}}, \"stat\": \"ignites_and_chill_apply_elemental_resistance_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"area_of_effect_+%_while_you_do_not_have_convergence\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"gain_convergence_on_hitting_unique_enemy\"}}"
+   ]
+  },
+  "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"endurance_charge_on_kill_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 14}}, \"stat\": \"mod_granted_passive_hash\"}}"
+   ]
+  },
+  "33d38652eb5d6d7b7714920252c4646512a63582e80142a864566fd026420bed.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 47743}}, \"stat\": \"bow_accuracy_rating_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 47743}}, \"stat\": \"bow_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 47743}}, \"stat\": \"bow_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 47743}}, \"stat\": \"damage_over_time_+%_with_bow_skills\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 23, \"line\": 14}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}"
+   ]
+  },
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25439}}, \"stat\": \"damage_+%_if_you_have_consumed_a_corpse_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25439}}, \"stat\": \"desecrate_maximum_number_of_corpses\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25439}}, \"stat\": \"life_regeneration_rate_per_minute_%_if_consumed_corpse_recently\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32241}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4940}}, \"stat\": \"attacks_intimidate_on_hit_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4940}}, \"stat\": \"axe_ailment_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4940}}, \"stat\": \"physical_axe_damage_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 13}}, \"stat\": \"mod_granted_passive_hash\"}}"
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22535}}, \"stat\": \"number_of_additional_curses_allowed\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 18, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 9}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25011}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55420}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}"
+   ]
+  },
+  "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"attack_ailment_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"endurance_charge_on_kill_percent_chance_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"physical_attack_damage_+%_while_holding_a_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 134, \"line\": 13}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"area_of_effect_+%_while_you_do_not_have_convergence\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"gain_convergence_on_hitting_unique_enemy\"}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15543}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 52061}}, \"stat\": \"nearby_enemies_are_intimidated_while_you_have_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55420}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"add_frenzy_charge_on_kill_%_chance\"}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 10}}, \"stat\": \"local_elemental_damage_+%_per_2%_quality\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 9}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 13}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60002}}, \"stat\": \"base_projectile_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60002}}, \"stat\": \"projectile_damage_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 13}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 18}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31039}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22535}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44191}}, \"stat\": \"dual_wield_or_shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 16}}, \"stat\": \"fire_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27137}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11784}}, \"stat\": \"damage_taken_goes_to_life_over_4_seconds_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11784}}, \"stat\": \"recover_%_maximum_life_on_kill\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 14, \"line\": 12}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 9}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 9, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13922}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14384}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20913}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25781}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40189}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 50842}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"add_frenzy_charge_on_kill_%_chance\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 65112}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7528}}, \"stat\": \"nearby_enemies_are_intimidated_while_you_have_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9361}}, \"stat\": \"maximum_rage\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"endurance_charge_on_kill_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 104, \"line\": 12}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 155, \"line\": 14}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44191}}, \"stat\": \"dual_wield_or_shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 12}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 5, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27137}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20832}}, \"stat\": \"shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 19, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25011}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33823}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 45358}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60002}}, \"stat\": \"base_projectile_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 60002}}, \"stat\": \"projectile_damage_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 4, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31039}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 43, \"line\": 16}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 49, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27137}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 36, \"line\": 25}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 27,
+ "reasons_gone": 115,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "life": [
+    4473.0,
+    4740.0
+   ],
+   "life-unreserved": [
+    4473.0,
+    4740.0
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "life": [
+    5844.0,
+    6134.0
+   ],
+   "life-unreserved": [
+    5844.0,
+    6134.0
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "life": [
+    3488.0,
+    3723.0
+   ],
+   "life-unreserved": [
+    3488.0,
+    3723.0
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "life": [
+    5237.0,
+    5529.0
+   ],
+   "life-unreserved": [
+    5237.0,
+    5529.0
+   ]
+  },
+  "978a6e195aa9d893c884e094ab5387b8484c57cf1847389c48b35dd4d64bc143.json": {
+   "life": [
+    2750.0,
+    2770.0
+   ],
+   "life-unreserved": [
+    2750.0,
+    2770.0
+   ],
+   "strength": [
+    58.0,
+    78.0
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "life": [
+    3517.0,
+    3780.0
+   ],
+   "life-unreserved": [
+    3517.0,
+    3780.0
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "life": [
+    6299.0,
+    6639.0
+   ],
+   "life-unreserved": [
+    6299.0,
+    6639.0
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "life": [
+    4199.0,
+    4468.0
+   ],
+   "life-unreserved": [
+    4199.0,
+    4468.0
+   ],
+   "poe1.spell-block-chance": [
+    0.0,
+    4.0
+   ]
+  },
+  "da30a1febcd3fe99c179ce1dfc3359cf15475382a741fe317e618090058708fb.json": {
+   "life": [
+    2897.0,
+    2917.0
+   ],
+   "life-unreserved": [
+    2897.0,
+    2917.0
+   ],
+   "strength": [
+    77.0,
+    97.0
+   ]
+  }
+ }
+}

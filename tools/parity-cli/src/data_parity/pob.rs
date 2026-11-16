@@ -9,7 +9,7 @@ use serde::de::{self, IgnoredAny};
 use serde::{Deserialize, Deserializer};
 
 /// The export format this reader understands.
-pub const FORMAT: u32 = 1;
+pub const FORMAT: u32 = 8;
 
 /// The whole export.
 #[derive(Debug, Deserialize)]
@@ -34,6 +34,10 @@ pub struct Export {
     pub gems: BTreeMap<String, Gem>,
     /// `data.itemBases` with weapon or armour properties, by name.
     pub bases: BTreeMap<String, Base>,
+    /// Every `data.itemBases` entry's requirements, by name (format 6).
+    pub base_requirements: BTreeMap<String, BaseRequirements>,
+    /// The mods of the keyed `data.itemMods` files, by mod ID (format 6).
+    pub mods: BTreeMap<String, ItemMod>,
     /// `data.monster*Table`, by table name; entry `i` is level `i + 1`.
     pub monster_tables: BTreeMap<String, Vec<f64>>,
     /// `data.gameConstants`.
@@ -42,8 +46,94 @@ pub struct Export {
     pub character_constants: BTreeMap<String, f64>,
     /// `data.monsterConstants`.
     pub monster_constants: BTreeMap<String, f64>,
+    /// `data.bosses`, by PoB's name (format 2).
+    pub bosses: BTreeMap<String, Boss>,
+    /// data.pantheons, by god ID (format 3, P3-12g).
+    pub pantheons: BTreeMap<String, God>,
+    /// data.jewelRadius, in PoB's order: the full radii, then the rings
+    /// (format 7, passive tree plan T-f).
+    #[serde(deserialize_with = "list")]
+    pub jewel_radii: Vec<JewelRadius>,
+    /// `data.flavourText`, in PoB's order (format 8, B-2).
+    #[serde(deserialize_with = "list")]
+    pub flavour_text: Vec<FlavourEntry>,
     /// The tree.
     pub tree: Tree,
+}
+
+/// An entry of `data.flavourText`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FlavourEntry {
+    /// The `FlavourText` ID, trailing underscores dropped.
+    pub id: String,
+    /// The unique's name.
+    pub name: String,
+    /// The lines as PoB's exporter cleaned them.
+    #[serde(deserialize_with = "list")]
+    pub text: Vec<String>,
+}
+
+/// An entry of `data.jewelRadius`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JewelRadius {
+    /// The inner radius (0 for a full radius).
+    pub inner: f64,
+    /// The outer radius.
+    pub outer: f64,
+    /// `Small` ... `Massive`, or `Variable` for a ring.
+    pub label: String,
+}
+
+/// A boss of `data.bosses`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Boss {
+    /// `armourMult`, percent.
+    #[serde(rename = "armourMult")]
+    pub armour_mult: f64,
+    /// `evasionMult`, percent.
+    #[serde(rename = "evasionMult")]
+    pub evasion_mult: f64,
+    /// `isUber`.
+    #[serde(rename = "isUber")]
+    pub is_uber: bool,
+}
+
+/// A god of data.pantheons.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct God {
+    /// isMajorGod.
+    #[serde(rename = "isMajorGod")]
+    pub is_major_god: bool,
+    /// The souls, in PoB's order.
+    #[serde(deserialize_with = "list")]
+    pub souls: Vec<Soul>,
+}
+
+/// A soul of a god.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Soul {
+    /// The soul's name.
+    pub name: String,
+    /// Its mods, in PoB's order.
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<SoulMod>,
+}
+
+/// A soul's mod: the line PoB's exporter rendered from the stat and its
+/// value (describeStats), which PoB's parser reads.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SoulMod {
+    /// The line.
+    pub line: String,
+    /// The stat's values.
+    #[serde(deserialize_with = "list")]
+    pub value: Vec<f64>,
 }
 
 /// PoB's version.
@@ -96,6 +186,11 @@ pub struct Skill {
     /// `support`.
     #[serde(default)]
     pub support: Option<bool>,
+    /// `color` (format 5, P3-12i): the game's `Attribute`, as PoB's
+    /// exporter writes it (1 strength, 2 dexterity, 3 intelligence, 4
+    /// none); absent for a skill PoB defines without one.
+    #[serde(default)]
+    pub color: Option<i64>,
     /// Stat IDs in level-value order.
     #[serde(deserialize_with = "list")]
     pub stats: Vec<String>,
@@ -110,6 +205,83 @@ pub struct Skill {
     pub quality_stats: Vec<StatValue>,
     /// `levels`, by level number as text.
     pub levels: BTreeMap<String, Level>,
+    /// The mods each stat gives through the skill's `statMap` or PoB's
+    /// `SkillStatMap.lua`, and the base mods (stat `""`), format 4
+    /// (P3-12h).
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<StatMods>,
+    /// `minionList` (format 4).
+    #[serde(deserialize_with = "list")]
+    pub minions: Vec<String>,
+    /// A support's `addSkillTypes`, by name (format 4).
+    #[serde(deserialize_with = "list")]
+    pub add_types: Vec<String>,
+    /// A support's `addMinionList` (format 4).
+    #[serde(deserialize_with = "list")]
+    pub add_minions: Vec<String>,
+    /// A support's `isTrigger` (format 4).
+    pub is_trigger: bool,
+}
+
+/// The mods one stat of a skill gives (format 4): PoB's
+/// `mergeSkillInstanceMods` reads `statMap[stat]`, else
+/// `data.skillStatMap[stat]`.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatMods {
+    /// The stat (`""` for the skill's base mods).
+    pub stat: String,
+    #[expect(
+        dead_code,
+        reason = "read so the export is checked whole; not compared"
+    )]
+    /// From the skill's own `statMap` (else PoB's global map).
+    pub own: bool,
+    /// The map's `div`, when it has one.
+    #[serde(default)]
+    pub div: Option<f64>,
+    /// The map's `mult`, when it has one.
+    #[serde(default)]
+    pub mult: Option<f64>,
+    /// The mods.
+    #[serde(deserialize_with = "list")]
+    pub mods: Vec<ModRecord>,
+}
+
+/// One mod of a skill's stat map (format 4), plain fields only.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ModRecord {
+    /// The mod's name (`Accuracy`, `CritChance`, `SkillData`, ...).
+    pub name: String,
+    /// Its type (`BASE`, `INC`, `MORE`, `FLAG`, `LIST`, ...).
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// `ModFlag` bits.
+    #[serde(default)]
+    pub flags: Option<u64>,
+    /// `KeywordFlag` bits.
+    #[serde(default, rename = "keywordFlags")]
+    pub keyword_flags: Option<u64>,
+    /// A constant value, when the mod has one.
+    #[serde(default)]
+    pub value: Option<serde_json::Value>,
+    /// A `LIST` mod's value fields (`key` and `value` for `SkillData`).
+    #[serde(default)]
+    pub value_fields: Option<BTreeMap<String, serde_json::Value>>,
+    /// The tags, in order, each with its plain fields.
+    #[serde(deserialize_with = "list")]
+    pub tags: Vec<BTreeMap<String, serde_json::Value>>,
+}
+
+impl ModRecord {
+    /// The `GlobalEffect` tag's fields, if the mod has one.
+    #[must_use]
+    pub fn global_effect(&self) -> Option<&BTreeMap<String, serde_json::Value>> {
+        self.tags
+            .iter()
+            .find(|t| t.get("type").and_then(serde_json::Value::as_str) == Some("GlobalEffect"))
+    }
 }
 
 /// One level of a skill.
@@ -220,6 +392,57 @@ pub struct Base {
     /// `armour` (PoB's field names).
     #[serde(default)]
     pub armour: Option<BTreeMap<String, f64>>,
+}
+
+/// An item base's `req` (format 6): the level PoB's exporter derived
+/// (`v2.67.2:src/Export/Scripts/bases.lua:276-293`) and the attributes it
+/// copied when not 0 (`:294-305`). Absent fields were not written.
+#[derive(Debug, Deserialize)]
+#[expect(dead_code, reason = "PoB's item type names are not game data")]
+#[serde(deny_unknown_fields)]
+pub struct BaseRequirements {
+    /// PoB's item type.
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// Whether the base is a flask (the exporter's other level rule).
+    pub flask: bool,
+    /// The required level.
+    #[serde(default)]
+    pub level: Option<f64>,
+    /// Strength.
+    #[serde(default)]
+    pub str: Option<f64>,
+    /// Dexterity.
+    #[serde(default)]
+    pub dex: Option<f64>,
+    /// Intelligence.
+    #[serde(default)]
+    pub int: Option<f64>,
+}
+
+/// One mod of the keyed `data.itemMods` files (format 6), as PoB's
+/// exporter wrote it (`v2.67.2:src/Export/Scripts/mods.lua:83-114`).
+#[derive(Debug, Deserialize)]
+#[expect(
+    dead_code,
+    reason = "the kind is not compared (data_parity::NOT_COMPARED)"
+)]
+#[serde(deny_unknown_fields)]
+pub struct ItemMod {
+    /// `affix` (the game's `Mods.Name`; `""` when it has none).
+    pub affix: String,
+    /// `level` (the game's `Mods.Level`).
+    #[serde(default)]
+    pub level: Option<f64>,
+    /// `type` (`Prefix`, `Suffix`, `Corrupted`, ...), when written.
+    #[serde(default, rename = "type")]
+    pub kind: Option<String>,
+    /// The `data.itemMods` files holding the ID, in the export's order.
+    #[serde(deserialize_with = "list")]
+    pub tables: Vec<String>,
+    /// Two of those files disagree on the affix or level.
+    #[serde(default)]
+    pub conflict: bool,
 }
 
 /// The tree file.

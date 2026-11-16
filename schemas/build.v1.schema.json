@@ -144,6 +144,17 @@
             "$ref": "#/$defs/BuildPartEntry"
           }
         },
+        "league": {
+          "description": "The league the build is planned for, if chosen (additive,\naccepted 2026-11-14).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/League"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "passives": {
           "description": "Passive specs.",
           "$ref": "#/$defs/Passives"
@@ -310,6 +321,10 @@
             "$ref": "#/$defs/Attribute"
           }
         },
+        "layout": {
+          "description": "How the build's format held the sets; left out for one element\nper set.",
+          "$ref": "#/$defs/ConfigLayout"
+        },
         "sets": {
           "description": "The sets.",
           "type": "array",
@@ -332,6 +347,17 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Attribute"
+          }
+        },
+        "kind": {
+          "description": "Whether the value was set or is a placeholder; left out for a\nset value.",
+          "$ref": "#/$defs/ConfigInputKind"
+        },
+        "lines": {
+          "description": "The custom modifier lines read from a text value applied as\nsuch (PoB's legacy `customMods`), with their resolutions; left\nout when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierLine"
           }
         },
         "name": {
@@ -380,6 +406,36 @@
         }
       ]
     },
+    "ConfigInputKind": {
+      "description": "Whether a config value was set or is a placeholder.",
+      "oneOf": [
+        {
+          "description": "A value set for the input.",
+          "type": "string",
+          "const": "input"
+        },
+        {
+          "description": "A placeholder: the value a planner shows for an input left\nunset, which it may also use for that input.",
+          "type": "string",
+          "const": "placeholder"
+        }
+      ]
+    },
+    "ConfigLayout": {
+      "description": "How a build's format held its config sets.",
+      "oneOf": [
+        {
+          "description": "Each set in its own element.",
+          "type": "string",
+          "const": "sets"
+        },
+        {
+          "description": "One set (ID 1, no title, no attributes) held directly, with no\nset element.",
+          "type": "string",
+          "const": "flat"
+        }
+      ]
+    },
     "ConfigSet": {
       "description": "One config set.",
       "type": "object",
@@ -389,6 +445,13 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/Attribute"
+          }
+        },
+        "custom_modifiers": {
+          "description": "Custom modifier blocks, after the inputs; left out when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierBlock"
           }
         },
         "id": {
@@ -491,6 +554,65 @@
             "string"
           ]
         }
+      ]
+    },
+    "CustomModifierBlock": {
+      "description": "A block of custom modifier lines.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "description": "Untyped attributes.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Attribute"
+          }
+        },
+        "enabled": {
+          "description": "Whether the block applies.",
+          "type": "boolean"
+        },
+        "lines": {
+          "description": "The modifier lines read from the text, with their resolutions;\nleft out when none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomModifierLine"
+          }
+        },
+        "text": {
+          "description": "The block's text, as read.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "text"
+      ]
+    },
+    "CustomModifierLine": {
+      "description": "One modifier line of a custom modifier block or a config input.",
+      "type": "object",
+      "properties": {
+        "resolution": {
+          "description": "What the line resolved to.",
+          "$ref": "#/$defs/LineResolution"
+        },
+        "text": {
+          "description": "The modifier text.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "resolution"
       ]
     },
     "DataVersion": {
@@ -1061,6 +1183,21 @@
           "required": [
             "opaque"
           ]
+        }
+      ]
+    },
+    "League": {
+      "description": "The league a build is planned for.",
+      "oneOf": [
+        {
+          "description": "A challenge league: legacy item versions cannot be had.",
+          "type": "string",
+          "const": "challenge"
+        },
+        {
+          "description": "Standard: legacy item versions can be had.",
+          "type": "string",
+          "const": "standard"
         }
       ]
     },
@@ -2421,6 +2558,39 @@
           "additionalProperties": false,
           "required": [
             "catalyst-quality"
+          ]
+        },
+        {
+          "description": "A custom modifier line that is a label or a comment, with no\neffect (ADR-015 Amendment 2; additive in v1, P3-close).",
+          "type": "string",
+          "const": "custom-note"
+        },
+        {
+          "description": "A custom modifier line read by a curated pattern as PoB's\nparser reads it (ADR-015 Amendment 2; additive in v1).",
+          "type": "object",
+          "properties": {
+            "custom-pattern": {
+              "type": "object",
+              "properties": {
+                "pattern": {
+                  "description": "The pattern's name.",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "The value as shown.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "pattern",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "custom-pattern"
           ]
         }
       ]

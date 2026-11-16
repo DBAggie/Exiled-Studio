@@ -1,4 +1,1437 @@
 {
   "format": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "DIV-0001",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0002",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 109.027150546875,
+      "successor_value": 108.97266421476762,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0003",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-area-hit-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0004",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-area-hit-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 97.07558901562498,
+      "successor_value": 97.02707547788604,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0005",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-area-hit-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "97.1",
+      "successor_value": "97.0",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0006",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-weapon-mods-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.4705,
+      "successor_value": 1.4655172413793103,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon is the tooltip's: a Siege Axe with 15% increased attack speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0007",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-weapon-mods-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 358.69188482421873,
+      "successor_value": 357.47646484374997,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon is the tooltip's: a Siege Axe with 15% increased attack speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0008",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-weapon-mods-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "358.7",
+      "successor_value": "357.5",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon is the tooltip's: a Siege Axe with 15% increased attack speed"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0009",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-melee-physical-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.1475,
+      "successor_value": 1.1469265367316341,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0010",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-melee-physical-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 110.89568376562498,
+      "successor_value": 110.84026363380808,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0011",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-melee-physical-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "110.9",
+      "successor_value": "110.8",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0012",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-melee-physical-area-hit-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.1475,
+      "successor_value": 1.1469265367316341,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0013",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-melee-physical-area-hit-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 77.72216806406249,
+      "successor_value": 77.68332640086206,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0014",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-elemental-attacks-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0015",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-elemental-attacks-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 316.82214660937495,
+      "successor_value": 316.66381470202396,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0016",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-elemental-attacks-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "316.8",
+      "successor_value": "316.7",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0017",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-items-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.4025,
+      "successor_value": 1.4017991004497752,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0018",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-items-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 308.80138629140623,
+      "successor_value": 308.64706276002624,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0019",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-items-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "308.8",
+      "successor_value": "308.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0020",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-crit-items-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0021",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-crit-items-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 109.59370137890625,
+      "successor_value": 109.53893191294976,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0022",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-crit-items-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "109.6",
+      "successor_value": "109.5",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0023",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-enemy-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0024",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-enemy-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 289.01616172734373,
+      "successor_value": 288.87172586441153,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0025",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-enemy-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "289.0",
+      "successor_value": "288.9",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture's weapon has no local attack speed: the difference is the base rate 1000 / 667 = 1.4993 against PoB's exported round(1000 / 667, 2) = 1.50, supported by the tooltip (not PoB's 1.50 x 1.15) and the developer's 1000 / ms"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0026",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-charges-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.3769999999999998,
+      "successor_value": 1.376311844077961,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with two frenzy charges (8% increased attack speed per PoB's order): the difference is the same base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 1.08 on both sides (P3-12e)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0027",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-charges-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 127.46361910218748,
+      "successor_value": 127.39991914261618,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with two frenzy charges (8% increased attack speed per PoB's order): the difference is the same base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 1.08 on both sides (P3-12e)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0028",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-charges-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "127.5",
+      "successor_value": "127.4",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with two frenzy charges (8% increased attack speed per PoB's order): the difference is the same base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 1.08 on both sides (P3-12e)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0029",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-shocked-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.5299999999999998,
+      "successor_value": 1.5292353823088454,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with a shocked enemy in 20% delirium and Onslaught (P3-12f): the enemy's damage taken scales the hit only, and the average damage equals PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 1.2 (Onslaught's 20% increased attack speed) on both sides. The TotalDPS breakdown's displayed total rounds to the same 164.8 on both sides, so it needs no entry"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0030",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-shocked-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 164.84905162687497,
+      "successor_value": 164.7666682927286,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with a shocked enemy in 20% delirium and Onslaught (P3-12f): the enemy's damage taken scales the hit only, and the average damage equals PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 1.2 (Onslaught's 20% increased attack speed) on both sides. The TotalDPS breakdown's displayed total rounds to the same 164.8 on both sides, so it needs no entry"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-12",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0031",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-intimidate-blind-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml against an intimidated, blinded, unnerved enemy (P3-12g): Intimidate's 10% increased attack damage taken scales the hit, Blind's 20% less evasion raises the chance to hit (PoB's 26%, ours the same), and the average damage equals PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0032",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-intimidate-blind-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 141.87625572656248,
+      "successor_value": 141.80535305003747,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml against an intimidated, blinded, unnerved enemy (P3-12g): Intimidate's 10% increased attack damage taken scales the hit, Blind's 20% less evasion raises the chance to hit (PoB's 26%, ours the same), and the average damage equals PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0033",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-intimidate-blind-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "141.9",
+      "successor_value": "141.8",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml against an intimidated, blinded, unnerved enemy (P3-12g): Intimidate's 10% increased attack damage taken scales the hit, Blind's 20% less evasion raises the chance to hit (PoB's 26%, ours the same), and the average damage equals PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0034",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-skill-keywords-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with custom lines that name a skill keyword (P3-8h): the lightning skill's crit chance and multiplier, physical and lightning damage with attack skills apply, the others do not (cold skills, cast speed, fire damage, spell skills); the average damage, crit chance, and crit multiplier equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0035",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-skill-keywords-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 133.74316296,
+      "successor_value": 133.67632479760118,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is smite-templar.xml with custom lines that name a skill keyword (P3-8h): the lightning skill's crit chance and multiplier, physical and lightning damage with attack skills apply, the others do not (cold skills, cast speed, fire damage, spell skills); the average damage, crit chance, and crit multiplier equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0036",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.1475,
+      "successor_value": 1.1469265367316341,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0037",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 353.73885226424994,
+      "successor_value": 353.56207122863566,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0038",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-gem-levels-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "353.7",
+      "successor_value": "353.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with Melee Physical Damage, Precision in another group, and custom lines that raise gem levels (P3-8i): Smite gains 3 levels, Melee Physical Damage 1, Precision 3; the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 0.9 (Melee Physical Damage's less attack speed) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0039",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-minion-modifiers-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.4789999999999999,
+      "successor_value": 1.478260869565217,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe and custom lines: minion damage and speeds with the redirects of minion damage and minion attack speed to you (P3-8j); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 1.16 (16% increased attack speed from the minion modifiers) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0040",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-minion-modifiers-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 151.35683157375,
+      "successor_value": 151.28119097826084,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe and custom lines: minion damage and speeds with the redirects of minion damage and minion attack speed to you (P3-8j); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 1.16 (16% increased attack speed from the minion modifiers) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0041",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-minion-modifiers-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "151.4",
+      "successor_value": "151.3",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe and custom lines: minion damage and speeds with the redirects of minion damage and minion attack speed to you (P3-8j); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) and 1.16 (16% increased attack speed from the minion modifiers) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0042",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-exposure-shock-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.275,
+      "successor_value": 1.2743628185907045,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked, with Elemental Army's exposure type and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock (P3-8k); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0043",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-exposure-shock-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 232.14339411656246,
+      "successor_value": 232.02738042634928,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked, with Elemental Army's exposure type and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock (P3-8k); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0044",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-exposure-shock-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "232.1",
+      "successor_value": "232.0",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked, with Elemental Army's exposure type and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock (P3-8k); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the base rate 1000 / 667 = 1.4993 against PoB's round(1000 / 667, 2) = 1.50, times the same 0.85 (Smite's attack speed multiplier) on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0045",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-rage-momentum-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2.3528000000000002,
+      "successor_value": 2.344827586206897,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed), supported by Momentum, with rage configured at 35, \"Gain 1 Rage on Melee Hit\", \"+10 to Maximum Rage\", and Intimidate while you have rage (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's round(1.50 x 1.15, 2) = 1.73, times the same skill multiplier and global modifiers on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0046",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-rage-momentum-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 852.59400084925,
+      "successor_value": 849.705003836207,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed), supported by Momentum, with rage configured at 35, \"Gain 1 Rage on Melee Hit\", \"+10 to Maximum Rage\", and Intimidate while you have rage (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's round(1.50 x 1.15, 2) = 1.73, times the same skill multiplier and global modifiers on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0047",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-rage-momentum-templar.xml",
+      "field": "/breakdowns/TotalDPS/1",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "2.35",
+      "successor_value": "2.34",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed), supported by Momentum, with rage configured at 35, \"Gain 1 Rage on Melee Hit\", \"+10 to Maximum Rage\", and Intimidate while you have rage (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's round(1.50 x 1.15, 2) = 1.73, times the same skill multiplier and global modifiers on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0048",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-rage-momentum-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "852.6",
+      "successor_value": "849.7",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed), supported by Momentum, with rage configured at 35, \"Gain 1 Rage on Melee Hit\", \"+10 to Maximum Rage\", and Intimidate while you have rage (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's round(1.50 x 1.15, 2) = 1.73, times the same skill multiplier and global modifiers on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0049",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-conversion-penetration-templar.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.4705,
+      "successor_value": 1.4655172413793103,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed) whose quality does not increase physical damage, with 25% of physical damage converted to fire, 10% fire penetration with weapons, and 20% increased melee damage at close range (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's 1.73, times the same skill multiplier on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0050",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-conversion-penetration-templar.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 434.35290210585936,
+      "successor_value": 432.88110634428875,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed) whose quality does not increase physical damage, with 25% of physical damage converted to fire, 10% fire penetration with weapons, and 20% increased melee damage at close range (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's 1.73, times the same skill multiplier on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0051",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-conversion-penetration-templar.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "434.4",
+      "successor_value": "432.9",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is Smite with the tooltip's Siege Axe (15% increased attack speed) whose quality does not increase physical damage, with 25% of physical damage converted to fire, 10% fire penetration with weapons, and 20% increased melee damage at close range (P3-8n); the average damage, crit chance, crit multiplier, hit chance, and unreserved mana equal PoB's; the difference is the weapon's rate, 1000 / 580 against PoB's 1.73, times the same skill multiplier on both sides"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0052",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act1.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.59477,
+      "successor_value": 1.5956316410861866,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the Smite of Divine Judgement Inquisitor guide's Act 1 setup (P3-3b), its custom block's \"Perfect Forest Warrior\" a custom note since the Phase 3 close-out (Q13 option (b)), so every slice field is complete; every field but the rate and the hit DPS equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0053",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act1.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1466.6294791719577,
+      "successor_value": 1467.4218869909328,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the Smite of Divine Judgement Inquisitor guide's Act 1 setup (P3-3b), its custom block's \"Perfect Forest Warrior\" a custom note since the Phase 3 close-out (Q13 option (b)), so every slice field is complete; every field but the rate and the hit DPS equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0054",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act1.xml",
+      "field": "/breakdowns/TotalDPS/1",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "1.59",
+      "successor_value": "1.60",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the Smite of Divine Judgement Inquisitor guide's Act 1 setup (P3-3b), its custom block's \"Perfect Forest Warrior\" a custom note since the Phase 3 close-out (Q13 option (b)), so every slice field is complete; every field but the rate and the hit DPS equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0055",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act1.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "1466.6",
+      "successor_value": "1467.4",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the Smite of Divine Judgement Inquisitor guide's Act 1 setup (P3-3b), its custom block's \"Perfect Forest Warrior\" a custom note since the Phase 3 close-out (Q13 option (b)), so every slice field is complete; every field but the rate and the hit DPS equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0056",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/main_output/AverageDamage",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1698.9775885920435,
+      "successor_value": 1698.8626905317944,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0057",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 1.59477,
+      "successor_value": 1.5956316410861866,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0058",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2709.478488958933,
+      "successor_value": 2710.7590628733415,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0059",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/breakdowns/TotalDPS/0",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "1699.0",
+      "successor_value": "1698.9",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0060",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/breakdowns/TotalDPS/1",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "1.59",
+      "successor_value": "1.60",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0061",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act2.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "2709.5",
+      "successor_value": "2710.8",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 2 setup (P3-3b) with Herald of Ash, Herald of Purity, Intimidating Cry, and Shockwave modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0062",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/main_output/AverageDamage",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 15434.30125812615,
+      "successor_value": 15433.568779729778,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 5 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry, and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0063",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2.74822,
+      "successor_value": 2.7497048406139317,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 5 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry, and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0064",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 42416.85540360745,
+      "successor_value": 42437.75878157102,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 5 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry, and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0065",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/breakdowns/TotalDPS/0",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "15434.3",
+      "successor_value": "15433.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 5 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry, and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0066",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act5.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "42416.9",
+      "successor_value": "42437.8",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 5 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry, and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0067",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/main_output/AverageDamage",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 31851.872590499886,
+      "successor_value": 31850.55771376552,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 10 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry (Urgent Orders), and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0068",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/main_output/Speed",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 2.8685799999999997,
+      "successor_value": 2.87012987012987,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 10 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry (Urgent Orders), and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0069",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/main_output/TotalDPS",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": 91369.64467565615,
+      "successor_value": 91415.23707457376,
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 10 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry (Urgent Orders), and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0070",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/breakdowns/TotalDPS/0",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "31851.9",
+      "successor_value": "31850.6",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 10 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry (Urgent Orders), and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::intimidating_cry_uptime_should_divide_its_exerts_by_the_attack_rate",
+      "added": "2026-11-13",
+      "status": "accepted"
+    },
+    {
+      "id": "DIV-0071",
+      "mechanic": "A weapon's attack rate: the attack time in integer milliseconds, floored after local increased attack speed, rate 1000 / ms (Q11); PoB rounds the base rate and the local rate to two decimals. The registered value also carries the skill's attack speed multiplier and global modifiers in PoB's order; it holds only if open question Q12 confirms that order.",
+      "fixture": "smite-inquisitor-act10.xml",
+      "field": "/breakdowns/TotalDPS/2",
+      "comparison": {
+        "type": "exact"
+      },
+      "oracle_value": "91369.6",
+      "successor_value": "91415.2",
+      "kind": "game-truth",
+      "evidence": [
+        "In-game weapon tooltip, maintainer, 2026-11-12: Siege Axe (667 ms) with 15% increased attack speed shows 1.72; PoB's model gives round(1.50 x 1.15, 2) = 1.73. It shows the weapon's own rate only, and does not separate a floored from an unfloored attack time (both 1.7241) (docs/phase-3/attack-hits.md, \"The switch\")",
+        "Mark_GGG, Reddit questions thread 2020-01-29: weapons have an attack time in ms; 625 / 1.23 = 508 ms, rounded down to an integer value; attacks per second 1000 / ms, rounded only for the tooltip (https://devtrackers.gg/pathofexile/p/bc0f1173-questions-thread-january-29-2020)",
+        "This fixture is the guide's Act 10 setup (P3-3b) with the heralds, Flesh and Stone, Elemental Weakness, Intimidating and Rallying Cry (Urgent Orders), and Summon Lightning Golem with Wrath modelled since the Phase 3 close-out; every field but the rate, the hit DPS, and the average damage equals PoB's",
+        "The average damage differs through Intimidating Cry's exerted attacks: PoB adds their uptime, min((exerts / rate) / (cooldown + cast time), 1) x 100, to the double damage chance (CalcOffence.lua 2592 to 2600, 3200 to 3201), so the floored rate (above PoB's) gives a smaller uptime; with PoB's rate the engine's uptime is PoB's (act10: PoB's 8.2774 over the engine's 8.2729 is 1.00054, the ratio of the rates)"
+      ],
+      "test": "crates/loom-calc/tests/attack.rs::the_weapons_attack_time_should_be_floored_to_whole_milliseconds",
+      "added": "2026-11-13",
+      "status": "accepted"
+    }
+  ]
 }

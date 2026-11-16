@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8l): a level 90 Witch casting Ice Nova (level 20) with Zealotry (level 20) and Discipline (level 18), two auras reserving a percentage of mana, and Herald of Ice (level 20), a buff reserving a percentage of mana, with custom lines: 23% increased effect of Non-Curse Auras (it scales Zealotry's and Discipline's mods, not the herald's), 13% increased Mana Reservation Efficiency, 7% increased Reservation Efficiency, and 8% reduced Reservation of Skills (each reservation x 0.92 / 1.2). Odd efficiency values: an even one also reads as the stat whose description doubles its value (mana_reservation_efficiency_-2%_per_1), an ambiguous line.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Zealotry" skillId="Zealotry" variantId="Zealotry" gemId="Metadata/Items/Gems/SkillGemSpellDamageAura" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Discipline" skillId="Discipline" variantId="Discipline" gemId="Metadata/Items/Gems/SkillGemDiscipline" level="18" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Herald of Ice" skillId="HeraldOfIce" variantId="HeraldOfIce" gemId="Metadata/Items/Gems/SkillGemHeraldOfIce" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				23% increased effect of Non-Curse Auras from your Skills
+13% increased Mana Reservation Efficiency of Skills
+7% increased Reservation Efficiency of Skills
+8% reduced Reservation of Skills
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

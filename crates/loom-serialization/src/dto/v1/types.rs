@@ -46,6 +46,15 @@ dto! {
         pub build: Build,
     }
 
+    /// The league a build is planned for.
+    #[serde(rename_all = "kebab-case")]
+    pub enum League {
+        /// A challenge league: legacy item versions cannot be had.
+        Challenge,
+        /// Standard: legacy item versions can be had.
+        Standard,
+    }
+
     /// A game.
     #[serde(rename_all = "kebab-case")]
     pub enum Game {
@@ -87,6 +96,10 @@ dto! {
         /// The data bundle the build was made with, if recorded.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub data: Option<DataVersion>,
+        /// The league the build is planned for, if chosen (additive,
+        /// accepted 2026-11-14).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub league: Option<League>,
         /// The character.
         pub character: Character,
         /// Passive specs.
@@ -677,6 +690,17 @@ dto! {
             /// The quality as shown.
             quality: String,
         },
+        /// A custom modifier line that is a label or a comment, with no
+        /// effect (ADR-015 Amendment 2; additive in v1, P3-close).
+        CustomNote,
+        /// A custom modifier line read by a curated pattern as PoB's
+        /// parser reads it (ADR-015 Amendment 2; additive in v1).
+        CustomPattern {
+            /// The pattern's name.
+            pattern: String,
+            /// The value as shown.
+            value: String,
+        },
     }
 
     /// One placeholder value of a property line.
@@ -720,9 +744,25 @@ dto! {
         pub active: Option<u32>,
         /// The sets.
         pub sets: Vec<Entry<ConfigSet>>,
+        /// How the build's format held the sets; left out for one element
+        /// per set.
+        #[serde(default, skip_serializing_if = "ConfigLayout::is_sets")]
+        pub layout: ConfigLayout,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// How a build's format held its config sets.
+    #[derive(Default, Copy, PartialEq, Eq)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum ConfigLayout {
+        /// Each set in its own element.
+        #[default]
+        Sets,
+        /// One set (ID 1, no title, no attributes) held directly, with no
+        /// set element.
+        Flat,
     }
 
     /// One config set.
@@ -734,9 +774,38 @@ dto! {
         pub title: Option<String>,
         /// Inputs.
         pub inputs: Vec<Entry<ConfigInput>>,
+        /// Custom modifier blocks, after the inputs; left out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub custom_modifiers: Vec<CustomModifierBlock>,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// A block of custom modifier lines.
+    pub struct CustomModifierBlock {
+        /// The title, if any.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub title: Option<String>,
+        /// Whether the block applies.
+        pub enabled: bool,
+        /// The block's text, as read.
+        pub text: String,
+        /// The modifier lines read from the text, with their resolutions;
+        /// left out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub lines: Vec<CustomModifierLine>,
+        /// Untyped attributes.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub attributes: Vec<Attribute>,
+    }
+
+    /// One modifier line of a custom modifier block or a config input.
+    pub struct CustomModifierLine {
+        /// The modifier text.
+        pub text: String,
+        /// What the line resolved to.
+        pub resolution: LineResolution,
     }
 
     /// One config input.
@@ -745,9 +814,30 @@ dto! {
         pub name: String,
         /// The value.
         pub value: ConfigValue,
+        /// Whether the value was set or is a placeholder; left out for a
+        /// set value.
+        #[serde(default, skip_serializing_if = "ConfigInputKind::is_input")]
+        pub kind: ConfigInputKind,
+        /// The custom modifier lines read from a text value applied as
+        /// such (PoB's legacy `customMods`), with their resolutions; left
+        /// out when none.
+        #[serde(default, skip_serializing_if = "is_empty")]
+        pub lines: Vec<CustomModifierLine>,
         /// Untyped attributes.
         #[serde(default, skip_serializing_if = "is_empty")]
         pub attributes: Vec<Attribute>,
+    }
+
+    /// Whether a config value was set or is a placeholder.
+    #[derive(Default, Copy, PartialEq, Eq)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum ConfigInputKind {
+        /// A value set for the input.
+        #[default]
+        Input,
+        /// A placeholder: the value a planner shows for an input left
+        /// unset, which it may also use for that input.
+        Placeholder,
     }
 
     /// A config value.
@@ -759,6 +849,29 @@ dto! {
         Number(Sourced<Number>),
         /// Text.
         String(String),
+    }
+}
+
+impl ConfigInputKind {
+    /// Whether this is a set value (for `skip_serializing_if`).
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "serde's skip_serializing_if passes a reference"
+    )]
+    fn is_input(&self) -> bool {
+        *self == Self::Input
+    }
+}
+
+impl ConfigLayout {
+    /// Whether this is the layout with one element per set (for
+    /// `skip_serializing_if`).
+    #[expect(
+        clippy::trivially_copy_pass_by_ref,
+        reason = "serde's skip_serializing_if passes a reference"
+    )]
+    fn is_sets(&self) -> bool {
+        *self == Self::Sets
     }
 }
 

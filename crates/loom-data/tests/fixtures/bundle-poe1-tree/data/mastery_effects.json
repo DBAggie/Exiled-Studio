@@ -1,0 +1,22 @@
+[
+ {
+  "hash": 4242,
+  "id": "TestLifeMastery1",
+  "stats": [
+   {
+    "stat": "test_mastery_stat",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "hash": 4243,
+  "id": "TestLifeMastery2",
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 20
+   }
+  ]
+ }
+]

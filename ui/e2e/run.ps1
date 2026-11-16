@@ -1,0 +1,46 @@
+# Runs the real-app workflow (ui/e2e/workflow.mjs) on Windows: starts
+# tauri-driver with msedgedriver, then the script. From the repository
+# root, in CI's e2e job (Windows) or by hand:
+#
+#   pwsh ui/e2e/run.ps1 <app binary> <msedgedriver.exe> [<tauri-driver.exe>]
+#
+# PowerShell, not Git Bash: the native drivers and WebView2 must see
+# Windows paths and environment as they are (under Git Bash the session
+# could not be created: DevToolsActivePort file doesn't exist).
+param(
+  [Parameter(Mandatory = $true)][string]$App,
+  [Parameter(Mandatory = $true)][string]$EdgeDriver,
+  [string]$TauriDriver = 'tauri-driver'
+)
+$ErrorActionPreference = 'Stop'
+
+if (-not (Test-Path $EdgeDriver)) { throw "no native driver at $EdgeDriver" }
+$app = (Resolve-Path $App).Path
+$work = Join-Path ([IO.Path]::GetTempPath()) "loom-e2e-$PID"
+New-Item -ItemType Directory -Force $work | Out-Null
+# The synthetic build as the synthetic tree bundle's Test Brute (passive
+# tree plan T1a), so the workflow can allocate on the tree.
+$xml = [IO.File]::ReadAllText((Resolve-Path 'tools\parity-cli\testdata\build-round-trip\synthetic-poe1.xml').Path)
+$xml = $xml.Replace('className="Scion"', 'className="Test Brute"').Replace('classId="0" ascendClassId="0" nodes=""', 'classId="1" ascendClassId="0" nodes="1000"')
+[IO.File]::WriteAllText((Join-Path $work 'import.xml'), $xml)
+
+# A pack of the synthetic tree bundle, signed with the public test key
+# (Phase 5, P4: the e2e installs it).
+& cargo run -q --locked -p loom-release -- pack crates/loom-data/tests/fixtures/bundle-poe1-tree --test-key --out (Join-Path $work 'bundle.loombundle')
+if ($LASTEXITCODE -ne 0) { throw 'loom-release pack failed' }
+
+$env:LOOM_E2E_DIR = $work
+$env:LOOM_DATA_DIR = Join-Path $work 'data'
+$env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1-tree').Path
+
+$driver = Start-Process $TauriDriver -ArgumentList '--native-driver', $EdgeDriver -PassThru -NoNewWindow
+try {
+  # Wait for the driver to listen.
+  for ($i = 0; $i -lt 50; $i++) {
+    try { Invoke-WebRequest 'http://127.0.0.1:4444/status' -UseBasicParsing | Out-Null; break } catch { Start-Sleep -Milliseconds 200 }
+  }
+  node ui\e2e\workflow.mjs $app $work
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+} finally {
+  Stop-Process $driver -ErrorAction SilentlyContinue
+}

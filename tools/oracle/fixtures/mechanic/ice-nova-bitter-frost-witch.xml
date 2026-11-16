@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8m): a level 90 Witch casting Ice Nova (level 20) with the Bitter Frost keystone allocated (node 12128, by the shortest path from the Witch start: intelligence and energy shield and mana nodes), Frostblink (level 20, a chilling area skill) in a second group, an enemy configured as chilled with an 8% effect, and custom lines "Adds 10 to 20 Fire Damage to Spells" and "25% increased Effect of Chill": Frostblink's guaranteed chill is 10 x 1.25 = 12.5, larger than the configured 8, so the chill is 12 (floored), and the enemy takes 12% increased cold damage; the spell deals no non-cold damage, so the added fire damage is not dealt.
+     A keystone not connected to the class start stays unallocated in PoB. Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes="54447,57226,21678,32210,8948,38176,49651,5296,19501,12128"/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Frostblink" skillId="Frostblink" variantId="Frostblink" gemId="Metadata/Items/Gems/SkillGemFrostblink" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyChilled" boolean="true"/>
+			<Input name="conditionEnemyChilledEffect" number="8"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Adds 10 to 20 Fire Damage to Spells
+25% increased Effect of Chill
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

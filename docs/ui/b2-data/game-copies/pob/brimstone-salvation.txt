@@ -1,0 +1,13 @@
+Item Class: Helmets
+Rarity: RARE
+Brimstone Salvation
+Gladiator Helmet
+Quality: 16
+Armour: 295
+Sockets: W-W W
+Item Level: 39
+Implicits: 0
+{prefix}{tags:defences,armour}43% increased Armour
+{prefix}{tags:life}+56 to maximum Life
+{suffix}{tags:elemental,lightning,resistance}+22% to Lightning Resistance
+{suffix}{tags:elemental,cold,resistance}+21% to Cold Resistance

@@ -1,0 +1,384 @@
+{
+ "builds_with_reason_changes": 32,
+ "only_after": [
+  "ice-nova-pantheon-arakaali-shakari-witch.xml.json",
+  "ice-nova-pantheon-brine-king-gruthkul-witch.xml.json",
+  "ice-nova-pantheon-lunaris-garukhan-witch.xml.json",
+  "ice-nova-pantheon-solaris-yugul-witch.xml.json",
+  "ice-nova-unnerve-intimidate-blind-witch.xml.json",
+  "smite-intimidate-blind-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Savior.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}"
+   ]
+  },
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyUnnerved\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionKilledRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}"
+   ]
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIntimidated\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyMaimed\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Arakaali\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Shakari\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionKilledRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 22}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 18, \"line\": 20}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionCastSpellRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionUsedMinionSkillRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ryslatha\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionUsedMinionSkillRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Garukhan\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyMaimed\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ryslatha\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierNonInstantSpellCastRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIntimidated\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyLowLife\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Gruthkul\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionUsedMinionSkillRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyUnnerved\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierNonInstantSpellCastRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 22}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIntimidated\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyPoisoned\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 20}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Arakaali\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 24}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Solaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyUnnerved\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 27}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 23}}, \"stat\": \"base_stun_recovery_+%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Garukhan\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionCastSpellRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Shakari\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBleeding\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyBlinded\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyPoisoned\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyLowLife\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 5}}, \"stat\": \"curse_effect_on_self_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 39, \"line\": 21}}, \"stat\": \"base_avoid_freeze_%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Garukhan\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyIgnited\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyLowLife\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionEnemyUnnerved\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionLeeching\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "smite-inquisitor-act1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"Lunaris\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Ralakesh\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 37, \"line\": 16}}, \"stat\": \"curse_effect_on_self_+%\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-major\", \"value\": \"TheBrineKing\"}}",
+    "{\"unmodelled-choice\": {\"choice\": \"pantheon-minor\", \"value\": \"Abberath\"}}",
+    "{\"unmodelled-config\": {\"input\": \"multiplierNonInstantSpellCastRecently\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMajorGod\"}}",
+    "{\"unmodelled-config\": {\"input\": \"pantheonMinorGod\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 159,
+ "state_changes": {},
+ "value_changes": {
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    894.3017062399999,
+    989.6578028749999
+   ],
+   "crit-chance": [
+    15.6096,
+    17.073
+   ],
+   "hit-chance": [
+    64.0,
+    70.0
+   ],
+   "hit-dps": [
+    2936.290602154667,
+    3249.3764527729168
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    49.61230751594999,
+    53.8895419902
+   ],
+   "crit-chance": [
+    28.439725,
+    30.11265
+   ],
+   "hit-chance": [
+    85.0,
+    90.0
+   ],
+   "hit-dps": [
+    134.96681507027256,
+    146.6027325109742
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    6727.914375,
+    7266.147525
+   ],
+   "hit-dps": [
+    21977.853625,
+    23736.081915
+   ]
+  }
+ }
+}

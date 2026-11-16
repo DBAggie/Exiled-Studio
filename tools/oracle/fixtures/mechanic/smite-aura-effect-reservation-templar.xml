@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8l): Smite with a normal Karui Maul (1000 ms) and Precision (level 10) and Clarity (level 5), auras reserving flat mana, and Haste (level 12), an aura reserving a percentage of mana, with custom lines: 10% increased effect of Non-Curse Auras (it scales Precision's accuracy and critical strike chance and Haste's attack speed), 17% increased Mana Reservation Efficiency, and 5% reduced Reservation Efficiency of Skills (each reservation / 1.12, flat amounts rounded to whole mana, the percent to 2 decimals). Odd efficiency values: an even one also reads as the stat whose description doubles its value, an ambiguous line.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="10" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Clarity" skillId="Clarity" variantId="Clarity" gemId="Metadata/Items/Gems/SkillGemClarity" level="5" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false">
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="12" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Karui Maul
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<CustomModifierBlock enabled="true" title="Default">
+				10% increased effect of Non-Curse Auras from your Skills
+17% increased Mana Reservation Efficiency of Skills
+5% reduced Reservation Efficiency of Skills
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

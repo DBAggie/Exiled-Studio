@@ -14,7 +14,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use loom_data::bundle::validate::validate;
+use loom_data::bundle::Bundle;
+use loom_data::bundle::validate::{Integrity, check, validate};
 use loom_data::bundle::{BundleSource, MANIFEST, MemorySource};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -110,6 +111,56 @@ fn changed_byte_should_give_a_hash_mismatch() {
     bytes[at] = b'L';
     src.insert("data/stats.json", bytes);
     assert_eq!(codes(&src), ["BUNDLE_HASH_MISMATCH"]);
+}
+
+#[test]
+fn checking_sizes_only_should_skip_the_hash_but_not_the_size() {
+    let mut src = source("bundle-poe2");
+    // Same size, still the same tables: a space becomes a tab.
+    let mut bytes = src.read("data/stats.json").unwrap();
+    let at = bytes.iter().position(|b| *b == b' ').unwrap();
+    bytes[at] = b'\t';
+    src.insert("data/stats.json", bytes.clone());
+    assert_eq!(check(&src, Integrity::Sizes).err().map(|r| r.codes()), None);
+    assert_eq!(
+        check(&src, Integrity::Hashes).unwrap_err().codes(),
+        ["BUNDLE_HASH_MISMATCH"]
+    );
+    bytes.push(b' ');
+    src.insert("data/stats.json", bytes);
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_SIZE_MISMATCH"]
+    );
+}
+
+#[test]
+fn checking_sizes_only_should_still_run_the_other_checks() {
+    let mut src = source("bundle-poe2");
+    src.insert("data/extra.json", "[]");
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_UNLISTED_FILE"]
+    );
+    let mut src = source("bundle-poe2");
+    let mut bases = json_of(&src, "data/base_items.json");
+    bases[0]["implicits"] = json!(["NoSuchMod"]);
+    put(&mut src, "data/base_items.json", &bases);
+    rehash(&mut src);
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_DANGLING_REF"]
+    );
+}
+
+#[test]
+fn check_should_return_the_bundle_it_loaded() {
+    for name in ["bundle-poe1", "bundle-poe2", "bundle-poe1-tree"] {
+        let src = source(name);
+        let checked = check(&src, Integrity::Hashes).unwrap();
+        let loaded = Bundle::load(&src).unwrap();
+        assert_eq!(format!("{checked:?}"), format!("{loaded:?}"), "{name}");
+    }
 }
 
 #[test]
@@ -342,6 +393,21 @@ fn skill_levels_out_of_order_should_give_their_code() {
     }
 }
 
+#[test]
+fn a_granted_effect_attribute_out_of_range_should_give_its_code() {
+    for (value, expected) in [
+        (json!(1), &[][..]),
+        (json!(4), &[][..]),
+        (json!(0), &["BUNDLE_VALUE_RANGE"][..]),
+        (json!(5), &["BUNDLE_VALUE_RANGE"][..]),
+    ] {
+        let src = edited("bundle-poe1", "data/granted_effects.json", |v| {
+            v[0]["attribute"] = value.clone();
+        });
+        assert_eq!(codes(&src), expected, "{value}");
+    }
+}
+
 /// The bundle as format 1 (no skill files), rehashed.
 fn format_1(name: &str) -> MemorySource {
     let mut src = source(name);
@@ -528,7 +594,7 @@ fn tree_node_outside_its_orbit_should_give_its_code() {
 #[test]
 fn property_mutations_should_each_give_their_code() {
     type Edit = fn(&mut Value);
-    let cases: [(&str, &str, Edit, &str); 13] = [
+    let cases: [(&str, &str, Edit, &str); 15] = [
         (
             "data/weapon_types.json",
             "weapon base",
@@ -592,6 +658,23 @@ fn property_mutations_should_each_give_their_code() {
         (
             "data/game_constants.json",
             "constant without ID",
+            |v| {
+                v[0]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "data/monster_types.json",
+            "monster type twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "data/monster_types.json",
+            "monster type without ID",
             |v| {
                 v[0]["id"] = "".into();
             },
@@ -772,5 +855,163 @@ fn property_values_and_shapes_should_each_give_their_code() {
     for (bundle, path, what, edit, code) in cases {
         let src = edited(bundle, path, edit);
         assert_eq!(codes(&src), [code], "{what}");
+    }
+}
+
+/// The pantheon (P3-12g): each mutation gives its code alone.
+#[test]
+fn pantheon_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/pantheons.json";
+    let cases: [(&str, Edit, &str); 5] = [
+        (
+            "soul stat",
+            |v| {
+                v[0]["souls"][1]["stats"][0][0] = "nope".into();
+            },
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "god twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "god without ID",
+            |v| {
+                v[1]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "soul without stats",
+            |v| {
+                v[0]["souls"][0]["stats"] = json!([]);
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "soul without a name",
+            |v| {
+                v[1]["souls"][0]["name"] = "".into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
+/// Unique flavour text (B-2): each mutation gives its code alone; a name
+/// with two IDs (variants) is valid.
+#[test]
+fn flavour_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/unique_flavour.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "row twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "row without a name",
+            |v| {
+                v[0]["name"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "row without an ID",
+            |v| {
+                v[1]["id"] = "".into();
+            },
+            "BUNDLE_EMPTY_ID",
+        ),
+        (
+            "row without text",
+            |v| {
+                v[2]["text"] = " ".into();
+            },
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    assert!(validate(&source("bundle-poe1")).is_valid());
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
+/// Socket caps (B-2 item evidence, E9): each mutation gives its code alone.
+#[test]
+fn socket_cap_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/socket_caps.json";
+    let cases: [(&str, Edit, &str); 4] = [
+        (
+            "base twice",
+            |v| {
+                let first = v[0].clone();
+                v.as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "unknown base",
+            |v| v[0]["base"] = json!("Test/Items/Nothing"),
+            "BUNDLE_DANGLING_REF",
+        ),
+        (
+            "no counts",
+            |v| v[0]["levels"] = json!([]),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "counts out of order",
+            |v| v[0]["levels"] = json!([[2, 1], [1, 1]]),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
+    }
+}
+
+/// Tree flavour (B-2 item evidence, E10): each mutation gives its code
+/// alone.
+#[test]
+fn tree_flavour_mutations_should_each_give_their_code() {
+    type Edit = fn(&mut Value);
+    let path = "poe1/tree_flavour.json";
+    let cases: [(&str, Edit, &str); 3] = [
+        (
+            "passive twice",
+            |v| {
+                let first = v["passives"][0].clone();
+                v["passives"].as_array_mut().unwrap().push(first);
+            },
+            "BUNDLE_DUPLICATE_ID",
+        ),
+        (
+            "passive without text",
+            |v| v["passives"][0]["text"] = json!(" "),
+            "BUNDLE_VALUE_RANGE",
+        ),
+        (
+            "ascendancy without text",
+            |v| v["ascendancies"][0]["text"] = json!(""),
+            "BUNDLE_VALUE_RANGE",
+        ),
+    ];
+    for (what, edit, code) in cases {
+        assert_eq!(codes(&edited("bundle-poe1", path, edit)), [code], "{what}");
     }
 }

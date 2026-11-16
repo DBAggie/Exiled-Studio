@@ -1,0 +1,81 @@
+{
+ "builds_added": 0,
+ "builds_gone": 11,
+ "changed": {},
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"meleeDistance\"}}"
+   ]
+  },
+  "7c666aff5a513810fc8c161bfb91bff83e390021cd53ed571752b834899a740f.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}",
+    "{\"unmodelled-config\": {\"input\": \"meleeDistance\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}"
+   ]
+  }
+ },
+ "reasons_added": {},
+ "reasons_gone": {
+  "{\"unmodelled-config\": {\"input\": \"<untyped>\"}}": 10,
+  "{\"unmodelled-config\": {\"input\": \"meleeDistance\"}}": 2
+ }
+}

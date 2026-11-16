@@ -88,6 +88,41 @@ fn poe2_bundle_should_load_into_the_same_types_without_a_poe1_section() {
     );
 }
 
+/// B-2: a data schema 4 bundle carries affix names and levels, base
+/// requirements, and tag names; a schema 2 one loads without them.
+#[test]
+fn affix_data_should_load_from_schema_4_and_be_absent_before() {
+    let b = load(&source("bundle-poe1").unwrap()).unwrap();
+    assert!(b.manifest.data_schema >= bundle::AFFIX_SCHEMA);
+    let armour = b.mods.iter().find(|m| m.id == "TestArmour1").unwrap();
+    assert_eq!(
+        (armour.name.as_str(), armour.level),
+        ("of Test Plating", Some(5))
+    );
+    let ring = b
+        .base_items
+        .iter()
+        .find(|x| x.name == "Plain Test Ring")
+        .unwrap();
+    assert_eq!(ring.drop_level, Some(5));
+    assert_eq!(ring.requirements.map(|r| r.dexterity), Some(10));
+    assert_eq!(
+        b.tags
+            .iter()
+            .map(|t| t.display.as_str())
+            .collect::<Vec<_>>(),
+        ["Attack", "Defences"]
+    );
+    let old = load(&source("bundle-poe2").unwrap()).unwrap();
+    assert!(old.manifest.data_schema < bundle::AFFIX_SCHEMA);
+    assert!(old.tags.is_empty());
+    assert!(
+        old.mods
+            .iter()
+            .all(|m| m.name.is_empty() && m.level.is_none())
+    );
+}
+
 #[test]
 fn bundles_should_carry_valid_item_rules() {
     for name in ["bundle-poe1", "bundle-poe2"] {
@@ -429,4 +464,17 @@ fn format_2_bundles_should_load_their_property_tables_in_each_game_shape() {
             ((1, 1, 1, 2, 1), Some(0), range(9, 9), 4.99, None),
         )
     );
+}
+
+/// The most sockets a base rolls at an item level (E9; the game's body
+/// armour chain: `docs/ui/b2-data/card-data.md`).
+#[test]
+fn socket_caps_should_follow_the_item_level() {
+    let b = load(&source("bundle-poe1").unwrap()).unwrap();
+    let poe1 = b.poe1.as_ref().unwrap();
+    let shield = poe1.socket_caps_of("Test/Items/Shield1").unwrap();
+    let at: Vec<u32> = [1, 14, 25, 46, 72].iter().map(|l| shield.at(*l)).collect();
+    assert_eq!(at, [2, 3, 4, 5, 6]);
+    assert_eq!(poe1.socket_caps_of("Test/Items/Ring1").unwrap().at(84), 0);
+    assert!(poe1.socket_caps_of("Test/Items/Wand1").is_none());
 }

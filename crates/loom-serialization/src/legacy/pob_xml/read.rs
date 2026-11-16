@@ -3,7 +3,8 @@
 use loom_domain::poe1::Poe1Choices;
 use loom_domain::{
     AscendancyId, Attribute, Attributes, Build, BuildPart, Character, ClassId, Config, ConfigInput,
-    ConfigSet, ConfigSetId, ConfigValue, Game, GameSpecific, Gem, GemId, ItemId, JewelSocket,
+    ConfigInputKind, ConfigLayout, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock,
+    CustomModifierLine, Game, GameSpecific, Gem, GemId, ItemId, JewelSocket, LineResolution,
     MasteryEffect, NodeId, Number, OpaqueNode, Ordered, PassiveSpec, Passives, SkillId, SkillSet,
     SkillSetId, Skills, SlotId, SocketGroup, Sourced, SpecId, SpecPart, TreeVersion,
 };
@@ -402,41 +403,193 @@ fn gem(n: Node<'_, '_>) -> Option<Gem> {
     })
 }
 
+/// The `<Config>` element. With no `ConfigSet` child and some element, it
+/// is PoB's layout before config sets: PoB loads every child into set 1
+/// (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`, lines 888 to 902), read
+/// here as one flat set. A mix of both layouts keeps its loose children
+/// untyped (PoB's result then depends on their order).
 fn config_of(n: Node<'_, '_>) -> Option<Config> {
+    let active = number_u32(n, "activeConfigSet")?.map(|s| ConfigSetId(*s.value()));
+    let attributes = rest(n, &["activeConfigSet"]);
+    let is_set = |c: &Node<'_, '_>| c.is_element() && c.tag_name().name() == "ConfigSet";
+    if children(n).any(|c| c.is_element()) && !children(n).any(|c| is_set(&c)) {
+        let (inputs, custom_modifiers) = set_content(n)?;
+        let mut sets = Ordered::new();
+        sets.push(ConfigSet {
+            id: ConfigSetId(1),
+            title: None,
+            inputs,
+            custom_modifiers,
+            attributes: Attributes::new(),
+        });
+        return Some(Config {
+            active,
+            sets,
+            layout: ConfigLayout::Flat,
+            attributes,
+        });
+    }
     let mut sets = Ordered::new();
     for c in children(n) {
-        match (c.tag_name().name(), c.is_element()) {
-            ("ConfigSet", true) => match config_set(c) {
-                Some(s) => sets.push(s),
-                None => sets.push_opaque(opaque(c)?),
-            },
-            _ => sets.push_opaque(opaque(c)?),
+        match config_set(c).filter(|_| is_set(&c)) {
+            Some(s) => sets.push(s),
+            None => sets.push_opaque(opaque(c)?),
         }
     }
     Some(Config {
-        active: number_u32(n, "activeConfigSet")?.map(|s| ConfigSetId(*s.value())),
+        active,
         sets,
-        attributes: rest(n, &["activeConfigSet"]),
+        layout: ConfigLayout::Sets,
+        attributes,
     })
 }
 
 fn config_set(n: Node<'_, '_>) -> Option<ConfigSet> {
+    let (inputs, custom_modifiers) = set_content(n)?;
+    Some(ConfigSet {
+        id: ConfigSetId(*required_u32(n, "id")?.value()),
+        title: text(n, "title"),
+        inputs,
+        custom_modifiers,
+        attributes: rest(n, &["id", "title"]),
+    })
+}
+
+/// A set's inputs, placeholders, and custom modifier blocks.
+fn set_content(n: Node<'_, '_>) -> Option<(Ordered<ConfigInput>, Vec<CustomModifierBlock>)> {
+    // The blocks after the last other child are typed (PoB writes them
+    // last); any other block stays opaque in place.
+    let all: Vec<_> = children(n).collect();
+    let first_block = all
+        .iter()
+        .rposition(|c| custom_modifier_block(*c).is_none())
+        .map_or(0, |i| i + 1);
+    let (others, blocks) = all.split_at_checked(first_block).unwrap_or((&all, &[]));
+    let custom_modifiers = blocks
+        .iter()
+        .filter_map(|c| custom_modifier_block(*c))
+        .collect();
     let mut inputs = Ordered::new();
-    for c in children(n) {
+    for &c in others {
         match (c.tag_name().name(), c.is_element()) {
             ("Input", true) => match input(c) {
+                Some(i) => inputs.push(i),
+                None => inputs.push_opaque(opaque(c)?),
+            },
+            ("Placeholder", true) => match placeholder(c) {
                 Some(i) => inputs.push(i),
                 None => inputs.push_opaque(opaque(c)?),
             },
             _ => inputs.push_opaque(opaque(c)?),
         }
     }
-    Some(ConfigSet {
-        id: ConfigSetId(*required_u32(n, "id")?.value()),
+    Some((inputs, custom_modifiers))
+}
+
+/// A `CustomModifierBlock` (PoB v2.67.2, `Classes/ConfigTab.lua`, `Load`
+/// and `Save`) with `enabled` written as `true` or `false` and only text
+/// inside. Any other form stays opaque (PoB reads a missing `enabled` as
+/// true and any other value as false).
+///
+/// PoB reads the text with its own XML reader (`runtime/lua/xml.lua`,
+/// `ParseXML`): trimmed, the five named entities decoded, any other
+/// reference read as nothing, and a CDATA section as a separate node. XML
+/// decodes a character reference (`&#10;` a line break) and a CDATA
+/// section as text, so a block whose raw text holds either is kept whole:
+/// read here, its lines would differ from PoB's (ADR-015: kept, never
+/// silently changed).
+fn custom_modifier_block(n: Node<'_, '_>) -> Option<CustomModifierBlock> {
+    if !n.is_element() || n.tag_name().name() != "CustomModifierBlock" {
+        return None;
+    }
+    if n.children().any(|c| !c.is_text()) {
+        return None;
+    }
+    // The raw content: after the first `>`, before the end tag. A raw `>`
+    // in an attribute only adds the attributes' rest to the text checked,
+    // never leaves content out. An element with no children has none.
+    let raw = n.document().input_text().get(n.range()).unwrap_or_default();
+    let content = raw
+        .split_once('>')
+        .and_then(|(_, after)| after.rsplit_once("</"))
+        .map_or("", |(content, _)| content);
+    let read_differently = n.has_children()
+        && (content.contains("<![CDATA[")
+            || content.split('&').skip(1).any(|r| {
+                r.split_once(';')
+                    .is_none_or(|(e, _)| named_entity(e).is_none())
+            }));
+    if read_differently {
+        return None;
+    }
+    let enabled = match n.attribute("enabled")? {
+        "true" => true,
+        "false" => false,
+        _ => return None,
+    };
+    let body: String = n.children().filter_map(|c| c.text()).collect();
+    Some(CustomModifierBlock {
         title: text(n, "title"),
-        inputs,
-        attributes: rest(n, &["id", "title"]),
+        enabled,
+        lines: custom_modifier_lines(&body)
+            .map(|text| CustomModifierLine {
+                text,
+                resolution: LineResolution::Pending,
+            })
+            .collect(),
+        text: body,
+        attributes: rest(n, &["title", "enabled"]),
     })
+}
+
+/// The lines of a custom modifier block that PoB parses as modifiers
+/// (PoB v2.67.2, `Classes/ConfigTab.lua`, `BuildModList`, lines 1106 to
+/// 1128): each line with its colour codes removed (`StripEscapes`,
+/// `HeadlessWrapper.lua` 75: `^` and a digit, then `^x` and six hex
+/// digits) and trimmed of Lua's `%s`. An empty line is left out: it is no
+/// modifier.
+pub fn custom_modifier_lines(text: &str) -> impl Iterator<Item = String> + '_ {
+    text.split('\n').filter_map(|line| {
+        let line = strip_escapes(line);
+        let line = line.trim_matches(is_lua_space);
+        (!line.is_empty()).then(|| line.to_owned())
+    })
+}
+
+/// Lua's `%s`: space, tab, line feed, vertical tab, form feed, carriage
+/// return.
+const fn is_lua_space(c: char) -> bool {
+    matches!(c, ' ' | '\t' | '\n' | '\u{b}' | '\u{c}' | '\r')
+}
+
+/// PoB's `StripEscapes`: every `^` and a digit removed, then every `^x`
+/// and six hex digits, in two passes as `gsub` does.
+fn strip_escapes(line: &str) -> String {
+    let colour = strip(line, 2, |b| matches!(b, [b'^', d] if d.is_ascii_digit()));
+    strip(
+        &colour,
+        8,
+        |b| matches!(b, [b'^', b'x', hex @ ..] if hex.iter().all(u8::is_ascii_hexdigit)),
+    )
+}
+
+/// `text` without every non-overlapping window of `len` bytes that
+/// `matches`, left to right. Only ASCII windows match, and a multi-byte
+/// character holds no ASCII byte, so the rest stays valid UTF-8.
+fn strip(text: &str, len: usize, matches: impl Fn(&[u8]) -> bool) -> String {
+    let bytes = text.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while let Some(&b) = bytes.get(i) {
+        match bytes.get(i..i + len) {
+            Some(window) if matches(window) => i += len,
+            _ => {
+                out.push(b);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8(out).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }
 
 fn input(n: Node<'_, '_>) -> Option<ConfigInput> {
@@ -450,12 +603,146 @@ fn input(n: Node<'_, '_>) -> Option<ConfigInput> {
     ) {
         (Some(b), None, None) => ConfigValue::Boolean(boolean(b)?),
         (None, Some(x), None) => ConfigValue::Number(Sourced::read(Number(x.parse().ok()?), x)),
-        (None, None, Some(s)) => ConfigValue::String(s.to_owned()),
+        (None, None, Some(_)) => ConfigValue::String(pob_attribute(n, "string")?),
         _ => return None,
     };
+    let name = text(n, "name")?;
+    // PoB's legacy custom modifiers: one string of lines, which `Load`
+    // moves into a block (`ConfigTab.lua` 872 to 884); whether they apply
+    // is the calculations' concern.
+    let lines = match &value {
+        ConfigValue::String(s) if name == LEGACY_CUSTOM_MODS => custom_modifier_lines(s)
+            .map(|text| CustomModifierLine {
+                text,
+                resolution: LineResolution::Pending,
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    Some(ConfigInput {
+        name,
+        value,
+        kind: ConfigInputKind::Input,
+        lines,
+        attributes: rest(n, &["name", "boolean", "number", "string"]),
+    })
+}
+
+/// PoB's legacy custom modifier input (before `CustomModifierBlock`).
+const LEGACY_CUSTOM_MODS: &str = "customMods";
+
+/// The value of attribute `name` as PoB reads it (PoB v2.67.2,
+/// `runtime/lua/xml.lua`, `parseAttribs` and `decodeContent`): the raw
+/// text between the quotes, with its line breaks, tabs, and carriage
+/// returns (XML would turn each into a space), `&lt;`, `&gt;`, `&amp;`,
+/// `&apos;`, and `&quot;` decoded, and any other reference (`&#10;`)
+/// removed. PoB writes line breaks raw (`encodeContent` escapes only those
+/// five characters), so a multi-line value round-trips only this way.
+///
+/// `None` (the element is then kept whole) when the attribute is absent,
+/// when its raw text, read as XML reads it, is not the parser's value
+/// (the raw text is then not where it was looked for), or when it holds a
+/// raw `>`: XML allows one, but PoB's tag pattern ends the tag there
+/// (`xml.lua` 52), so PoB does not read the value at all. Also `None`
+/// when it holds a reference PoB reads as nothing (`&#10;`): PoB drops it
+/// silently, so the element is kept whole and stays a reason rather than
+/// losing that text without a trace (ADR-015).
+fn pob_attribute(n: Node<'_, '_>, name: &str) -> Option<String> {
+    let a = n.attribute_node(name)?;
+    let raw = n.document().input_text().get(a.range_value())?;
+    let dropped = raw.split('&').skip(1).any(|r| {
+        r.split_once(';')
+            .is_none_or(|(e, _)| named_entity(e).is_none())
+    });
+    (!raw.contains('>') && !dropped && xml_attribute_value(raw)? == a.value())
+        .then(|| pob_decode(raw))
+}
+
+/// A raw attribute text read as XML reads it: line ends normalised, then
+/// each line break and tab a space, then references decoded (a character
+/// reference is not normalised). `None` for a reference XML does not
+/// define.
+fn xml_attribute_value(raw: &str) -> Option<String> {
+    let mut out = String::with_capacity(raw.len());
+    let mut chars = raw.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '&' => {
+                let reference: String = chars.by_ref().take_while(|&c| c != ';').collect();
+                out.push(xml_reference(&reference)?);
+            }
+            '\r' => {
+                chars.next_if_eq(&'\n');
+                out.push(' ');
+            }
+            '\n' | '\t' => out.push(' '),
+            c => out.push(c),
+        }
+    }
+    Some(out)
+}
+
+/// An XML reference's character: a predefined entity, or a decimal or
+/// hexadecimal character reference.
+fn xml_reference(reference: &str) -> Option<char> {
+    if let Some(named) = named_entity(reference) {
+        return Some(named);
+    }
+    let code = match reference.strip_prefix("#x") {
+        Some(hex) => u32::from_str_radix(hex, 16).ok()?,
+        None => reference.strip_prefix('#')?.parse().ok()?,
+    };
+    char::from_u32(code)
+}
+
+/// The five entities PoB decodes.
+fn named_entity(name: &str) -> Option<char> {
+    match name {
+        "lt" => Some('<'),
+        "gt" => Some('>'),
+        "amp" => Some('&'),
+        "apos" => Some('\''),
+        "quot" => Some('"'),
+        _ => None,
+    }
+}
+
+/// PoB's `decodeContent`: each `&` up to the next `;` replaced by the
+/// named entity, or by nothing when it is any other; an `&` with no `;`
+/// after it stays.
+fn pob_decode(raw: &str) -> String {
+    let mut out = String::with_capacity(raw.len());
+    let mut rest = raw;
+    while let Some((before, after)) = rest.split_once('&') {
+        out.push_str(before);
+        match after.split_once(';') {
+            Some((name, tail)) => {
+                out.extend(named_entity(name));
+                rest = tail;
+            }
+            None => {
+                out.push('&');
+                rest = after;
+            }
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// A `Placeholder` with a number (PoB v2.67.2, `Classes/ConfigTab.lua`,
+/// `Load`). Any other form stays opaque: PoB loads a `string` placeholder
+/// as the input's value, not as a placeholder.
+fn placeholder(n: Node<'_, '_>) -> Option<ConfigInput> {
+    if children(n).next().is_some() {
+        return None;
+    }
+    let x = n.attribute("number")?;
     Some(ConfigInput {
         name: text(n, "name")?,
-        value,
-        attributes: rest(n, &["name", "boolean", "number", "string"]),
+        value: ConfigValue::Number(Sourced::read(Number(x.parse().ok()?), x)),
+        kind: ConfigInputKind::Placeholder,
+        lines: Vec::new(),
+        attributes: rest(n, &["name", "number"]),
     })
 }

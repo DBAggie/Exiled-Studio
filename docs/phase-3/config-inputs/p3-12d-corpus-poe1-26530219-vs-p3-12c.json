@@ -1,0 +1,51 @@
+{
+ "builds_with_reason_changes": 3,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}, \"stat\": \"base_cooldown_speed_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 11}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 10}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 12}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 13}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 8}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 9}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-variant-fits\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  }
+ },
+ "reasons_added": 19,
+ "reasons_gone": 3,
+ "state_changes": {},
+ "value_changes": {}
+}

@@ -1,0 +1,306 @@
+{
+ "builds_with_reason_changes": 23,
+ "only_after": [
+  "ice-nova-minimum-power-charges-witch.xml.json",
+  "ice-nova-power-charge-modifiers-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25411}}, \"stat\": \"max_power_charges\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 21}}, \"stat\": \"max_frenzy_charges\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 44, \"line\": 12}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 1734}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64882}}, \"stat\": \"damage_+%_per_endurance_charge\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48614}}, \"stat\": \"max_frenzy_charges\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 60, \"line\": 26}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34173}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62504}}, \"stat\": \"damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62504}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25411}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4242}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42443}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48614}}, \"stat\": \"max_frenzy_charges\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4833}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34173}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 20}}, \"stat\": \"damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25411}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 13, \"line\": 13}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 11}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37326}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 6, \"line\": 18}}, \"stat\": \"damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25411}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34173}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 62, \"line\": 15}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 63, \"line\": 16}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 23066}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42443}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48614}}, \"stat\": \"max_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"base_minimum_frenzy_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"damage_+%_per_frenzy_charge\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 11730}}, \"stat\": \"max_endurance_charges\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_endurance_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25651}}, \"stat\": \"base_minimum_power_charges\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12783}}, \"stat\": \"critical_strike_multiplier_+_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16954}}, \"stat\": \"critical_strike_chance_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20528}}, \"stat\": \"max_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56158}}, \"stat\": \"spell_damage_+%_per_power_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"base_minimum_power_charges\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9261}}, \"stat\": \"damage_+%_per_power_charge\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 102,
+ "state_changes": {},
+ "value_changes": {
+  "boneshatter-juggernaut.xml.json": {
+   "average-damage": [
+    1695.453700830443,
+    2228.948628611394
+   ],
+   "hit-dps": [
+    2525.2527930797833,
+    3319.8539997142507
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    1015.576206715,
+    1051.618987055
+   ],
+   "hit-dps": [
+    3706.8531545097503,
+    3908.5172352210834
+   ],
+   "speed": [
+    3.6500000000000004,
+    3.716666666666667
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    5069.476468,
+    6297.398996000001
+   ],
+   "crit-chance": [
+    50.540000000000006,
+    58.33
+   ],
+   "crit-multiplier": [
+    1.5,
+    1.7
+   ],
+   "hit-dps": [
+    15860.2192356,
+    19701.862573200004
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    10983.905361520003,
+    14555.070978000002
+   ],
+   "crit-chance": [
+    55.290000000000006,
+    68.59
+   ],
+   "crit-multiplier": [
+    2.98,
+    3.23
+   ],
+   "hit-dps": [
+    32010.23848214401,
+    42417.63542160001
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    71.88559830362294,
+    97.6841425346193
+   ],
+   "crit-chance": [
+    38.988477,
+    49.848777
+   ],
+   "hit-dps": [
+    195.55974592275916,
+    265.7428823791256
+   ]
+  }
+ }
+}

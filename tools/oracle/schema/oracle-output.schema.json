@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "loom oracle adapter output, protocol 3",
-  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted; shims names exactly the manifest's adapter.shims, in that order; partial is not empty when an Inflate call in the probe has an error. Protocol 2 (PR C2b) added shims and probe; protocol 3 (PR C3b+C4) added the variant_order shim and probe.variant_order.",
+  "title": "loom oracle adapter output, protocol 4",
+  "description": "The one document tools/oracle/adapter/oracle.lua writes per run. This file documents the contract; loom-parity-cli enforces it with a hand-written check (tools/parity-cli/src/oracle_output.rs), which also requires: error is null exactly when stage is done; settings is null only when stage is startup; main_output and breakdowns are present exactly when stage is done; breakdowns holds exactly the names in the manifest's adapter.breakdowns; $opaque names a key in adapter.opaque_keys; modules is sorted; shims names exactly the manifest's adapter.shims, in that order; partial is not empty when an Inflate call in the probe has an error. Protocol 2 (PR C2b) added shims and probe; protocol 3 (PR C3b+C4) added the variant_order shim and probe.variant_order; protocol 4 (Phase 3 P3-5) sets PoB's CALCS view, which the breakdowns come from, to the main view, which main_output comes from, and records the changes in probe.calcs_view.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -18,7 +18,7 @@
     "main_output"
   ],
   "properties": {
-    "protocol": { "const": 3 },
+    "protocol": { "const": 4 },
     "stage": {
       "description": "The stage reached: done, or the stage that failed.",
       "enum": ["startup", "import", "calculate", "normalize", "done"]
@@ -51,10 +51,10 @@
       "items": { "$ref": "#/$defs/shim" }
     },
     "probe": {
-      "description": "What the shims did in this run.",
+      "description": "What the shims and the adapter did in this run.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["inflate", "variant_order", "writes_refused"],
+      "required": ["inflate", "variant_order", "writes_refused", "calcs_view"],
       "properties": {
         "inflate": {
           "description": "Every call of the Inflate shim, in order (PoB inflates timeless jewel data when a build needs it).",
@@ -68,6 +68,11 @@
         },
         "writes_refused": {
           "description": "Paths PoB tried to open for writing, which the write guard refused (for example the jewel loader's .bin cache), in order.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "calcs_view": {
+          "description": "What the adapter changed to set PoB's CALCS view (calcsTab.input.skill_number, the main group's mainActiveSkillCalcs, its gems' skillPartCalcs) to the main view's values (mainSocketGroup, mainActiveSkill, skillPart) before the breakdowns are read, in order, as '<what> <old> -> <new>'; empty when the build already had them in step (then PoB's CALCS output is not recomputed).",
           "type": "array",
           "items": { "type": "string" }
         }

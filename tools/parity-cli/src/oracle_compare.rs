@@ -250,7 +250,7 @@ pub struct SideRecord {
 }
 
 /// The register used.
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct RegisterRecord {
     /// SHA-256 of the register file.
     pub sha256: String,
@@ -572,24 +572,30 @@ fn read_output(path: &Path) -> Result<Output, String> {
 }
 
 /// A fixture as an oracle-run report lists it.
-struct RunFixture {
-    id: String,
-    sha256: Option<String>,
-    status: String,
-    class: Option<FailureClass>,
-    /// The outcome the fixture manifest named, and whether it was met.
-    expect: Option<String>,
-    met: Option<bool>,
+pub struct RunFixture {
+    /// The fixture id.
+    pub id: String,
+    /// SHA-256 of its bytes.
+    pub sha256: Option<String>,
+    /// `ok`, `partial`, or `failed`.
+    pub status: String,
+    /// A failed fixture's class.
+    pub class: Option<FailureClass>,
+    /// The outcome the fixture manifest named.
+    pub expect: Option<String>,
+    /// Whether it was met.
+    pub met: Option<bool>,
 }
 
 /// An oracle-run directory: its report's fixtures and record.
-struct RunDir {
+pub struct RunDir {
     dir: PathBuf,
     fixtures: Vec<RunFixture>,
     record: SideRecord,
 }
 
-fn read_run(dir: &Path) -> Result<RunDir, String> {
+/// Reads an `oracle-run` directory's report (`calc-parity` reads it too).
+pub fn read_run(dir: &Path) -> Result<RunDir, String> {
     let path = dir.join("report.json");
     let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
     let report: Value =
@@ -632,8 +638,19 @@ fn read_run(dir: &Path) -> Result<RunDir, String> {
 }
 
 impl RunDir {
-    fn output(&self, id: &str) -> Result<Output, String> {
+    /// A fixture's output document.
+    pub fn output(&self, id: &str) -> Result<Output, String> {
         read_output(&self.dir.join("outputs").join(format!("{id}.json")))
+    }
+
+    /// The fixtures, in the report's order.
+    pub fn fixtures(&self) -> &[RunFixture] {
+        &self.fixtures
+    }
+
+    /// The run's record.
+    pub const fn record(&self) -> &SideRecord {
+        &self.record
     }
 }
 

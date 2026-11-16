@@ -1,6 +1,6 @@
 -- loom PoB data export (Phase 3 plan, step 2). Original code of this
 -- project (MIT); not part of Path of Building. Maintainer-run, not in CI,
--- and outside the oracle adapter and its protocol (protocol 3 unchanged).
+-- and outside the oracle adapter and its protocol (it reads no build).
 --
 -- Writes the game data PoB v2.67.2 holds after startup, for the values a
 -- calculation reads, as one JSON document that `loom-parity-cli
@@ -58,7 +58,7 @@ if type(data) ~= "table" or type(data.skills) ~= "table" then
 	die("PoB startup did not define data.skills")
 end
 
-local FORMAT = 1
+local FORMAT = 8
 local treeVersion = treeArgument or latestTreeVersion
 
 -- A list that encodes as a JSON array even when empty is not possible with
@@ -131,6 +131,77 @@ local function statPairs(rows)
 	return out
 end
 
+-- A mod's plain fields and its tags' plain fields (format 4, P3-12h). A
+-- tag's `var`, `effectType`, `effectName`, and the like are what decide
+-- whether a skill's stat reaches the character (`GlobalEffect`, see
+-- Modules/CalcActiveSkill.lua 794 to 859).
+local function modRecord(m)
+	local out = pick(m, { "name", "type", "flags", "keywordFlags" })
+	-- A map entry that is not a mod (PoB keeps a few helper tables there)
+	-- is written as such, so the check sees it instead of skipping it.
+	out.name = out.name or "<unnamed>"
+	out.type = out.type or ""
+	if type(m.value) == "number" or type(m.value) == "boolean" or type(m.value) == "string" then
+		out.value = m.value
+	elseif type(m.value) == "table" then
+		out.value_fields = pick(m.value, { "key", "value", "type", "name" })
+	end
+	local tags = {}
+	for i, tag in ipairs(m) do
+		if type(tag) == "table" then
+			tags[i] = pick(tag, { "type", "effectType", "effectName", "var", "varList", "actor", "skillType", "neg", "allowTotemBuff", "applyNotPlayer", "applyMinions", "unscalable", "effectCond", "effectEnemyCond", "div", "limit", "stat", "modCond", "effectStackVar", "effectStackLimit", "effectStackLimitVar", "skillName", "skillId", "threshold", "thresholdStat", "ifSkillType" })
+		end
+	end
+	out.tags = tags
+	return out
+end
+
+-- The mods each stat of a skill gives, as PoB's `mergeSkillInstanceMods`
+-- (Modules/CalcTools.lua) finds them: the skill's own `statMap`, else
+-- PoB's global `data.skillStatMap` (Data/SkillStatMap.lua); and the
+-- skill's `baseMods` (stat "", for the mods every instance has). The
+-- stats are the skill's level, constant, and quality stats and its
+-- statMap keys. A stat neither map knows has no row.
+local function skillMods(effect)
+	local stats = {}
+	local seen = {}
+	local function add(stat)
+		if type(stat) == "string" and not seen[stat] then
+			seen[stat] = true
+			stats[#stats + 1] = stat
+		end
+	end
+	for _, s in ipairs(effect.stats or {}) do add(s) end
+	for _, row in ipairs(effect.constantStats or {}) do add(row[1]) end
+	for _, row in ipairs(effect.qualityStats or {}) do add(row[1]) end
+	for s in pairs(effect.statMap or {}) do
+		-- `_grantedEffect` is the back reference PoB sets (Data.lua), not a stat.
+		if s ~= "_grantedEffect" then add(s) end
+	end
+	table.sort(stats)
+	local out = {}
+	for _, stat in ipairs(stats) do
+		local map = (effect.statMap and effect.statMap[stat]) or data.skillStatMap[stat]
+		if map then
+			local mods = {}
+			for _, m in ipairs(map) do
+				if type(m) == "table" then
+					mods[#mods + 1] = modRecord(m)
+				end
+			end
+			out[#out + 1] = { stat = stat, own = (effect.statMap and effect.statMap[stat]) ~= nil, div = map.div, mult = map.mult, mods = mods }
+		end
+	end
+	local base = {}
+	for _, m in ipairs(effect.baseMods or {}) do
+		if type(m) == "table" then
+			base[#base + 1] = modRecord(m)
+		end
+	end
+	out[#out + 1] = { stat = "", own = true, mods = base }
+	return out
+end
+
 local skills = {}
 for id, effect in pairs(data.skills) do
 	local stats = list(effect.stats)
@@ -149,12 +220,21 @@ for id, effect in pairs(data.skills) do
 		out.cost = cost
 		levels[tostring(level)] = out
 	end
-	local skill = pick(effect, { "name", "castTime", "baseEffectiveness", "incrementalEffectiveness", "support" })
+	local skill = pick(effect, { "name", "castTime", "baseEffectiveness", "incrementalEffectiveness", "support", "color" })
 	skill.stats = stats
 	skill.types = typeNames(effect.skillTypes)
 	skill.constant_stats = statPairs(effect.constantStats)
 	skill.quality_stats = statPairs(effect.qualityStats)
 	skill.levels = levels
+	skill.mods = skillMods(effect)
+	skill.minions = list(effect.minionList)
+	local addTypes = {}
+	for i, number in ipairs(effect.addSkillTypes or {}) do
+		addTypes[i] = skillTypeNames[number] or ("#" .. tostring(number))
+	end
+	skill.add_types = addTypes
+	skill.add_minions = list(effect.addMinionList)
+	skill.is_trigger = effect.isTrigger == true
 	skills[id] = skill
 end
 
@@ -193,6 +273,58 @@ for name, base in pairs(data.itemBases) do
 	end
 end
 
+-- Every item base's requirements (data.itemBases[name].req, format 6, UX
+-- sprint B-2): the level PoB's exporter derived and the attributes it
+-- copied (src/Export/Scripts/bases.lua:276-305). `flask` says which level
+-- rule the exporter used.
+local baseRequirements = {}
+for name, base in pairs(data.itemBases) do
+	local req = type(base.req) == "table" and base.req or {}
+	baseRequirements[name] = {
+		type = base.type,
+		flask = type(base.flask) == "table",
+		level = req.level,
+		str = req.str,
+		dex = req.dex,
+		int = req.int,
+	}
+end
+
+---------------------------------------------------------------------------
+-- Item mods (format 6, UX sprint B-2): the affix name and level of each
+-- mod PoB keys by the game's mod ID, from the files Modules/Data.lua loads
+-- into data.itemMods (`Prefix:`/`Suffix:` spec lines name these keys,
+-- Classes/Item.lua 1008-1010). `Item` is a merge of the first seven and
+-- `WatchersEye` is derived, so neither is read; data.masterMods has no
+-- IDs. `tables` lists the files holding the ID, in this order; `conflict`
+-- is set when two of them disagree on the affix or level.
+---------------------------------------------------------------------------
+local MOD_TABLES = {
+	"Explicit", "ItemExclusive", "Corrupted", "Delve", "Synthesis", "Scourge", "Eldritch",
+	"Flask", "Tincture", "Graft", "Jewel", "JewelAbyss", "JewelCluster", "JewelCharm", "Foulborn",
+}
+local itemMods = {}
+for _, tableName in ipairs(MOD_TABLES) do
+	local source = data.itemMods[tableName]
+	if type(source) ~= "table" then
+		die("data.itemMods." .. tableName .. " is missing")
+	end
+	for id, mod in pairs(source) do
+		if type(id) == "string" and type(mod) == "table" then
+			local affix = type(mod.affix) == "string" and mod.affix or ""
+			local record = itemMods[id]
+			if not record then
+				itemMods[id] = { affix = affix, level = mod.level, type = mod.type, tables = { tableName } }
+			else
+				record.tables[#record.tables + 1] = tableName
+				if record.affix ~= affix or record.level ~= mod.level then
+					record.conflict = true
+				end
+			end
+		end
+	end
+end
+
 ---------------------------------------------------------------------------
 -- Monster tables and constants (src/Data/Misc.lua).
 ---------------------------------------------------------------------------
@@ -204,6 +336,29 @@ local MONSTER_TABLES = {
 local monsterTables = {}
 for _, name in ipairs(MONSTER_TABLES) do
 	monsterTables[name] = list(data[name])
+end
+
+-- PoB's bosses (`data.bosses`, `Data/Bosses.lua`): the multipliers its boss
+-- enemies' armour and evasion average (format 2, P3-1d).
+local bosses = {}
+for name, boss in pairs(data.bosses or {}) do
+	bosses[name] = { armourMult = boss.armourMult, evasionMult = boss.evasionMult, isUber = boss.isUber == true }
+end
+
+-- PoB's pantheon (data.pantheons, Data/Pantheons.lua): each god's major
+-- mark and its souls, each soul's name and its mods' lines and values, in
+-- PoB's order (format 3, P3-12g).
+local pantheons = {}
+for id, god in pairs(data.pantheons or {}) do
+	local souls = {}
+	for i, soul in ipairs(god.souls or {}) do
+		local mods = {}
+		for j, mod in ipairs(soul.mods or {}) do
+			mods[j] = { line = mod.line, value = list(mod.value) }
+		end
+		souls[i] = { name = soul.name, mods = mods }
+	end
+	pantheons[id] = { isMajorGod = god.isMajorGod == true, souls = souls }
 end
 
 local function copyMap(t)
@@ -263,6 +418,27 @@ for key, node in pairs(rawTree.nodes or {}) do
 end
 
 ---------------------------------------------------------------------------
+-- Jewel radii (format 7, passive tree plan T-f): data.jewelRadius, the
+-- latest tree version's list (Modules/Data.lua 597-624), in PoB's order:
+-- the full radii, then the rings ("Variable").
+---------------------------------------------------------------------------
+local jewelRadii = {}
+for i, r in ipairs(data.jewelRadius or {}) do
+	jewelRadii[i] = { inner = r.inner, outer = r.outer, label = r.label }
+end
+
+---------------------------------------------------------------------------
+-- Unique flavour text (format 8, B-2): data.flavourText (src/Data/
+-- FlavourText.lua, written by src/Export/Scripts/flavourText.lua), in PoB's
+-- order: each entry's FlavourText ID, the unique's name, and its lines as
+-- PoB's exporter cleaned them.
+---------------------------------------------------------------------------
+local flavourText = {}
+for i, entry in ipairs(data.flavourText or {}) do
+	flavourText[i] = { id = entry.id, name = entry.name, text = list(entry.text) }
+end
+
+---------------------------------------------------------------------------
 -- The document.
 ---------------------------------------------------------------------------
 local document = {
@@ -273,10 +449,16 @@ local document = {
 	skills = skills,
 	gems = gems,
 	bases = bases,
+	base_requirements = baseRequirements,
+	mods = itemMods,
 	monster_tables = monsterTables,
 	game_constants = copyMap(data.gameConstants),
 	character_constants = copyMap(data.characterConstants),
 	monster_constants = copyMap(data.monsterConstants),
+	bosses = bosses,
+	pantheons = pantheons,
+	jewel_radii = list(jewelRadii),
+	flavour_text = list(flavourText),
 	tree = { classes = classes, nodes = nodes },
 }
 

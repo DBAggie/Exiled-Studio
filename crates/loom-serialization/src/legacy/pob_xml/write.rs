@@ -2,9 +2,9 @@
 //! the attributes kept as read, in order; untyped content where it was.
 
 use loom_domain::{
-    Attributes, Build, BuildPart, Character, Config, ConfigValue, Entry, GameSpecific, Gem, Item,
-    ItemPart, Items, ItemsEntry, OpaqueNode, Ordered, PassiveSpec, Passives, Skills, Sourced,
-    SpecPart,
+    Attributes, Build, BuildPart, Character, Config, ConfigInputKind, ConfigLayout, ConfigSet,
+    ConfigValue, Entry, GameSpecific, Gem, Item, ItemPart, Items, ItemsEntry, OpaqueNode, Ordered,
+    PassiveSpec, Passives, Skills, Sourced, SpecPart,
 };
 
 /// An XML writer that indents with tabs, as PoB does.
@@ -27,6 +27,26 @@ fn escape(s: &str, attribute: bool) -> String {
             '\n' if attribute => out.push_str("&#10;"),
             '\r' => out.push_str("&#13;"),
             '\t' if attribute => out.push_str("&#9;"),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
+/// An attribute value as PoB writes one (PoB v2.67.2, `runtime/lua/xml.lua`,
+/// `encodeContent`): only `&`, `<`, `>`, and `"` escaped (and `'`, which
+/// PoB escapes too); line breaks, tabs, and carriage returns raw, where
+/// PoB reads them back (a character reference such as `&#10;` it reads as
+/// nothing). The reader reads such a value raw (`read::pob_attribute`).
+fn escape_pob(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\x27' => out.push_str("&apos;"),
             c => out.push(c),
         }
     }
@@ -69,6 +89,12 @@ impl Writer {
     }
 
     fn open(&mut self, depth: usize, name: &str, attrs: &Attrs) {
+        self.open_pob(depth, name, attrs, None);
+    }
+
+    /// [`Writer::open`], with attribute `pob` (when named) written as PoB
+    /// writes one ([`escape_pob`]).
+    fn open_pob(&mut self, depth: usize, name: &str, attrs: &Attrs, pob: Option<&str>) {
         self.indent(depth);
         self.out.push('<');
         self.out.push_str(name);
@@ -76,7 +102,11 @@ impl Writer {
             self.out.push(' ');
             self.out.push_str(k);
             self.out.push_str("=\"");
-            self.out.push_str(&escape(v, true));
+            if pob == Some(k.as_str()) {
+                self.out.push_str(&escape_pob(v));
+            } else {
+                self.out.push_str(&escape(v, true));
+            }
             self.out.push('"');
         }
     }
@@ -84,7 +114,19 @@ impl Writer {
     /// An element whose children `body` writes; self-closing when it
     /// writes none.
     fn element(&mut self, depth: usize, name: &str, attrs: &Attrs, body: impl FnOnce(&mut Self)) {
-        self.open(depth, name, attrs);
+        self.element_pob(depth, name, attrs, None, body);
+    }
+
+    /// [`Writer::element`], with attribute `pob` written as PoB writes one.
+    fn element_pob(
+        &mut self,
+        depth: usize,
+        name: &str,
+        attrs: &Attrs,
+        pob: Option<&str>,
+        body: impl FnOnce(&mut Self),
+    ) {
+        self.open_pob(depth, name, attrs, pob);
         self.out.push('>');
         let start = self.out.len();
         body(self);
@@ -154,6 +196,21 @@ impl Writer {
                 Entry::Opaque(o) => self.opaque(depth, o),
             }
         }
+    }
+
+    /// An element holding only text, written as kept (no layout inside);
+    /// self-closing when the text is empty.
+    fn text_element(&mut self, depth: usize, name: &str, attrs: &Attrs, text: &str) {
+        self.open(depth, name, attrs);
+        if text.is_empty() {
+            self.out.push_str("/>");
+            return;
+        }
+        self.out.push('>');
+        self.out.push_str(&escape(text, false));
+        self.out.push_str("</");
+        self.out.push_str(name);
+        self.out.push('>');
     }
 }
 
@@ -317,30 +374,53 @@ fn config(w: &mut Writer, c: &Config) {
         c.active.map(|x| x.0.to_string()).as_deref(),
     );
     kept(&mut a, &c.attributes);
-    w.element(1, "Config", &a, |w| {
-        w.ordered(2, &c.sets, |w, set| {
+    // PoB's layout before config sets: the one set's content directly
+    // under `<Config>`. A flat config that breaks the layout check (only a
+    // build never read through a document can) is written with set
+    // elements, so nothing is dropped.
+    let flat = c.layout == ConfigLayout::Flat && c.check_layout().is_ok();
+    w.element(1, "Config", &a, |w| match c.sets.typed().next() {
+        Some(set) if flat => set_content(w, 2, set),
+        _ => w.ordered(2, &c.sets, |w, set| {
             let mut a = vec![("id".to_owned(), set.id.0.to_string())];
             put(&mut a, "title", set.title.as_deref());
             kept(&mut a, &set.attributes);
-            w.element(2, "ConfigSet", &a, |w| {
-                w.ordered(3, &set.inputs, |w, i| {
-                    let mut a = vec![("name".to_owned(), i.name.clone())];
-                    match &i.value {
-                        ConfigValue::Boolean(b) => put(&mut a, "boolean", Some(bool_text(*b))),
-                        ConfigValue::Number(n) => {
-                            let text = n
-                                .source()
-                                .map_or_else(|| n.value().0.to_string(), str::to_owned);
-                            put(&mut a, "number", Some(&text));
-                        }
-                        ConfigValue::String(s) => put(&mut a, "string", Some(s)),
-                    }
-                    kept(&mut a, &i.attributes);
-                    w.element(3, "Input", &a, |_| {});
-                });
-            });
-        });
+            w.element(2, "ConfigSet", &a, |w| set_content(w, 3, set));
+        }),
     });
+}
+
+/// A config set's inputs, placeholders, and custom modifier blocks, at
+/// `depth`.
+fn set_content(w: &mut Writer, depth: usize, set: &ConfigSet) {
+    w.ordered(depth, &set.inputs, |w, i| {
+        let mut a = vec![("name".to_owned(), i.name.clone())];
+        match &i.value {
+            ConfigValue::Boolean(b) => put(&mut a, "boolean", Some(bool_text(*b))),
+            ConfigValue::Number(n) => {
+                let text = n
+                    .source()
+                    .map_or_else(|| n.value().0.to_string(), str::to_owned);
+                put(&mut a, "number", Some(&text));
+            }
+            ConfigValue::String(s) => put(&mut a, "string", Some(s)),
+        }
+        kept(&mut a, &i.attributes);
+        let element = match i.kind {
+            ConfigInputKind::Input => "Input",
+            ConfigInputKind::Placeholder => "Placeholder",
+        };
+        // A string as PoB writes it: PoB reads a line break in
+        // it (the legacy `customMods`) back only when raw.
+        w.element_pob(depth, element, &a, Some("string"), |_| {});
+    });
+    for b in &set.custom_modifiers {
+        let mut a = Attrs::new();
+        put(&mut a, "title", b.title.as_deref());
+        put(&mut a, "enabled", Some(bool_text(b.enabled)));
+        kept(&mut a, &b.attributes);
+        w.text_element(depth, "CustomModifierBlock", &a, &b.text);
+    }
 }
 
 fn items(w: &mut Writer, items: &Items) {
@@ -379,7 +459,7 @@ fn items(w: &mut Writer, items: &Items) {
 /// entries), the lines are joined with `\n`: blank lines and indentation
 /// are not written. PoB reads such a text the same way (it trims each line
 /// and skips blank ones), so only the layout of the text changes.
-fn item_text(item: &Item) -> String {
+pub fn item_text(item: &Item) -> String {
     let lines = &item.body.lines;
     let spacing = &item.text_spacing;
     if spacing.len() != lines.len() + 1 {

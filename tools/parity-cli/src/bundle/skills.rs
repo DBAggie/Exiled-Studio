@@ -3,7 +3,8 @@
 //! - `ActiveSkillType` to skill types (`FlagStat` by stat ID);
 //! - `ActiveSkills` to active skills (types, minion types, weapon classes
 //!   (PoE1 `WeaponRestriction_ItemClassesKeys`), `IsManuallyCasted`);
-//! - `GrantedEffects` with `GrantedEffectsPerLevel` (levels sorted
+//! - `GrantedEffects` (PoE1 `Attribute`, the gem's colour, as stored;
+//!   PoE2 has none) with `GrantedEffectsPerLevel` (levels sorted
 //!   ascending; costs paired by position: PoE1 types per level, PoE2 per
 //!   effect; reservations: PoE1 mana and life, flat and percent; PoE2
 //!   `Reservation`, which PoB's PoE2 exporter reads as `SpiritReservation`,
@@ -409,6 +410,13 @@ fn granted_effects(
     );
     let main_set = column(&t, &["StatSet1", "StatSet"])?;
     let more_sets = column(&t, &["StatSet2", "AdditionalStatSets"])?;
+    // PoE1's layout (`StatSet1`) has the gem's colour; PoE2's has none. A
+    // PoE1 table without it fails the run instead of reading as `None`.
+    let attribute = if t.column("StatSet1").is_ok() {
+        Some(col("Attribute")?)
+    } else {
+        None
+    };
     let effect_costs: Option<Vec<Vec<String>>> = t.column("CostTypes").ok().map(|c| {
         t.rows
             .iter()
@@ -430,6 +438,7 @@ fn granted_effects(
                 support: flag(r, Some(support)),
                 active_skill: at(&l.actives, Table::int(r, active), counts),
                 cast_time: Table::int(r, cast).unwrap_or(0),
+                attribute: attribute.and_then(|c| Table::int(r, c)),
                 allowed_types: ids(&l.types, r, Some(allowed), counts),
                 added_types: ids(&l.types, r, Some(added), counts),
                 excluded_types: ids(&l.types, r, Some(excluded), counts),

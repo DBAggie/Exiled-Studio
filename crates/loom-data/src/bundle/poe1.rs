@@ -9,6 +9,22 @@
 //!   each grants, and the allowed skill levels
 //!   (`BrequelGraftGrantedSkillLevels`). Essences need no file: their item
 //!   classes are precomputed into the mod rows (`essence_classes`).
+//! - `poe1/pantheons.json`: the pantheon's gods (`PantheonPanelLayout`,
+//!   rows not disabled), each with its souls and their stats (P3-12g; the
+//!   calc applies a chosen god's souls).
+//! - `poe1/jewel_radii.json`: the jewel radii (`PassiveJewelRadii`), each
+//!   with its name, radius, and ring (passive tree plan, T-f: which nodes
+//!   a radius jewel reaches).
+//! - `poe1/unique_flavour.json`: unique items' flavour text (`FlavourText`,
+//!   found through `UniqueStashLayout`; B-2's item card, Q-B2-1), each with
+//!   the unique's name and the text's ID, as the game writes it.
+//! - `poe1/tree_flavour.json`: the passive tree's texts the game shows: a
+//!   keystone's flavour text (`PassiveSkills.FlavourText`) and an
+//!   ascendancy's quote (`Ascendancy.FlavourText`, with its colour; B-2
+//!   item evidence, E10).
+//! - `poe1/socket_caps.json`: how many sockets each base can roll by item
+//!   level (the item type files' `Sockets` component, `socket_info`, the
+//!   nearest file of the base's chain that sets it; B-2 item evidence).
 
 use serde::{Deserialize, Serialize};
 
@@ -20,6 +36,142 @@ pub const DIR: &str = "poe1/";
 pub const QUALITY_TYPES: &str = "poe1/quality_types.json";
 /// Grafts.
 pub const GRAFTS: &str = "poe1/grafts.json";
+/// Pantheons.
+pub const PANTHEONS: &str = "poe1/pantheons.json";
+/// Jewel radii.
+pub const JEWEL_RADII: &str = "poe1/jewel_radii.json";
+/// Unique flavour text.
+pub const UNIQUE_FLAVOUR: &str = "poe1/unique_flavour.json";
+/// Socket caps by base.
+pub const SOCKET_CAPS: &str = "poe1/socket_caps.json";
+/// The passive tree's flavour texts.
+pub const TREE_FLAVOUR: &str = "poe1/tree_flavour.json";
+
+/// The passive tree's flavour texts (module docs), each as the game stores
+/// it with its line breaks as `\n`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TreeFlavour {
+    /// The passives with a flavour text, by node number.
+    pub passives: Vec<PassiveFlavour>,
+    /// The ascendancies with a quote, by ID.
+    pub ascendancies: Vec<AscendancyFlavour>,
+}
+
+/// A passive's flavour text ([`TreeFlavour`]).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PassiveFlavour {
+    /// The node number (`PassiveSkillGraphId`).
+    pub node: i64,
+    /// The text.
+    pub text: String,
+}
+
+/// An ascendancy's quote ([`TreeFlavour`]).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AscendancyFlavour {
+    /// The ascendancy's ID (`Ascendancy.Id`, what nodes name).
+    pub id: String,
+    /// The quote.
+    pub text: String,
+    /// The colour the game prints it in (`RGBFlavourTextColour`, `r,g,b`),
+    /// when the table gives one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub colour: Option<String>,
+}
+
+/// The sockets a base can roll (`docs/ui/b2-data/card-data.md`, "Maximum
+/// sockets"): the item type's `socket_info` (`count:item level:weight`),
+/// the counts that can roll (weight above 0, item level below the game's
+/// 9999 "never") with the item level each needs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SocketCaps {
+    /// The base item's ID.
+    pub base: String,
+    /// `(sockets, item level)`, by socket count.
+    pub levels: Vec<(u32, u32)>,
+}
+
+impl SocketCaps {
+    /// The most sockets the base rolls at `item_level`; 0 when none rolls.
+    #[must_use]
+    pub fn at(&self, item_level: u32) -> u32 {
+        self.levels
+            .iter()
+            .filter(|(_, level)| *level <= item_level)
+            .map(|(count, _)| *count)
+            .max()
+            .unwrap_or(0)
+    }
+}
+
+/// A unique item's flavour text. The game links them by a name convention,
+/// not a key (`docs/ui/b2-data/card-data.md`): the unique's art
+/// (`ItemVisualIdentity.Id`) names the `FlavourText` row, and a per-game
+/// list names the rest (upgraded versions that share their base's art).
+/// A name may have several rows: a unique whose variants have their own
+/// text (Grand Spectrum).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct UniqueFlavour {
+    /// The unique's name (`Words.Text2`).
+    pub name: String,
+    /// The `FlavourText` row's ID.
+    pub id: String,
+    /// The text as the game stores it, with line breaks as `\n` (the
+    /// table's `\r\n` made `\n`) and the game's markup (`<default>{...}`,
+    /// `<<...>>` glyphs) kept.
+    pub text: String,
+}
+
+/// A jewel radius (`PassiveJewelRadii`), in the game table's units: the
+/// tree before 3.16's, which `loom_tree::poe1::radius::scaled` turns into
+/// the layout's tree units (times 1.2). A jewel with this radius reaches
+/// the nodes whose distance from its socket is at most `radius`; a ring
+/// jewel (Thread of Hope) the nodes from `ring_inner` to `ring_outer`,
+/// both included.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct JewelRadius {
+    /// ID.
+    pub id: String,
+    /// The name an item's `Radius:` line shows (`ClientStrings`); empty
+    /// when the extract has none.
+    pub name: String,
+    /// The radius.
+    pub radius: i64,
+    /// The ring's inner radius.
+    pub ring_inner: i64,
+    /// The ring's outer radius.
+    pub ring_outer: i64,
+}
+
+/// A god of the pantheon (`PantheonPanelLayout`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Pantheon {
+    /// ID (`TheBrineKing`, ...): the name PoB's config stores.
+    pub id: String,
+    /// A major god (else a minor one).
+    pub major: bool,
+    /// The god's souls with stats, in the table's order (the god's own
+    /// soul first, then its upgrades).
+    pub souls: Vec<PantheonSoul>,
+}
+
+/// One soul of a god: its name and stats (`Effect<n>_StatsKeys` with
+/// `Effect<n>_Values`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PantheonSoul {
+    /// The soul's name (`GodName<n>`).
+    pub name: String,
+    /// The soul's stats (`(stat, value)`), in the table's order.
+    pub stats: Vec<(String, i64)>,
+}
 
 /// An alternate quality type.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -65,9 +217,176 @@ pub struct Poe1Section {
     pub quality_types: Option<Vec<QualityType>>,
     /// Grafts (`None` when the file is absent).
     pub grafts: Option<Grafts>,
+    /// Pantheons (`None` when the file is absent).
+    pub pantheons: Option<Vec<Pantheon>>,
+    /// Jewel radii (`None` when the file is absent).
+    pub jewel_radii: Option<Vec<JewelRadius>>,
+    /// Unique flavour text (`None` when the file is absent).
+    pub unique_flavour: Option<Vec<UniqueFlavour>>,
+    /// Socket caps (`None` when the file is absent).
+    pub socket_caps: Option<Vec<SocketCaps>>,
+    /// The passive tree's flavour texts (`None` when the file is absent).
+    pub tree_flavour: Option<TreeFlavour>,
 }
 
 impl Poe1Section {
+    /// The stats the section's build choices (the pantheon's souls) name,
+    /// each with the row it is on: the validator checks each is a stat.
+    pub(super) fn choice_stats(&self) -> Vec<(String, &str)> {
+        let mut out = Vec::new();
+        for g in self.pantheons.iter().flatten() {
+            for (s, _) in g.souls.iter().flat_map(|soul| &soul.stats) {
+                out.push((format!("{PANTHEONS}:{}", g.id), s.as_str()));
+            }
+        }
+        out
+    }
+
+    /// The pantheon's domain checks for the validator: the file, its IDs
+    /// (each must be unique and not empty), and the rows whose shape is
+    /// wrong (a soul without a name or a stat: the converter keeps only
+    /// souls with stats, as PoB's export does).
+    pub(super) fn choice_domain(&self) -> (&'static str, Vec<&str>, Vec<(String, &'static str)>) {
+        let gods = self.pantheons.as_deref().unwrap_or_default();
+        let ids = gods.iter().map(|g| g.id.as_str()).collect();
+        let bad = gods
+            .iter()
+            .filter(|g| {
+                g.souls
+                    .iter()
+                    .any(|s| s.name.is_empty() || s.stats.is_empty())
+            })
+            .map(|g| {
+                (
+                    format!("{PANTHEONS}:{}", g.id),
+                    "a soul without a name or a stat",
+                )
+            })
+            .collect();
+        (PANTHEONS, ids, bad)
+    }
+
+    /// The jewel radii's domain checks for the validator: unique IDs, and
+    /// the rows whose values are out of range (a negative radius, or a
+    /// ring whose inner radius is above its outer one).
+    pub(super) fn radius_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let radii = self.jewel_radii.as_deref().unwrap_or_default();
+        let ids = radii.iter().map(|r| r.id.as_str()).collect();
+        let bad = radii
+            .iter()
+            .filter(|r| r.radius < 0 || r.ring_inner < 0 || r.ring_inner > r.ring_outer)
+            .map(|r| {
+                (
+                    format!("{JEWEL_RADII}:{}", r.id),
+                    "a negative radius, or a ring whose inner radius is above its outer one",
+                )
+            })
+            .collect();
+        (ids, bad)
+    }
+
+    /// Unique flavour text's domain checks for the validator: each row's
+    /// key (`name:id`, each must be unique), the number of rows without a
+    /// name or an ID, and the rows with no text.
+    pub(super) fn flavour_domain(&self) -> (Vec<String>, usize, Vec<(String, &'static str)>) {
+        let rows = self.unique_flavour.as_deref().unwrap_or_default();
+        let keys = rows
+            .iter()
+            .map(|r| format!("{}:{}", r.name, r.id))
+            .collect();
+        let empty = rows
+            .iter()
+            .filter(|r| r.name.is_empty() || r.id.is_empty())
+            .count();
+        let bad = rows
+            .iter()
+            .filter(|r| r.text.trim().is_empty())
+            .map(|r| (format!("{UNIQUE_FLAVOUR}:{}:{}", r.name, r.id), "no text"))
+            .collect();
+        (keys, empty, bad)
+    }
+
+    /// Socket caps' domain checks for the validator: each row's base, and
+    /// the rows with no level or counts out of order.
+    pub(super) fn socket_domain(&self) -> (Vec<&str>, Vec<(String, &'static str)>) {
+        let rows = self.socket_caps.as_deref().unwrap_or_default();
+        let bases = rows.iter().map(|r| r.base.as_str()).collect();
+        let bad = rows
+            .iter()
+            .filter(|r| {
+                r.levels.is_empty()
+                    || r.levels
+                        .iter()
+                        .zip(r.levels.iter().skip(1))
+                        .any(|(a, b)| a.0 >= b.0)
+            })
+            .map(|r| (format!("{SOCKET_CAPS}:{}", r.base), "no counts in order"))
+            .collect();
+        (bases, bad)
+    }
+
+    /// The tree flavour's domain checks for the validator: the passives'
+    /// node keys, the ascendancies' IDs, and the rows with no text.
+    pub(super) fn tree_flavour_domain(
+        &self,
+    ) -> (Vec<String>, Vec<&str>, Vec<(String, &'static str)>) {
+        let Some(f) = &self.tree_flavour else {
+            return (Vec::new(), Vec::new(), Vec::new());
+        };
+        let nodes = f.passives.iter().map(|p| p.node.to_string()).collect();
+        let ids = f.ascendancies.iter().map(|a| a.id.as_str()).collect();
+        let bad = f
+            .passives
+            .iter()
+            .filter(|p| p.text.trim().is_empty())
+            .map(|p| format!("{TREE_FLAVOUR}:passive:{}", p.node))
+            .chain(
+                f.ascendancies
+                    .iter()
+                    .filter(|a| a.text.trim().is_empty())
+                    .map(|a| format!("{TREE_FLAVOUR}:ascendancy:{}", a.id)),
+            )
+            .map(|at| (at, "no text"))
+            .collect();
+        (nodes, ids, bad)
+    }
+
+    /// The flavour text of passive `node`, if the file has one.
+    #[must_use]
+    pub fn passive_flavour(&self, node: i64) -> Option<&str> {
+        self.tree_flavour
+            .as_ref()?
+            .passives
+            .iter()
+            .find(|p| p.node == node)
+            .map(|p| p.text.as_str())
+    }
+
+    /// The quote of ascendancy `id`, if the file has one.
+    #[must_use]
+    pub fn ascendancy_flavour(&self, id: &str) -> Option<&AscendancyFlavour> {
+        self.tree_flavour
+            .as_ref()?
+            .ascendancies
+            .iter()
+            .find(|a| a.id == id)
+    }
+
+    /// The socket caps of base `id`, if the file has them.
+    #[must_use]
+    pub fn socket_caps_of(&self, id: &str) -> Option<&SocketCaps> {
+        self.socket_caps.iter().flatten().find(|r| r.base == id)
+    }
+
+    /// The flavour text rows of the unique named `name`, in the file's
+    /// order (none without the file).
+    pub fn flavour_of<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a UniqueFlavour> {
+        self.unique_flavour
+            .iter()
+            .flatten()
+            .filter(move |r| r.name == name)
+    }
+
     /// Reads the section's files the manifest lists.
     ///
     /// # Errors
@@ -85,6 +404,31 @@ impl Poe1Section {
             },
             grafts: if listed(GRAFTS) {
                 Some(json(source, GRAFTS)?)
+            } else {
+                None
+            },
+            pantheons: if listed(PANTHEONS) {
+                Some(json(source, PANTHEONS)?)
+            } else {
+                None
+            },
+            jewel_radii: if listed(JEWEL_RADII) {
+                Some(json(source, JEWEL_RADII)?)
+            } else {
+                None
+            },
+            unique_flavour: if listed(UNIQUE_FLAVOUR) {
+                Some(json(source, UNIQUE_FLAVOUR)?)
+            } else {
+                None
+            },
+            socket_caps: if listed(SOCKET_CAPS) {
+                Some(json(source, SOCKET_CAPS)?)
+            } else {
+                None
+            },
+            tree_flavour: if listed(TREE_FLAVOUR) {
+                Some(json(source, TREE_FLAVOUR)?)
             } else {
                 None
             },

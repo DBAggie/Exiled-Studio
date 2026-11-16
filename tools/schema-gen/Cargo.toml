@@ -1,6 +1,6 @@
 [package]
 name = "loom-schema-gen"
-description = "Writes the JSON Schema of the successor build document from its DTOs (Phase 2 plan, decision 11)."
+description = "Writes the JSON Schemas of the successor documents (build, calc result) from their DTOs (Phase 2 plan, decision 11)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

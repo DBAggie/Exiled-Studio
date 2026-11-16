@@ -209,7 +209,7 @@ pub struct Adapter {
 }
 
 /// The adapter protocol this reader knows.
-pub const PROTOCOL: u32 = 3;
+pub const PROTOCOL: u32 = 4;
 
 impl Manifest {
     /// Parses and checks a manifest.

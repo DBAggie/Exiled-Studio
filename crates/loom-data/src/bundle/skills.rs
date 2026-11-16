@@ -21,6 +21,9 @@
 //! References are by ID (stats, skill types, item classes, base items) and
 //! the validator checks them.
 //!
+//! A granted effect's `attribute` (P3-12i) is optional: a bundle without
+//! it still loads, and the calc then treats every gem's colour as unknown.
+//!
 //! Not carried (no calc in Phase 3 reads them; adding one is a new field):
 //! PoE1 Ruthless (`Hardmode`) gem effects, level requirements, Vaal soul
 //! costs, PoE2 quality `AltStats` and `ApplyToStatSets`, PoE2 weapon
@@ -185,6 +188,13 @@ pub struct GrantedEffect {
     /// Cast time, milliseconds.
     #[serde(default)]
     pub cast_time: i64,
+    /// The gem's colour as the game stores it (PoE1 `Attribute`: 1
+    /// strength, 2 dexterity, 3 intelligence, 4 none; P3-12i). PoE2 has no
+    /// column, and a bundle made before P3-12i has no field: `None`. Its
+    /// meaning is the calc's rule (`loom_calc::poe1::sockets`), so the
+    /// number is kept as stored.
+    #[serde(default)]
+    pub attribute: Option<i64>,
     /// Supports: skill types it can support, by ID.
     #[serde(default)]
     pub allowed_types: Vec<String>,

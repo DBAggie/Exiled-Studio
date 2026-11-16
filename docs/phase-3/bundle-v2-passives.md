@@ -1,6 +1,6 @@
 # Bundle format 2, character and passive tables (P3-1b): evidence
 
-Phase 3 plan, step 1b (`dev/active/phase-3-calc-slice/`). Maintainer workstation, Windows, 2026-11-11. Follows `bundle-v2-skills.md` (P3-1a); the bundle summaries in this folder were replaced by P3-1c's (`bundle-v2-items-monsters.md`); the hashes below are P3-1b's.
+Phase 3 plan, step 1b (`dev/completed/phase-3-calc-slice/`). Maintainer workstation, Windows, 2026-11-11. Follows `bundle-v2-skills.md` (P3-1a); the bundle summaries in this folder were replaced by P3-1c's (`bundle-v2-items-monsters.md`); the hashes below are P3-1b's.
 
 ## Inputs
 - Game data: PoE1 Steam build 26530219, PoE2 Steam build 26476662 (unchanged).

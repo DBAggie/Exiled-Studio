@@ -12,13 +12,19 @@
 mod build_round_trip;
 mod bundle;
 mod bundle_equal;
+mod calc_parity;
+mod calc_run;
+mod calc_survey;
 mod categorize;
+mod custom_lines;
 mod data_parity;
 mod divergence;
 mod dto_hashes;
 mod extract;
+mod flavour;
 mod grafts;
 mod item_tags;
+mod jewel_radii;
 mod load_statdesc;
 mod lookup;
 mod mod_filter;
@@ -29,19 +35,40 @@ mod oracle_output;
 mod oracle_process;
 mod oracle_run;
 mod oracle_verify;
+mod pantheons;
 mod poe1;
 mod poe2;
 mod properties;
 mod render_check;
 mod resolve_corpus;
 mod round_trip;
+mod tree_flavour;
+mod tree_layout;
+mod tree_parity;
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 use std::process::ExitCode;
 
 use serde::Serialize;
 
 const USAGE: &str = "usage:
+  loom-parity-cli tree-parity layout <pob-layout.json> <bundle-dir>
+  loom-parity-cli tree-parity alloc-requests <bundle-dir> <count> <seed>
+  loom-parity-cli tree-parity alloc <requests.txt> <pob-alloc.json> <bundle-dir>
+  loom-parity-cli tree-parity readback <build.xml> <pob-readback.json>
+      The passive tree against PoB (docs/tree/parity.md): PoB's side from
+      tools/oracle/data/pob_tree.lua. Prints a JSON record; exit 0 when
+      everything matches, 1 otherwise. alloc-requests prints seeded
+      requests for pob_tree.lua alloc.
+  loom-parity-cli tree-layout <tools/tree/manifest.json> <export-dir> <bundle-dir> --out <dir>
+      Copy a bundle into <dir> (which must not exist) with the passive
+      tree's layout constants (data/passive_tree_layout.json) and sprites
+      (data/passive_tree_sprites.json, the sheets in trees/assets/) added,
+      read from GGG's tree export at the pinned commit (ADR-005 Amendment 2;
+      fetch it with tools/tree/acquire). Refuses another commit, orbits
+      that differ from the bundle's, or a README angle table that differs
+      from the rule; validates before and after; prints a summary.
   loom-parity-cli bundle <extract-dir> --out <dir>
       Convert a `loom-extractor extract` output (PoE1 or PoE2) into a data
       bundle of format 2 (loom_data::bundle) in <dir>, which must not
@@ -125,6 +152,14 @@ const USAGE: &str = "usage:
       dto::v1); print each document's SHA-256 and size as JSON. CI compares
       the output of Windows and Linux. Exit 1 if a document differs on a
       second run or does not read back to the same build.
+  loom-parity-cli custom-lines <bundle-dir> <pob-parse.json> --out <dir>
+      Read every custom modifier line of <pob-parse.json> (the output of
+      tools/oracle/data/pob_parse_lines.lua: each line with PoB v2.67.2's
+      parse) as a build's custom line is read (stat descriptions, then the
+      curated patterns, then the note rule; ADR-015 Amendment 2) and compare
+      with PoB's parse; write report.json to <dir>, which must not exist
+      (docs/phase-3/custom-lines.md). Exit 1 when a note is a line PoB
+      applies, or a pattern's effect differs from PoB's mods.
   loom-parity-cli data-parity <bundle-dir> <pob-export> --rules <file> --out <dir>
       Compare the values a calculation reads (skills and their levels,
       gems, item bases, classes, character and monster constants, game
@@ -158,6 +193,65 @@ const USAGE: &str = "usage:
       when every build passes, 1 when one fails (or no build was given),
       2 on a usage error, 3 when the run cannot start (an input or the
       bundle does not read or validate, or <dir> exists).
+  loom-parity-cli calc-survey <input>... --bundle <dir> --scope <file> --data-rules <file> --out <dir>
+                  [--anonymous]
+      Decide which builds are in the calc slice's scope from game data
+      (Phase 3 plan, step 3): import each PoB build (a folder: every *.xml
+      directly in it, in name order; or a *.xml file; identical files count
+      once), resolve it with the bundle (format 2, PoE1, validated first),
+      find its main skill as PoB does, and apply the archetype rules, the
+      tree-version rule, unknown passives, and the excluded mechanics of
+      the scope file <file> (docs/phase-3/calc-scope-poe1.json); the
+      data-parity rules (docs/phase-3/data-parity-rules-poe1.json) name the
+      passives the bundle does not fully carry. Write summary.json (per
+      build: main skill, verdict and reasons; candidate skills per kind,
+      ranked; the chosen skills' in-scope builds) and report.json (each
+      build's mechanic inventory; how many builds reach each stat,
+      support, skill, and config input) to <dir>, which must not exist.
+      --anonymous names builds by SHA-256. Exit 0 when every chosen skill
+      has the scope file's minimum of in-scope builds (or none is chosen),
+      1 when one has fewer, 2 on a usage error, 3 when the run cannot
+      start.
+  loom-parity-cli calc-run <input>... --bundle <dir> --out <dir> [--anonymous] [--data-overlay <file>]
+                  [--scope <file>]
+      Calculate every build (Phase 3 plan, step 5): import (a folder: every
+      *.xml directly in it, in name order; a *.xml file; or a v1 build
+      document *.json), resolve with the bundle (validated first), and run
+      the engine; write each result as the calc result document v1
+      (documents/<id>.json), report.json (per build: outcome, error code,
+      document SHA-256, state counts), summary.json (counts of states,
+      reasons, failure codes; calculation time), and timing.json (time per
+      build) to <dir>, which must not exist. A build's id is its file
+      name, or its SHA-256 with --anonymous, as oracle-run names fixtures.
+      --data-overlay reads data-parity's overlay.json for this bundle and
+      calculates with PoB's values for its rows (for calc-parity
+      --overlay-run). --scope reads calc-survey's scope file for this
+      bundle's Steam build; its tree_version is the data's passive tree
+      version, against which the engine checks each build's (without it,
+      a build that allocates passives is partial, unchecked-tree-version).
+      Exit 0 when every build has a document, 1 when one failed, 2 on a
+      usage error, 3 when the run cannot start.
+  loom-parity-cli calc-parity <oracle-run-dir> <calc-run-dir> --slice <file> --out <dir>
+                  [--register <file>] [--overlay-run <dir>] [--manifest <file>]
+      Compare the successor's documents with the oracle's outputs, paired
+      by id, per slice field (docs/phase-3/slice-fields.json): complete
+      fields with their rule; partial, indeterminate, and not computed
+      fields listed, not compared; the ten breakdowns term by term at each
+      line's printed decimals (not when PoB's CALCS and main views
+      differ). Differences are classified with the divergence register; a
+      data-version entry covers one only when the --overlay-run (calc-run
+      --data-overlay) matches the oracle there. --manifest: each mechanic
+      fixture's targets must match or be registered, and each must be in
+      both runs. The overlay run must hold the same builds (ids, SHA-256)
+      and tool commit; a build whose bytes differ between the two runs is
+      not compared (ORACLE_PROTOCOL). Write report.json and summary.md to
+      <dir>, which must not exist. Exit: the class of a build without
+      output on a side (10 to 18; 17 for a breakdown line the reader does
+      not know); else 20 for an unregistered difference; else 5 when a
+      build is incomplete (no complete field, or a complete field's
+      breakdown not compared): not a pass; else 19 when every difference
+      is registered; else 0. 2 on a usage error, 3 when an input does not
+      read.
   loom-parity-cli divergence-check <register>
       Validate a divergence register (docs/parity/divergence-register.json)
       against its format (docs/parity/README.md). Print a JSON report.
@@ -427,6 +521,29 @@ fn load_bundle(dir: &Path) -> Result<loom_data::bundle::Bundle, String> {
     }
     loom_data::bundle::Bundle::load(&source)
         .map_err(|e| format!("{}: {} ({e})", dir.display(), e.code()))
+}
+
+/// `custom-lines`: custom modifier lines against PoB's parse
+/// ([`custom_lines`]).
+fn custom_lines_cmd(bundle_dir: &Path, pob: &Path, out: &Path) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let bytes = std::fs::read(pob).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let lines: Vec<custom_lines::PobLine> =
+        serde_json::from_slice(&bytes).map_err(|e| format!("{}: {e}", pob.display()))?;
+    let bundle = load_bundle(bundle_dir)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data).map_err(|e| e.to_string())?;
+    let report = custom_lines::compare(&resolver, &lines);
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let json = serde_json::to_string_pretty(&report).map_err(|e| e.to_string())? + "\n";
+    std::fs::write(out.join("report.json"), json).map_err(|e| e.to_string())?;
+    println!(
+        "{}",
+        serde_json::to_string(&report.counts).map_err(|e| e.to_string())?
+    );
+    Ok(report.passed())
 }
 
 /// `bundle-equal`: the pipeline's data from a bundle against the
@@ -772,6 +889,7 @@ fn data_parity_cmd(args: &[String]) -> ExitCode {
             export: &export,
             rules: &rules,
             passive_scope: data_parity::compare::PASSIVE_SCOPE,
+            bosses: &loom_calc::poe1::enemy::BOSSES,
             tool: resolve_corpus::Tool {
                 commit: git(&["rev-parse", "HEAD"]),
                 dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
@@ -990,8 +1108,407 @@ fn build_round_trip_run(args: &RoundTripArgs) -> Result<bool, String> {
     Ok(summary.failed == 0 && summary.builds > 0)
 }
 
+/// `calc-survey`'s arguments.
+#[derive(Debug, Default, PartialEq, Eq)]
+struct SurveyArgs {
+    inputs: Vec<String>,
+    bundle: Option<String>,
+    scope: Option<String>,
+    data_rules: Option<String>,
+    out: Option<String>,
+    anonymous: bool,
+}
+
+/// Parses the arguments after `calc-survey`; `None` is a usage error.
+fn survey_args(args: &[String]) -> Option<SurveyArgs> {
+    let mut out = SurveyArgs::default();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        let slot = match arg.as_str() {
+            "--anonymous" => {
+                out.anonymous = true;
+                continue;
+            }
+            "--bundle" => &mut out.bundle,
+            "--scope" => &mut out.scope,
+            "--data-rules" => &mut out.data_rules,
+            "--out" => &mut out.out,
+            flag if flag.starts_with("--") => return None,
+            input => {
+                out.inputs.push(input.to_owned());
+                continue;
+            }
+        };
+        let [value, tail @ ..] = rest else {
+            return None;
+        };
+        if slot.replace(value.clone()).is_some() {
+            return None;
+        }
+        rest = tail;
+    }
+    let complete = !out.inputs.is_empty()
+        && out.bundle.is_some()
+        && out.scope.is_some()
+        && out.data_rules.is_some()
+        && out.out.is_some();
+    complete.then_some(out)
+}
+
+/// `calc-survey` (module `calc_survey`).
+fn calc_survey_cmd(args: &[String]) -> ExitCode {
+    let Some(args) = survey_args(args) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match calc_survey_run(&args) {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("calc-survey: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn calc_survey_run(args: &SurveyArgs) -> Result<bool, String> {
+    let path = |p: &Option<String>| Path::new(p.as_deref().unwrap_or_default()).to_path_buf();
+    let read = |p: &Path| std::fs::read(p).map_err(|e| format!("{}: {e}", p.display()));
+    let sha = |b: &[u8]| {
+        use sha2::Digest as _;
+        sha2::Sha256::digest(b)
+            .iter()
+            .map(|x| format!("{x:02x}"))
+            .collect::<String>()
+    };
+    let out = path(&args.out);
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let scope_bytes = read(&path(&args.scope))?;
+    let scope = calc_survey::rules::Scope::read(&scope_bytes)?;
+    let rules_bytes = read(&path(&args.data_rules))?;
+    let not_carried = calc_survey::not_carried_passives(&rules_bytes, scope.steam_build)?;
+    let inputs: Vec<calc_survey::Input> = round_trip_inputs(&args.inputs)?
+        .into_iter()
+        .map(|i| match i.format {
+            build_round_trip::Format::PobXml => Ok(calc_survey::Input {
+                path: i.path,
+                bytes: i.bytes,
+            }),
+            build_round_trip::Format::BuildDocument => {
+                Err(format!("{}: calc-survey reads PoB builds (*.xml)", i.path))
+            }
+        })
+        .collect::<Result<_, _>>()?;
+    let bundle = load_bundle(&path(&args.bundle))?;
+    let m = &bundle.manifest;
+    if m.game != "poe1" || m.source.steam_build != Some(scope.steam_build) {
+        return Err(format!(
+            "the bundle is {} Steam build {:?}; the scope file is for poe1 {}",
+            m.game, m.source.steam_build, scope.steam_build
+        ));
+    }
+    let tables = calc_survey::Tables::new(&bundle)?;
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data)
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let request = calc_survey::Request {
+        resolver: &resolver,
+        data: &data,
+        tables: &tables,
+        scope: &scope,
+        not_carried: &not_carried,
+        anonymous: args.anonymous,
+        inputs: calc_survey::Inputs {
+            tool: resolve_corpus::Tool {
+                commit: git(&["rev-parse", "HEAD"]),
+                dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+            },
+            bundle: resolve_corpus::BundleInputs {
+                game: m.game.clone(),
+                steam_build: m.source.steam_build,
+                index_sha256: m.source.index_sha256.clone(),
+            },
+            scope_sha256: sha(&scope_bytes),
+            data_rules_sha256: sha(&rules_bytes),
+            anonymous: args.anonymous,
+        },
+    };
+    let (summary, report) = calc_survey::run(&inputs, &request);
+    write_out(&out, &summary, &report)?;
+    println!(
+        "calc-survey: {} builds, {} in scope ({} duplicates skipped)",
+        summary.builds, summary.in_scope, summary.duplicates
+    );
+    for (kind, list) in &summary.candidates {
+        for c in list.iter().take(3) {
+            println!(
+                "  {kind} {}: {} in scope of {} archetype builds",
+                c.skill,
+                c.in_scope.len(),
+                c.archetype_builds
+            );
+        }
+    }
+    for (kind, c) in &summary.chosen {
+        println!(
+            "  chosen {kind} {}: {} in scope (minimum {}){}",
+            c.skill,
+            c.in_scope.len(),
+            summary.scope.minimum_per_skill,
+            if c.meets_minimum {
+                ""
+            } else {
+                ", below the minimum"
+            }
+        );
+    }
+    Ok(summary.pass)
+}
+
+/// Positional arguments, `--name value` options, and flags.
+type CliArgs = (Vec<String>, BTreeMap<String, String>, BTreeSet<String>);
+
+/// Options of the form `--name value`, plus positional arguments and the
+/// flags in `flags`; `None` on an unknown option or a repeated one.
+fn options(args: &[String], names: &[&str], flags: &[&str]) -> Option<CliArgs> {
+    let mut positional = Vec::new();
+    let mut values = BTreeMap::new();
+    let mut set = BTreeSet::new();
+    let mut rest = args;
+    while let [arg, tail @ ..] = rest {
+        rest = tail;
+        if flags.contains(&arg.as_str()) {
+            if !set.insert(arg.clone()) {
+                return None;
+            }
+        } else if names.contains(&arg.as_str()) {
+            let [value, tail @ ..] = rest else {
+                return None;
+            };
+            rest = tail;
+            if values.insert(arg.clone(), value.clone()).is_some() {
+                return None;
+            }
+        } else if arg.starts_with("--") {
+            return None;
+        } else {
+            positional.push(arg.clone());
+        }
+    }
+    Some((positional, values, set))
+}
+
+/// `calc-run` (module `calc_run`).
+fn calc_run_cmd(args: &[String]) -> ExitCode {
+    let Some((inputs, values, flags)) = options(
+        args,
+        &["--bundle", "--out", "--data-overlay", "--scope"],
+        &["--anonymous"],
+    ) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    let (Some(bundle), Some(out)) = (values.get("--bundle"), values.get("--out")) else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    if inputs.is_empty() {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    }
+    let run = calc_run_run(
+        &inputs,
+        Path::new(bundle),
+        Path::new(out),
+        values.get("--data-overlay").map(Path::new),
+        values.get("--scope").map(Path::new),
+        flags.contains("--anonymous"),
+    );
+    match run {
+        Ok(true) => ExitCode::SUCCESS,
+        Ok(false) => ExitCode::FAILURE,
+        Err(message) => {
+            eprintln!("calc-run: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+fn calc_run_run(
+    inputs: &[String],
+    bundle_dir: &Path,
+    out: &Path,
+    overlay: Option<&Path>,
+    scope: Option<&Path>,
+    anonymous: bool,
+) -> Result<bool, String> {
+    if out.exists() {
+        return Err(format!("{}: already exists", out.display()));
+    }
+    let inputs = round_trip_inputs(inputs)?;
+    let bundle = load_bundle(bundle_dir)?;
+    let manifest_path = bundle_dir.join("bundle.json");
+    let manifest_bytes =
+        std::fs::read(&manifest_path).map_err(|e| format!("{}: {e}", manifest_path.display()))?;
+    let manifest_sha256 = oracle::sha256_hex(&manifest_bytes);
+    let data = loom_parser::import::BundleData::new(&bundle);
+    let resolver = loom_parser::import::Resolver::new(&data)
+        .map_err(|e| format!("the bundle's pipeline does not build: {} ({e})", e.code()))?;
+    let overlay = match overlay {
+        Some(path) => {
+            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let data = calc_run::OverlayData::read(&bytes, &bundle, &manifest_sha256)
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            Some((data, oracle::sha256_hex(&bytes)))
+        }
+        None => None,
+    };
+    let scope = match scope {
+        Some(path) => {
+            let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
+            let file = calc_survey::rules::Scope::read(&bytes)
+                .map_err(|e| format!("{}: {e}", path.display()))?;
+            if file.game != bundle.game.name()
+                || Some(file.steam_build) != bundle.manifest.source.steam_build
+            {
+                return Err(format!(
+                    "{}: for {} Steam build {}, not this bundle",
+                    path.display(),
+                    file.game,
+                    file.steam_build
+                ));
+            }
+            Some(calc_run::ScopeRecord {
+                sha256: oracle::sha256_hex(&bytes),
+                tree_version: file.tree_version,
+            })
+        }
+        None => None,
+    };
+    let tree = loom_tree::Tree::from_bundle(&bundle);
+    let request = calc_run::Request {
+        scope,
+        bundle: &bundle,
+        resolver: &resolver,
+        tree: tree.as_ref(),
+        data: &data,
+        bundle_record: calc_run::BundleRecord {
+            game: bundle.game.name().to_owned(),
+            steam_build: bundle.manifest.source.steam_build,
+            data_schema: bundle.manifest.data_schema,
+            manifest_sha256,
+        },
+        overlay: overlay.as_ref().map(|(data, sha256)| {
+            (
+                data,
+                calc_run::OverlayRecord {
+                    sha256: sha256.clone(),
+                    rows: data.counts(),
+                },
+            )
+        }),
+        anonymous,
+        tool: calc_run::ToolRecord {
+            commit: git(&["rev-parse", "HEAD"]),
+            dirty: git(&["status", "--porcelain"]).map(|s| !s.is_empty()),
+        },
+    };
+    let outputs = calc_run::run(&inputs, &request)?;
+    calc_run::write(out, &outputs)?;
+    let s = &outputs.summary;
+    println!(
+        "calc-run: {} builds, {} ok, {} failed; fields {} complete, {} partial, {} unsupported, {} indeterminate; calculation {} us total",
+        s.builds,
+        s.ok,
+        s.failed,
+        s.field_states.complete,
+        s.field_states.partial,
+        s.field_states.unsupported,
+        s.field_states.indeterminate,
+        s.timing.total_micros
+    );
+    for b in outputs.report.builds.iter().filter(|b| b.status != "ok") {
+        eprintln!(
+            "{}: {} at {}",
+            b.id,
+            b.code.as_deref().unwrap_or("?"),
+            b.step
+                .map_or_else(String::new, |step| calc_run::reason_kind(&step))
+        );
+    }
+    Ok(s.failed == 0 && s.builds > 0)
+}
+
+/// `calc-parity` (module `calc_parity`).
+fn calc_parity_cmd(args: &[String]) -> ExitCode {
+    let parsed = options(
+        args,
+        &[
+            "--slice",
+            "--out",
+            "--register",
+            "--overlay-run",
+            "--manifest",
+        ],
+        &[],
+    );
+    let request = parsed.and_then(|(positional, values, _)| {
+        let [oracle, successor] = positional.as_slice() else {
+            return None;
+        };
+        Some(calc_parity::Request {
+            oracle: oracle.into(),
+            successor: successor.into(),
+            slice: values.get("--slice")?.into(),
+            out: values.get("--out")?.into(),
+            register: values.get("--register").map(Into::into),
+            overlay_run: values.get("--overlay-run").map(Into::into),
+            manifest: values.get("--manifest").map(Into::into),
+        })
+    });
+    let Some(request) = request else {
+        eprintln!("{USAGE}");
+        return ExitCode::from(2);
+    };
+    match calc_parity::run(&request) {
+        Ok(report) => {
+            print!("{}", report.summary_markdown());
+            ExitCode::from(report.exit_code())
+        }
+        Err(message) => {
+            eprintln!("calc-parity: {message}");
+            ExitCode::from(3)
+        }
+    }
+}
+
+/// Prints a tree-parity record; whether it matched.
+fn print_record<T: Serialize>((record, ok): (T, bool)) -> Result<bool, String> {
+    let json = serde_json::to_string_pretty(&record).map_err(|e| e.to_string())?;
+    println!("{json}");
+    Ok(ok)
+}
+
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-run"
+    {
+        return calc_run_cmd(rest);
+    }
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-parity"
+    {
+        return calc_parity_cmd(rest);
+    }
+    if let [cmd, rest @ ..] = args.as_slice()
+        && cmd == "calc-survey"
+    {
+        return calc_survey_cmd(rest);
+    }
     if let [cmd, rest @ ..] = args.as_slice()
         && cmd == "build-round-trip"
     {
@@ -1027,8 +1544,44 @@ fn main() -> ExitCode {
             bundle_cmd(Path::new(extract), Path::new(out))
         }
         [cmd, dir] if cmd == "bundle-check" => bundle_check(Path::new(dir)),
+        [cmd, pin, export, bundle, flag, out] if cmd == "tree-layout" && flag == "--out" => {
+            tree_layout::run(
+                Path::new(pin),
+                Path::new(export),
+                Path::new(bundle),
+                Path::new(out),
+            )
+            .and_then(|summary| {
+                let json = serde_json::to_string_pretty(&summary).map_err(|e| e.to_string())?;
+                println!("{json}");
+                Ok(true)
+            })
+        }
+        [cmd, mode, pob, bundle] if cmd == "tree-parity" && mode == "layout" => {
+            tree_parity::layout(Path::new(pob), Path::new(bundle)).and_then(print_record)
+        }
+        [cmd, mode, bundle, count, seed] if cmd == "tree-parity" && mode == "alloc-requests" => {
+            let count = count.parse().map_err(|e| format!("count: {e}"));
+            let seed = seed.parse().map_err(|e| format!("seed: {e}"));
+            count.and_then(|c| seed.map(|s| (c, s))).and_then(|(c, s)| {
+                tree_parity::alloc_requests(Path::new(bundle), c, s).map(|text| {
+                    print!("{text}");
+                    true
+                })
+            })
+        }
+        [cmd, mode, requests, pob, bundle] if cmd == "tree-parity" && mode == "alloc" => {
+            tree_parity::alloc(Path::new(requests), Path::new(pob), Path::new(bundle))
+                .and_then(print_record)
+        }
+        [cmd, mode, build, pob] if cmd == "tree-parity" && mode == "readback" => {
+            tree_parity::readback(Path::new(build), Path::new(pob)).and_then(print_record)
+        }
         [cmd, dirs @ ..] if cmd == "dto-hashes" && !dirs.is_empty() => dto_hashes(dirs),
         [cmd, extract] if cmd == "load-statdesc" => load_statdesc(Path::new(extract)),
+        [cmd, bundle, pob, flag, out] if cmd == "custom-lines" && flag == "--out" => {
+            custom_lines_cmd(Path::new(bundle), Path::new(pob), Path::new(out))
+        }
         [cmd, extract, flag, out] if cmd == "round-trip" && flag == "--out" => {
             round_trip(Path::new(extract), Path::new(out))
         }

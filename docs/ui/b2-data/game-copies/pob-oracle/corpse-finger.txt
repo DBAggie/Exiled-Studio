@@ -1,0 +1,21 @@
+Rarity: RARE
+Corpse Finger
+Iron Ring
+Crafted: true
+Prefix: {range:1,1}AddedPhysicalDamage4
+Prefix: {range:0.25}IncreasedMana13
+Prefix: None
+Suffix: {fractured}{range:0.667}ManaRegeneration4
+Suffix: {range:0.5}ChaosResist4
+Suffix: {range:0}ItemFoundRarityIncrease3
+Item Level: 85
+LevelReq: 68
+Implicits: 1
++1 to Maximum Endurance Charges
+{tags:mana}{suffix}{fractured}46% increased Mana Regeneration Rate
+{tags:damage,physical,attack}{prefix}Adds 6 to 10 Physical Damage to Attacks
+{tags:mana}{prefix}+75 to maximum Mana
+{tags:drop}{suffix}+15% to Item Rarity
+{tags:chaos,resistance}{suffix}+23% to Chaos Resistance
+Fractured Item
+Corrupted

@@ -21,7 +21,10 @@
 //! Exit 0 when every difference has a category and every rule matched one;
 //! 1 otherwise; 2 on a usage error; 3 when an input does not read.
 
+pub mod affixes;
 pub mod compare;
+pub mod flavour;
+pub mod gem_effects;
 pub mod pob;
 pub mod rules;
 
@@ -40,10 +43,12 @@ use self::rules::{Category, Rules};
 use crate::resolve_corpus::Tool;
 
 /// The tables compared (also the names rules use).
-pub const TABLES: [&str; 10] = [
+pub const TABLES: [&str; 16] = [
     "skills",
     "gems",
     "bases",
+    "base_requirements",
+    "mod_affixes",
     "characters",
     "character_constants",
     "monster_constants",
@@ -51,6 +56,10 @@ pub const TABLES: [&str; 10] = [
     "monster_levels",
     "passives",
     "mastery_effects",
+    "pantheons",
+    "gem_effects",
+    "jewel_radii",
+    "flavour_text",
 ];
 
 /// Summary and overlay format.
@@ -61,7 +70,22 @@ pub const UNCATEGORIZED: &str = "uncategorized";
 
 /// What the export and the comparison leave out on purpose, with the
 /// reason, for the report.
-pub const NOT_COMPARED: [(&str, &str, &str); 9] = [
+pub const NOT_COMPARED: [(&str, &str, &str); 12] = [
+    (
+        "mod_affixes",
+        "bundle mods PoB does not export; PoB's crafted mods (data.masterMods); prefix or suffix kind, group, weights, lines",
+        "monster, area, and other domains are not items; data.masterMods has no mod IDs to match; the rest is compared through resolution and the item rules",
+    ),
+    (
+        "mod_affixes",
+        "data.itemMods.Item and WatchersEye",
+        "Item merges seven of the files read; WatchersEye is derived by PoB from the Explicit file",
+    ),
+    (
+        "base_requirements",
+        "bundle bases PoB does not have",
+        "currency, gems, and other items without a PoB base; not listed",
+    ),
     (
         "skills",
         "level requirement, Vaal soul cost and stored uses, soul gain prevention",
@@ -277,6 +301,8 @@ pub struct Request<'a> {
     pub rules: &'a [u8],
     /// The scope passive text renders with ([`compare::PASSIVE_SCOPE`]).
     pub passive_scope: &'a str,
+    /// The bosses to compare (`loom_calc::poe1::enemy::BOSSES` in a run).
+    pub bosses: &'a [loom_calc::poe1::enemy::Boss],
     /// The tool record.
     pub tool: Tool,
 }
@@ -320,7 +346,7 @@ pub fn run(request: &Request<'_>) -> Result<Outputs, String> {
                 .unwrap_or("an unknown version")
         ));
     }
-    let comparison = compare::compare(bundle, &export, request.passive_scope)?;
+    let comparison = compare::compare(bundle, &export, request.passive_scope, request.bosses)?;
     let inputs = Inputs {
         game,
         steam_build: bundle.manifest.source.steam_build,

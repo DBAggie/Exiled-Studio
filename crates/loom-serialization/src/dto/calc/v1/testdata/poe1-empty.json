@@ -1,0 +1,2185 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe1",
+    "state": "indeterminate",
+    "reasons": {
+      "indeterminate": [
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_evasion_rating"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_maximum_all_resistances_%"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "base_maximum_spell_block_%"
+          }
+        },
+        {
+          "missing-data": {
+            "table": "character_constants",
+            "key": "maximum_block_%"
+          }
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field": "strength",
+        "value": 14.0,
+        "node": 11,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "dexterity",
+        "value": 14.0,
+        "node": 23,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "intelligence",
+        "value": 32.0,
+        "node": 35,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "life",
+        "value": 57.0,
+        "node": 50,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "mana",
+        "value": 56.0,
+        "node": 64,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "energy-shield",
+        "value": 0.0,
+        "node": 174,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "armour",
+        "value": 0.0,
+        "node": 185,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "evasion",
+        "value": 0.0,
+        "node": 196,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.fire",
+        "value": -60.0,
+        "node": 82,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.cold",
+        "value": -60.0,
+        "node": 100,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.lightning",
+        "value": -60.0,
+        "node": 118,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "resistance.chaos",
+        "value": -60.0,
+        "node": 136,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "block-chance",
+        "value": 0.0,
+        "node": 147,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "life-unreserved",
+        "value": 57.0,
+        "node": 197,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "mana-unreserved",
+        "value": 56.0,
+        "node": 198,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "average-damage",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-speed",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-chance",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "crit-multiplier",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "hit-dps",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "poe1.spell-suppression-chance",
+        "value": 0.0,
+        "node": 157,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      },
+      {
+        "field": "poe1.spell-block-chance",
+        "value": 0.0,
+        "node": 154,
+        "state": "indeterminate",
+        "indeterminate": [
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_evasion_rating"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_all_resistances_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "base_maximum_spell_block_%"
+            }
+          },
+          {
+            "missing-data": {
+              "table": "character_constants",
+              "key": "maximum_block_%"
+            }
+          }
+        ]
+      }
+    ],
+    "graph": [
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "strength",
+            "op": "base"
+          }
+        },
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          0
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          1
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          3
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          4
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          5,
+          6
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          2,
+          7
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          8
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          9,
+          10
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "dexterity",
+            "op": "base"
+          }
+        },
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          12
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          13
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          15
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          16
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          17,
+          18
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          14,
+          19
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          20
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          21,
+          22
+        ],
+        "value": 14.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "intelligence",
+            "op": "base"
+          }
+        },
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          24
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          25
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          27
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          28
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          29,
+          30
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          26,
+          31
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          32
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          33,
+          34
+        ],
+        "value": 32.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          11,
+          36
+        ],
+        "value": 7.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.life-from-strength",
+        "children": [
+          37
+        ],
+        "value": 7.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 38.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "life-per-level"
+            },
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 12.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          39,
+          40
+        ],
+        "value": 50.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          41,
+          38
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          43
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          44
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          42,
+          45,
+          46
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          47
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 1.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          48,
+          49
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "half"
+          }
+        },
+        "value": 0.5
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          35,
+          51
+        ],
+        "value": 16.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.mana-from-intelligence",
+        "children": [
+          52
+        ],
+        "value": 16.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "mana",
+            "op": "base"
+          }
+        },
+        "value": 34.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "mana-per-level"
+            },
+            "quantity": "mana",
+            "op": "base"
+          }
+        },
+        "value": 6.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "children": [
+          54,
+          55
+        ],
+        "value": 40.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          56,
+          53
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          58
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          59
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          60,
+          61
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          57,
+          62
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "result",
+        "children": [
+          63
+        ],
+        "value": 56.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.fire",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          65
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          67
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          68,
+          69
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          70,
+          71
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          66,
+          72
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          73
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          75,
+          76
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          77
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          79
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          74,
+          78
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          81,
+          80
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.cold",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          83
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          85
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          86,
+          87
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          88,
+          89
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          84,
+          90
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          91
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          93,
+          94
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          95
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          97
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          92,
+          96
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          99,
+          98
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.lightning",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          101
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          103
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          104,
+          105
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          106,
+          107
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          102,
+          108
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          109
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          111,
+          112
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          113
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          115
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          110,
+          114
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          117,
+          116
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "resistance-penalty"
+            },
+            "quantity": "resistance.chaos",
+            "op": "base"
+          }
+        },
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          119
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          121
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          122,
+          123
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "no-negative-modifier"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "step.modifier-at-least-zero",
+        "children": [
+          124,
+          125
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          120,
+          126
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          127
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "maximum-resistance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.maximum-capped",
+        "children": [
+          129,
+          130
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.max",
+        "children": [
+          131
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-floor"
+          }
+        },
+        "value": -200.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.min",
+        "children": [
+          133
+        ],
+        "value": -200.0
+      },
+      {
+        "kind": "min",
+        "term": "step.capped",
+        "children": [
+          128,
+          132
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          135,
+          134
+        ],
+        "value": -60.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.block-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          137
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          139
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          138,
+          140,
+          141
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.total",
+        "children": [
+          142
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "block-chance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.max",
+        "children": [
+          144,
+          145
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          143,
+          146
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "value": 0.0
+      },
+      {
+        "kind": "product",
+        "term": "step.unrounded",
+        "children": [
+          148,
+          140,
+          141
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.total",
+        "children": [
+          149
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.maximum-sum",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "block-chance-cap"
+          }
+        },
+        "value": 90.0
+      },
+      {
+        "kind": "min",
+        "term": "step.max",
+        "children": [
+          151,
+          152
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          150,
+          153
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "suppression-chance-cap"
+          }
+        },
+        "value": 100.0
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          155,
+          156
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "tenth"
+          }
+        },
+        "value": 0.1
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          35,
+          158
+        ],
+        "value": 3.2
+      },
+      {
+        "kind": "floor",
+        "term": "step.energy-shield-from-intelligence",
+        "children": [
+          159
+        ],
+        "value": 3.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "fifth"
+          }
+        },
+        "value": 0.2
+      },
+      {
+        "kind": "product",
+        "term": "step.attribute-scaled",
+        "children": [
+          23,
+          161
+        ],
+        "value": 2.8000000000000003
+      },
+      {
+        "kind": "floor",
+        "term": "step.evasion-from-dexterity",
+        "children": [
+          162
+        ],
+        "value": 2.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          164,
+          160
+        ],
+        "value": 3.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          165
+        ],
+        "value": 1.03
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          166,
+          167
+        ],
+        "value": 1.03
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          169
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          171
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          172,
+          173
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          175
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          176
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          177,
+          178
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          180
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          182
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          183,
+          184
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          186,
+          163
+        ],
+        "value": 2.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          187
+        ],
+        "value": 1.02
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "step.modifier",
+        "children": [
+          188,
+          189
+        ],
+        "value": 1.02
+      },
+      {
+        "kind": "sum",
+        "term": "step.base-effects",
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          191
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.slots",
+        "value": 0.0
+      },
+      {
+        "kind": "round-half-up",
+        "term": "step.rounded",
+        "children": [
+          193
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "minimum"
+          }
+        },
+        "value": 0.0
+      },
+      {
+        "kind": "max",
+        "term": "result",
+        "children": [
+          194,
+          195
+        ],
+        "value": 0.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          50
+        ],
+        "value": 57.0
+      },
+      {
+        "kind": "sum",
+        "term": "result",
+        "children": [
+          64
+        ],
+        "value": 56.0
+      }
+    ]
+  }
+}

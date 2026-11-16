@@ -4,7 +4,7 @@ The game is the truth; Path of Building (PoB) at a pinned tag is the regression 
 
 | File | What it is |
 |---|---|
-| `divergence-register.json` | The register: every accepted difference. Empty until Phase 3 compares a successor result. |
+| `divergence-register.json` | The register: every accepted difference. The first entries (DIV-0001 to DIV-0025, a weapon's attack time in floored milliseconds, Q11) came with Phase 3's attack-rate switch (PR #81) (`docs/phase-3/attack-hits.md`, "The switch"). |
 | `divergence-register.schema.json` | The format as JSON Schema (documentation). `loom-parity-cli divergence-check` enforces it, plus the rules a schema cannot express. |
 
 Unregistered differences fail a parity gate. There is no general "close enough" rule: every tolerance is written down per field, in an entry (ADR-006, "Comparison rules").
@@ -39,6 +39,15 @@ Rules beyond the schema: ids are unique; at most one `accepted` entry per fixtur
 - Accepted entries for a compared fixture that covered nothing are listed (`unused_entries`): the difference is gone, and the entry may be retired.
 
 Exit codes: a failure class of a run (10 to 18) when a fixture has no output on a side; else 20 when any difference is unregistered or a fixture is on one side only; else 19 when every difference is registered; else 0. One unregistered difference makes the whole comparison 20, whatever else is expected. A gate passes on 0 and 19.
+
+### The successor against the oracle (`calc-parity`, Phase 3)
+
+`loom-parity-cli calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json --out <dir> [--register <file>] [--overlay-run <dir>] [--manifest <file>]` compares the successor's calc result documents (`calc-run`) with the oracle's outputs, per slice field. It uses this register with the same classes and exit codes, and the same `field` pointers into the oracle's output document:
+
+- a field: `/main_output/<key>` (the oracle's value against ours, as numbers);
+- a breakdown line: `/breakdowns/<key>/<line index>`, a slot row's part `/breakdowns/<key>/slots/<row index>/<base|inc|more|total>` (the oracle's printed text against ours printed the same way, as strings); a term only our graph has: `/breakdowns/<key>/<term>` (oracle value `null`).
+
+Only fields our result marks `complete` are compared; `partial`, `indeterminate`, and not-computed fields are listed, never passed. A `data-version` entry covers a difference only when the `--overlay-run` (`calc-run --data-overlay`, PoB's data values for the rows `data-parity` found different) matches the oracle at that pointer (Phase 3 plan, decision 5); without it, the difference stays unexpected. Details: `docs/phase-3/calc-parity.md`.
 
 ## Adding an entry
 

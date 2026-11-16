@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-10): Smite with Elemental Damage with Attacks and Added Lightning Damage: more elemental attack damage, added lightning times effectiveness.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+				<Gem nameSpec="Elemental Damage with Attacks" skillId="SupportElementalDamageWithAttacks" variantId="SupportElementalDamageWithAttacks" gemId="Metadata/Items/Gems/SupportGemWeaponElementalDamage" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Added Lightning Damage" skillId="SupportAddedLightningDamage" variantId="SupportAddedLightningDamage" gemId="Metadata/Items/Gems/SupportGemAddedLightningDamage" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

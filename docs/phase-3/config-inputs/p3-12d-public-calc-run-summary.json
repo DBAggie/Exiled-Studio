@@ -1,0 +1,71 @@
+{
+  "format": 1,
+  "tool": {
+    "commit": "565c890832708f7a660704f6ce87c5f52c8d71ec",
+    "dirty": false
+  },
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b"
+  },
+  "overlay": null,
+  "scope": {
+    "sha256": "02ff7fe5924e28d7e1ad628bf6e449c63f496930841514c15fd31d1298a33656",
+    "tree_version": "3_29"
+  },
+  "builds": 88,
+  "ok": 87,
+  "failed": 1,
+  "failures": {
+    "IMPORT_XML": 1
+  },
+  "build_states": {
+    "indeterminate": 17,
+    "unsupported": 70
+  },
+  "field_states": {
+    "complete": 1030,
+    "partial": 351,
+    "unsupported": 395,
+    "indeterminate": 312
+  },
+  "field_reasons": {
+    "excluded-line": 182,
+    "not-computed": 395,
+    "scaled-line": 227,
+    "tree-version": 295,
+    "unmapped-stat": 646,
+    "unmodelled-choice": 510,
+    "unmodelled-config": 646,
+    "unmodelled-gem": 544,
+    "unmodelled-item": 442,
+    "unmodelled-passive": 358,
+    "unmodelled-skill": 29,
+    "unread-line": 17,
+    "unresolved-line": 612,
+    "unsettled-value": 17
+  },
+  "build_reasons": {
+    "excluded-line": 10,
+    "scaled-line": 12,
+    "tree-version": 16,
+    "unmapped-stat": 34,
+    "unmodelled-choice": 26,
+    "unmodelled-config": 34,
+    "unmodelled-gem": 28,
+    "unmodelled-item": 24,
+    "unmodelled-passive": 20,
+    "unread-line": 1,
+    "unresolved-line": 32,
+    "unsettled-value": 1
+  },
+  "timing": {
+    "builds": 87,
+    "min_micros": 14,
+    "median_micros": 164,
+    "max_micros": 2403,
+    "total_micros": 50995
+  }
+}

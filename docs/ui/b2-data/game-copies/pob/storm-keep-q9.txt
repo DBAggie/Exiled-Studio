@@ -1,0 +1,14 @@
+Item Class: Body Armours
+Rarity: RARE
+Storm Keep
+Golden Plate
+Quality: 9
+Armour: 703
+Sockets: W-W
+Item Level: 57
+Implicits: 0
+{prefix}{tags:life,defences,armour}+29 to Armour
+{prefix}{tags:life,defences,armour}+18 to maximum Life
+{suffix}{tags:elemental,cold,resistance}+29% to Cold Resistance
+{suffix}{tags:elemental,fire,resistance}+7% to Fire Resistance
+{suffix}{tags:attribute}+36 to Strength

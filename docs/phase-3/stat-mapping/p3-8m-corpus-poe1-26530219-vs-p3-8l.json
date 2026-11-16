@@ -1,0 +1,68 @@
+{
+ "builds_with_reason_changes": 7,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "2c336bb9f318a48a15c9bd03ca7884e4c60bdb493062614f7d95035110185f2e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "2fcbf03a66d16bc8949db1f1fbfb39941803c438bb8b490a607fb68a642af98b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22088}}, \"stat\": \"keystone_elemental_overload\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 31, \"line\": 26}}, \"stat\": \"cold_ailment_effect_+%\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 7,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "average-damage": [
+    17.463831,
+    16.8245
+   ],
+   "crit-multiplier": [
+    1.5,
+    1.0
+   ],
+   "hit-dps": [
+    529.2069999999999,
+    509.8333333333333
+   ]
+  }
+ }
+}

@@ -16,8 +16,12 @@
 //! - `ItemClasses` to class IDs; the `ClientStrings` rows the game's item
 //!   rules name; the lookup tables `lookup` builds; the stat-description
 //!   files, copied as the extractor wrote them;
-//! - PoE1: `poe1/quality_types.json` (`properties::quality_types`) and
-//!   `poe1/grafts.json` (`grafts::rows`);
+//! - PoE1: `poe1/quality_types.json` (`properties::quality_types`),
+//!   `poe1/grafts.json` (`grafts::rows`), and `poe1/pantheons.json`
+//!   (`pantheons::rows`, P3-12g), and `poe1/jewel_radii.json`
+//!   (`jewel_radii::rows`, passive tree plan T-f), and
+//!   `poe1/unique_flavour.json` (`flavour::rows` with
+//!   `poe1::FLAVOUR_PAIRS`, B-2's item card);
 //! - the game's item rules: `poe1::item_rules` or `poe2::item_rules`;
 //! - format 2, both games: the skill tables ([`skills`]) and the character
 //!   and passive tables ([`passives`]; the extract's manifest format 5), and
@@ -34,8 +38,8 @@ use loom_data::bundle::poe1::{self as bundle_poe1, Grafts as BundleGrafts};
 use loom_data::bundle::properties as bundle_properties;
 use loom_data::bundle::skills as bundle_skills;
 use loom_data::bundle::{
-    self, BaseItem, ClientText, FileEntry, LookupTable, Manifest, ModEntry, ModStat, Provenance,
-    SpawnWeight, Stat,
+    self, AttributeRequirements, BaseItem, ClientText, FileEntry, LookupTable, Manifest, ModEntry,
+    ModStat, Provenance, SpawnWeight, Stat, TagName,
 };
 use loom_data::stat_desc::{Lookup, LookupHandler, StatDescManifest};
 use loom_parser::import::ItemRules;
@@ -44,9 +48,11 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 use crate::extract::{Extract, Read, Table};
-use crate::item_tags::ItemTags;
+use crate::item_tags::{self, ItemTags};
 use crate::lookup::{LookupReport, TableLookup};
-use crate::{grafts, mod_filter, poe1, poe2, properties};
+use crate::{
+    flavour, grafts, jewel_radii, mod_filter, pantheons, poe1, poe2, properties, tree_flavour,
+};
 
 mod base_properties;
 mod passives;
@@ -104,6 +110,8 @@ pub struct Summary {
     pub passives: passives::PassiveSummary,
     /// The item property and monster tables (format 2).
     pub properties: base_properties::PropertySummary,
+    /// The pantheon (PoE1, P3-12g); `None` without its table.
+    pub pantheons: Option<pantheons::PantheonSummary>,
 }
 
 /// Counters the readers fill (see [`Summary`]).
@@ -241,6 +249,8 @@ fn mods(
         col("CraftingItemClassRestrictions")?,
         col("IsEssenceOnlyModifier")?,
     );
+    let implicit = column(&t, &["ImplicitTagsKeys", "ImplicitTags"])?;
+    let (name, level) = (col("Name")?, col("Level")?);
     let mut slots = Vec::new();
     for n in 1..=8 {
         slots.push(StatSlot::find(&t, n)?);
@@ -292,6 +302,12 @@ fn mods(
             craft_classes: class_ids(&craft_rows),
             essence_only: r.get(essence).and_then(Value::as_bool).unwrap_or(false),
             essence_classes: essence_of.get(&n).map(class_ids),
+            implicit_tags: mod_filter::ints(r, implicit)
+                .into_iter()
+                .filter_map(|i| at(&tags, Some(i), counts))
+                .collect(),
+            name: Table::text(r, name).unwrap_or("").trim().to_owned(),
+            level: Table::int(r, level),
         });
     }
     let names: BTreeSet<&str> = mod_types.iter().map(String::as_str).collect();
@@ -299,13 +315,15 @@ fn mods(
     Ok((out, bad_spawn, duplicate_types))
 }
 
-/// Named base items, and the count whose tags are unknown.
+/// Named base items, the count whose tags are unknown, the count without
+/// a name, and each base's socket caps (B-2 item evidence, E9: the item
+/// type chain's `socket_info`; bases whose chain sets none are left out).
 fn base_items(
     read: Read<'_>,
     classes: &[String],
     mods: &[ModEntry],
     counts: &Counts,
-) -> Result<(Vec<BaseItem>, usize, usize), String> {
+) -> Result<BaseItemRows, String> {
     let tag_ids = mod_filter::tag_ids(read)?;
     let t = Table::require(read, "BaseItemTypes")?;
     let col = |n: &str| t.column(n);
@@ -320,9 +338,13 @@ fn base_items(
         column(&t, &["TagsKeys", "Tags"])?,
         column(&t, &["Implicit_ModsKeys", "Implicit_Mods"])?,
     );
+    let drop_level = col("DropLevel")?;
+    let base_ids: Vec<Option<&str>> = t.rows.iter().map(|r| Table::text(r, id)).collect();
+    let requirements = attribute_requirements(read, &base_ids)?;
     let mut item_tags = ItemTags::default();
     let (mut unknown, mut nameless) = (0, 0);
     let mut out = Vec::new();
+    let mut caps = Vec::new();
     for r in &t.rows {
         let (Some(i), Some(n)) = (Table::text(r, id), Table::text(r, name)) else {
             continue;
@@ -344,6 +366,16 @@ fn base_items(
         if row_tags.is_none() {
             unknown += 1;
         }
+        if let Some(levels) = Table::text(r, inherits)
+            .and_then(|path| item_tags.socket_info(read, path))
+            .and_then(|info| item_tags::socket_levels(&info))
+            .filter(|l| !l.is_empty())
+        {
+            caps.push(bundle_poe1::SocketCaps {
+                base: i.to_owned(),
+                levels,
+            });
+        }
         out.push(BaseItem {
             id: i.to_owned(),
             name: n.to_owned(),
@@ -363,9 +395,84 @@ fn base_items(
                     found
                 })
                 .collect(),
+            drop_level: Table::int(r, drop_level),
+            requirements: requirements.get(i).copied(),
         });
     }
-    Ok((out, unknown, nameless))
+    Ok((out, unknown, nameless, caps))
+}
+
+/// [`base_items`]' result.
+type BaseItemRows = (Vec<BaseItem>, usize, usize, Vec<bundle_poe1::SocketCaps>);
+
+/// Base item IDs to their attribute requirements, from
+/// `ComponentAttributeRequirements` (a PoE1 extraction root; empty when the
+/// extract has no such table). The game keys the table by the base's ID
+/// (a string column); a row number into `BaseItemTypes` is read too, through
+/// `base_ids` (each row's ID). Rows with no requirement are left out.
+fn attribute_requirements(
+    read: Read<'_>,
+    base_ids: &[Option<&str>],
+) -> Result<BTreeMap<String, AttributeRequirements>, String> {
+    let mut out = BTreeMap::new();
+    let Some(t) = Table::read(read, "ComponentAttributeRequirements")? else {
+        return Ok(out);
+    };
+    let base = column(&t, &["BaseItemTypesKey", "BaseItemTypes"])?;
+    let (s, d, i) = (
+        t.column("ReqStr")?,
+        t.column("ReqDex")?,
+        t.column("ReqInt")?,
+    );
+    for r in &t.rows {
+        let id = Table::text(r, base).map(str::to_owned).or_else(|| {
+            Table::int(r, base)
+                .and_then(|n| usize::try_from(n).ok())
+                .and_then(|n| base_ids.get(n).copied().flatten())
+                .map(str::to_owned)
+        });
+        let Some(row) = id else {
+            continue;
+        };
+        let req = AttributeRequirements {
+            strength: Table::int(r, s).unwrap_or(0),
+            dexterity: Table::int(r, d).unwrap_or(0),
+            intelligence: Table::int(r, i).unwrap_or(0),
+        };
+        if req != AttributeRequirements::default() {
+            out.insert(row, req);
+        }
+    }
+    Ok(out)
+}
+
+/// Each tag's display name, sorted by ID; tags with none left out.
+///
+/// The name is `Tags.Name` where the schema has that column (PoE1): the
+/// names the Alt view prints after a mod's header (`Life`, `Defences`,
+/// `Armour`), empty for the tags it hides (`resource`, `physical_damage`;
+/// Q-B2-2, `docs/ui/b2-data/card-data.md`). Without it (PoE2's schema
+/// leaves the fourth column unnamed), `Tags.DisplayString`, which holds
+/// monster labels, not mod tag names.
+fn tag_names(read: Read<'_>) -> Result<Vec<TagName>, String> {
+    let t = Table::require(read, "Tags")?;
+    let id = t.column("Id")?;
+    let display = t.column("Name").or_else(|_| t.column("DisplayString"))?;
+    let mut out: Vec<TagName> = t
+        .rows
+        .iter()
+        .filter_map(|r| {
+            let id = Table::text(r, id)?;
+            let display = Table::text(r, display)?.trim();
+            (!id.is_empty() && !display.is_empty()).then(|| TagName {
+                id: id.to_owned(),
+                display: display.to_owned(),
+            })
+        })
+        .collect();
+    out.sort_by(|a, b| a.id.cmp(&b.id));
+    out.dedup_by(|a, b| a.id == b.id);
+    Ok(out)
 }
 
 /// The `ClientStrings` rows the rules name, sorted by ID.
@@ -486,7 +593,8 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     unique_ids("ItemClasses", classes.iter().map(String::as_str))?;
     let (mod_rows, bad_spawn, duplicate_types) = mods(read, &classes, &counts)?;
     unique_ids("Mods", mod_rows.iter().map(|m| m.id.as_str()))?;
-    let (bases, tags_unknown, nameless) = base_items(read, &classes, &mod_rows, &counts)?;
+    let (bases, tags_unknown, nameless, socket_caps) =
+        base_items(read, &classes, &mod_rows, &counts)?;
     let (skill_tables, skill_summary) = skills::convert(read, &classes, &counts)?;
     let (passive_tables, passive_summary) = passives::convert(read, &raw, &counts)?;
     let (property_tables, property_summary) = base_properties::convert(read, &counts)?;
@@ -545,6 +653,14 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         bundle::ITEM_RULES,
         to_json(&rules)?,
         None,
+    );
+    let tags = tag_names(read)?;
+    put(
+        &mut files,
+        &mut rows,
+        bundle::TAGS,
+        to_json(&tags)?,
+        Some(tags.len()),
     );
 
     let sk = &skill_tables;
@@ -637,7 +753,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
     let pr = &property_tables;
     // Every file of `bundle_properties::FILES`; the load-back refuses a
     // bundle that lacks one.
-    let property_files: [(&str, Vec<u8>, usize); 5] = [
+    let property_files: [(&str, Vec<u8>, usize); 6] = [
         (
             bundle_properties::WEAPON_TYPES,
             to_json(&pr.weapon_types)?,
@@ -662,6 +778,11 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
             bundle_properties::GAME_CONSTANTS,
             to_json(&pr.game_constants)?,
             pr.game_constants.len(),
+        ),
+        (
+            bundle_properties::MONSTER_TYPES,
+            to_json(&pr.monster_types)?,
+            pr.monster_types.len(),
         ),
     ];
     for (path, bytes, n) in property_files {
@@ -689,6 +810,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         put(&mut files, &mut rows, &target, read(&output)?, None);
     }
 
+    let mut pantheon_summary = None;
     if game == "poe1" {
         if let Some(q) = properties::quality_types(read)? {
             let q: Vec<bundle_poe1::QualityType> = q
@@ -721,6 +843,53 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
                 Some(n),
             );
         }
+        if let Some(texts) = flavour::rows(read, &poe1::FLAVOUR_PAIRS)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::UNIQUE_FLAVOUR,
+                to_json(&texts)?,
+                Some(texts.len()),
+            );
+        }
+        if let Some(texts) = tree_flavour::rows(read)? {
+            let n = texts.passives.len() + texts.ascendancies.len();
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::TREE_FLAVOUR,
+                to_json(&texts)?,
+                Some(n),
+            );
+        }
+        if !socket_caps.is_empty() {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::SOCKET_CAPS,
+                to_json(&socket_caps)?,
+                Some(socket_caps.len()),
+            );
+        }
+        if let Some(radii) = jewel_radii::rows(read)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::JEWEL_RADII,
+                to_json(&radii)?,
+                Some(radii.len()),
+            );
+        }
+        if let Some((gods, summary)) = pantheons::rows(read)? {
+            put(
+                &mut files,
+                &mut rows,
+                bundle_poe1::PANTHEONS,
+                to_json(&gods)?,
+                Some(gods.len()),
+            );
+            pantheon_summary = Some(summary);
+        }
     }
 
     let entries: Vec<FileEntry> = files
@@ -733,7 +902,10 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         .collect();
     let manifest = Manifest {
         format: bundle::CALC_FORMAT,
-        data_schema: 2,
+        // 3 since P3-8n: mods carry their implicit tags. 4 since B-2: mods
+        // their affix name and level, bases their drop level and attribute
+        // requirements, and `data/tags.json` (`bundle::AFFIX_SCHEMA`).
+        data_schema: bundle::AFFIX_SCHEMA,
         game: game.clone(),
         source: provenance(&raw),
         files: entries,
@@ -769,6 +941,7 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
         skills: skill_summary,
         passives: passive_summary,
         properties: property_summary,
+        pantheons: pantheon_summary,
     };
     files.insert(bundle::MANIFEST.to_owned(), manifest_json);
     Ok((files, summary))
@@ -777,11 +950,13 @@ pub fn convert(read: Read<'_>, extract: &Extract) -> Result<(Files, Summary), St
 /// The tables `convert` reads for PoE1 only (the `poe1/` section and the
 /// essence classes), for gate 3d.
 #[cfg(test)]
-const POE1_ONLY_TABLES: [&str; 4] = [
+const POE1_ONLY_TABLES: [&str; 6] = [
     "AlternateQualityTypes",
     "BrequelGrafts",
     "BrequelGraftGrantedSkillLevels",
+    "ComponentAttributeRequirements",
     "Essences",
+    "PassiveJewelRadii",
 ];
 
 #[cfg(test)]
@@ -862,6 +1037,140 @@ mod tests {
         let row = serde_json::json!([4, [5, 8]]);
         let slot = StatSlot::find(&t, 1).unwrap();
         assert_eq!(slot.read(row.as_array().unwrap()), (Some(4), Some((5, 8))));
+    }
+
+    /// A reader of the given `tables/<name>.json` texts.
+    fn reader(tables: &[(&str, &str)]) -> impl Fn(&str) -> Result<Vec<u8>, String> {
+        let tables: Vec<(String, String)> = tables
+            .iter()
+            .map(|(n, j)| (format!("tables/{n}.json"), (*j).to_owned()))
+            .collect();
+        move |path: &str| {
+            tables
+                .iter()
+                .find(|(p, _)| p == path)
+                .map(|(_, j)| j.clone().into_bytes())
+                .ok_or_else(|| format!("{path}: missing"))
+        }
+    }
+
+    #[test]
+    fn attribute_requirements_should_map_base_rows_and_skip_none() {
+        let read = reader(&[(
+            "ComponentAttributeRequirements",
+            r#"{"table": "ComponentAttributeRequirements", "columns": [
+                {"name": "BaseItemTypesKey", "references": "BaseItemTypes"},
+                {"name": "ReqStr", "references": null},
+                {"name": "ReqDex", "references": null},
+                {"name": "ReqInt", "references": null}],
+              "rows": [[4, 85, 62, 0], [5, 0, 0, 0], [null, 1, 1, 1], [9, 1, 1, 1]]}"#,
+        )]);
+        let ids = [None, None, None, None, Some("Base/Four"), Some("Base/Five")];
+        let req = attribute_requirements(&read, &ids).unwrap();
+        // Row 9 is past the table: no base, left out.
+        assert_eq!(
+            req.into_iter().collect::<Vec<_>>(),
+            [(
+                "Base/Four".to_owned(),
+                AttributeRequirements {
+                    strength: 85,
+                    dexterity: 62,
+                    intelligence: 0
+                }
+            )]
+        );
+        // The game's layout: the key is the base's ID as a string.
+        let read = reader(&[(
+            "ComponentAttributeRequirements",
+            r#"{"table": "ComponentAttributeRequirements", "columns": [
+                {"name": "BaseItemTypesKey", "references": "BaseItemTypes", "type": "string"},
+                {"name": "ReqStr", "references": null},
+                {"name": "ReqDex", "references": null},
+                {"name": "ReqInt", "references": null}],
+              "rows": [["Metadata/Items/Armours/Shields/ShieldStr1", 11, 0, 0]]}"#,
+        )]);
+        let req = attribute_requirements(&read, &[]).unwrap();
+        assert_eq!(
+            req.get("Metadata/Items/Armours/Shields/ShieldStr1")
+                .map(|r| r.strength),
+            Some(11)
+        );
+        // An extract without the table (PoE2 until checked): none.
+        assert!(
+            attribute_requirements(&reader(&[]), &[])
+                .unwrap()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn tag_names_should_keep_tags_with_a_display_string_sorted() {
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null}],
+              "rows": [["life", 1, "Life"], ["default", 2, ""],
+                       ["defences", 3, "Defences "], ["life", 4, "Again"]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [
+                TagName {
+                    id: "defences".to_owned(),
+                    display: "Defences".to_owned()
+                },
+                TagName {
+                    id: "life".to_owned(),
+                    display: "Life".to_owned()
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn tag_names_should_fall_back_to_the_display_string_without_a_name_column() {
+        // PoE2: the fourth column is unnamed in the schema.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": null, "references": null}],
+              "rows": [["boss", 1, "Boss", "Ignored"], ["life", 2, "", "Life"]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "boss".to_owned(),
+                display: "Boss".to_owned()
+            }]
+        );
+    }
+
+    #[test]
+    fn tag_names_should_read_the_name_column_when_the_schema_has_it() {
+        // PoE1: `Name` holds the mod tag names; `DisplayString` the monster
+        // labels, ignored; an empty `Name` (a hidden tag) is left out.
+        let read = reader(&[(
+            "Tags",
+            r#"{"table": "Tags", "columns": [
+                {"name": "Id", "references": null},
+                {"name": "HASH32", "references": null},
+                {"name": "DisplayString", "references": null},
+                {"name": "Name", "references": null}],
+              "rows": [["life", 1, "", "Life"], ["resource", 2, "", ""],
+                       ["pinnacle_boss", 3, "Pinnacle Atlas Boss", ""]]}"#,
+        )]);
+        assert_eq!(
+            tag_names(&read).unwrap(),
+            [TagName {
+                id: "life".to_owned(),
+                display: "Life".to_owned()
+            }]
+        );
     }
 
     #[test]

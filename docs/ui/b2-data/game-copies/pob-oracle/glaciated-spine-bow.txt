@@ -1,0 +1,11 @@
+Rarity: MAGIC
+Glaciated Spine Bow
+Crafted: true
+Prefix: {range:0.555556,0.416667}LocalAddedColdDamageTwoHand7
+Suffix: None
+Item Level: 72
+Quality: 0
+Sockets: G G-G-G-G B
+LevelReq: 64
+Implicits: 0
+{tags:damage,elemental,cold,attack}{prefix}Adds 92 to 164 Cold Damage

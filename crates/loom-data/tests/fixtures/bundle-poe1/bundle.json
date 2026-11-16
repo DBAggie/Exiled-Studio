@@ -1,5 +1,5 @@
 {
- "data_schema": 2,
+ "data_schema": 4,
  "files": [
   {
    "path": "data/active_skills.json",
@@ -18,8 +18,8 @@
   },
   {
    "path": "data/base_items.json",
-   "sha256": "4be1ac0f811443fb0af8bcad714d5292b03311a82e56ac0ad2b69f1ebc25f38d",
-   "size": 973
+   "sha256": "310d5f3a4b021471c482e3457570e9e96794f542b4eb22921129bc1bebd3980e",
+   "size": 1076
   },
   {
    "path": "data/characters.json",
@@ -88,13 +88,18 @@
   },
   {
    "path": "data/mods.json",
-   "sha256": "f7dfffdf30778f3b74114e230387997f07b36d20b70df5774418130918369cc7",
-   "size": 663
+   "sha256": "0dcc094cb334c7f94ebeca7ff8a7de550a4987fd7807c40e1f37ba36475b10ee",
+   "size": 819
   },
   {
    "path": "data/monster_levels.json",
    "sha256": "2d2d6859f038febe80f853f0fb31fb8f610192038e12d07fb8a8544cf89389c7",
    "size": 539
+  },
+  {
+   "path": "data/monster_types.json",
+   "sha256": "06ded3def5e4e1ccad08fe2f0cb6af23d8c46bbc797678a557b5b207af8e338c",
+   "size": 135
   },
   {
    "path": "data/object_templates.json",
@@ -132,6 +137,11 @@
    "size": 782
   },
   {
+   "path": "data/tags.json",
+   "sha256": "aa10362b6244961bbd1435af0a9a6eab5308c1d0cffe00b0c39f54f9c4706b61",
+   "size": 101
+  },
+  {
    "path": "data/weapon_types.json",
    "sha256": "86108c9750ecce57dd177de567bb3f57693377eb0884b872be2b3ca9357e93a0",
    "size": 142
@@ -142,9 +152,34 @@
    "size": 163
   },
   {
+   "path": "poe1/jewel_radii.json",
+   "sha256": "0446402c1aded95ddf69f25685871ae4dfeb748cc1d03ac0468390c676a04679",
+   "size": 219
+  },
+  {
+   "path": "poe1/pantheons.json",
+   "sha256": "5c256f7cd586ee9d6812659661134bb052299fc5be11f7f676f34e989b582a73",
+   "size": 512
+  },
+  {
    "path": "poe1/quality_types.json",
    "sha256": "111b8b10a17f224fdf089bfa958fb8db20200080ad29731d83abf70ff2c09ee4",
    "size": 136
+  },
+  {
+   "path": "poe1/socket_caps.json",
+   "sha256": "bc276ebd821441f136bb2957d7cfaffaccf0077103ff86f00429c0648132530e",
+   "size": 284
+  },
+  {
+   "path": "poe1/tree_flavour.json",
+   "sha256": "ac5d8101ab3c7d6a78266d6707a323d29f111981d4361ddbe235868d4b6a58c6",
+   "size": 293
+  },
+  {
+   "path": "poe1/unique_flavour.json",
+   "sha256": "0870ea1453f95667052a0b273d133dcb03f7af6f87866b01b4bd132d75c2a096",
+   "size": 451
   },
   {
    "path": "stat_descriptions/charm_stat_descriptions.json",

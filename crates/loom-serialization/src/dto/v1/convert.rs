@@ -10,14 +10,15 @@
 use loom_domain as d;
 
 use super::DtoError;
-use super::types::{Adapted, Exclusion};
+use super::types::{Adapted, Exclusion, League};
 use super::types::{
-    AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigSet,
-    ConfigValue, DataVersion, Entry, Game, GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine,
-    ItemPart, ItemSet, Items, ItemsEntry, JewelSocket, LineKind, LineResolution, MasteryEffect,
-    ModSection, ModifierLine, NoBase, NonFinite, Number, OpaqueNode, PassiveSpec, Passives,
-    Poe2Choices, Prefix, PropertyValue, Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup,
-    Sourced, SpecPart, StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
+    AltVariant, Attribute, Build, BuildPart, Character, Config, ConfigInput, ConfigInputKind,
+    ConfigLayout, ConfigSet, ConfigValue, CustomModifierBlock, CustomModifierLine, DataVersion,
+    Entry, Game, GameSpecific, Gem, HeaderLine, Item, ItemBody, ItemLine, ItemPart, ItemSet, Items,
+    ItemsEntry, JewelSocket, LineKind, LineResolution, MasteryEffect, ModSection, ModifierLine,
+    NoBase, NonFinite, Number, OpaqueNode, PassiveSpec, Passives, Poe2Choices, Prefix,
+    PropertyValue, Rarity, Resolved, SkillSet, Skills, SlotEntry, SocketGroup, Sourced, SpecPart,
+    StatLine, StatValue, TypedResolution, UnresolvedReason, VariantSelection,
 };
 
 // ---- shared ----------------------------------------------------------------
@@ -218,6 +219,10 @@ pub(super) fn build_to(b: &d::Build) -> Build {
             schema_version: v.schema_version,
             steam_build: v.steam_build,
         }),
+        league: b.league.map(|l| match l {
+            d::League::Challenge => League::Challenge,
+            d::League::Standard => League::Standard,
+        }),
         character: Character {
             class: c.class.as_ref().map(|i| i.as_str().to_owned()),
             ascendancy: c.ascendancy.as_ref().map(|i| i.as_str().to_owned()),
@@ -249,6 +254,10 @@ pub(super) fn build_from(b: Build) -> Result<d::Build, DtoError> {
         game: game_from(&v.game),
         schema_version: v.schema_version,
         steam_build: v.steam_build,
+    });
+    out.league = b.league.map(|l| match l {
+        League::Challenge => d::League::Challenge,
+        League::Standard => d::League::Standard,
     });
     let c = b.character;
     out.character = d::Character {
@@ -709,6 +718,13 @@ fn resolution_to(r: &d::LineResolution) -> LineResolution {
                         stats: stats_to(stats),
                         quality: quality.clone(),
                     },
+                    d::TypedResolution::CustomNote => TypedResolution::CustomNote,
+                    d::TypedResolution::CustomPattern { pattern, value } => {
+                        TypedResolution::CustomPattern {
+                            pattern: pattern.clone(),
+                            value: value.clone(),
+                        }
+                    }
                 }),
             },
             adapted: adapted.map(|a| match a {
@@ -777,6 +793,10 @@ fn resolution_from(r: LineResolution) -> Result<d::LineResolution, DtoError> {
                         stats: stats_from(stats),
                         quality,
                     },
+                    TypedResolution::CustomNote => d::TypedResolution::CustomNote,
+                    TypedResolution::CustomPattern { pattern, value } => {
+                        d::TypedResolution::CustomPattern { pattern, value }
+                    }
                 }),
             },
             adapted: adapted.map(|a| match a {
@@ -820,12 +840,54 @@ fn config_to(c: &d::Config) -> Config {
                     d::ConfigValue::Number(n) => ConfigValue::Number(sourced_to(n, number_to)),
                     d::ConfigValue::String(s) => ConfigValue::String(s.clone()),
                 },
+                kind: match i.kind {
+                    d::ConfigInputKind::Input => ConfigInputKind::Input,
+                    d::ConfigInputKind::Placeholder => ConfigInputKind::Placeholder,
+                },
+                lines: lines_to(&i.lines),
                 attributes: attrs_to(&i.attributes),
             }),
+            custom_modifiers: set
+                .custom_modifiers
+                .iter()
+                .map(|b| CustomModifierBlock {
+                    title: b.title.clone(),
+                    enabled: b.enabled,
+                    text: b.text.clone(),
+                    lines: lines_to(&b.lines),
+                    attributes: attrs_to(&b.attributes),
+                })
+                .collect(),
             attributes: attrs_to(&set.attributes),
         }),
+        layout: match c.layout {
+            d::ConfigLayout::Sets => ConfigLayout::Sets,
+            d::ConfigLayout::Flat => ConfigLayout::Flat,
+        },
         attributes: attrs_to(&c.attributes),
     }
+}
+
+fn lines_to(lines: &[d::CustomModifierLine]) -> Vec<CustomModifierLine> {
+    lines
+        .iter()
+        .map(|l| CustomModifierLine {
+            text: l.text.clone(),
+            resolution: resolution_to(&l.resolution),
+        })
+        .collect()
+}
+
+fn lines_from(lines: Vec<CustomModifierLine>) -> Result<Vec<d::CustomModifierLine>, DtoError> {
+    lines
+        .into_iter()
+        .map(|l| {
+            Ok(d::CustomModifierLine {
+                text: l.text,
+                resolution: resolution_from(l.resolution)?,
+            })
+        })
+        .collect()
 }
 
 fn config_from(c: Config) -> Result<d::Config, DtoError> {
@@ -845,12 +907,39 @@ fn config_from(c: Config) -> Result<d::Config, DtoError> {
                             }
                             ConfigValue::String(s) => d::ConfigValue::String(s),
                         },
+                        kind: match i.kind {
+                            ConfigInputKind::Input => d::ConfigInputKind::Input,
+                            ConfigInputKind::Placeholder => d::ConfigInputKind::Placeholder,
+                        },
+                        lines: lines_from(i.lines)?,
                         attributes: attrs_from(i.attributes),
                     })
                 })?,
+                custom_modifiers: set
+                    .custom_modifiers
+                    .into_iter()
+                    .map(|b| {
+                        Ok(d::CustomModifierBlock {
+                            title: b.title,
+                            enabled: b.enabled,
+                            text: b.text,
+                            lines: lines_from(b.lines)?,
+                            attributes: attrs_from(b.attributes),
+                        })
+                    })
+                    .collect::<Result<_, DtoError>>()?,
                 attributes: attrs_from(set.attributes),
             })
         })?,
+        layout: match c.layout {
+            ConfigLayout::Sets => d::ConfigLayout::Sets,
+            ConfigLayout::Flat => d::ConfigLayout::Flat,
+        },
         attributes: attrs_from(c.attributes),
+    })
+    .and_then(|config: d::Config| {
+        config.check_custom_lines().map_err(DtoError::Domain)?;
+        config.check_layout().map_err(DtoError::Domain)?;
+        Ok(config)
     })
 }

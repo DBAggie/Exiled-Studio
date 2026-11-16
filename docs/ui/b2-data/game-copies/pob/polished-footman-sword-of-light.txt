@@ -1,0 +1,10 @@
+Item Class: Two Hand Swords
+Rarity: MAGIC
+Polished Footman Sword of Light
+Sockets: W-W W W-R
+Item Level: 46
+Implicits: 1
+{implicit}{tags:attack}60% increased Global Accuracy Rating
+{prefix}{tags:damage,physical,attack}Adds 10 to 21 Physical Damage
+{suffix}{tags:attack}15% increased Global Accuracy Rating
+{suffix}{tags:attack}23% increased Light Radius

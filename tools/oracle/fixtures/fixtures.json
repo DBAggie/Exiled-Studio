@@ -291,6 +291,1066 @@
       "expect": "ok",
       "tags": ["timeless-jewel"],
       "description": "goratha (Maxroll), Essence Drain Contagion Occultist; credit, retrieval and terms in community/SOURCES.md. Covers: Chaos damage over time (Essence Drain, Blight of Contagion), Chaos Inoculation."
+    },
+    {
+      "id": "ice-nova-elementalist-campaign-lab1.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-campaign-lab1.xml",
+      "sha256": "d6bf11eaa98a91d22a121f3326257981275da5c9c3441dbba1766795f497e48d",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Campaign (lab 1) setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell, early Elementalist."
+    },
+    {
+      "id": "ice-nova-elementalist-campaign.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-campaign.xml",
+      "sha256": "ffbd3a4867c7f7416b2cdb8972297aa767bbad03d4f89d4d4b2a84bc2886f409",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Campaign setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell."
+    },
+    {
+      "id": "ice-nova-elementalist-mapping.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/ice-nova-elementalist-mapping.xml",
+      "sha256": "bdbc5ac3d446a7a3a7da46818b8a08a0bf50bdd0ea12ed90560cd604b28cd0e4",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "aer0 (Maxroll), Ice Nova Elementalist; the guide's Mapping setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: self-cast Ice Nova, the Phase 3 spell, critical strikes, mapping gear."
+    },
+    {
+      "id": "smite-inquisitor-act1.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act1.xml",
+      "sha256": "b236499a59949d20ed0cb49083552a810272f875023031778822b6882e912ec4",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 1 setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, campaign start."
+    },
+    {
+      "id": "smite-inquisitor-act2.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act2.xml",
+      "sha256": "dbcc2e59a1428f2558d34f9a7b4978d3345312df295ee27e529212df6d5574bc",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 2 setup made active (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack."
+    },
+    {
+      "id": "smite-inquisitor-act5.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act5.xml",
+      "sha256": "75b037cfbce11831a3d605cbf6a1ee63a7fdc6facad0c45dc6c8ea087be6bef1",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 5 setup made active, Smite selected in its group with Leap Slam (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, supports."
+    },
+    {
+      "id": "smite-inquisitor-act10.xml",
+      "tier": "community",
+      "source": "local",
+      "path": "community/smite-inquisitor-act10.xml",
+      "sha256": "e0506b151a0991372a5abb1ccaf0905e61037c78e25f74e029b01bb4f7a86bec",
+      "expect": "ok",
+      "tags": ["derived"],
+      "description": "Shayd (Maxroll), Smite of Divine Judgement Inquisitor; the guide's Act 10 setup made active, Smite selected in its group with Leap Slam (derived: spec, skill set, item set, and main group switched together; credit, retrieval, terms, and the change in community/SOURCES.md). Covers: Smite, the Phase 3 attack, Inquisitor ascendancy."
+    },
+    {
+      "id": "bare-scion-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-scion-level1.xml",
+      "sha256": "bcee71c5bace607bab60dfa9a7a85b10fb58f213c0cbc62f1b20c3f9052a0fd0",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Scion with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-scion-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-scion-level90.xml",
+      "sha256": "6e03821b4fc23ef699af7dfe80b396b3a79e9eae38f1a975bb6827833fcc7443",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Scion with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-marauder-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-marauder-level1.xml",
+      "sha256": "f5c1e571e69b055adf9e1b0f63b044eac1beeac3515eb41ba231bc14c92b9324",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Marauder with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-marauder-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-marauder-level90.xml",
+      "sha256": "07ecdc6f515dacdf48d930d1c8940e978df864b4fbe567fe4070d108d72430b4",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Marauder with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-ranger-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-ranger-level1.xml",
+      "sha256": "66126dc066fe7c41531d79404e9e6f4f852129fe6bd22dd5fe203a78a33cbdb5",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Ranger with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-ranger-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-ranger-level90.xml",
+      "sha256": "2ad9d46ad9439973e5efafa7ee9e53101316632b69acb40380ae0fe7bc00536c",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Ranger with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-witch-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-witch-level1.xml",
+      "sha256": "2e6c73477fa1aade62f08191e6d36602e3e3048eb06762decbb9f4db28967450",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Witch with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-witch-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-witch-level90.xml",
+      "sha256": "1bd070b07b26fd419f66291bce0895e9310c6f9fbcf481bd294e715c856586db",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-duelist-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-duelist-level1.xml",
+      "sha256": "85311a8ec778c756cc3f25fb04615491f78347f2a71d135d26e7aa6e6b808258",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Duelist with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-duelist-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-duelist-level90.xml",
+      "sha256": "604345926ccd193929262031859f18d9389a672a2a8ad6de7e6e2a539e08aaea",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Duelist with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-templar-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-templar-level1.xml",
+      "sha256": "df61417dbf14600bebad8d03ff547ad5b09448b65f57136c4ac799db00c9af56",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Templar with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-templar-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-templar-level90.xml",
+      "sha256": "f2a531dfcfcddbcf7c11584f0c688457bffff973a1ef1c3f91b4ca4cb6607129",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Templar with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-shadow-level1.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-shadow-level1.xml",
+      "sha256": "06e813046223dbdb3c8b455dd80c32e1d6eb63984fcde8ba32a2703a91fae164",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 1 Shadow with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "bare-shadow-level90.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/bare-shadow-level90.xml",
+      "sha256": "e13125be6097f2bd69b675e18b5153834ce4f697b6fd5b96e151c53cb96bd25a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Shadow with nothing allocated or equipped: the class's base attributes and life, mana and energy shield by level (P3-6)."
+    },
+    {
+      "id": "passives-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/passives-witch.xml",
+      "sha256": "d11b78c855f6a0df42bfd60e58453906f7a33e9079434f0bb7196e7106cbbd11",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with the path to Deep Wisdom and Heart and Soul: passive flat energy shield and mana, Intelligence (to mana and energy shield), increased life and mana (P3-6)."
+    },
+    {
+      "id": "passives-scion.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/passives-scion.xml",
+      "sha256": "557ae04184fb6af1dc46c07e12c26711317eb211f42016309df3101d6036b142",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Scion with the node next to the class start: flat life and Strength (to life) from a passive (P3-6)."
+    },
+    {
+      "id": "masteries-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/masteries-witch.xml",
+      "sha256": "dcde306d6a6b3974990ff8c2d865f11114064b0c2e36b76f9f47a246429fe1ae",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with Utmost Intellect and its group's Attributes mastery (5% increased Attributes): a mastery effect, increased attributes (P3-6)."
+    },
+    {
+      "id": "jewellery-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/jewellery-witch.xml",
+      "sha256": "ca4e12f5ad56475df19da4d738107eab346b9e3d3207523d1083f7eb0a301acd",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with two rings, an amulet and a belt (rare, original): flat life, mana, energy shield and attributes, increased energy shield from items (P3-6)."
+    },
+    {
+      "id": "jewel-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/jewel-witch.xml",
+      "sha256": "9047a2f4e00ec80c01113e2951fef711e1630a9bdc230e1a112dba66bfc6b1be",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with a Cobalt Jewel (rare, original) in an allocated socket: a jewel's attributes, increased energy shield and mana (P3-6)."
+    },
+    {
+      "id": "armour-pieces-marauder.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/armour-pieces-marauder.xml",
+      "sha256": "0199218b8f5542c6f2a271cb8984e02a1caef7724684a0e5ee19df3e02f57a6b",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Marauder in four armour pieces (rare, original): base ranges at a given percentile and at the top, quality, local flat and increased armour; global armour, evasion and resistances from jewellery (P3-7)."
+    },
+    {
+      "id": "shield-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/shield-templar.xml",
+      "sha256": "4c88370819087772882b8e41186d6f7f8216453dee481eeed5ae2ad31b83050c",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 80 Templar with a spirit shield and an amulet (rare, original): the shield's block and energy shield with local mods and quality, attack and spell block with their increases and maximums (P3-7)."
+    },
+    {
+      "id": "resistances-duelist.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/resistances-duelist.xml",
+      "sha256": "6a9673a663b0e27bd45321c990e54af10275fa41142640e6ca9566529cc80430",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 70 Duelist with the act 5 resistance penalty set in the config, resistances from jewellery: over the cap, a raised maximum, pairs, all elemental, chaos (P3-7)."
+    },
+    {
+      "id": "evasion-es-shadow.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/evasion-es-shadow.xml",
+      "sha256": "cde61a0548b26c4b2a77bbda067829027a959b8d902d17cea10ad2e002fbb160",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 85 Shadow in evasion and energy shield pieces (rare, original): a hybrid helmet with percentiles, quality and hybrid local lines; global evasion, energy shield and defences from jewellery; attribute bonuses on every row (P3-7)."
+    },
+    {
+      "id": "ice-nova-config-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-config-conditions-witch.xml",
+      "sha256": "0baa38f9b254ae44c22895fb40624b23b171d8183d9fd1afa5f3c763b7dc6e04",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with every config input that only sets named conditions or multipliers (loom_calc::poe1::config::NAMED_ONLY): PoB's values equal the bare fixture's, and no input is a reason (P3-12a)."
+    },
+    {
+      "id": "ice-nova-config-placeholders-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-config-placeholders-witch.xml",
+      "sha256": "ecc1430b93c916e85bad231ae5fd3f96023e790c7389f182fd31e70b0f6b96ea",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a saved placeholder for every input loom_calc::poe1::config classifies, at values PoB would show if it used them (the enemy's cold resistance 0 and level 1 among them), and two enemy damage inputs: PoB's values equal the bare fixture's, and no placeholder is a reason (P3-12b)."
+    },
+    {
+      "id": "ice-nova-custom-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-custom-modifiers-witch.xml",
+      "sha256": "b18e152036535f651deedd09e5d255ed508eac75a6ed899f525fa73ca30766d4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with three custom modifier blocks: an empty one; an enabled one of five game-text modifiers (cold resistance, life, critical strike multiplier, spell damage, cast speed) with colour codes and blank lines; a disabled one with three more. The enabled lines apply as character-wide modifiers, the disabled ones not (P3-12c)."
+    },
+    {
+      "id": "ice-nova-legacy-custom-mods-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-legacy-custom-mods-witch.xml",
+      "sha256": "8b93936c15085270511ac219f2be16fb2e03e8de4c363d95365eadb2cf2cc192",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with PoB's legacy customMods input twice (the last counts) and one empty disabled block: PoB moves the second input's five game-text lines (raw line breaks, colour codes, a tab, blank lines) into the block, and they apply as character-wide modifiers (P3-12d)."
+    },
+    {
+      "id": "ice-nova-old-config-layout-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-old-config-layout-witch.xml",
+      "sha256": "ee27d84b8a7e389b11ed1e96521bfbe5605dda8c526c29029744b64c8e1a3c02",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with its config in PoB's layout before config sets (no ConfigSet element): an enemy level placeholder and a legacy customMods input of three lines, which PoB loads into set 1 and moves into its default block, so they apply (P3-12e)."
+    },
+    {
+      "id": "ice-nova-charges-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-charges-witch.xml",
+      "sha256": "0bf85ee63ee9ea695e8bdedc1500ad5b03694f4fb7b3ce4dab7e8c9d6875daee",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml using power, frenzy, and endurance charges at their maximum (3 each): increased critical strike chance per power charge, increased cast speed and more damage per frenzy charge; endurance charges reach no slice field (P3-12e)."
+    },
+    {
+      "id": "smite-charges-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-charges-templar.xml",
+      "sha256": "b8495b585b972a49d50d1803be2d37ffbc8d56454ee4e60f0ccd17cd1646a0ae",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml using charges with counts set: one power charge (the override's placeholder), two frenzy charges (increased attack speed, more damage), one endurance charge; fortified with 10 stacks, which reach no slice field (P3-12e)."
+    },
+    {
+      "id": "ice-nova-shocked-uber-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-shocked-uber-witch.xml",
+      "sha256": "a768e543bea3a20581d85e6fb618355fdb69a47855395fe1b4d060e4389918b2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml against a shocked Uber boss in 40% delirium: the enemy's damage taken (35% increased from the configured shock, 70% less for the Uber boss and 32% less from delirium, one name rounded to two decimals); Alira's +15% to all elemental resistances (P3-12f)."
+    },
+    {
+      "id": "smite-shocked-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-shocked-templar.xml",
+      "sha256": "d262f8c4ee3baad9c7c564204ce2d06ccd434668a7d4aec83b9513e995eac6ca",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml against a shocked enemy in 20% delirium: a configured 70% shock capped at 50% increased damage taken, 16% less; the physical hit's armour reduction computed before the damage taken; Oak's +40 to maximum Life; Onslaught's 20% increased attack speed, with the weapon's rate (P3-12f)."
+    },
+    {
+      "id": "ice-nova-onslaught-rage-exposure-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-rage-exposure-witch.xml",
+      "sha256": "31e8041f5729de86218479cd5ab48b3936f2c0d553fdaa92852e6adcf4ebecae",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Onslaught (20% increased cast speed), 30 rage, and the enemy exposed to cold and fire: rage and exposure act only with a source of rage or of exposure, which the build lacks, so only Onslaught changes a field (P3-12f)."
+    },
+    {
+      "id": "ice-nova-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-witch.xml",
+      "sha256": "9c63aed3b9b760fec630fc6c9c68625e8e78a49365e60ae211db013b82be4fd9",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 90 Witch casting Ice Nova (level 20) alone: base damage from the skill's level, crit, cast speed, the default enemy's cold resistance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-level10-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-level10-witch.xml",
+      "sha256": "fc1993d060585967ea125a8bf6caa7c4e3556696f765a2386dde330e858f1781",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 40 Witch casting Ice Nova at level 10 with 20% quality: another level's base damage; quality adds only area (P3-9b)."
+    },
+    {
+      "id": "ice-nova-added-cold-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-added-cold-witch.xml",
+      "sha256": "e91a91a6e7585689990eebe4ccd2ee15c0fea1dc3e79320d39adce042db7d1f4",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Added Cold Damage: added damage scaled by the skill's damage effectiveness (P3-9b)."
+    },
+    {
+      "id": "ice-nova-controlled-destruction-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-controlled-destruction-witch.xml",
+      "sha256": "2bc26cb3382244c58cb3225a5a9a5243d3b9d5bbb93f7a3ba5d60fc1bd0758cd",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Controlled Destruction: more spell damage, less critical strike chance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-increased-critical-strikes-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-increased-critical-strikes-witch.xml",
+      "sha256": "25116a55df502caf9b809d7f11714d0c753d349e2e533f81d2d1155663f3e757",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Strikes: additional base and increased critical strike chance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-cold-penetration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-cold-penetration-witch.xml",
+      "sha256": "782699e902e4f0cd4d7f34031f80ee1f183a9964db4f08f2eb5c106f228d20e3",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Cold Penetration: penetration of the default enemy's cold resistance (P3-9b)."
+    },
+    {
+      "id": "ice-nova-faster-casting-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-faster-casting-witch.xml",
+      "sha256": "1a41a9900617eb90ddc339a339f87a6d2af595b016dcfd3b7fd37533abda4d27",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Faster Casting: increased cast speed (P3-9b)."
+    },
+    {
+      "id": "ice-nova-increased-critical-damage-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-increased-critical-damage-witch.xml",
+      "sha256": "c1d8c2aa7ccedc67b1fd54cb3040d9cc351b8969ac766a4941a7928a473ef43a",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Damage: critical strike multiplier (P3-9b)."
+    },
+    {
+      "id": "ice-nova-added-damage-items-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-added-damage-items-witch.xml",
+      "sha256": "808d11908dab636cbdf5c78841c15902faa3a49f5042bcb84ca57ac50aa988a2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with jewellery (rare, original): added cold damage to spells; increased spell, cold, elemental and generic damage; cast speed (P3-9b)."
+    },
+    {
+      "id": "ice-nova-crit-items-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-crit-items-witch.xml",
+      "sha256": "6abd49cefb2d24696f8dfa226d9750eb31a893e4e6729d9fab8849930c0f42eb",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with jewellery (rare, original): spell critical strike chance, global critical strike chance and multiplier (P3-9b)."
+    },
+    {
+      "id": "ice-nova-enemy-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-enemy-witch.xml",
+      "sha256": "1bbff35058435e824872a1aac58a5b2dd95078221d9606801c53d25d3629dbdc",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured with 80% cold resistance (above the default maximum of 75%, which the input raises) and level 70 (P3-9b)."
+    },
+    {
+      "id": "smite-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-templar.xml",
+      "sha256": "f5311a250d6b5fe3473bcfd8c28d38c791bb5e5a5fb3e6696ebae6c4b5891814",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite (level 20, Melee Hit) with a normal Siege Axe: weapon damage, attack rate and crit, accuracy against the default enemy's evasion, 50% conversion to lightning, the aura's added lightning, the enemy's armour (P3-10)."
+    },
+    {
+      "id": "smite-area-hit-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-area-hit-templar.xml",
+      "sha256": "4cd401ce20c879f5333b410f0545aa6e32652ebceae2854f01cfc64d01575386",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite (level 20, 20% quality) Area Hit: the skill's less area damage, its quality, area and not melee (P3-10)."
+    },
+    {
+      "id": "smite-weapon-mods-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-weapon-mods-templar.xml",
+      "sha256": "bf04498831c63d0ccbc5cbebf34d80cc7e3d3c0ff741d941247de803269d07a8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a rare Siege Axe (20% quality): local added physical and lightning damage, increased physical damage, attack speed, crit chance, accuracy (P3-10)."
+    },
+    {
+      "id": "smite-melee-physical-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-melee-physical-templar.xml",
+      "sha256": "5643fcf40cb13d9d0b3310e6c1ec79cef1fcf229709ffedb572b56288af316b2",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Melee Physical Damage: more physical melee damage (also on the converted part), less attack speed (P3-10)."
+    },
+    {
+      "id": "smite-melee-physical-area-hit-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-melee-physical-area-hit-templar.xml",
+      "sha256": "29faa9570e353b995a5ec445e203d4a6f03b90a97c003014f99d77bda646d9dd",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite Area Hit with Melee Physical Damage: the more melee damage does not apply to the area hit (P3-10)."
+    },
+    {
+      "id": "smite-elemental-attacks-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-elemental-attacks-templar.xml",
+      "sha256": "58bfcf331ad9af30bb50ee4aaad54d9d1ad7886539f3942b255244c9160c7c1c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Elemental Damage with Attacks and Added Lightning Damage: more elemental attack damage, added lightning times effectiveness (P3-10)."
+    },
+    {
+      "id": "smite-items-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-items-templar.xml",
+      "sha256": "86d9d9f29bcb6dc516c6abc924c4a34899759ab715b75688a5b31e404c42687e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with jewellery (rare, original): added physical damage to attacks, accuracy and increased accuracy, increased physical, melee, attack, lightning damage, attack speed (P3-10)."
+    },
+    {
+      "id": "smite-crit-items-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-crit-items-templar.xml",
+      "sha256": "7e638c9e118b27967dd6f0b2067dbc12b9be37be4f7ffb4d1d12a43e56d48c8e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with an amulet (rare, original): global crit chance and multiplier on an attack (P3-10)."
+    },
+    {
+      "id": "smite-two-hand-level10-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-two-hand-level10-templar.xml",
+      "sha256": "a84f8f8b93e8476e4166bbef9fefbc882cbf53926a0b5412f73fb05eedc76ea6",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A level 40 Templar, Smite level 10 with a normal Double Axe (10% quality): another level, a two-handed weapon, weapon quality (P3-10)."
+    },
+    {
+      "id": "smite-enemy-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-enemy-templar.xml",
+      "sha256": "63bc88f00ec631f4450738e0029219c125f2cb927e5543a4c0f03aaf02b8e275",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite against a configured enemy: level 70, 20000 armour, 3000 evasion, 40% lightning resistance (P3-10)."
+    },
+    {
+      "id": "rolled-jewellery-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/rolled-jewellery-witch.xml",
+      "sha256": "62dbdabfc2b46d98e580b7b75789d8c44ce52f02bb302130063df54c0804991a",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Witch with two rings, an amulet and a belt (rare, original) whose lines are ranges with PoB's roll: rolls between the ends, a tie on a reduced line, implicit rolls, and an agreeing ModRange (P3-8b)."
+    },
+    {
+      "id": "smite-global-attack-stats-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-global-attack-stats-templar.xml",
+      "sha256": "9a39f3df00818365026f84300f42da48b219cbadf263210ce49c78018c73efba",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Karui Maul (1000 ms) and an amulet (rare, original): increased attack and cast speed, elemental damage with attack skills, melee critical strike chance; minion damage and a chance to freeze, shock and ignite, which change no slice field (P3-8c)."
+    },
+    {
+      "id": "ice-nova-attack-and-cast-speed-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-attack-and-cast-speed-witch.xml",
+      "sha256": "2bc3a608817543e3ac4c3546acb8c9628b85a89d92819e7726e3ffcc267a45f1",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with an amulet (rare, original): increased attack and cast speed on a spell (P3-8c)."
+    },
+    {
+      "id": "ice-nova-pantheon-arakaali-shakari-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-arakaali-shakari-witch.xml",
+      "sha256": "ff12e713ad65a625a59242f7015d1d2a8ac88c790a575990e8c4033c1056031a",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Arakaali and Shakari: Arakaali's chaos resistance against damage over time (PoB: a Dot-flagged ChaosResist, not the shown resistance) and damage over time taken; Shakari's chaos damage taken and poison on you; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-solaris-yugul-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-solaris-yugul-witch.xml",
+      "sha256": "8fc325f778133a1e843fe500e8eaef3f21ca472806330a89ad7990158d336eb6",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Solaris and Yugul: Solaris's physical damage reduction, area and elemental damage taken; Yugul's reflected damage, reflected hexes, and curse effect on you (no curse on you); every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-lunaris-garukhan-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-lunaris-garukhan-witch.xml",
+      "sha256": "0fec502ba810efda3a19594deab760ef392444c6bbdb3419f02b26df49a65ae8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's Lunaris and Garukhan: Lunaris's per-enemy damage reduction and movement speed, projectile avoidance; Garukhan's shock on you, Blind immunity (not blinded), Maim avoidance; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-pantheon-brine-king-gruthkul-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-pantheon-brine-king-gruthkul-witch.xml",
+      "sha256": "3034f72fae4a7fa3f8da932f7d4b02f1b30c2165ea36062d990e8b118b41aa15",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the pantheon's TheBrineKing and Gruthkul: the Brine King's stun, freeze, and chill on you; Gruthkul's damage reduction per hit taken and the enemy's attack speed; every soul applies and none changes a slice field (P3-12g)."
+    },
+    {
+      "id": "ice-nova-unnerve-intimidate-blind-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-unnerve-intimidate-blind-witch.xml",
+      "sha256": "80edc8177282bdda376522781e76eca2349aee2ddc6a37ca71c666288cb34036",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml against an unnerved, intimidated, blinded enemy: Unnerve's 10% increased spell damage taken; Intimidate (attacks) and Blind (evasion) change nothing on a spell; ten inputs that only set names modifiers read (P3-12g)."
+    },
+    {
+      "id": "smite-intimidate-blind-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-intimidate-blind-templar.xml",
+      "sha256": "6debe980d993100c145f26eee37c300724011b2b329ecc13f7b09c031a41a836",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml against an intimidated, blinded, unnerved enemy: Intimidate's 10% increased attack damage taken, Blind's 20% less evasion in the chance to hit; Unnerve (spells) changes nothing on an attack; ten inputs that only set names modifiers read (P3-12g)."
+    },
+    {
+      "id": "smite-other-gems-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-other-gems-templar.xml",
+      "sha256": "6dc8edaa20b74869165c33a6b1bb8f4737ab42e5c6c4279f69012349f8882b3c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml on a Karui Maul with the other gems of an act 1 Smite setup: inert skills and supports (Ground Slam with Chance to Bleed and Ruthless, Frostblink, Leap Slam with Faster Attacks, Holy Flame Totem with Summon Phantasm), Precision and Clarity at level 2 (accuracy, increased critical strike chance, flat mana reservation), and a level 1 Precision whose buff the level 2 one outvalues (P3-12h)."
+    },
+    {
+      "id": "smite-blood-rage-haste-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-blood-rage-haste-templar.xml",
+      "sha256": "f84b2e68018cb1b08c9b4db27ac721848caaf34b435dc5373c018c2a9aabd02e",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml on a Karui Maul with Blood Rage (increased attack speed), Haste (increased attack speed, 50% of mana reserved), Arctic Armour (its reservation; its effects reach no slice field), and a Haste with enableGlobal1 off that PoB does not create (P3-12h)."
+    },
+    {
+      "id": "ice-nova-zealotry-discipline-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-zealotry-discipline-witch.xml",
+      "sha256": "a3c0822700923f8d46aac4d936e9a5a050fe0a51b17a96cd2c1e7ad74841a254",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Zealotry (more spell damage, increased spell critical strike chance) and Discipline (energy shield), each reserving a percentage of mana (P3-12h)."
+    },
+    {
+      "id": "ice-nova-herald-of-ice-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-herald-of-ice-witch.xml",
+      "sha256": "d51515960fb1a4635afba54a34a02365424eaff63f1f769a58264838479b40de",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Herald of Ice twice: level 20 linked to Increased Critical Strikes (a cost multiplier on a percent reservation) and level 5 alone; the buff keeps the larger added cold damage, both reserve (P3-12h)."
+    },
+    {
+      "id": "ice-nova-socket-colours-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-socket-colours-witch.xml",
+      "sha256": "6884b69fb0f87b0b014ffb655b54bd47e91039aef605e02b8636086b609d1781",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with its gems in a Plate Vest socketed B-B-R-W G-B: Ice Nova and Controlled Destruction in blue sockets (+10 quality each), Increased Critical Strikes in a red socket and Faster Casting in a white one (none); a second group in the same slot from socket 5, Precision in green (+10), Haste in blue (none) (P3-12i)."
+    },
+    {
+      "id": "smite-socket-colours-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-socket-colours-templar.xml",
+      "sha256": "0c81189b95792c65fabe3b0628baf12f6d142fb9eceaecdb217c48c2706842c5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "A Karui Maul socketed R-R-G holding Smite, Melee Physical Damage, and Faster Attacks, each in a socket of its colour (+10 quality each) (P3-12i)."
+    },
+    {
+      "id": "ice-nova-onslaught-modifier-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-modifier-witch.xml",
+      "sha256": "899c1c3f5e88790262a33e3a29babc8883ebdfd2fc9f4cdee4265a2fe55c3b8f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the custom modifier 'Onslaught' alone, the check off: Onslaught's 20% increased cast speed (P3-12j)."
+    },
+    {
+      "id": "ice-nova-onslaught-twice-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-onslaught-twice-witch.xml",
+      "sha256": "2edbe9158a91f51d1fe7d00d831e892e43dc2fbaa4016d6dbcb12d82298e481c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the custom modifier 'Onslaught' in two blocks and the buffOnslaught check: Onslaught once (P3-12j)."
+    },
+    {
+      "id": "ice-nova-power-charge-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-power-charge-modifiers-witch.xml",
+      "sha256": "df59086fc7a7af641c1a158aa6db4bc0752b468c65ab9d2cb51226a19798a768",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with power charges used and charge modifiers as custom lines: +1 maximum (4 charges), increased damage, spell damage, crit chance, and crit multiplier per power charge (P3-8d)."
+    },
+    {
+      "id": "ice-nova-minimum-power-charges-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-minimum-power-charges-witch.xml",
+      "sha256": "ead7edd01a316ba72b01f56c1c2cfd7f02711c011022e07c48be03caa47a1389",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml without the power charge check, with +2 minimum power charges and spell damage per power charge: two charges (P3-8d)."
+    },
+    {
+      "id": "ice-nova-area-spell-crit-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-area-spell-crit-witch.xml",
+      "sha256": "71438d1a1dc04579861cd97a7acbb91bec83c836ca36f8417f9b97e34aad2e2c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines: 20% increased area damage, +30% critical strike multiplier for spell damage, and four stats that reach no slice field (area of effect, spell and aura area of effect, light radius) (P3-8e)."
+    },
+    {
+      "id": "ice-nova-staff-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-staff-conditions-witch.xml",
+      "sha256": "1a96652fb48f4a0a59ac1b9642edc74ae0fa918ee0f19b6147f490c1538cc312",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Gnarled Branch (a staff) and custom lines while wielding a staff: spell damage, crit chance and multiplier, spell block, defences (P3-8f)."
+    },
+    {
+      "id": "ice-nova-shield-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-shield-conditions-witch.xml",
+      "sha256": "4095b4e051a9b69608ead51807a5fc14969fe7376d6d541f5566faf2837dfa42",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a Carved Wand and a Twig Spirit Shield and custom lines: spell damage and spell block while holding a shield; staff lines without a staff (P3-8f)."
+    },
+    {
+      "id": "ice-nova-skill-keywords-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-skill-keywords-witch.xml",
+      "sha256": "ff08f29f6c77165b75beebb6a9e4ccca418e034d5a2d7f8c3341f8484dc942f0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines that name a skill keyword: cast speed, crit chance, and crit multiplier with cold and elemental skills (applied) and with fire and lightning skills (not); cold damage with spell skills (applied) and attack skills (not) (P3-8h)."
+    },
+    {
+      "id": "smite-skill-keywords-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-skill-keywords-templar.xml",
+      "sha256": "5ca8c0938c7299658805837d625a8d4e78f8e0a21c67a33f244217d13903f7fa",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "smite-templar.xml with custom lines that name a skill keyword: crit chance and multiplier with lightning skills (applied) and cold skills (not), cast speed with lightning skills (not: an attack), physical and lightning damage with attack skills (applied), fire damage with attack skills (no fire damage), lightning damage with spell skills (not) (P3-8h)."
+    },
+    {
+      "id": "ice-nova-gem-levels-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-gem-levels-witch.xml",
+      "sha256": "8ebe3f63b89a549ec7f10436f97104279f1f1c306c9afcfda4dc53fd15eef5d5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with Increased Critical Strikes and Added Cold Damage, Herald of Ice in another group, and custom lines that raise the levels of cold, spell, herald, and fire skill gems and of critical and non-exceptional support gems: each gem gains the lines its tags match (P3-8i)."
+    },
+    {
+      "id": "smite-gem-levels-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-gem-levels-templar.xml",
+      "sha256": "b5c23d7211725c914d5e50632c051b7b07a96023365533b9ebfffc1f1d83c770",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with Melee Physical Damage and a normal Siege Axe, Precision in another group, and custom lines that raise the levels of strength, aura, dexterity, melee, and physical skill gems and of non-exceptional support gems: each gem gains the lines its tags match (P3-8i)."
+    },
+    {
+      "id": "ice-nova-minion-modifiers-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-minion-modifiers-witch.xml",
+      "sha256": "3cad8711180208cdec6211a2760b4becade6048761f1ffa648aba38a1d71fc87",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova with custom lines: minion damage, cast speed, and attack speed, and the redirects of minion damage (also at 150% of their value: the larger counts) and of minion cast speed to you; Ice Nova gains 30% increased damage and 10% increased cast speed, the minion attack speed reaches nothing (P3-8j)."
+    },
+    {
+      "id": "smite-minion-modifiers-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-minion-modifiers-templar.xml",
+      "sha256": "a77fd243ff9ab1701633dce267089c8aa224b33ce374b7e966098c04ba24a6fb",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Siege Axe and custom lines: minion damage, attack speed, cast speed, and attack and cast speed, and the redirects of minion damage and of minion attack speed to you; Smite gains 20% increased damage and 16% increased attack speed, the minion cast speed reaches nothing (P3-8j)."
+    },
+    {
+      "id": "ice-nova-exposure-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-exposure-witch.xml",
+      "sha256": "3624f1157799af9723fc9638d7034d9b666a18220f956c3afa164cddb2ae6bb1",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured as exposed to cold and to fire, with custom lines: a chance to inflict cold exposure, an extra -25% to every exposure, -5% to cold exposure, and -7% to fire exposure; the enemy's cold resistance is 50 - 10 - 25 - 5 = 10, and the fire check without a fire chance gives nothing (P3-8k)."
+    },
+    {
+      "id": "ice-nova-guaranteed-shock-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-guaranteed-shock-witch.xml",
+      "sha256": "a17943777e30e9f51b066dde4382d4c01e7ebdefe91414077579e9191dad92b8",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Ice Nova against an enemy configured as shocked with a 10% effect, with custom lines: a 25% minimum shock, 30% increased effect of lightning ailments, 20% increased effect of non-damaging ailments, and \"Hits always Shock\"; the guaranteed shock 25 x 1.5 = 37.5 is floored to 37, and the last line changes nothing (P3-8k)."
+    },
+    {
+      "id": "smite-exposure-shock-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-exposure-shock-templar.xml",
+      "sha256": "e8776fc499a4b6706db839237878a6e59b12f22c58e962ee70c17e1543fffc0f",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Siege Axe against an enemy configured as exposed to lightning and shocked with a 10% effect, Elemental Army's exposure type set to lightning, and custom lines: an extra -25% to every exposure, a 25% minimum shock, and 20% increased effect of shock; Smite's lightning damage meets 15% resistance, and the guaranteed shock is 30 (P3-8k)."
+    },
+    {
+      "id": "ice-nova-aura-effect-reservation-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-aura-effect-reservation-witch.xml",
+      "sha256": "a84b1cbaa1088cc8fd7b8ac495f9ec400df7ca9b8426e374acadb2febdd8cfc0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with Zealotry and Discipline (auras) and Herald of Ice (a buff), each reserving a percentage of mana, and custom lines: 23% increased effect of non-curse auras (Zealotry's and Discipline's mods scaled, the herald's not), 13% increased mana reservation efficiency, 7% increased reservation efficiency, and 8% reduced reservation of skills (P3-8l)."
+    },
+    {
+      "id": "smite-aura-effect-reservation-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-aura-effect-reservation-templar.xml",
+      "sha256": "2e7c38c52c82d36ee7cbf95f1eb11331e95c655272fbda8cf96f7623a443b744",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Karui Maul, Precision and Clarity (auras reserving flat mana) and Haste (an aura reserving a percentage of mana), and custom lines: 10% increased effect of non-curse auras (Precision's, Haste's, and Smite's own aura scaled), 17% increased mana reservation efficiency, and 5% reduced reservation efficiency (P3-8l)."
+    },
+    {
+      "id": "smite-resolute-technique-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-resolute-technique-templar.xml",
+      "sha256": "befe038ecdbde0dd1fba02310d25fb9f92afdc0d4432b4bd684b3b11335c56da",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a normal Karui Maul and the Resolute Technique keystone, against an enemy configured with 2000 evasion: its hits cannot be evaded (chance to hit 100) and never crit (crit chance and multiplier 0) (P3-8m)."
+    },
+    {
+      "id": "ice-nova-elemental-overload-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-elemental-overload-witch.xml",
+      "sha256": "05f2db5242dc138650501e0ca976ed5e4c8df821d2453b34549aee54cc7cef87",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the Elemental Overload keystone and a custom line adding 10 to 20 fire damage to spells: the spell can crit, so its cold and fire damage are 40% more, and its crits deal no extra damage (crit multiplier 1) (P3-8m)."
+    },
+    {
+      "id": "ice-nova-bitter-frost-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-bitter-frost-witch.xml",
+      "sha256": "975be99f7d475290ee3ade69846f015e0ab4974222532b50c443bfb22382326c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with the Bitter Frost keystone, Frostblink in a second group, an enemy configured as chilled with an 8% effect, and custom lines adding 10 to 20 fire damage to spells and 25% increased effect of chill: Frostblink's guaranteed chill 10 x 1.25 is larger, so the enemy takes 12% increased cold damage, and the fire damage is not dealt (P3-8m)."
+    },
+    {
+      "id": "ice-nova-hit-conditions-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-hit-conditions-witch.xml",
+      "sha256": "b95d6a49431f2a67c807c3915f84a0eb0fef56d3193463626b09e6fe22f4fb18",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines for increased damage if you have shattered or shocked an enemy recently, crit multiplier against unique enemies, and crit chance against enemies on full life, the shattered and enemy-on-full-life checks on and a standard boss: each conditional line applies only with its condition (P3-8n)."
+    },
+    {
+      "id": "ice-nova-action-speed-double-damage-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-action-speed-double-damage-witch.xml",
+      "sha256": "5a19f27fea12efd2ea4968f58d80b36333db6be830011604443a6e5937be84b0",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with custom lines \"8% increased Action Speed\" and \"Spells have a 12% chance to deal Double Damage\": the cast rate times the action speed modifier before the cap, the damage times 1.12 (P3-8n)."
+    },
+    {
+      "id": "ice-nova-arcane-surge-convergence-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-arcane-surge-convergence-witch.xml",
+      "sha256": "76838ccbdd17a61a7795376650f74533649de13762cfc684ea6cba7a05ecbdb5",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml supported by Arcane Surge with the Arcane Surge and Convergence checks on, \"Gain Convergence when you Hit a Unique Enemy\", and cast speed per different non-instant spell cast recently with 2 configured: Arcane Surge's cast speed and more spell damage, Convergence's 30% more elemental damage, 10% increased cast speed (P3-8n)."
+    },
+    {
+      "id": "ice-nova-intensify-inspiration-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-intensify-inspiration-witch.xml",
+      "sha256": "9cfb691b858ba1d21cdbb7a94ca20ea27736c251ecccba8a70a4481a893ec763",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml supported by Intensify and Inspiration, intensity configured at 5 with +1 to maximum intensity: Intensify's more area damage at the limit of 4, Inspiration's more elemental damage and crit chance at 5 charges (P3-8n)."
+    },
+    {
+      "id": "ice-nova-enemy-ailments-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-enemy-ailments-witch.xml",
+      "sha256": "1e2372b7bf4bfd6699236b5a880e68567feede95b819db8cc3601909c9506b2c",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml against an enemy configured as chilled, on consecrated ground, and chilled by you for 4 seconds, with custom lines lowering the resistances of chilled or ignited enemies, damage taken per second chilled, consecrated ground's damage taken and effect, and cold exposure on hit at -12% (P3-8n)."
+    },
+    {
+      "id": "ice-nova-granted-passive-staff-witch.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/ice-nova-granted-passive-staff-witch.xml",
+      "sha256": "b029ecba9fdf4f5daf2f33228c7593f458d799bf3b17923cb10eeb73f6f910ca",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "ice-nova-witch.xml with a 20% quality staff granting 1% increased elemental damage per 2% quality and an amulet anointed with Disciple of the Slaughter (a minimum frenzy charge, damage per frenzy charge) (P3-8n)."
+    },
+    {
+      "id": "smite-rage-momentum-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-rage-momentum-templar.xml",
+      "sha256": "2be8c06aa6017a62c47b92751e253aed6b8b87ff26ba269673303c10c43a8472",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a Siege Axe supported by Momentum, gaining rage on melee hit with +10 maximum rage, nearby enemies intimidated while you have rage, and rage configured at 35: rage's more attack damage, Intimidate, Momentum's default stacks (P3-8n)."
+    },
+    {
+      "id": "smite-conversion-penetration-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/smite-conversion-penetration-templar.xml",
+      "sha256": "4ba4601061e4eab7e1d010316c6c564a01fccf8fd333ff9d6948688a57ddb492",
+      "expect": "ok",
+      "targets": ["Armour", "AverageDamage", "BlockChance", "ChaosResist", "ColdResist", "CritChance", "CritMultiplier", "Dex", "EnergyShield", "Evasion", "FireResist", "HitChance", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "Speed", "SpellBlockChance", "SpellSuppressionChance", "Str", "TotalDPS"],
+      "description": "Smite with a 20% quality Siege Axe whose quality does not increase physical damage, 25% of physical damage converted to fire, 10% fire penetration with weapons, and 20% increased melee damage at close range with the check on (P3-8n)."
+    },
+    {
+      "id": "life-mastery-no-life-modifiers-templar.xml",
+      "tier": "mechanic",
+      "source": "local",
+      "path": "mechanic/life-mastery-no-life-modifiers-templar.xml",
+      "sha256": "ca95d57cba6329858e76a46be8a1a49d4e44c372d3514386d21fc53bb15cb45e",
+      "expect": "ok",
+      "targets": ["Armour", "BlockChance", "ChaosResist", "ColdResist", "Dex", "EnergyShield", "Evasion", "FireResist", "Int", "Life", "LifeUnreserved", "LightningResist", "Mana", "ManaUnreserved", "SpellBlockChance", "SpellSuppressionChance", "Str"],
+      "description": "A level 90 Templar with a Life Mastery's 15% increased maximum Life if there are no Life Modifiers on Equipped Body Armour and a rare Astral Plate with armour and fire resistance: the condition holds, from the mods' life tags (PoB: no line with the text \"life\") (P3-8n)."
     }
   ]
 }

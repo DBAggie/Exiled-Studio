@@ -122,8 +122,17 @@ fn exact(v: i64) -> RawValue {
     RawValue::Exact(StatValue::exact(v))
 }
 
+/// A range whose ends are exact and in order (`min` shown first).
 fn ranged(min: i64, max: i64) -> RawValue {
-    RawValue::Ranged(StatValue { min, max })
+    ranged_ends(min, max, Some((min, max)))
+}
+
+/// A range with its ends as shown (`from` first), or none.
+fn ranged_ends(min: i64, max: i64, ends: Option<(i64, i64)>) -> RawValue {
+    RawValue::Ranged(
+        StatValue { min, max },
+        ends.map(|(from, to)| RangeEnds { from, to }),
+    )
 }
 
 fn rejections(r: &Resolution) -> Vec<&'static str> {
@@ -209,9 +218,10 @@ fn resolve_should_invert_negate_for_the_reduced_variant() {
         values(&resolve(&set, "10% increased X")),
         vec![("s".to_owned(), exact(10))]
     );
+    // The ends keep the shown order: 10 reduced first, raw -10.
     assert_eq!(
         values(&resolve(&set, "(10-20)% reduced X")),
-        vec![("s".to_owned(), ranged(-20, -10))]
+        vec![("s".to_owned(), ranged_ends(-20, -10, Some((-10, -20))))]
     );
 }
 
@@ -225,7 +235,7 @@ fn resolve_should_fit_a_range_that_crosses_zero_to_the_variant_it_meets() {
     // The reduced variant negates: shown -10..10 is raw 10..-10.
     assert_eq!(
         values(&resolve(&set, "(-10-10)% reduced X")),
-        vec![("s".to_owned(), ranged(-10, 10))]
+        vec![("s".to_owned(), ranged_ends(-10, 10, Some((10, -10))))]
     );
 }
 
@@ -249,6 +259,12 @@ fn resolve_should_give_the_raw_interval_of_a_rounding_handler() {
     assert_eq!(
         rejections(&resolve(&set, "Regenerate 1.75 Life per second")),
         vec!["value-not-shown"]
+    );
+    // A range of lossy ends keeps the hull and no ends: a roll between
+    // two intervals is not one raw value.
+    assert_eq!(
+        values(&resolve(&set, "Regenerate (1.7-2) Life per second")),
+        vec![("regen_per_minute".to_owned(), ranged_ends(99, 122, None))]
     );
 }
 
@@ -681,7 +697,7 @@ fn resolve_should_read_back_what_the_renderer_writes() {
             other => panic!("{text} {h:?} {raw:?} -> {:?}: {other:?}", lines[0]),
         };
         for (stat, raw) in c.stats.iter().zip(&raw) {
-            let (RawValue::Exact(got) | RawValue::Ranged(got)) = stat.value else {
+            let (RawValue::Exact(got) | RawValue::Ranged(got, _)) = stat.value else {
                 panic!("hidden {stat:?}");
             };
             assert!(
@@ -723,7 +739,7 @@ fn resolve_should_read_back_the_variant_the_conditions_chose() {
         let r = resolve(&set, &lines[0]);
         let c = resolved(&r);
         assert_eq!(c.variant, variant, "{raw:?} -> {}", lines[0]);
-        let (RawValue::Exact(got) | RawValue::Ranged(got)) = c.stats[0].value else {
+        let (RawValue::Exact(got) | RawValue::Ranged(got, _)) = c.stats[0].value else {
             panic!("hidden");
         };
         assert!(

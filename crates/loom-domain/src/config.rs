@@ -1,7 +1,9 @@
 //! Config inputs, as typed key-value pairs. What each key means is the
 //! calculations' concern (Phase 3).
 
+use crate::error::DomainError;
 use crate::id::ConfigSetId;
+use crate::item::LineResolution;
 use crate::opaque::{Attributes, Ordered};
 use crate::value::{Number, Sourced};
 
@@ -12,8 +14,89 @@ pub struct Config {
     pub active: Option<ConfigSetId>,
     /// The sets, with untyped content in place.
     pub sets: Ordered<ConfigSet>,
+    /// How the build's format held the sets.
+    pub layout: ConfigLayout,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// How a build's format held its config sets.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ConfigLayout {
+    /// Each set in its own element.
+    #[default]
+    Sets,
+    /// One set (ID 1, no title, no attributes) whose content the format
+    /// held directly, with no set element (PoB's layout before config
+    /// sets). What a planner does differently with such a set is the
+    /// calculations' concern (`loom_calc::poe1::collect`).
+    Flat,
+}
+
+impl Config {
+    /// Checks the layout: a flat config holds exactly one set, with ID 1,
+    /// no title, and no attributes, and no untyped content beside it.
+    ///
+    /// # Errors
+    /// [`DomainError::FlatConfigLayout`] when it does not.
+    pub fn check_layout(&self) -> Result<(), DomainError> {
+        if self.layout == ConfigLayout::Sets {
+            return Ok(());
+        }
+        match self.sets.entries() {
+            [crate::opaque::Entry::Typed(set)]
+                if set.id == ConfigSetId(1) && set.title.is_none() && set.attributes.is_empty() =>
+            {
+                Ok(())
+            }
+            _ => Err(DomainError::FlatConfigLayout),
+        }
+    }
+
+    /// Checks that no custom modifier line continues another line (only
+    /// item lines resolve over several lines).
+    ///
+    /// # Errors
+    /// [`DomainError::ContinuedCustomLine`] for the first such line.
+    pub fn check_custom_lines(&self) -> Result<(), DomainError> {
+        let continued = |lines: &[CustomModifierLine]| {
+            lines
+                .iter()
+                .position(|l| matches!(l.resolution, LineResolution::Continues { .. }))
+        };
+        for set in self.sets.typed() {
+            for (block, b) in set.custom_modifiers.iter().enumerate() {
+                if let Some(line) = continued(&b.lines) {
+                    return Err(DomainError::ContinuedCustomLine {
+                        set: set.id.0,
+                        block,
+                        line,
+                    });
+                }
+            }
+            for input in set.inputs.typed() {
+                if let Some(line) = continued(&input.lines) {
+                    return Err(DomainError::ContinuedCustomInputLine {
+                        set: set.id.0,
+                        input: input.name.clone(),
+                        line,
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Every custom modifier line of every set: the blocks' and the
+    /// inputs'.
+    pub fn custom_lines(&self) -> impl Iterator<Item = &CustomModifierLine> {
+        self.sets.typed().flat_map(|s| {
+            s.custom_modifiers
+                .iter()
+                .flat_map(|b| &b.lines)
+                .chain(s.inputs.typed().flat_map(|i| &i.lines))
+        })
+    }
 }
 
 /// One config set.
@@ -25,8 +108,42 @@ pub struct ConfigSet {
     pub title: Option<String>,
     /// Inputs, with untyped content in place.
     pub inputs: Ordered<ConfigInput>,
+    /// Custom modifier blocks, after the inputs (where PoB writes them).
+    /// A block anywhere else stays untyped content in `inputs`.
+    pub custom_modifiers: Vec<CustomModifierBlock>,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// A block of custom modifier lines, which a planner applies as if the
+/// character had them when the block is enabled. What a line changes is
+/// the calculations' concern.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomModifierBlock {
+    /// The title, if any.
+    pub title: Option<String>,
+    /// Whether the block applies.
+    pub enabled: bool,
+    /// The block's text, as read (whitespace and line breaks included).
+    pub text: String,
+    /// The modifier lines the import adapter read from `text` (its
+    /// format's rules say which lines hold a modifier and with what text),
+    /// in order, each with its resolution. They are derived from `text`,
+    /// which an export writes: a change to `text` must derive them again
+    /// (nothing checks that they agree).
+    pub lines: Vec<CustomModifierLine>,
+    /// Attributes not typed.
+    pub attributes: Attributes,
+}
+
+/// One modifier line of a custom modifier block. Resolution reads it as a
+/// character-wide modifier (no item base).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CustomModifierLine {
+    /// The modifier text.
+    pub text: String,
+    /// What the line resolved to.
+    pub resolution: LineResolution,
 }
 
 /// One config input.
@@ -36,8 +153,31 @@ pub struct ConfigInput {
     pub name: String,
     /// The value.
     pub value: ConfigValue,
+    /// Whether the value was set or is a placeholder.
+    pub kind: ConfigInputKind,
+    /// The modifier lines the import adapter read from a text value its
+    /// format applies as custom modifier lines (PoB's legacy `customMods`
+    /// input), in order, each with its resolution; empty for any other
+    /// input. Whether they apply is the calculations' concern (PoB applies
+    /// them only when the set has no block with text). Derived from
+    /// `value`, as a block's lines are from its text.
+    pub lines: Vec<CustomModifierLine>,
     /// Attributes not typed.
     pub attributes: Attributes,
+}
+
+/// Whether a config value was set or is a placeholder.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ConfigInputKind {
+    /// A value set for the input.
+    #[default]
+    Input,
+    /// A placeholder: the value a planner shows for an input left unset,
+    /// which it may also use for that input (PoB applies a numeric
+    /// input's placeholder when the input is unset, or 0 unless the
+    /// option is `countAllowZero`). What it
+    /// changes is the calculations' concern.
+    Placeholder,
 }
 
 /// A config value.
@@ -49,4 +189,62 @@ pub enum ConfigValue {
     Number(Sourced<Number>),
     /// Text.
     String(String),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::opaque::OpaqueNode;
+
+    fn set(id: u32) -> ConfigSet {
+        ConfigSet {
+            id: ConfigSetId(id),
+            title: None,
+            inputs: Ordered::new(),
+            custom_modifiers: Vec::new(),
+            attributes: Attributes::new(),
+        }
+    }
+
+    fn flat(sets: Ordered<ConfigSet>) -> Config {
+        Config {
+            layout: ConfigLayout::Flat,
+            sets,
+            ..Config::default()
+        }
+    }
+
+    #[test]
+    fn a_flat_config_should_hold_one_set_1_without_title_or_attributes() {
+        let one = |s: ConfigSet| {
+            let mut o = Ordered::new();
+            o.push(s);
+            o
+        };
+        assert_eq!(flat(one(set(1))).check_layout(), Ok(()));
+        // The layout with set elements holds anything.
+        let mut sets = one(set(2));
+        sets.push(set(3));
+        let config = Config {
+            sets: sets.clone(),
+            ..Config::default()
+        };
+        assert_eq!(config.check_layout(), Ok(()));
+        let mut titled = set(1);
+        titled.title = Some("t".to_owned());
+        let mut attributed = set(1);
+        attributed.attributes = vec![crate::opaque::Attribute::new("x", "1")];
+        let mut opaque = one(set(1));
+        opaque.push_opaque(OpaqueNode::element("Input"));
+        for bad in [
+            Ordered::new(),
+            one(set(2)),
+            one(titled),
+            one(attributed),
+            sets,
+            opaque,
+        ] {
+            assert_eq!(flat(bad).check_layout(), Err(DomainError::FlatConfigLayout));
+        }
+    }
 }

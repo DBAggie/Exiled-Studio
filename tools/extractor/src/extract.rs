@@ -85,6 +85,12 @@ pub const LOOKUP_TABLES_POE1: [&str; 2] = ["IndexableNonActiveSupportGems", "Ind
 /// rows (PoE1 26530219), and it would pull in about 30 unrelated tables.
 pub const MOD_SOURCE_TABLES_POE1: [&str; 1] = ["Essences"];
 
+/// Base items' attribute requirements (B-2's tooltip: `Requires Level 65,
+/// 85 Str, 62 Dex`); nothing references the table, so it is a root. PoE1
+/// only until PoE2's install is checked for the file (a root without a file
+/// fails the run).
+pub const REQUIREMENT_TABLES_POE1: [&str; 1] = ["ComponentAttributeRequirements"];
+
 /// Tables that give item lines a stat or a skill outside the stat
 /// descriptions (Spike B PR B5x, areas 3 and 4 of the B4b verdict,
 /// `docs/spikes/spike-b-resolution.md` section 7a). PoE1
@@ -135,20 +141,46 @@ pub const PASSIVE_TABLES: [&str; 4] = [
 /// step 1c), in both games: weapon, armour, and shield properties of base
 /// items, the per-level monster stats, and the game constants (PoB derives
 /// monster armour from `MonsterDamageReductionImprovement` there instead
-/// of reading `DefaultMonsterStats.Armour`). The default monster stats of
+/// of reading `DefaultMonsterStats.Armour`), and the monster types' defence
+/// multipliers (P3-1d, the enemy model's bosses). The default monster stats of
 /// the monster object template come with [`crate::itemtype::OBJECT_TEMPLATES`].
-pub const ITEM_PROPERTY_TABLES: [&str; 5] = [
+pub const ITEM_PROPERTY_TABLES: [&str; 6] = [
     "WeaponTypes",
     "ArmourTypes",
     "ShieldTypes",
     "DefaultMonsterStats",
     "GameConstants",
+    "MonsterTypes",
 ];
+
+/// PoE1 build-choice tables the calc bundle reads (P3-12g): the pantheon's
+/// gods with their souls' stats (PoB v2.67.2 exports `Data/Pantheons.lua`
+/// from it, `src/Export/Scripts/pantheons.lua`).
+pub const CHOICE_TABLES_POE1: [&str; 1] = ["PantheonPanelLayout"];
+
+/// PoE1 passive tree tables the editor and the calc read (passive tree
+/// plan, T-f and T-i): the jewel radii (`PassiveJewelRadii`: which nodes a
+/// radius jewel reaches) and the jewel slots (`PassiveJewelSlots`: each
+/// cluster jewel socket's size, index, parent, and proxy). Nothing
+/// references them, so they are roots. PoE1 only until PoE2's install is
+/// checked for the files (a root without a file fails the run).
+pub const TREE_TABLES_POE1: [&str; 2] = ["PassiveJewelRadii", "PassiveJewelSlots"];
+
+/// PoE1 tables for unique flavour text (B-2's item card; `docs/ui/b2-data/
+/// card-data.md`, Q-B2-1): the unique stash layout (each unique's name,
+/// `Words`, and art, `ItemVisualIdentity`) and the words. A unique's text
+/// is the `FlavourText` row whose ID is its art's (a name convention, no
+/// key). Nothing references the layout, so it is a root; `Words` comes with
+/// it and is a root too, so a schema change cannot drop it unnoticed. PoE1
+/// only until PoE2's install is checked for the files.
+pub const FLAVOUR_TABLES_POE1: [&str; 2] = ["UniqueStashLayout", "Words"];
 
 /// The root tables `extract` plans for `game`: [`SPIKE_TABLES`],
 /// [`LOOKUP_TABLES`], [`SKILL_TABLES`], [`PASSIVE_TABLES`],
 /// [`ITEM_PROPERTY_TABLES`], and for PoE1 [`LOOKUP_TABLES_POE1`],
-/// [`MOD_SOURCE_TABLES_POE1`], and [`ITEM_LINE_TABLES_POE1`].
+/// [`MOD_SOURCE_TABLES_POE1`], [`ITEM_LINE_TABLES_POE1`],
+/// [`CHOICE_TABLES_POE1`], [`TREE_TABLES_POE1`], and
+/// [`FLAVOUR_TABLES_POE1`].
 #[must_use]
 pub fn roots(game: Game) -> Vec<&'static str> {
     let mut roots = Vec::from(SPIKE_TABLES);
@@ -159,7 +191,11 @@ pub fn roots(game: Game) -> Vec<&'static str> {
     if game == Game::Poe1 {
         roots.extend(LOOKUP_TABLES_POE1);
         roots.extend(MOD_SOURCE_TABLES_POE1);
+        roots.extend(REQUIREMENT_TABLES_POE1);
         roots.extend(ITEM_LINE_TABLES_POE1);
+        roots.extend(CHOICE_TABLES_POE1);
+        roots.extend(TREE_TABLES_POE1);
+        roots.extend(FLAVOUR_TABLES_POE1);
     }
     roots
 }
@@ -1969,13 +2005,19 @@ mod tests {
             LOOKUP_TABLES_POE1
                 .iter()
                 .chain(&MOD_SOURCE_TABLES_POE1)
+                .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
+                .chain(&CHOICE_TABLES_POE1)
+                .chain(&TREE_TABLES_POE1)
                 .all(|t| roots(Game::Poe1).contains(t))
         );
         assert!(
             MOD_SOURCE_TABLES_POE1
                 .iter()
+                .chain(&REQUIREMENT_TABLES_POE1)
                 .chain(&ITEM_LINE_TABLES_POE1)
+                .chain(&CHOICE_TABLES_POE1)
+                .chain(&TREE_TABLES_POE1)
                 .all(|t| !poe2.contains(t))
         );
     }

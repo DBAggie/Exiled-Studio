@@ -1,0 +1,21 @@
+Rarity: RARE
+Brimstone Salvation
+Gladiator Helmet
+Armour: 295
+ArmourBasePercentile: 0.1828
+Crafted: true
+Prefix: {range:0}LocalIncreasedPhysicalDamageReductionRatingPercent3
+Prefix: {range:0.071}IncreasedLife4
+Prefix: None
+Suffix: {range:0.8}LightningResist3
+Suffix: {range:0.6}ColdResist3
+Suffix: None
+Item Level: 39
+Quality: 16
+Sockets: W-W W
+LevelReq: 35
+Implicits: 0
+{tags:defences,armour}{prefix}43% increased Armour
+{tags:life}{prefix}+56 to maximum Life
+{tags:elemental,cold,resistance}{suffix}+21% to Cold Resistance
+{tags:elemental,lightning,resistance}{suffix}+22% to Lightning Resistance

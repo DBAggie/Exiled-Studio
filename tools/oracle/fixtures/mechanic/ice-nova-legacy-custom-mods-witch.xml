@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12d): ice-nova-witch.xml with PoB's legacy customMods
+     input: a first one PoB replaces with the second (the last counts), and the second's
+     lines in one attribute with raw line breaks, colour codes, a tab, and blank lines. The set's
+     only block is empty and disabled, so PoB's Load moves the text into it.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="customMods" string="+100 to maximum Life"/>
+			<Input name="customMods" string="+25% to Cold Resistance
+^2+30 to maximum Life^7
+
+^xFF0000+15% to Global Critical Strike Multiplier
+	40% increased Spell Damage
+^1
+12% increased Cast Speed
+"/>
+			<CustomModifierBlock enabled="false" title="Default">
+				
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

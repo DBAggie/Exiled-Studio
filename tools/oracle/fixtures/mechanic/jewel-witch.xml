@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-6): a level 90 Witch with the path to the jewel socket
+     41263 and a Cobalt Jewel in it.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes="8948,21678,27659,32210,37671,41263,48778,54447,57226">
+			<Sockets>
+				<Socket nodeId="41263" itemId="1"/>
+			</Sockets>
+		</Spec>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Shard
+Cobalt Jewel
+Implicits: 0
++14 to Intelligence
+6% increased maximum Energy Shield
+8% increased maximum Mana
+		</Item>
+		<ItemSet id="1">
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-7): a level 70 Duelist with the act 5
+     resistance penalty set in the config (-30%), resistances from rings,
+     an amulet and a belt: over the cap, at a raised maximum, pairs, all
+     elemental, chaos.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="70" targetVersion="3_0" className="Duelist" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="4" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Ember
+Ruby Ring
+Implicits: 1
++25% to Fire Resistance
++45% to Fire Resistance
++20% to Fire and Cold Resistances
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Frost
+Sapphire Ring
+Implicits: 1
++22% to Cold Resistance
++1% to maximum Cold Resistance
++13% to Chaos Resistance
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Charm
+Onyx Amulet
+Implicits: 1
++12 to all Attributes
++1% to all maximum Resistances
++16% to all Elemental Resistances
+		</Item>
+		<Item id="4">
+Rarity: RARE
+Loom Test Cord
+Leather Belt
+Implicits: 1
++30 to maximum Life
++30% to Lightning Resistance
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Ring 1" itemId="1"/>
+			<Slot name="Ring 2" itemId="2"/>
+			<Slot name="Amulet" itemId="3"/>
+			<Slot name="Belt" itemId="4"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="resistancePenalty" number="-30"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

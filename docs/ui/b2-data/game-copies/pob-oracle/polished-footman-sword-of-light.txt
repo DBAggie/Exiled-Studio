@@ -1,0 +1,14 @@
+Rarity: MAGIC
+Polished Footman Sword of Light
+Crafted: true
+Prefix: {range:0,0}LocalAddedPhysicalDamageTwoHand3
+Suffix: {range:1}LocalLightRadiusAndAccuracyNew2
+Item Level: 46
+Quality: 0
+Sockets: W-W W W-R
+LevelReq: 40
+Implicits: 1
+{tags:attack}60% increased Global Accuracy Rating
+{tags:damage,physical,attack}{prefix}Adds 10 to 21 Physical Damage
+{tags:attack}{suffix}15% increased Global Accuracy Rating
+{tags:attack}{suffix}{range:0.222222}(21-30)% increased Light Radius

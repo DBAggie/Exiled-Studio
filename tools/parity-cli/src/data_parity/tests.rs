@@ -28,8 +28,19 @@ fn bundle(name: &str) -> loom_data::bundle::Bundle {
 /// The export PoB would write for the synthetic bundle.
 fn equal_export() -> Value {
     json!({
-        "format": 1,
+        "format": 8,
         "pob": {"version": "2.67.2"},
+        "base_requirements": {
+            "Plain Test Ring": {"type": "Ring", "flask": false, "dex": 10},
+            "Plain Test Wand": {"type": "Wand", "flask": false},
+            "Plain Test Shield": {"type": "Shield", "flask": false},
+            "Plain Test Charm": {"type": "Charm", "flask": false}
+        },
+        "mods": {
+            "TestLife1": {"affix": "", "tables": ["ItemExclusive"]},
+            "TestArmour1": {"affix": "of Test Plating", "level": 5, "type": "Suffix", "tables": ["Explicit"]},
+            "TestAccuracy1": {"affix": "Steady", "level": 12, "type": "Prefix", "tables": ["Explicit"]}
+        },
         "tree_version": "3_29",
         "skill_types": {},
         "skills": {
@@ -42,7 +53,7 @@ fn equal_export() -> Value {
                 "types": ["TestSpell"],
                 "constant_stats": [{"stat": "test_damage_per_level", "value": 5}],
                 "quality_stats": [{"stat": "test_quality_cast_speed", "value": 0.5}],
-                "levels": {
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {
                     "1": {"values": [4.5, 9, 1], "cost": {"Mana": 6}, "critChance": 6},
                     "2": {"values": [6.25, 12.5, 2], "cost": {"Mana": 7}, "critChance": 6}
                 }
@@ -53,7 +64,7 @@ fn equal_export() -> Value {
                 "types": ["TestAttack"],
                 "constant_stats": {},
                 "quality_stats": {},
-                "levels": {}
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {}
             },
             "SupportTestDamage": {
                 "support": true,
@@ -61,7 +72,7 @@ fn equal_export() -> Value {
                 "types": {},
                 "constant_stats": {},
                 "quality_stats": {},
-                "levels": {
+                "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false, "levels": {
                     "1": {"values": [20], "cost": {}, "manaMultiplier": 30, "manaReservationPercent": 25}
                 }
             }
@@ -103,6 +114,32 @@ fn equal_export() -> Value {
         "game_constants": {"MonsterDamageReductionImprovement": 6.7},
         "character_constants": {},
         "monster_constants": {},
+        "bosses": {
+            "Armoured": {"armourMult": 50, "evasionMult": 0, "isUber": true},
+            "Evasive": {"armourMult": 0, "evasionMult": 100, "isUber": false}
+        },
+        "pantheons": {
+            "TestMajorGod": {"isMajorGod": true, "souls": [
+                {"name": "Soul of Test", "mods": [{"line": "+10 to maximum Life", "value": [10]}]},
+                {"name": "Test Upgrade", "mods": [{"line": "", "value": [5]}, {"line": "+2 to Strength", "value": [2]}]}
+            ]},
+            "TestMinorGod": {"isMajorGod": false, "souls": [
+                {"name": "Soul of Minor Test", "mods": [{"line": "+4 to maximum Life", "value": [4]}]}
+            ]}
+        },
+        "jewel_radii": [
+            {"inner": 0, "outer": 960, "label": "Small"},
+            {"inner": 0, "outer": 1440, "label": "Medium"},
+            {"inner": 960, "outer": 1320, "label": "Variable"},
+            {"inner": 1320, "outer": 1680, "label": "Variable"}
+        ],
+        "flavour_text": [
+            {"id": "TestUnique1", "name": "Test Flavoured", "text": ["A made-up line.", "Another one.", "", "^8A made-up note"]},
+            {"id": "TestUnique2", "name": "Test Variants", "text": ["First variant."]},
+            {"id": "TestUnique3", "name": "Test Variants", "text": ["Second variant."]},
+            {"id": "TestUnique4", "name": "Test Same", "text": ["One text."]},
+            {"id": "TestUnique5", "name": "Test Same", "text": ["One text."]}
+        ],
         "tree": {
             "classes": [
                 {"name": "Test Brute", "base_str": 32, "base_dex": 14, "base_int": 14, "ascendancies": ["TestChampion"]},
@@ -121,9 +158,23 @@ fn equal_export() -> Value {
     })
 }
 
+/// The synthetic bundle's bosses (`make_bundles.py`).
+const BOSSES: [loom_calc::poe1::enemy::Boss; 2] = [
+    loom_calc::poe1::enemy::Boss {
+        name: "Armoured",
+        monster_type: "TestBossArmoured",
+        uber: true,
+    },
+    loom_calc::poe1::enemy::Boss {
+        name: "Evasive",
+        monster_type: "TestBossEvasive",
+        uber: false,
+    },
+];
+
 fn differences(export: &Value) -> Vec<Difference> {
     let export = pob::parse(&serde_json::to_vec(export).unwrap()).unwrap();
-    compare::compare(&bundle("bundle-poe1"), &export, SCOPE)
+    compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES)
         .unwrap()
         .differences
 }
@@ -138,11 +189,13 @@ fn fields(found: &[Difference]) -> Vec<(&str, &str, &str)> {
 #[test]
 fn equal_export_should_have_no_difference() {
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
     assert_eq!(comparison.differences, []);
     // Every table compared something; bundle rows PoB lacks are counted.
     for table in super::TABLES {
-        if !["character_constants", "monster_constants"].contains(&table) {
+        // `gem_effects` checks the engine's tables against skills the synthetic
+        // bundle does not have (its own tests, `gem_effects.rs`).
+        if !["character_constants", "monster_constants", "gem_effects"].contains(&table) {
             assert!(comparison.tables[table].compared > 0, "{table}");
         }
     }
@@ -152,7 +205,22 @@ fn equal_export_should_have_no_difference() {
 #[test]
 fn each_changed_value_should_be_one_difference() {
     // (pointer into the export, new value, expected (table, key, field)).
-    let cases: [(&str, Value, (&str, &str, &str)); 14] = [
+    let cases: [(&str, Value, (&str, &str, &str)); 17] = [
+        (
+            "/jewel_radii/1/outer",
+            json!(1500),
+            ("jewel_radii", "TestMedium", "radius"),
+        ),
+        (
+            "/jewel_radii/2/inner",
+            json!(900),
+            ("jewel_radii", "TestSmall", "ring"),
+        ),
+        (
+            "/jewel_radii/0/label",
+            json!("Tiny"),
+            ("jewel_radii", "TestSmall", "name"),
+        ),
         (
             "/skills/TestBolt/castTime",
             json!(0.8),
@@ -242,13 +310,25 @@ fn each_changed_value_should_be_one_difference() {
     }
 }
 
+/// The gem's colour (format 5): the synthetic bundle has none, so PoB's
+/// colour is one difference, and none on both sides is equal.
+#[test]
+fn a_skill_colour_should_compare_with_the_bundles_attribute() {
+    let mut export = equal_export();
+    export["skills"]["TestBolt"]["color"] = json!(3);
+    assert_eq!(
+        fields(&differences(&export)),
+        [("skills", "TestBolt", "color")]
+    );
+}
+
 #[test]
 fn rows_on_one_side_should_be_listed() {
     let mut export = equal_export();
     let skills = export["skills"].as_object_mut().unwrap();
     skills.insert(
         "PobOnly".to_owned(),
-        json!({"stats": {}, "types": {}, "constant_stats": {}, "quality_stats": {}, "levels": {}}),
+        json!({"stats": {}, "types": {}, "constant_stats": {}, "quality_stats": {}, "levels": {}, "mods": {}, "minions": {}, "add_types": {}, "add_minions": {}, "is_trigger": false}),
     );
     skills.remove("TestStrike");
     // A bundle level PoB does not have.
@@ -257,7 +337,7 @@ fn rows_on_one_side_should_be_listed() {
         .unwrap()
         .remove("2");
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
-    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
     assert_eq!(
         fields(&comparison.differences),
         [("skills", "PobOnly", "row")]
@@ -273,6 +353,33 @@ fn rows_on_one_side_should_be_listed() {
     );
     let skills = &comparison.tables["skills"];
     assert_eq!((skills.pob_only_rows, skills.bundle_only_rows), (1, 2));
+}
+
+#[test]
+fn flavour_text_should_compare_pobs_cleaned_lines_by_name_and_id() {
+    let mut export = equal_export();
+    let rows = export["flavour_text"].as_array_mut().unwrap();
+    // A changed line, a PoB row the bundle lacks, and a bundle row PoB
+    // lacks; an ID with trailing underscores is the same row.
+    rows[0]["id"] = json!("TestUnique1__");
+    rows[1]["text"] = json!(["First variant, as PoB has it."]);
+    rows[2] = json!({"id": "TestUnique9", "name": "Test PoB Only", "text": ["Only in PoB."]});
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(
+        fields(&comparison.differences),
+        [
+            ("flavour_text", "Test PoB Only|TestUnique9", "row"),
+            ("flavour_text", "Test Variants|TestUnique2", "text"),
+        ]
+    );
+    let only: Vec<&str> = comparison
+        .bundle_only
+        .iter()
+        .filter(|b| b.table == "flavour_text")
+        .map(|b| b.key.as_str())
+        .collect();
+    assert_eq!(only, ["Test Variants|TestUnique3"]);
 }
 
 #[test]
@@ -315,7 +422,7 @@ fn crit_chance_should_prefer_the_second_column() {
     export["skills"]["TestBolt"]["levels"]["1"]["critChance"] = json!(7.5);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
@@ -390,9 +497,10 @@ fn bases_should_match_one_base_by_name() {
     weapon.base_item = twin.id.clone();
     properties.weapon_types.push(weapon.clone());
     let export = pob::parse(&serde_json::to_vec(&equal_export()).unwrap()).unwrap();
-    let found = compare::compare(&bundle, &export, SCOPE)
+    let found = compare::compare(&bundle, &export, SCOPE, &BOSSES)
         .unwrap()
         .differences;
+    // Its requirements agree with the first one's, so they compare as one.
     assert_eq!(fields(&found), [("bases", "Plain Test Wand", "row")]);
     // A Royale base is skipped, as PoB skips it (bases.lua:342).
     let royale = "Test/Items/Wand2Royale";
@@ -406,10 +514,103 @@ fn bases_should_match_one_base_by_name() {
         .unwrap()
         .base_item = royale.to_owned();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
+    );
+}
+
+#[test]
+fn affixes_and_requirements_should_compare() {
+    let mut export = equal_export();
+    export["mods"]["TestArmour1"]["affix"] = json!("of Plating");
+    export["mods"]["TestAccuracy1"]["level"] = json!(11);
+    export["mods"]["TestGone1"] = json!({"affix": "Gone", "level": 1, "tables": ["Explicit"]});
+    export["mods"]["TestLife1"]["conflict"] = json!(true);
+    export["base_requirements"]["Plain Test Ring"]["dex"] = json!(12);
+    export["base_requirements"]["Plain Test Ring"]["level"] = json!(5);
+    export["base_requirements"]["Plain Test Wand"]["flask"] = json!(true);
+    export["base_requirements"]["Missing Base"] = json!({"type": "Ring", "flask": false});
+    assert_eq!(
+        fields(&differences(&export)),
+        [
+            ("base_requirements", "Missing Base", "row"),
+            ("base_requirements", "Plain Test Ring", "level"),
+            ("base_requirements", "Plain Test Ring", "dex"),
+            ("base_requirements", "Plain Test Wand", "flask"),
+            ("mod_affixes", "TestAccuracy1", "level"),
+            ("mod_affixes", "TestArmour1", "affix"),
+            ("mod_affixes", "TestGone1", "row"),
+            ("mod_affixes", "TestLife1", "pob_tables"),
+        ]
+    );
+    // An implicit's level raises the required level: floor(10 * 0.8) = 8.
+    let mut bundle = bundle("bundle-poe1");
+    bundle
+        .mods
+        .iter_mut()
+        .find(|m| m.id == "TestLife1")
+        .unwrap()
+        .level = Some(10);
+    let mut export = equal_export();
+    export["mods"]["TestLife1"]["level"] = json!(10);
+    export["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle, &export, SCOPE, &BOSSES).unwrap();
+    assert_eq!(comparison.differences, []);
+    // A second game base under the ring's name with other requirements:
+    // PoB holds one, so the row differs.
+    let mut twin = bundle
+        .base_items
+        .iter()
+        .find(|b| b.id == "Test/Items/Ring1")
+        .unwrap()
+        .clone();
+    twin.id = "Test/Items/Ring2".to_owned();
+    twin.requirements = None;
+    bundle.base_items.push(twin);
+    assert_eq!(
+        fields(
+            &compare::compare(&bundle, &export, SCOPE, &BOSSES)
+                .unwrap()
+                .differences
+        ),
+        [("base_requirements", "Plain Test Ring", "row")]
+    );
+    // PoB's values must still be one candidate's: dex 11 is neither.
+    let mut off = equal_export();
+    off["mods"]["TestLife1"]["level"] = json!(10);
+    off["base_requirements"]["Plain Test Ring"]["level"] = json!(8);
+    off["base_requirements"]["Plain Test Ring"]["dex"] = json!(11);
+    // A variant name PoB gave the ring, with the second candidate's values
+    // (no attributes): matched by the game's name, the row differs only.
+    off["base_requirements"]["Plain Test Ring (Plain)"] =
+        json!({"type": "Ring", "flask": false, "level": 8});
+    // A variant name whose values are neither candidate's.
+    off["base_requirements"]["Plain Test Ring (Odd)"] =
+        json!({"type": "Ring", "flask": false, "str": 5});
+    let off = pob::parse(&serde_json::to_vec(&off).unwrap()).unwrap();
+    assert_eq!(
+        fields(
+            &compare::compare(&bundle, &off, SCOPE, &BOSSES)
+                .unwrap()
+                .differences
+        ),
+        [
+            ("base_requirements", "Plain Test Ring", "row"),
+            ("base_requirements", "Plain Test Ring", "values"),
+            ("base_requirements", "Plain Test Ring (Odd)", "row"),
+            ("base_requirements", "Plain Test Ring (Odd)", "values"),
+            ("base_requirements", "Plain Test Ring (Plain)", "row"),
+        ]
+    );
+    // A bundle before data schema 4 carries neither: refused, not compared.
+    bundle.manifest.data_schema = 3;
+    assert!(
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
+            .unwrap_err()
+            .contains("data schema 3")
     );
 }
 
@@ -433,7 +634,7 @@ fn passive_text_should_render_as_the_game_shows_it() {
     export["tree"]["nodes"]["101"]["stats"] = json!(["+10 to maximum Life"]);
     let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
     assert_eq!(
-        compare::compare(&bundle, &export, SCOPE)
+        compare::compare(&bundle, &export, SCOPE, &BOSSES)
             .unwrap()
             .differences,
         []
@@ -611,6 +812,7 @@ fn run_with(export: &Value, rules: &Value, bundle_name: &str) -> Result<super::O
         export: &export,
         rules: &rules,
         passive_scope: SCOPE,
+        bosses: &BOSSES,
         tool: Tool::default(),
     })
 }
@@ -788,11 +990,11 @@ fn bad_inputs_should_not_start() {
     );
     // Another export format, and an unknown field.
     let mut export = equal_export();
-    export["format"] = json!(2);
+    export["format"] = json!(1);
     assert!(
         run_with(&export, &json!([]), "bundle-poe1")
             .unwrap_err()
-            .contains("format 2")
+            .contains("format 1")
     );
     let mut export = equal_export();
     export["extra"] = json!(1);
@@ -822,8 +1024,87 @@ fn rules_should_be_for_the_bundles_build() {
         export: &export,
         rules: &rules,
         passive_scope: SCOPE,
+        bosses: &BOSSES,
         tool: Tool::default(),
     })
     .unwrap_err();
     assert!(error.contains("Steam build 1"), "{error}");
+}
+
+#[test]
+fn bosses_should_compare_their_multipliers_and_uber_mark() {
+    assert!(differences(&equal_export()).is_empty());
+    let mut export = equal_export();
+    export["bosses"]["Armoured"]["armourMult"] = json!(40);
+    let found = differences(&export);
+    assert_eq!(found.len(), 1);
+    assert_eq!(
+        (
+            found[0].table,
+            found[0].key.as_str(),
+            found[0].field.as_str()
+        ),
+        ("bosses", "Armoured", "armour")
+    );
+    for (field, value) in [("evasionMult", json!(5)), ("isUber", json!(false))] {
+        let mut export = equal_export();
+        export["bosses"]["Armoured"][field] = value;
+        assert_eq!(differences(&export).len(), 1, "{field}");
+    }
+    // A boss PoB lists and the engine does not, and the other way.
+    let mut export = equal_export();
+    export["bosses"]["Extra"] = json!({"armourMult": 0, "evasionMult": 0, "isUber": false});
+    export["bosses"].as_object_mut().unwrap().remove("Evasive");
+    let keys: Vec<_> = differences(&export).iter().map(|d| d.key.clone()).collect();
+    assert!(keys.contains(&"Extra".to_owned()) && keys.contains(&"Evasive".to_owned()));
+}
+
+#[test]
+fn pantheons_should_compare_gods_souls_lines_and_values() {
+    assert!(differences(&equal_export()).is_empty());
+    for (path, value, field) in [
+        ("/pantheons/TestMajorGod/isMajorGod", json!(false), "major"),
+        (
+            "/pantheons/TestMajorGod/souls/1/name",
+            json!("Other"),
+            "souls",
+        ),
+        (
+            "/pantheons/TestMajorGod/souls/1/mods/0/line",
+            json!("Other line"),
+            "soul.2.lines",
+        ),
+        (
+            "/pantheons/TestMinorGod/souls/0/mods/0/value/0",
+            json!(5),
+            "soul.1.values",
+        ),
+    ] {
+        let mut export = equal_export();
+        *export.pointer_mut(path).unwrap() = value;
+        let found = differences(&export);
+        assert_eq!(
+            fields(&found),
+            [("pantheons", path.split('/').nth(2).unwrap(), field)],
+            "{path}"
+        );
+    }
+    // A god PoB has and the bundle lacks, and the other way.
+    let mut export = equal_export();
+    let minor = export["pantheons"]["TestMinorGod"].take();
+    export["pantheons"]["Extra"] = minor;
+    export["pantheons"]
+        .as_object_mut()
+        .unwrap()
+        .remove("TestMinorGod");
+    let found = differences(&export);
+    assert_eq!(fields(&found), [("pantheons", "Extra", "row")], "PoB only");
+    let export = pob::parse(&serde_json::to_vec(&export).unwrap()).unwrap();
+    let comparison = compare::compare(&bundle("bundle-poe1"), &export, SCOPE, &BOSSES).unwrap();
+    assert!(
+        comparison
+            .bundle_only
+            .iter()
+            .any(|b| b.table == "pantheons" && b.key == "TestMinorGod")
+    );
 }

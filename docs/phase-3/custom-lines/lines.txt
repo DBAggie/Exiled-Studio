@@ -1,0 +1,242 @@
+				+1 to Level of all Cold Skill Gems
+				+1 to Level of all Strength Skill Gems
+				+1 to Maximum Power Charges
+				+2 to Minimum Power Charges
+				+30% to Cold Resistance
+				+30% to Critical Strike Multiplier with Lightning Skills
+				+40% to Fire Resistance
+				// Spectres
+				10% Chance to Inflict Cold Exposure on Hit with Cold Damage
+				10% increased effect of Non-Curse Auras from your Skills
+				20% increased Area Damage
+				20% increased Cast Speed with Cold Skills
+				20% increased Damage if you've Shattered an Enemy Recently
+				20% increased Spell Damage while holding a Shield
+				23% increased effect of Non-Curse Auras from your Skills
+				25% of Physical Damage Converted to Fire Damage
+				30% increased Spell Damage while wielding a Staff
+				8% increased Action Speed
+				===3.29 MANA COST CHANGES===
+				Adds 10 to 20 Fire Damage to Spells
+				Duration Support
+				Earthshatter Config
+				Earthshatter deals 140% more damage with hits
+				Enemies Ignited or Chilled by you have -5% to Elemental Resistances
+				Exposure you inflict applies an extra -25% to the affected Resistance
+				Gain 1 Rage on Melee Hit
+				Gain Convergence when you Hit a Unique Enemy, no more than once every 8 seconds
+				Merc Base
+				Minions deal 20% increased Damage
+				Onslaught
+				Perfect Forest Warrior
+				Rational Doctrine Profane Ground:
+				Shocks from your Hits always increase Damage taken by at least 25%
+				Spells which can gain Intensity have +1 to maximum Intensity
+				Warcries Exert 9999 additional attacks
+				Warcries exert 999 additional attacks
+				Warcries exert 99999 additional attacks
+				^1=== CAP RES & ATTRIBUTES WITH GEAR ===
+	40% increased Spell Damage
++1 maximum power charge
++1 to Level of all Aura Skill Gems
++1 to Level of all Herald Skill Gems
++1 to Level of all Melee Skill Gems
++1 to Level of all Physical Skill Gems
++1 to Level of all Spell Skill Gems
++1 to Level of all non-Exceptional Support Gems
++1.5% to critical strike chance
++10 to Maximum Rage
++100 to maximum Life
++150% to all resistances
++180% to all resistances
++1806 to life
++2 to Level of all Critical Support Gems
++2 to Level of all Dexterity Skill Gems
++20% to Critical Strike Multiplier while wielding a Staff
++200% to all resistances
++25% to Cold Resistance
++25% to Critical Strike Multiplier with Cold Skills
++3 to Level of all Fire Skill Gems
++30 to Critical Strike Multiplier
++30 to maximum Life
++30% to Critical Strike Multiplier against Unique Enemies
++30% to Critical Strike Multiplier for Spell Damage
++5% Chance to Block Spell Damage while wielding a Staff
++50% to Critical Strike Multiplier with Cold Skills
++6% Chance to Block Spell Damage while holding a Shield
++6% to Critical Strike Multiplier per Power Charge
++60% to Critical Strike Multiplier with Lightning Skills
+-- plus 1 curse chest and windscream --
+--AG Gear
+--Dying Breath
+--Follow Through (above 5 chains)
+--Leer Cast
+--dreadarc--
+--forest warrior
+-Arcane Surge
+///Minions have 20% increased cast speed
+//New Runegraft for Arcane Surge//
+10% Increased Effect of your Curses
+10% increased Area of Effect of Aura Skills
+10% increased Cast Speed
+10% increased Cast Speed with Elemental Skills
+10% increased Critical Strike Chance per Power Charge
+10% increased Movement Speed
+100% Increased Critical Strike Chance
+100% increased Spell Damage
+100% increased damage
+12% Less Damage
+12% increased Cast Speed
+13% increased Mana Reservation Efficiency of Skills
+147% Increased Maximum Life
+15% increased Area of Effect
+15% increased Damage if you have Shocked an Enemy Recently
+15% increased Physical Damage with Attack Skills
+17% increased Mana Reservation Efficiency of Skills
+18% Increased Effect of your curses
+18% increased curse effect
+18% increased effect of your curses
+18% increased minion damage
+20% Less Damage Taken
+20% increased Cast Speed with Lightning Skills
+20% increased Effect of Consecrated Ground you create
+20% increased Effect of Non-Damaging Ailments
+20% increased Effect of Shock
+20% increased Light Radius
+20% increased Lightning Damage with Attack Skills
+20% increased Melee Damage with Hits at Close Range
+20% more damage
+24% more block chance
+24% more spell block chance
+24% more spell block chance 
+25% Of Physical Damage Taken as Fire Damage
+25% increased Cold Damage with Spell Skills
+25% increased Defences while wielding a Staff
+25% increased Effect of Chill
+25% increased Fire Damage with Attack Skills
+25% more damage
+28% increased effect of withered
+30% Increased Cooldown Recovery Rate
+30% increased Cast Speed with Fire Skills
+30% increased Effect of Lightning Ailments
+30% increased Spell Damage while wielding a Staff
+30% less mana cost of skills
+4% increased Damage per Power Charge
+40% increased Critical Strike Chance while wielding a Staff
+40% increased Critical Strike Chance with Cold Skills
+40% increased Critical Strike Chance with Lightning Skills
+40% increased Spell Damage
+40% more damage
+40% more skill effect duration
+42% more skill effect duration
+46% increased mana cost of attacks
+5% increased Cast Speed for each different Non-Instant Spell you've Cast Recently
+5% increased Spell Damage per Power Charge
+5% reduced Reservation Efficiency of Skills
+50% Less Punishment Curse Effect
+50% increased Cold Damage with Attack Skills
+50% increased Critical Strike Chance against Enemies that are on Full Life
+50% increased Lightning Damage with Spell Skills
+50% increased Spell Damage
+50% increased minion damage
+50% less mana cost of attacks
+60% increased life recovery rate
+7% increased Reservation Efficiency of Skills
+8% reduced Reservation of Skills
+80% Increased Mana Regeneration Rate
+=== AG item mods === 
+===25% inc damage taken from pact===
+===3.29 MANA COST CHANGES===
+===75% inc damage taken from pact===
+=We're assuming the nodes on the tree + helmet mod
+=will be around 100% increased mana cost efficiency:
+Adds 155 to 252 Physical Damage to Attacks
+Adds 350 to 571 Physical Damage to Attacks
+Adds 594 to 967 Physical Damage to Attacks
+Animate Guardian
+Bone Offering
+Bone offering life regen
+CANE
+CHAOS DOT BUFF
+CHARGED STAFF
+Cold Exposure you inflict applies an extra -5% to Cold Resistance
+Consecrated Ground you create applies 10% increased Damage taken to Enemies
+Convocation
+Culling Strike
+Culling strike
+Damage with Weapons Penetrates 10% Fire Resistance
+Earthshatter deals 140% more damage with hits
+Enemies permanently take 1% increased Damage for each second they've ever been Chilled by you, up to a maximum of 10%
+Exposure you inflict applies an extra -25% to the affected Resistance
+Fire Exposure you inflict applies an extra -7% to Fire Resistance
+Forest warrior
+Gloam ring
+Hatred has no reservation
+Hits always Shock
+Ice Nova Buffs
+Increases and Reductions to Minion Attack Speed also affect you
+Increases and Reductions to Minion Cast Speed also affect you
+Increases and Reductions to Minion Damage also affect you
+Increases and Reductions to Minion Damage also affect you at 150% of their value
+Inflict Cold Exposure on Hit, applying -12% to Cold Resistance
+Leer cast & Dying breath &  windscream
+Malevolence
+Mana Infused Staff
+Merc
+Minion taunt
+Minions Regenerate 5% of life per second
+Minions have 10% increased Attack Speed
+Minions have 10% increased Cast Speed
+Minions have 15% increased Attack Speed
+Minions have 20% increased cast speed
+Minions have 20% increased poison duration
+Minions have 22% increased poison duration
+Minions have 23% increased poison duration
+Minions have 27% increased poison duration
+Minions have 6% increased Attack and Cast Speed
+Minions regenerate 2% of life per second
+Minions regenerate 4% of life per second
+Minions take 15% reduced Damage
+Nearby Allies Deal 50% Increased Damage
+Nearby Allies Deal 68% Increased Damage
+Nearby Enemies Take 12% Increased Physical Damage
+Nearby Enemies are Intimidated while you have Rage
+Nearby allies deal 18% increased damage
+Nearby allies deal 50% increased damage
+Nearby enemies take 10% reduced cold damage
+Onslaught
+PACT OF GHORR
+Perfect Forest Warrior
+Pride Has No Reservation
+Pride has 20% Increased Aura Effect
+Pride has 36% Increased Aura Effect
+Pride has 51% Increased Aura Effect
+Primal Crushclaw Average Damage
+Punishment has 50% reduced Curse Effect
+Regenerate 3.2% of Life per second
+Regenerate 4% of Life Per Second
+Regenerate 4% of maximum life per second
+Shocks from your Hits always increase Damage taken by at least 25%
+Spell Skills have 10% increased Area of Effect
+Spells have a 12% chance to deal Double Damage
+Supports
+Warp
+You Can Apply an Additional Curse
+You Can Apply an additional curse
+You can Apply an Additional Curse
+You can apply an additional curse
+Zealotry has no reservation
+^0Made by: Helm Breaker
+^1
+^2+20 to maximum Life^7
+^2+30 to maximum Life^7
+^xFF0000+15% to Global Critical Strike Multiplier
+^xFF0000+20% to Global Critical Strike Multiplier
+culling strike
+curse enemies with flammability on hit
+nearby enemies deal 10% less damage
+pledge buff
+regenerate 2% of life per second
+tempest placeholder
+you can apply an additional curse
+~Add 30 Rage to the Config when you get Rage on Hit on Gloves

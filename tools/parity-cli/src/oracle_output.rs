@@ -1,4 +1,4 @@
-//! The adapter's output document (protocol 3): the hand-written schema
+//! The adapter's output document (protocol 4): the hand-written schema
 //! check and the canonical form `oracle-run` hashes and compares. The
 //! contract is documented in `tools/oracle/schema/oracle-output.schema.json`;
 //! this module is what enforces it (Spike C plan: no JSON-schema crate).
@@ -34,7 +34,7 @@ pub const FIELDS: [&str; 11] = [
 const SHIM_FIELDS: [&str; 4] = ["name", "replaces", "installed", "detail"];
 
 /// The fields of the probe, in the order the schema lists them.
-const PROBE_FIELDS: [&str; 3] = ["inflate", "variant_order", "writes_refused"];
+const PROBE_FIELDS: [&str; 4] = ["inflate", "variant_order", "writes_refused", "calcs_view"];
 
 /// The fields of one recorded `Inflate` call.
 const INFLATE_FIELDS: [&str; 5] = [
@@ -62,6 +62,11 @@ pub struct Probe {
     pub variant_order: Vec<String>,
     /// Shims that are not installed (by name).
     pub not_installed: Vec<String>,
+    /// What the adapter changed to set PoB's CALCS view (the breakdowns)
+    /// to the main view (`main_output`), protocol 4: for example
+    /// `skill_number 1 -> 32`. Empty when the build already had them in
+    /// step.
+    pub calcs_view: Vec<String>,
 }
 
 /// The stage a run reached; every stage but `Done` is where it failed.
@@ -257,6 +262,7 @@ fn check_probe(value: &Value) -> Result<Probe, String> {
     exact_keys(probe, &PROBE_FIELDS, "probe")?;
     let writes_refused = string_list(&probe["writes_refused"], "probe.writes_refused")?.len();
     let variant_order = string_list(&probe["variant_order"], "probe.variant_order")?;
+    let calcs_view = string_list(&probe["calcs_view"], "probe.calcs_view")?;
     let Value::Array(calls) = &probe["inflate"] else {
         return Err("probe.inflate: not an array".to_owned());
     };
@@ -264,6 +270,7 @@ fn check_probe(value: &Value) -> Result<Probe, String> {
         inflate_calls: calls.len(),
         writes_refused,
         variant_order,
+        calcs_view,
         ..Probe::default()
     };
     for (i, call) in calls.iter().enumerate() {
@@ -431,7 +438,7 @@ mod tests {
 
     fn adapter() -> Adapter {
         Adapter {
-            protocol: 3,
+            protocol: 4,
             breakdowns: vec!["Life".to_owned(), "TotalDPS".to_owned()],
             opaque_keys: vec!["sourceGem".to_owned()],
             shims: vec![
@@ -457,7 +464,7 @@ mod tests {
 
     fn done() -> Value {
         json!({
-            "protocol": 3,
+            "protocol": 4,
             "stage": "done",
             "error": null,
             "partial": [],
@@ -467,7 +474,8 @@ mod tests {
             "probe": {
                 "inflate": [inflated()],
                 "variant_order": ["Metadata/Items/Gems/SkillGemVaalDetonateDead"],
-                "writes_refused": ["./Data/x.bin"]
+                "writes_refused": ["./Data/x.bin"],
+                "calcs_view": ["skill_number 1 -> 2"]
             },
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": {"Life": ["1 (base)", "= 1"], "TotalDPS": null},
@@ -484,14 +492,14 @@ mod tests {
 
     fn failed(stage: &str) -> Value {
         json!({
-            "protocol": 3,
+            "protocol": 4,
             "stage": stage,
             "error": {"source": "pob", "message": "bad"},
             "partial": [],
             "modules": [],
             "settings": {"path": "/Settings.xml", "found": false},
             "shims": shims(),
-            "probe": {"inflate": [], "variant_order": [], "writes_refused": []},
+            "probe": {"inflate": [], "variant_order": [], "writes_refused": [], "calcs_view": []},
             "breakdown_source": BREAKDOWN_SOURCE,
             "breakdowns": null,
             "main_output": null
@@ -517,6 +525,7 @@ mod tests {
                 writes_refused: 1,
                 variant_order: vec!["Metadata/Items/Gems/SkillGemVaalDetonateDead".to_owned()],
                 not_installed: vec![],
+                calcs_view: vec!["skill_number 1 -> 2".to_owned()],
             }
         );
     }

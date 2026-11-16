@@ -5,13 +5,15 @@
 //!   defences as `*Min`/`*Max` columns, PoE2 one column each; one of the two
 //!   sets must be there in full);
 //! - `DefaultMonsterStats` (`DisplayLevel` read as an integer);
-//! - `GameConstants`.
+//! - `GameConstants`;
+//! - `MonsterTypes` (`Id`, `Armour`, `Evasion`).
 //!
 //! Columns both games have are required; a row whose base item is past the
 //! table's end is dropped and counted.
 
 use loom_data::bundle::properties::{
-    ArmourType, GameConstant, MonsterLevel, PropertyTables, ShieldType, ValueRange, WeaponType,
+    ArmourType, GameConstant, MonsterLevel, MonsterType, PropertyTables, ShieldType, ValueRange,
+    WeaponType,
 };
 use serde::Serialize;
 use serde_json::Value;
@@ -50,6 +52,7 @@ pub fn convert(
         shield_types: shields(read, &bases, counts, &mut summary)?,
         monster_levels: monster_levels(read)?,
         game_constants: game_constants(read)?,
+        monster_types: monster_types(read)?,
     };
     Ok((tables, summary))
 }
@@ -246,6 +249,24 @@ fn game_constants(read: Read<'_>) -> Result<Vec<GameConstant>, String> {
                 id: id.to_owned(),
                 value: required(&t, r, value, "value")?,
                 divisor: required(&t, r, divisor, "divisor")?,
+            })
+        })
+        .collect()
+}
+
+fn monster_types(read: Read<'_>) -> Result<Vec<MonsterType>, String> {
+    let t = Table::require(read, "MonsterTypes")?;
+    let (id, armour, evasion) = (t.column("Id")?, t.column("Armour")?, t.column("Evasion")?);
+    t.rows
+        .iter()
+        .map(|r| {
+            let id = Table::text(r, id)
+                .filter(|s| !s.is_empty())
+                .ok_or("MonsterTypes: a row has no ID")?;
+            Ok(MonsterType {
+                id: id.to_owned(),
+                armour: required(&t, r, armour, "armour")?,
+                evasion: required(&t, r, evasion, "evasion")?,
             })
         })
         .collect()

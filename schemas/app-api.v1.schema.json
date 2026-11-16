@@ -1,0 +1,5093 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Application API v1",
+  "description": "Every top-level type of the API, so one schema names them all. Never\nsent.",
+  "type": "object",
+  "properties": {
+    "command": {
+      "description": "A command.",
+      "$ref": "#/$defs/Command"
+    },
+    "crashes": {
+      "description": "Crash records (Phase 5, P-f).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CrashRecord"
+      }
+    },
+    "data-feed": {
+      "description": "The data feed's answer (Phase 5, P-e).",
+      "$ref": "#/$defs/DataFeedStatus"
+    },
+    "diagnostics": {
+      "description": "The diagnostic package's preview (Phase 5, P-f).",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DiagnosticFile"
+      }
+    },
+    "error": {
+      "description": "An error.",
+      "$ref": "#/$defs/ApiError"
+    },
+    "event": {
+      "description": "An event.",
+      "$ref": "#/$defs/Event"
+    },
+    "gems": {
+      "description": "The gems the game data offers.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GemCatalogEntry"
+      }
+    },
+    "item": {
+      "description": "One item.",
+      "$ref": "#/$defs/ItemView"
+    },
+    "mcp": {
+      "description": "The MCP server's state.",
+      "$ref": "#/$defs/McpStatus"
+    },
+    "outcome": {
+      "description": "A command's answer.",
+      "$ref": "#/$defs/Outcome"
+    },
+    "preview": {
+      "description": "An item edit's preview.",
+      "$ref": "#/$defs/ItemEditPreview"
+    },
+    "recent": {
+      "description": "Recent builds.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecentEntry"
+      }
+    },
+    "recovery": {
+      "description": "Recovery snapshots found at start.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecoveryEntry"
+      }
+    },
+    "snapshot": {
+      "description": "The snapshot query's answer.",
+      "$ref": "#/$defs/Snapshot"
+    },
+    "tree-layout": {
+      "description": "The loaded data's passive tree.",
+      "$ref": "#/$defs/TreeLayout"
+    },
+    "tree-preview": {
+      "description": "A tree edit's preview.",
+      "$ref": "#/$defs/TreePreview"
+    },
+    "tree-sprites": {
+      "description": "The loaded data's passive tree sprites, when its bundle has\nthem.",
+      "$ref": "#/$defs/TreeSprites"
+    },
+    "updates": {
+      "description": "Application updates (Phase 5, P-d).",
+      "$ref": "#/$defs/UpdateStatus"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "snapshot",
+    "item",
+    "command",
+    "outcome",
+    "event",
+    "error",
+    "preview",
+    "mcp",
+    "recovery",
+    "recent",
+    "gems",
+    "tree-layout",
+    "tree-preview",
+    "tree-sprites",
+    "crashes",
+    "diagnostics",
+    "updates",
+    "data-feed"
+  ],
+  "$defs": {
+    "AffixKind": {
+      "description": "Where an affix is on the item.",
+      "oneOf": [
+        {
+          "description": "An implicit modifier.",
+          "type": "string",
+          "const": "implicit"
+        },
+        {
+          "description": "A prefix.",
+          "type": "string",
+          "const": "prefix"
+        },
+        {
+          "description": "A suffix.",
+          "type": "string",
+          "const": "suffix"
+        }
+      ]
+    },
+    "AffixView": {
+      "description": "One mod of an item, as the tooltip's Alt view heads its lines\n(`Prefix Modifier \"Urchin's\" (Tier: 2) — Life, Defences`).",
+      "type": "object",
+      "properties": {
+        "crafted": {
+          "description": "Whether it is crafted (`Master Crafted Prefix Modifier`).",
+          "type": "boolean"
+        },
+        "inferred": {
+          "description": "Whether it was inferred from the lines (the only reading the\ngame data allows) rather than named by the item.",
+          "type": "boolean"
+        },
+        "kind": {
+          "description": "Prefix or suffix.",
+          "$ref": "#/$defs/AffixKind"
+        },
+        "lines": {
+          "description": "The line indices it made, in item order.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "name": {
+          "description": "The affix name, when the game data has one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Its tags as the game prints them (`Life`, `Defences`).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tier": {
+          "description": "Its tier on the item's base (1 is the best), when known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "crafted",
+        "inferred",
+        "tags",
+        "lines"
+      ]
+    },
+    "ApiError": {
+      "description": "An error: a stable code (ADR-014) and a message for logs. The UI\nshows text for the code, not the message.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The code of the layer that failed (`IMPORT_*`, `PERSIST_*`,\n`APP_*`, ...).",
+          "type": "string"
+        },
+        "message": {
+          "description": "Detail in English, for diagnostics.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "BuildView": {
+      "description": "The open build.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "class": {
+          "description": "The class, if set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "completeness": {
+          "description": "`complete` or `partial`: whether anything was not read.",
+          "type": "string"
+        },
+        "config": {
+          "description": "The active config set's inputs and custom modifier blocks, if\nthe build has a config set.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "config-sets": {
+          "description": "The config sets, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SetView"
+          }
+        },
+        "data-version": {
+          "description": "The data version the build is pinned to.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataVersionView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "game": {
+          "description": "`poe1` or `poe2`.",
+          "type": "string"
+        },
+        "in-use-completeness": {
+          "description": "`complete` or `partial` counting only what the calculation\nreads: lines of items in use ([`ItemSummary::in_use`]) and the\ncustom modifier lines. A warning on an item of another item set\nleaves it `complete` (UX walkthrough, UX-03).",
+          "type": "string"
+        },
+        "item-sets": {
+          "description": "The item sets, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SetView"
+          }
+        },
+        "items": {
+          "description": "The items, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemSummary"
+          }
+        },
+        "league": {
+          "description": "The league the build is planned for (`challenge` when not\nchosen).",
+          "$ref": "#/$defs/League"
+        },
+        "level": {
+          "description": "The character level, if set.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "The import's counts.",
+          "$ref": "#/$defs/LineCounts"
+        },
+        "loadouts": {
+          "description": "The build's stages (PoB's loadouts: one per passive spec, with\nthe item, skill, and config sets linked to it), in spec order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LoadoutView"
+          }
+        },
+        "main-skill": {
+          "description": "The main skill's gem names, if the build has a main group.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "A display name: the file's stem, else \"imported build\" in the\nUI's language (empty here).",
+          "type": "string"
+        },
+        "passive-names": {
+          "description": "The names of the active passive spec's allocated nodes, when the\nloaded game data has them: a calc result's `passive` source\nnames its node by number.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeName"
+          }
+        },
+        "second-weapon-set": {
+          "description": "Whether the active item set uses its second weapon set (the\ngame's weapon swap, `II`).",
+          "type": "boolean"
+        },
+        "skill-groups": {
+          "description": "The active skill set's socket groups, in order: a calc result's\n`gem` source names a group and a gem by their index here.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SkillGroupView"
+          }
+        },
+        "skill-sets": {
+          "description": "The skill sets, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SetView"
+          }
+        },
+        "specs": {
+          "description": "The passive tree specs, in build order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SetView"
+          }
+        },
+        "tree": {
+          "description": "The active passive spec as the tree editor sees it, when the\nloaded data has a passive tree (passive tree plan, T5a).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreeView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "warnings": {
+          "description": "Lines with warnings: kept, shown, not calculated (ADR-015).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WarningView"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "game",
+        "completeness",
+        "in-use-completeness",
+        "lines",
+        "items",
+        "warnings",
+        "item-sets",
+        "second-weapon-set",
+        "skill-sets",
+        "specs",
+        "config-sets",
+        "loadouts",
+        "skill-groups",
+        "passive-names",
+        "league"
+      ]
+    },
+    "CalcState": {
+      "description": "A calculation's progress.",
+      "oneOf": [
+        {
+          "description": "No build, or no data.",
+          "type": "string",
+          "const": "idle"
+        },
+        {
+          "description": "A calculation of the latest version runs.",
+          "type": "string",
+          "const": "running"
+        },
+        {
+          "description": "The result is of the latest version.",
+          "type": "string",
+          "const": "done"
+        },
+        {
+          "description": "The latest version's calculation failed.",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "CalcStatus": {
+      "description": "The calculation of the latest version.",
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "Why the latest calculation failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result-state": {
+          "description": "The result's overall state (`complete`, `partial`,\n`unsupported`, `indeterminate`), when there is one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/CalcState"
+        },
+        "version": {
+          "description": "The version of the result held (`result` is of it); may be\nolder than the snapshot's while a calculation runs.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "version"
+      ]
+    },
+    "CardDamage": {
+      "description": "One damage type's range on an item card.",
+      "type": "object",
+      "properties": {
+        "damage-type": {
+          "description": "`physical`, `fire`, `cold`, `lightning`, or `chaos`.",
+          "type": "string"
+        },
+        "max": {
+          "description": "The maximum.",
+          "type": "number",
+          "format": "double"
+        },
+        "min": {
+          "description": "The minimum.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "damage-type",
+        "min",
+        "max"
+      ]
+    },
+    "CardDefence": {
+      "description": "One defence on an item card.",
+      "type": "object",
+      "properties": {
+        "defence": {
+          "description": "`armour`, `evasion`, or `energy-shield`.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defence",
+        "value"
+      ]
+    },
+    "CardProperty": {
+      "description": "One base value on an item card.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name (`Energy Shield`).",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value, as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value"
+      ]
+    },
+    "CardValues": {
+      "description": "An item's own values ([`ItemCard::values`]), each as the game's\ntooltip shows it before rounding for display.",
+      "type": "object",
+      "properties": {
+        "attack-rate": {
+          "description": "A weapon's attacks per second.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "block": {
+          "description": "A shield's chance to block, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "crit-chance": {
+          "description": "A weapon's critical strike chance, percent.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "damage": {
+          "description": "A weapon's damage per type, physical first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDamage"
+          }
+        },
+        "defences": {
+          "description": "The defences above 0, in the game's order (armour, evasion,\nenergy shield).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardDefence"
+          }
+        },
+        "partial": {
+          "description": "The values leave out something the engine does not model on\nthis item (an unmodelled line or base, missing data).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "defences",
+        "damage",
+        "partial"
+      ]
+    },
+    "ChangeKind": {
+      "description": "What a change was, for undo and redo labels.",
+      "oneOf": [
+        {
+          "description": "An item edit.",
+          "type": "string",
+          "const": "item-edit"
+        },
+        {
+          "description": "An item edit an MCP client requested.",
+          "type": "string",
+          "const": "request-applied"
+        },
+        {
+          "description": "Another item set made active.",
+          "type": "string",
+          "const": "item-set"
+        },
+        {
+          "description": "Another stage (loadout) made active.",
+          "type": "string",
+          "const": "loadout"
+        },
+        {
+          "description": "Another skill set made active.",
+          "type": "string",
+          "const": "skill-set"
+        },
+        {
+          "description": "A gem or socket group changed, or the main skill.",
+          "type": "string",
+          "const": "skill-edit"
+        },
+        {
+          "description": "Another config set made active, or a config input or custom\nmodifier block changed.",
+          "type": "string",
+          "const": "config"
+        },
+        {
+          "description": "The league the build is planned for changed.",
+          "type": "string",
+          "const": "league"
+        },
+        {
+          "description": "The active item set's weapon set switched (weapon swap).",
+          "type": "string",
+          "const": "weapon-set"
+        },
+        {
+          "description": "A passive tree edit: a node, a mastery effect, the class, the\nascendancy, or a reset.",
+          "type": "string",
+          "const": "tree"
+        },
+        {
+          "description": "A passive tree added, copied, renamed, or deleted.",
+          "type": "string",
+          "const": "tree-specs"
+        },
+        {
+          "description": "A passive tree change an MCP client requested.",
+          "type": "string",
+          "const": "tree-request-applied"
+        },
+        {
+          "description": "An item added (and perhaps put in a slot).",
+          "type": "string",
+          "const": "item-added"
+        }
+      ]
+    },
+    "ChangeRequest": {
+      "description": "A change an MCP client asked for.",
+      "type": "object",
+      "properties": {
+        "client": {
+          "description": "The client's name, as it gave it.",
+          "type": "string"
+        },
+        "edit": {
+          "description": "The item edit, for an item request; `null` for a tree request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemEdit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "description": "Why it failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "Its ID, unique in the session.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "note": {
+          "description": "The client's note, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "preview": {
+          "description": "The item edit's effect, calculated when it arrived.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemEditPreview"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "description": "Where it is.",
+          "$ref": "#/$defs/RequestStatus"
+        },
+        "tree": {
+          "description": "The passive tree change, for a tree request.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreeChange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tree-preview": {
+          "description": "The tree change's effect, calculated when it arrived.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreePreview"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "client",
+        "status"
+      ]
+    },
+    "Command": {
+      "description": "A command (ADR-004): an intent the application runs in order.",
+      "oneOf": [
+        {
+          "description": "Starts a new PoE1 build: Scion, level 1, empty sets (UX brief\nnote 3).",
+          "type": "string",
+          "const": "new-build"
+        },
+        {
+          "description": "Loads an installed bundle by its ID (B-1) and remembers the\nchoice.",
+          "type": "object",
+          "properties": {
+            "use-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID ([`InstalledBundle`]).",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-bundle"
+          ]
+        },
+        {
+          "description": "Accepts a quarantined bundle (Phase 5, P-e): the user saw its\nmanifest's SHA-256 and approved it. Refused when the bundle\nchanged since (`APP_QUARANTINED`).",
+          "type": "object",
+          "properties": {
+            "accept-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID ([`QuarantinedBundle`]).",
+                  "type": "string"
+                },
+                "manifest-sha256": {
+                  "description": "The manifest SHA-256 the user was shown.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "manifest-sha256"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "accept-bundle"
+          ]
+        },
+        {
+          "description": "Checks every file of an installed bundle against its manifest's\nhashes (the user's \"verify data\"; the start checks sizes only).\n`APP_BUNDLE_DAMAGED` when one differs.",
+          "type": "object",
+          "properties": {
+            "verify-bundle": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The bundle's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "verify-bundle"
+          ]
+        },
+        {
+          "description": "Imports a PoB share code or XML text.",
+          "type": "object",
+          "properties": {
+            "import-text": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "import-text"
+          ]
+        },
+        {
+          "description": "Applies an item edit.",
+          "type": "object",
+          "properties": {
+            "edit-item": {
+              "$ref": "#/$defs/ItemEdit"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "edit-item"
+          ]
+        },
+        {
+          "description": "Adds an item to the build from the game's item copy (Ctrl+C or\nCtrl+Alt+C) or PoB's item text, as one undoable change; with\n`slot`, also puts it in that slot of the active item set (B-2\nitem evidence, E3).",
+          "type": "object",
+          "properties": {
+            "add-item": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "description": "A slot of the active item set (`Helmet`, `Weapon 1`,\n`Ring 2`, `Flask 3`, ...), if the item goes in one.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "description": "The copied text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-item"
+          ]
+        },
+        {
+          "description": "Makes an item set the active one, as one undoable change.",
+          "type": "object",
+          "properties": {
+            "use-item-set": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The set's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-item-set"
+          ]
+        },
+        {
+          "description": "Makes a stage (loadout) the active one: its passive spec and the\nsets linked to it, as one undoable change.",
+          "type": "object",
+          "properties": {
+            "use-loadout": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The passive spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-loadout"
+          ]
+        },
+        {
+          "description": "Makes a skill set the active one, as one undoable change.",
+          "type": "object",
+          "properties": {
+            "use-skill-set": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The set's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-skill-set"
+          ]
+        },
+        {
+          "description": "Changes a gem of the active skill set, as one undoable change.",
+          "type": "object",
+          "properties": {
+            "edit-gem": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "description": "Enables or disables the gem.",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "gem": {
+                  "description": "The gem's index in the group.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "group": {
+                  "description": "The socket group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "level": {
+                  "description": "A new level.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "quality": {
+                  "description": "A new quality.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "int32"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "edit-gem"
+          ]
+        },
+        {
+          "description": "Changes a socket group of the active skill set, as one undoable\nchange.",
+          "type": "object",
+          "properties": {
+            "edit-socket-group": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "description": "Enables or disables the group.",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "group": {
+                  "description": "The group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "label": {
+                  "description": "Renames the group; empty for no label.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "main": {
+                  "description": "Makes it the main skill group (`true` only).",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "main-gem": {
+                  "description": "Makes this gem (by index in the group) the group's main active\nskill; with `main`, the build's main skill.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "slot": {
+                  "description": "Moves the group to this equipment slot (empty: no slot).",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "edit-socket-group"
+          ]
+        },
+        {
+          "description": "Adds a gem to a socket group of the active skill set.",
+          "type": "object",
+          "properties": {
+            "add-gem": {
+              "type": "object",
+              "properties": {
+                "at": {
+                  "description": "Its place in the group (by index); the end when absent.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "gem": {
+                  "description": "The gem, by its gem effect ID (a [`GemCatalogEntry`]'s `id`).",
+                  "type": "string"
+                },
+                "group": {
+                  "description": "The group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-gem"
+          ]
+        },
+        {
+          "description": "Removes a gem from a socket group of the active skill set.",
+          "type": "object",
+          "properties": {
+            "remove-gem": {
+              "type": "object",
+              "properties": {
+                "gem": {
+                  "description": "The gem's index in the group.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "group": {
+                  "description": "The group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group",
+                "gem"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove-gem"
+          ]
+        },
+        {
+          "description": "Adds an empty socket group at the end of the active skill set.",
+          "type": "object",
+          "properties": {
+            "add-socket-group": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "description": "Its label, if any.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slot": {
+                  "description": "The equipment slot it is socketed in, if any.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-socket-group"
+          ]
+        },
+        {
+          "description": "Removes a socket group of the active skill set.",
+          "type": "object",
+          "properties": {
+            "remove-socket-group": {
+              "type": "object",
+              "properties": {
+                "group": {
+                  "description": "The group's index in the active skill set.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "group"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove-socket-group"
+          ]
+        },
+        {
+          "description": "Makes a config set the active one, as one undoable change.",
+          "type": "object",
+          "properties": {
+            "use-config-set": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The set's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-config-set"
+          ]
+        },
+        {
+          "description": "Sets a config input of the active config set (added when the\nset has none of that name; a placeholder becomes a value), as\none undoable change.",
+          "type": "object",
+          "properties": {
+            "set-config-input": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name (PoB's option key).",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "The value.",
+                  "$ref": "#/$defs/ConfigValueView"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-config-input"
+          ]
+        },
+        {
+          "description": "Removes a config input of the active config set.",
+          "type": "object",
+          "properties": {
+            "remove-config-input": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "description": "The name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove-config-input"
+          ]
+        },
+        {
+          "description": "Changes a custom modifier block of the active config set; a new\ntext's lines are read and resolved again.",
+          "type": "object",
+          "properties": {
+            "edit-custom-block": {
+              "type": "object",
+              "properties": {
+                "block": {
+                  "description": "The block's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "enabled": {
+                  "description": "Whether it applies, if changed.",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "description": "The new text, if changed.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "block"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "edit-custom-block"
+          ]
+        },
+        {
+          "description": "Adds a custom modifier block, with `text`, after the others.",
+          "type": "object",
+          "properties": {
+            "add-custom-block": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add-custom-block"
+          ]
+        },
+        {
+          "description": "Removes a custom modifier block.",
+          "type": "object",
+          "properties": {
+            "remove-custom-block": {
+              "type": "object",
+              "properties": {
+                "block": {
+                  "description": "The block's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "block"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove-custom-block"
+          ]
+        },
+        {
+          "description": "Switches the active item set to its first or second weapon set\n(the game's weapon swap), as one undoable change.",
+          "type": "object",
+          "properties": {
+            "use-weapon-set": {
+              "type": "object",
+              "properties": {
+                "second": {
+                  "description": "The second weapon set (`II`) when set.",
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "second"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "use-weapon-set"
+          ]
+        },
+        {
+          "description": "Sets the league the build is planned for, as one undoable\nchange.",
+          "type": "object",
+          "properties": {
+            "set-league": {
+              "type": "object",
+              "properties": {
+                "league": {
+                  "description": "The league.",
+                  "$ref": "#/$defs/League"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "league"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-league"
+          ]
+        },
+        {
+          "description": "Allocates a node of a passive spec and the path to it (the\npath is the application's, never sent), as one undoable\nchange.",
+          "type": "object",
+          "properties": {
+            "allocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "allocate-node"
+          ]
+        },
+        {
+          "description": "Deallocates a node and every node it leaves unconnected.",
+          "type": "object",
+          "properties": {
+            "deallocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "deallocate-node"
+          ]
+        },
+        {
+          "description": "Sets a mastery's effect, allocating the mastery.",
+          "type": "object",
+          "properties": {
+            "set-mastery-effect": {
+              "type": "object",
+              "properties": {
+                "effect": {
+                  "description": "The effect's hash.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The mastery node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node",
+                "effect"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-mastery-effect"
+          ]
+        },
+        {
+          "description": "Changes a spec's class: no ascendancy, nodes no longer\nconnected deallocated (the UI confirms first).",
+          "type": "object",
+          "properties": {
+            "select-class": {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "description": "The class's number.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "class"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "select-class"
+          ]
+        },
+        {
+          "description": "Changes a spec's ascendancy (0 for none): the old one's nodes\ndeallocated.",
+          "type": "object",
+          "properties": {
+            "select-ascendancy": {
+              "type": "object",
+              "properties": {
+                "ascendancy": {
+                  "description": "The ascendancy's number within the class.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "ascendancy"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "select-ascendancy"
+          ]
+        },
+        {
+          "description": "Deallocates every node of a spec but the starts, kept ones\ntoo.",
+          "type": "object",
+          "properties": {
+            "reset-tree": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "reset-tree"
+          ]
+        },
+        {
+          "description": "Sockets a jewel of the build in an allocated jewel socket of a\nspec, or empties the socket (`item` absent). Cluster jewels\nare refused for now.",
+          "type": "object",
+          "properties": {
+            "socket-jewel": {
+              "type": "object",
+              "properties": {
+                "item": {
+                  "description": "The item's ID; absent to empty the socket.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "default": null,
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The socket node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "socket-jewel"
+          ]
+        },
+        {
+          "description": "Adds a passive tree at the end of the list (a stage of its\nown): a copy of spec `copy`, or a new one with the active\nspec's class and ascendancy and only the starts. It does not\nbecome active.",
+          "type": "object",
+          "properties": {
+            "new-spec": {
+              "type": "object",
+              "properties": {
+                "copy": {
+                  "description": "The spec it copies, if any.",
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint32",
+                  "default": null,
+                  "minimum": 0
+                },
+                "title": {
+                  "description": "Its name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "title"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "new-spec"
+          ]
+        },
+        {
+          "description": "Renames a passive tree.",
+          "type": "object",
+          "properties": {
+            "rename-spec": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "title": {
+                  "description": "Its new name.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "title"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "rename-spec"
+          ]
+        },
+        {
+          "description": "Deletes a passive tree; never the last one. The specs after it\nare renumbered; when it was active, the one before it becomes\nactive.",
+          "type": "object",
+          "properties": {
+            "delete-spec": {
+              "type": "object",
+              "properties": {
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "delete-spec"
+          ]
+        },
+        {
+          "description": "Reverts the latest change.",
+          "type": "string",
+          "const": "undo"
+        },
+        {
+          "description": "Applies the latest reverted change again.",
+          "type": "string",
+          "const": "redo"
+        },
+        {
+          "description": "Saves the build where it is saved.",
+          "type": "string",
+          "const": "save"
+        },
+        {
+          "description": "Opens a recent build by its ID.",
+          "type": "object",
+          "properties": {
+            "open-recent": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "open-recent"
+          ]
+        },
+        {
+          "description": "Removes a build from the recent list (the file stays).",
+          "type": "object",
+          "properties": {
+            "forget-recent": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "forget-recent"
+          ]
+        },
+        {
+          "description": "Restores a recovery snapshot.",
+          "type": "object",
+          "properties": {
+            "restore": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The snapshot's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "restore"
+          ]
+        },
+        {
+          "description": "Discards a recovery snapshot.",
+          "type": "object",
+          "properties": {
+            "discard": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The snapshot's ID.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "discard"
+          ]
+        },
+        {
+          "description": "Approves a change request.",
+          "type": "object",
+          "properties": {
+            "approve": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The request's ID.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "approve"
+          ]
+        },
+        {
+          "description": "Declines a change request.",
+          "type": "object",
+          "properties": {
+            "decline": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "description": "The request's ID.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "id"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "decline"
+          ]
+        },
+        {
+          "description": "Writes the build's PoB share code.",
+          "type": "string",
+          "const": "export-share-code"
+        },
+        {
+          "description": "Closes the build.",
+          "type": "string",
+          "const": "close"
+        }
+      ]
+    },
+    "ConfigInputView": {
+      "description": "One config input.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "What it does to the computed fields.",
+          "$ref": "#/$defs/InputEffect"
+        },
+        "name": {
+          "description": "The name, as the build's format writes it (PoB's option key).",
+          "type": "string"
+        },
+        "placeholder": {
+          "description": "Whether the value is a placeholder: the value a planner shows\nfor an input left unset.",
+          "type": "boolean"
+        },
+        "value": {
+          "description": "The value.",
+          "$ref": "#/$defs/ConfigValueView"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "value",
+        "placeholder",
+        "effect"
+      ]
+    },
+    "ConfigValueView": {
+      "description": "A config input's value.",
+      "oneOf": [
+        {
+          "description": "A flag.",
+          "type": "object",
+          "properties": {
+            "boolean": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "boolean"
+          ]
+        },
+        {
+          "description": "A number.",
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "number"
+          ]
+        },
+        {
+          "description": "Text.",
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ]
+        }
+      ]
+    },
+    "ConfigView": {
+      "description": "The active config set: its inputs and custom modifier blocks.",
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "description": "Its custom modifier blocks, in order (the index is the key).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomBlockView"
+          }
+        },
+        "inputs": {
+          "description": "Its inputs, in build order (the name is the key).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConfigInputView"
+          }
+        },
+        "set": {
+          "description": "The set's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "set",
+        "inputs",
+        "blocks"
+      ]
+    },
+    "CrashRecord": {
+      "description": "A panic the application recorded (ADR-014; Phase 5, P-f), redacted.",
+      "type": "object",
+      "properties": {
+        "at": {
+          "description": "When, in seconds since 1970 (UTC).",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its ID.",
+          "type": "string"
+        },
+        "location": {
+          "description": "Where it panicked (`file:line:column`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "message": {
+          "description": "The panic's message.",
+          "type": "string"
+        },
+        "thread": {
+          "description": "The thread's name.",
+          "type": "string"
+        },
+        "version": {
+          "description": "The application's version.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "at",
+        "version",
+        "thread",
+        "message"
+      ]
+    },
+    "CustomBlockView": {
+      "description": "One custom modifier block.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether it applies.",
+          "type": "boolean"
+        },
+        "lines": {
+          "description": "The modifier lines read from the text, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CustomLineView"
+          }
+        },
+        "text": {
+          "description": "The text as written.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "text",
+        "lines"
+      ]
+    },
+    "CustomLineView": {
+      "description": "One line of a custom modifier block.",
+      "type": "object",
+      "properties": {
+        "status": {
+          "description": "Its status: `warning` when it did not resolve (kept, not\ncalculated, ADR-015).",
+          "$ref": "#/$defs/LineStatus"
+        },
+        "text": {
+          "description": "The text.",
+          "type": "string"
+        },
+        "typed": {
+          "description": "The typed kind it resolved to, if any (`custom-note`: a label or\ncomment with no effect; `custom-pattern`: read as PoB reads it).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "status"
+      ]
+    },
+    "DataFeedStatus": {
+      "description": "The data feed's answer (Phase 5, P-e): the game data the project\npublishes, from a feed whose signature verified and whose sequence\nis not lower than one seen before.",
+      "type": "object",
+      "properties": {
+        "offers": {
+          "description": "The packs it lists, newest first.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DataOffer"
+          }
+        },
+        "sequence": {
+          "description": "The feed's sequence number.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "offers"
+      ]
+    },
+    "DataOffer": {
+      "description": "A pack the data feed lists.",
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Its download size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its bundle ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "installed": {
+          "description": "Whether a bundle with this ID is installed (loaded or not).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bytes",
+        "installed"
+      ]
+    },
+    "DataStatus": {
+      "description": "The game data.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "The loaded bundle's ID, when it is an installed one (a folder\npicked for development, or `LOOM_BUNDLE_DIR`, has none: it is\nunsigned and not installed).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bundle": {
+          "description": "The bundle folder, if one is set.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "data-version": {
+          "description": "The bundle's data version, when it loaded.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataVersionView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "description": "Why the bundle did not load, if it did not (a stable code).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installed": {
+          "description": "The bundles installed in the application's `bundles/` folder,\nnewest first (B-1). The UI switches between them by ID with\n[`Command::UseBundle`]; paths never reach the webview.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/InstalledBundle"
+          }
+        },
+        "loading": {
+          "description": "The game data is still loading at start (Phase 5, P7): the\nfirst screen comes before it. Its version, or why it did not\nload, follows in a later snapshot.",
+          "type": "boolean",
+          "default": false
+        },
+        "notice": {
+          "description": "Something to tell the user about the choice of data that is not\nan error: `APP_BUNDLE_FALLBACK` when the remembered bundle did\nnot load and the newest installed one was taken instead.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pinned": {
+          "description": "The installed bundle the open build was made with, when it is not\nthe loaded one (ADR-010: never switched silently; the UI offers\nit).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quarantined": {
+          "description": "Installed bundles that do not load (Phase 5, P-e): unsigned or\nsigned by an unknown key until the user accepts them; for good\nwhen the signature fails, the key is revoked, or files are\ndamaged.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/QuarantinedBundle"
+          }
+        },
+        "tree-version": {
+          "description": "The passive tree version the application gives the engine for\nthis bundle, if known; it names the game's patch (`3_29` is\npatch 3.29), which the UI shows (UX-14).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "DataVersionView": {
+      "description": "A data version.",
+      "type": "object",
+      "properties": {
+        "game": {
+          "description": "`poe1` or `poe2`.",
+          "type": "string"
+        },
+        "schema-version": {
+          "description": "The bundle's data schema version.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "steam-build": {
+          "description": "The Steam build it was extracted from, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "game",
+        "schema-version"
+      ]
+    },
+    "DiagnosticFile": {
+      "description": "One file of the diagnostic package, as the user previews it and the\nzip holds it.",
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "description": "Its size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Its name in the package (`about.json`, `logs/loom.log`, ...).",
+          "type": "string"
+        },
+        "text": {
+          "description": "Its text, redacted.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "text"
+      ]
+    },
+    "Event": {
+      "description": "An event (ADR-004): something committed, a job's progress, or an\nerror.",
+      "type": "object",
+      "properties": {
+        "correlation": {
+          "description": "The command that caused it, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What happened.",
+          "$ref": "#/$defs/EventKind"
+        },
+        "version": {
+          "description": "The snapshot version after the event.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind"
+      ]
+    },
+    "EventKind": {
+      "description": "What an event reports.",
+      "oneOf": [
+        {
+          "description": "The build changed (or was opened, imported, closed).",
+          "type": "string",
+          "const": "build-changed"
+        },
+        {
+          "description": "The build was saved.",
+          "type": "object",
+          "properties": {
+            "saved": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "description": "Where.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "path"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "saved"
+          ]
+        },
+        {
+          "description": "A calculation started.",
+          "type": "string",
+          "const": "calc-started"
+        },
+        {
+          "description": "A calculation finished; its result is the snapshot's.",
+          "type": "object",
+          "properties": {
+            "calc-finished": {
+              "type": "object",
+              "properties": {
+                "state": {
+                  "description": "The result's overall state.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "state"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "calc-finished"
+          ]
+        },
+        {
+          "description": "A calculation failed.",
+          "type": "object",
+          "properties": {
+            "calc-failed": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "description": "Why.",
+                  "$ref": "#/$defs/ApiError"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "calc-failed"
+          ]
+        },
+        {
+          "description": "The MCP server or its requests changed.",
+          "type": "string",
+          "const": "mcp-changed"
+        },
+        {
+          "description": "A command failed.",
+          "type": "object",
+          "properties": {
+            "failed": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "description": "Why.",
+                  "$ref": "#/$defs/ApiError"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "error"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "failed"
+          ]
+        }
+      ]
+    },
+    "ExpectedLine": {
+      "description": "A line's text an edit expects.",
+      "type": "object",
+      "properties": {
+        "line": {
+          "description": "The line's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "Its text.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "text"
+      ]
+    },
+    "FieldDelta": {
+      "description": "One field before and after an edit.",
+      "type": "object",
+      "properties": {
+        "after": {
+          "description": "Its value after, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "before": {
+          "description": "Its value before, when computed and finite.",
+          "type": [
+            "number",
+            "null"
+          ],
+          "format": "double"
+        },
+        "field": {
+          "description": "The field's name.",
+          "type": "string"
+        },
+        "state-after": {
+          "description": "Its state after.",
+          "type": "string"
+        },
+        "state-before": {
+          "description": "Its state before.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "state-before",
+        "state-after"
+      ]
+    },
+    "FlavourLine": {
+      "description": "One line of a unique's flavour text. An empty line is the gap the\ngame leaves between parts.",
+      "type": "object",
+      "properties": {
+        "default-colour": {
+          "description": "The game prints it in the default text colour (`<default>{...}`:\na note such as \"This item can be transformed on the Altar of\nSacrifice\"), not the flavour colour.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "The text, the game's markup removed.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "default-colour"
+      ]
+    },
+    "GemCatalogEntry": {
+      "description": "A gem the game data offers, for a gem picker.",
+      "type": "object",
+      "properties": {
+        "colour": {
+          "description": "Its colour (red, green, blue, or white), if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fits": {
+          "description": "For a support, when a group was named: whether it would support\nan active gem of that group.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The gem effect ID (the `gem` of [`Command::AddGem`]).",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name.",
+          "type": "string"
+        },
+        "support": {
+          "description": "Whether it is a support gem.",
+          "type": "boolean"
+        },
+        "tags": {
+          "description": "Its tag names (Spell, Area, Cold, ...).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "support",
+        "tags"
+      ]
+    },
+    "GemView": {
+      "description": "One gem of a socket group.",
+      "type": "object",
+      "properties": {
+        "colour": {
+          "description": "Its colour, when the game data knows it: `red`, `green`,\n`blue`, or `white`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "description": "Whether the gem is enabled.",
+          "type": "boolean"
+        },
+        "level": {
+          "description": "The level.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "main": {
+          "description": "Whether it is the build's main skill (in the main group, the\nactive skill the group's main skill names).",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The name as written, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quality": {
+          "description": "The quality.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "socket": {
+          "description": "The socket it sits in, by index in its slot's item (PoB fills a\nslot's sockets with its groups' gems in order); `None` when the\ngroup has no slot or the item has no socket left for it.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "support": {
+          "description": "Whether it is a support, when the game data knows the gem.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "supports": {
+          "description": "For a support: the gems of the group (by index) it can support,\nas the calculation matches supports to a skill.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "quality",
+        "enabled",
+        "main",
+        "supports"
+      ]
+    },
+    "HistoryEntry": {
+      "description": "One change in the history (ADR-017: an addon's change is recorded\nlike the user's).",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item it changed (for `item-set`: the item set it made\nactive).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it was.",
+          "$ref": "#/$defs/ChangeKind"
+        },
+        "request": {
+          "description": "The change request it applied, when an MCP client asked for it.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "item"
+      ]
+    },
+    "HistoryView": {
+      "description": "Undo and redo.",
+      "type": "object",
+      "properties": {
+        "can-redo": {
+          "description": "Whether there is a change to redo.",
+          "type": "boolean"
+        },
+        "can-undo": {
+          "description": "Whether there is a change to undo.",
+          "type": "boolean"
+        },
+        "redo": {
+          "description": "What redo would apply again.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HistoryEntry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "undo": {
+          "description": "What undo would revert.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HistoryEntry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "can-undo",
+        "can-redo"
+      ]
+    },
+    "InputEffect": {
+      "description": "What a config input does to the computed fields.",
+      "oneOf": [
+        {
+          "description": "The calculation applies it.",
+          "type": "string",
+          "const": "applied"
+        },
+        {
+          "description": "It changes no computed field.",
+          "type": "string",
+          "const": "no-effect"
+        },
+        {
+          "description": "The calculation does not model it: computed fields are partial.",
+          "type": "string",
+          "const": "unmodelled"
+        }
+      ]
+    },
+    "InstalledBundle": {
+      "description": "A bundle installed in the application's `bundles/` folder.",
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "description": "Whether the user accepted it from quarantine (unsigned, or an\nunknown key).",
+          "type": "boolean",
+          "default": false
+        },
+        "data-version": {
+          "description": "Its data version.",
+          "$ref": "#/$defs/DataVersionView"
+        },
+        "id": {
+          "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "signed-by": {
+          "description": "The key that signed it, when a trusted one did (Phase 5, P-e).",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "tree-version": {
+          "description": "The passive tree version the application knows for it, if any:\nthe game's patch (`3_29` is patch 3.29; UX-14).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data-version"
+      ]
+    },
+    "ItemCard": {
+      "description": "An item card's fields, from the item's header and spec lines.",
+      "type": "object",
+      "properties": {
+        "affixes": {
+          "description": "The item's mods and the lines each made, implicits first, then\nprefixes and suffixes, crafted last in each (the tooltip's Alt\nview headers): the mods PoB names, and those the lines allow\none reading of; lines no mod is found for are in none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AffixView"
+          }
+        },
+        "current-variant": {
+          "description": "When the selected variant is a legacy version: the variant the\ncurrent game makes instead, if one matches.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "flags": {
+          "description": "Flag lines (`Corrupted`, `Mirrored`), as written.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "flavour": {
+          "description": "A unique's flavour text, line by line, as the game prints it\nunder the mods (B-2): empty when the game data has none for the\nunique's name, or several (a unique whose variants each have\ntheir own text).",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/FlavourLine"
+          }
+        },
+        "influences": {
+          "description": "The influences, by name.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "item-class": {
+          "description": "The item class, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "item-level": {
+          "description": "The item level, as written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level-req": {
+          "description": "The level the item requires, as written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "max-sockets": {
+          "description": "The most sockets the item's base rolls at its item level (the\ngame data's item types; B-2 item evidence). None when the data\nhas no caps for the base. More sockets than this is shown on the\ncard, never a calculation state.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "default": null,
+          "minimum": 0
+        },
+        "properties": {
+          "description": "The defences and other base values written on the item\n(`Energy Shield: 276`), in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CardProperty"
+          }
+        },
+        "quality": {
+          "description": "The quality, as written (`20`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requirements": {
+          "description": "What the item requires, when known.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Requirements"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "selected-variant": {
+          "description": "The selected variant (1-based), if the item names one.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "sockets": {
+          "description": "The sockets, one string of colour letters per link group.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "values": {
+          "description": "The item's own values as the calculation computes them (B-2\nitem evidence): an armour piece's defences, a shield's block, a\nweapon's damage, rate, and critical strike chance. None for an\nitem without such values, or when the data or the base is\nmissing.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CardValues"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "variant-eras": {
+          "description": "What each variant is, in the order of `variants`.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/VariantEra"
+          }
+        },
+        "variants": {
+          "description": "The variants' names, in order (variant 1 first).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "sockets",
+        "properties",
+        "influences",
+        "flags",
+        "variants",
+        "variant-eras",
+        "affixes"
+      ]
+    },
+    "ItemEdit": {
+      "description": "An item edit: line operations on one item. It is refused as stale\n(`APP_STALE_EDIT`) when the item's lines it names are not the ones\nit expects.",
+      "type": "object",
+      "properties": {
+        "expect": {
+          "description": "The text each line the operations name had when the edit was\nmade, by line index.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExpectedLine"
+          }
+        },
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "ops": {
+          "description": "The operations, in order; line indices are the item's before\nthe edit.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineOp"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "ops",
+        "expect"
+      ]
+    },
+    "ItemEditPreview": {
+      "description": "An item edit's effect, calculated by the application (never by the\nrequester).",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Each slice field before and after.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          }
+        },
+        "item": {
+          "description": "The item as edited, with its lines' new statuses.",
+          "$ref": "#/$defs/ItemView"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "fields"
+      ]
+    },
+    "ItemSummary": {
+      "description": "One item in a list.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "in-use": {
+          "description": "Whether the calculation reads it: in a slot of the active item\nset that is in use, or in an allocated jewel socket of the\nactive passive spec.",
+          "type": "boolean"
+        },
+        "item-class": {
+          "description": "Its base's item class in the game data (`Bow`, `Quiver`, `Two\nHand Sword`, `LifeFlask`, ...), when the base is known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "legacy": {
+          "description": "Whether its selected variant is a legacy version of a unique\n(`Pre 3.7.0`): only Standard has such items.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "The name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rarity": {
+          "description": "`normal`, `magic`, `rare`, `unique`, `relic`, if read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "requirements": {
+          "description": "Its requirements (level, attributes), as on its card (B-2:\nthe equipment panel checks them against the character).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Requirements"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sets": {
+          "description": "The item sets that hold it, by ID.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "slot": {
+          "description": "The slot it is in, in the active item set, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sockets": {
+          "description": "Its sockets as linked groups, each a string of colours (`R`,\n`G`, `B`, `W`, `A` abyssal) in socket order: `R-R-G B` is\n`[\"RRG\", \"B\"]`. Empty without a `Sockets` line.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tree-socket": {
+          "description": "The allocated jewel socket of the active spec it is in, by node\nnumber, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "warnings": {
+          "description": "Its lines with warnings.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "warnings",
+        "in-use",
+        "sockets",
+        "sets",
+        "legacy"
+      ]
+    },
+    "ItemView": {
+      "description": "One item with its lines.",
+      "type": "object",
+      "properties": {
+        "base": {
+          "description": "The base, if written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "card": {
+          "description": "What an item card shows (UX walkthrough, UX-08).",
+          "$ref": "#/$defs/ItemCard"
+        },
+        "id": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "Every source line, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LineView"
+          }
+        },
+        "name": {
+          "description": "The name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rarity": {
+          "description": "The rarity, if read.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "slot": {
+          "description": "The slot it is in, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "lines",
+        "card"
+      ]
+    },
+    "League": {
+      "description": "The league a build is planned for.",
+      "oneOf": [
+        {
+          "description": "A challenge league: legacy versions of unique items cannot be\nhad.",
+          "type": "string",
+          "const": "challenge"
+        },
+        {
+          "description": "Standard: items keep their legacy versions.",
+          "type": "string",
+          "const": "standard"
+        }
+      ]
+    },
+    "LineCounts": {
+      "description": "Counts of item modifier lines by status.",
+      "type": "object",
+      "properties": {
+        "adapted": {
+          "description": "Resolved after an import tolerance.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "excluded": {
+          "description": "Excluded by the item (another variant, a custom line, a\nsection without effect).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "matched": {
+          "description": "Resolved to game stats exactly.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "modifiers": {
+          "description": "Modifier lines.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "warnings": {
+          "description": "With a warning.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "modifiers",
+        "matched",
+        "adapted",
+        "warnings",
+        "excluded"
+      ]
+    },
+    "LineOp": {
+      "description": "One line operation of an item edit.",
+      "oneOf": [
+        {
+          "description": "Replaces the line's text.",
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "text": {
+                  "description": "The new text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line",
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "replace"
+          ]
+        },
+        {
+          "description": "Removes the line.",
+          "type": "object",
+          "properties": {
+            "remove": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "remove"
+          ]
+        },
+        {
+          "description": "Sets a ranged line's roll, as PoB's `{range:r}` prefix (0 the\nlow end, 1 the high end), keeping the range.",
+          "type": "object",
+          "properties": {
+            "set-range": {
+              "type": "object",
+              "properties": {
+                "line": {
+                  "description": "The line's index.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "value": {
+                  "description": "The roll, from 0 to 1.",
+                  "type": "number",
+                  "format": "double"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "line",
+                "value"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-range"
+          ]
+        },
+        {
+          "description": "Selects the item's variant (1-based): its `Selected Variant`\nline is written (added after the variants when missing), and\nthe item is read again.",
+          "type": "object",
+          "properties": {
+            "select-variant": {
+              "type": "object",
+              "properties": {
+                "variant": {
+                  "description": "The variant.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "variant"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "select-variant"
+          ]
+        },
+        {
+          "description": "Adds a modifier line after the item's last line.",
+          "type": "object",
+          "properties": {
+            "add": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "add"
+          ]
+        }
+      ]
+    },
+    "LineStatus": {
+      "description": "A line's status, as the UI names it (`docs/ui/UI-DESIGN-BRIEF.md`,\nterminology).",
+      "oneOf": [
+        {
+          "description": "Resolved to game stats or a typed kind.",
+          "type": "string",
+          "const": "matched"
+        },
+        {
+          "description": "Resolved after an import tolerance.",
+          "type": "string",
+          "const": "adapted"
+        },
+        {
+          "description": "Kept and shown, not calculated (ADR-015).",
+          "type": "string",
+          "const": "warning"
+        },
+        {
+          "description": "Excluded by the item.",
+          "type": "string",
+          "const": "excluded"
+        },
+        {
+          "description": "Continues the line before it (one description over several\nlines).",
+          "type": "string",
+          "const": "continues"
+        },
+        {
+          "description": "Not a modifier line.",
+          "type": "string",
+          "const": "other"
+        }
+      ]
+    },
+    "LineView": {
+      "description": "One source line of an item.",
+      "type": "object",
+      "properties": {
+        "adapted": {
+          "description": "The tolerance it needed (`case-folded`, `split-section`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "code": {
+          "description": "The warning's code (`LINE_NO_TEMPLATE`, ...), when the status is\n`warning`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "index": {
+          "description": "The line's index among the item's lines.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it is: the domain's line kind name (`modifier`, `spec`,\n`name`, ...).",
+          "type": "string"
+        },
+        "marks": {
+          "description": "The modifier's marks from its prefixes: `crafted`,\n`fractured`, `crucible`, `scourge`, `synthesis`, `mutated`.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numbers": {
+          "description": "The numbers in the text, in order, for roll edits.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NumberSpan"
+          }
+        },
+        "ranged": {
+          "description": "The line as the game prints it with Alt held: each roll followed\nby its range (`+28(24-28) to maximum Life`); `None` when the\nline has no range.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "section": {
+          "description": "The modifier list it belongs to (`implicit`, `explicit`, ...);\nmodifier lines only.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "shown": {
+          "description": "A modifier line as the game prints it, its roll applied (no\nmarkup); `None` when it is shown as written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stats": {
+          "description": "What the line resolved to: game stats, or a typed kind.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StatView"
+          }
+        },
+        "status": {
+          "description": "Its status.",
+          "$ref": "#/$defs/LineStatus"
+        },
+        "text": {
+          "description": "The line as written.",
+          "type": "string"
+        },
+        "typed": {
+          "description": "The typed kind (`granted-skill`, ...), if it resolved to one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "variants": {
+          "description": "The variants (1-based) a modifier line belongs to; empty for\nevery variant.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "text",
+        "kind",
+        "status",
+        "stats",
+        "numbers",
+        "variants",
+        "marks"
+      ]
+    },
+    "LoadoutView": {
+      "description": "A stage of the build (PoB's loadout): a passive spec and the sets\nlinked to it, switched together.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "Whether the build uses this spec and every linked set.",
+          "type": "boolean"
+        },
+        "config-set": {
+          "description": "The linked config set, if one is.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "item-set": {
+          "description": "The linked item set, if one is.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "skill-set": {
+          "description": "The linked skill set, if one is.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "spec": {
+          "description": "The passive spec's ID (the stage's key).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "title": {
+          "description": "The title, without colour codes and links.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "spec",
+        "title",
+        "active"
+      ]
+    },
+    "MasteryChoice": {
+      "description": "A mastery and its chosen effect.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "The effect (its hash, as builds name it).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The mastery node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "effect"
+      ]
+    },
+    "MasteryEffectView": {
+      "description": "A mastery effect.",
+      "type": "object",
+      "properties": {
+        "effect": {
+          "description": "Its hash (what builds name).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "lines": {
+          "description": "Its stat lines as the game prints them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "lines"
+      ]
+    },
+    "MasteryGroupView": {
+      "description": "A mastery group's effects.",
+      "type": "object",
+      "properties": {
+        "effects": {
+          "description": "Its effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryEffectView"
+          }
+        },
+        "id": {
+          "description": "Its ID.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "effects"
+      ]
+    },
+    "McpPermissions": {
+      "description": "What MCP clients may do. Reading is allowed while the server runs.",
+      "type": "object",
+      "properties": {
+        "requests": {
+          "description": "Clients may request changes (off by default: read-only).",
+          "type": "boolean"
+        },
+        "standing-grant": {
+          "description": "Requests apply without asking (a standing grant the user can\nrevoke).",
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "requests",
+        "standing-grant"
+      ]
+    },
+    "McpStatus": {
+      "description": "The MCP server (ADR-017).",
+      "type": "object",
+      "properties": {
+        "permissions": {
+          "description": "What clients may do.",
+          "$ref": "#/$defs/McpPermissions"
+        },
+        "requests": {
+          "description": "Change requests, newest last.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChangeRequest"
+          }
+        },
+        "running": {
+          "description": "Whether it runs.",
+          "type": "boolean"
+        },
+        "token": {
+          "description": "The bearer token, while it runs.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "token-kept": {
+          "description": "Whether the token is kept between starts in the OS's protected\nstore (ADR-017 Amendment 1); `false` when it is made at each\nstart.",
+          "type": "boolean",
+          "default": false
+        },
+        "url": {
+          "description": "Its address, while it runs (`http://127.0.0.1:<port>/mcp`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "running",
+        "permissions",
+        "requests"
+      ]
+    },
+    "NodeName": {
+      "description": "A passive node's name.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Its name in the game data.",
+          "type": "string"
+        },
+        "node": {
+          "description": "The node number.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "name"
+      ]
+    },
+    "NumberSpan": {
+      "description": "A number in a line's text: where it is, as character offsets.",
+      "type": "object",
+      "properties": {
+        "end": {
+          "description": "The offset after the last character.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "The first character's offset.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "The number as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "text"
+      ]
+    },
+    "Outcome": {
+      "description": "A command's answer.",
+      "oneOf": [
+        {
+          "description": "Done; the snapshot version after it.",
+          "type": "object",
+          "properties": {
+            "done": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "description": "The version.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "version"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "done"
+          ]
+        },
+        {
+          "description": "Done, with text to give the user (a share code).",
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "The text.",
+                  "type": "string"
+                },
+                "version": {
+                  "description": "The version.",
+                  "type": "integer",
+                  "format": "uint64",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "text"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "text"
+          ]
+        },
+        {
+          "description": "Nothing to do (undo with an empty history, a cancelled dialog).",
+          "type": "string",
+          "const": "nothing"
+        }
+      ]
+    },
+    "QuarantinedBundle": {
+      "description": "An installed bundle that does not load (Phase 5, P-e).",
+      "type": "object",
+      "properties": {
+        "acceptable": {
+          "description": "Whether the user may accept it ([`Command::AcceptBundle`]):\n`unsigned` and `unknown-key` only.",
+          "type": "boolean"
+        },
+        "bytes": {
+          "description": "Its size in bytes.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "data-version": {
+          "description": "Its data version.",
+          "$ref": "#/$defs/DataVersionView"
+        },
+        "files": {
+          "description": "Its number of files.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its ID: `<game>/<steam build>-s<data schema>`.",
+          "type": "string"
+        },
+        "key-id": {
+          "description": "The signing key's ID, when signed.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "manifest-sha256": {
+          "description": "The SHA-256 of its manifest (`bundle.json`), shown to the user,\nwho accepts exactly it.",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,\n`damaged`.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "data-version",
+        "reason",
+        "acceptable",
+        "manifest-sha256",
+        "files",
+        "bytes"
+      ]
+    },
+    "RecentEntry": {
+      "description": "A recent build.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "at": {
+          "description": "When it was last opened or saved, in seconds since the Unix\nepoch.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
+        "class": {
+          "description": "The class, if known (UX-20; lists written before it have none).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "description": "The ID the application issued for it (the UI opens a recent\nbuild by it and never sends a path).",
+          "type": "string"
+        },
+        "level": {
+          "description": "The character level, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "main-skill": {
+          "description": "The main skill, if known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "The display name.",
+          "type": "string"
+        },
+        "path": {
+          "description": "The build document's path.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "name",
+        "at"
+      ]
+    },
+    "RecoveryEntry": {
+      "description": "A recovery snapshot (autosave) found at start.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "Its ID (the file's stem).",
+          "type": "string"
+        },
+        "name": {
+          "description": "The build's display name.",
+          "type": "string"
+        },
+        "origin": {
+          "description": "The file it was imported from, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Where the build was saved, if it was.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "saved-at": {
+          "description": "When it was written, in seconds since the Unix epoch.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "saved-at",
+        "name"
+      ]
+    },
+    "RequestStatus": {
+      "description": "A change request's status.",
+      "oneOf": [
+        {
+          "description": "Waiting for the user.",
+          "type": "string",
+          "const": "pending"
+        },
+        {
+          "description": "Applied (approved, or under the standing grant).",
+          "type": "string",
+          "const": "applied"
+        },
+        {
+          "description": "Declined by the user.",
+          "type": "string",
+          "const": "declined"
+        },
+        {
+          "description": "It could not apply (the item changed, a line is gone, ...).",
+          "type": "string",
+          "const": "failed"
+        }
+      ]
+    },
+    "Requirements": {
+      "description": "An item's requirements: the level, and attributes above 0.",
+      "type": "object",
+      "properties": {
+        "dexterity": {
+          "description": "Dexterity (0: none).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "intelligence": {
+          "description": "Intelligence (0: none).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "level": {
+          "description": "The level: as written on the item, else the base's (its drop\nlevel for a weapon, armour, or flask, its implicits' levels; PoB's\nrule, `loom_data::bundle::required_level`).",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "strength": {
+          "description": "Strength (0: none).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "strength",
+        "dexterity",
+        "intelligence"
+      ]
+    },
+    "SetView": {
+      "description": "One item set, skill set, passive spec, or config set.",
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "Whether the calculation uses it.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "The set's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "title": {
+          "description": "The title as written, if any (PoB's colour codes and `{1,2}`\nloadout links included).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "active"
+      ]
+    },
+    "SkillGroupView": {
+      "description": "One socket group of the active skill set.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Whether the group is enabled.",
+          "type": "boolean"
+        },
+        "gems": {
+          "description": "Its gems, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GemView"
+          }
+        },
+        "label": {
+          "description": "The label, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "main": {
+          "description": "Whether it is the build's main skill group.",
+          "type": "boolean"
+        },
+        "slot": {
+          "description": "The slot it is socketed in, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "main",
+        "gems"
+      ]
+    },
+    "Snapshot": {
+      "description": "The application's state at one version. Queries return it whole;\nevents say when it changed (ADR-004: a missed event version means\nquery again).",
+      "type": "object",
+      "properties": {
+        "build": {
+          "description": "The open build, if any.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BuildView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "calc": {
+          "description": "The calculation of the latest version.",
+          "$ref": "#/$defs/CalcStatus"
+        },
+        "data": {
+          "description": "The game data the application calculates with.",
+          "$ref": "#/$defs/DataStatus"
+        },
+        "dirty": {
+          "description": "Whether the build changed since it was last saved or opened.",
+          "type": "boolean"
+        },
+        "history": {
+          "description": "Undo and redo.",
+          "$ref": "#/$defs/HistoryView"
+        },
+        "notices": {
+          "description": "Notices about the open build that are not errors (for example\n`APP_RESOLUTION_CHANGED`: the build's stored resolutions differ\nfrom this bundle's, so they stand and rolled values stay\nunsettled).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ApiError"
+          }
+        },
+        "origin": {
+          "description": "The file the build was imported from, if any; never written.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "Where the build is saved (a build document), if it is.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "description": "Increases with every change of the build (import, open, edit,\nundo, redo); 0 before any build.",
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "calc",
+        "history",
+        "dirty",
+        "data",
+        "notices"
+      ]
+    },
+    "StatView": {
+      "description": "One stat a line resolved to.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "The game's stat ID.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The value as text (`15`, `10 to 20`, `hidden`).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ]
+    },
+    "TreeAscendancyView": {
+      "description": "An ascendancy on the tree.",
+      "type": "object",
+      "properties": {
+        "flavour": {
+          "description": "Its quote, as the game shows it in the ascendancy's circle (the\ngame data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "flavour-colour": {
+          "description": "The quote's colour (`r,g,b`), when the data gives one.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "id": {
+          "description": "Its ID (what nodes name).",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "number": {
+          "description": "Its number within the class (PoB's `ascendClassId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "Its start node, if any.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "id",
+        "name"
+      ]
+    },
+    "TreeChange": {
+      "description": "A passive tree change an MCP client asks for: the tree commands\nof the same names.",
+      "oneOf": [
+        {
+          "description": "Allocates a node and the shortest path to it.",
+          "type": "object",
+          "properties": {
+            "allocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "allocate-node"
+          ]
+        },
+        {
+          "description": "Deallocates a node and the nodes it leaves unconnected.",
+          "type": "object",
+          "properties": {
+            "deallocate-node": {
+              "type": "object",
+              "properties": {
+                "node": {
+                  "description": "The node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "deallocate-node"
+          ]
+        },
+        {
+          "description": "Chooses a mastery's effect, allocating the mastery.",
+          "type": "object",
+          "properties": {
+            "set-mastery-effect": {
+              "type": "object",
+              "properties": {
+                "effect": {
+                  "description": "The effect.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "node": {
+                  "description": "The mastery node.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                },
+                "spec": {
+                  "description": "The spec's ID.",
+                  "type": "integer",
+                  "format": "uint32",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false,
+              "required": [
+                "spec",
+                "node",
+                "effect"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "set-mastery-effect"
+          ]
+        }
+      ]
+    },
+    "TreeClassView": {
+      "description": "A class on the tree.",
+      "type": "object",
+      "properties": {
+        "ascendancies": {
+          "description": "Its ascendancies.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeAscendancyView"
+          }
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "number": {
+          "description": "Its number (PoB's `classId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "start": {
+          "description": "Its start node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "name",
+        "start",
+        "ascendancies"
+      ]
+    },
+    "TreeJewel": {
+      "description": "A jewel in a tree socket.",
+      "type": "object",
+      "properties": {
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "node": {
+          "description": "The socket node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "item"
+      ]
+    },
+    "TreeLayout": {
+      "description": "The loaded data's passive tree, for the tree screen: static while\nthe data is loaded.",
+      "type": "object",
+      "properties": {
+        "classes": {
+          "description": "The classes, by number.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeClassView"
+          }
+        },
+        "groups": {
+          "description": "The groups' centres, by group index.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreePoint"
+          }
+        },
+        "masteries": {
+          "description": "Each mastery group's effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryGroupView"
+          }
+        },
+        "nodes": {
+          "description": "The nodes, ascending.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeNodeView"
+          }
+        },
+        "orbit-radii": {
+          "description": "Each orbit's radius.",
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "placed": {
+          "description": "Whether nodes have positions (the bundle has the layout\nconstants); without them the tree is listed, not drawn.",
+          "type": "boolean"
+        },
+        "tree-version": {
+          "description": "The tree version, when known.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "placed",
+        "orbit-radii",
+        "groups",
+        "nodes",
+        "classes",
+        "masteries"
+      ]
+    },
+    "TreeNodeArt": {
+      "description": "A node's art, as the export names it.",
+      "type": "object",
+      "properties": {
+        "active-icon": {
+          "description": "A mastery's icon once it is chosen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "icon": {
+          "description": "Its icon (a passive's).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inactive-icon": {
+          "description": "A mastery's icon until it is chosen.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "node": {
+          "description": "The node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node"
+      ]
+    },
+    "TreeNodeKind": {
+      "description": "What a node is.",
+      "oneOf": [
+        {
+          "description": "A small passive.",
+          "type": "string",
+          "const": "normal"
+        },
+        {
+          "description": "A notable.",
+          "type": "string",
+          "const": "notable"
+        },
+        {
+          "description": "A keystone.",
+          "type": "string",
+          "const": "keystone"
+        },
+        {
+          "description": "A mastery.",
+          "type": "string",
+          "const": "mastery"
+        },
+        {
+          "description": "A jewel socket.",
+          "type": "string",
+          "const": "jewel-socket"
+        },
+        {
+          "description": "A cluster jewel socket.",
+          "type": "string",
+          "const": "cluster-socket"
+        },
+        {
+          "description": "A class's start.",
+          "type": "string",
+          "const": "class-start"
+        },
+        {
+          "description": "An ascendancy's start.",
+          "type": "string",
+          "const": "ascendancy-start"
+        }
+      ]
+    },
+    "TreeNodeView": {
+      "description": "One node of the tree.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy it belongs to (its ID), if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cluster-area": {
+          "description": "Whether it exists only once a cluster jewel is socketed (a\nnested socket or position proxy): not drawn, as PoB does not.",
+          "type": "boolean",
+          "default": false
+        },
+        "flavour": {
+          "description": "Its flavour text, as the game shows it under a keystone's lines\n(the game data's; B-2 item evidence), lines split by `\\n`.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "group": {
+          "description": "Its group's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "id": {
+          "description": "Its number.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "description": "What it is.",
+          "$ref": "#/$defs/TreeNodeKind"
+        },
+        "lines": {
+          "description": "Its stat lines as the game prints them.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "links": {
+          "description": "The nodes it links to with a higher number (each link once).",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "mastery-group": {
+          "description": "For a mastery: its mastery group's ID.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "modelled": {
+          "description": "Whether the editor allocates it.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "orbit": {
+          "description": "Its orbit.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "position": {
+          "description": "Where it is drawn, when the tree is placed.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreePoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "group",
+        "orbit",
+        "modelled",
+        "links",
+        "lines"
+      ]
+    },
+    "TreePoint": {
+      "description": "A point on the tree.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "description": "x.",
+          "type": "number",
+          "format": "double"
+        },
+        "y": {
+          "description": "y (down is positive).",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "TreePreview": {
+      "description": "What clicking a node would do: allocate the path to it, or\ndeallocate it and what it leaves unconnected; with each slice\nfield before and after, when the build calculates.",
+      "type": "object",
+      "properties": {
+        "fields": {
+          "description": "Each slice field before and after (empty without a\ncalculation).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldDelta"
+          }
+        },
+        "node": {
+          "description": "The node.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "path": {
+          "description": "Nodes allocated, from the allocated ones to the node.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "removed": {
+          "description": "Nodes deallocated, ascending.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "path",
+        "removed",
+        "fields"
+      ]
+    },
+    "TreeSprite": {
+      "description": "One sprite on a sheet, in pixels.",
+      "type": "object",
+      "properties": {
+        "h": {
+          "description": "Height.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Its name (an icon path, or a frame's name).",
+          "type": "string"
+        },
+        "w": {
+          "description": "Width.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "x": {
+          "description": "Left.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "y": {
+          "description": "Top.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "x",
+        "y",
+        "w",
+        "h"
+      ]
+    },
+    "TreeSpriteCategory": {
+      "description": "One export category's sprites.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Its sheet's file name.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "sprites": {
+          "description": "Its sprites, by name.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSprite"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "file",
+        "sprites"
+      ]
+    },
+    "TreeSpriteSheet": {
+      "description": "A sheet's image.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Its file name, as the categories name it.",
+          "type": "string"
+        },
+        "image": {
+          "description": "The image as a `data:` URL (the bundle's bytes, unmodified).",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "image"
+      ]
+    },
+    "TreeSprites": {
+      "description": "The passive tree's sprites (GGG's export sheets, ADR-005\nAmendment 2): static while the data is loaded. A sprite covers its\npixel size divided by `zoom` in tree units.",
+      "type": "object",
+      "properties": {
+        "categories": {
+          "description": "The export's categories (`normalActive`, `frame`, ...).",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSpriteCategory"
+          }
+        },
+        "nodes": {
+          "description": "The nodes' art, by node.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeNodeArt"
+          }
+        },
+        "sheets": {
+          "description": "The sheets, each once.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TreeSpriteSheet"
+          }
+        },
+        "zoom": {
+          "description": "The export's zoom level the sheets are for.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "zoom",
+        "sheets",
+        "categories",
+        "nodes"
+      ]
+    },
+    "TreeView": {
+      "description": "The active passive spec as the tree editor sees it.",
+      "type": "object",
+      "properties": {
+        "ascendancy": {
+          "description": "The ascendancy's number within the class, 0 for none.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "ascendancy-points": {
+          "description": "Ascendancy points spent.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "class": {
+          "description": "The class's number (PoB's `classId`).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "jewels": {
+          "description": "The jewels socketed in the spec's sockets.",
+          "type": "array",
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/TreeJewel"
+          }
+        },
+        "kept": {
+          "description": "Allocated nodes the editor keeps but does not edit: ones the\ntree lacks or does not model (bloodline passives, cluster\njewels' nodes), ascending.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "locked": {
+          "description": "Why the spec cannot be edited, when it cannot: its tree version\ndiffers from the loaded data's, or its class is not known. The\ntree is then shown, not edited.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
+        },
+        "masteries": {
+          "description": "The chosen mastery effects.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MasteryChoice"
+          }
+        },
+        "nodes": {
+          "description": "The allocated nodes, ascending (starts included).",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0
+          }
+        },
+        "points": {
+          "description": "Passive points spent (PoB's count, never enforced).",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "spec": {
+          "description": "The spec's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "spec",
+        "class",
+        "ascendancy",
+        "nodes",
+        "masteries",
+        "kept",
+        "points",
+        "ascendancy-points"
+      ]
+    },
+    "UpdateMode": {
+      "description": "How the application looks for its own updates (Phase 5, P-d). Every\ninstall waits for the user's approval in each mode.",
+      "oneOf": [
+        {
+          "description": "Checks once at start, and when the user asks (the default).",
+          "type": "string",
+          "const": "automatic-check"
+        },
+        {
+          "description": "Checks only when the user asks.",
+          "type": "string",
+          "const": "manual"
+        },
+        {
+          "description": "Never connects: no check, no download.",
+          "type": "string",
+          "const": "strict-offline"
+        }
+      ]
+    },
+    "UpdateOffer": {
+      "description": "A newer version the update feed offers (lower or equal versions are\nnever offered).",
+      "type": "object",
+      "properties": {
+        "date": {
+          "description": "When it was published (RFC 3339), if the feed says.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "notes": {
+          "description": "Its release notes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "description": "Its release page.",
+          "type": "string"
+        },
+        "version": {
+          "description": "Its version.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "url"
+      ]
+    },
+    "UpdateStatus": {
+      "description": "Application updates: the mode, this build, and the last check's\nanswer (Phase 5, P-d).",
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "description": "The package this build came from: `nsis`, `msi`, `app-image`,\n`deb`, or `plain` (the portable zip, or a development build).",
+          "type": "string"
+        },
+        "available": {
+          "description": "Whether this build can check at all (it carries an update key).",
+          "type": "boolean"
+        },
+        "checked": {
+          "description": "Whether a check has answered since the application started.",
+          "type": "boolean"
+        },
+        "checking": {
+          "description": "A check runs.",
+          "type": "boolean"
+        },
+        "current": {
+          "description": "The running version.",
+          "type": "string"
+        },
+        "error": {
+          "description": "Why the last check or install failed, if it did.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "installs": {
+          "description": "Whether this package installs an update itself (`nsis`, `msi`,\n`app-image`); the others only link to the release.",
+          "type": "boolean"
+        },
+        "mode": {
+          "description": "The mode.",
+          "$ref": "#/$defs/UpdateMode"
+        },
+        "offer": {
+          "description": "The last check's newer version, if it found one.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/UpdateOffer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "current",
+        "artifact",
+        "installs",
+        "available",
+        "checking",
+        "checked"
+      ]
+    },
+    "VariantEra": {
+      "description": "What a variant of an item is.",
+      "oneOf": [
+        {
+          "description": "A legacy version (`Pre 3.7.0`): only items from earlier leagues.",
+          "type": "string",
+          "const": "legacy"
+        },
+        {
+          "description": "The version the current game makes (`Current`).",
+          "type": "string",
+          "const": "current"
+        },
+        {
+          "description": "A choice the player makes (`Fire`, `Life`), not a version.",
+          "type": "string",
+          "const": "choice"
+        }
+      ]
+    },
+    "WarningView": {
+      "description": "A line with a warning.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "The stable code.",
+          "type": "string"
+        },
+        "in-use": {
+          "description": "Whether the line's item is in use ([`ItemSummary::in_use`]): a\nwarning on an item not in use does not touch the calculation.",
+          "type": "boolean"
+        },
+        "item": {
+          "description": "The item's ID.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "item-name": {
+          "description": "The item's name, if any.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "description": "The line's index.",
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "text": {
+          "description": "The line as written.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "line",
+        "text",
+        "code",
+        "in-use"
+      ]
+    }
+  }
+}

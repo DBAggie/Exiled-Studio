@@ -1,0 +1,2062 @@
+[
+ {
+  "characters": [
+   "Test/Chars/Str"
+  ],
+  "id": "t1000",
+  "name": "Brute Start",
+  "node": 1000
+ },
+ {
+  "characters": [
+   "Test/Chars/Int"
+  ],
+  "id": "t2000",
+  "name": "Sage Start",
+  "node": 2000
+ },
+ {
+  "ascendancy": "TestChampion",
+  "ascendancy_start": true,
+  "id": "t3000",
+  "name": "Test Champion",
+  "node": 3000
+ },
+ {
+  "ascendancy": "TestChampion",
+  "id": "t3001",
+  "name": "Test Champion Small",
+  "node": 3001,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 8
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestChampion",
+  "id": "t3002",
+  "name": "Test Champion Notable",
+  "node": 3002,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 40
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestChampion",
+  "id": "t3003",
+  "multiple_choice": true,
+  "name": "Test Champion Choice",
+  "node": 3003,
+  "notable": true
+ },
+ {
+  "ascendancy": "TestChampion",
+  "id": "t3004",
+  "multiple_choice_option": true,
+  "name": "Test Champion Option A",
+  "node": 3004,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 12
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestChampion",
+  "id": "t3005",
+  "multiple_choice_option": true,
+  "name": "Test Champion Option B",
+  "node": 3005,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 14
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "ascendancy_start": true,
+  "id": "t3100",
+  "name": "Test Berserker",
+  "node": 3100
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "id": "t3101",
+  "name": "Test Berserker Small",
+  "node": 3101,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 8
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "id": "t3102",
+  "name": "Test Berserker Notable",
+  "node": 3102,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 40
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "id": "t3103",
+  "multiple_choice": true,
+  "name": "Test Berserker Choice",
+  "node": 3103,
+  "notable": true
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "id": "t3104",
+  "multiple_choice_option": true,
+  "name": "Test Berserker Option A",
+  "node": 3104,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 12
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestBerserker",
+  "id": "t3105",
+  "multiple_choice_option": true,
+  "name": "Test Berserker Option B",
+  "node": 3105,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 14
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestOracle",
+  "ascendancy_start": true,
+  "id": "t3200",
+  "name": "Test Oracle",
+  "node": 3200
+ },
+ {
+  "ascendancy": "TestOracle",
+  "id": "t3201",
+  "name": "Test Oracle Small",
+  "node": 3201,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 8
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestOracle",
+  "id": "t3202",
+  "name": "Test Oracle Notable",
+  "node": 3202,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 40
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestOracle",
+  "id": "t3203",
+  "multiple_choice": true,
+  "name": "Test Oracle Choice",
+  "node": 3203,
+  "notable": true
+ },
+ {
+  "ascendancy": "TestOracle",
+  "id": "t3204",
+  "multiple_choice_option": true,
+  "name": "Test Oracle Option A",
+  "node": 3204,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 12
+   }
+  ]
+ },
+ {
+  "ascendancy": "TestOracle",
+  "id": "t3205",
+  "multiple_choice_option": true,
+  "name": "Test Oracle Option B",
+  "node": 3205,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 14
+   }
+  ]
+ },
+ {
+  "id": "t5000",
+  "jewel_socket": true,
+  "name": "Test Large Jewel Socket",
+  "node": 5000
+ },
+ {
+  "expansion": true,
+  "id": "t5001",
+  "jewel_socket": true,
+  "name": "Test Medium Cluster Socket",
+  "node": 5001
+ },
+ {
+  "id": "t5002",
+  "name": "Test Medium Proxy",
+  "node": 5002
+ },
+ {
+  "expansion": true,
+  "id": "t5003",
+  "jewel_socket": true,
+  "name": "Test Small Cluster Socket",
+  "node": 5003
+ },
+ {
+  "id": "t5004",
+  "name": "Test Small Proxy",
+  "node": 5004
+ },
+ {
+  "id": "t10000",
+  "name": "Test Life 0-0-0",
+  "node": 10000,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10001",
+  "name": "Test Life 0-0-1",
+  "node": 10001,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10002",
+  "name": "Test Life 0-0-2",
+  "node": 10002,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10003",
+  "name": "Test Notable 0-0",
+  "node": 10003,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t10004",
+  "name": "Test Life 0-0-4",
+  "node": 10004,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10005",
+  "name": "Test Life 0-0-5",
+  "node": 10005,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10010",
+  "name": "Test Life 0-1-0",
+  "node": 10010,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10011",
+  "name": "Test Life 0-1-1",
+  "node": 10011,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10012",
+  "name": "Test Life 0-1-2",
+  "node": 10012,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10013",
+  "name": "Test Life 0-1-3",
+  "node": 10013,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10014",
+  "name": "Test Life 0-1-4",
+  "node": 10014,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10015",
+  "name": "Test Life 0-1-5",
+  "node": 10015,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10020",
+  "name": "Test Life 0-2-0",
+  "node": 10020,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10021",
+  "name": "Test Life 0-2-1",
+  "node": 10021,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10022",
+  "name": "Test Life 0-2-2",
+  "node": 10022,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10023",
+  "name": "Test Notable 0-2",
+  "node": 10023,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t10024",
+  "name": "Test Life 0-2-4",
+  "node": 10024,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10025",
+  "name": "Test Life 0-2-5",
+  "node": 10025,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10029",
+  "mastery_group": "TestLifeMastery",
+  "name": "Test Life Mastery",
+  "node": 10029
+ },
+ {
+  "id": "t10030",
+  "name": "Test Life 0-3-0",
+  "node": 10030,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10031",
+  "name": "Test Life 0-3-1",
+  "node": 10031,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10032",
+  "name": "Test Life 0-3-2",
+  "node": 10032,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10033",
+  "name": "Test Life 0-3-3",
+  "node": 10033,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10034",
+  "name": "Test Life 0-3-4",
+  "node": 10034,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10035",
+  "name": "Test Life 0-3-5",
+  "node": 10035,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10040",
+  "name": "Test Life 0-4-0",
+  "node": 10040,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10041",
+  "name": "Test Life 0-4-1",
+  "node": 10041,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10042",
+  "name": "Test Life 0-4-2",
+  "node": 10042,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10043",
+  "name": "Test Notable 0-4",
+  "node": 10043,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t10044",
+  "name": "Test Life 0-4-4",
+  "node": 10044,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10045",
+  "name": "Test Life 0-4-5",
+  "node": 10045,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10050",
+  "name": "Test Life 0-5-0",
+  "node": 10050,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10051",
+  "name": "Test Life 0-5-1",
+  "node": 10051,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10052",
+  "name": "Test Life 0-5-2",
+  "node": 10052,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10053",
+  "name": "Test Life 0-5-3",
+  "node": 10053,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10054",
+  "name": "Test Life 0-5-4",
+  "node": 10054,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10055",
+  "name": "Test Life 0-5-5",
+  "node": 10055,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10060",
+  "name": "Test Life 0-6-0",
+  "node": 10060,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10061",
+  "name": "Test Life 0-6-1",
+  "node": 10061,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10062",
+  "name": "Test Life 0-6-2",
+  "node": 10062,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10063",
+  "name": "Test Notable 0-6",
+  "node": 10063,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t10064",
+  "name": "Test Life 0-6-4",
+  "node": 10064,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10065",
+  "name": "Test Life 0-6-5",
+  "node": 10065,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10070",
+  "name": "Test Life 0-7-0",
+  "node": 10070,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10071",
+  "name": "Test Life 0-7-1",
+  "node": 10071,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10072",
+  "name": "Test Life 0-7-2",
+  "node": 10072,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10073",
+  "name": "Test Life 0-7-3",
+  "node": 10073,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10074",
+  "name": "Test Life 0-7-4",
+  "node": 10074,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10075",
+  "name": "Test Life 0-7-5",
+  "node": 10075,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10080",
+  "name": "Test Life 0-8-0",
+  "node": 10080,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10081",
+  "name": "Test Life 0-8-1",
+  "node": 10081,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10082",
+  "name": "Test Life 0-8-2",
+  "node": 10082,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10083",
+  "name": "Test Notable 0-8",
+  "node": 10083,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t10084",
+  "name": "Test Life 0-8-4",
+  "node": 10084,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t10085",
+  "name": "Test Life 0-8-5",
+  "node": 10085,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11000",
+  "name": "Test Life 1-0-0",
+  "node": 11000,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11001",
+  "name": "Test Life 1-0-1",
+  "node": 11001,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11002",
+  "name": "Test Life 1-0-2",
+  "node": 11002,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11003",
+  "name": "Test Notable 1-0",
+  "node": 11003,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t11004",
+  "name": "Test Life 1-0-4",
+  "node": 11004,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11005",
+  "name": "Test Life 1-0-5",
+  "node": 11005,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11010",
+  "name": "Test Life 1-1-0",
+  "node": 11010,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11011",
+  "name": "Test Life 1-1-1",
+  "node": 11011,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11012",
+  "name": "Test Life 1-1-2",
+  "node": 11012,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11013",
+  "name": "Test Life 1-1-3",
+  "node": 11013,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11014",
+  "name": "Test Life 1-1-4",
+  "node": 11014,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11015",
+  "name": "Test Life 1-1-5",
+  "node": 11015,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11020",
+  "name": "Test Life 1-2-0",
+  "node": 11020,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11021",
+  "name": "Test Life 1-2-1",
+  "node": 11021,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11022",
+  "name": "Test Life 1-2-2",
+  "node": 11022,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11023",
+  "name": "Test Notable 1-2",
+  "node": 11023,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t11024",
+  "name": "Test Life 1-2-4",
+  "node": 11024,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11025",
+  "name": "Test Life 1-2-5",
+  "node": 11025,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11028",
+  "jewel_socket": true,
+  "name": "Test Jewel Socket",
+  "node": 11028
+ },
+ {
+  "id": "t11030",
+  "name": "Test Life 1-3-0",
+  "node": 11030,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11031",
+  "name": "Test Life 1-3-1",
+  "node": 11031,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11032",
+  "name": "Test Life 1-3-2",
+  "node": 11032,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11033",
+  "name": "Test Life 1-3-3",
+  "node": 11033,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11034",
+  "name": "Test Life 1-3-4",
+  "node": 11034,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11035",
+  "name": "Test Life 1-3-5",
+  "node": 11035,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11040",
+  "keystone": true,
+  "name": "Test Keystone",
+  "node": 11040
+ },
+ {
+  "id": "t11041",
+  "name": "Test Life 1-4-1",
+  "node": 11041,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11042",
+  "name": "Test Life 1-4-2",
+  "node": 11042,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11043",
+  "name": "Test Notable 1-4",
+  "node": 11043,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t11044",
+  "name": "Test Life 1-4-4",
+  "node": 11044,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11045",
+  "name": "Test Life 1-4-5",
+  "node": 11045,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11050",
+  "name": "Test Life 1-5-0",
+  "node": 11050,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11051",
+  "name": "Test Life 1-5-1",
+  "node": 11051,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11052",
+  "name": "Test Life 1-5-2",
+  "node": 11052,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11053",
+  "name": "Test Life 1-5-3",
+  "node": 11053,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11054",
+  "name": "Test Life 1-5-4",
+  "node": 11054,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11055",
+  "name": "Test Life 1-5-5",
+  "node": 11055,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11060",
+  "name": "Test Life 1-6-0",
+  "node": 11060,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11061",
+  "name": "Test Life 1-6-1",
+  "node": 11061,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11062",
+  "name": "Test Life 1-6-2",
+  "node": 11062,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11063",
+  "name": "Test Notable 1-6",
+  "node": 11063,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t11064",
+  "name": "Test Life 1-6-4",
+  "node": 11064,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11065",
+  "name": "Test Life 1-6-5",
+  "node": 11065,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11068",
+  "jewel_socket": true,
+  "name": "Test Jewel Socket",
+  "node": 11068
+ },
+ {
+  "id": "t11070",
+  "name": "Test Life 1-7-0",
+  "node": 11070,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11071",
+  "name": "Test Life 1-7-1",
+  "node": 11071,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11072",
+  "name": "Test Life 1-7-2",
+  "node": 11072,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11073",
+  "name": "Test Life 1-7-3",
+  "node": 11073,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11074",
+  "name": "Test Life 1-7-4",
+  "node": 11074,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11075",
+  "name": "Test Life 1-7-5",
+  "node": 11075,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11080",
+  "name": "Test Life 1-8-0",
+  "node": 11080,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11081",
+  "name": "Test Life 1-8-1",
+  "node": 11081,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11082",
+  "name": "Test Life 1-8-2",
+  "node": 11082,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11083",
+  "name": "Test Notable 1-8",
+  "node": 11083,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t11084",
+  "name": "Test Life 1-8-4",
+  "node": 11084,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t11085",
+  "name": "Test Life 1-8-5",
+  "node": 11085,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12000",
+  "name": "Test Life 2-0-0",
+  "node": 12000,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12001",
+  "name": "Test Life 2-0-1",
+  "node": 12001,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12002",
+  "name": "Test Life 2-0-2",
+  "node": 12002,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12003",
+  "name": "Test Notable 2-0",
+  "node": 12003,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t12004",
+  "name": "Test Life 2-0-4",
+  "node": 12004,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12005",
+  "name": "Test Life 2-0-5",
+  "node": 12005,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12010",
+  "name": "Test Life 2-1-0",
+  "node": 12010,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12011",
+  "name": "Test Life 2-1-1",
+  "node": 12011,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12012",
+  "name": "Test Life 2-1-2",
+  "node": 12012,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12013",
+  "name": "Test Life 2-1-3",
+  "node": 12013,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12014",
+  "name": "Test Life 2-1-4",
+  "node": 12014,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12015",
+  "name": "Test Life 2-1-5",
+  "node": 12015,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12020",
+  "name": "Test Life 2-2-0",
+  "node": 12020,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12021",
+  "name": "Test Life 2-2-1",
+  "node": 12021,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12022",
+  "name": "Test Life 2-2-2",
+  "node": 12022,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12023",
+  "name": "Test Notable 2-2",
+  "node": 12023,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t12024",
+  "name": "Test Life 2-2-4",
+  "node": 12024,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12025",
+  "name": "Test Life 2-2-5",
+  "node": 12025,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12030",
+  "name": "Test Life 2-3-0",
+  "node": 12030,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12031",
+  "name": "Test Life 2-3-1",
+  "node": 12031,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12032",
+  "name": "Test Life 2-3-2",
+  "node": 12032,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12033",
+  "name": "Test Life 2-3-3",
+  "node": 12033,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12034",
+  "name": "Test Life 2-3-4",
+  "node": 12034,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12035",
+  "name": "Test Life 2-3-5",
+  "node": 12035,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12040",
+  "name": "Test Life 2-4-0",
+  "node": 12040,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12041",
+  "name": "Test Life 2-4-1",
+  "node": 12041,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12042",
+  "name": "Test Life 2-4-2",
+  "node": 12042,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12043",
+  "name": "Test Notable 2-4",
+  "node": 12043,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t12044",
+  "name": "Test Life 2-4-4",
+  "node": 12044,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12045",
+  "name": "Test Life 2-4-5",
+  "node": 12045,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12050",
+  "name": "Test Life 2-5-0",
+  "node": 12050,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12051",
+  "name": "Test Life 2-5-1",
+  "node": 12051,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12052",
+  "name": "Test Life 2-5-2",
+  "node": 12052,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12053",
+  "name": "Test Life 2-5-3",
+  "node": 12053,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12054",
+  "name": "Test Life 2-5-4",
+  "node": 12054,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12055",
+  "name": "Test Life 2-5-5",
+  "node": 12055,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12060",
+  "name": "Test Life 2-6-0",
+  "node": 12060,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12061",
+  "name": "Test Life 2-6-1",
+  "node": 12061,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12062",
+  "name": "Test Life 2-6-2",
+  "node": 12062,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12063",
+  "name": "Test Notable 2-6",
+  "node": 12063,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t12064",
+  "name": "Test Life 2-6-4",
+  "node": 12064,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12065",
+  "name": "Test Life 2-6-5",
+  "node": 12065,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12069",
+  "mastery_group": "TestLifeMastery",
+  "name": "Test Life Mastery",
+  "node": 12069
+ },
+ {
+  "id": "t12070",
+  "name": "Test Life 2-7-0",
+  "node": 12070,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12071",
+  "name": "Test Life 2-7-1",
+  "node": 12071,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12072",
+  "name": "Test Life 2-7-2",
+  "node": 12072,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12073",
+  "name": "Test Life 2-7-3",
+  "node": 12073,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12074",
+  "name": "Test Life 2-7-4",
+  "node": 12074,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12075",
+  "name": "Test Life 2-7-5",
+  "node": 12075,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12080",
+  "name": "Test Life 2-8-0",
+  "node": 12080,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12081",
+  "name": "Test Life 2-8-1",
+  "node": 12081,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12082",
+  "name": "Test Life 2-8-2",
+  "node": 12082,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12083",
+  "name": "Test Notable 2-8",
+  "node": 12083,
+  "notable": true,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 25
+   }
+  ]
+ },
+ {
+  "id": "t12084",
+  "name": "Test Life 2-8-4",
+  "node": 12084,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ },
+ {
+  "id": "t12085",
+  "name": "Test Life 2-8-5",
+  "node": 12085,
+  "stats": [
+   {
+    "stat": "test_passive_life",
+    "value": 5
+   }
+  ]
+ }
+]

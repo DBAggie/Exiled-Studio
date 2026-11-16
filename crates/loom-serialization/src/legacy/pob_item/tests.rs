@@ -443,3 +443,72 @@ fn item_base_should_follow_pobs_rules_for_each_rarity() {
         Err(NoBaseName::NoName)
     );
 }
+
+#[test]
+fn variant_names_should_say_legacy_current_or_choice() {
+    use super::{VariantEra, variant_eras};
+    let eras = |v: &[&str]| variant_eras(&v.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>());
+    let (l, c, x) = (VariantEra::Legacy, VariantEra::Current, VariantEra::Choice);
+    assert_eq!(
+        eras(&[
+            "Pre 3.7.0",
+            "Pre.3.19.0",
+            "Pre 3.26",
+            "Pre 3.26 Crit Chance",
+            "Fire and Cold Damage (Pre 3.14)",
+            "Wrath: Lightning Damage Mana Leech (Pre 3.8.0)",
+            "Current",
+        ]),
+        [l, l, l, l, l, l, c]
+    );
+    // A bare version is current, unless a variant says "Current".
+    assert_eq!(eras(&["Pre 3.19.0", "3.19.0"]), [l, c]);
+    assert_eq!(
+        eras(&["Pre 3.4.0", "Pre 3.7.0", "3.19.0", "Current"]),
+        [l, l, l, c]
+    );
+    // Ralakesh's Impatience: current versions with a choice.
+    assert_eq!(
+        eras(&["Pre 3.19.0", "Endurance Current", "Frenzy Current"]),
+        [l, c, c]
+    );
+    assert_eq!(
+        eras(&[
+            "Fire",
+            "Life",
+            "Wrath: Inc Lightning Damage",
+            "None",
+            "Prefix 3.1"
+        ]),
+        [x, x, x, x, x]
+    );
+}
+
+#[test]
+fn a_legacy_variant_should_name_its_current_counterpart() {
+    use super::current_variant;
+    let names = |v: &[&str]| v.iter().map(|s| (*s).to_owned()).collect::<Vec<_>>();
+    let versions = names(&["Pre 2.6.0", "Pre 3.0.0", "Current"]);
+    assert_eq!(current_variant(&versions, 1), Some(3));
+    assert_eq!(current_variant(&versions, 3), None);
+    let bare = names(&["Pre 3.19.0", "3.19.0"]);
+    assert_eq!(current_variant(&bare, 1), Some(2));
+    let choices = names(&[
+        "Fire and Cold Damage (Pre 3.14)",
+        "Fire and Cold Damage",
+        "Pre 3.26 Crit Chance",
+        "Crit Chance",
+    ]);
+    assert_eq!(current_variant(&choices, 1), Some(2));
+    assert_eq!(current_variant(&choices, 3), Some(4));
+    // No current counterpart.
+    assert_eq!(
+        current_variant(&names(&["Pre 3.0.0 Life", "Mana"]), 1),
+        None
+    );
+    assert_eq!(current_variant(&versions, 9), None);
+    // An older bare version goes to "Current".
+    let rathpith = names(&["Pre 3.4.0", "Pre 3.7.0", "3.19.0", "Current"]);
+    assert_eq!(current_variant(&rathpith, 3), Some(4));
+    assert_eq!(current_variant(&rathpith, 1), Some(4));
+}

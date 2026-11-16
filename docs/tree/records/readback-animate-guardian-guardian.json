@@ -1,0 +1,8 @@
+{
+  "build_sha256": "c6af0fe5c9ba411adc3843b6ac0d03054c98af41b58b3e23395d9f03559b40cf",
+  "pob_readback_sha256": "641fc77b25b64740672b626f2951f745924dcbc8ac2cda9301bb932d0943fd56",
+  "specs": 1,
+  "specs_equal": 1,
+  "build_class_equal": true,
+  "differences": []
+}

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): a level 90 Witch casting Ice Nova (level 20), custom lines "20% increased Damage if you've Shattered an Enemy Recently", "15% increased Damage if you have Shocked an Enemy Recently", "+30% to Critical Strike Multiplier against Unique Enemies", and "50% increased Critical Strike Chance against Enemies that are on Full Life", the config's shattered and enemy-on-full-life checks on (shocked off) and a standard boss (rare or unique): 20% increased damage, +30% crit multiplier, 50% increased crit chance.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionShatteredEnemyRecently" boolean="true"/>
+			<Input name="conditionEnemyFullLife" boolean="true"/>
+			<Input name="enemyIsBoss" string="Boss"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				20% increased Damage if you've Shattered an Enemy Recently
+15% increased Damage if you have Shocked an Enemy Recently
++30% to Critical Strike Multiplier against Unique Enemies
+50% increased Critical Strike Chance against Enemies that are on Full Life
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

@@ -1,0 +1,67 @@
+{
+ "builds_with_reason_changes": 3,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 11}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 4,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "hit-dps": [
+    18.24865058823529,
+    326.30945454545446
+   ],
+   "resistance.cold": [
+    24.0,
+    76.0
+   ],
+   "resistance.fire": [
+    13.0,
+    76.0
+   ],
+   "resistance.lightning": [
+    24.0,
+    76.0
+   ],
+   "speed": [
+    1.6946778711484591,
+    30.3030303030303
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "resistance.cold": [
+    -55.0,
+    45.0
+   ],
+   "resistance.fire": [
+    -55.0,
+    45.0
+   ],
+   "resistance.lightning": [
+    -55.0,
+    45.0
+   ]
+  }
+ }
+}

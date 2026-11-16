@@ -1,0 +1,127 @@
+/* Design tokens (docs/ui/UI-DESIGN-BRIEF.md, section 2, and the mockups in
+   docs/ui/exiled-studio-ui-draft-v1.zip). Every colour the UI uses is a
+   token here; theme/pairs.ts lists each foreground and background pair the
+   CSS combines, and a test checks their contrast (WCAG 2.2 AA) and that no
+   other CSS file writes a colour. */
+:root {
+  /* Surfaces, darkest first. */
+  --c-bg: #101215;
+  --c-input: #0f1114;
+  --c-nav: #13161a;
+  --c-header: #14171b;
+  --c-panel: #181b20;
+  --c-raised: #20242b;
+  --c-hover: #22272f;
+  --c-selected: #2c323b;
+
+  /* Lines. */
+  --c-row: #23272e;
+  --c-border: #2a2f37;
+  --c-border-control: #3a414c;
+  --c-border-strong: #6b7380;
+
+  /* Text. */
+  --c-text: #e9e6df;
+  --c-soft: #c9ced6;
+  --c-muted: #a3a9b3;
+  --c-link: #f0b45a;
+  --c-accent: #e8a33d;
+  --c-on-accent: #1a1206;
+  --c-focus: #8dc1f2;
+
+  /* States (text). */
+  --c-ok: #8fd18a;
+  --c-info: #8dc1f2;
+  --c-warn: #f0a85a;
+  --c-neutral: #b8bec8;
+  --c-danger: #f08a7a;
+
+  /* Badges: tinted fill and its text. */
+  --c-ok-fill: #1d2b22;
+  --c-ok-text: #a3ddb2;
+  --c-info-fill: #16263a;
+  --c-info-text: #8dc1f2;
+  --c-warn-fill: #3a2a12;
+  --c-warn-text: #f5be6b;
+  --c-neutral-fill: #252a32;
+  --c-neutral-text: #c9ced6;
+  --c-danger-fill: #3a1d1a;
+  --c-danger-text: #f5a497;
+
+  /* Change blocks (AI approval: what is removed and added; a line with a
+     warning in the item editor). */
+  --c-remove-fill: #221b12;
+  --c-remove-border: #4a3518;
+  --c-add-fill: #14231a;
+  --c-add-border: #2c4a36;
+
+  /* Item rarity. */
+  --c-rarity-normal: #c9ced6;
+  --c-rarity-magic: #8dc1f2;
+  --c-rarity-rare: #f2d97a;
+  --c-rarity-unique: #e39a6e;
+
+  /* The game-style item tooltip and inventory (B-2): the game's text
+     colours on a near-black panel, the same in either theme; our own
+     values, never game art (ADR-000). */
+  --c-tt-bg: #0d0d10;
+  --c-tt-border: #4a3f2a;
+  --c-tt-label: #8a8a8a;
+  --c-tt-value: #ffffff;
+  --c-tt-augmented: #8888ff;
+  --c-tt-mod: #8888ff;
+  --c-tt-crafted: #b4b4ff;
+  --c-tt-enchant: #b4b4ff;
+  --c-tt-fractured: #a29162;
+  --c-tt-corrupted: #ff4a4a;
+  /* A unique's flavour text (the game's brown, as PoB's tooltip). */
+  --c-tt-flavour: #af6025;
+  /* A requirement the character does not meet (the game's red). */
+  --c-tt-unmet: #ff4a4a;
+  /* Damage types on a weapon's values (E5): the game's hues, lightened to
+     read on the panel. */
+  --c-tt-fire: #e0864f;
+  --c-tt-cold: #7ea6e6;
+  --c-tt-lightning: #e3df72;
+  --c-tt-chaos: #e070bd;
+  --c-tt-separator: #5a4a2c;
+  --c-tt-shadow: rgb(0 0 0 / 0.6);
+  --c-tt-sheen: rgb(255 255 255 / 0.06);
+  --c-inv-slot: #15151a;
+  --c-inv-slot-border: #3a3a44;
+  --c-flask-life: #b3352f;
+  --c-flask-mana: #3b5fc4;
+  --c-flask-hybrid: #8a4cb0;
+  --c-flask-utility: #4e9a5a;
+
+  /* Gem colours (the gem's attribute: strength, dexterity, intelligence,
+     none), as marks beside gem names; never game art (ADR-000). */
+  --c-gem-red: #e0705f;
+  --c-gem-green: #7cc46f;
+  --c-gem-blue: #6fa4e8;
+  --c-gem-white: #d9dde3;
+
+  /* The passive tree canvas (our own shapes; never game art, ADR-000). */
+  --c-tree-bg: #0c0e11;
+  --c-tree-link: #3a414c;
+  --c-tree-link-on: #c98a2e;
+  --c-tree-node: #59616e;
+  --c-tree-node-on: #e8a33d;
+  --c-tree-path: #8dc1f2;
+  --c-tree-removed: #f08a7a;
+  --c-tree-match: #f2d97a;
+  --c-tree-kept: #3a3f47;
+  --c-tree-ring: #c9ced6;
+
+  /* Bundled fonts (SIL OFL 1.1; ui/public/licenses/), then system ones. */
+  --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+  --font-heading:
+    'Space Grotesk Variable', 'Space Grotesk', 'Inter Variable', system-ui,
+    sans-serif;
+  --font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Mono',
+    monospace;
+
+  --radius: 8px;
+  --radius-panel: 10px;
+}

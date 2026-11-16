@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8k): Smite (level 20) with a normal Siege Axe against an enemy configured as exposed to lightning and shocked with a 10% effect, with Elemental Army's exposure type set to lightning (the input's chance, whatever the skill) and custom lines: "Exposure you inflict applies an extra -25%", "Shocks from your Hits always increase Damage taken by at least 25%", and 20% increased effect of shock. Smite's lightning damage meets 50 - 10 - 25 = 15% resistance; the guaranteed shock 25 x 1.2 = 30 raises every type's damage taken.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Smite" skillId="Smite" variantId="Smite" gemId="Metadata/Items/Gems/SkillGemSmite" level="20" quality="0" enabled="true" enableGlobal1="true" count="1" skillPart="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Siege Axe
+Quality: 0
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyLightningExposure" boolean="true"/>
+			<Input name="conditionEnemyShocked" boolean="true"/>
+			<Input name="conditionShockEffect" number="10"/>
+			<Input name="elementalArmyExposureType" string="Lightning"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Exposure you inflict applies an extra -25% to the affected Resistance
+Shocks from your Hits always increase Damage taken by at least 25%
+20% increased Effect of Shock
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

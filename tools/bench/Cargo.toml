@@ -1,0 +1,21 @@
+[package]
+name = "loom-bench"
+description = "Performance measurements of the core paths (Phase 5, P7): instruction counts in CI under callgrind, wall clock on the reference tier."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+loom-app.workspace = true
+loom-calc.workspace = true
+loom-domain.workspace = true
+loom-data.workspace = true
+loom-parser.workspace = true
+loom-pipeline.workspace = true
+loom-tree.workspace = true
+
+[lints]
+workspace = true

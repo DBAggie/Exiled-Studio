@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-7): a level 85 Shadow in evasion and energy
+     shield pieces: a hybrid helmet with percentiles, quality, local flat,
+     hybrid flat and hybrid increased lines; energy shield and evasion
+     bases; global evasion, energy shield, and defences from jewellery;
+     dexterity's and intelligence's bonuses on every row.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="85" targetVersion="3_0" className="Shadow" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="6" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Visage
+Deicide Mask
+Quality: 12
+EvasionBasePercentile: 0.25
+EnergyShieldBasePercentile: 0.75
+Implicits: 0
++30 to Evasion Rating
++20 to maximum Energy Shield
++15 to Evasion Rating and Energy Shield
+40% increased Evasion and Energy Shield
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Shroud
+Vaal Regalia
+Implicits: 0
++80 to maximum Energy Shield
+100% increased Energy Shield
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Step
+Slink Boots
+Quality: 20
+Implicits: 0
+25% increased Evasion Rating
+		</Item>
+		<Item id="4">
+Rarity: RARE
+Loom Test Touch
+Sorcerer Gloves
+Implicits: 0
++30 to maximum Energy Shield
+		</Item>
+		<Item id="5">
+Rarity: RARE
+Loom Test Band
+Coral Ring
+Implicits: 1
++25 to maximum Life
++30 to Dexterity
+12% increased maximum Energy Shield
+20% increased Evasion Rating
+		</Item>
+		<Item id="6">
+Rarity: RARE
+Loom Test Charm
+Onyx Amulet
+Implicits: 1
++12 to all Attributes
++30 to Intelligence
++40 to Evasion Rating
+8% increased Global Defences
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Helmet" itemId="1"/>
+			<Slot name="Body Armour" itemId="2"/>
+			<Slot name="Boots" itemId="3"/>
+			<Slot name="Gloves" itemId="4"/>
+			<Slot name="Ring 1" itemId="5"/>
+			<Slot name="Amulet" itemId="6"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

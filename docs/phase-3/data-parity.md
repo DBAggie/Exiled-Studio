@@ -1,6 +1,6 @@
 # Data parity, bundle against PoB v2.67.2's data (P3-2): evidence
 
-Phase 3 plan, step 2 (`dev/active/phase-3-calc-slice/`, decision 5): before any calc comparison, the values a calculation reads are compared between our bundle (the current game) and the data PoB v2.67.2, the oracle, holds. Each difference gets a category with cited evidence, so a later calc difference can be told apart from a data-version difference. Maintainer workstation, Windows, 2026-11-11.
+Phase 3 plan, step 2 (`dev/completed/phase-3-calc-slice/`, decision 5): before any calc comparison, the values a calculation reads are compared between our bundle (the current game) and the data PoB v2.67.2, the oracle, holds. Each difference gets a category with cited evidence, so a later calc difference can be told apart from a data-version difference. Maintainer workstation, Windows, 2026-11-11.
 
 ## How
 1. `tools/oracle/data/pob_data.lua` (maintainer-run, outside the oracle adapter and its protocol) starts PoB with its own `HeadlessWrapper.lua` on the pinned oracle runtime and writes the data PoB holds: `data.skills`, `data.gems`, `data.itemBases` (weapons and armour), the monster tables and constants of `src/Data/Misc.lua`, and the tree file `TreeData/3_29/tree.lua`. Command: `tools/oracle/data/README.md`.
@@ -19,7 +19,7 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 
 | Table | Compared | Differences | PoB-only rows | Bundle-only (listed, not gating) |
 |---|---|---|---|---|
-| skills | 495,396 | 205 | 13 | 11,332 (effects, levels, 35 effects' additional stat sets) |
+| skills | 496,904 (P3-12i; 495,396 before the colour) | 205 | 13 | 11,332 (effects, levels, 35 effects' additional stat sets) |
 | passives | 27,168 | 214 | 0 | 2,310 |
 | bases | 6,550 | 5 | 5 | 10 |
 | gems | 5,220 | 8 | 0 | 422 |
@@ -64,11 +64,44 @@ Two exports are byte-identical, and the oracle checkout stayed clean (ignored fi
 
 Evidence, sources, and key lists are in `data-parity-rules-poe1.json`.
 
+## P3-12h: table `gem_effects`
+Not bundle data: the engine's other-gem tables (`loom_calc::poe1::gems`) against PoB's skill stat maps (the export's format 4), for every entry the bundle holds; any difference is uncategorized. 255 values, 0 differences (`docs/phase-3/other-gems.md`, "The check against PoB").
+
+## P3-12i: the skills' `color`
+The bundle carries each granted effect's colour (`attribute`, the game's `GrantedEffects.Attribute` as stored); PoB's export (format 5) writes each skill's `color`, which its exporter copies from the same column (`src/Export/Scripts/skills.lua` 157). Table `skills`, field `color`: 1,508 values compared (every skill both sides hold), 0 differences; the other counts are unchanged (534 differences, `uncategorized` 0). Two PoB skills without a colour (`HarvestNessaCrabScreechDebuff`, `HarvestRhexScreechDebuff`) are among the 13 PoB-only rows.
+
+## B-2: tables `mod_affixes` and `base_requirements` (UX sprint, data schema 4)
+The item tooltip's Alt view shows each mod's affix name and level, and the requirement line (`dev/active/ux-improvements/b2-item-data-plan.md`). The export (format 6) adds:
+- `mods`: each mod of the keyed `data.itemMods` files (Explicit, ItemExclusive, Corrupted, Delve, Synthesis, Scourge, Eldritch, Flask, Tincture, Graft, Jewel, JewelAbyss, JewelCluster, JewelCharm, Foulborn), by the game's mod ID, which `Prefix:`/`Suffix:` spec lines name (`src/Classes/Item.lua` 1008 to 1010). Each has its `affix` and `level` as PoB's exporter wrote them (`src/Export/Scripts/mods.lua` 101, 114) and the files that hold it. `conflict` is set when two files disagree. `Item` (a merge of seven of them) and `WatchersEye` (derived) are not read. `data.masterMods` (crafted mods) has no IDs.
+- `base_requirements`: every `data.itemBases` entry's `req` and whether it is a flask.
+
+`mod_affixes` compares `affix` and `level` by mod ID. `base_requirements` matches by name as `bases` does, but over every base. Several game bases under one name compare as one when their values in PoB's form agree. When they disagree, or PoB names a variant (`Two-Toned Boots (Armour/Evasion)`, looked up by the game's name), the row differs, and PoB's values must equal one candidate's: field `values`, compared every time, so a changed value is never hidden behind the row's rule. The required level is put into PoB's form as its exporter derived it (`src/Export/Scripts/bases.lua` 276 to 293): the drop level when above 4 for a weapon or armour and above 2 for a flask, raised to `floor(level * 0.8)` of each implicit, and absent when 1. Attributes are absent when 0 (294 to 305). A bundle before data schema 4 is refused.
+
+**Run on the schema 4 bundle** (Steam build 26530219, 2026-11-14; summary `docs/ui/b2-data/data-parity-poe1-26530219.json`): PoB's export has 23,230 mods, none in conflict, and 1,106 bases.
+- `mod_affixes`: 46,460 values, **0 differences**; every PoB mod ID is in the bundle.
+- `base_requirements`: 5,461 values, 23 differences, all `row`, all `representation`; the 23 `values` checks are equal:
+  - `base-requirements-pob-names` (15): bases PoB names by variant (Two-Toned Boots, Two-Stone Ring, the Avian Twins and Monkey Paw Talismans, Energy Blade), as `bases-pob-names`. Each is matched by the game's name, and its values equal one of those game bases'.
+  - `base-requirements-legacy-quivers` (8): a legacy and a current quiver under one name. PoB's spec writes the current one last, so `data.itemBases` holds it. Each current quiver's values equal PoB's (the `values` check).
+  - 14 more names shared by several game bases compare as one, because their values agree: Ashbark, Blood Sap, Borealwood, Fulgurite, Ironwood, Oakbranch, Poisonberry, and Rosethorn Tincture; Avian Twins, Black Maw, Greatwolf, and Monkey Paw Talisman; Shadowed Ring; Two-Stone Ring.
+- Totals: `uncategorized` 0, no failed rule; the 314 overlay rows are identical to the close-out's.
+- **The first run found a converter bug.** The game keys `ComponentAttributeRequirements` by the base's ID string, not a row number, so the bundle carried no attribute requirements: 1,293 differences, all on Str, Dex, and Int. Fixed in `tools/parity-cli/src/bundle.rs`, with a test using the game's layout; the second run has none.
+- Review (`code-architecture-reviewer`) applied: PoB's values are checked against the candidates for the 23 rows (they were left out before), the 15 variant names are compared through the game's names, and a mod PoB's files disagree on is not compared value by value.
+
+## B-2: table `flavour_text` (the item card's flavour text, export format 8)
+The card shows a unique's flavour text (`docs/ui/b2-data/card-data.md`, Q-B2-1). The export (format 8) adds `flavour_text`: each `data.flavourText` entry (`src/Data/FlavourText.lua`) with its ID, name, and lines as PoB's exporter cleaned them (`src/Export/Scripts/flavourText.lua`, `cleanAndSplit`). `flavour_text` keys a row by the unique's name and the ID without trailing underscores, cleans the bundle's text the way PoB's exporter does (`data_parity::flavour::pob_lines`), and compares the lines. A PoB row the bundle lacks is a difference; a bundle row PoB lacks is listed, not gating.
+
+**Run on the B-2 card bundle** (Steam build 26530219, 2026-11-15, PoB export format 8, twice byte-identical): 1,356 PoB rows compared. **Every row both sides have is equal**: the bundle's text, cleaned as PoB cleans it, is PoB's.
+- 56 differences, all `row`, rule `flavour-upgraded-version-shares-base-art` (`pob-derivation`): upgraded versions (fated uniques and the like) whose stash row has `BaseVersion` set and their base's art. PoB's export gives every stash row its art's text, so these names carry their base version's (Kaom's Way with Kaom's Sign's). The bundle takes their text only from the per-game list (Kaom's Way: `FatedUnique1`), so it has no such row.
+- 32 bundle-only rows: base versions that share their art with an upgraded one (Blackheart, Bramblejack, ...). PoB's export keys its stash lookup by art, so one name per art survives there.
+- Totals: 613 differences (not-carried 163, patch-delta 130, pob-derivation 240, representation 80), `uncategorized` 0, 0 failed rules, 370 overlay rows (the 56 new rows are never read: no calculation reads `flavour_text`).
+
+**B-2 item evidence data run** (same build and export, 2026-11-15, twice byte-identical; `docs/ui/b2-data/item-evidence.md`, "Main workstation data run"): one more difference, `The Light of Meaning|UniqueJewel181` (`row`), rule `flavour-game-copy-over-shared-art` (`pob-derivation`, count 1). The Light of Meaning shares its art with That Which Was Taken, so PoB's export gives it that art's text; the maintainer's in-game copy shows `FlavourText` row `UniqueJewel183_`, which the bundle now pairs with it (`poe1::FLAVOUR_PAIRS`). Its `UniqueJewel183` row is bundle-only. Totals: 614 differences (pob-derivation 241), `uncategorized` 0, 0 failed rules, 371 overlay rows. Summary: `docs/ui/b2-data/data-parity-poe1-26530219-evidence.json`.
+
 ## Not compared
 Listed in the summary's `not_compared`: level requirements, Vaal soul costs, interpolation kinds, PvP and PoB's own skill model, support constraints (allowed, added, and excluded types; P3-9a compares them), additional stat sets (PoB exports the main set only), gem display data, tree geometry, and the monster columns the bundle does not carry. Bundle rows and levels PoB does not have are listed in `report.json`, not gating: no PoB build reads them.
 
 ## Open for the maintainer
-- The 8 Vaal transfigured gem tag differences are classed `patch-delta` without a patch-note line. Confirm, or reclassify them.
+- The 8 Vaal transfigured gem tag differences stay `patch-delta` without a patch-note line: **confirmed by the maintainer 2026-11-13** (PoB copies `GemEffects.Tags` verbatim, so only the game changed them; the tags do not enter the calc slice). Recorded in P3-12h.
 - `not-carried` is a fifth category, beside the plan's four.
 - 15 ascendancy nodes (`passives-buff-text`) need either the passive buff tables in the bundle (a format change) or a `Partial` state when allocated. P3-3 and P3-8 decide.
 

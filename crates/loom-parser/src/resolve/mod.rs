@@ -158,8 +158,9 @@ pub enum RawValue {
     /// can still lie inside the interval.
     Exact(StatValue),
     /// Shown as a range `(a-b)`: from the lowest raw value of `a` to the
-    /// highest of `b`.
-    Ranged(StatValue),
+    /// highest of `b`; with both ends when each shows exactly one raw
+    /// value and the stat has no scaling handler ([`RangeEnds`]).
+    Ranged(StatValue, Option<RangeEnds>),
     /// Not shown in the text.
     Hidden {
         /// The variant's condition on the stat.
@@ -172,6 +173,20 @@ pub enum RawValue {
     /// Shown as a name through a lookup handler: every key with that name
     /// that meets the variant's condition, sorted.
     Lookup(Vec<i64>),
+}
+
+/// The two ends of a range `(a-b)` as raw values, in the line's order
+/// (`a` first; a negated or "reduced" range has `from > to`). Kept only
+/// when each end shows exactly one raw value: a lossy handler's end is an
+/// interval, and a roll between intervals is not one number. A host
+/// settles a rolled value from them (PoB's `{range:r}`: `from + r x (to -
+/// from)`, P3-8b).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RangeEnds {
+    /// The raw value of `a`.
+    pub from: i64,
+    /// The raw value of `b`.
+    pub to: i64,
 }
 
 /// A stat ID and its value.
@@ -757,6 +772,9 @@ fn slots(
 struct Read {
     value: StatValue,
     ranged: bool,
+    /// A range's exact ends; `None` for a number, a lossy end, or a stat
+    /// read twice.
+    ends: Option<RangeEnds>,
 }
 
 /// Verifies one variant against the line's tokens (same key, so the same
@@ -817,20 +835,40 @@ fn verify(entry: &Entry<'_>, tokens: &[Token]) -> Result<Vec<ResolvedStat>, Reje
                     })
                     .collect();
                 let mut value: Option<StatValue> = None;
+                let mut raws = Vec::with_capacity(numbers.len());
                 for shown in &numbers {
                     let raw =
                         invert_shown(&chain, shown).ok_or_else(|| RejectReason::ValueNotShown {
                             stat: id(*stat),
                             shown: shown.clone(),
                         })?;
+                    raws.push(raw);
                     value = Some(value.map_or(raw, |v| hull(v, raw)));
                 }
                 let Some(value) = value else { continue };
+                // Ends only where raw = shown (or its negative): PoB rolls
+                // the shown numbers at the stat's own precision, which a
+                // scaling handler would make differ (P3-8b).
+                let unscaled = chain.iter().all(|h| h.name == "negate");
+                let ends = match raws.as_slice() {
+                    [a, b] if ranged && unscaled && a.min == a.max && b.min == b.max => {
+                        Some(RangeEnds {
+                            from: a.min,
+                            to: b.min,
+                        })
+                    }
+                    _ => None,
+                };
                 let merged = match read.get(*stat).copied().flatten() {
-                    None => Some(Read { value, ranged }),
+                    None => Some(Read {
+                        value,
+                        ranged,
+                        ends,
+                    }),
                     Some(before) => intersect(before.value, value).map(|value| Read {
                         value,
                         ranged: before.ranged || ranged,
+                        ends: None,
                     }),
                 };
                 let merged =
@@ -871,12 +909,14 @@ fn verify(entry: &Entry<'_>, tokens: &[Token]) -> Result<Vec<ResolvedStat>, Reje
             Some(Read {
                 value,
                 ranged: true,
+                ends,
             }) => meets(condition, value)
-                .then_some(RawValue::Ranged(value))
+                .then_some(RawValue::Ranged(value, ends))
                 .ok_or_else(fails)?,
             Some(Read {
                 value,
                 ranged: false,
+                ..
             }) => RawValue::Exact(narrow(condition, value).ok_or_else(fails)?),
             None => hidden(condition).ok_or_else(fails)?,
         };

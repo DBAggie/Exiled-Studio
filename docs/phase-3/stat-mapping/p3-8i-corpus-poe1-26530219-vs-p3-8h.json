@@ -1,0 +1,65 @@
+{
+ "builds_with_reason_changes": 6,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 16}}, \"stat\": \"all_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 56, \"line\": 16}}, \"stat\": \"fire_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "9068619d0a7332f32ac6d811b2967abc2196a93412d3b61cd0ad35341a9d9171.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 10, \"line\": 13}}, \"stat\": \"fire_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 3, \"line\": 8}}, \"stat\": \"fire_skill_gem_level_+\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 13}}, \"stat\": \"all_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 14}}, \"stat\": \"physical_skill_gem_level_+\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 101, \"line\": 17}}, \"stat\": \"fire_spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 155, \"line\": 18}}, \"stat\": \"fire_skill_gem_level_+\"}}"
+   ]
+  },
+  "e1c3b79c837f85911bf0530eea9a5396e403cb7302ebe6ac761ed1554e83978c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 45, \"line\": 15}}, \"stat\": \"cold_spell_skill_gem_level_+\"}}"
+   ]
+  },
+  "ed8da49180a0e5f885fb6ce374f800ded852506223e6e79c961e696747171870.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 15}}, \"stat\": \"spell_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 16}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 18}}, \"stat\": \"minion_skill_gem_level_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 31, \"line\": 24}}, \"stat\": \"minion_skill_gem_level_+\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 13,
+ "state_changes": {},
+ "value_changes": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "average-damage": [
+    10.768211999999998,
+    10.837239
+   ],
+   "hit-dps": [
+    326.30945454545446,
+    328.4011818181818
+   ]
+  }
+ }
+}

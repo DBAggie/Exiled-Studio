@@ -19,16 +19,21 @@
 //! - [`bundle`]: [`BundleData`], the pipeline's data from a validated
 //!   data bundle (P2-6a).
 
+pub mod affixes;
 pub mod base;
 pub mod build;
 pub mod bundle;
 pub mod grafts;
 pub mod mods;
+pub mod poe1;
 pub mod properties;
 pub mod tolerance;
 
 pub use base::{
     BaseError, BaseQuery, BaseRow, FoundBase, ItemData, ItemRules, TextRules, find_base,
 };
-pub use build::{ItemBaseName, ResolveError, Resolver, data_version, resolve_build};
+pub use build::{
+    BuildRangeEnds, ItemBaseName, LineRangeEnds, ResolveError, Resolver, data_version,
+    resolve_build,
+};
 pub use bundle::BundleData;

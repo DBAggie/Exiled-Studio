@@ -1,0 +1,14 @@
+Item Class: Jewels
+Rarity: RARE
+Soul Joy
+Large Cluster Jewel
+LevelReq: 67
+Item Level: 84
+Implicits: 3
+Adds 8 Passive Skills (enchant)
+2 Added Passive Skills are Jewel Sockets (enchant)
+Added Small Passive Skills grant: 12% increased Attack Damage while holding a Shield (enchant)
+{prefix}{tags:physical,attack,ailment}1 Added Passive Skill is Vicious Skewering - Unscalable Value
+{prefix}{tags:defences,elemental,resistance,attribute}1 Added Passive Skill is Veteran Defender - Unscalable Value
+{suffix}{tags:damage,attack,speed}1 Added Passive Skill is Martial Prowess - Unscalable Value
+{suffix}{tags:attack,speed}Added Small Passive Skills also grant: 3% increased Attack Speed

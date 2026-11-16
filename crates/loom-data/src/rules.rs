@@ -60,6 +60,13 @@ pub struct TextRules {
     pub label_ids: Vec<String>,
     /// The wrapper of a granted skill's line (`{1}` level, `{0}` name).
     pub granted_skill_wrapper: Option<String>,
+    /// The mod tags the tooltip's Alt view names after a mod's header, and
+    /// their names (`(life, Life)`), for a game whose tag table has none
+    /// (PoE1 bundles built before `Tags.Name` was read carry 27 such
+    /// pairs; Q-B2-2); tags not listed are not shown. Empty: the tag
+    /// table's display names are used.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub mod_tag_names: Vec<(String, String)>,
 }
 
 impl ItemRules {
@@ -198,6 +205,29 @@ pub struct ModRules {
     /// Influence names (the domain's [`InfluenceId`]) to the rows'
     /// influence values.
     pub influences: Vec<(String, i64)>,
+    /// Which generation types are prefixes and which suffixes (the
+    /// tooltip's Alt view headers, B-2). Empty in rules written before
+    /// the field: then no mod is inferred as a prefix or suffix.
+    #[serde(default, skip_serializing_if = "AffixGenerations::is_empty")]
+    pub affix_generations: AffixGenerations,
+}
+
+/// The generation types of prefixes and suffixes (part of [`ModRules`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AffixGenerations {
+    /// Prefix generation types.
+    pub prefix: Vec<i64>,
+    /// Suffix generation types.
+    pub suffix: Vec<i64>,
+}
+
+impl AffixGenerations {
+    /// Whether neither list names a generation type.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.prefix.is_empty() && self.suffix.is_empty()
+    }
 }
 
 /// Why a game's [`ModRules`] cannot be used.

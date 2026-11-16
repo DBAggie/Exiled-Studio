@@ -37,6 +37,8 @@ mod tests;
 
 pub use equal::{NORMALIZATIONS, xml_equal};
 use loom_domain::Build;
+pub use read::custom_modifier_lines;
+pub use write::item_text;
 
 /// Why a document did not import.
 #[derive(Debug)]
@@ -144,10 +146,15 @@ pub fn kept_whole(build: &Build) -> Vec<String> {
                 out.extend(
                     named(&build.config.sets, "ConfigSet").map(|()| "Config/ConfigSet".to_owned()),
                 );
+                // PoB's layout before config sets has no set element.
+                let set_path = match build.config.layout {
+                    loom_domain::ConfigLayout::Sets => "Config/ConfigSet",
+                    loom_domain::ConfigLayout::Flat => "Config",
+                };
                 for set in build.config.sets.typed() {
-                    out.extend(
-                        named(&set.inputs, "Input").map(|()| "Config/ConfigSet/Input".to_owned()),
-                    );
+                    for name in ["Input", "Placeholder", "CustomModifierBlock"] {
+                        out.extend(named(&set.inputs, name).map(|()| format!("{set_path}/{name}")));
+                    }
                 }
             }
             _ => {}

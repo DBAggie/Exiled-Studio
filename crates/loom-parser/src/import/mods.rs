@@ -34,7 +34,8 @@ use super::base::BaseRow;
 use crate::resolve::{Candidate, RawValue, ResolvedStat};
 
 pub use loom_data::rules::{
-    DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, ModRulesError, Unflagged,
+    AffixGenerations, DomainMatch, FitClause, FitRule, LocalCarriers, ModRules, ModRulesError,
+    Unflagged,
 };
 
 /// Whether `line` is one of the lines `u` names: its section, and none of
@@ -159,7 +160,7 @@ impl ModRow {
 /// Whether a value read from a line allows some raw value in `[lo, hi]`.
 fn admits(value: &RawValue, lo: i64, hi: i64) -> bool {
     match value {
-        RawValue::Exact(s) | RawValue::Ranged(s) => s.min <= hi && lo <= s.max,
+        RawValue::Exact(s) | RawValue::Ranged(s, _) => s.min <= hi && lo <= s.max,
         RawValue::Hidden { condition, .. } => match *condition {
             Condition::Range { min, max } => {
                 min.map_or(lo, |m| m.max(lo)) <= max.map_or(hi, |m| m.min(hi))
@@ -207,6 +208,7 @@ pub struct Mods {
     rows: Vec<ModRow>,
     by_stat: BTreeMap<String, Vec<usize>>,
     by_unset: BTreeMap<String, Vec<usize>>,
+    by_type: BTreeMap<i64, Vec<usize>>,
     /// Local stats, by ID.
     pub locality: BTreeMap<String, Locality>,
     /// Rows whose spawn tag and weight lists differ in length (read with
@@ -257,7 +259,11 @@ impl Mods {
             }
         }
         let (mut by_stat, mut by_unset) = (BTreeMap::new(), BTreeMap::new());
+        let mut by_type: BTreeMap<i64, Vec<usize>> = BTreeMap::new();
         for (n, row) in rows.iter().enumerate() {
+            if let Some(t) = row.mod_type {
+                by_type.entry(t).or_default().push(n);
+            }
             for (stat, _, _) in &row.stats {
                 add(&mut by_stat, stat, n);
             }
@@ -269,6 +275,7 @@ impl Mods {
             rows,
             by_stat,
             by_unset,
+            by_type,
             locality: BTreeMap::new(),
             bad_spawn_rows: 0,
         }
@@ -308,6 +315,33 @@ impl Mods {
             .into_iter()
             .flatten()
             .filter_map(|n| self.rows.get(*n))
+    }
+
+    /// Whether `stats` are global (no stat is local to an item) and a row
+    /// of one of `domains` backs them (module docs, "Backing"): the
+    /// custom-line rule ([`crate::import`], P3-12j). A custom line acts on
+    /// the character, so a local reading is never its reading. "Local" is
+    /// the locality table's ([`Mods::locality`], from the bundle's rules), as
+    /// for the item filter: a local stat the table lacks reads as global.
+    #[must_use]
+    pub fn backed_in(&self, stats: &[ResolvedStat], domains: &BTreeSet<i64>) -> bool {
+        self.local_kind(stats) == LocalKind::Global
+            && self
+                .rows_for(stats)
+                .into_iter()
+                .filter_map(|n| self.row(n))
+                .any(|r| domains.contains(&r.domain) && r.backs(stats).is_some())
+    }
+
+    /// The indexes of the rows carrying `stat` at a value other than
+    /// `(0, 0)`, in row order.
+    pub(crate) fn row_indexes_with_stat(&self, stat: &str) -> &[usize] {
+        self.by_stat.get(stat).map_or(&[], Vec::as_slice)
+    }
+
+    /// The indexes of the rows of mod type `mod_type`, in row order.
+    pub(crate) fn row_indexes_of_type(&self, mod_type: i64) -> &[usize] {
+        self.by_type.get(&mod_type).map_or(&[], Vec::as_slice)
     }
 
     /// Rows with at least one of `stats`, in row order.
@@ -411,7 +445,8 @@ struct Fit {
 }
 
 impl Context<'_> {
-    fn fits(&self, row: &ModRow, line: &LineContext) -> bool {
+    /// Whether `row` fits `line` on one of the base rows.
+    pub(crate) fn fits(&self, row: &ModRow, line: &LineContext) -> bool {
         self.bases
             .iter()
             .any(|b| fits(self.rules, row, b, self.unique, line))
@@ -450,7 +485,7 @@ impl Context<'_> {
     /// Whether one fitting row spawns on one of the base rows
     /// ([`Self::spawns`]). A legacy essence row counts where its mod type
     /// spawns.
-    fn row_spawns(&self, line: &LineContext, row: &ModRow) -> bool {
+    pub(crate) fn row_spawns(&self, line: &LineContext, row: &ModRow) -> bool {
         let excluded = unflagged(&self.rules.spawn_exclusion, line)
             && self
                 .rules

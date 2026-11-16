@@ -1,0 +1,247 @@
+{
+ "builds_with_reason_changes": 13,
+ "only_after": [
+  "ice-nova-legacy-custom-mods-witch.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "animate-guardian-guardian.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 10}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 12}}, \"stat\": \"kill_enemy_on_hit_if_under_10%_life\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 9}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 11}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 8}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}, \"stat\": \"attack_mana_cost_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}, \"stat\": \"withered_effect_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}, \"stat\": \"life_recovery_rate_+%\"}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 2}}}}",
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 3}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 4}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 6}}}}",
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 7}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"ambiguous\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 0}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [
+    "{\"unresolved-line\": {\"reason\": \"no-template\", \"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 1}}}}"
+   ],
+   "gone": [
+    "{\"unmodelled-config\": {\"input\": \"customMods\"}}"
+   ]
+  }
+ },
+ "reasons_added": 52,
+ "reasons_gone": 13,
+ "state_changes": {},
+ "value_changes": {
+  "holy-flame-totem-hierophant.xml.json": {
+   "resistance.chaos": [
+    -29.0,
+    75.0
+   ],
+   "resistance.cold": [
+    -43.0,
+    75.0
+   ],
+   "resistance.fire": [
+    42.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    -43.0,
+    75.0
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "resistance.chaos": [
+    -60.0,
+    75.0
+   ],
+   "resistance.cold": [
+    -7.0,
+    75.0
+   ],
+   "resistance.fire": [
+    -37.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    -36.0,
+    75.0
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "resistance.chaos": [
+    -52.0,
+    75.0
+   ],
+   "resistance.cold": [
+    -7.0,
+    75.0
+   ],
+   "resistance.fire": [
+    -52.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    -36.0,
+    75.0
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "resistance.chaos": [
+    -12.0,
+    75.0
+   ],
+   "resistance.cold": [
+    -1.0,
+    75.0
+   ],
+   "resistance.fire": [
+    -46.0,
+    75.0
+   ],
+   "resistance.lightning": [
+    -76.0,
+    75.0
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "resistance.chaos": [
+    -20.0,
+    76.0
+   ],
+   "resistance.cold": [
+    -49.0,
+    76.0
+   ],
+   "resistance.fire": [
+    -34.0,
+    76.0
+   ],
+   "resistance.lightning": [
+    -19.0,
+    76.0
+   ]
+  }
+ }
+}

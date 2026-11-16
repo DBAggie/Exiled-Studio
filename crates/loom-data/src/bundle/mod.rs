@@ -24,6 +24,8 @@
 //! | `data/skill_types.json`, ... | format 2: the skill tables ([`skills`]) |
 //! | `data/characters.json`, ... | format 2: the character and passive tables ([`passives`]) |
 //! | `data/weapon_types.json`, ... | format 2: the item property and monster tables ([`properties`]) |
+//! | `data/passive_tree_layout.json` | optional: the tree's layout constants ([`tree_layout`]) |
+//! | `data/passive_tree_sprites.json`, `trees/assets/*` | optional: the tree's sprites ([`tree_sprites`]) |
 //!
 //! JSON files have sorted keys and a stable row order; unknown fields are
 //! errors. The loader parses; checking hashes, references, and domain
@@ -35,6 +37,8 @@ pub mod poe1;
 pub mod properties;
 pub mod skills;
 mod source;
+pub mod tree_layout;
+pub mod tree_sprites;
 pub mod validate;
 
 use loom_domain::Game;
@@ -95,6 +99,14 @@ pub const CLIENT_TEXTS: &str = "data/client_texts.json";
 pub const LOOKUPS: &str = "data/lookups.json";
 /// Item rules.
 pub const ITEM_RULES: &str = "data/item_rules.json";
+/// Tag display names (data schema 4; optional, listed when present).
+pub const TAGS: &str = "data/tags.json";
+
+/// The first data schema whose mods carry their affix name and level, whose
+/// base items carry their drop level and attribute requirements, and that
+/// has [`TAGS`] (B-2's tooltip). Readers gate on the manifest's
+/// `data_schema`, not on empty fields: an empty name is a mod without one.
+pub const AFFIX_SCHEMA: u32 = 4;
 /// The folder of stat-description files.
 pub const STAT_DESCRIPTIONS_DIR: &str = "stat_descriptions/";
 
@@ -232,6 +244,45 @@ pub struct ModEntry {
     /// Item classes an essence puts this row on, when the data says.
     #[serde(default)]
     pub essence_classes: Option<Vec<String>>,
+    /// The mod's implicit tags, by tag ID (the game's `ImplicitTagsKeys`:
+    /// `life` makes it a "Life Modifier"). Carried since data schema 3
+    /// (P3-8n); empty in an older bundle.
+    #[serde(default)]
+    pub implicit_tags: Vec<String>,
+    /// The affix name the game shows (`Urchin's`, `of the Lost`); empty
+    /// when it has none. Carried since data schema 4 ([`AFFIX_SCHEMA`]).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub name: String,
+    /// The mod's level (the lowest item level it rolls on). Since data
+    /// schema 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<i64>,
+}
+
+/// A base item's attribute requirements (the game's
+/// `ComponentAttributeRequirements`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AttributeRequirements {
+    /// Strength.
+    pub strength: i64,
+    /// Dexterity.
+    pub dexterity: i64,
+    /// Intelligence.
+    pub intelligence: i64,
+}
+
+/// A tag's display name, as the tooltip's modifier headers print it
+/// (`Life`, `Defences`): PoE1's `Tags.Name`, where a tag the Alt view hides
+/// has none (Q-B2-2). Bundles built before that read `Tags.DisplayString`,
+/// which holds monster labels only.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct TagName {
+    /// Tag ID.
+    pub id: String,
+    /// Display name.
+    pub display: String,
 }
 
 /// A base item.
@@ -253,6 +304,13 @@ pub struct BaseItem {
     /// Implicit mods, by ID.
     #[serde(default)]
     pub implicits: Vec<String>,
+    /// The level it drops from. Since data schema 4 ([`AFFIX_SCHEMA`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drop_level: Option<i64>,
+    /// Its attribute requirements, when the game lists any. Since data
+    /// schema 4.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub requirements: Option<AttributeRequirements>,
 }
 
 /// A client text the item rules name.
@@ -296,6 +354,9 @@ pub struct Bundle {
     pub lookups: Vec<LookupTable>,
     /// Item rules.
     pub item_rules: ItemRules,
+    /// Tag display names, sorted by ID (data schema 4; empty without
+    /// [`TAGS`]).
+    pub tags: Vec<TagName>,
     /// Stat-description files.
     pub stat_descriptions: StatDescriptions,
     /// The Path of Exile only section, when present.
@@ -306,6 +367,13 @@ pub struct Bundle {
     pub passives: Option<passives::PassiveTables>,
     /// The item property and monster tables (format 2; `None` in format 1).
     pub properties: Option<properties::PropertyTables>,
+    /// The passive tree's layout constants, when listed
+    /// ([`tree_layout::TREE_LAYOUT`]; optional).
+    pub tree_layout: Option<tree_layout::TreeLayout>,
+    /// The passive tree's sprite index, when listed
+    /// ([`tree_sprites::TREE_SPRITES`]; optional). Its sheets are read by
+    /// path, not loaded.
+    pub tree_sprites: Option<tree_sprites::TreeSprites>,
 }
 
 /// Why a bundle did not load.
@@ -383,7 +451,7 @@ fn json<T: DeserializeOwned>(source: &dyn BundleSource, path: &str) -> Result<T,
 
 /// Whether `path` is a plain relative bundle path: `/`-separated segments,
 /// none empty, `.` or `..`, and no `\\` or `:` anywhere.
-fn plain_path(path: &str) -> bool {
+pub fn plain_path(path: &str) -> bool {
     !path.is_empty()
         && !path.contains(['\\', ':'])
         && path
@@ -476,11 +544,26 @@ impl Bundle {
             client_texts: json(source, CLIENT_TEXTS)?,
             lookups: json(source, LOOKUPS)?,
             item_rules: json(source, ITEM_RULES)?,
+            tags: if manifest.files.iter().any(|f| f.path == TAGS) {
+                json(source, TAGS)?
+            } else {
+                Vec::new()
+            },
             stat_descriptions,
             poe1,
             skills,
             passives,
             properties,
+            tree_layout: if listed(tree_layout::TREE_LAYOUT) {
+                Some(json(source, tree_layout::TREE_LAYOUT)?)
+            } else {
+                None
+            },
+            tree_sprites: if listed(tree_sprites::TREE_SPRITES) {
+                Some(json(source, tree_sprites::TREE_SPRITES)?)
+            } else {
+                None
+            },
             game,
             manifest,
         })
@@ -498,7 +581,59 @@ pub enum ScopeRootError {
     Several(usize),
 }
 
+/// The level a base requires, by PoB's exporter's rule
+/// (`v2.67.2:src/Export/Scripts/bases.lua:277-293`), which the game's
+/// tooltips agree with (B-2 item evidence: a jewel requires none): the drop
+/// level when above 4 for a weapon or armour and above 2 for a flask, else
+/// 1; raised to `floor(level x 0.8)` of each implicit; none when 1.
+#[must_use]
+pub fn required_level(
+    drop_level: i64,
+    weapon_or_armour: bool,
+    flask: bool,
+    implicit_levels: impl IntoIterator<Item = i64>,
+) -> Option<i64> {
+    let mut level = 1;
+    if weapon_or_armour && drop_level > 4 {
+        level = drop_level;
+    }
+    if flask && drop_level > 2 {
+        level = drop_level;
+    }
+    for implicit in implicit_levels {
+        // Lua's math.floor(mod.Level * 0.8), in the same f64 arithmetic.
+        #[expect(clippy::cast_precision_loss, reason = "game levels")]
+        #[expect(clippy::cast_possible_truncation, reason = "floored game levels")]
+        let scaled = (implicit as f64 * 0.8).floor() as i64;
+        level = level.max(scaled);
+    }
+    (level > 1).then_some(level)
+}
+
 impl Bundle {
+    /// The level `base` requires ([`required_level`]): a weapon or armour
+    /// base is one with a row in the property tables; a flask one whose
+    /// item class ends in `Flask` (as PoB's exporter tests the game's
+    /// flask table). None when the bundle has no drop levels (before data
+    /// schema 4).
+    #[must_use]
+    pub fn required_level(&self, base: &BaseItem) -> Option<i64> {
+        let drop_level = base.drop_level?;
+        let weapon_or_armour = self.properties.as_ref().is_some_and(|p| {
+            p.weapon_types.iter().any(|w| w.base_item == base.id)
+                || p.armour_types.iter().any(|a| a.base_item == base.id)
+        });
+        let flask = base
+            .item_class
+            .as_deref()
+            .is_some_and(|c| c.ends_with("Flask"));
+        let implicits = base
+            .implicits
+            .iter()
+            .filter_map(|id| self.mods.iter().find(|m| m.id == *id).and_then(|m| m.level));
+        required_level(drop_level, weapon_or_armour, flask, implicits)
+    }
+
     /// The source path of the stat-description file whose name, without
     /// folder or extension, is `scope` in any case (PoE1 writes `.txt`
     /// sources, PoE2 `.csd`): the root of the scope's chain.

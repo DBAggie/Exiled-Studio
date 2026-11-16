@@ -1,0 +1,100 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe1",
+    "state": "unsupported",
+    "reasons": {
+      "unsupported": [
+        {
+          "unmapped-stat": {
+            "stat": "unknown_stat",
+            "source": "character"
+          }
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field": "life",
+        "value": 56.00000000000001,
+        "node": 6,
+        "state": "partial",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "unknown_stat",
+              "source": "character"
+            }
+          }
+        ]
+      },
+      {
+        "field": "mana",
+        "state": "unsupported",
+        "reason": "not-computed"
+      }
+    ],
+    "graph": [
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 50.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          0
+        ],
+        "value": 50.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "life",
+            "op": "increased"
+          }
+        },
+        "value": 12.0
+      },
+      {
+        "kind": "sum",
+        "term": "step.increased-sum",
+        "children": [
+          2
+        ],
+        "value": 12.0
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          3
+        ],
+        "value": 1.12
+      },
+      {
+        "kind": "product",
+        "term": "more",
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          1,
+          4,
+          5
+        ],
+        "value": 56.00000000000001
+      }
+    ]
+  }
+}

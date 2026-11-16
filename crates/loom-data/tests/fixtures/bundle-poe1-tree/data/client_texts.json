@@ -1,0 +1,18 @@
+[
+ {
+  "id": "DisplayLastsSeconds",
+  "text": "Lasts {0} Seconds"
+ },
+ {
+  "id": "TestGrantedSkill",
+  "text": "Grants Level {1} {0} Skill"
+ },
+ {
+  "id": "TestPresence",
+  "text": "While a Test Enemy is near, {0}"
+ },
+ {
+  "id": "TestStrands",
+  "text": "Test Strands"
+ }
+]

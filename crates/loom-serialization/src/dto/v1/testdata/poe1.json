@@ -958,6 +958,18 @@
                 }
               },
               {
+                "typed": {
+                  "name": "enemyArmour",
+                  "value": {
+                    "number": {
+                      "value": 61989.0,
+                      "source": "61989"
+                    }
+                  },
+                  "kind": "placeholder"
+                }
+              },
+              {
                 "opaque": {
                   "element": {
                     "name": "Placeholder",
@@ -969,6 +981,91 @@
                     ]
                   }
                 }
+              },
+              {
+                "typed": {
+                  "name": "customMods",
+                  "value": {
+                    "string": "+20 to maximum Life\n\nIce Nova Buffs\n"
+                  },
+                  "lines": [
+                    {
+                      "text": "+20 to maximum Life",
+                      "resolution": {
+                        "resolved": {
+                          "result": {
+                            "stats": [
+                              {
+                                "stat": "made_up_life",
+                                "value": {
+                                  "exact": {
+                                    "min": 20,
+                                    "max": 20
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "text": "Ice Nova Buffs",
+                      "resolution": {
+                        "unresolved": "no-template"
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "custom_modifiers": [
+              {
+                "title": "Default",
+                "enabled": true,
+                "text": "\n\t\t\t\t+30% to Cold Resistance\nOnslaught\nx\n\t\t\t",
+                "lines": [
+                  {
+                    "text": "+30% to Cold Resistance",
+                    "resolution": {
+                      "resolved": {
+                        "result": {
+                          "stats": [
+                            {
+                              "stat": "made_up_cold",
+                              "value": {
+                                "exact": {
+                                  "min": 30,
+                                  "max": 30
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "text": "Onslaught",
+                    "resolution": {
+                      "unresolved": "no-template"
+                    }
+                  },
+                  {
+                    "text": "x",
+                    "resolution": "pending"
+                  }
+                ]
+              },
+              {
+                "enabled": false,
+                "text": "",
+                "attributes": [
+                  {
+                    "name": "x",
+                    "value": "1"
+                  }
+                ]
               }
             ]
           }

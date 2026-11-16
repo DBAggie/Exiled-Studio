@@ -49,40 +49,6 @@ export type ConfigSetEntry =
       opaque: OpaqueNode
     }
 /**
- * One entry of a list with untyped content in place.
- */
-export type ConfigInputEntry =
-  | {
-      typed: ConfigInput
-    }
-  | {
-      opaque: OpaqueNode
-    }
-/**
- * One entry of a list with untyped content in place.
- */
-export type ItemsEntryEntry =
-  | {
-      typed: ItemsEntry
-    }
-  | {
-      opaque: OpaqueNode
-    }
-/**
- * An item or an item set.
- */
-export type ItemsEntry =
-  | {
-      item: Item
-    }
-  | {
-      set: ItemSet
-    }
-/**
- * A header line.
- */
-export type HeaderLine = 'item-class' | 'rarity' | 'separator' | 'name' | 'base'
-/**
  * Why a modifier line is not resolved by design.
  */
 export type Exclusion = 'not-selected' | 'custom' | 'section'
@@ -138,6 +104,19 @@ export type TypedResolution =
         stats: StatLine[]
       }
     }
+  | 'custom-note'
+  | {
+      'custom-pattern': {
+        /**
+         * The pattern's name.
+         */
+        pattern: string
+        /**
+         * The value as shown.
+         */
+        value: string
+      }
+    }
 /**
  * Why a line did not resolve.
  */
@@ -160,6 +139,40 @@ export type NoBase =
     }
   | 'not-found'
   | 'scope-conflict'
+/**
+ * One entry of a list with untyped content in place.
+ */
+export type ConfigInputEntry =
+  | {
+      typed: ConfigInput
+    }
+  | {
+      opaque: OpaqueNode
+    }
+/**
+ * One entry of a list with untyped content in place.
+ */
+export type ItemsEntryEntry =
+  | {
+      typed: ItemsEntry
+    }
+  | {
+      opaque: OpaqueNode
+    }
+/**
+ * An item or an item set.
+ */
+export type ItemsEntry =
+  | {
+      item: Item
+    }
+  | {
+      set: ItemSet
+    }
+/**
+ * A header line.
+ */
+export type HeaderLine = 'item-class' | 'rarity' | 'separator' | 'name' | 'base'
 /**
  * Item rarity.
  */
@@ -202,6 +215,10 @@ export type BuildPartEntry =
  * Where a typed section sits among untyped ones.
  */
 export type BuildPart = 'character' | 'passives' | 'skills' | 'items' | 'config'
+/**
+ * The league a build is planned for.
+ */
+export type League = 'challenge' | 'standard'
 /**
  * One entry of a list with untyped content in place.
  */
@@ -318,6 +335,11 @@ export interface Build {
    * The sections in order, typed ones as markers.
    */
   layout: BuildPartEntry[]
+  /**
+   * The league the build is planned for, if chosen (additive,
+   * accepted 2026-11-14).
+   */
+  league?: League | null
   passives: Passives
   /**
    * Untyped content before the build's container.
@@ -393,6 +415,11 @@ export interface Config {
    */
   attributes?: Attribute[]
   /**
+   * How the build's format held the sets; left out for one element
+   * per set.
+   */
+  layout?: 'sets' | 'flat'
+  /**
    * The sets.
    */
   sets: ConfigSetEntry[]
@@ -405,6 +432,10 @@ export interface ConfigSet {
    * Untyped attributes.
    */
   attributes?: Attribute[]
+  /**
+   * Custom modifier blocks, after the inputs; left out when none.
+   */
+  custom_modifiers?: CustomModifierBlock[]
   /**
    * The set's ID.
    */
@@ -419,6 +450,139 @@ export interface ConfigSet {
   title?: string | null
 }
 /**
+ * A block of custom modifier lines.
+ */
+export interface CustomModifierBlock {
+  /**
+   * Untyped attributes.
+   */
+  attributes?: Attribute[]
+  /**
+   * Whether the block applies.
+   */
+  enabled: boolean
+  /**
+   * The modifier lines read from the text, with their resolutions;
+   * left out when none.
+   */
+  lines?: CustomModifierLine[]
+  /**
+   * The block's text, as read.
+   */
+  text: string
+  /**
+   * The title, if any.
+   */
+  title?: string | null
+}
+/**
+ * One modifier line of a custom modifier block or a config input.
+ */
+export interface CustomModifierLine {
+  /**
+   * What the line resolved to.
+   */
+  resolution:
+    | 'pending'
+    | {
+        excluded: Exclusion
+      }
+    | {
+        resolved: {
+          /**
+           * The tolerance it needed, if any.
+           */
+          adapted?: Adapted | null
+          /**
+           * The result.
+           */
+          result:
+            | {
+                stats: StatLine[]
+              }
+            | {
+                typed: TypedResolution
+              }
+        }
+      }
+    | {
+        continues: {
+          /**
+           * Index of that line among the item's lines.
+           */
+          line: number
+        }
+      }
+    | {
+        unresolved: UnresolvedReason
+      }
+  /**
+   * The modifier text.
+   */
+  text: string
+}
+/**
+ * A stat ID and its value.
+ */
+export interface StatLine {
+  /**
+   * The stat.
+   */
+  stat: string
+  /**
+   * Its value.
+   */
+  value:
+    | {
+        exact: {
+          /**
+           * Highest raw value.
+           */
+          max: number
+          /**
+           * Lowest raw value.
+           */
+          min: number
+        }
+      }
+    | {
+        ranged: {
+          /**
+           * Highest raw value.
+           */
+          max: number
+          /**
+           * Lowest raw value.
+           */
+          min: number
+        }
+      }
+    | {
+        hidden: {
+          /**
+           * The assumed value, if clear.
+           */
+          assumed?: number | null
+        }
+      }
+    | {
+        lookup: number[]
+      }
+}
+/**
+ * One placeholder value of a property line.
+ */
+export interface PropertyValue {
+  /**
+   * The placeholder's number.
+   */
+  slot: number
+  /**
+   * The value's text.
+   */
+  text: string
+}
+/**
  * One config input.
  */
 export interface ConfigInput {
@@ -426,6 +590,17 @@ export interface ConfigInput {
    * Untyped attributes.
    */
   attributes?: Attribute[]
+  /**
+   * Whether the value was set or is a placeholder; left out for a
+   * set value.
+   */
+  kind?: 'input' | 'placeholder'
+  /**
+   * The custom modifier lines read from a text value applied as
+   * such (PoB's legacy `customMods`), with their resolutions; left
+   * out when none.
+   */
+  lines?: CustomModifierLine[]
   /**
    * The key.
    */
@@ -702,67 +877,6 @@ export interface Prefix {
    * The value, if any.
    */
   value?: string | null
-}
-/**
- * A stat ID and its value.
- */
-export interface StatLine {
-  /**
-   * The stat.
-   */
-  stat: string
-  /**
-   * Its value.
-   */
-  value:
-    | {
-        exact: {
-          /**
-           * Highest raw value.
-           */
-          max: number
-          /**
-           * Lowest raw value.
-           */
-          min: number
-        }
-      }
-    | {
-        ranged: {
-          /**
-           * Highest raw value.
-           */
-          max: number
-          /**
-           * Lowest raw value.
-           */
-          min: number
-        }
-      }
-    | {
-        hidden: {
-          /**
-           * The assumed value, if clear.
-           */
-          assumed?: number | null
-        }
-      }
-    | {
-        lookup: number[]
-      }
-}
-/**
- * One placeholder value of a property line.
- */
-export interface PropertyValue {
-  /**
-   * The placeholder's number.
-   */
-  slot: number
-  /**
-   * The value's text.
-   */
-  text: string
 }
 /**
  * Variant selection.

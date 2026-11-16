@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8b): a level 90 Witch with two rings, an amulet and a belt
+     whose lines are ranges with PoB's roll ({range:r}): rolls between the
+     ends, a tie rounded away from zero on a "reduced" line, implicit rolls,
+     and a ModRange entry that agrees with its line.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Roll Band
+Coral Ring
+Implicits: 1
+{range:0.5}+(20-30) to maximum Life
+{range:0.468}+(40-49) to maximum Life
+{range:0.25}+(13-17) to Strength
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Roll Loop
+Paua Ring
+Implicits: 1
+{range:1}+(20-25) to maximum Mana
+{range:0.75}+(30-35)% to Fire Resistance
+{range:0.05}+(12-15)% to Cold Resistance
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Roll Charm
+Onyx Amulet
+Implicits: 1
+{range:0.333}+(10-16) to all Attributes
+{range:0.9}(10-12)% increased maximum Energy Shield
+{range:0.5}(5-10)% reduced maximum Mana
+		</Item>
+		<Item id="4">
+Rarity: RARE
+Loom Roll Cord
+Heavy Belt
+Implicits: 1
+{range:0.5}+(25-35) to Strength
+{range:0.66}+(60-69) to maximum Life
+			<ModRange id="2" range="0.66"/>
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Amulet" itemId="3"/>
+			<Slot name="Belt" itemId="4"/>
+			<Slot name="Ring 1" itemId="1"/>
+			<Slot name="Ring 2" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

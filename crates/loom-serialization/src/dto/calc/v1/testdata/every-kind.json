@@ -1,0 +1,679 @@
+{
+  "format": "loom-calc-result",
+  "version": 1,
+  "result": {
+    "game": "poe1",
+    "state": "indeterminate",
+    "reasons": {
+      "unsupported": [
+        {
+          "unmapped-stat": {
+            "stat": "made_up_stat",
+            "source": {
+              "passive": {
+                "node": 42
+              }
+            }
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 3
+              }
+            },
+            "reason": "no-match"
+          }
+        },
+        {
+          "unresolved-line": {
+            "source": {
+              "custom-modifier": {
+                "block": 1,
+                "line": 2
+              }
+            },
+            "reason": "no-template"
+          }
+        },
+        {
+          "excluded-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 4
+              }
+            },
+            "exclusion": "custom"
+          }
+        },
+        {
+          "pending-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 5
+              }
+            }
+          }
+        },
+        {
+          "unhandled-kind": {
+            "kind": "made-up-kind",
+            "source": {
+              "gem": {
+                "group": 1,
+                "gem": 2
+              }
+            }
+          }
+        },
+        {
+          "unmodelled-condition": {
+            "condition": "on-full-life",
+            "quantity": "damage",
+            "source": {
+              "config": {
+                "input": "made_up_input"
+              }
+            }
+          }
+        },
+        {
+          "depends-on-not-computed": {
+            "field": "evasion"
+          }
+        },
+        "not-computed",
+        {
+          "unmodelled-gem": {
+            "source": {
+              "gem": {
+                "group": 0,
+                "gem": 1
+              }
+            }
+          }
+        },
+        {
+          "unmodelled-config": {
+            "input": "made_up_input"
+          }
+        },
+        {
+          "unmodelled-choice": {
+            "choice": "made-up-choice",
+            "value": "Someone"
+          }
+        },
+        {
+          "unmodelled-item": {
+            "item": 8,
+            "slot": "Helmet",
+            "what": "base-properties"
+          }
+        },
+        {
+          "unmodelled-passive": {
+            "source": {
+              "passive": {
+                "node": 65552
+              }
+            },
+            "what": "cluster-jewel-node"
+          }
+        },
+        {
+          "unread-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 9
+              }
+            }
+          }
+        },
+        {
+          "scaled-line": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 10
+              }
+            },
+            "scaling": "catalyst"
+          }
+        },
+        "unchecked-tree-version",
+        {
+          "unmodelled-skill": {
+            "source": {
+              "gem": {
+                "group": 0,
+                "gem": 0
+              }
+            },
+            "what": "physical-hit-armour"
+          }
+        }
+      ],
+      "indeterminate": [
+        {
+          "conflicting-override": {
+            "quantity": "maximum-resistance.fire"
+          }
+        },
+        {
+          "unsettled-value": {
+            "stat": "ranged_stat",
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 6,
+                "adapted": "split-section"
+              }
+            }
+          }
+        },
+        {
+          "missing-data": {
+            "table": "passives",
+            "key": "999"
+          }
+        },
+        {
+          "tree-version": {
+            "build": "3_28",
+            "data": "3_29"
+          }
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field": "life",
+        "value": 48.0,
+        "node": 12,
+        "state": "complete"
+      },
+      {
+        "field": "mana",
+        "value": 47.0,
+        "node": 13,
+        "state": "partial",
+        "unsupported": [
+          {
+            "unmapped-stat": {
+              "stat": "made_up_stat",
+              "source": {
+                "passive": {
+                  "node": 42
+                }
+              }
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 3
+                }
+              },
+              "reason": "no-match"
+            }
+          },
+          {
+            "unresolved-line": {
+              "source": {
+                "custom-modifier": {
+                  "block": 1,
+                  "line": 2
+                }
+              },
+              "reason": "no-template"
+            }
+          },
+          {
+            "excluded-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 4
+                }
+              },
+              "exclusion": "custom"
+            }
+          },
+          {
+            "pending-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 5
+                }
+              }
+            }
+          },
+          {
+            "unhandled-kind": {
+              "kind": "made-up-kind",
+              "source": {
+                "gem": {
+                  "group": 1,
+                  "gem": 2
+                }
+              }
+            }
+          },
+          {
+            "unmodelled-condition": {
+              "condition": "on-full-life",
+              "quantity": "damage",
+              "source": {
+                "config": {
+                  "input": "made_up_input"
+                }
+              }
+            }
+          },
+          {
+            "depends-on-not-computed": {
+              "field": "evasion"
+            }
+          },
+          "not-computed",
+          {
+            "unmodelled-gem": {
+              "source": {
+                "gem": {
+                  "group": 0,
+                  "gem": 1
+                }
+              }
+            }
+          },
+          {
+            "unmodelled-config": {
+              "input": "made_up_input"
+            }
+          },
+          {
+            "unmodelled-choice": {
+              "choice": "made-up-choice",
+              "value": "Someone"
+            }
+          },
+          {
+            "unmodelled-item": {
+              "item": 8,
+              "slot": "Helmet",
+              "what": "base-properties"
+            }
+          },
+          {
+            "unmodelled-passive": {
+              "source": {
+                "passive": {
+                  "node": 65552
+                }
+              },
+              "what": "cluster-jewel-node"
+            }
+          },
+          {
+            "unread-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 9
+                }
+              }
+            }
+          },
+          {
+            "scaled-line": {
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 10
+                }
+              },
+              "scaling": "catalyst"
+            }
+          },
+          "unchecked-tree-version",
+          {
+            "unmodelled-skill": {
+              "source": {
+                "gem": {
+                  "group": 0,
+                  "gem": 0
+                }
+              },
+              "what": "physical-hit-armour"
+            }
+          }
+        ]
+      },
+      {
+        "field": "energy-shield",
+        "state": "unsupported",
+        "reason": "not-computed"
+      },
+      {
+        "field": "evasion",
+        "value": {
+          "f64_bits": "7ff0000000000000"
+        },
+        "node": 18,
+        "state": "complete"
+      },
+      {
+        "field": "resistance.fire",
+        "value": 75.0,
+        "node": 19,
+        "state": "indeterminate",
+        "unsupported": [
+          "not-computed"
+        ],
+        "indeterminate": [
+          {
+            "conflicting-override": {
+              "quantity": "maximum-resistance.fire"
+            }
+          },
+          {
+            "unsettled-value": {
+              "stat": "ranged_stat",
+              "source": {
+                "item": {
+                  "item": 7,
+                  "line": 6,
+                  "adapted": "split-section"
+                }
+              }
+            }
+          },
+          {
+            "missing-data": {
+              "table": "passives",
+              "key": "999"
+            }
+          },
+          {
+            "tree-version": {
+              "build": "3_28",
+              "data": "3_29"
+            }
+          }
+        ]
+      },
+      {
+        "field": "hit-dps",
+        "state": "unsupported",
+        "reason": {
+          "depends-on-not-computed": {
+            "field": "energy-shield"
+          }
+        }
+      },
+      {
+        "field": "poe1.spell-block-chance",
+        "value": 1.0,
+        "node": 14,
+        "state": "complete"
+      }
+    ],
+    "graph": [
+      {
+        "kind": {
+          "contribution": {
+            "source": "character",
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 38.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "item": {
+                "item": 7,
+                "line": 0,
+                "adapted": "case-folded"
+              }
+            },
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 0.30000000000000004
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "passive": {
+                "node": 42
+              }
+            },
+            "quantity": "life",
+            "op": "increased"
+          }
+        },
+        "value": 10.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "gem": {
+                "group": 0,
+                "gem": 1
+              }
+            },
+            "quantity": "life",
+            "op": "more"
+          }
+        },
+        "value": -0.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "config": {
+                "input": "made_up_input"
+              }
+            },
+            "quantity": "poe1.spell-block-chance",
+            "op": "flag"
+          }
+        },
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": "enemy",
+            "quantity": "resistance.fire",
+            "op": "override"
+          }
+        },
+        "value": 75.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "rule": "strength-to-life"
+            },
+            "quantity": "life",
+            "op": "base"
+          }
+        },
+        "value": 5.0
+      },
+      {
+        "kind": {
+          "contribution": {
+            "source": {
+              "item-base": {
+                "item": 4
+              }
+            },
+            "quantity": "armour",
+            "op": "base"
+          }
+        },
+        "value": 12.0
+      },
+      {
+        "kind": "sum",
+        "term": "base",
+        "children": [
+          0,
+          1,
+          6
+        ],
+        "value": 43.3
+      },
+      {
+        "kind": "percent-factor",
+        "term": "increased",
+        "children": [
+          2
+        ],
+        "value": 1.1
+      },
+      {
+        "kind": "percent-factor",
+        "term": "more",
+        "children": [
+          3
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": "product",
+        "term": "result",
+        "children": [
+          8,
+          9,
+          10
+        ],
+        "value": 47.63
+      },
+      {
+        "kind": "round-half-up",
+        "term": "result",
+        "children": [
+          11
+        ],
+        "value": 48.0
+      },
+      {
+        "kind": "floor",
+        "term": "step.floored",
+        "children": [
+          11
+        ],
+        "value": 47.0
+      },
+      {
+        "kind": "any",
+        "term": "result",
+        "children": [
+          4
+        ],
+        "value": 1.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "resistance-cap"
+          }
+        },
+        "value": 75.0
+      },
+      {
+        "kind": {
+          "constant": {
+            "label": "unbounded"
+          }
+        },
+        "value": {
+          "f64_bits": "7ff0000000000000"
+        }
+      },
+      {
+        "kind": "min",
+        "term": "result",
+        "children": [
+          5,
+          15
+        ],
+        "value": 75.0
+      },
+      {
+        "kind": "max",
+        "term": "step.at-least-floor",
+        "children": [
+          13,
+          16
+        ],
+        "value": {
+          "f64_bits": "7ff0000000000000"
+        }
+      },
+      {
+        "kind": "override",
+        "children": [
+          5,
+          17
+        ],
+        "value": 75.0
+      },
+      {
+        "kind": "trunc",
+        "term": "step.total",
+        "children": [
+          11
+        ],
+        "value": 47.0
+      },
+      {
+        "kind": "quotient",
+        "term": "step.crit-share",
+        "children": [
+          8,
+          15
+        ],
+        "value": 0.5773333333333333
+      },
+      {
+        "kind": "difference",
+        "term": "step.non-crit-share",
+        "children": [
+          9,
+          21
+        ],
+        "value": 0.5226666666666668
+      },
+      {
+        "kind": "power",
+        "term": "step.evasion-power",
+        "children": [
+          8,
+          21
+        ],
+        "value": 8.806412253246078
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+Item Class: Staves
+Rarity: MAGIC
+Conjuror's Long Staff of Talent
+Sockets: W W
+Item Level: 24
+Implicits: 1
+{implicit}+20% Chance to Block Spell Damage
+{prefix}{tags:mana,damage,caster}30% increased Spell Damage
+{prefix}{tags:mana,damage,caster}+31 to maximum Mana
+{suffix}{tags:caster,speed}9% increased Cast Speed

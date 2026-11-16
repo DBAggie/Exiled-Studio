@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-7): a level 80 Templar with a spirit shield
+     and an amulet: the shield's block and energy shield with local mods and
+     quality, attack and spell block with their increases and maximums.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="80" targetVersion="3_0" className="Templar" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="5" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Ward
+Titanium Spirit Shield
+Quality: 20
+EnergyShieldBasePercentile: 0.3
+Implicits: 0
++6% Chance to Block
++50 to maximum Energy Shield
+70% increased Energy Shield
++10% Chance to Block Spell Damage
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Charm
+Onyx Amulet
+Implicits: 1
++12 to all Attributes
++3% Chance to Block Attack Damage
+8% increased Chance to Block Attack and Spell Damage
++2% to maximum Chance to Block Attack Damage
++1% to maximum Chance to Block Spell Damage
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Band
+Coral Ring
+Implicits: 1
++25 to maximum Life
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 2" itemId="1"/>
+			<Slot name="Amulet" itemId="2"/>
+			<Slot name="Ring 1" itemId="3"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

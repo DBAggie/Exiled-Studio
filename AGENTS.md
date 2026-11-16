@@ -5,9 +5,9 @@ Rules for anyone contributing, human or AI agent. `CLAUDE.md` adds Claude Code s
 ## Hard rules
 - The game is the truth; PoB v2.67.2 is the pinned regression oracle. Every difference from PoB needs evidence and a divergence-register entry (ADR-001/006).
 - Never modify the legacy PoB repository. Legacy source is fetched at a pinned public tag, never copied in (ADR-006).
-- Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). Local game data and extractor output go in `local/` or `out/` (both ignored).
+- Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). GGG's published passive tree export (data and sprite sheets) is fetched at pinned commits by `tools/tree/` into `local/` and shipped only inside signed data bundles (ADR-005 Amendment 2). Local game data and extractor output go in `local/` or `out/` (both ignored).
 - Modifiers are `(stat_id, values)`. Text parsing lives only in import adapters; unresolved content is quarantined and shown, never dropped (ADR-015).
-- No telemetry. Network access only in `loom-integrations` (ADR-011). One exception outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`; no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged).
+- No telemetry. Network access only in `loom-integrations` (ADR-011). Exceptions outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`, and the maintainer's `tools/tree/` scripts fetch GGG's passive tree export at pinned commits with `git` (ADR-005 Amendment 2); no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged). The application's own network paths (Phase 5): the data feed and pack downloads in `loom-integrations::data_feed`, the update check and download through `tauri-plugin-updater` in `loom-tauri::updates` (plan decision P-d, the one path outside `loom-integrations`), and the MCP server on loopback; strict-offline mode refuses the first two before connecting. The `release` workflow's scripts in `tools/package/` download the shipped bundle named by `release/bundle.json`. The experimental application reads its update and data feeds from the project site (`https://dbaggie.github.io/Exiled-Studio/experimental/`, GitHub Pages), which `pages.yml` fills from the newest pre-release (`docs/release/channels.md`).
 - Do not contradict an ADR. Propose an amendment and wait for the maintainer.
 
 ## Layout
@@ -17,17 +17,27 @@ crates/
   loom-data           core   canonical game-data model, abstract bundle source
   loom-parser         core   text -> stat-ID resolution, import parsing
   loom-calc           core   calculations over immutable snapshots
-  loom-serialization  core   versioned DTOs, migrations, legacy XML adapters
-  loom-persistence    host   files, autosave, SQLite indexes
-  loom-app            host   command/query/event API, single-writer build task
-  loom-integrations   host   network adapters, MCP addon transport
+  loom-serialization  core   versioned DTOs (build, calc result, app API), migrations, legacy XML adapters
+  loom-pipeline       core   text to calc result: import, resolution, settled values, engine (calc-run and the app)
+  loom-tree           core   the passive tree: graph, kinds, positions, allocation rules, tree URL (the editor)
+  loom-persistence    host   files, recovery snapshots, recent list (SQLite indexes later)
+  loom-app            host   command/query/event API, single-writer build task, background calculation, local logs, crash records, diagnostic package (docs/phase-5/logs.md)
+  loom-integrations   host   network adapters, the local MCP server (loopback)
   loom-tauri          shell  Tauri 2 desktop app
 tools/
   extractor           loom-extractor: maintainer-run Bundles2 extractor
   parity-cli          loom-parity-cli: maintainer-run oracle and corpus harnesses
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
-schemas/              generated JSON Schemas of the successor documents (do not edit; CI checks freshness)
+  tree                not a crate: GGG's passive tree export, pinned (manifest.json) and fetched into local/tree-export/ by acquire.{ps1,sh} (ADR-005 Amendment 2)
+  release             loom-release: data keys, signatures, signed bundle packs, the data feed (docs/release/signing.md)
+  bench               loom-bench: the core paths' instruction counts (CI) and wall clock (docs/phase-5/performance.md)
+  package             not a crate: installers, portable zip, smoke runs, release workflow scripts, the release channel (docs/phase-5/packaging.md, docs/release/channels.md)
+  site                not a crate: build.py fills site/ from GitHub's releases for the download page (docs/release/channels.md)
+fuzz/                 cargo-fuzz targets of the hostile-input readers; its own workspace (docs/phase-5/security.md)
+release/              trust lists and public keys compiled into the app; bundle.json names the shipped bundle (the maintainer's)
+site/                 the download page on GitHub Pages: template and style (pages.yml publishes it; docs/release/channels.md)
+schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract (rewritten by its test, below)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
 ```
@@ -36,11 +46,14 @@ docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence
 Dependencies flow one way, with no cycles:
 - `loom-domain` <- `loom-data` <- `loom-parser`, `loom-calc`
 - `loom-domain` <- `loom-serialization` <- `loom-persistence`
+- `loom-calc` <- `loom-serialization` (the calc result document, Phase 3 step 13; `loom-calc` never depends on serialization)
+- `loom-parser`, `loom-calc`, `loom-serialization`, `loom-tree` <- `loom-pipeline` (Phase 4 plan, decision 0; the resolved passive set, passive tree plan T-e)
+- `loom-data` <- `loom-tree` (passive tree plan, T-e; `loom-calc` does not depend on it: `loom-pipeline` resolves the spec with it and hands the engine the result)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
-- `tools/*` depend on core crates only.
+- `tools/*` depend on core crates only, except `loom-release` and `loom-bench`, which use `loom-app`'s pack writing and `tree::rules_spec` (tools, never shipped).
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
-**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization) must:
+**Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline, loom-tree) must:
 - build for `wasm32-unknown-unknown` (CI checks every PR; ADR-016);
 - not use the filesystem, threads, clocks, environment, or network. Each has a `clippy.toml` that bans these; hosts inject them;
 - depend only on other core crates and pure, wasm-compatible libraries;
@@ -56,10 +69,14 @@ Toolchain: Rust pinned by `rust-toolchain.toml`; Node per `.node-version`; pnpm 
 cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
-cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
+cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline -p loom-tree
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
-# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto, regenerate both;
+# RustSec advisories (CI job `advisories`; each ignore in deny.toml has its reason; docs/phase-5/security.md):
+cargo deny --all-features --locked check advisories
+# Secrets in the history (CI job `secrets`; gitleaks 8.30.1 from its GitHub release, checksum in ci.yml):
+gitleaks git --no-banner --redact --exit-code 1 .
+# Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto (build v1, calc::v1), regenerate both;
 # CI (schema freshness) fails on any difference:
 cargo run -p loom-schema-gen            # writes schemas/*.schema.json (--check: exit 1 if stale)
 (cd ui && pnpm generate:schema)       # writes ui/src/generated/*.ts from the schema
@@ -97,6 +114,17 @@ cargo run --release -p loom-parity-cli -- bundle local/extract/<game>/<build> --
 cargo run --release -p loom-parity-cli -- bundle-check <bundle-dir>
 # Load an extract's stat-description files through loom-data; prints counts as JSON, exits 1 if a check fails:
 cargo run --release -p loom-parity-cli -- load-statdesc local/extract/<game>/<build>
+# The passive tree's layout constants and sprites (docs/tree/layout.md): fetch GGG's export at the pinned commit, then write a
+# copy of <bundle> with data/passive_tree_layout.json, data/passive_tree_sprites.json, and the export's sprite sheets in
+# trees/assets/ added (<dir> must not exist; the sheets are never committed); the rules and layout against that bundle:
+powershell -ExecutionPolicy Bypass -File tools/tree/acquire.ps1      # or tools/tree/acquire.sh
+cargo run --release -p loom-parity-cli -- tree-layout tools/tree/manifest.json local/tree-export <bundle> --out <dir>
+cargo test -p loom-tree --test real_bundle -- --ignored --nocapture          # LOOM_TREE_BUNDLE, else local/tree/bundle-poe1-tree-a
+cargo test -p loom-app --test tree_workflow -- --ignored --nocapture
+# The tree against PoB (docs/tree/parity.md; needs the oracle, tools/oracle/acquire): layout, 2,000 seeded allocations, and PoB
+# reading edited exports back, through tools/oracle/data/pob_tree.lua (outside the adapter protocol) and
+# `loom-parity-cli tree-parity layout|alloc-requests|alloc|readback`; writes docs/tree/records/, exit 0 when all match:
+tools/tree/parity.sh [bundle-dir]                                            # default local/tree/bundle-poe1-tree-a
 # Render every stat-description variant and resolve it back; writes summary.json and report.json (<dir> must not exist):
 cargo run --release -p loom-parity-cli -- round-trip local/extract/<game>/<build> --out <dir>
 # Compare the renderer with PoB's exported mod text (PoE1; PoB checkout in local/pob/); exits 1 on an uncategorized difference:
@@ -120,7 +148,11 @@ powershell -ExecutionPolicy Bypass -File tools/oracle/acquire.ps1    # or: tools
 # files against local/oracle/build.json, runtime version and build flags; JSON report on stdout;
 # exits 10 (ORACLE_ACQUISITION) or 11 (ORACLE_ENVIRONMENT) on failure:
 cargo run --release -p loom-parity-cli -- oracle-verify tools/oracle/manifest.json local/oracle
-# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 3, with the shims in
+# PoB's configuration options for the configuration page (verifies the oracle first; writes
+# ui/src/data/pob-config-options.json, PoB's MIT notice beside it):
+powershell -ExecutionPolicy Bypass -File tools/oracle/config-options.ps1
+# Run fixtures through the adapter (tools/oracle/adapter/oracle.lua, protocol 4: it sets PoB's CALCS view, the
+# breakdowns' source, to the main view before loading (probe.calcs_view; docs/phase-3/calc-parity.md), with the shims in
 # shims.lua: Inflate through zlib, variant_order (sorted pairs for PoB's ambiguous old-format Vaal gem
 # lookup; see docs/parity/README.md), io.open write guard) on the pinned runtime, 3 times each (offline;
 # verifies first; checks the checkout after each fixture). Writes report.json, summary.md, outputs/,
@@ -157,13 +189,67 @@ LOOM_XML_DIR="<abs-dir>" cargo test -p loom-serialization --test pob_xml_fixture
 # pob-derivation, representation, not-carried, with evidence); writes summary.json, report.json, overlay.json
 # (<dir> must not exist); exit 0 when nothing is uncategorized and every rule matched, 1 otherwise, 3 when an input does not read:
 cargo run --release -p loom-parity-cli -- data-parity <bundle-dir> <pob-export.json> --rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# (PoB export format 8: table jewel_radii checks the bundle's poe1/jewel_radii.json, PassiveJewelRadii, times the tree scale 1.2, against data.jewelRadius;
+#  table flavour_text checks poe1/unique_flavour.json, cleaned as PoB's exporter cleans it, against data.flavourText.)
+# Custom modifier lines against PoB's own parse (Phase 3 close-out, ADR-015 Amendment 2; maintainer-run): every custom line
+# of the fixtures read as a build does (notes, patterns, stats, unresolved) and compared with pob-parse.json
+# (tools/oracle/data/pob_parse_lines.lua; docs/phase-3/custom-lines.md); exit 1 when a note is a line PoB applies or a
+# pattern differs from PoB's mod:
+cargo run --release -p loom-parity-cli -- custom-lines <bundle-dir> docs/phase-3/custom-lines/pob-parse.json --out <dir>
+# Calc scope survey (P3-3; maintainer-run, not in CI): main skill, archetype rules, tree version, excluded mechanics
+# (docs/phase-3/calc-scope-poe1.json), and mechanic inventory per build; writes summary.json and report.json
+# (<dir> must not exist; --anonymous for the corpus); exit 0 when every chosen skill has the minimum of in-scope
+# builds (or none is chosen yet), 1 otherwise, 3 when an input does not read (docs/phase-3/calc-survey.md):
+cargo run --release -p loom-parity-cli -- calc-survey <builds>... --bundle <bundle-dir> --scope docs/phase-3/calc-scope-poe1.json --data-rules docs/phase-3/data-parity-rules-poe1.json --out <dir>
+# Calc runs (P3-5): import, resolve, calculate; each build's calc result document v1 in <dir>/documents/,
+# report.json, summary.json (counts), timing.json (time per build); ids as oracle-run's (file name, or
+# SHA-256 with --anonymous); --data-overlay takes data-parity's overlay.json for this bundle (PoB's values;
+# a row the engine reads but cannot apply refuses the run); --scope takes calc-survey's scope file for this
+# bundle's Steam build, whose tree_version the engine checks each build's against (P3-6; without it a build
+# with passives is partial, unchecked-tree-version; another tree version is indeterminate).
+# Exit 0 every build has a document, 1 one failed (malformed.xml does), 2 usage, 3 the run cannot start.
+# CI (build round-trip) runs it on the synthetic builds; dto-compare diffs the documents' SHA-256:
+cargo run --release -p loom-parity-cli -- calc-run <builds>... --bundle <bundle-dir> --out <dir> [--anonymous] [--data-overlay <overlay.json>] [--scope docs/phase-3/calc-scope-poe1.json]
+# Compare a calc run with an oracle run per slice field (docs/phase-3/slice-fields.json): complete fields by
+# their rule, the ten breakdowns term by term at their printed decimals; partial and not-computed fields
+# listed, never passed; register as oracle-compare, a data-version entry only when --overlay-run matches;
+# --manifest checks mechanic fixtures' targets. Exit 0, 19, 20, or a failure class (17: an unknown breakdown
+# line); 5 when a build is incomplete (nothing complete, or a complete field's breakdown not compared): not a
+# pass; 2 usage, 3 an input does not read (docs/phase-3/calc-parity.md):
+cargo run --release -p loom-parity-cli -- calc-parity <oracle-run-dir> <calc-run-dir> --slice docs/phase-3/slice-fields.json --out <dir> [--register docs/parity/divergence-register.json] [--overlay-run <calc-run-dir>] [--manifest tools/oracle/fixtures/fixtures.json]
 
 # Frontend (in ui/)
 pnpm install --frozen-lockfile
 pnpm format:check && pnpm lint && pnpm build
+pnpm test              # vitest: UI workflow, axe on every screen, keyboard, error states, contrast
+pnpm licenses:check    # JS dependency licenses (OSI allow-list and named exceptions in ui/scripts/check-licenses.mjs; its test is scripts/check-licenses.test.mjs, run by pnpm test)
 
-# Desktop app in dev mode: run `pnpm dev` in ui/, then in another terminal
+# Desktop app in dev mode: run `pnpm dev` in ui/, then in another terminal (LOOM_BUNDLE_DIR names a
+# bundle folder, else the one chosen in the app; LOOM_DATA_DIR overrides the app's data folder):
 cargo run -p loom-tauri
+# Outside the shell (`pnpm dev` in a browser) the UI runs on an in-memory fake API with sample data.
+
+# MCP tool contract (Phase 4): a change to the tool list is a reviewed diff of schemas/mcp-tools.v1.json:
+LOOM_WRITE_MCP_CONTRACT=1 cargo test -p loom-integrations --test mcp_contract
+# The real app under WebDriver (CI e2e job; needs tauri-driver 2.1.0, and WebKitWebDriver on Linux or
+# msedgedriver on Windows): build ui/, then the app with the e2e picker, then run the workflow:
+cargo build -p loom-tauri --features e2e,tauri/custom-protocol
+# (runs on the synthetic tree bundle crates/loom-data/tests/fixtures/bundle-poe1-tree, which make_bundles.py writes)
+ui/e2e/run.sh target/debug/loom-tauri                                   # Linux
+pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Windows (PowerShell, not Git Bash)
+
+# Release (Phase 5; docs/phase-5/packaging.md, docs/release/signing.md, docs/phase-5/data-bundles.md):
+cargo run -p loom-release -- <keygen|trust|trust-add|sign|verify|test-trust|test-sign|pack|feed> ...   # usage: no arguments
+cargo run -p loom-release -- pack <bundle-dir> --test-key --out <x.loombundle>   # a pack debug and e2e builds trust
+pwsh tools/package/portable.ps1 <loom-tauri.exe> <out-dir> [<version>]           # the portable zip
+pwsh tools/package/smoke.ps1 <package> <kind> <version>                           # start a package, check its build info
+LOOM_CHANNEL=experimental cargo build ...                                         # an experimental build (docs/release/channels.md)
+python3 -m unittest discover -s tools/site -p 'test_*.py'                         # the download page builder
+# Performance (docs/phase-5/performance.md): wall clock of the core paths, and CI's instruction counts (Linux, valgrind):
+cargo run --release -p loom-bench -- wall [--bundle <dir>] [--build <file>] [--runs <n>]
+bash tools/bench/count.sh [--update]      # fails on a count 10% over tools/bench/baseline.json
+# Fuzzing (docs/phase-5/security.md; Linux, nightly, cargo-fuzz 0.13.2; libFuzzer does not link on Windows MSVC):
+bash fuzz/seed.sh && cargo +nightly-2026-11-01 fuzz run <target> -- -max_total_time=600
 ```
 
 ## Code expectations
@@ -190,16 +276,19 @@ When to update:
 1. **Before opening the PR:** commit every update in the table on the PR branch, writing the PR as "open, in review".
 2. **Right after `gh pr create`, before any other work:** push a follow-up commit to the same branch that writes the new PR number (`PR #N, open, branch <name>`) into the handoff **Current state** and into every other document that names the PR (`CLAUDE.md` Status, `docs/plan/ACTION-PLAN.md`, `dev/active/<task>/`, where the "Open PR" task is ticked with the number). The PR number does not exist until the PR is opened, and without it the next session cannot find the PR.
 3. **On every later push to the PR** (review fixes, rebases): keep the handoff true in the same push.
-4. **The merge is recorded by the next session:** first thing, it checks the PR's state (`gh pr view <N>`), and if it merged, its own PR records the squash commit and the main CI run in **Current state**.
+4. **The merge is recorded by the next session:** first thing, it checks the PR's state (`gh pr view <N>`), and if it merged, its own PR records the squash commit and the CI run in **Current state**.
 
 Write state as facts with dates and links (PR numbers, CI runs, file paths), not as "see conversation". Record anything learned that is hard to rediscover from the code: failed approaches, environment quirks, open decisions waiting on the maintainer.
 
 ## Pull requests (ADR-012 evidence rule)
-- Small and single-purpose; branch from `main` (GitHub Flow).
+- Small and single-purpose; branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch, and the maintainer keeps it open.
+  - The maintainer merges approved states of `dev` into `experimental`, which holds the experimental installers. Experimental releases are tagged there.
+  - The maintainer merges into `main`, which always holds the stable application. Stable releases are tagged there.
+  - Both are protected alike (maintainer decision 2026-11-15; `docs/release/channels.md`).
 - Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**, and **Handoff** (which documents above were updated). CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
 - All CI checks green. Two checks are required: `ci-ok` (`.github/workflows/ci.yml`) and `PR evidence` (`.github/workflows/pr-evidence.yml`). `PR evidence` re-runs when the description is edited, so fix an empty section by editing the PR, not by pushing. The check logic is `.github/scripts/check-pr-evidence.sh`; test it with `bash .github/scripts/test-check-pr-evidence.sh`. The maintainer reviews and merges; `main` is protected.
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).
 
 ## Dependencies
-- Licenses must be permissive and MIT-compatible; the allow-list is in `deny.toml` and the `cargo-deny` CI job enforces it on the whole tree. Never add a license to the global allow-list to get a crate in. A crate that needs another license gets a per-crate exception with a reason, and only with maintainer approval.
+- Licenses must be open source (OSI-approved; maintainer decision 2026-11-13, which widened the permissive-only rule): the allow-lists are `deny.toml` (Rust; the `cargo-deny` CI job checks the whole tree) and `ui/scripts/check-licenses.mjs` (JavaScript; `pnpm licenses:check` in CI). Strong copyleft (GPL, AGPL, LGPL) stays off both lists: ADR-005 keeps GPL-derived code out of the shipped app, so such a dependency needs the maintainer. Anything else outside the lists gets a per-package exception with a reason, only with maintainer approval. A bundled asset (a font) ships with its license text next to it (`ui/public/licenses/`).
 - crates.io only; git or other registries need an explicit `deny.toml` entry.

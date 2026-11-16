@@ -1,0 +1,25 @@
+Rarity: RARE
+Tempest Refuge
+Ezomyte Tower Shield
+Armour: 1198
+ArmourBasePercentile: 0.7112
+Shaper Item
+Crafted: true
+Prefix: {range:0.867}LocalIncreasedPhysicalDamageReductionRatingPercent2
+Prefix: {range:0}LocalIncreasedBlockPercentage2
+Prefix: None
+Suffix: {range:0.772}LifeRegeneration4
+Suffix: {range:1}RecoverLifePercentOnBlockUber1_
+Suffix: {range:0.667}ReducedExtraDamageFromCrits4__
+Item Level: 85
+Quality: 20
+Sockets: B R-R
+LevelReq: 64
+Implicits: 1
+{tags:life}{range:1}+(30-40) to maximum Life
+{prefix}46% increased Chance to Block
+{tags:damage,critical}{suffix}You take 57% reduced Extra Damage from Critical Strikes
+{tags:defences,armour}{prefix}40% increased Armour
+{tags:life}{suffix}Regenerate 22.2 Life per second
+{tags:life}{suffix}Recover 5% of Life when you Block
+{tags:defences,armour}{prefix}{custom}{crafted}{range:0.1}+(250-320) to Armour

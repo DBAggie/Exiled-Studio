@@ -12,9 +12,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use loom_calc::poe1::enemy::Boss;
 use loom_data::bundle::Bundle;
 use loom_data::bundle::passives::{Passive, PassiveTables, StatAmount};
-use loom_data::bundle::properties::{MonsterLevel, PropertyTables};
+use loom_data::bundle::properties::{MonsterLevel, MonsterType, PropertyTables};
 use loom_data::bundle::skills::{Resource, SkillTables, StatSet};
 use loom_data::stat_desc::{NotRenderedReason, StatValue, VariantFilter};
 use serde::Serialize;
@@ -87,7 +88,7 @@ pub struct Transform {
 }
 
 /// Every conversion the comparison makes.
-pub const TRANSFORMS: [Transform; 17] = [
+pub const TRANSFORMS: [Transform; 20] = [
     Transform {
         table: "*",
         fields: "*",
@@ -173,6 +174,24 @@ pub const TRANSFORMS: [Transform; 17] = [
         source: "v2.67.2:src/Export/Scripts/bases.lua:237-238",
     },
     Transform {
+        table: "base_requirements",
+        fields: "*",
+        transform: "matched by name as bases (every base, not only weapons and armour); flask: the bundle's item class ends in Flask",
+        source: "v2.67.2:src/Export/Scripts/bases.lua:116-117, 283, 342",
+    },
+    Transform {
+        table: "base_requirements",
+        fields: "level, str, dex, int",
+        transform: "level: the drop level when above 4 (weapon or armour) or above 2 (flask), else 1, raised to floor(implicit level * 0.8), absent when 1; attributes absent when 0",
+        source: "v2.67.2:src/Export/Scripts/bases.lua:276-305",
+    },
+    Transform {
+        table: "mod_affixes",
+        fields: "affix, level",
+        transform: "matched by mod ID; affix is the game's Mods.Name, \"\" when none; level is Mods.Level",
+        source: "v2.67.2:src/Export/Scripts/mods.lua:83, 101, 114; v2.67.2:src/Modules/Data.lua:646-681",
+    },
+    Transform {
         table: "game_constants",
         fields: "value",
         transform: "value / divisor",
@@ -249,7 +268,7 @@ impl Comparison {
     }
 
     /// Compares one value.
-    fn check(
+    pub(super) fn check(
         &mut self,
         table: &'static str,
         key: &str,
@@ -272,7 +291,7 @@ impl Comparison {
     }
 
     /// A PoB row the bundle does not have.
-    fn pob_only(&mut self, table: &'static str, key: &str) {
+    pub(super) fn pob_only(&mut self, table: &'static str, key: &str) {
         let counts = self.table(table);
         counts.compared += 1;
         counts.differences += 1;
@@ -286,7 +305,11 @@ impl Comparison {
         });
     }
 
-    fn bundle_only(&mut self, table: &'static str, keys: impl IntoIterator<Item = String>) {
+    pub(super) fn bundle_only(
+        &mut self,
+        table: &'static str,
+        keys: impl IntoIterator<Item = String>,
+    ) {
         let before = self.bundle_only.len();
         self.bundle_only
             .extend(keys.into_iter().map(|key| BundleOnly { table, key }));
@@ -363,19 +386,33 @@ pub fn compare(
     bundle: &Bundle,
     export: &Export,
     passive_scope: &str,
+    bosses: &[Boss],
 ) -> Result<Comparison, String> {
     let (Some(skills), Some(passives), Some(properties)) =
         (&bundle.skills, &bundle.passives, &bundle.properties)
     else {
         return Err("the bundle has no calc tables (format 2 is needed)".to_owned());
     };
+    super::affixes::check_schema(bundle)?;
     let mut out = Comparison::default();
     compare_skills(&mut out, skills, export);
     compare_gems(&mut out, skills, export);
     compare_bases(&mut out, bundle, properties, export);
+    super::affixes::compare_base_requirements(&mut out, bundle, properties, export);
+    super::affixes::compare_mod_affixes(&mut out, bundle, export);
     compare_characters(&mut out, passives, export);
     compare_constants(&mut out, passives, properties, export);
     compare_monster_levels(&mut out, properties, export);
+    compare_bosses(&mut out, properties, export, bosses);
+    compare_pantheons(&mut out, bundle, export)?;
+    compare_jewel_radii(&mut out, bundle, export);
+    super::flavour::compare_flavour_text(&mut out, bundle, export);
+    let effects: std::collections::BTreeSet<&str> = skills
+        .granted_effects
+        .iter()
+        .map(|e| e.id.as_str())
+        .collect();
+    super::gem_effects::compare_gem_effects(&mut out, export, &effects);
     compare_passives(&mut out, bundle, passives, export, passive_scope)?;
     Ok(out)
 }
@@ -487,6 +524,15 @@ fn compare_skills(out: &mut Comparison, skills: &SkillTables, export: &Export) {
             "quality_stats",
             Value::Array(quality),
             Value::Array(pob_quality),
+        );
+        // The gem's colour (format 5, P3-12i): PoB's exporter writes
+        // `GrantedEffects.Attribute` unchanged (skills.lua:157).
+        out.check(
+            T,
+            id,
+            "color",
+            effect.attribute.map_or(Value::Null, int),
+            skill.color.map_or(Value::Null, int),
         );
         out.bundle_only(
             T,
@@ -742,7 +788,7 @@ fn compare_gems(out: &mut Comparison, skills: &SkillTables, export: &Export) {
 
 /// PoB's display name of a base: `ö` as `o`, trimmed
 /// (`v2.67.2:src/Export/Scripts/bases.lua:116-117`).
-fn pob_name(name: &str) -> String {
+pub(super) fn pob_name(name: &str) -> String {
     name.replace('\u{f6}', "o").trim().to_owned()
 }
 
@@ -1006,6 +1052,204 @@ fn compare_constants(
             opt(export.game_constants.get(key).copied()),
         );
     }
+}
+
+/// PoB's bosses (`data.bosses`) against the bundle's monster types, by
+/// a boss list (the engine's `loom_calc::poe1::enemy::BOSSES`, PoB's
+/// `Export/Enemies/Bosses.txt`, in a run): each boss's armour and evasion
+/// multipliers and uber mark; a boss on one side only is a difference.
+fn compare_bosses(
+    out: &mut Comparison,
+    properties: &PropertyTables,
+    export: &Export,
+    bosses: &[Boss],
+) {
+    const T: &str = "bosses";
+    let ours: BTreeMap<&str, (&Boss, Option<&MonsterType>)> = bosses
+        .iter()
+        .map(|b| {
+            let row = properties
+                .monster_types
+                .iter()
+                .find(|m| m.id == b.monster_type);
+            (b.name, (b, row))
+        })
+        .collect();
+    let names: BTreeSet<&str> = ours
+        .keys()
+        .copied()
+        .chain(export.bosses.keys().map(String::as_str))
+        .collect();
+    for name in names {
+        let pob = export.bosses.get(name);
+        let (boss, row) = match ours.get(name) {
+            Some((b, r)) => (Some(*b), *r),
+            None => (None, None),
+        };
+        out.check(
+            T,
+            name,
+            "armour",
+            row.map_or(Value::Null, |r| int(r.armour)),
+            opt(pob.map(|p| p.armour_mult)),
+        );
+        out.check(
+            T,
+            name,
+            "evasion",
+            row.map_or(Value::Null, |r| int(r.evasion)),
+            opt(pob.map(|p| p.evasion_mult)),
+        );
+        out.check(
+            T,
+            name,
+            "uber",
+            boss.map_or(Value::Null, |b| Value::Bool(b.uber)),
+            pob.map_or(Value::Null, |p| Value::Bool(p.is_uber)),
+        );
+    }
+}
+
+/// The stat-description scope PoB's pantheon exporter renders soul lines
+/// with (`v2.67.2:src/Export/Scripts/pantheons.lua`: `stat_descriptions.txt`).
+pub const PANTHEON_SCOPE: &str = "stat_descriptions";
+
+/// PoB's pantheon (`data.pantheons`) against the bundle's
+/// (`poe1/pantheons.json`, P3-12g), by god ID: the major mark, the souls'
+/// names in order, and each soul's mods. PoB keeps each mod as the line
+/// its exporter rendered from the stat and its value
+/// (`table.concat(describeStats(stats), ' ')`) and the value; the bundle
+/// keeps the stat. So each of the bundle's stats is rendered with the
+/// game's stat descriptions ([`PANTHEON_SCOPE`]) into PoB's form, and the
+/// lines and values are compared. A god on one side only is a difference;
+/// a bundle without the file has every PoB god on PoB's side only.
+///
+/// # Errors
+/// A message when the scope does not load.
+/// `jewel_radii`: the bundle's row `k` (`PassiveJewelRadii`, in the
+/// table's order) against PoB's `k`-th full radius (its name and outer
+/// radius) and its `k`-th ring (the entries labelled `Variable`, in order):
+/// the bundle reads a ring jewel's ring value `k` as row `k`'s ring
+/// (`loom_tree::poe1::radius`), which this checks. The bundle's values are
+/// compared in tree units, times the game's tree scale
+/// (`loom_tree::poe1::radius::scaled`), as the tree reads them.
+fn compare_jewel_radii(out: &mut Comparison, bundle: &Bundle, export: &Export) {
+    const T: &str = "jewel_radii";
+    let rows = bundle
+        .poe1
+        .as_ref()
+        .and_then(|p| p.jewel_radii.as_deref())
+        .unwrap_or_default();
+    let full: Vec<_> = export
+        .jewel_radii
+        .iter()
+        .filter(|r| r.label != "Variable")
+        .collect();
+    let rings: Vec<_> = export
+        .jewel_radii
+        .iter()
+        .filter(|r| r.label == "Variable")
+        .collect();
+    for (k, row) in rows.iter().enumerate() {
+        let (Some(radius), Some(ring)) = (full.get(k), rings.get(k)) else {
+            out.bundle_only(T, [row.id.clone()]);
+            continue;
+        };
+        // Exact, unlike `scaled`'s integer: a value that is not a multiple
+        // of 5 would show its fraction against PoB's.
+        let (n, d) = loom_tree::poe1::radius::TABLE_SCALE;
+        #[expect(clippy::cast_precision_loss, reason = "radii are small integers")]
+        let num = |v: i64| json!((v * n) as f64 / d as f64);
+        out.check(T, &row.id, "name", json!(row.name), json!(radius.label));
+        out.check(T, &row.id, "radius", num(row.radius), json!(radius.outer));
+        out.check(
+            T,
+            &row.id,
+            "ring",
+            json!([num(row.ring_inner), num(row.ring_outer)]),
+            json!([ring.inner, ring.outer]),
+        );
+    }
+    for k in rows.len()..full.len().max(rings.len()) {
+        out.pob_only(T, &format!("row {}", k + 1));
+    }
+}
+
+fn compare_pantheons(out: &mut Comparison, bundle: &Bundle, export: &Export) -> Result<(), String> {
+    const T: &str = "pantheons";
+    let gods: BTreeMap<&str, &loom_data::bundle::poe1::Pantheon> = bundle
+        .poe1
+        .as_ref()
+        .and_then(|p| p.pantheons.as_ref())
+        .into_iter()
+        .flatten()
+        .map(|g| (g.id.as_str(), g))
+        .collect();
+    out.bundle_only(
+        T,
+        gods.keys()
+            .filter(|id| !export.pantheons.contains_key(**id))
+            .map(|id| (*id).to_owned()),
+    );
+    if export.pantheons.is_empty() {
+        return Ok(());
+    }
+    let root = bundle
+        .scope_root(PANTHEON_SCOPE)
+        .map_err(|e| format!("stat descriptions {PANTHEON_SCOPE}: {e}"))?;
+    let scope = bundle
+        .stat_descriptions
+        .scope(root)
+        .map_err(|e| format!("stat descriptions {PANTHEON_SCOPE}: {e}"))?;
+    for (id, pob) in &export.pantheons {
+        let Some(god) = gods.get(id.as_str()) else {
+            out.pob_only(T, id);
+            continue;
+        };
+        out.check(T, id, "major", json!(god.major), json!(pob.is_major_god));
+        out.check(
+            T,
+            id,
+            "souls",
+            json!(god.souls.iter().map(|s| &s.name).collect::<Vec<_>>()),
+            json!(pob.souls.iter().map(|s| &s.name).collect::<Vec<_>>()),
+        );
+        for (n, (soul, pob_soul)) in god.souls.iter().zip(&pob.souls).enumerate() {
+            let lines: Vec<String> = soul
+                .stats
+                .iter()
+                .map(|(stat, value)| {
+                    let one = [StatAmount {
+                        stat: stat.clone(),
+                        value: *value,
+                    }];
+                    render(bundle, &scope, &one).join(" ")
+                })
+                .collect();
+            out.check(
+                T,
+                id,
+                format!("soul.{}.lines", n + 1),
+                json!(lines),
+                json!(pob_soul.mods.iter().map(|m| &m.line).collect::<Vec<_>>()),
+            );
+            out.check(
+                T,
+                id,
+                format!("soul.{}.values", n + 1),
+                Value::Array(soul.stats.iter().map(|(_, v)| int(*v)).collect()),
+                Value::Array(
+                    pob_soul
+                        .mods
+                        .iter()
+                        .flat_map(|m| &m.value)
+                        .map(|v| num(*v))
+                        .collect(),
+                ),
+            );
+        }
+    }
+    Ok(())
 }
 
 fn compare_monster_levels(out: &mut Comparison, properties: &PropertyTables, export: &Export) {

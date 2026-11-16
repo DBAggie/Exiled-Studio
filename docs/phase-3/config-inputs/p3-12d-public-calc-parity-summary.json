@@ -1,0 +1,5482 @@
+{
+  "format": 1,
+  "status": "incomplete",
+  "class": "ORACLE_EXPECTED_DIFFERENCE",
+  "oracle": {
+    "sha256": "a6d5cddf6d6da32051ae90b70f4f408b4d1340abcdba645cc496f6da0e4dc06a",
+    "platform": "windows-x86_64",
+    "tool_commit": "565c890832708f7a660704f6ce87c5f52c8d71ec"
+  },
+  "successor": {
+    "sha256": "943a3faa9203256ad5af6923492668d6d8e3a9b12523e44d95f8f7c689462b5f",
+    "platform": null,
+    "tool_commit": "565c890832708f7a660704f6ce87c5f52c8d71ec"
+  },
+  "overlay": {
+    "sha256": "9f0ed24f514b4701bade2e984e3410c1a9aeb77807d7a7435e52f163c05765b0",
+    "platform": null,
+    "tool_commit": "565c890832708f7a660704f6ce87c5f52c8d71ec"
+  },
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "deaaa6fb3b193d22668730b1eb54d9a551235443274d76e005c8cd8b3c5c340b"
+  },
+  "slice": {
+    "sha256": "6b120021dbe21ba7db2515fdb6571532ae938f7fa2c75800299e9c59f3a6c0bb",
+    "revision": 2,
+    "status": "proposed"
+  },
+  "register": {
+    "sha256": "c76ff26c9972fce31449c4fbc5624d56e79a4233cd1833a2fb12746e7055856f",
+    "entries": 25,
+    "accepted": 25
+  },
+  "counts": {
+    "builds": 88,
+    "no_difference": 78,
+    "expected": 9,
+    "unexpected": 0,
+    "failed": 0,
+    "expected_failures": 1,
+    "not_compared": 0,
+    "fields": {
+      "difference": 18,
+      "indeterminate": 312,
+      "match": 1012,
+      "not-computed": 395,
+      "partial": 351
+    },
+    "breakdowns": {
+      "absent": 100,
+      "difference": 7,
+      "match": 388,
+      "not-compared": 375
+    },
+    "views_differ": 0,
+    "incomplete": 35,
+    "expected_differences": 25,
+    "unexpected_differences": 0
+  },
+  "unpaired": [],
+  "missing_mechanic": [],
+  "unused_entries": [],
+  "views_differ": [],
+  "not_no_difference": [
+    {
+      "id": "malformed.xml",
+      "status": "expected_failure",
+      "reason": "both sides failed to import, as the fixture manifest expects (oracle ORACLE_IMPORT, successor IMPORT_XML at read)"
+    },
+    {
+      "id": "smite-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-area-hit-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-weapon-mods-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-melee-physical-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-melee-physical-area-hit-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-elemental-attacks-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-items-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-crit-items-templar.xml",
+      "status": "expected"
+    },
+    {
+      "id": "smite-enemy-templar.xml",
+      "status": "expected"
+    }
+  ],
+  "mechanic": [
+    {
+      "id": "bare-scion-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-scion-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-marauder-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-marauder-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-ranger-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-ranger-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-witch-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-witch-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-duelist-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-duelist-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-templar-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-templar-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-shadow-level1.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "bare-shadow-level90.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "passives-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "passives-scion.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "masteries-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "jewellery-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "jewel-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "armour-pieces-marauder.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "shield-templar.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "resistances-duelist.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "evasion-es-shadow.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-config-conditions-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-config-placeholders-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-custom-modifiers-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-legacy-custom-mods-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-level10-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-added-cold-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-controlled-destruction-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-increased-critical-strikes-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-cold-penetration-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-faster-casting-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-increased-critical-damage-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-added-damage-items-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-crit-items-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-enemy-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "smite-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-area-hit-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-weapon-mods-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-melee-physical-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-melee-physical-area-hit-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-elemental-attacks-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-items-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-crit-items-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "smite-two-hand-level10-templar.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "smite-enemy-templar.xml",
+      "status": "expected",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "difference"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "difference"
+        }
+      ]
+    },
+    {
+      "id": "rolled-jewellery-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "smite-global-attack-stats-templar.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "HitChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    },
+    {
+      "id": "ice-nova-attack-and-cast-speed-witch.xml",
+      "status": "no_difference",
+      "targets": [
+        {
+          "field": "Armour",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "AverageDamage",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "BlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ChaosResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ColdResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "CritMultiplier",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Dex",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "EnergyShield",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Evasion",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "FireResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Int",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Life",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LifeUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "LightningResist",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Mana",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "ManaUnreserved",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Speed",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellBlockChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "SpellSuppressionChance",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "Str",
+          "met": true,
+          "outcome": "match"
+        },
+        {
+          "field": "TotalDPS",
+          "met": true,
+          "outcome": "match"
+        }
+      ]
+    }
+  ]
+}

@@ -3,11 +3,14 @@
 //! exists). Five kinds of check, each finding with a stable code (ADR-014):
 //!
 //! - **structural:** every listed file exists with its SHA-256 and size; no
-//!   file is unlisted; `signatures` is empty (formats 1 and 2);
+//!   file is unlisted (but the installer's side files, `signature.json` and
+//!   `accepted.json`, `crate::pack::SIDE_FILES`); `signatures` is empty
+//!   (formats 1 and 2);
 //! - **schema:** the bundle loads ([`Bundle::load`]: format, game, paths,
 //!   required files, every file parses);
-//! - **referential:** mod stats, quality stats, and the stats of the
-//!   rules' compositions are stats; mod classes and base classes are item
+//! - **referential:** mod stats, quality stats, the stats of the PoE1
+//!   section's build choices (`poe1::Poe1Section::choice_stats`), and the
+//!   stats of the rules' compositions are stats; mod classes and base classes are item
 //!   classes; base implicits are mods; graft gems are base items; client
 //!   texts the rules name exist; in the skill tables (format 2), every
 //!   stat, skill type, item class, active skill, granted effect, stat set,
@@ -16,7 +19,11 @@
 //!   object template, mastery group, and mastery effect, every passive of a
 //!   tree node, and every tree node of a connection or root; no object
 //!   template chain loops (`BUNDLE_TEMPLATE_CYCLE`); every tree node's orbit
-//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`); the
+//!   and position fit the orbit slots (`BUNDLE_TREE_GEOMETRY`), and the tree
+//!   layout, when present, has a radius and an angle per slot
+//!   (`BUNDLE_TREE_LAYOUT`), and the tree sprites, when present, have
+//!   every sheet listed, every sprite on its sheet, and every node icon
+//!   on a sheet (`BUNDLE_TREE_SPRITES`); the
 //!   weapon, armour, and shield types' base items exist;
 //! - **domain:** IDs are unique per kind, and in the calc tables not empty
 //!   (`BUNDLE_EMPTY_ID`); passive node numbers, tree nodes, roots,
@@ -28,7 +35,10 @@
 //!   (`BUNDLE_VALUE_RANGE`); the property tables have their game's shape
 //!   (`BUNDLE_GAME_SHAPE`); the item rules validate; the
 //!   per-level rows of a granted effect or stat set have strictly
-//!   ascending levels (`BUNDLE_SKILL_LEVELS`);
+//!   ascending levels (`BUNDLE_SKILL_LEVELS`); a granted effect's
+//!   attribute is 1 to 4 (`BUNDLE_VALUE_RANGE`); the PoE1 section's build
+//!   choices have unique, non-empty IDs, and their rows the shape
+//!   `poe1::Poe1Section::choice_domain` names (`BUNDLE_VALUE_RANGE`);
 //! - **smoke:** every stat-description scope the rules name is one file,
 //!   builds, and renders a sample.
 //!
@@ -38,6 +48,12 @@
 //!
 //! Structural findings stop before the schema check (a file whose bytes
 //! are not the listed ones is not parsed); a schema finding stops the rest.
+//!
+//! [`validate`] checks every file's SHA-256. [`check`] also returns the
+//! bundle it loaded, so a host loads the tables once, and can check sizes
+//! only ([`Integrity::Sizes`]) for a bundle whose hashes were checked
+//! before (an installed bundle: at install and on Verify; plan decision
+//! P-e; `docs/phase-5/performance.md`).
 
 use std::collections::BTreeSet;
 
@@ -96,24 +112,84 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-/// Validates the bundle `source` holds (module docs).
+/// What the structural check compares a listed file with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Integrity {
+    /// Its size and its SHA-256: every file is read and hashed.
+    Hashes,
+    /// Its size alone ([`BundleSource::size`]), for a bundle whose hashes
+    /// were checked before. Every other check still runs.
+    Sizes,
+}
+
+/// Validates the bundle `source` holds (module docs), hashes included.
 #[must_use]
 pub fn validate(source: &dyn BundleSource) -> Report {
+    check(source, Integrity::Hashes).err().unwrap_or_default()
+}
+
+/// Validates the bundle `source` holds and returns it loaded.
+///
+/// # Errors
+/// The report, with at least one finding, when the bundle is not valid.
+pub fn check(source: &dyn BundleSource, integrity: Integrity) -> Result<Bundle, Report> {
     let mut report = Report::default();
-    if !structural(source, &mut report) {
-        return report;
+    if !structural(source, integrity, &mut report) {
+        return Err(report);
     }
     let bundle = match Bundle::load(source) {
         Ok(b) => b,
         Err(e) => {
             report.add(e.code(), at_of(&e), e.to_string());
-            return report;
+            return Err(report);
         }
     };
     referential(&bundle, &mut report);
     domain(&bundle, &mut report);
+    layout(&bundle, &mut report);
+    sprites(&bundle, &mut report);
     smoke(&bundle, &mut report);
-    report
+    if report.is_valid() {
+        Ok(bundle)
+    } else {
+        Err(report)
+    }
+}
+
+/// The tree layout, when present, fits the tree's orbits
+/// (`BUNDLE_TREE_LAYOUT`).
+fn layout(b: &Bundle, report: &mut Report) {
+    let (Some(layout), Some(p)) = (&b.tree_layout, &b.passives) else {
+        return;
+    };
+    if !layout.fits(&p.tree.orbit_slots) {
+        report.add(
+            "BUNDLE_TREE_LAYOUT",
+            super::tree_layout::TREE_LAYOUT,
+            "the layout does not give one radius and one angle in [0, 360) per slot of every orbit",
+        );
+    }
+}
+
+/// The tree sprites, when present: a sound index whose sheets are listed
+/// (`BUNDLE_TREE_SPRITES`).
+fn sprites(b: &Bundle, report: &mut Report) {
+    use super::tree_sprites::TREE_SPRITES;
+    let Some(sprites) = &b.tree_sprites else {
+        return;
+    };
+    for p in sprites.problems() {
+        report.add("BUNDLE_TREE_SPRITES", TREE_SPRITES, p);
+    }
+    for path in sprites.sheet_paths() {
+        if b.manifest.files.iter().all(|f| f.path != path) {
+            report.add(
+                "BUNDLE_TREE_SPRITES",
+                &path,
+                "a sheet the index names is not listed",
+            );
+        }
+    }
 }
 
 fn at_of(e: &BundleError) -> String {
@@ -128,9 +204,9 @@ fn at_of(e: &BundleError) -> String {
     }
 }
 
-/// Hashes, sizes, unlisted files, signatures; `false` when the schema check
-/// must not run.
-fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
+/// Hashes (with [`Integrity::Hashes`]), sizes, unlisted files, signatures;
+/// `false` when the schema check must not run.
+fn structural(source: &dyn BundleSource, integrity: Integrity, report: &mut Report) -> bool {
     let bytes = match source.read(MANIFEST) {
         Ok(b) => b,
         Err(e) => {
@@ -155,18 +231,24 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         );
     }
     for f in &manifest.files {
-        match source.read(&f.path) {
+        let read = match integrity {
+            Integrity::Hashes => source.read(&f.path).map(|b| {
+                let size = b.len() as u64;
+                (size, Some(hex(&Sha256::digest(&b))))
+            }),
+            Integrity::Sizes => source.size(&f.path).map(|size| (size, None)),
+        };
+        match read {
             Err(e) => report.add(e.code(), &f.path, e.to_string()),
-            Ok(b) => {
-                if b.len() as u64 != f.size {
+            Ok((size, sha)) => {
+                if size != f.size {
                     report.add(
                         "BUNDLE_SIZE_MISMATCH",
                         &f.path,
-                        format!("listed {} bytes, found {}", f.size, b.len()),
+                        format!("listed {} bytes, found {size}", f.size),
                     );
                 }
-                let sha = hex(&Sha256::digest(&b));
-                if sha != f.sha256 {
+                if let Some(sha) = sha.filter(|sha| *sha != f.sha256) {
                     report.add("BUNDLE_HASH_MISMATCH", &f.path, format!("SHA-256 {sha}"));
                 }
             }
@@ -176,7 +258,10 @@ fn structural(source: &dyn BundleSource, report: &mut Report) -> bool {
         Err(e) => report.add(e.code(), "", e.to_string()),
         Ok(paths) => {
             for p in paths {
-                if p != MANIFEST && manifest.files.iter().all(|f| f.path != p) {
+                if p != MANIFEST
+                    && !crate::pack::SIDE_FILES.contains(&p.as_str())
+                    && manifest.files.iter().all(|f| f.path != p)
+                {
                     report.add("BUNDLE_UNLISTED_FILE", &p, "not in the manifest");
                 }
             }
@@ -241,6 +326,11 @@ fn referential(b: &Bundle, report: &mut Report) {
         for g in p.grafts.iter().flat_map(|g| &g.bases) {
             if !bases.contains(g.gem.as_str()) {
                 dangling(format!("poe1/grafts:{}", g.graft), "gem", &g.gem);
+            }
+        }
+        for (at, s) in p.choice_stats() {
+            if !stats.contains(s) {
+                dangling(at, "stat", s);
             }
         }
     }
@@ -428,6 +518,13 @@ fn skill_domain(sk: &SkillTables, report: &mut Report) {
                 "BUNDLE_SKILL_LEVELS",
                 format!("granted_effects:{}", e.id),
                 "levels are not strictly ascending",
+            );
+        }
+        if let Some(a) = e.attribute.filter(|a| !(1..=4).contains(a)) {
+            report.add(
+                "BUNDLE_VALUE_RANGE",
+                format!("granted_effects:{}", e.id),
+                format!("attribute {a} is not 1 to 4"),
             );
         }
     }
@@ -699,7 +796,7 @@ fn property_refs(p: &PropertyTables, bases: &BTreeSet<&str>, report: &mut Report
 
 /// The item property and monster tables' domain checks (module docs).
 fn property_domain(p: &PropertyTables, game: Game, report: &mut Report) {
-    let files: [(&str, Vec<&str>); 4] = [
+    let files: [(&str, Vec<&str>); 5] = [
         (
             properties::WEAPON_TYPES,
             p.weapon_types
@@ -724,6 +821,10 @@ fn property_domain(p: &PropertyTables, game: Game, report: &mut Report) {
         (
             properties::GAME_CONSTANTS,
             p.game_constants.iter().map(|c| c.id.as_str()).collect(),
+        ),
+        (
+            properties::MONSTER_TYPES,
+            p.monster_types.iter().map(|m| m.id.as_str()).collect(),
         ),
     ];
     for (file, ids) in files {
@@ -889,6 +990,68 @@ fn domain(b: &Bundle, report: &mut Report) {
     }
     if let Some(p) = &b.properties {
         property_domain(p, b.game, report);
+    }
+    if let Some(p) = &b.poe1 {
+        let (file, ids, findings) = p.choice_domain();
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add("BUNDLE_EMPTY_ID", file, format!("{empty} rows have no ID"));
+        }
+        duplicates(report, file, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let (ids, findings) = p.radius_domain();
+        let empty = ids.iter().filter(|id| id.is_empty()).count();
+        if empty > 0 {
+            report.add(
+                "BUNDLE_EMPTY_ID",
+                super::poe1::JEWEL_RADII,
+                format!("{empty} rows have no ID"),
+            );
+        }
+        duplicates(report, super::poe1::JEWEL_RADII, ids.into_iter());
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let (nodes, ids, findings) = p.tree_flavour_domain();
+        duplicates(
+            report,
+            super::poe1::TREE_FLAVOUR,
+            nodes.iter().map(String::as_str).chain(ids.iter().copied()),
+        );
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let (bases, findings) = p.socket_domain();
+        duplicates(report, super::poe1::SOCKET_CAPS, bases.iter().copied());
+        let known: BTreeSet<&str> = b.base_items.iter().map(|x| x.id.as_str()).collect();
+        for base in bases.iter().filter(|x| !known.contains(*x)) {
+            report.add(
+                "BUNDLE_DANGLING_REF",
+                format!("{}:{base}", super::poe1::SOCKET_CAPS),
+                format!("base item {base} does not exist"),
+            );
+        }
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
+        let (keys, empty, findings) = p.flavour_domain();
+        if empty > 0 {
+            report.add(
+                "BUNDLE_EMPTY_ID",
+                super::poe1::UNIQUE_FLAVOUR,
+                format!("{empty} rows have no name or no ID"),
+            );
+        }
+        duplicates(
+            report,
+            super::poe1::UNIQUE_FLAVOUR,
+            keys.iter().map(String::as_str),
+        );
+        for (at, detail) in findings {
+            report.add("BUNDLE_VALUE_RANGE", at, detail);
+        }
     }
 }
 

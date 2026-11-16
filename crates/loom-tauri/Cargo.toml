@@ -8,13 +8,33 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[features]
+# The end-to-end test picker (Phase 4 plan, decision 14 d): fixed files
+# instead of native dialogs. Never in a release build.
+e2e = []
+
 [dependencies]
 loom-app.workspace = true
+loom-data.workspace = true
 loom-integrations.workspace = true
-tauri = "2.12.5"
+loom-persistence.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tauri = { version = "2.12.5", features = [] }
+# The file dialogs, called from Rust only (decision 10); MIT or Apache-2.0.
+tauri-plugin-dialog = "2"
+# Application updates (Phase 5, P-d; the one network path outside
+# loom-integrations): native-tls, not rustls with webpki-roots
+# (CDLA-Permissive-2.0 is not on the license allow-list; review M12).
+tauri-plugin-updater = { version = "2.14.1", default-features = false, features = ["native-tls", "system-proxy"] }
+semver = "1"
+
+[dev-dependencies]
+tauri = { version = "2.12.5", features = ["test"] }
 
 [lints]
 workspace = true
 
 [build-dependencies]
-tauri-build = "2.7.4"
+tauri-build = { version = "2.7.4", features = [] }

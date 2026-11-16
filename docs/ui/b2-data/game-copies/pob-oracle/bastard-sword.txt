@@ -1,0 +1,8 @@
+Rarity: NORMAL
+Bastard Sword
+Item Level: 25
+Quality: 0
+Sockets: W-W-W-W
+LevelReq: 12
+Implicits: 1
+{tags:attack}60% increased Global Accuracy Rating

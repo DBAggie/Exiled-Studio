@@ -34,8 +34,11 @@ mod value;
 )]
 mod tests;
 
-pub use build::{Build, BuildPart, Character};
-pub use config::{Config, ConfigInput, ConfigSet, ConfigValue};
+pub use build::{Build, BuildPart, Character, League};
+pub use config::{
+    Config, ConfigInput, ConfigInputKind, ConfigLayout, ConfigSet, ConfigValue,
+    CustomModifierBlock, CustomModifierLine,
+};
 pub use error::DomainError;
 pub use game::{DataVersion, Game, GameSpecific, Poe2Choices};
 pub use id::{

@@ -21,6 +21,29 @@ pub enum DomainError {
         /// Index of the line.
         line: usize,
     },
+    /// A custom modifier line claims to continue another line: only item
+    /// lines resolve over several lines.
+    ContinuedCustomLine {
+        /// The config set.
+        set: u32,
+        /// The block's index in the set.
+        block: usize,
+        /// The line's index in the block.
+        line: usize,
+    },
+    /// A custom modifier line of a config input claims to continue another
+    /// line (as [`DomainError::ContinuedCustomLine`]).
+    ContinuedCustomInputLine {
+        /// The config set.
+        set: u32,
+        /// The input's name.
+        input: String,
+        /// The line's index among the input's lines.
+        line: usize,
+    },
+    /// A flat config does not hold exactly one set with ID 1, no title,
+    /// and no attributes.
+    FlatConfigLayout,
 }
 
 impl DomainError {
@@ -30,6 +53,12 @@ impl DomainError {
         match self {
             Self::GameMismatch { .. } => "DOMAIN_GAME_MISMATCH",
             Self::BrokenContinuation { .. } => "DOMAIN_BROKEN_CONTINUATION",
+            // One code for both: the same rule, on a block's line or an
+            // input's.
+            Self::ContinuedCustomLine { .. } | Self::ContinuedCustomInputLine { .. } => {
+                "DOMAIN_CONTINUED_CUSTOM_LINE"
+            }
+            Self::FlatConfigLayout => "DOMAIN_FLAT_CONFIG_LAYOUT",
         }
     }
 }
@@ -47,6 +76,21 @@ impl fmt::Display for DomainError {
             Self::BrokenContinuation { line } => {
                 write!(f, "{}: item line {line}", self.code())
             }
+            Self::ContinuedCustomLine { set, block, line } => write!(
+                f,
+                "{}: config set {set}, block {block}, line {line}",
+                self.code()
+            ),
+            Self::ContinuedCustomInputLine { set, input, line } => write!(
+                f,
+                "{}: config set {set}, input {input:?}, line {line}",
+                self.code()
+            ),
+            Self::FlatConfigLayout => write!(
+                f,
+                "{}: a flat config holds one set, ID 1, without title or attributes",
+                self.code()
+            ),
         }
     }
 }

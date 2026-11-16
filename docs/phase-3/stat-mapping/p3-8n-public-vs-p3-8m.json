@@ -1,0 +1,772 @@
+{
+ "builds_with_reason_changes": 29,
+ "only_after": [
+  "ice-nova-action-speed-double-damage-witch.xml.json",
+  "ice-nova-arcane-surge-convergence-witch.xml.json",
+  "ice-nova-enemy-ailments-witch.xml.json",
+  "ice-nova-granted-passive-staff-witch.xml.json",
+  "ice-nova-hit-conditions-witch.xml.json",
+  "ice-nova-intensify-inspiration-witch.xml.json",
+  "life-mastery-no-life-modifiers-templar.xml.json",
+  "smite-conversion-penetration-templar.xml.json",
+  "smite-rage-momentum-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Wield Cospris CoC.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 10}}, \"stat\": \"local_elemental_damage_+%_per_2%_quality\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 9}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 5926}}, \"stat\": \"base_chance_to_shock_%\"}}"
+   ]
+  },
+  "Mirage Archer Toxic Rain.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 26620}}, \"stat\": \"withered_effect_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 14}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 22}}, \"stat\": \"add_frenzy_charge_on_kill_%_chance\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 22, \"line\": 23}}, \"stat\": \"chance_to_deal_double_damage_%\"}}"
+   ]
+  },
+  "OccVortex.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 10115}}, \"stat\": \"spell_damage_+%_per_100_maximum_mana_up_to_60%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 2, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44207}}, \"stat\": \"block_recovery_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44207}}, \"stat\": \"recover_X_life_on_block\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44207}}, \"stat\": \"shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 19, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 16}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}"
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 7}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 84, \"line\": 8}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 88, \"line\": 20}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 91, \"line\": 17}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42792}}, \"stat\": \"elemental_resistance_cannot_be_lowered_by_curses\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32853}}, \"stat\": \"extra_target_targeting_distance_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 5, \"line\": 18}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 7, \"line\": 18}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13922}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25781}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33657}}, \"stat\": \"elemental_resistance_cannot_be_lowered_by_curses\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 59335}}, \"stat\": \"base_max_fortification\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22702}}, \"stat\": \"additional_block_%_if_you_have_crit_recently\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 41, \"line\": 21}}, \"stat\": \"chance_to_deal_double_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 47, \"line\": 19}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 49, \"line\": 14}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"physical_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"staff_ailment_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24716}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25011}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33823}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34590}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48199}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48282}}, \"stat\": \"physical_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48282}}, \"stat\": \"staff_ailment_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9471}}, \"stat\": \"nearby_enemies_are_intimidated_while_you_have_rage\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}, \"stat\": \"critical_strike_chance_+%_per_righteous_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}, \"stat\": \"elemental_damage_+%_final_per_righteous_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}, \"stat\": \"gain_righteous_charge_on_mana_spent_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}, \"stat\": \"lose_all_righteous_charges_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 5, \"group\": 0}}, \"stat\": \"support_inspiration_mana_cost_+%_final\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 41, \"line\": 14}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 45, \"line\": 18}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 52, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31039}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}"
+   ]
+  },
+  "essence-drain-contagion-occultist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 55, \"line\": 15}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 58, \"line\": 8}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14113}}, \"stat\": \"cast_speed_+%_per_num_unique_spells_cast_recently\"}}"
+   ]
+  },
+  "ethereal-knives-mines-assassin.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 13}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 6}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 10}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 24, \"line\": 11}}, \"stat\": \"local_elemental_damage_+%_per_2%_quality\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42649}}, \"stat\": \"ignites_and_chill_apply_elemental_resistance_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9586}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 50858}}, \"stat\": \"damage_+%_per_warcry_used_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 50858}}, \"stat\": \"warcry_speed_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 102, \"line\": 18}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 17}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 53, \"line\": 21}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 54, \"line\": 14}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 54, \"line\": 19}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 64, \"line\": 18}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12809}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24716}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32241}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33657}}, \"stat\": \"elemental_resistance_cannot_be_lowered_by_curses\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34590}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48199}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 23, \"line\": 19}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 52, \"line\": 18}}, \"stat\": \"melee_attack_number_of_spirit_strikes\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13922}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24716}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25781}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34590}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 4139}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48199}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56595}}, \"stat\": \"melee_attack_number_of_spirit_strikes\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 59335}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9471}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmodelled-config\": {\"input\": \"conditionAtCloseRange\"}}"
+   ]
+  },
+  "forged-frostbearer-spectre-necromancer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19897}}, \"stat\": \"base_number_of_skeletons_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19897}}, \"stat\": \"base_number_of_spectres_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 19897}}, \"stat\": \"base_number_of_zombies_allowed\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 53, \"line\": 11}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48505}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}"
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 14079}}, \"stat\": \"arcane_surge_effect_+%_per_active_totem\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 17, \"line\": 19}}, \"stat\": \"base_physical_damage_%_to_convert_to_fire\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 19, \"line\": 10}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16123}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27137}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27733}}, \"stat\": \"cast_speed_+%_per_num_unique_spells_cast_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34927}}, \"stat\": \"base_physical_damage_%_to_convert_to_fire\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 37641}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_base_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_gain_buff_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_mana_regeneration_rate_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"display_base_intensity_loss\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"support_spell_boost_area_damage_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"support_spell_boost_area_of_effect_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_base_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_gain_buff_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_mana_regeneration_rate_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 31}}, \"stat\": \"support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"display_base_intensity_loss\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"support_spell_boost_area_damage_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 31}}, \"stat\": \"support_spell_boost_area_of_effect_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16123}}, \"stat\": \"critical_strike_chance_against_enemies_on_full_life_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27733}}, \"stat\": \"cast_speed_+%_per_num_unique_spells_cast_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 28680}}, \"stat\": \"maximum_intensify_stacks\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41870}}, \"stat\": \"damage_+%_if_enemy_shattered_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"config-input-line\": {\"input\": \"customMods\", \"line\": 5}}, \"stat\": \"hierophant_mana_cost_+%_final\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"stat\": \"display_base_intensity_loss\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"stat\": \"support_spell_boost_area_damage_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"stat\": \"support_spell_boost_area_of_effect_+%_final_per_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"critical_strike_chance_+%_per_righteous_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"elemental_damage_+%_final_per_righteous_charge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"gain_righteous_charge_on_mana_spent_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"lose_all_righteous_charges_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"support_inspiration_mana_cost_+%_final\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_base_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_gain_buff_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_mana_regeneration_rate_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 15}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 16}}, \"stat\": \"local_elemental_damage_+%_per_2%_quality\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 1, \"line\": 20}}, \"stat\": \"spell_chance_to_deal_double_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 15}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 27, \"line\": 19}}, \"stat\": \"cold_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 18}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 36, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"physical_staff_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16754}}, \"stat\": \"staff_ailment_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 26557}}, \"stat\": \"damage_+%_if_you_have_shocked_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30393}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32509}}, \"stat\": \"maximum_intensify_stacks\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41870}}, \"stat\": \"damage_+%_if_enemy_shattered_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"area_of_effect_+%_while_you_do_not_have_convergence\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 57197}}, \"stat\": \"gain_convergence_on_hitting_unique_enemy\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62697}}, \"stat\": \"base_chance_to_shock_%\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"attack_ailment_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"endurance_charge_on_kill_percent_chance_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"physical_attack_damage_+%_while_holding_a_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 15, \"line\": 20}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 16, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 292}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9586}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}"
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 544}}, \"stat\": \"attack_skills_additional_ballista_totems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 544}}, \"stat\": \"totem_skill_attack_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 544}}, \"stat\": \"totems_nearby_enemies_damage_taken_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 15, \"line\": 12}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 13}}, \"stat\": \"base_chance_to_shock_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 15}}, \"stat\": \"local_quality_does_not_increase_physical_damage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32241}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40743}}, \"stat\": \"avoid_all_elemental_status_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 21, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25011}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}"
+   ]
+  },
+  "lightning-trap-of-sparking-elementalist.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44191}}, \"stat\": \"dual_wield_or_shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 11, \"line\": 20}}, \"stat\": \"lightning_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 18}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 61, \"line\": 304}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 86, \"line\": 21}}, \"stat\": \"chance_to_deal_double_damage_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 16123}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 22535}}, \"stat\": \"number_of_additional_curses_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 44191}}, \"stat\": \"dual_wield_or_shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 12, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 20, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 8, \"line\": 16}}, \"stat\": \"fire_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12125}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 27137}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"attack_ailment_damage_+%_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"endurance_charge_on_kill_percent_chance_while_holding_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"physical_attack_damage_+%_while_holding_a_shield\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 861}}, \"stat\": \"shield_block_%\"}}"
+   ],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 61, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 71, \"line\": 18}}, \"stat\": \"skill_mana_cost_+_with_non_channelling_skills\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 58921}}, \"stat\": \"add_frenzy_charge_on_kill_%_chance\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 25, \"line\": 7}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 28, \"line\": 13}}, \"stat\": \"fire_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12382}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_base_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_cast_speed_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_gain_buff_on_mana_use_threshold\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_mana_regeneration_rate_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 4, \"group\": 0}}, \"stat\": \"support_arcane_surge_spell_damage_+%_final_while_you_have_arcane_surge\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 143, \"line\": 10}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 146, \"line\": 21}}, \"stat\": \"lightning_exposure_on_hit_magnitude\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 147, \"line\": 20}}, \"stat\": \"action_speed_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 12382}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffArcaneSurge\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"count_as_momentum_+_if_not_channelled\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_attack_speed_+%_per_stack\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_base_buff_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_max_stacks\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_movement_speed_+%_per_stack_removed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_stack_while_channelling_base_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 10245}}, \"stat\": \"melee_attack_number_of_spirit_strikes\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 13922}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 20913}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 25781}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30439}}, \"stat\": \"reduce_enemy_fire_resistance_with_weapons_%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38320}}, \"stat\": \"base_physical_damage_%_to_convert_to_fire\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39790}}, \"stat\": \"consecrated_ground_enemy_damage_taken_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39790}}, \"stat\": \"consecrated_ground_while_stationary_radius\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40189}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42792}}, \"stat\": \"elemental_resistance_cannot_be_lowered_by_curses\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 50842}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55002}}, \"stat\": \"melee_damage_+%_at_close_range\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 59335}}, \"stat\": \"base_max_fortification\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 64406}}, \"stat\": \"base_self_critical_strike_multiplier_-%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 7528}}, \"stat\": \"nearby_enemies_are_intimidated_while_you_have_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9361}}, \"stat\": \"maximum_rage\"}}"
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 10245}}, \"stat\": \"melee_attack_number_of_spirit_strikes\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55002}}, \"stat\": \"melee_damage_+%_at_close_range\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"count_as_momentum_+_if_not_channelled\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_attack_speed_+%_per_stack\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_base_buff_duration_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_max_stacks\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_movement_speed_+%_per_stack_removed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 1}}, \"stat\": \"support_momentum_stack_while_channelling_base_ms\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 10245}}, \"stat\": \"melee_attack_number_of_spirit_strikes\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24716}}, \"stat\": \"maximum_rage\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34590}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 36949}}, \"stat\": \"consecrated_ground_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39790}}, \"stat\": \"consecrated_ground_enemy_damage_taken_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 39790}}, \"stat\": \"consecrated_ground_while_stationary_radius\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41415}}, \"stat\": \"maximum_life_+%_if_no_life_tags_on_body_armour\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 48199}}, \"stat\": \"gain_x_rage_on_melee_hit\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 55002}}, \"stat\": \"melee_damage_+%_at_close_range\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9471}}, \"stat\": \"nearby_enemies_are_intimidated_while_you_have_rage\"}}"
+   ]
+  },
+  "winter-orb-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"item\": {\"item\": 4, \"line\": 12}}, \"stat\": \"mod_granted_passive_hash\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 15167}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 24872}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 28680}}, \"stat\": \"cast_speed_+%_per_num_unique_spells_cast_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34506}}, \"stat\": \"golem_buff_effect_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 41870}}, \"stat\": \"damage_+%_if_enemy_shattered_recently\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 42649}}, \"stat\": \"ignites_and_chill_apply_elemental_resistance_+\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 56461}}, \"stat\": \"base_number_of_golems_allowed\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62849}}, \"stat\": \"permanent_damage_+%_per_second_of_chill\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 9586}}, \"stat\": \"critical_strike_multiplier_+_vs_unique_enemies\"}}",
+    "{\"unmodelled-config\": {\"input\": \"buffArcaneSurge\"}}"
+   ]
+  }
+ },
+ "reasons_added": 28,
+ "reasons_gone": 283,
+ "state_changes": {},
+ "value_changes": {
+  "OccVortex.xml.json": {
+   "mana": [
+    1202.0,
+    1390.0
+   ],
+   "mana-unreserved": [
+    1202.0,
+    1390.0
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "life": [
+    3816.0,
+    4099.0
+   ],
+   "life-unreserved": [
+    3816.0,
+    4099.0
+   ]
+  },
+  "arakaalis-raise-spider-occultist.xml.json": {
+   "life": [
+    4982.0,
+    5302.0
+   ],
+   "life-unreserved": [
+    4982.0,
+    5302.0
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "hit-dps": [
+    6927.664973693164,
+    7204.771572640891
+   ],
+   "speed": [
+    1.4894259818731115,
+    1.549003021148036
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "life": [
+    4509.0,
+    4825.0
+   ],
+   "life-unreserved": [
+    4509.0,
+    4825.0
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    1107.4802211200001,
+    1465.1797995099998
+   ],
+   "crit-chance": [
+    17.073,
+    19.349400000000003
+   ],
+   "crit-multiplier": [
+    2.2800000000000002,
+    2.5300000000000002
+   ],
+   "hit-dps": [
+    4116.134821829334,
+    5772.320016802897
+   ],
+   "speed": [
+    3.716666666666667,
+    3.939666666666667
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "life": [
+    5223.0,
+    5555.0
+   ],
+   "life-unreserved": [
+    5223.0,
+    5555.0
+   ]
+  },
+  "holy-flame-totem-hierophant.xml.json": {
+   "life": [
+    3952.0,
+    4250.0
+   ],
+   "life-unreserved": [
+    3952.0,
+    4250.0
+   ]
+  },
+  "ice-nova-elementalist-campaign-lab1.xml.json": {
+   "average-damage": [
+    5905.200000000001,
+    8739.640000000001
+   ],
+   "hit-dps": [
+    17378.160000000003,
+    25719.512000000006
+   ]
+  },
+  "ice-nova-elementalist-campaign.xml.json": {
+   "average-damage": [
+    29701.81475133599,
+    48710.560927392005
+   ],
+   "hit-dps": [
+    95045.80720427519,
+    155873.79496765445
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "average-damage": [
+    177455.16150817004,
+    608692.9476337943
+   ],
+   "crit-chance": [
+    77.995,
+    82.27
+   ],
+   "hit-dps": [
+    529830.410788679,
+    1926252.3108548303
+   ],
+   "speed": [
+    2.9857142857142853,
+    3.164571428571429
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    97.6841425346193,
+    102.7548847530018
+   ],
+   "crit-multiplier": [
+    3.81,
+    4.0600000000000005
+   ],
+   "hit-dps": [
+    265.7428823791256,
+    290.7189814646219
+   ],
+   "speed": [
+    2.7204301075268815,
+    2.829247311827957
+   ]
+  },
+  "kinetic-fusillade-ballista-hierophant.xml.json": {
+   "life": [
+    3532.0,
+    3821.0
+   ],
+   "life-unreserved": [
+    3532.0,
+    3821.0
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "life": [
+    3577.0,
+    3865.0
+   ],
+   "life-unreserved": [
+    3577.0,
+    3865.0
+   ],
+   "resistance.cold": [
+    75.0,
+    76.0
+   ],
+   "resistance.lightning": [
+    75.0,
+    76.0
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "life": [
+    3517.0,
+    3780.0
+   ],
+   "life-unreserved": [
+    3517.0,
+    3780.0
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "life": [
+    11203.0,
+    11514.0
+   ],
+   "life-unreserved": [
+    11203.0,
+    11514.0
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    10652.796,
+    16264.02375
+   ],
+   "block-chance": [
+    59.0,
+    67.0
+   ],
+   "hit-dps": [
+    36574.5996,
+    63711.60237
+   ],
+   "life": [
+    3296.0,
+    3551.0
+   ],
+   "life-unreserved": [
+    3296.0,
+    3551.0
+   ],
+   "poe1.spell-block-chance": [
+    25.0,
+    33.0
+   ],
+   "speed": [
+    3.4333333333333336,
+    3.917333333333333
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "average-damage": [
+    6660.665625,
+    15100.681274999999
+   ],
+   "hit-dps": [
+    15841.689376106846,
+    41673.95806412338
+   ],
+   "life": [
+    4175.0,
+    4478.0
+   ],
+   "life-unreserved": [
+    4175.0,
+    4478.0
+   ],
+   "speed": [
+    2.3783943329397874,
+    2.75974025974026
+   ]
+  },
+  "smite-inquisitor-act2.xml.json": {
+   "life": [
+    2779.0,
+    3072.0
+   ],
+   "life-unreserved": [
+    2779.0,
+    3072.0
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "average-damage": [
+    4806.115624999999,
+    8037.688125
+   ],
+   "hit-dps": [
+    10948.524319288665,
+    21213.992684105662
+   ],
+   "life": [
+    2814.0,
+    3112.0
+   ],
+   "life-unreserved": [
+    2814.0,
+    3112.0
+   ],
+   "speed": [
+    2.2780401416765055,
+    2.639315230224321
+   ]
+  }
+ }
+}

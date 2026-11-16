@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8k): a level 90 Witch casting Ice Nova (level 20) against an enemy configured as exposed to cold and to fire, with custom lines: a chance to inflict cold exposure, "Exposure you inflict applies an extra -25%", "Cold Exposure you inflict applies an extra -5%", and "Fire Exposure you inflict applies an extra -7%". The enemy's cold resistance is 50 - 10 - 25 - 5 = 10; the fire check has no fire chance, so it gives nothing.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="conditionEnemyColdExposure" boolean="true"/>
+			<Input name="conditionEnemyFireExposure" boolean="true"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				10% Chance to Inflict Cold Exposure on Hit with Cold Damage
+Exposure you inflict applies an extra -25% to the affected Resistance
+Cold Exposure you inflict applies an extra -5% to Cold Resistance
+Fire Exposure you inflict applies an extra -7% to Fire Resistance
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

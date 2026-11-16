@@ -349,16 +349,22 @@ fn sample_build(game: Game, item: Item) -> Build {
     inputs.push(ConfigInput {
         name: "flag".to_owned(),
         value: ConfigValue::Boolean(true),
+        kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     inputs.push(ConfigInput {
         name: "count".to_owned(),
         value: ConfigValue::Number(Sourced::read(Number(10.0), "10")),
+        kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     inputs.push(ConfigInput {
         name: "choice".to_owned(),
         value: ConfigValue::String("Fire".to_owned()),
+        kind: crate::ConfigInputKind::Input,
+        lines: Vec::new(),
         attributes: Attributes::new(),
     });
     build.config.active = Some(ConfigSetId(1));
@@ -366,6 +372,7 @@ fn sample_build(game: Game, item: Item) -> Build {
         id: ConfigSetId(1),
         title: Some("Default".to_owned()),
         inputs,
+        custom_modifiers: Vec::new(),
         attributes: Attributes::new(),
     });
 
@@ -585,6 +592,29 @@ fn ordered_should_keep_opaque_content_between_typed_siblings() {
         })
         .collect();
     assert_eq!(shape, ["SkillA", "opaque", "SupportB"]);
+}
+
+#[test]
+fn ordered_should_insert_and_remove_typed_entries_around_opaque_content() {
+    let mut list: Ordered<&str> = Ordered::new();
+    list.push("a");
+    list.push_opaque(OpaqueNode::element("x"));
+    list.push("c");
+    list.insert_typed(1, "b");
+    list.insert_typed(9, "d");
+    let shape = |l: &Ordered<&str>| -> Vec<String> {
+        l.entries()
+            .iter()
+            .map(|e| match e {
+                Entry::Typed(t) => (*t).to_owned(),
+                Entry::Opaque(_) => "opaque".to_owned(),
+            })
+            .collect()
+    };
+    assert_eq!(shape(&list), ["a", "opaque", "b", "c", "d"]);
+    assert_eq!(list.remove_typed(2), Some("c"));
+    assert_eq!(list.remove_typed(5), None);
+    assert_eq!(shape(&list), ["a", "opaque", "b", "d"]);
 }
 
 #[test]

@@ -1,0 +1,4 @@
+{
+  "$comment": "Every webview permission, by capability identifier (Phase 5, P6; docs/phase-5/security.md). The test capabilities_should_equal_the_committed_allow_list fails when a capability file differs; a new permission needs a reviewed change here. No dialog:*, fs:*, shell:*, or updater:* permission: the Rust side does those.",
+  "main": ["core:event:allow-listen", "core:event:allow-unlisten"]
+}

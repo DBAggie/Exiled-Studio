@@ -1,0 +1,83 @@
+{
+ "builds_with_reason_changes": 11,
+ "only_after": [],
+ "only_before": [],
+ "per_build": {
+  "34e61d44e1a4114a53387cbdf976d7d979c13e6f9c255666602e10f23121ae2a.json": {
+   "added": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 2}}, \"stat\": \"projectile_damage_+%\"}}"
+   ],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "59bb60144b724f801b8c2d881f20b7c54ec69fd61019c54ea60b6f78dfbfd575.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "5bc910b938478b1b2460adfa21c11c6232be5eccf36161539e975ff7cdcc9e14.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "6cdeea82eacaeb99a12f037e02362308a490e9461648da96e37fb781decc9e7b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 16}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "8508853c2d0188c2b9a25279aea80ba426a8a2ad3b8ef911b27e1f214a4ebcd3.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "a48870a459e8d82a7d5cb9c5cac714045518db15bf3ca5d1ba16c6f6f49da20e.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "a642e196787cae9a8d02549fb458ce5dc90f1efd610b128a8599d706f5c55e3b.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "b6098b6859e6be03cd4020386a5a8422e804d7d042e14cc45501ba7b13e2322a.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 12}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "d4cf2bcc2ccf2b75109d8619193d140f16fb1658918bc414462dd8457e935844.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "d5403cb1d96e669044bd1db2cb9f8cfdb99331e351813b5cb50d84765f24c94c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "e1004b49057737ee4cc8e5e9ac9275c453b5173b6537cc9299daac84b825044c.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  }
+ },
+ "reasons_added": 1,
+ "reasons_gone": 15,
+ "state_changes": {},
+ "value_changes": {}
+}

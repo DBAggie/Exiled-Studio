@@ -1,0 +1,20 @@
+Rarity: RARE
+Grim Mangler
+Totemic Maul
+Crafted: true
+Prefix: {range:0.167}LocalIncreasedPhysicalDamagePercent4
+Prefix: {range:0.875,0.25}LocalAddedPhysicalDamageTwoHand6
+Prefix: {range:0.333333,0.117647}LocalAddedLightningDamageTwoHand6
+Suffix: {range:1}StunThresholdReduction3
+Suffix: None
+Suffix: None
+Item Level: 55
+Quality: 0
+Sockets: R-R-R
+LevelReq: 36
+Implicits: 1
+30% increased Stun Duration on Enemies
+{tags:damage,physical,attack}{prefix}89% increased Physical Damage
+{tags:damage,physical,attack}{prefix}Adds 27 to 45 Physical Damage
+{tags:damage,elemental,lightning,attack}{prefix}Adds 12 to 212 Lightning Damage
+{suffix}11% reduced Enemy Stun Threshold

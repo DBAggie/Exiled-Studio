@@ -356,6 +356,49 @@ fn quarantine_should_name_every_unresolved_line() {
 }
 
 #[test]
+fn resolve_build_ranged_should_give_the_exact_ends_of_each_range() {
+    let b = bundle("bundle-poe1");
+    let data = BundleData::new(&b);
+    let mut build = build(
+        Game::Poe1,
+        vec![item(
+            1,
+            Some(RING),
+            vec![
+                explicit("+15 to maximum Life"),
+                explicit("+(10-20) to maximum Life"),
+            ],
+        )],
+    );
+    let resolver = Resolver::new(&data).unwrap();
+    let (_, ends) = resolver
+        .resolve_build_ranged(&mut build, base_line)
+        .unwrap();
+    // The ranged line only, its one stat with both ends in shown order.
+    let line = ends.get(&ItemId(1)).unwrap();
+    assert_eq!(line.keys().copied().collect::<Vec<_>>(), [1]);
+    assert_eq!(
+        line[&1],
+        [Some(loom_parser::resolve::RangeEnds { from: 10, to: 20 })]
+    );
+    assert_eq!(
+        resolutions(&build, 1)[1],
+        stats(
+            vec![StatLine {
+                stat: StatId::new("test_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }],
+            None
+        )
+    );
+    // Resolved lines are not read again: a second run gives no ends.
+    let (_, again) = resolver
+        .resolve_build_ranged(&mut build, base_line)
+        .unwrap();
+    assert!(again.is_empty());
+}
+
+#[test]
 fn a_second_run_should_change_nothing() {
     let b = bundle("bundle-poe1");
     let mut build = resolved(Game::Poe1, &b);
@@ -447,4 +490,142 @@ fn a_bundle_with_skipped_references_should_be_refused() {
     let data = BundleData::new(&b);
     let err = Resolver::new(&data).unwrap_err();
     assert_eq!(err.code(), "IMPORT_DATA_UNVALIDATED");
+}
+
+/// Custom modifier lines (P3-12c): each read alone in the default scope,
+/// with no base, in every block of every set, enabled or not, and in a
+/// config input (PoB's legacy `customMods`, P3-12d).
+#[test]
+fn custom_modifier_lines_should_be_resolved_alone_without_a_base() {
+    use loom_domain::{
+        ConfigInput, ConfigInputKind, ConfigSet, ConfigSetId, ConfigValue, CustomModifierBlock,
+        CustomModifierLine,
+    };
+
+    let texts = [
+        "+15 to maximum Life",
+        "+15 TO MAXIMUM LIFE",
+        "+(10-20) to maximum Life",
+        "+12 to Accuracy",
+        "+12 to Evasion",
+        "+5 to Shadowed Text",
+        "Nothing like this",
+        "+1 first half",
+        "20% more Damage",
+        "Nothing like this 7",
+    ];
+    let pending = || -> Vec<_> {
+        texts
+            .iter()
+            .map(|t| CustomModifierLine {
+                text: (*t).to_owned(),
+                resolution: LineResolution::Pending,
+            })
+            .collect()
+    };
+    let block = |enabled: bool| CustomModifierBlock {
+        title: None,
+        enabled,
+        text: String::new(),
+        lines: pending(),
+        attributes: Vec::new(),
+    };
+    let mut inputs = Ordered::new();
+    inputs.push(ConfigInput {
+        name: "customMods".to_owned(),
+        value: ConfigValue::String(texts.join(
+            "
+",
+        )),
+        kind: ConfigInputKind::Input,
+        lines: pending(),
+        attributes: Vec::new(),
+    });
+    let mut b = build(Game::Poe1, Vec::new());
+    b.config.sets.push(ConfigSet {
+        id: ConfigSetId(1),
+        title: None,
+        inputs,
+        custom_modifiers: vec![block(true), block(false)],
+        attributes: Vec::new(),
+    });
+    let bundle = bundle("bundle-poe1");
+    let data = BundleData::new(&bundle);
+    // No item, but unresolved custom lines: the build is not complete.
+    assert_eq!(
+        resolve_build(&mut b, &data, base_line).unwrap(),
+        Completeness::Partial
+    );
+    let expected = vec![
+        stats(vec![exact("test_maximum_life", 15)], None),
+        stats(
+            vec![exact("test_maximum_life", 15)],
+            Some(Adapted::CaseFolded),
+        ),
+        stats(
+            vec![StatLine {
+                stat: StatId::new("test_maximum_life"),
+                value: StatValue::Ranged { min: 10, max: 20 },
+            }],
+            None,
+        ),
+        // No base for the item filter; only `test_accuracy_a` has a mod
+        // row an item can carry, so it is the reading (P3-12j).
+        stats(vec![exact("test_accuracy_a", 12)], None),
+        // Neither evasion reading has such a row: still ambiguous.
+        unresolved(UnresolvedReason::Ambiguous(vec![
+            vec![StatId::new("test_evasion_a")],
+            vec![StatId::new("test_evasion_b")],
+        ])),
+        unresolved(UnresolvedReason::OnlyShadowed),
+        // No template and no digit: a label, a custom note (ADR-015
+        // Amendment 2; close-out).
+        Some(LineResolution::Resolved {
+            result: Resolved::Typed(TypedResolution::CustomNote),
+            adapted: None,
+        }),
+        // Half of a two-line description, read alone.
+        unresolved(UnresolvedReason::NoTemplate),
+        // No template, a curated pattern of PoB's parser.
+        Some(LineResolution::Resolved {
+            result: Resolved::Typed(TypedResolution::CustomPattern {
+                pattern: "more-damage".to_owned(),
+                value: "20".to_owned(),
+            }),
+            adapted: None,
+        }),
+        // No template, no pattern, a digit: still a reason.
+        unresolved(UnresolvedReason::NoTemplate),
+    ];
+    let set = b.config.sets.typed().next().unwrap();
+    for blk in &set.custom_modifiers {
+        let got: Vec<_> = blk
+            .lines
+            .iter()
+            .map(|l| Some(l.resolution.clone()))
+            .collect();
+        assert_eq!(got, expected);
+    }
+    let input = set.inputs.typed().next().unwrap();
+    let got: Vec<_> = input
+        .lines
+        .iter()
+        .map(|l| Some(l.resolution.clone()))
+        .collect();
+    assert_eq!(got, expected);
+    // Resolved lines are kept: a second run changes nothing.
+    let before = b.clone();
+    resolve_build(&mut b, &data, base_line).unwrap();
+    assert_eq!(b, before);
+    // Only resolved lines left: complete.
+    let set = b.config.sets.typed_mut().next().unwrap();
+    for blk in &mut set.custom_modifiers {
+        blk.lines.truncate(3);
+    }
+    assert_eq!(b.completeness(), Completeness::Partial, "the input's lines");
+    let set = b.config.sets.typed_mut().next().unwrap();
+    for input in set.inputs.typed_mut() {
+        input.lines.truncate(3);
+    }
+    assert_eq!(b.completeness(), Completeness::Complete);
 }

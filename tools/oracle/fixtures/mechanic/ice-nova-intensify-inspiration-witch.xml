@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): a level 90 Witch casting Ice Nova (level 20) supported by Intensify and Inspiration (level 20), the config's intensity at 5 and a custom line "Spells which can gain Intensity have +1 to maximum Intensity": 4 intensity (the limit) of Intensify's more area damage; Inspiration's more elemental damage and increased crit chance per charge at the maximum 5 charges.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Intensify" skillId="SupportIntensify" variantId="SupportIntensify" gemId="Metadata/Items/Gems/SupportGemHandcastSpellBoost" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Inspiration" skillId="SupportInspiration" variantId="SupportInspiration" gemId="Metadata/Items/Gems/SupportGemReducedMana" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="intensifyIntensity" number="5"/>
+			<CustomModifierBlock enabled="true" title="Default">
+				Spells which can gain Intensity have +1 to maximum Intensity
+			</CustomModifierBlock>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

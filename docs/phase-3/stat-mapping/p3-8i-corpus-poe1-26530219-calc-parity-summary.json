@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "status": "incomplete",
+  "class": null,
+  "oracle": {
+    "sha256": "6fdcb67fc0ac84ab0c36867f34a4656ccfddd9d1ab8c6909be610f6613c3615a",
+    "platform": "windows-x86_64",
+    "tool_commit": "0f1ab6bb446c7b4e192b46847a7d342cb19c53a8"
+  },
+  "successor": {
+    "sha256": "eac5f1f12ad4791f4338b63fe5e1262675d6c27cd56ef6335eab2223c61425d7",
+    "platform": null,
+    "tool_commit": "7a7c1734828a548e0aa8b397c69a0e88836392de"
+  },
+  "overlay": null,
+  "bundle": {
+    "game": "poe1",
+    "steam_build": 26530219,
+    "data_schema": 2,
+    "manifest_sha256": "ab807d33bf33fcbf53b6d390613987dc98c5efed8480e8e119bcedb72325d594"
+  },
+  "slice": {
+    "sha256": "6b120021dbe21ba7db2515fdb6571532ae938f7fa2c75800299e9c59f3a6c0bb",
+    "revision": 2,
+    "status": "proposed"
+  },
+  "register": {
+    "sha256": "c895fb0dd02cb3136f3c92ea6966f225cf4e8817609717fbc9a1dd93fe66f694",
+    "entries": 38,
+    "accepted": 38
+  },
+  "counts": {
+    "builds": 21,
+    "no_difference": 21,
+    "expected": 0,
+    "unexpected": 0,
+    "failed": 0,
+    "expected_failures": 0,
+    "not_compared": 0,
+    "fields": {
+      "indeterminate": 363,
+      "not-computed": 141
+    },
+    "breakdowns": {
+      "not-compared": 210
+    },
+    "views_differ": 0,
+    "incomplete": 21,
+    "expected_differences": 0,
+    "unexpected_differences": 0
+  },
+  "unpaired": [],
+  "missing_mechanic": [],
+  "unused_entries": [],
+  "views_differ": [],
+  "not_no_difference": []
+}

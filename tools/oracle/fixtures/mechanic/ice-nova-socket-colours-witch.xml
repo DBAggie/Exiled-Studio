@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12i): a level 90 Witch casting Ice Nova (level 20) from a body armour with sockets B-B-R-W G-B. Group 1: Ice Nova (blue socket: +10 quality), Controlled Destruction (blue: +10 quality, 5% increased spell damage), Increased Critical Strikes (a blue gem in a red socket: none), Faster Casting (a white socket: none). Group 2 in the same slot continues at socket 5: Precision (green: +10 quality), Haste (a green gem in a blue socket: none).
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true" slot="Body Armour">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Controlled Destruction" skillId="SupportControlledDestruction" variantId="SupportControlledDestruction" gemId="Metadata/Items/Gems/SupportGemControlledDestruction" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Increased Critical Strikes" skillId="SupportIncreasedCriticalStrikes" variantId="SupportIncreasedCriticalStrikes" gemId="Metadata/Items/Gems/SupportGemIncreasedCriticalStrikes" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Faster Casting" skillId="SupportFasterCasting" variantId="SupportFasterCasting" gemId="Metadata/Items/Gems/SupportGemFasterCast" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="false" slot="Body Armour">
+				<Gem nameSpec="Precision" skillId="Precision" variantId="Precision" gemId="Metadata/Items/Gems/SkillGemPrecision" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+				<Gem nameSpec="Haste" skillId="Haste" variantId="Haste" gemId="Metadata/Items/Gems/SkillGemHaste" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: NORMAL
+Plate Vest
+Quality: 0
+Sockets: B-B-R-W G-B
+Implicits: 0
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

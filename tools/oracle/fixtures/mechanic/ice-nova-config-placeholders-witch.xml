@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-12b): ice-nova-witch.xml with a saved placeholder
+     for every input loom_calc::poe1::config classifies (NAMED_ONLY's placeholders,
+     ENEMY_DAMAGE, enemy::RESET_PLACEHOLDERS), each at a value PoB would show if it used it:
+     the enemy's cold resistance 0 and level 1 would change the hit, but PoB's enemyIsBoss
+     resets them. Two enemy damage inputs as well. PoB's values equal ice-nova-witch.xml's.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items/>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="enemyPhysicalDamage" number="9999"/>
+			<Input name="enemySpeed" number="100"/>
+			<Placeholder name="ScorchStacks" number="3"/>
+			<Placeholder name="ShockStacks" number="5"/>
+			<Placeholder name="aspectOfLunarisLunarProtection" number="2"/>
+			<Placeholder name="aspectOfLunarisLunarResistance" number="2"/>
+			<Placeholder name="aspectOfSolarisSunscaldStacks" number="1"/>
+			<Placeholder name="configSpectralTigerCount" number="2"/>
+			<Placeholder name="enemyArmour" number="0"/>
+			<Placeholder name="enemyChaosDamage" number="1"/>
+			<Placeholder name="enemyChaosResist" number="0"/>
+			<Placeholder name="enemyColdDamage" number="1"/>
+			<Placeholder name="enemyColdPen" number="40"/>
+			<Placeholder name="enemyColdResist" number="0"/>
+			<Placeholder name="enemyCritChance" number="90"/>
+			<Placeholder name="enemyCritDamage" number="300"/>
+			<Placeholder name="enemyDamageRollRange" number="0"/>
+			<Placeholder name="enemyEvasion" number="0"/>
+			<Placeholder name="enemyFireDamage" number="1"/>
+			<Placeholder name="enemyFirePen" number="40"/>
+			<Placeholder name="enemyFireResist" number="0"/>
+			<Placeholder name="enemyLevel" number="1"/>
+			<Placeholder name="enemyLightningDamage" number="1"/>
+			<Placeholder name="enemyLightningPen" number="40"/>
+			<Placeholder name="enemyLightningResist" number="0"/>
+			<Placeholder name="enemyPhysicalDamage" number="1"/>
+			<Placeholder name="enemyPhysicalOverwhelm" number="40"/>
+			<Placeholder name="enemySpeed" number="3000"/>
+			<Placeholder name="meleeDistance" number="5"/>
+			<Placeholder name="multiplierEnemyHallowingFlame" number="3"/>
+			<Placeholder name="multiplierHallowingFlameStacksRemovedByAlly" number="2"/>
+			<Placeholder name="multiplierWitheredStackCountSelf" number="7"/>
+			<Placeholder name="projectileDistance" number="90"/>
+			<Placeholder name="sigilOfPowerStages" number="3"/>
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

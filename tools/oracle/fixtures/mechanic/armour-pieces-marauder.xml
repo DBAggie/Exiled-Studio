@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-7): a level 90 Marauder in four armour pieces:
+     base ranges at a given percentile and at the top, quality, local flat
+     and increased armour; global armour, evasion, and resistances from
+     rings and an amulet.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Marauder" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="1" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills/>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Hide
+Glorious Plate
+Quality: 20
+ArmourBasePercentile: 0.5
+Implicits: 0
++80 to Armour
+60% increased Armour
++70 to maximum Life
++40% to Fire Resistance
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Crown
+Eternal Burgonet
+Implicits: 0
++30 to Armour
+20% increased Armour
+		</Item>
+		<Item id="3">
+Rarity: RARE
+Loom Test Grip
+Titan Gauntlets
+Quality: 10
+Implicits: 0
++15% to Cold Resistance
+		</Item>
+		<Item id="4">
+Rarity: RARE
+Loom Test Stride
+Titan Greaves
+Quality: 20
+Armour: 289
+ArmourBasePercentile: 0
+Implicits: 0
++25 to maximum Life
+		</Item>
+		<Item id="5">
+Rarity: RARE
+Loom Test Band
+Coral Ring
+Implicits: 1
++25 to maximum Life
+15% increased Armour
++10% to all Elemental Resistances
++12% to Lightning Resistance
+		</Item>
+		<Item id="6">
+Rarity: RARE
+Loom Test Loop
+Coral Ring
+Implicits: 1
++25 to maximum Life
++30 to Armour
++20% to Chaos Resistance
+		</Item>
+		<Item id="7">
+Rarity: RARE
+Loom Test Charm
+Onyx Amulet
+Implicits: 1
++12 to all Attributes
++30 to Evasion Rating
+10% increased Evasion Rating
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Body Armour" itemId="1"/>
+			<Slot name="Helmet" itemId="2"/>
+			<Slot name="Gloves" itemId="3"/>
+			<Slot name="Boots" itemId="4"/>
+			<Slot name="Ring 1" itemId="5"/>
+			<Slot name="Ring 2" itemId="6"/>
+			<Slot name="Amulet" itemId="7"/>
+		</ItemSet>
+	</Items>
+	<Config/>
+</PathOfBuilding>

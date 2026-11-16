@@ -1,0 +1,28 @@
+Item Class: Jewels
+Rarity: Unique
+Watcher's Eye
+Prismatic Jewel
+--------
+Limited to: 1
+--------
+Item Level: 86
+--------
+{ Unique Modifier — Life }
+6(4-6)% increased maximum Life
+{ Unique Modifier — Defences, Energy Shield }
+5(4-6)% increased maximum Energy Shield
+{ Unique Modifier — Mana }
+4(4-6)% increased maximum Mana
+{ Unique Modifier — Physical }
+25% chance to Impale Enemies on Hit with Attacks while using Pride
+(When an Impaled enemy is hit, the Impale reflects 10% of the physical damage of the Impaling hit to that enemy. Impale lasts for 5 hits or 8 seconds)
+{ Unique Modifier — Physical }
+5(5-8)% additional Physical Damage Reduction while affected by Determination
+{ Unique Modifier — Damage, Critical }
++28(20-30)% to Critical Strike Multiplier while affected by Precision
+--------
+One by one, they stood their ground against a creature 
+they had no hope of understanding, let alone defeating,
+and one by one, they became a part of it.
+--------
+Place into an allocated Jewel Socket on the Passive Skill Tree. Right click to remove from the Socket.

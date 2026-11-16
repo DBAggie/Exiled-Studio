@@ -218,6 +218,341 @@ fn kept_whole_should_be_empty_when_everything_reads() {
 }
 
 #[test]
+fn a_numeric_placeholder_should_be_typed_beside_the_inputs() {
+    use loom_domain::ConfigInputKind;
+
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<Placeholder name="enemyArmour" number="61989"/>
+			<Placeholder name="ShockStacks" number="1"/>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    let kinds: Vec<_> = set
+        .inputs
+        .typed()
+        .map(|i| (i.name.as_str(), i.kind))
+        .collect();
+    assert_eq!(
+        kinds,
+        [
+            ("flag", ConfigInputKind::Input),
+            ("count", ConfigInputKind::Input),
+            ("choice", ConfigInputKind::Input),
+            ("enemyArmour", ConfigInputKind::Placeholder),
+            ("ShockStacks", ConfigInputKind::Placeholder),
+        ]
+    );
+    assert_eq!(set.inputs.opaque().count(), 0);
+    assert!(export(&b).contains(r#"<Placeholder name="enemyArmour" number="61989"/>"#));
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// PoB loads a `string` placeholder as the input's value
+/// (`Classes/ConfigTab.lua`, `Load`), so it is not typed as a placeholder;
+/// nor is one without a number.
+#[test]
+fn a_placeholder_without_a_number_should_be_kept_whole() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<Placeholder name="text" string="x"/>
+			<Placeholder name="bad" number="x"/>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 3);
+    assert_eq!(set.inputs.opaque().count(), 2);
+    assert_eq!(
+        kept_whole(&b),
+        [
+            "Config/ConfigSet/Placeholder",
+            "Config/ConfigSet/Placeholder"
+        ]
+    );
+}
+
+/// PoB writes custom modifier blocks after the inputs (`Classes/
+/// ConfigTab.lua`, `Save`); they are typed there, text as read.
+#[test]
+fn custom_modifier_blocks_after_the_inputs_should_be_typed() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        "<Input name=\"choice\" string=\"Fire\"/>
+			<Placeholder name=\"ShockStacks\" number=\"1\"/>
+			<CustomModifierBlock enabled=\"true\" title=\"Default\">
+				Onslaught &amp; more
+Culling Strike
+			</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"false\" title=\"Off\" x=\"1\">\n\t\t\t\t\n\t\t\t</CustomModifierBlock>
+			<CustomModifierBlock title=\"Group 3\" enabled=\"true\"/>",
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 4);
+    assert_eq!(set.inputs.opaque().count(), 0);
+    let blocks: Vec<_> = set
+        .custom_modifiers
+        .iter()
+        .map(|c| {
+            (
+                c.title.as_deref(),
+                c.enabled,
+                c.text.as_str(),
+                c.attributes.len(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        blocks,
+        [
+            (
+                Some("Default"),
+                true,
+                "\n\t\t\t\tOnslaught & more\nCulling Strike\n\t\t\t",
+                0
+            ),
+            (Some("Off"), false, "\n\t\t\t\t\n\t\t\t", 1),
+            (Some("Group 3"), true, "", 0),
+        ]
+    );
+    // The modifier lines, pending until resolution.
+    let first = &set.custom_modifiers[0].lines;
+    assert_eq!(
+        first.iter().map(|l| l.text.as_str()).collect::<Vec<_>>(),
+        ["Onslaught & more", "Culling Strike"]
+    );
+    assert!(
+        first
+            .iter()
+            .all(|l| l.resolution == loom_domain::LineResolution::Pending)
+    );
+    assert!(set.custom_modifiers[1].lines.is_empty());
+    let out = export(&b);
+    assert!(
+        out.contains("Onslaught &amp; more\nCulling Strike"),
+        "{out}"
+    );
+    assert!(out.contains(r#"<CustomModifierBlock title="Group 3" enabled="true"/>"#));
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// A block before an input, with `enabled` other than `true` or `false`
+/// (PoB reads a missing one as true, any other as false), or with an
+/// element inside stays opaque in place and is listed.
+#[test]
+fn other_custom_modifier_blocks_should_be_kept_whole() {
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        "<CustomModifierBlock enabled=\"true\">Onslaught</CustomModifierBlock>
+			<Input name=\"choice\" string=\"Fire\"/>
+			<CustomModifierBlock title=\"a\">Onslaught</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"yes\">Onslaught</CustomModifierBlock>
+			<CustomModifierBlock enabled=\"true\">a<b/></CustomModifierBlock>
+			<CustomModifierBlock enabled=\"true\">Culling Strike</CustomModifierBlock>",
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.inputs.typed().count(), 3);
+    assert_eq!(set.inputs.opaque().count(), 4);
+    assert_eq!(set.custom_modifiers.len(), 1);
+    assert_eq!(set.custom_modifiers[0].text, "Culling Strike");
+    assert_eq!(kept_whole(&b), ["Config/ConfigSet/CustomModifierBlock"; 4]);
+}
+
+/// PoB's layout before config sets: the content directly under `<Config>`
+/// is set 1, read as one flat set and written back without a set element.
+#[test]
+fn the_old_config_layout_should_be_one_flat_set() {
+    let xml = BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        r#"<Config>
+		<Input name="flag" boolean="true"/>
+		<Placeholder name="ShockStacks" number="1"/>
+		<Input name="odd" number="x"/>
+		<CustomModifierBlock enabled="true" title="Default">+10 to maximum Life</CustomModifierBlock>
+	</Config>"#,
+    );
+    let b = round_trip(&xml);
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Flat);
+    assert_eq!(b.config.sets.entries().len(), 1);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(
+        (set.id, set.title.as_deref()),
+        (loom_domain::ConfigSetId(1), None)
+    );
+    assert_eq!(set.inputs.typed().count(), 2);
+    assert_eq!(set.custom_modifiers.len(), 1);
+    assert_eq!(kept_whole(&b), ["Config/Input"]);
+    assert!(!export(&b).contains("ConfigSet"));
+    // The build document carries it and refuses a flat config that is not
+    // one set 1 without title.
+    let json = crate::dto::v1::to_json(&b).unwrap();
+    assert!(json.contains(r#""layout": "flat""#), "{json}");
+    let mut bad = b.clone();
+    bad.config.sets.typed_mut().next().unwrap().title = Some("t".to_owned());
+    let err = crate::dto::v1::to_json(&bad).unwrap_err();
+    assert!(
+        err.to_string().contains("DOMAIN_FLAT_CONFIG_LAYOUT"),
+        "{err}"
+    );
+    // An empty `<Config>` stays the layout with sets, with none.
+    let b = round_trip(&BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        "<Config/>",
+    ));
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Sets);
+    assert_eq!(b.config.sets.entries().len(), 0);
+}
+
+/// A build document refuses a flat config that breaks the layout check
+/// on read; a comment alone does not make the flat layout; a broken flat
+/// build exports with set elements, dropping nothing.
+#[test]
+fn the_flat_layout_should_be_checked_and_never_drop_content() {
+    let b = import(BASE).unwrap();
+    let json = crate::dto::v1::to_json(&b).unwrap();
+    assert!(json.contains(r#""config": {"#), "{json}");
+    let flat = json.replacen(r#""config": {"#, r#""config": {"layout": "flat","#, 1);
+    let err = crate::dto::v1::from_json(&flat).unwrap_err();
+    assert!(
+        err.to_string().contains("DOMAIN_FLAT_CONFIG_LAYOUT"),
+        "{err}"
+    );
+
+    let commented = BASE.replace(
+        r#"<Config activeConfigSet="1">"#,
+        r#"<Config activeConfigSet="1"><!-- x -->"#,
+    );
+    assert_eq!(
+        import(&commented).unwrap().config.layout,
+        loom_domain::ConfigLayout::Sets
+    );
+    let only_comment = import(&BASE.replace(
+        r#"<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+			<Input name="flag" boolean="true"/>
+			<Input name="count" number="1.50"/>
+			<Input name="choice" string="Fire"/>
+		</ConfigSet>
+	</Config>"#,
+        "<Config><!-- x --></Config>",
+    ))
+    .unwrap();
+    assert_eq!(only_comment.config.layout, loom_domain::ConfigLayout::Sets);
+
+    let mut broken = b;
+    broken.config.layout = loom_domain::ConfigLayout::Flat;
+    let out = export(&broken);
+    assert!(
+        out.contains(r#"<ConfigSet id="1" title="Default">"#),
+        "{out}"
+    );
+    assert!(
+        out.contains(r#"<Input name="choice" string="Fire"/>"#),
+        "{out}"
+    );
+}
+
+/// Both layouts at once: the loose content stays untyped beside the sets.
+#[test]
+fn loose_config_content_beside_sets_should_stay_untyped() {
+    let xml = BASE.replace(
+        r#"<Config activeConfigSet="1">"#,
+        r#"<Config activeConfigSet="1">
+		<Input name="loose" boolean="true"/>"#,
+    );
+    let b = round_trip(&xml);
+    assert_eq!(b.config.layout, loom_domain::ConfigLayout::Sets);
+    assert_eq!(b.config.sets.typed().count(), 1);
+    assert_eq!(b.config.sets.opaque().count(), 1);
+}
+
+/// A block's text that PoB's XML reader reads otherwise than XML (another
+/// reference than the five, which PoB reads as nothing; a CDATA section,
+/// which PoB reads as a separate node) keeps the block whole.
+#[test]
+fn block_text_read_otherwise_by_pob_should_keep_the_block_whole() {
+    for body in [
+        "+10 to maximum Life&#10;+5 to Strength",
+        "<![CDATA[+10 to maximum Life]]>",
+        "a <![CDATA[b]]>",
+    ] {
+        let xml = BASE.replace(
+            r#"<Input name="choice" string="Fire"/>"#,
+            &format!(
+                r#"<Input name="choice" string="Fire"/>
+			<CustomModifierBlock enabled="true">{body}</CustomModifierBlock>"#
+            ),
+        );
+        let b = import(&xml).unwrap();
+        let set = b.config.sets.typed().next().unwrap();
+        assert!(set.custom_modifiers.is_empty(), "{body}");
+        assert_eq!(
+            kept_whole(&b),
+            ["Config/ConfigSet/CustomModifierBlock"],
+            "{body}"
+        );
+    }
+    // The five named entities are read as PoB reads them.
+    let xml = BASE.replace(
+        r#"<Input name="choice" string="Fire"/>"#,
+        r#"<Input name="choice" string="Fire"/>
+			<CustomModifierBlock enabled="true">a &lt;&gt;&amp;&apos;&quot; b</CustomModifierBlock>"#,
+    );
+    let b = round_trip(&xml);
+    let set = b.config.sets.typed().next().unwrap();
+    assert_eq!(set.custom_modifiers[0].text, "a <>&'\" b");
+}
+
+fn lines(text: &str) -> Vec<String> {
+    super::read::custom_modifier_lines(text).collect()
+}
+
+#[test]
+fn custom_modifier_lines_should_be_trimmed_and_skip_empty_ones() {
+    // As PoB saves a block: the text indented, lines after the first not.
+    assert_eq!(
+        lines("\n\t\t\t\tPerfect Forest Warrior\nOnslaught\r\n  Culling Strike \n\t\t\t"),
+        ["Perfect Forest Warrior", "Onslaught", "Culling Strike"]
+    );
+    assert!(lines("").is_empty());
+    assert!(lines("\n\t\t\t\t\n\t\t\t").is_empty());
+    // Vertical tab and form feed are Lua spaces; a no-break space is not.
+    assert!(lines("\u{b}\u{c}").is_empty());
+    assert_eq!(lines("\u{a0}"), ["\u{a0}"]);
+}
+
+#[test]
+fn custom_modifier_lines_should_lose_colour_codes() {
+    assert_eq!(
+        lines("^1=== CAP RES ===\n^xFF00aaOnslaught^7\n^1\n^xABCDEF"),
+        ["=== CAP RES ===", "Onslaught"]
+    );
+    // Not a code: too few hex digits, upper-case X, a caret alone.
+    assert_eq!(lines("^xFF00 a"), ["^xFF00 a"]);
+    assert_eq!(lines("^XFF00AA"), ["^XFF00AA"]);
+    assert_eq!(lines("a ^ b"), ["a ^ b"]);
+    // Two passes, as `gsub` twice: removing `^1` can make a `^x` code.
+    assert_eq!(lines("^^1xFF00AAz"), ["z"]);
+    // Other text is kept, whatever its script.
+    assert_eq!(lines("^2Gain Onslaught — 4s"), ["Gain Onslaught — 4s"]);
+}
+
+#[test]
 fn xml_equal_should_see_a_changed_value_or_text() {
     assert!(!xml_equal(r#"<a x="1"/>"#, r#"<a x="2"/>"#).unwrap());
     assert!(!xml_equal("<a>x</a>", "<a>y</a>").unwrap());
@@ -432,4 +767,149 @@ fn slot_with_children_should_stay_opaque() {
         (set.slots.typed().count(), set.slots.entries().len()),
         (1, 3)
     );
+}
+
+/// `BASE` with the `choice` input replaced by `inputs`.
+fn with_inputs(inputs: &str) -> String {
+    BASE.replace(r#"<Input name="choice" string="Fire"/>"#, inputs)
+}
+
+fn first_input(b: &Build, name: &str) -> loom_domain::ConfigInput {
+    b.config
+        .sets
+        .typed()
+        .next()
+        .unwrap()
+        .inputs
+        .typed()
+        .find(|i| i.name == name)
+        .unwrap()
+        .clone()
+}
+
+fn input_lines(input: &loom_domain::ConfigInput) -> Vec<&str> {
+    input.lines.iter().map(|l| l.text.as_str()).collect()
+}
+
+/// PoB's legacy `customMods` input holds its lines in one attribute with
+/// raw line breaks (PoB's `xml.lua` keeps them; XML would make each a
+/// space). The reader keeps them and reads the lines as a block's; the
+/// writer writes them raw, where PoB reads them back.
+#[test]
+fn legacy_custom_mods_should_keep_their_line_breaks_and_lines() {
+    let xml = with_inputs(
+        "<Input string=\"+30% to Cold Resistance\n\n^2Ice Nova &amp; more\t\n  \n\" name=\"customMods\"/>",
+    );
+    let b = round_trip(&xml);
+    let input = first_input(&b, "customMods");
+    assert_eq!(
+        input.value,
+        ConfigValue::String("+30% to Cold Resistance\n\n^2Ice Nova & more\t\n  \n".to_owned())
+    );
+    assert_eq!(
+        input_lines(&input),
+        ["+30% to Cold Resistance", "Ice Nova & more"]
+    );
+    assert!(
+        input
+            .lines
+            .iter()
+            .all(|l| l.resolution == loom_domain::LineResolution::Pending)
+    );
+    let out = export(&b);
+    assert!(
+        out.contains("string=\"+30% to Cold Resistance\n\n^2Ice Nova &amp; more\t\n  \n\""),
+        "{out}"
+    );
+    assert_eq!(kept_whole(&b), [] as [&str; 0]);
+}
+
+/// Only `customMods` has lines; any other string keeps its raw line
+/// breaks too (PoB's reading of every attribute).
+#[test]
+fn other_string_inputs_should_have_no_lines() {
+    let b = round_trip(&with_inputs(
+        r#"<Input name="choice" string="a
+b"/>"#,
+    ));
+    let input = first_input(&b, "choice");
+    assert_eq!(input.value, ConfigValue::String("a\nb".to_owned()));
+    assert!(input.lines.is_empty());
+}
+
+/// PoB decodes the five named entities (`xml.lua`, `decodeContent`), in
+/// either quote (its pattern takes both); `&amp;#10;` is the text `&#10;`.
+#[test]
+fn named_entities_should_read_as_pob_reads_them() {
+    let b = round_trip(&with_inputs(
+        r#"<Input name='customMods' string='&apos;c&apos; &lt;d&gt; &quot;e&quot; &amp;#10;'/>"#,
+    ));
+    let input = first_input(&b, "customMods");
+    assert_eq!(
+        input.value,
+        ConfigValue::String("'c' <d> \"e\" &#10;".to_owned())
+    );
+    assert_eq!(input_lines(&input), ["'c' <d> \"e\" &#10;"]);
+}
+
+/// PoB reads any other reference as nothing (`&#10;` is no line break
+/// there): silent in PoB, so the element is kept whole (a reason). As with a raw `>`, the
+/// export writes the kept value as XML read it, so it need not re-import
+/// the same.
+#[test]
+fn another_reference_should_keep_the_input_whole() {
+    for value in ["a&#10;b", "&#39;c", "&#x41;"] {
+        let b = import(&with_inputs(&format!(
+            r#"<Input name="customMods" string="{value}"/>"#
+        )))
+        .unwrap();
+        let set = b.config.sets.typed().next().unwrap();
+        assert!(
+            set.inputs.typed().all(|i| i.name != "customMods"),
+            "{value}"
+        );
+        assert_eq!(kept_whole(&b), ["Config/ConfigSet/Input"], "{value}");
+    }
+}
+
+/// A carriage return stays in the value (PoB on Windows reads the file in
+/// text mode, elsewhere not); the lines lose it with Lua's `%s` trim.
+#[test]
+fn a_crlf_value_should_keep_its_carriage_returns_and_give_the_same_lines() {
+    // A whole file with CRLF line ends, the value's included.
+    let crlf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>").replace('\n', "\r\n");
+    let lf = with_inputs("<Input name=\"customMods\" string=\"a\nb\n\"/>");
+    let (crlf, lf) = (import(&crlf).unwrap(), import(&lf).unwrap());
+    let (crlf_input, lf_input) = (
+        first_input(&crlf, "customMods"),
+        first_input(&lf, "customMods"),
+    );
+    assert_eq!(
+        crlf_input.value,
+        ConfigValue::String("a\r\nb\r\n".to_owned())
+    );
+    assert_eq!(lf_input.value, ConfigValue::String("a\nb\n".to_owned()));
+    assert_eq!(input_lines(&crlf_input), ["a", "b"]);
+    assert_eq!(input_lines(&crlf_input), input_lines(&lf_input));
+    assert_eq!(import(&export(&crlf)).unwrap(), crlf);
+}
+
+/// A raw `>` is XML, but PoB's tag pattern ends the tag there and the input
+/// has no value in PoB: the element is kept whole. The export writes every
+/// `>` as `&gt;` (an opaque attribute keeps no raw text), which PoB reads:
+/// the only case where export and re-import differ (`config-inputs.md`,
+/// "P3-12d").
+#[test]
+fn a_raw_greater_than_should_keep_the_input_whole() {
+    let b = import(&with_inputs(r#"<Input name="customMods" string="a > b"/>"#)).unwrap();
+    let set = b.config.sets.typed().next().unwrap();
+    assert!(set.inputs.typed().all(|i| i.name != "customMods"));
+    assert_eq!(kept_whole(&b), ["Config/ConfigSet/Input"]);
+}
+
+/// A legacy value that is not a string has no lines.
+#[test]
+fn a_numeric_legacy_value_should_have_no_lines() {
+    let b = round_trip(&with_inputs(r#"<Input name="customMods" number="5"/>"#));
+    assert!(first_input(&b, "customMods").lines.is_empty());
 }

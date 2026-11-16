@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mechanic fixture (loom, Phase 3 P3-8n): a level 90 Witch casting Ice Nova (level 20) with a rare Imperial Staff (20% quality, "Grants 1% increased Elemental Damage per 2% Quality") and a rare Gold Amulet anointed with Disciple of the Slaughter ("Allocates Disciple of the Slaughter": a minimum of 1 frenzy charge, 8% increased damage per frenzy charge): 10% increased elemental damage, and one frenzy charge with its cast speed and more damage and the notable's increased damage.
+     Original; not from PoB or the corpus. -->
+<PathOfBuilding>
+	<Build level="90" targetVersion="3_0" className="Witch" ascendClassName="None" mainSocketGroup="1" bandit="None" pantheonMajorGod="None" pantheonMinorGod="None"/>
+	<Tree activeSpec="1">
+		<Spec treeVersion="3_29" classId="3" ascendClassId="0" nodes=""/>
+	</Tree>
+	<Skills activeSkillSet="1">
+		<SkillSet id="1">
+			<Skill mainActiveSkill="1" mainActiveSkillCalcs="1" enabled="true" includeInFullDPS="true">
+				<Gem nameSpec="Ice Nova" skillId="IceNova" variantId="IceNova" gemId="Metadata/Items/Gems/SkillGemIceNova" level="20" quality="0" enabled="true" enableGlobal1="true" count="1"/>
+			</Skill>
+		</SkillSet>
+	</Skills>
+	<Items activeItemSet="1">
+		<Item id="1">
+Rarity: RARE
+Loom Test Branch
+Imperial Staff
+Quality: 20
+Implicits: 0
+Grants 1% increased Elemental Damage per 2% Quality
+		</Item>
+		<Item id="2">
+Rarity: RARE
+Loom Test Pendant
+Gold Amulet
+Implicits: 1
+{crafted}Allocates Disciple of the Slaughter
+		</Item>
+		<ItemSet id="1">
+			<Slot name="Weapon 1" itemId="1"/>
+			<Slot name="Amulet" itemId="2"/>
+		</ItemSet>
+	</Items>
+	<Config activeConfigSet="1">
+		<ConfigSet id="1" title="Default">
+		</ConfigSet>
+	</Config>
+</PathOfBuilding>

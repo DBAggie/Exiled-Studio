@@ -1,0 +1,44 @@
+Item Class: One Hand Swords
+Rarity: Unique
+Replica Dreamfeather
+Eternal Sword
+--------
+One Handed Sword
+Physical Damage: 86-144 (augmented)
+Critical Strike Chance: 5.00%
+Attacks per Second: 1.65 (augmented)
+Weapon Range: 1.1 metres
+--------
+Requirements:
+Level: 70
+Str: 111
+Dex: 122 (unmet)
+Int: 37
+--------
+Sockets: W-W-W 
+--------
+Item Level: 84
+--------
+{ Corruption Implicit Modifier — Attack }
+Melee Hits have 15(10-15)% chance to Fortify
+(Fortifying grants an amount of Fortification based on the Damage of the Hit)
+(Take 1% less Damage from Hits per Fortification. Maximum 20 Fortification. Fortification lasts 6 seconds)
+--------
+{ Unique Modifier — Damage, Physical, Attack }
+Adds 45(40-65) to 76(70-100) Physical Damage
+{ Unique Modifier — Attack, Speed }
+10(5-10)% increased Attack Speed
+{ Unique Modifier — Defences, Armour }
++188(180-200) to Armour
+{ Unique Modifier — Speed }
+3% reduced Movement Speed
+{ Unique Modifier — Attack }
++280(280-300) to Accuracy Rating
+{ Unique Modifier — Damage, Attack }
+1% increased Attack Damage per 450 Armour
+--------
+"Once we armoured the test subject heavily enough to test Prototype #502, he proceeded
+to fight his way out. I don't know what we expected." 
+- Researcher Graven
+--------
+Corrupted

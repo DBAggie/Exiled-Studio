@@ -1,0 +1,44 @@
+{
+  "format": 1,
+  "label": "P3-8c, public fixtures (before: P3-12a 23a1a5c; after: 5287654)",
+  "groups": {
+    "in-scope": {
+      "builds": 8,
+      "before": {
+        "distinct_stats": 108,
+        "occurrences": 363
+      },
+      "after": {
+        "distinct_stats": 103,
+        "occurrences": 292
+      },
+      "no_longer_unmapped": [
+        "attack_and_cast_speed_+%",
+        "chance_to_freeze_shock_ignite_%",
+        "elemental_damage_with_attack_skills_+%",
+        "melee_critical_strike_chance_+%",
+        "minion_damage_+%"
+      ],
+      "new_unmapped": []
+    },
+    "all": {
+      "builds": 82,
+      "before": {
+        "distinct_stats": 1045,
+        "occurrences": 3196
+      },
+      "after": {
+        "distinct_stats": 1040,
+        "occurrences": 3008
+      },
+      "no_longer_unmapped": [
+        "attack_and_cast_speed_+%",
+        "chance_to_freeze_shock_ignite_%",
+        "elemental_damage_with_attack_skills_+%",
+        "melee_critical_strike_chance_+%",
+        "minion_damage_+%"
+      ],
+      "new_unmapped": []
+    }
+  }
+}

@@ -1,0 +1,40 @@
+Item Class: Helmets
+Rarity: Rare
+Loath Crown
+Archdemon Crown
+--------
+Quality: +20% (augmented)
+Armour: 313 (augmented)
+Energy Shield: 64 (augmented)
+--------
+Requirements:
+Level: 75
+Str: 111
+Dex: 111
+Int: 79
+--------
+Sockets: G-G-G-R 
+--------
+Item Level: 82
+--------
+{ Implicit Modifier }
+-2 to Level of Socketed Support Gems
++2 to Level of Socketed Skill Gems
+--------
+{ Prefix Modifier "The Elder's" (Tier: 2) — Damage, Gem }
+Socketed Gems are Supported by Level 18 Concentrated Effect Support — Unscalable Value
+20(19-22)% increased Area Damage
+{ Prefix Modifier "Boggart's" (Tier: 4) — Defences, Armour, Energy Shield }
+26(21-26)% increased Armour and Energy Shield
+11(10-11)% increased Stun and Block Recovery
+{ Prefix Modifier "Gentian" (Tier: 5) — Mana }
++54(50-54) to maximum Mana
+{ Suffix Modifier "of the Elder" (Tier: 3) — Damage, Elemental, Fire, Gem }
+Socketed Gems are Supported by Level 16 Burning Damage Support — Unscalable Value
+21(20-25)% increased Burning Damage
+{ Suffix Modifier "of Raiding" (Tier: 3) — Drop }
++11(11-14)% to Item Rarity
+{ Master Crafted Suffix Modifier "of Craft" (Rank: 3) — Elemental, Fire, Resistance }
++34(29-35)% to Fire Resistance
+--------
+Elder Item

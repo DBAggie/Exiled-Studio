@@ -1,0 +1,214 @@
+{
+ "builds_with_reason_changes": 18,
+ "only_after": [
+  "ice-nova-socket-colours-witch.xml.json",
+  "smite-socket-colours-templar.xml.json"
+ ],
+ "only_before": [],
+ "per_build": {
+  "Dual Savior.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 30335}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31628}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32480}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33988}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40535}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "Generals Perforate Zerker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "animate-guardian-guardian.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 11}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "boneshatter-juggernaut.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 0}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "cyclone-shockwave-slayer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "facebreaker-luminary.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "flicker-strike-berserker.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "ice-nova-elementalist-mapping.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 6}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 4}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 34009}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "penance-brand-ignite-elementalist.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "poisonous-concoction-of-bouncing-pathfinder.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 0, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "rf-chieftain-league-start.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 31628}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 32480}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 33988}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 38777}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 40535}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "rf-chieftain-life-stack.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 18901}}, \"stat\": \"melee_physical_damage_+%\"}}",
+    "{\"unmapped-stat\": {\"source\": {\"passive\": {\"node\": 62319}}, \"stat\": \"melee_physical_damage_+%\"}}"
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 0}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "smite-inquisitor-act10.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 1, \"group\": 3}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 3, \"group\": 2}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  },
+  "smite-inquisitor-act5.xml.json": {
+   "added": [],
+   "gone": [
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 1}}, \"what\": \"socket-colour-quality\"}}",
+    "{\"unmodelled-skill\": {\"source\": {\"gem\": {\"gem\": 2, \"group\": 4}}, \"what\": \"socket-colour-quality\"}}"
+   ]
+  }
+ },
+ "reasons_added": 0,
+ "reasons_gone": 47,
+ "state_changes": {},
+ "value_changes": {
+  "boneshatter-juggernaut.xml.json": {
+   "average-damage": [
+    1383.421025521068,
+    1695.453700830443
+   ],
+   "hit-dps": [
+    2060.5032192806234,
+    2525.2527930797833
+   ]
+  },
+  "elemental-hit-of-the-spectrum-deadeye.xml.json": {
+   "average-damage": [
+    989.6578028749999,
+    1015.576206715
+   ],
+   "hit-dps": [
+    3579.2623870645825,
+    3706.8531545097503
+   ],
+   "speed": [
+    3.6166666666666663,
+    3.6500000000000004
+   ]
+  },
+  "kinetic-blast-of-clustering-necromancer.xml.json": {
+   "average-damage": [
+    67.2090014594196,
+    71.88559830362294
+   ],
+   "crit-multiplier": [
+    3.76,
+    3.81
+   ],
+   "hit-dps": [
+    182.8373910670232,
+    195.55974592275916
+   ]
+  },
+  "lacerate-bleed-gladiator.xml.json": {
+   "average-damage": [
+    162.81143999999998,
+    180.549435
+   ],
+   "hit-dps": [
+    190.76106295318124,
+    211.5441159183673
+   ]
+  },
+  "shock-nova-archmage-hierophant.xml.json": {
+   "average-damage": [
+    7266.147525,
+    7560.548100000001
+   ],
+   "hit-dps": [
+    23736.081915,
+    25327.836135
+   ],
+   "speed": [
+    3.2666666666666666,
+    3.3499999999999996
+   ]
+  }
+ }
+}

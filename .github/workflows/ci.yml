@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, experimental, dev]
   workflow_dispatch:
 
 permissions:
@@ -107,6 +107,16 @@ jobs:
             [ -f "$w" ] && [ -f "$l" ] || { echo "a build-round-trip run is missing ($set)" >&2; exit 1; }
             diff <(hashes "$w") <(hashes "$l")
           done
+      # Phase 3 step 5: calc-run's calc result documents (SHA-256 per build).
+      - name: Compare calc result documents, Windows with Linux
+        run: |
+          docs() { jq '[.builds[] | {id, status, document_sha256}]' "$1"; }
+          for set in calc-poe1 calc-poe2; do
+            w="out/round-trip-Windows/$set/report.json"; l="out/round-trip-Linux/$set/report.json"
+            [ -f "$w" ] && [ -f "$l" ] || { echo "a calc-run is missing ($set)" >&2; exit 1; }
+            docs "$l" | tee -a "$GITHUB_STEP_SUMMARY"
+            diff <(docs "$w") <(docs "$l")
+          done
 
   # Phase 2 decision 11: the committed JSON Schema and TypeScript are what
   # the DTOs generate. Regenerates both and fails on any difference.
@@ -185,6 +195,15 @@ jobs:
           for game in poe1 poe2; do
             jq -e '.failed == 0 and .modifier_lines.resolved > 0 and (.modifier_lines.pending // 0) == 0' "out/round-trip/$game/summary.json"
           done
+      # Phase 3 step 5: the synthetic builds through calc-run (import,
+      # resolution, the engine, the calc result document v1); dto-compare
+      # compares the documents' SHA-256, Windows with Linux.
+      - name: Calc result documents of the synthetic builds (calc-run)
+        run: |
+          target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe1.xml --bundle crates/loom-data/tests/fixtures/bundle-poe1 --out out/round-trip/calc-poe1
+          target/release/loom-parity-cli calc-run tools/parity-cli/testdata/build-round-trip/synthetic-poe2.json --bundle crates/loom-data/tests/fixtures/bundle-poe2 --out out/round-trip/calc-poe2
+          jq -e '.builds == 1 and .ok == 1 and .field_states.unsupported == 7 and .field_states.indeterminate == 17' out/round-trip/calc-poe1/summary.json
+          jq -e '.builds == 1 and .ok == 1 and .build_states.unsupported == 1' out/round-trip/calc-poe2/summary.json
       - name: No PoE1-only identifiers in shared code (gate 3c)
         if: runner.os == 'Linux'
         run: cargo test --locked -p loom-parser --test no_poe1_identifiers
@@ -208,7 +227,8 @@ jobs:
   # Spike C step 4: the PoB oracle on the public fixtures (tools/oracle/fixtures/
   # fixtures.json), 3 runs each. Required through ci-ok since C5, after 10
   # consecutive green runs on both runners (maintainer, 2026-11-10;
-  # docs/spikes/spike-c-oracle.md, section 7).
+  # docs/spikes/spike-c-oracle.md, section 7). Every tier of the manifest
+  # runs, the Phase 3 mechanic fixtures (tier mechanic, from P3-6) too.
   oracle:
     name: oracle (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -324,20 +344,87 @@ jobs:
       - name: Build core crates for wasm32-unknown-unknown
         run: >-
           cargo build --locked --target wasm32-unknown-unknown
-          -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization
+          -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline -p loom-tree
 
   deny:
     name: cargo-deny
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Policy in deny.toml. Advisories are not checked yet: the advisory DB changes
-      # without a code change, so it needs its own non-blocking job (handoff follow-up).
+      # Policy in deny.toml. Advisories are their own job (`advisories`).
       - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1 (cargo-deny 0.20.2)
         with:
           arguments: --all-features --locked
           command: check
           command-arguments: licenses bans sources
+
+  # Phase 5, P6 (docs/phase-5/security.md): a RustSec advisory not ignored in
+  # deny.toml (each ignore with its reason) fails. The advisory database
+  # changes without a code change, so a new advisory can turn this red on
+  # any PR: that is the blocker the plan defines (P-g), fixed or ignored
+  # with a reason before anything merges.
+  advisories:
+    name: cargo-deny advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1 (cargo-deny 0.20.2)
+        with:
+          arguments: --all-features --locked
+          command: check
+          command-arguments: advisories
+
+  # Phase 5, P6: secrets in the whole history. gitleaks pinned by version and
+  # SHA-256 (the release's checksums file), default rules, no allow-list.
+  secrets:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks 8.30.1
+        run: |
+          curl -fsSL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Scan the history
+        run: ./gitleaks git --no-banner --redact --exit-code 1 .
+
+  # Phase 5, P7 (docs/phase-5/performance.md): instruction counts of the core
+  # paths (tools/bench, loom-bench) under callgrind on the synthetic tree
+  # bundle; a count 10% over tools/bench/baseline.json fails.
+  bench:
+    name: bench (instruction counts)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends valgrind
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: bash tools/bench/count.sh
+
+  # Phase 5, P6: the fuzz targets (fuzz/, its own workspace) still build; the
+  # fuzzing runs in fuzz.yml (weekly) and on the maintainer's machine.
+  fuzz-build:
+    name: fuzz targets build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz
+      - run: cargo check --locked --bins
+        working-directory: fuzz
+
+  # The project site's builder (tools/site/build.py; docs/release/channels.md).
+  site:
+    name: site builder
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 -m unittest discover -s tools/site -p 'test_*.py' -v
 
   frontend:
     name: frontend (${{ matrix.os }})
@@ -363,6 +450,159 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm build
+      # Phase 4 gate 2: the UI workflow, axe on every screen, keyboard,
+      # error states, contrast (vitest + jsdom).
+      - run: pnpm test
+      # Phase 4 gate 5: JavaScript dependency licenses (allow-list and
+      # named exceptions in scripts/check-licenses.mjs).
+      - run: pnpm licenses:check
+
+  # Phase 4 gate 1b (decision 14 d): the real application under WebDriver
+  # (tauri-driver): WebView2 on Windows, WebKitGTK under Xvfb on Linux. The
+  # app is built with the e2e feature (a fixed-file picker instead of the
+  # native dialogs) and the frontend embedded.
+  e2e:
+    name: e2e (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # Windows: msedgedriver cannot create a session on the hosted runner
+    # ("DevToolsActivePort file doesn't exist") though the same workflow
+    # passes on a Windows desktop (Phase 4 report, gate 1b, recorded there).
+    # It still runs, for diagnosis, but does not gate ci-ok; Linux does.
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Ubuntu 24.04, not latest: 26.04 has no webkit2gtk-driver (WebKitWebDriver).
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Tauri system dependencies and the WebKit driver (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev libxdo-dev \
+            webkit2gtk-driver xvfb
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: ui/package.json # version from "packageManager"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: ui
+      - run: pnpm build
+        working-directory: ui
+      - name: Build the e2e app
+        run: cargo build --locked -p loom-tauri --features e2e,tauri/custom-protocol
+      # Pinned; cached between runs (a fixed version, so the cache is safe).
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: tauri-driver
+        with:
+          path: ~/.cargo-tools
+          key: tauri-driver-2.1.0-${{ runner.os }}
+      - name: Install tauri-driver
+        if: steps.tauri-driver.outputs.cache-hit != 'true'
+        run: cargo install --locked tauri-driver --version 2.1.0 --root ~/.cargo-tools
+      - name: Put tauri-driver on the path
+        shell: bash
+        run: echo "$HOME/.cargo-tools/bin" >> "$GITHUB_PATH"
+      - name: Workflow (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a bash ui/e2e/run.sh target/debug/loom-tauri
+      # msedgedriver must match the WebView2 runtime the app runs in: its
+      # version from the registry, the driver from Microsoft's download host.
+      - name: Install msedgedriver for the WebView2 runtime (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          $version = (Get-ItemProperty $key).pv
+          Write-Output "WebView2 runtime $version"
+          $zip = Join-Path $env:RUNNER_TEMP 'edgedriver.zip'
+          $dir = Join-Path $env:RUNNER_TEMP 'edgedriver'
+          try {
+            Invoke-WebRequest "https://msedgedriver.microsoft.com/$version/edgedriver_win64.zip" -OutFile $zip
+          } catch {
+            Invoke-WebRequest "https://msedgedriver.azureedge.net/$version/edgedriver_win64.zip" -OutFile $zip
+          }
+          Expand-Archive $zip -DestinationPath $dir -Force
+          "EDGE_DRIVER=$((Join-Path $dir 'msedgedriver.exe') -replace '\\', '/')" >> $env:GITHUB_ENV
+      # PowerShell, not Git Bash (ui/e2e/run.ps1 says why).
+      - name: Workflow (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        # tauri-driver by its Windows path (the PATH entry above is Git Bash's form).
+        run: ./ui/e2e/run.ps1 target/debug/loom-tauri.exe $env:EDGE_DRIVER (Join-Path $HOME '.cargo-tools/bin/tauri-driver.exe')
+
+  # Phase 5, P1 (docs/phase-5/packaging.md): the two packages a PR builds,
+  # each started once (--smoke: the first screen comes up, then the app
+  # quits) with its build info checked: the portable zip on Windows, the
+  # AppImage on Linux (extract-and-run: no FUSE on runners). The release
+  # workflow builds and installs all five.
+  package:
+    name: package (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Tauri system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libssl-dev libxdo-dev \
+            xvfb file
+      - run: rustup toolchain install # reads rust-toolchain.toml
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          package_json_file: ui/package.json # version from "packageManager"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: ui/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: ui
+      - run: pnpm build
+        working-directory: ui
+      # The portable zip is made from the plain executable: `tauri build`
+      # patches the executable with its installer type in place.
+      - name: Portable zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cargo build --release --locked -p loom-tauri --features tauri/custom-protocol
+          ./tools/package/portable.ps1 target/release/loom-tauri.exe out/package
+      - name: Smoke-run the portable package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tools/package/smoke.ps1 (Get-ChildItem out/package/*-portable.zip).FullName plain
+      - name: AppImage (Linux)
+        if: runner.os == 'Linux'
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+        run: |
+          ui/node_modules/.bin/tauri build --bundles appimage
+          mkdir -p out/package
+          cp target/release/bundle/appimage/*.AppImage out/package/
+      - name: Smoke-run the AppImage (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a bash tools/package/smoke.sh out/package/*.AppImage app-image
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package-${{ runner.os }}
+          path: out/package
+          if-no-files-found: error
 
   # The ADR-012 PR-evidence check is in pr-evidence.yml so editing a PR description re-runs it.
 
@@ -370,7 +610,7 @@ jobs:
   ci-ok:
     name: ci-ok
     if: always()
-    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, frontend]
+    needs: [fmt, rust, dto-compare, schema, round-trip, oracle, oracle-compare, wasm, deny, advisories, secrets, fuzz-build, bench, site, frontend, e2e, package]
     runs-on: ubuntu-latest
     steps:
       - name: Require gated jobs
