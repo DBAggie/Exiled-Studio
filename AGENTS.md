@@ -7,7 +7,7 @@ Rules for anyone contributing, human or AI agent. `CLAUDE.md` adds Claude Code s
 - Never modify the legacy PoB repository. Legacy source is fetched at a pinned public tag, never copied in (ADR-006).
 - Game files are read only to derive data. Never commit GGG art, audio, other assets, or raw game files (ADR-000). GGG's published passive tree export (data and sprite sheets) is fetched at pinned commits by `tools/tree/` into `local/` and shipped only inside signed data bundles (ADR-005 Amendment 2). Local game data and extractor output go in `local/` or `out/` (both ignored).
 - Modifiers are `(stat_id, values)`. Text parsing lives only in import adapters; unresolved content is quarantined and shown, never dropped (ADR-015).
-- No telemetry. Network access only in `loom-integrations` (ADR-011). Exceptions outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`, and the maintainer's `tools/tree/` scripts fetch GGG's passive tree export at pinned commits with `git` (ADR-005 Amendment 2); no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged).
+- No telemetry. Network access only in `loom-integrations` (ADR-011). Exceptions outside the crates: the maintainer and CI acquire scripts in `tools/oracle/` fetch the pinned oracle sources with `git`, and the maintainer's `tools/tree/` scripts fetch GGG's passive tree export at pinned commits with `git` (ADR-005 Amendment 2); no Rust code fetches (Spike C plan step 1, accepted by the maintainer 2026-11-10; the scripts are not application code, so ADR-011 is unchanged). The application's own network paths (Phase 5): the data feed and pack downloads in `loom-integrations::data_feed`, the update check and download through `tauri-plugin-updater` in `loom-tauri::updates` (plan decision P-d, the one path outside `loom-integrations`), and the MCP server on loopback; strict-offline mode refuses the first two before connecting. The `release` workflow's scripts in `tools/package/` download the shipped bundle named by `release/bundle.json`. The experimental application reads its update and data feeds from the project site (`https://dbaggie.github.io/Exiled-Studio/experimental/`, GitHub Pages), which `pages.yml` fills from the newest pre-release (`docs/release/channels.md`).
 - Do not contradict an ADR. Propose an amendment and wait for the maintainer.
 
 ## Layout
@@ -30,6 +30,13 @@ tools/
   schema-gen          loom-schema-gen: writes schemas/ from the successor DTOs (loom-serialization `schema` feature)
   oracle              not a crate: PoB oracle manifest, acquire scripts, adapter, output schema, fixtures (Spike C)
   tree                not a crate: GGG's passive tree export, pinned (manifest.json) and fetched into local/tree-export/ by acquire.{ps1,sh} (ADR-005 Amendment 2)
+  release             loom-release: data keys, signatures, signed bundle packs, the data feed (docs/release/signing.md)
+  bench               loom-bench: the core paths' instruction counts (CI) and wall clock (docs/phase-5/performance.md)
+  package             not a crate: installers, portable zip, smoke runs, release workflow scripts, the release channel (docs/phase-5/packaging.md, docs/release/channels.md)
+  site                not a crate: build.py fills site/ from GitHub's releases for the download page (docs/release/channels.md)
+fuzz/                 cargo-fuzz targets of the hostile-input readers; its own workspace (docs/phase-5/security.md)
+release/              trust lists and public keys compiled into the app; bundle.json names the shipped bundle (the maintainer's)
+site/                 the download page on GitHub Pages: template and style (pages.yml publishes it; docs/release/channels.md)
 schemas/              generated JSON Schemas: build, calc result, app API (do not edit; CI checks freshness); mcp-tools.v1.json, the MCP tool contract (rewritten by its test, below)
 ui/                   React + TypeScript + Vite (pnpm)
 docs/                 ADRs, plans, handoff, spikes; parity/ holds the divergence register (ADR-006)
@@ -43,7 +50,7 @@ Dependencies flow one way, with no cycles:
 - `loom-parser`, `loom-calc`, `loom-serialization`, `loom-tree` <- `loom-pipeline` (Phase 4 plan, decision 0; the resolved passive set, passive tree plan T-e)
 - `loom-data` <- `loom-tree` (passive tree plan, T-e; `loom-calc` does not depend on it: `loom-pipeline` resolves the spec with it and hands the engine the result)
 - all of the above <- `loom-app` <- `loom-integrations` <- `loom-tauri`
-- `tools/*` depend on core crates only.
+- `tools/*` depend on core crates only, except `loom-release` and `loom-bench`, which use `loom-app`'s pack writing and `tree::rules_spec` (tools, never shipped).
 - Dev-dependencies (tests only) may point only to another core crate, and never from a crate to one that depends on it. None does today: gate 3b's JSON round-trip of resolved builds runs in `loom-parity-cli build-round-trip` (P2-8).
 
 **Core crates** (loom-domain, loom-data, loom-parser, loom-calc, loom-serialization, loom-pipeline, loom-tree) must:
@@ -65,6 +72,10 @@ cargo test --workspace --all-features --locked
 cargo build --locked --target wasm32-unknown-unknown -p loom-domain -p loom-data -p loom-parser -p loom-calc -p loom-serialization -p loom-pipeline -p loom-tree
 # Dependency licenses, bans, sources (policy in deny.toml; once: cargo install --locked cargo-deny@0.20.2)
 cargo deny --all-features --locked check licenses bans sources
+# RustSec advisories (CI job `advisories`; each ignore in deny.toml has its reason; docs/phase-5/security.md):
+cargo deny --all-features --locked check advisories
+# Secrets in the history (CI job `secrets`; gitleaks 8.30.1 from its GitHub release, checksum in ci.yml):
+gitleaks git --no-banner --redact --exit-code 1 .
 # Generated schemas (Phase 2 decision 11): after changing a DTO in loom-serialization::dto (build v1, calc::v1), regenerate both;
 # CI (schema freshness) fails on any difference:
 cargo run -p loom-schema-gen            # writes schemas/*.schema.json (--check: exit 1 if stale)
@@ -226,6 +237,19 @@ cargo build -p loom-tauri --features e2e,tauri/custom-protocol
 # (runs on the synthetic tree bundle crates/loom-data/tests/fixtures/bundle-poe1-tree, which make_bundles.py writes)
 ui/e2e/run.sh target/debug/loom-tauri                                   # Linux
 pwsh ui/e2e/run.ps1 target/debug/loom-tauri.exe <msedgedriver.exe>      # Windows (PowerShell, not Git Bash)
+
+# Release (Phase 5; docs/phase-5/packaging.md, docs/release/signing.md, docs/phase-5/data-bundles.md):
+cargo run -p loom-release -- <keygen|trust|trust-add|sign|verify|test-trust|test-sign|pack|feed> ...   # usage: no arguments
+cargo run -p loom-release -- pack <bundle-dir> --test-key --out <x.loombundle>   # a pack debug and e2e builds trust
+pwsh tools/package/portable.ps1 <loom-tauri.exe> <out-dir> [<version>]           # the portable zip
+pwsh tools/package/smoke.ps1 <package> <kind> <version>                           # start a package, check its build info
+LOOM_CHANNEL=experimental cargo build ...                                         # an experimental build (docs/release/channels.md)
+python3 -m unittest discover -s tools/site -p 'test_*.py'                         # the download page builder
+# Performance (docs/phase-5/performance.md): wall clock of the core paths, and CI's instruction counts (Linux, valgrind):
+cargo run --release -p loom-bench -- wall [--bundle <dir>] [--build <file>] [--runs <n>]
+bash tools/bench/count.sh [--update]      # fails on a count 10% over tools/bench/baseline.json
+# Fuzzing (docs/phase-5/security.md; Linux, nightly, cargo-fuzz 0.13.2; libFuzzer does not link on Windows MSVC):
+bash fuzz/seed.sh && cargo +nightly-2026-11-01 fuzz run <target> -- -max_total_time=600
 ```
 
 ## Code expectations
@@ -257,7 +281,10 @@ When to update:
 Write state as facts with dates and links (PR numbers, CI runs, file paths), not as "see conversation". Record anything learned that is hard to rediscover from the code: failed approaches, environment quirks, open decisions waiting on the maintainer.
 
 ## Pull requests (ADR-012 evidence rule)
-- Small and single-purpose; branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch; the maintainer merges `dev` into `main` at the end of a stretch of work and keeps `dev` open.
+- Small and single-purpose; branch from `dev` and target `dev` (maintainer decision 2026-11-11). `dev` is the permanent integration branch, and the maintainer keeps it open.
+  - The maintainer merges approved states of `dev` into `experimental`, which holds the experimental installers. Experimental releases are tagged there.
+  - The maintainer merges into `main`, which always holds the stable application. Stable releases are tagged there.
+  - Both are protected alike (maintainer decision 2026-11-15; `docs/release/channels.md`).
 - Fill in every evidence section of `.github/pull_request_template.md`: **Tests**, **Parity / divergence**, **Coverage touched**, and **Handoff** (which documents above were updated). CI fails a PR with an empty section. Write `None: <reason>` when a section does not apply.
 - All CI checks green. Two checks are required: `ci-ok` (`.github/workflows/ci.yml`) and `PR evidence` (`.github/workflows/pr-evidence.yml`). `PR evidence` re-runs when the description is edited, so fix an empty section by editing the PR, not by pushing. The check logic is `.github/scripts/check-pr-evidence.sh`; test it with `bash .github/scripts/test-check-pr-evidence.sh`. The maintainer reviews and merges; `main` is protected.
 - Architectural changes need an ADR or amendment (`docs/adr/README.md`).

@@ -7,6 +7,20 @@ import { describe, expect, it } from 'vitest'
 import { expectAccessible, renderApp } from './render'
 
 describe('error states', () => {
+  it('says the game data is loading, not that there is none, while it loads at start (P7)', async () => {
+    await renderApp({ data: false, loading: true })
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(screen.queryByText(/No game data yet\./)).toBeNull()
+    expect(screen.getAllByText('Loading game data…').length).toBe(2)
+    expect(
+      (
+        screen.getByRole('button', {
+          name: 'Import build',
+        }) as HTMLButtonElement
+      ).disabled,
+    ).toBe(true)
+  })
+
   it('says quietly when no game data is loaded, and lets the user add it (UX-17)', async () => {
     const { user, api } = await renderApp({ data: false })
     // No error up front: one footer line, and the actions that need data

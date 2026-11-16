@@ -18,6 +18,10 @@
 //! The command names are the committed list `ui/src/api/commands.json`,
 //! which the UI's client reads and a test compares with these handlers.
 
+pub mod data_updates;
+pub mod release;
+pub mod updates;
+
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
@@ -112,6 +116,8 @@ pub enum Pick {
     BundleFolder,
     /// Where to write the diagnostic package (`.zip`).
     Diagnostics,
+    /// A data bundle pack to install (`.loombundle`; Phase 5, P-e).
+    BundlePack,
 }
 
 /// Opens the file dialogs. `None` when the user cancelled.
@@ -403,6 +409,84 @@ fn choose_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
     with_pick(&ctx, Pick::BundleFolder, "", HostCommand::SetBundle)
 }
 
+/// Installs a data bundle pack the user picks (Phase 5, P-e): signed by a
+/// trusted key it loads; unsigned or by an unknown key it is quarantined
+/// until the user accepts it.
+#[tauri::command(async)]
+fn install_bundle(ctx: State<'_, Ctx>) -> Answer<api::Outcome> {
+    with_pick(&ctx, Pick::BundlePack, "", HostCommand::InstallBundle)
+}
+
+/// The first screen has rendered. In a smoke run (`--smoke <file>`,
+/// [`release::Smoke`]) the build info is written and the application quits;
+/// otherwise nothing happens.
+#[tauri::command]
+fn app_ready<R: Runtime>(handle: tauri::AppHandle<R>) {
+    if let Some(smoke) = handle.try_state::<release::Smoke>() {
+        smoke.write(true);
+        handle.exit(0);
+    }
+}
+
+/// Application updates: the mode, this package, the last check (Phase 5,
+/// P-d; [`updates`]).
+#[tauri::command]
+fn update_status(updates: State<'_, updates::Updates>) -> api::UpdateStatus {
+    updates.status()
+}
+
+/// Sets how the application looks for its updates.
+#[tauri::command]
+fn set_update_mode(
+    updates: State<'_, updates::Updates>,
+    mode: api::UpdateMode,
+) -> api::UpdateStatus {
+    updates.set_mode(mode);
+    updates.status()
+}
+
+/// Checks for an update now (the user asked).
+#[tauri::command]
+async fn check_updates<R: Runtime>(
+    handle: tauri::AppHandle<R>,
+    updates: State<'_, updates::Updates>,
+) -> Answer<api::UpdateStatus> {
+    updates.check(&handle).await
+}
+
+/// Downloads, verifies, and installs the offered update, then restarts:
+/// the user approved it in the UI's prompt. Refused, before anything is
+/// downloaded, for a package that only notifies, in strict-offline mode,
+/// and without an offer.
+#[tauri::command]
+async fn install_update<R: Runtime>(
+    handle: tauri::AppHandle<R>,
+    updates: State<'_, updates::Updates>,
+) -> Answer<()> {
+    let update = updates.to_install()?;
+    tracing::info!(version = %update.version, "installing an update");
+    let result = update
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| api::ApiError::new("UPDATE_INSTALL", e.to_string()));
+    if let Err(e) = result {
+        updates.failed(e.clone());
+        return Err(e);
+    }
+    shutdown(&handle);
+    handle.restart()
+}
+
+/// Stops the application (a change made since the last autosave is kept
+/// for recovery) and the MCP server; before the process exits, also when
+/// an update's installer replaces it.
+pub(crate) fn shutdown<R: Runtime>(handle: &tauri::AppHandle<R>) {
+    if let Some(ctx) = handle.try_state::<Ctx>() {
+        drop(lock(&ctx).take());
+        ctx.app.stop();
+    }
+}
+
 /// The crash records, newest first (Phase 5, P-f).
 #[tauri::command]
 fn crashes(ctx: State<'_, Ctx>) -> Vec<api::CrashRecord> {
@@ -479,7 +563,7 @@ fn set_ui_prefs(ctx: State<'_, Ctx>, text: String) -> Answer<()> {
 }
 
 /// Every command name, as `ui/src/api/commands.json` lists them.
-pub const COMMANDS: [&str; 28] = [
+pub const COMMANDS: [&str; 36] = [
     "snapshot",
     "calc_document",
     "item",
@@ -508,6 +592,14 @@ pub const COMMANDS: [&str; 28] = [
     "dismiss_crash",
     "diagnostics",
     "export_diagnostics",
+    "app_ready",
+    "update_status",
+    "set_update_mode",
+    "check_updates",
+    "install_update",
+    "install_bundle",
+    "check_data_feed",
+    "download_data",
 ];
 
 /// Where the application keeps its data and which bundle it loads.
@@ -523,7 +615,19 @@ pub struct Paths {
     /// store (ADR-017 Amendment 1); tests pass `false`, so they never
     /// touch the user's credentials.
     pub keep_token: bool,
+    /// The folder of data packs the installer ships (Phase 5, P-e), if
+    /// any: each one not installed yet is installed at start.
+    pub shipped: Option<PathBuf>,
+    /// Whether the window comes up before the data loads (Phase 5, P7;
+    /// `loom_app::Config::load_in_background`): the application's run;
+    /// tests that read the data right after the start pass `false`.
+    pub load_in_background: bool,
 }
+
+/// Whether this build trusts the public test data key: debug and `e2e`
+/// builds only (`docs/release/signing.md`, "The test key"). A released
+/// build is neither; its smoke run checks so.
+pub const TEST_KEYS: bool = cfg!(debug_assertions) || cfg!(feature = "e2e");
 
 /// Adds the commands and starts the application in `setup`.
 pub fn build<R: Runtime>(
@@ -561,6 +665,14 @@ pub fn build<R: Runtime>(
             dismiss_crash,
             diagnostics,
             export_diagnostics,
+            app_ready,
+            update_status,
+            set_update_mode,
+            check_updates,
+            install_update,
+            install_bundle,
+            data_updates::check_data_feed,
+            data_updates::download_data,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::DragDrop(drag) = event {
@@ -590,12 +702,19 @@ pub fn build<R: Runtime>(
             }
             loom_app::crash::install(paths.data.clone(), loom_app::logs::Redactor::from_env());
             let settings = paths.data.join(SETTINGS_FILE);
+            let settings_for_updates = settings.clone();
             let emitter = handle.clone();
             let sink: loom_app::Sink = Arc::new(move |event: api::Event| {
                 let _ = emitter.emit(EVENT, event);
             });
-            let application = App::start(Config::new(paths.data, paths.bundle), sink)
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+            let application = App::start(
+                Config::new(paths.data, paths.bundle)
+                    .with_test_keys(TEST_KEYS)
+                    .with_background_load(paths.load_in_background)
+                    .with_shipped(paths.shipped.clone()),
+                sink,
+            )
+            .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
             app.manage(Ctx {
                 app: Arc::new(application),
                 picker: picker(&handle),
@@ -603,12 +722,16 @@ pub fn build<R: Runtime>(
                 settings,
                 drop: Mutex::new(None),
                 tokens: if paths.keep_token {
-                    Box::new(OsStore::new())
+                    Box::new(OsStore::named(release::Channel::CURRENT.token_service()))
                 } else {
                     Box::new(NoStore)
                 },
                 token_kept: std::sync::atomic::AtomicBool::new(false),
             });
+            let plugin = handle.try_state::<updates::Plugin>().is_some();
+            app.manage(updates::Updates::new(plugin, settings_for_updates));
+            app.manage(data_updates::DataFeed::default());
+            updates::at_start(&handle);
             Ok(())
         })
 }
@@ -644,6 +767,9 @@ impl<R: Runtime> FilePicker for Dialogs<R> {
                 .add_filter("Diagnostic package", &["zip"])
                 .set_file_name(name)
                 .blocking_save_file(),
+            Pick::BundlePack => dialog
+                .add_filter("Exiled Studio game data", &["loombundle"])
+                .blocking_pick_file(),
         };
         path.and_then(|p| p.into_path().ok())
     }
@@ -662,6 +788,7 @@ impl FilePicker for E2ePicker {
             Pick::OpenBuild | Pick::SaveBuild => "saved.json",
             Pick::ExportPob => "export.xml",
             Pick::Diagnostics => "diagnostics.zip",
+            Pick::BundlePack => "bundle.loombundle",
             Pick::BundleFolder => return None,
         };
         Some(self.0.join(file))
@@ -673,17 +800,31 @@ impl FilePicker for E2ePicker {
 /// # Errors
 /// Tauri's.
 pub fn run() -> tauri::Result<()> {
-    let builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+    let smoke = release::Smoke::from_args(std::env::args_os());
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updates::Plugin);
+    if let Some(smoke) = smoke {
+        smoke.watchdog();
+        builder = builder.manage(smoke);
+    }
     let builder = build(
         builder,
         |handle| Paths {
+            // LOOM_DATA_DIR (development and tests), else the portable
+            // package's folder, else the user's application data folder.
             data: std::env::var_os("LOOM_DATA_DIR")
                 .map(PathBuf::from)
+                .or_else(release::portable_data)
                 .or_else(|| handle.path().app_data_dir().ok())
                 .unwrap_or_else(|| PathBuf::from(".loom")),
             bundle: std::env::var_os("LOOM_BUNDLE_DIR").map(PathBuf::from),
             // End-to-end runs keep nothing in the user's credentials.
             keep_token: !cfg!(feature = "e2e"),
+            // The installer's resources (`bundles/`), when it ships data.
+            shipped: handle.path().resource_dir().ok().map(|d| d.join("bundles")),
+            load_in_background: true,
         },
         |handle| {
             #[cfg(feature = "e2e")]
@@ -699,11 +840,8 @@ pub fn run() -> tauri::Result<()> {
         // Tauri's exit does not drop managed state: stop the application
         // here, so a change made since the last autosave is kept for
         // recovery and the MCP server stops.
-        if let tauri::RunEvent::Exit = event
-            && let Some(ctx) = handle.try_state::<Ctx>()
-        {
-            drop(lock(&ctx).take());
-            ctx.app.stop();
+        if let tauri::RunEvent::Exit = event {
+            shutdown(handle);
         }
     });
     Ok(())

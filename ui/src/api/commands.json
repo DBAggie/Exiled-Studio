@@ -26,5 +26,13 @@
   "crashes",
   "dismiss_crash",
   "diagnostics",
-  "export_diagnostics"
+  "export_diagnostics",
+  "app_ready",
+  "update_status",
+  "set_update_mode",
+  "check_updates",
+  "install_update",
+  "install_bundle",
+  "check_data_feed",
+  "download_data"
 ]

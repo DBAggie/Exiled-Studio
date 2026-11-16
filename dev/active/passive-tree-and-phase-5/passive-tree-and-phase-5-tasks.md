@@ -33,3 +33,19 @@ In the plan's commit order. CI = checked in CI; MR = maintainer-run with a commi
 - [ ] P7 Performance: `tools/bench`, baselines, instruction-count CI check, `docs/phase-5/performance.md`
 - [ ] P8 Reports, handoff, CLAUDE.md, ACTION-PLAN, AGENTS.md, README (notice, install, privacy), task docs
 - [ ] `code-architecture-reviewer` before marking the PR ready
+
+## Phase 5 sprint (maintainer 2026-11-15: "perform all open p5 steps in this next sprint"; branch `feat/p5-release`)
+One PR for P1, P2, P3, P4, P6, P7, P8, one or more commits per step, in this order. Tick each when its commit is pushed; the handoff's Current state names the last one.
+- [x] Housekeeping: #117's merge recorded
+- [x] P1 packaging (`docs/phase-5/packaging.md`)
+- [x] P2 signing (`docs/release/signing.md`)
+- [x] P3 app updates (`docs/phase-5/updates.md`)
+- [x] P4 data bundles (`docs/phase-5/data-bundles.md`)
+- [x] P6 security (`docs/phase-5/security.md`; the CI fuzz record from PR #118's `fuzz.yml` run 43779992583: no crash)
+- [x] P7 performance (`docs/phase-5/performance.md`; the baseline is committed from the PR's `bench` log)
+- [x] P8 reports and docs; review; PR #118 (`docs/phase-5/phase-5-report.md`)
+- [x] The maintainer's requests after the review (2026-11-15), on the same PR:
+  - [x] the startup fix: sizes for installed bundles, one load, the window before the data, shipped packs checked by sizes (`performance.md`, "Startup": median 3.11 s to 1.77 s)
+  - [x] channels: the `experimental` branch made and protected like `main`; the experimental application (`docs/release/channels.md`)
+  - [x] the download page: `site/`, `tools/site/`, `pages.yml`; Pages turned on
+  - [x] the `bench` baseline for the new `start` scenario (5,679,942, CI run 43787174465; `count.sh` now counts it)

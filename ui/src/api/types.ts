@@ -9,6 +9,10 @@ import type {
   ConfigInputView,
   ConfigView,
   CrashRecord,
+  DataFeedStatus,
+  UpdateOffer,
+  UpdateStatus,
+  QuarantinedBundle,
   CustomBlockView,
   CustomLineView,
   DataVersionView,
@@ -88,10 +92,15 @@ export type {
   TreePreview,
   TreeSprites,
   TreeView,
+  UpdateOffer,
+  UpdateStatus,
   WarningView,
+  QuarantinedBundle,
+  DataFeedStatus,
 }
 
 export type Command = ApplicationAPIV1['command']
+export type UpdateMode = UpdateStatus['mode']
 export type Outcome = ApplicationAPIV1['outcome']
 export type ApiEvent = ApplicationAPIV1['event']
 
@@ -143,6 +152,14 @@ export interface LoomApi {
   saveAs(): Promise<Outcome>
   exportXml(): Promise<Outcome>
   chooseBundle(): Promise<Outcome>
+  /** Installs a data bundle pack (`.loombundle`) the user picks (Phase
+   * 5, P-e); `nothing` when cancelled or already installed. */
+  installBundle(): Promise<Outcome>
+  /** Checks the project's signed data feed (`UPDATE_OFFLINE` in strict
+   * offline mode; `FEED_*`). */
+  checkDataFeed(): Promise<DataFeedStatus>
+  /** Downloads a pack the last feed lists and installs it. */
+  downloadData(id: string): Promise<Outcome>
   /** Opens the last dropped file: imports a PoB build, opens a build
    * document; `UI_DROP` for anything else. */
   openDropped(): Promise<Outcome>
@@ -159,6 +176,19 @@ export interface LoomApi {
   uiPrefs(): Promise<string | null>
   /** Saves the UI's preferences (`UI_PREFS` when not JSON or too big). */
   setUiPrefs(text: string): Promise<void>
+  /** The first screen has rendered (a packaged smoke run quits on it;
+   * otherwise nothing happens). */
+  ready(): Promise<void>
+  /** Application updates: mode, package, last check (Phase 5, P-d). */
+  updateStatus(): Promise<UpdateStatus>
+  setUpdateMode(mode: UpdateMode): Promise<UpdateStatus>
+  /** Checks now (`UPDATE_OFFLINE`, `UPDATE_UNAVAILABLE`, `UPDATE_BUSY`). */
+  checkUpdates(): Promise<UpdateStatus>
+  /** Installs the offered update and restarts; the user approved it.
+   * Refused for a package that only notifies (`UPDATE_NOTIFY_ONLY`). */
+  installUpdate(): Promise<void>
+  /** The check at start reports here. */
+  onUpdates(listener: (status: UpdateStatus) => void): Promise<() => void>
   onEvent(listener: (event: ApiEvent) => void): Promise<() => void>
   onDrop(listener: (notice: DropNotice) => void): Promise<() => void>
 }

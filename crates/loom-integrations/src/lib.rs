@@ -3,5 +3,7 @@
 //! may use the network. No telemetry.
 //!
 //! - [`mcp`]: the local MCP server (Phase 4), loopback only.
+//! - [`data_feed`]: the signed data feed and pack downloads (Phase 5, P4).
 
+pub mod data_feed;
 pub mod mcp;

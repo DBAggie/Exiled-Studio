@@ -1,8 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["crates/*", "tools/*"]
-# Oracle and tree export files (manifests, acquire scripts), not crates.
-exclude = ["tools/oracle", "tools/tree"]
+# Oracle and tree export files (manifests, acquire scripts), packaging scripts, and the site builder, not crates.
+exclude = ["tools/oracle", "tools/tree", "tools/package", "tools/site", "fuzz"]
 
 [workspace.package]
 version = "0.0.0"
@@ -37,6 +37,14 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "json", "std", "registry"] }
 # The diagnostic package's zip (stored entries; Phase 5, P-f).
 crc32fast = "1.4"
+# Ed25519 signatures over data bundles and feeds (Phase 5, P-c; BSD-3-Clause).
+# No default features: no precomputed tables, no RNG (core crates verify only).
+ed25519-dalek = { version = "2.2", default-features = false, features = ["std", "zeroize"] }
+# Data bundle packs (Phase 5, P4): deflate through flate2 with zlib-rs only;
+# no other codecs, no encryption.
+# Property tests of the hostile-input entry points (Phase 5, P6; dev only).
+proptest = "1"
+zip = { version = "9.6", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [workspace.lints.rust]
 unsafe_code = "deny"

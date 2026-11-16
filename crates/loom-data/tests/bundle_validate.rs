@@ -14,7 +14,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use loom_data::bundle::validate::validate;
+use loom_data::bundle::Bundle;
+use loom_data::bundle::validate::{Integrity, check, validate};
 use loom_data::bundle::{BundleSource, MANIFEST, MemorySource};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -110,6 +111,56 @@ fn changed_byte_should_give_a_hash_mismatch() {
     bytes[at] = b'L';
     src.insert("data/stats.json", bytes);
     assert_eq!(codes(&src), ["BUNDLE_HASH_MISMATCH"]);
+}
+
+#[test]
+fn checking_sizes_only_should_skip_the_hash_but_not_the_size() {
+    let mut src = source("bundle-poe2");
+    // Same size, still the same tables: a space becomes a tab.
+    let mut bytes = src.read("data/stats.json").unwrap();
+    let at = bytes.iter().position(|b| *b == b' ').unwrap();
+    bytes[at] = b'\t';
+    src.insert("data/stats.json", bytes.clone());
+    assert_eq!(check(&src, Integrity::Sizes).err().map(|r| r.codes()), None);
+    assert_eq!(
+        check(&src, Integrity::Hashes).unwrap_err().codes(),
+        ["BUNDLE_HASH_MISMATCH"]
+    );
+    bytes.push(b' ');
+    src.insert("data/stats.json", bytes);
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_SIZE_MISMATCH"]
+    );
+}
+
+#[test]
+fn checking_sizes_only_should_still_run_the_other_checks() {
+    let mut src = source("bundle-poe2");
+    src.insert("data/extra.json", "[]");
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_UNLISTED_FILE"]
+    );
+    let mut src = source("bundle-poe2");
+    let mut bases = json_of(&src, "data/base_items.json");
+    bases[0]["implicits"] = json!(["NoSuchMod"]);
+    put(&mut src, "data/base_items.json", &bases);
+    rehash(&mut src);
+    assert_eq!(
+        check(&src, Integrity::Sizes).unwrap_err().codes(),
+        ["BUNDLE_DANGLING_REF"]
+    );
+}
+
+#[test]
+fn check_should_return_the_bundle_it_loaded() {
+    for name in ["bundle-poe1", "bundle-poe2", "bundle-poe1-tree"] {
+        let src = source(name);
+        let checked = check(&src, Integrity::Hashes).unwrap();
+        let loaded = Bundle::load(&src).unwrap();
+        assert_eq!(format!("{checked:?}"), format!("{loaded:?}"), "{name}");
+    }
 }
 
 #[test]

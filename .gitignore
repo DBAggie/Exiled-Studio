@@ -22,3 +22,7 @@ Thumbs.db
 
 # Claude Code local settings
 .claude/settings.local.json
+crates/loom-tauri/shipped/
+
+# Python bytecode (tools/site tests)
+__pycache__/

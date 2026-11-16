@@ -4,6 +4,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+pub use loom_data::bundle::validate::Integrity;
 use loom_data::bundle::{Bundle, BundleSource, SourceError, validate};
 use loom_domain::{DataVersion, Game, TreeVersion};
 use loom_parser::import::{BundleData, Resolver};
@@ -66,6 +67,20 @@ impl BundleSource for DirSource<'_> {
             message: e.to_string(),
         })
     }
+
+    /// The file's length from its metadata; a link or a folder is not a file.
+    fn size(&self, path: &str) -> Result<u64, SourceError> {
+        let unreadable = |message: String| SourceError::Unreadable {
+            path: path.to_owned(),
+            message,
+        };
+        let meta =
+            std::fs::symlink_metadata(self.0.join(path)).map_err(|e| unreadable(e.to_string()))?;
+        if !meta.file_type().is_file() {
+            return Err(unreadable("not a plain file".to_owned()));
+        }
+        Ok(meta.len())
+    }
 }
 
 /// A loaded bundle with its resolver.
@@ -105,23 +120,33 @@ impl std::fmt::Debug for GameData {
 }
 
 impl GameData {
-    /// Validates and loads the bundle folder `dir`.
+    /// Validates and loads the bundle folder `dir`, every file's hash
+    /// included.
     ///
     /// # Errors
     /// `APP_BUNDLE` when the folder is not a valid bundle.
     pub fn load(dir: &Path) -> Result<Self, AppError> {
+        Self::load_checked(dir, Integrity::Hashes)
+    }
+
+    /// Validates and loads the bundle folder `dir`, the tables once. With
+    /// [`Integrity::Sizes`] its files' hashes are not checked: for an
+    /// installed bundle, checked at install and on Verify (plan decision
+    /// P-e). A folder chosen by hand is checked with
+    /// [`Integrity::Hashes`].
+    ///
+    /// # Errors
+    /// `APP_BUNDLE` when the folder is not a valid bundle.
+    pub fn load_checked(dir: &Path, integrity: Integrity) -> Result<Self, AppError> {
         let source = DirSource(dir);
-        let report = validate::validate(&source);
-        if !report.is_valid() {
-            return Err(AppError::new(
-                Code::Bundle,
-                format!("not a valid bundle ({})", report.codes().join(", ")),
-            ));
-        }
         // Codes only: a message could name a path, and the error reaches
         // MCP clients (decision 11: no file paths).
-        let bundle =
-            Bundle::load(&source).map_err(|e| AppError::new(Code::Bundle, e.code().to_owned()))?;
+        let bundle = validate::check(&source, integrity).map_err(|report| {
+            AppError::new(
+                Code::Bundle,
+                format!("not a valid bundle ({})", report.codes().join(", ")),
+            )
+        })?;
         let bundle: &'static Bundle = Box::leak(Box::new(bundle));
         let data: &'static BundleData<'static> = Box::leak(Box::new(BundleData::new(bundle)));
         let resolver =

@@ -237,6 +237,7 @@ impl Conn {
                 http::ReadError::Io => return,
             };
             let _ = http::respond(stream, status, None, b"");
+            http::linger(stream);
         };
         let head = match http::read_head(stream) {
             Ok(h) => h,
@@ -245,6 +246,7 @@ impl Conn {
         // Host, Origin, token, path, and method before reading a body.
         if let Some(status) = self.refuse(&head.request) {
             let _ = http::respond(stream, status, None, b"");
+            http::linger(stream);
             return;
         }
         let request = match head.body() {

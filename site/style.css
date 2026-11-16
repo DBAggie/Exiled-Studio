@@ -1,0 +1,192 @@
+/* The download page (site/index.html). The application's colours
+   (ui/src/theme/tokens.css): dark by default, light when the reader's
+   system asks for it. */
+:root {
+  --bg: #101215;
+  --panel: #181b20;
+  --raised: #20242b;
+  --border: #2a2f37;
+  --text: #e9e6df;
+  --muted: #a3a9b3;
+  --link: #f0b45a;
+  --accent: #e8a33d;
+  --on-accent: #1a1206;
+  --focus: #8dc1f2;
+  --warn-fill: #3a2a12;
+  --warn-text: #f5be6b;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f4ef;
+    --panel: #ffffff;
+    --raised: #efece5;
+    --border: #d9d4ca;
+    --text: #1d1f23;
+    --muted: #5b6069;
+    --link: #8a5300;
+    --accent: #b86e00;
+    --on-accent: #ffffff;
+    --focus: #1f5fa0;
+    --warn-fill: #fbecd3;
+    --warn-text: #6b4200;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 60rem;
+  padding: 2rem 1rem 3rem;
+  background: var(--bg);
+  color: var(--text);
+  font: 1rem/1.55 var(--font);
+}
+
+a {
+  color: var(--link);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 2rem;
+  letter-spacing: 0.01em;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+
+.lead {
+  margin: 0 0 2rem;
+  color: var(--muted);
+  max-width: 42rem;
+}
+
+section {
+  margin: 0 0 1.5rem;
+  padding: 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.channel.experimental {
+  border-left: 4px solid var(--accent);
+}
+
+.channel.experimental .blurb {
+  padding: 0.6rem 0.8rem;
+  background: var(--warn-fill);
+  color: var(--warn-text);
+  border-radius: 6px;
+}
+
+.blurb,
+.meta,
+.none {
+  margin: 0 0 1rem;
+}
+
+.meta,
+.none {
+  color: var(--muted);
+}
+
+.meta strong {
+  color: var(--text);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.button {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+.button span {
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.button:hover {
+  filter: brightness(1.08);
+}
+
+table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+caption {
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.num {
+  white-space: nowrap;
+}
+
+.sha code {
+  font: 0.75rem/1.4 var(--mono);
+  word-break: break-all;
+  color: var(--muted);
+}
+
+.notes ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.notes li + li {
+  margin-top: 0.6rem;
+}
+
+footer {
+  margin-top: 2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+footer p {
+  margin: 0.25rem 0;
+}

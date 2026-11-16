@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import type {
   ChangeRequest,
+  DataFeedStatus,
   DiagnosticFile,
   FieldDelta,
   ItemSummary,
@@ -29,6 +30,7 @@ import {
   withUnit,
 } from '../util'
 import { useTreeLayout } from './treeLayout'
+import { UpdateSettings } from './Updates'
 
 export function Warnings() {
   const build = useAppSelector((s) => s.session.snapshot?.build)
@@ -615,7 +617,48 @@ function DiagnosticFileView({ file }: { file: DiagnosticFile }) {
 function GameData() {
   const dispatch = useAppDispatch()
   const data = useAppSelector((s) => s.session.snapshot?.data)
+  const [status, setStatus] = useState<string | null>(null)
   const installed = data?.installed ?? []
+  const quarantined = data?.quarantined ?? []
+  const offline = useAppSelector(
+    (s) => s.lists.updates?.mode === 'strict-offline',
+  )
+  const [feed, setFeed] = useState<DataFeedStatus | null>(null)
+  const checkFeed = () => {
+    setStatus(null)
+    void dispatch(attempt((api) => api.checkDataFeed())).then((f) => {
+      if (f !== null) setFeed(f)
+    })
+  }
+  const download = (id: string) => {
+    setStatus(null)
+    void dispatch(attempt((api) => api.downloadData(id))).then((o) => {
+      if (o === null) return
+      setStatus(t('data.installed'))
+      setFeed((f) =>
+        f === null
+          ? f
+          : {
+              ...f,
+              offers: f.offers.map((x) =>
+                x.id === id ? { ...x, installed: true } : x,
+              ),
+            },
+      )
+    })
+  }
+  const install = () => {
+    setStatus(null)
+    void dispatch(attempt((api) => api.installBundle())).then((o) => {
+      if (o !== null && o !== 'nothing') setStatus(t('data.installed'))
+    })
+  }
+  const verify = (id: string) => {
+    setStatus(null)
+    void dispatch(run({ 'verify-bundle': { id } })).then((o) => {
+      if (o !== null) setStatus(t('data.verified', { id }))
+    })
+  }
   return (
     <section className="stack" aria-labelledby="about-data">
       <h2 id="about-data">{t('data.heading')}</h2>
@@ -632,6 +675,11 @@ function GameData() {
                   schema: b['data-version']['schema-version'],
                 })}
               </span>
+              {b['signed-by'] != null ? (
+                <Badge tone="ok">{t('data.signed')}</Badge>
+              ) : b.accepted === true ? (
+                <Badge tone="warn">{t('data.accepted')}</Badge>
+              ) : null}
               {b.id === data?.active ? (
                 <Badge tone="ok">{t('data.inUse')}</Badge>
               ) : (
@@ -644,14 +692,123 @@ function GameData() {
                   {t('data.use')}
                 </button>
               )}
+              <button
+                type="button"
+                aria-label={t('data.verifyLabel', { id: b.id })}
+                onClick={() => {
+                  verify(b.id)
+                }}
+              >
+                {t('data.verify')}
+              </button>
             </li>
           ))}
         </ul>
       )}
+      {quarantined.length > 0 && (
+        <div
+          className="panel stack"
+          role="region"
+          aria-labelledby="quarantine-h"
+        >
+          <h3 id="quarantine-h">{t('data.quarantine.heading')}</h3>
+          <p className="muted">{t('data.quarantine.help')}</p>
+          <ul className="data-list">
+            {quarantined.map((q) => (
+              <li key={q.id} className="stack">
+                <span>
+                  {t('data.entry', {
+                    name: dataName(q['data-version'], null),
+                    build: q['data-version']['steam-build'] ?? '?',
+                    schema: q['data-version']['schema-version'],
+                  })}
+                </span>
+                <span>
+                  {tDynamic(`data.quarantine.${q.reason}`, 'error.generic', {
+                    key: q['key-id'] ?? '?',
+                  })}
+                </span>
+                <span className="muted small-text">
+                  {t('data.quarantine.size', {
+                    files: q.files,
+                    bytes: q.bytes,
+                  })}
+                </span>
+                {q.acceptable && (
+                  <>
+                    <span className="mono selectable">
+                      {t('data.quarantine.hash', {
+                        hash: q['manifest-sha256'],
+                      })}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t('data.acceptLabel', { id: q.id })}
+                      onClick={() =>
+                        void dispatch(
+                          run({
+                            'accept-bundle': {
+                              id: q.id,
+                              'manifest-sha256': q['manifest-sha256'],
+                            },
+                          }),
+                        )
+                      }
+                    >
+                      {t('data.accept')}
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {data?.['data-version'] != null && data.active == null && (
         <p className="muted">{t('data.unsignedInUse')}</p>
       )}
-      <p>
+      {status !== null && (
+        <p role="status" className="muted">
+          {status}
+        </p>
+      )}
+      {feed !== null &&
+        (feed.offers.length === 0 ? (
+          <p className="muted">{t('data.feed.none')}</p>
+        ) : (
+          <ul className="data-list" aria-label={t('data.feed.list')}>
+            {feed.offers.map((o) => (
+              <li key={o.id}>
+                <span>
+                  {t('data.feed.offer', { id: o.id, bytes: o.bytes })}
+                </span>
+                {o.installed ? (
+                  <Badge tone="ok">{t('data.feed.installed')}</Badge>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label={t('data.feed.downloadLabel', { id: o.id })}
+                    onClick={() => {
+                      download(o.id)
+                    }}
+                  >
+                    {t('data.feed.download')}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ))}
+      {offline && <p className="muted">{t('data.feed.offline')}</p>}
+      <div className="row">
+        {!offline && (
+          <button type="button" onClick={checkFeed}>
+            {t('data.feed.check')}
+          </button>
+        )}
+        <button type="button" onClick={install}>
+          {t('data.install')}
+        </button>
         <button
           type="button"
           className="link"
@@ -659,7 +816,7 @@ function GameData() {
         >
           {t('data.chooseFolder')}
         </button>
-      </p>
+      </div>
     </section>
   )
 }
@@ -684,6 +841,7 @@ export function About() {
         </dd>
       </dl>
       <GameData />
+      <UpdateSettings />
       <Diagnostics />
       <p>{t('about.license')}</p>
       <p>{t('about.privacy')}</p>

@@ -29,6 +29,11 @@ import {
   type TreeLayout,
   type TreeSprites,
   type CrashRecord,
+  type DataFeedStatus,
+  type QuarantinedBundle,
+  type UpdateMode,
+  type UpdateOffer,
+  type UpdateStatus,
   type DiagnosticFile,
   type TreeChange,
   type TreePreview,
@@ -46,12 +51,25 @@ export interface FakeOptions {
   recovery?: RecoveryEntry[]
   /** Installed bundles by Steam build (B-1); the first is loaded. */
   installed?: number[]
+  /** Installed bundles that do not load (Phase 5, P-e). */
+  quarantined?: QuarantinedBundle[]
+  /** The data is still loading at start (Phase 5, P7). */
+  loading?: boolean
+  /** What the next "install from a file" installs: a signed or an
+   * unsigned pack of this game build. */
+  nextPack?: { build: number; signed: boolean }
+  /** What a data feed check finds (Phase 5, P-e). */
+  feed?: DataFeedStatus
   /** The Steam build the build was made with (its pinned data). */
   pinned?: number
   /** Why the passive tree cannot be edited (its version or class). */
   treeLocked?: string
   /** Crash records from an earlier run (Phase 5, P-f). */
   crashes?: CrashRecord[]
+  /** The update state at start (Phase 5, P-d). */
+  updates?: Partial<UpdateStatus>
+  /** What an update check finds. */
+  nextOffer?: UpdateOffer
 }
 
 function line(
@@ -599,6 +617,8 @@ export class FakeApi implements LoomApi {
     this.recentList = options.recent ?? []
     this.recoveryList = options.recovery ?? []
     this.crashList = options.crashes ?? []
+    this.updates = { ...this.updates, ...options.updates }
+    this.nextOffer = options.nextOffer ?? null
     this.activeBuild = options.installed?.[0] ?? 26530219
   }
 
@@ -848,7 +868,13 @@ export class FakeApi implements LoomApi {
             'steam-build': b,
           },
           'tree-version': b === 26530219 ? '3_29' : null,
+          'signed-by': this.acceptedBuilds.includes(b)
+            ? null
+            : 'ed25519:6e846054cb5c7102',
+          accepted: this.acceptedBuilds.includes(b),
         })),
+        quarantined: structuredClone(this.options.quarantined ?? []),
+        loading: this.options.loading ?? false,
         active:
           this.options.data === true &&
           (this.options.installed ?? []).includes(this.activeBuild)
@@ -1008,6 +1034,25 @@ export class FakeApi implements LoomApi {
           this.changed(null)
           return this.done()
       }
+    }
+    if (typeof command === 'object' && 'accept-bundle' in command) {
+      const { id, 'manifest-sha256': hash } = command['accept-bundle']
+      const q = (this.options.quarantined ?? []).find((b) => b.id === id)
+      if (q === undefined) this.fail('APP_NO_BUNDLE')
+      if (!q.acceptable || q['manifest-sha256'] !== hash) {
+        this.fail('APP_QUARANTINED')
+      }
+      const build = q['data-version']['steam-build'] ?? 0
+      this.options.quarantined = (this.options.quarantined ?? []).filter(
+        (b) => b.id !== id,
+      )
+      this.options.installed = [...(this.options.installed ?? []), build]
+      this.acceptedBuilds.push(build)
+      return this.done()
+    }
+    if (typeof command === 'object' && 'verify-bundle' in command) {
+      this.verified.push(command['verify-bundle'].id)
+      return this.done()
     }
     if (typeof command === 'object' && 'use-bundle' in command) {
       const build = (this.options.installed ?? []).find(
@@ -1609,6 +1654,85 @@ export class FakeApi implements LoomApi {
     ])
   }
 
+  ready(): Promise<void> {
+    return Promise.resolve()
+  }
+
+  /** Application updates (tests set the offer and the package). */
+  updates: UpdateStatus = {
+    mode: 'automatic-check',
+    current: '0.0.0',
+    artifact: 'nsis',
+    installs: true,
+    available: true,
+    checking: false,
+    checked: false,
+    offer: null,
+    error: null,
+  }
+
+  /** What the next check finds. */
+  nextOffer: UpdateOffer | null = null
+
+  /** How many installs were started. */
+  installs = 0
+
+  private updateListeners: ((s: UpdateStatus) => void)[] = []
+
+  updateStatus(): Promise<UpdateStatus> {
+    return Promise.resolve(structuredClone(this.updates))
+  }
+
+  setUpdateMode(mode: UpdateMode): Promise<UpdateStatus> {
+    this.updates.mode = mode
+    if (mode === 'strict-offline') this.updates.offer = null
+    return this.updateStatus()
+  }
+
+  checkUpdates(): Promise<UpdateStatus> {
+    if (this.updates.mode === 'strict-offline') {
+      return Promise.reject(
+        new ApiFailure({ code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' }),
+      )
+    }
+    this.updates.checked = true
+    this.updates.offer = structuredClone(this.nextOffer)
+    return this.updateStatus()
+  }
+
+  installUpdate(): Promise<void> {
+    const code =
+      this.updates.mode === 'strict-offline'
+        ? 'UPDATE_OFFLINE'
+        : !this.updates.installs
+          ? 'UPDATE_NOTIFY_ONLY'
+          : this.updates.offer === null
+            ? 'UPDATE_NONE'
+            : null
+    if (code !== null) {
+      return Promise.reject(new ApiFailure({ code, message: code }))
+    }
+    this.installs += 1
+    return Promise.resolve()
+  }
+
+  onUpdates(listener: (s: UpdateStatus) => void): Promise<() => void> {
+    this.updateListeners.push(listener)
+    return Promise.resolve(() => {
+      this.updateListeners = this.updateListeners.filter((l) => l !== listener)
+    })
+  }
+
+  /** The check at start reports (tests). */
+  emitUpdates() {
+    this.updates.checked = true
+    this.updates.offer = structuredClone(this.nextOffer)
+    const status = structuredClone(this.updates)
+    this.updateListeners.forEach((l) => {
+      l(status)
+    })
+  }
+
   exportDiagnostics(): Promise<Outcome> {
     this.diagnosticsExported += 1
     return Promise.resolve({ done: { version: this.version } } as Outcome)
@@ -1732,6 +1856,70 @@ export class FakeApi implements LoomApi {
   setUiPrefs(text: string) {
     this.prefs = text
     return Promise.resolve()
+  }
+
+  /** Builds the user accepted from quarantine. */
+  acceptedBuilds: number[] = []
+
+  /** Bundles the user verified. */
+  verified: string[] = []
+
+  checkDataFeed(): Promise<DataFeedStatus> {
+    if (this.updates.mode === 'strict-offline') {
+      return Promise.reject(
+        new ApiFailure({ code: 'UPDATE_OFFLINE', message: 'UPDATE_OFFLINE' }),
+      )
+    }
+    const feed = this.options.feed ?? { sequence: 1, offers: [] }
+    return Promise.resolve(structuredClone(feed))
+  }
+
+  /** Packs downloaded from the feed. */
+  downloads: string[] = []
+
+  downloadData(id: string): Promise<Outcome> {
+    const offer = this.options.feed?.offers.find((o) => o.id === id)
+    if (offer === undefined) {
+      return Promise.reject(
+        new ApiFailure({ code: 'APP_NOT_FOUND', message: 'APP_NOT_FOUND' }),
+      )
+    }
+    const build = Number(/\/(\d+)-s/.exec(id)?.[1] ?? '0')
+    this.options.installed = [...(this.options.installed ?? []), build]
+    offer.installed = true
+    this.downloads.push(id)
+    this.version += 1
+    this.emit('build-changed')
+    return Promise.resolve(this.done())
+  }
+
+  installBundle(): Promise<Outcome> {
+    const pack = this.options.nextPack
+    if (pack === undefined) return Promise.resolve('nothing' as Outcome)
+    if (pack.signed) {
+      this.options.installed = [...(this.options.installed ?? []), pack.build]
+    } else {
+      this.options.quarantined = [
+        ...(this.options.quarantined ?? []),
+        {
+          id: this.bundleId(pack.build),
+          'data-version': {
+            game: 'poe1',
+            'schema-version': 4,
+            'steam-build': pack.build,
+          },
+          reason: 'unsigned',
+          acceptable: true,
+          'manifest-sha256': 'ab'.repeat(32),
+          'key-id': null,
+          files: 41,
+          bytes: 123456,
+        },
+      ]
+    }
+    this.version += 1
+    this.emit('build-changed')
+    return Promise.resolve(this.done())
   }
 
   chooseBundle() {

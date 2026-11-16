@@ -31,7 +31,10 @@ impl OsStore {
         Self::named(SERVICE)
     }
 
-    fn named(service: &str) -> Self {
+    /// The store under another service name (one per application, so
+    /// two applications never share a token).
+    #[must_use]
+    pub fn named(service: &str) -> Self {
         Self {
             entry: keyring::Entry::new(service, ACCOUNT).ok(),
         }

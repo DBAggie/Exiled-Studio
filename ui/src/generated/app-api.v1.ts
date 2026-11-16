@@ -121,6 +121,26 @@ export interface ApplicationAPIV1 {
         }
       }
     | {
+        'accept-bundle': {
+          /**
+           * The bundle's ID ([`QuarantinedBundle`]).
+           */
+          id: string
+          /**
+           * The manifest SHA-256 the user was shown.
+           */
+          'manifest-sha256': string
+        }
+      }
+    | {
+        'verify-bundle': {
+          /**
+           * The bundle's ID.
+           */
+          id: string
+        }
+      }
+    | {
         'import-text': {
           /**
            * The text.
@@ -531,6 +551,7 @@ export interface ApplicationAPIV1 {
    * Crash records (Phase 5, P-f).
    */
   crashes: CrashRecord[]
+  'data-feed': DataFeedStatus
   /**
    * The diagnostic package's preview (Phase 5, P-f).
    */
@@ -581,6 +602,7 @@ export interface ApplicationAPIV1 {
   'tree-layout': TreeLayout
   'tree-preview': TreePreview1
   'tree-sprites': TreeSprites
+  updates: UpdateStatus
 }
 /**
  * An item edit: line operations on one item. It is refused as stale
@@ -644,6 +666,36 @@ export interface CrashRecord {
    * The application's version.
    */
   version: string
+}
+/**
+ * The data feed's answer (Phase 5, P-e).
+ */
+export interface DataFeedStatus {
+  /**
+   * The packs it lists, newest first.
+   */
+  offers: DataOffer[]
+  /**
+   * The feed's sequence number.
+   */
+  sequence: number
+}
+/**
+ * A pack the data feed lists.
+ */
+export interface DataOffer {
+  /**
+   * Its download size in bytes.
+   */
+  bytes: number
+  /**
+   * Its bundle ID: `<game>/<steam build>-s<data schema>`.
+   */
+  id: string
+  /**
+   * Whether a bundle with this ID is installed (loaded or not).
+   */
+  installed: boolean
 }
 /**
  * One file of the diagnostic package, as the user previews it and the
@@ -2037,6 +2089,12 @@ export interface DataStatus {
    */
   installed?: InstalledBundle[]
   /**
+   * The game data is still loading at start (Phase 5, P7): the
+   * first screen comes before it. Its version, or why it did not
+   * load, follows in a later snapshot.
+   */
+  loading?: boolean
+  /**
    * Something to tell the user about the choice of data that is not
    * an error: `APP_BUNDLE_FALLBACK` when the remembered bundle did
    * not load and the newest installed one was taken instead.
@@ -2049,6 +2107,13 @@ export interface DataStatus {
    */
   pinned?: string | null
   /**
+   * Installed bundles that do not load (Phase 5, P-e): unsigned or
+   * signed by an unknown key until the user accepts them; for good
+   * when the signature fails, the key is revoked, or files are
+   * damaged.
+   */
+  quarantined?: QuarantinedBundle[]
+  /**
    * The passive tree version the application gives the engine for
    * this bundle, if known; it names the game's patch (`3_29` is
    * patch 3.29), which the UI shows (UX-14).
@@ -2059,11 +2124,20 @@ export interface DataStatus {
  * A bundle installed in the application's `bundles/` folder.
  */
 export interface InstalledBundle {
+  /**
+   * Whether the user accepted it from quarantine (unsigned, or an
+   * unknown key).
+   */
+  accepted?: boolean
   'data-version': DataVersionView1
   /**
    * Its ID: `<game>/<steam build>-s<data schema>`.
    */
   id: string
+  /**
+   * The key that signed it, when a trusted one did (Phase 5, P-e).
+   */
+  'signed-by'?: string | null
   /**
    * The passive tree version the application knows for it, if any:
    * the game's patch (`3_29` is patch 3.29; UX-14).
@@ -2074,6 +2148,60 @@ export interface InstalledBundle {
  * A data version.
  */
 export interface DataVersionView1 {
+  /**
+   * `poe1` or `poe2`.
+   */
+  game: string
+  /**
+   * The bundle's data schema version.
+   */
+  'schema-version': number
+  /**
+   * The Steam build it was extracted from, if known.
+   */
+  'steam-build'?: number | null
+}
+/**
+ * An installed bundle that does not load (Phase 5, P-e).
+ */
+export interface QuarantinedBundle {
+  /**
+   * Whether the user may accept it ([`Command::AcceptBundle`]):
+   * `unsigned` and `unknown-key` only.
+   */
+  acceptable: boolean
+  /**
+   * Its size in bytes.
+   */
+  bytes: number
+  'data-version': DataVersionView2
+  /**
+   * Its number of files.
+   */
+  files: number
+  /**
+   * Its ID: `<game>/<steam build>-s<data schema>`.
+   */
+  id: string
+  /**
+   * The signing key's ID, when signed.
+   */
+  'key-id'?: string | null
+  /**
+   * The SHA-256 of its manifest (`bundle.json`), shown to the user,
+   * who accepts exactly it.
+   */
+  'manifest-sha256': string
+  /**
+   * Why: `unsigned`, `unknown-key`, `bad-signature`, `revoked`,
+   * `damaged`.
+   */
+  reason: string
+}
+/**
+ * A data version.
+ */
+export interface DataVersionView2 {
   /**
    * `poe1` or `poe2`.
    */
@@ -2452,4 +2580,69 @@ export interface TreeSpriteSheet {
    * The image as a `data:` URL (the bundle's bytes, unmodified).
    */
   image: string
+}
+/**
+ * Application updates (Phase 5, P-d).
+ */
+export interface UpdateStatus {
+  /**
+   * The package this build came from: `nsis`, `msi`, `app-image`,
+   * `deb`, or `plain` (the portable zip, or a development build).
+   */
+  artifact: string
+  /**
+   * Whether this build can check at all (it carries an update key).
+   */
+  available: boolean
+  /**
+   * Whether a check has answered since the application started.
+   */
+  checked: boolean
+  /**
+   * A check runs.
+   */
+  checking: boolean
+  /**
+   * The running version.
+   */
+  current: string
+  /**
+   * Why the last check or install failed, if it did.
+   */
+  error?: ApiError3 | null
+  /**
+   * Whether this package installs an update itself (`nsis`, `msi`,
+   * `app-image`); the others only link to the release.
+   */
+  installs: boolean
+  /**
+   * The mode.
+   */
+  mode: 'automatic-check' | 'manual' | 'strict-offline'
+  /**
+   * The last check's newer version, if it found one.
+   */
+  offer?: UpdateOffer | null
+}
+/**
+ * A newer version the update feed offers (lower or equal versions are
+ * never offered).
+ */
+export interface UpdateOffer {
+  /**
+   * When it was published (RFC 3339), if the feed says.
+   */
+  date?: string | null
+  /**
+   * Its release notes.
+   */
+  notes?: string | null
+  /**
+   * Its release page.
+   */
+  url: string
+  /**
+   * Its version.
+   */
+  version: string
 }

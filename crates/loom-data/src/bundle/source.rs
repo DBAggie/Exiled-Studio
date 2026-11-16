@@ -18,6 +18,15 @@ pub trait BundleSource {
     /// # Errors
     /// [`SourceError`] when the file is absent or unreadable.
     fn read(&self, path: &str) -> Result<Vec<u8>, SourceError>;
+
+    /// The size of one file in bytes. The default reads it; a host whose
+    /// files have a cheaper size (a folder's metadata) overrides it.
+    ///
+    /// # Errors
+    /// [`SourceError`] when the file is absent or unreadable.
+    fn size(&self, path: &str) -> Result<u64, SourceError> {
+        self.read(path).map(|b| b.len() as u64)
+    }
 }
 
 /// A source could not give a file.

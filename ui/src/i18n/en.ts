@@ -6,7 +6,7 @@
 export const en = {
   'app.name': 'Exiled Studio',
   'app.notice':
-    'Exiled Studio is not affiliated with or endorsed by Grinding Gear Games or the Path of Building Community project.',
+    "This product isn't affiliated with or endorsed by Grinding Gear Games in any way. Nor is it affiliated with or endorsed by the Path of Building Community project.",
   'app.licensed': 'Free and open source · MIT licensed',
   'app.untitled': 'Imported build',
 
@@ -161,6 +161,7 @@ export const en = {
   'data.gameBuild': '{game}, game build {build}',
   'data.steamBuild': 'game build {build}',
   'start.dataNoneYet': 'No game data yet.',
+  'start.dataLoading': 'Loading game data…',
   'start.dataFailed': 'The game data did not load.',
   'start.dataAdd': 'Add game data…',
   'start.dataChange': 'Change',
@@ -168,8 +169,40 @@ export const en = {
   'data.heading': 'Game data',
   'data.noneInstalled':
     'No game data is installed. Installed game data appears here and is chosen for you.',
-  'data.entry':
-    '{name} · game build {build}, data schema {schema} (unsigned: signing comes with the installer)',
+  'data.entry': '{name} · game build {build}, data schema {schema}',
+  'data.signed': 'Signed by the project',
+  'data.accepted': 'Accepted by you (not signed by the project)',
+  'data.verify': 'Verify',
+  'data.verifyLabel': 'Verify {id}',
+  'data.verified': 'Verified: every file of {id} matches its signed list.',
+  'data.install': 'Install game data from a file…',
+  'data.feed.check': 'Check for new game data',
+  'data.feed.offline':
+    'Strict offline is on: Exiled Studio does not look for new game data.',
+  'data.feed.none': 'No game data is published yet.',
+  'data.feed.offer': '{id} · {bytes} bytes',
+  'data.feed.installed': 'Installed',
+  'data.feed.download': 'Download and install',
+  'data.feed.downloadLabel': 'Download and install {id}',
+  'data.feed.list': 'Game data the project publishes',
+  'data.installed': 'Game data installed.',
+  'data.quarantine.heading': 'Installed, not loaded',
+  'data.quarantine.help':
+    'Exiled Studio loads game data signed by the project. This data is installed but not loaded until you decide.',
+  'data.quarantine.unsigned': 'Not signed.',
+  'data.quarantine.unknown-key':
+    'Signed by a key this version does not know ({key}).',
+  'data.quarantine.bad-signature':
+    'Its signature does not match: it changed after signing. It cannot be loaded.',
+  'data.quarantine.revoked':
+    'Signed by a key the project withdrew. It cannot be loaded.',
+  'data.quarantine.damaged':
+    'Files are missing or changed. Install it again. It cannot be loaded.',
+  'data.quarantine.hash':
+    'Check this fingerprint (SHA-256) with its source: {hash}',
+  'data.quarantine.size': '{files} files, {bytes} bytes',
+  'data.accept': 'Load it anyway: I trust this data',
+  'data.acceptLabel': 'Load {id} anyway: I trust this data',
   'data.inUse': 'In use',
   'data.use': 'Use',
   'data.unsignedInUse': 'In use: a folder chosen for development (unsigned).',
@@ -854,7 +887,7 @@ export const en = {
   'about.title': 'About Exiled Studio',
   'about.license': 'Free and open source under the MIT license.',
   'about.privacy':
-    'Works offline. No account and no telemetry. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
+    'Works offline. No account and no telemetry. The only connections it makes are the checks for a new version and for new game data, which you can turn off under Updates. Game data comes from data bundles the project extracts itself; the only game art is the passive tree art Grinding Gear Games publishes for tool developers, when a bundle carries it.',
   'about.fonts':
     'Fonts: Inter, Space Grotesk and JetBrains Mono, under the SIL Open Font License 1.1; their license texts are below.',
   'about.version': 'Exiled Studio version',
@@ -872,6 +905,28 @@ export const en = {
   'diag.saved': 'Diagnostic package saved.',
   'diag.files': 'Files in the package',
   'diag.size': '{n} bytes',
+  'updates.title': 'Updates',
+  'updates.available': 'Update available',
+  'updates.mode': 'Look for new versions',
+  'updates.mode.automatic-check': 'Check at start',
+  'updates.mode.manual': 'Only when I ask',
+  'updates.mode.strict-offline': 'Never connect (strict offline)',
+  'updates.privacy':
+    'A check asks GitHub, where the releases are, for the newest version. GitHub sees your IP address and this version number; nothing else is sent. Nothing is installed without your approval.',
+  'updates.check': 'Check now',
+  'updates.checking': 'Checking…',
+  'updates.current': 'You have the newest version ({version}).',
+  'updates.unavailable':
+    'This build cannot check for updates (it carries no update key: a development build).',
+  'updates.offline': 'Strict offline: Exiled Studio never connects.',
+  'updates.offer': 'Version {version} is available. You have {current}.',
+  'updates.notes': 'What’s new',
+  'updates.install': 'Install and restart',
+  'updates.later': 'Later',
+  'updates.notifyOnly':
+    'This package does not update itself. Download version {version} from its release page: {url}',
+  'updates.installHelp':
+    'Exiled Studio downloads the update, checks its signature, installs it, and restarts. Unsaved changes are kept for recovery.',
   'crash.title': 'An internal error was recorded',
   'crash.body':
     'Exiled Studio recorded an internal error (version {version}, {when}): {message}. Any unsaved build is offered below for recovery. The record is in the diagnostic package (About).',
@@ -912,6 +967,56 @@ export const en = {
   'error.APP_ITEM_SET': 'This build has no such item set.',
   'error.APP_LOADOUT': 'This build has no such stage.',
   'error.APP_TREE': 'That tree change is not possible.',
+  'error.UPDATE_OFFLINE':
+    'Strict offline is on, so Exiled Studio does not connect. Change it under About, Updates.',
+  'error.UPDATE_UNAVAILABLE':
+    'This build cannot check for updates (a development build).',
+  'error.UPDATE_BUSY': 'A check is already running.',
+  'error.UPDATE_CHECK':
+    'The update check failed. Check your connection and try again later.',
+  'error.UPDATE_NONE': 'No update is offered. Check again.',
+  'error.UPDATE_NOTIFY_ONLY':
+    'This package does not update itself. Download the new version from its release page.',
+  'error.UPDATE_INSTALL':
+    'The update could not be installed: the download failed or its signature did not match. Nothing was changed.',
+  'error.APP_QUARANTINED':
+    'That game data is quarantined: it is not signed by the project, or it changed since you saw it.',
+  'error.APP_PACK_EXISTS':
+    'Game data with that version is installed already, with other content. Nothing was changed.',
+  'error.APP_BUNDLE_DAMAGED':
+    'A file of that game data does not match its signed list. Install it again.',
+  'error.PACK_SIGNATURE':
+    'That game data file’s signature does not match, or its key was withdrawn. Nothing was installed.',
+  'error.PACK_ZIP':
+    'That is not an Exiled Studio game data file. Nothing was installed.',
+  'error.PACK_PATH':
+    'That game data file holds a file outside its folder. Nothing was installed.',
+  'error.PACK_UNLISTED':
+    'That game data file holds files its list does not name. Nothing was installed.',
+  'error.PACK_MISSING':
+    'That game data file lacks files its list names. Nothing was installed.',
+  'error.PACK_SIZE':
+    'A file in that game data file is not the size its list says. Nothing was installed.',
+  'error.PACK_CONTENT':
+    'A file in that game data file does not match its list. Nothing was installed.',
+  'error.PACK_TOO_LARGE':
+    'That game data file is too large. Nothing was installed.',
+  'error.PACK_MANIFEST':
+    'That game data file’s list is not readable. Nothing was installed.',
+  'error.FEED_HTTP':
+    'Exiled Studio could not reach GitHub for game data. Check your connection and try again later.',
+  'error.FEED_TOO_LARGE':
+    'The game data list was too large. Nothing was changed.',
+  'error.FEED_SIGNATURE':
+    'The game data list’s signature does not match. Nothing was changed.',
+  'error.FEED_MALFORMED':
+    'The game data list is not readable. Nothing was changed.',
+  'error.FEED_ROLLBACK':
+    'The game data list is older than one seen before, so it was refused.',
+  'error.FEED_MISMATCH':
+    'The downloaded game data does not match its list. Nothing was installed.',
+  'error.FEED_IO': 'The game data could not be saved for installing.',
+  'error.FEED_BUSY': 'That game data is already downloading.',
   'error.APP_ADD_ITEM':
     'That text could not be added: it is not an item, the data does not know its base, or it does not go in that slot.',
   'error.APP_SKILL':

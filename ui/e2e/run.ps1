@@ -24,6 +24,11 @@ $xml = [IO.File]::ReadAllText((Resolve-Path 'tools\parity-cli\testdata\build-rou
 $xml = $xml.Replace('className="Scion"', 'className="Test Brute"').Replace('classId="0" ascendClassId="0" nodes=""', 'classId="1" ascendClassId="0" nodes="1000"')
 [IO.File]::WriteAllText((Join-Path $work 'import.xml'), $xml)
 
+# A pack of the synthetic tree bundle, signed with the public test key
+# (Phase 5, P4: the e2e installs it).
+& cargo run -q --locked -p loom-release -- pack crates/loom-data/tests/fixtures/bundle-poe1-tree --test-key --out (Join-Path $work 'bundle.loombundle')
+if ($LASTEXITCODE -ne 0) { throw 'loom-release pack failed' }
+
 $env:LOOM_E2E_DIR = $work
 $env:LOOM_DATA_DIR = Join-Path $work 'data'
 $env:LOOM_BUNDLE_DIR = (Resolve-Path 'crates\loom-data\tests\fixtures\bundle-poe1-tree').Path
